@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Any, Property, Float
+from traits.api import HasTraits, List, Instance, Any, Property, Float, Event
 from traitsui.api import View, Item, VGroup, HGroup, Group, Spring, spring, \
     TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
@@ -32,6 +32,7 @@ from src.paths import paths
 #import math
 #from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
+from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #from src.regression.ols_regressor import PolynomialRegressor
 
 class CalibrationPoint(HasTraits):
@@ -66,13 +67,13 @@ class Magnet(SpectrometerDevice):
     _massmin = Float(0.0)
     _massmax = Float(200.0)
 
-    settling_time = 0.01
+    settling_time = 0.5
 
     calibration_points = Property(depends_on='mftable')
-    detector=Any
+    detector = Any
 #    graph = Instance(Graph, ())
 
-
+    dac_changed = Event
 
 #    def update_graph(self):
 #        pts = self._get_calibration_points()
@@ -181,6 +182,8 @@ class Magnet(SpectrometerDevice):
             if unblank:
                 micro.ask('BlankBeam False', verbose=verbose)
 
+        self.dac_changed = True
+
     @get_float
     def read_dac(self):
         if self.microcontroller is None:
@@ -231,18 +234,23 @@ class Magnet(SpectrometerDevice):
         return m
 
     def map_mass_to_dac(self, mass):
-        spec=self.spectrometer
+        spec = self.spectrometer
         molweights = spec.molecular_weights
         if self.mftable:
 
             xs = [molweights[i] for i in self.mftable[0]]
             ys = self.mftable[1]
 
-            dac=polyval(polyfit(xs, ys, 2), mass)
-            
-            
+            dac = polyval(polyfit(xs, ys, 2), mass)
+
+
             return dac
-        
+
+    def map_dac_to_isotope(self, dac=None):
+        if dac is None:
+            dac = self._dac
+        m = self.map_dac_to_mass(dac)
+        return next((k for k, v in MOLECULAR_WEIGHTS.iteritems() if abs(v - m) < 0.01), None)
 #    def __dac_changed(self):
 #        m = self.map_dac_to_mass(self._dac)
 ##        print 'get mass', m, type(m), nan, type(nan)
@@ -261,6 +269,7 @@ class Magnet(SpectrometerDevice):
         if self.detector:
             dac = self.spectrometer.correct_dac(self.detector, dac)
 
+        self._mass = m
         self.dac = dac
 
     def _validate_dac(self, d):
@@ -308,7 +317,8 @@ class Magnet(SpectrometerDevice):
     def _get_calibration_points(self):
 
         if self.mftable:
-            molweights = self.spectrometer.molecular_weights
+            molweights = MOLECULAR_WEIGHTS
+#            molweights = self.spectrometer.molecular_weights
             xs, ys = self.mftable
             return [CalibrationPoint(x=molweights[xi], y=yi) for xi, yi in zip(xs, ys)]
 #===============================================================================

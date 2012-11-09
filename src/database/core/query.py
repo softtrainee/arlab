@@ -58,10 +58,11 @@ class Query(HasTraits):
                          'contains'
                          ])
 #    criterion = String('')
-    criterion = String('3')
+    criterion = String('3', enter_set=True, auto_set=False)
+    criteria = Property(depends_on='parameter')
 #    query_table = Any
 
-    parent = Any
+    selector = Any
     add = Button('+')
     remove = Button('-')
     removable = Bool(True)
@@ -224,12 +225,20 @@ class Query(HasTraits):
 #        g = TableSelector()
 #        info = g.edit_traits()
 #        if info.result:
-#            self.parent.add_query(g.parameter)
-        self.parent.add_query('')
+#            self.selector.add_query(g.parameter)
+        self.selector.add_query('')
 
     def _remove_fired(self):
-        self.parent.remove_query(self)
+        self.selector.remove_query(self)
 
+    def _criterion_changed(self):
+        self.selector.execute_query()
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_criteria(self):
+        return []
 #===============================================================================
 # views
 #===============================================================================
@@ -250,4 +259,5 @@ class Query(HasTraits):
                 )
         v = View(qgrp)
         return v
+
 #============= EOF =============================================

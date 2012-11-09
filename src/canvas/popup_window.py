@@ -82,10 +82,14 @@ class PopupWindow(wx.MiniFrame):
 
     def SetPosition(self, position):
         #print("pos=%s" % (position))
+        self.Freeze()
         self.Move((position[0], position[1]))
+        self.Thaw()
 
     def SetText(self, t):
+        self.Freeze()
         self.text.SetLabel(t)
+        self.Thaw()
 #    def ActivateParent(self):
 #        """Activate the parent window
 #        @postcondition: parent window is raised

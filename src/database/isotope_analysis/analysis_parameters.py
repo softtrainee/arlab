@@ -34,6 +34,7 @@ class AnalysisParameters(HasTraits):
 #    analysis = Any
     fittypes = List(FIT_TYPES)
     show = Bool(False)
+    filter_outliers = Bool(True)
 
     def _get_intercept(self):
 
@@ -58,12 +59,17 @@ class AnalysisParameters(HasTraits):
                         Spring(width=50 - 10 * len(self.name), springy=False),
                         Item('show', show_label=False),
                         Item('fit', editor=EnumEditor(name='fittypes'),
-                             show_label=False),
+                             show_label=False,
+                             enabled_when='show'
+                             ),
 #                        Item('fit[]', style='custom',
 #                              editor=BoundEnumEditor(values=['linear', 'parabolic', 'cubic'],
 #
 #                                                     )),
-                        Item('filterstr[]'),
+                        Item('filterstr[]', enabled_when='show'),
+                        Item('filter_outliers',
+                             enabled_when='show',
+                             show_label=False),
                         Spring(width=20, springy=False),
                         Item('intercept',
                               style='readonly',

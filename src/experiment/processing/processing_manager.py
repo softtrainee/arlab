@@ -46,7 +46,8 @@ class ProcessingManager(DatabaseManager):
 
     def bind_preferences(self):
         try:
-            bind_preference(self, 'username', 'envisage.ui.workbench.username')
+#            bind_preference(self, 'username', 'envisage.ui.workbench.username')
+            bind_preference(self.db, 'save_username', 'envisage.ui.workbench.username')
             prefid = 'pychron.experiment'
             bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
             if self.db.kind == 'mysql':
@@ -130,8 +131,8 @@ class ProcessingManager(DatabaseManager):
                                          )
 
 
-            usr = self.username
-            return self._figure_factory(username=usr)
+#            usr = self.username
+            return self._figure_factory()
 
 #===============================================================================
 # factories

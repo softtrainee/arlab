@@ -42,6 +42,8 @@ import time
 from threading import Thread
 from Queue import Queue
 from src.helpers.timer import Timer
+from constants import NULL_STR
+from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
 #        self._file = open(p, mode)
@@ -88,7 +90,7 @@ class ScanManager(Manager):
     _recording = Bool(False)
     record_data_manager = Any
     _consuming = False
-
+    queue = None
     def _update_graph_limits(self, name, new):
         if 'high' in name:
             self._graph_ymax = max(new, self._graph_ymin)
@@ -99,6 +101,17 @@ class ScanManager(Manager):
     def _toggle_detector(self, obj, name, old, new):
         self.graph.set_series_visiblity(new, series=obj.name)
 
+    def _update_magnet(self, obj, name, old, new):
+        if new:
+            #covnert dac into a mass
+            #convert mass to isotope
+#            d = self.magnet.dac
+            iso = self.magnet.map_dac_to_isotope()
+            if iso in self.isotopes:
+                self.isotope = iso
+            else:
+                self.isotope = NULL_STR
+
     def opened(self):
 
         self.graph = self._graph_factory()
@@ -106,10 +119,13 @@ class ScanManager(Manager):
         self._start_timer()
 
         #listen to detector for enabling 
-        self.on_trait_change(self._toggle_detector, 'detectors.active')
+        self.on_trait_change(self._toggle_detector, 'detectors:active')
 
         #force update
         self.load_settings()
+
+        #bind 
+        self.on_trait_change(self._update_magnet, 'magnet:dac_changed')
 
     def load_settings(self):
         self.info('load scan settings')
@@ -178,8 +194,8 @@ class ScanManager(Manager):
             x = self.graph.record_multiple(signals,
                                            track_y=False,
                                            )
-    
-            if self._recording:
+
+            if self._recording and self.queue:
                 self.queue.put((x, keys, signals))
 
     def _update_scan_graph(self):
@@ -199,8 +215,7 @@ class ScanManager(Manager):
 ##        print time.clock() - st
 
     def _start_timer(self):
-        self._first_iteration = True
-        self._consuming = True
+#        self._first_iteration = True
         self.info('starting scan timer')
         self.integration_time = 1.048576
         self.timer = self._timer_factory()
@@ -208,28 +223,37 @@ class ScanManager(Manager):
     def _stop_timer(self):
         self.info('stopping scan timer')
         self.timer.Stop()
-        self._consuming = False
 
     def _start_recording(self):
-        self._first_recording = True
-        dm=self.record_data_manager
+#        self._first_recording = True
+        self.queue = Queue()
+        self.record_data_manager = dm = CSVDataManager()
+
+
+        self.consumer = Thread(target=self._consume, args=(dm,))
+        self.consumer.start()
 ##        root = paths.spectrometer_scans_dir
 ##        p, _c = unique_path(root, 'scan')
         dm.new_frame(directory=paths.spectrometer_scans_dir)
 
 
     def _stop_recording(self):
+        self._consuming = False
         self.record_data_manager.close()
 #===============================================================================
 # handlers
 #===============================================================================
     def _set_position(self):
         if self.isotope and self.detector:
+
+
             self.info('set position {} on {}'.format(self.isotope, self.detector))
             self.ion_optics_manager.position(self.isotope, self.detector.name)
 
+
     def _isotope_changed(self):
-        self._set_position()
+        if self.isotope != NULL_STR:
+            self._set_position()
 
     def _graph_changed(self):
         self.rise_rate.graph = self.graph
@@ -249,7 +273,23 @@ class ScanManager(Manager):
                 plot = plot[0]
                 plot.line_width = emphasize_width if name == self.detector.name else nominal_width
 
-            self._set_position()
+#            print self.detector, self.magnet.mass, self.magnet._mass
+
+            mass = self.magnet.mass
+            if abs(mass) > 1e-5:
+
+                if self.isotope in MOLECULAR_WEIGHTS:
+                    mw = MOLECULAR_WEIGHTS[self.isotope]
+                    if abs(mw - mass) > 0.1:
+                        self.isotope = NULL_STR
+
+                self.info('set position {} on {}'.format(mass, self.detector))
+
+                #thread not super necessary
+                #simple allows gui to update while the magnet is delaying for settling_time
+                t = Thread(target=self.ion_optics_manager.position, args=(mass, self.detector))
+                t.start()
+#                
 
     def _graph_y_auto_changed(self, new):
         p = self.graph.plots[0]
@@ -310,8 +350,8 @@ class ScanManager(Manager):
         do_later(do)
 
     def _consume(self, dm):
-        
-        _first_recording=True
+
+        _first_recording = True
         while self._consuming:
             time.sleep(0.0001)
             c = self.queue.get()
@@ -319,11 +359,11 @@ class ScanManager(Manager):
                 x, keys, signals = c
             except ValueError:
                 continue
-            
+
             if dm:
                 if _first_recording:
-                    _first_recording = False
                     dm.write_to_frame(('time',) + tuple(keys))
+                    _first_recording = False
 
                 dm.write_to_frame((x,) + tuple(signals))
 #===============================================================================
@@ -336,12 +376,7 @@ class ScanManager(Manager):
 
         mult = 1000
 
-        self.queue = Queue()
-        self.record_data_manager =dm= CSVDataManager()
-       
-        
-        self.consumer = Thread(target=self._consume, args=(dm,))
-        self.consumer.start()
+
 
         return Timer((self.integration_time + 0.025) * mult, self._update_scan_graph)
 
@@ -401,7 +436,7 @@ class ScanManager(Manager):
 #===============================================================================
     def _get_isotopes(self):
         molweights = self.spectrometer.molecular_weights
-        return sorted(molweights.keys(), key=lambda x: int(x[2:]))
+        return [NULL_STR] + sorted(molweights.keys(), key=lambda x: int(x[2:]))
 
     def _validate_graph_ymin(self, v):
         try:

@@ -41,6 +41,8 @@ from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from src.database.orms.isotope_orm import proc_FitHistoryTable, proc_FitTable
+import struct
+from src.deprecate import deprecated
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -84,8 +86,9 @@ class IsotopeRecord(DatabaseRecord):
     display_item = Instance(HasTraits)
 
     isotope_keys = Property
-    signals = Property
+    signals = Property(depends_on='age_dirty')
     _signals = Dict
+#    signals = Dict
 #    baselines = None
 #    backgrounds = None
 #    blanks = None
@@ -117,29 +120,43 @@ class IsotopeRecord(DatabaseRecord):
     k39 = None
     rad40 = None
     arar_result = None
+#    filter_outliers = True
+#    filter_outliers = False
+#    def _age_dirty_fired(self):
+#        self._signals = dict()
 
     def save(self):
         fit_hist = None
+        db = self.selector.db
+#        sess = db.get_session()
+#        db.sess = db.new_session()
+
+#        sess.expunge_all()
         #save the fits
         for fi in self.signal_graph.fit_selector.fits:
             #get database fit
             dbfit = self._get_db_fit(fi.name)
             if dbfit != fi.fit:
                 if fit_hist is None:
-                    fit_hist = proc_FitHistoryTable(analysis=self.dbrecord,
-                                                    user=self.selector.db.save_username
-                                                    )
-                    self.dbrecord.fit_histories.append(fit_hist)
-                    selhist = self.dbrecord.selected_histories
-                    selhist.selected_fits = fit_hist
+#                    fit_hist = proc_FitHistoryTable(analysis=self.dbrecord,
+#                                                    user=db.save_username
+#                                                    )
+#                    self.dbrecord.fit_histories.append(fit_hist)
+#                    selhist = self.dbrecord.selected_histories
+#                    selhist.selected_fits = fit_hist
+                    print db.save_username, 'adsfasfd'
+                    fit_hist = db.add_fit_history(self.dbrecord, user=db.save_username)
 
-                _f = proc_FitTable(history=fit_hist, fit=fi.fit,
-                                                    isotope=fi.name)
+                dbiso = next((iso for iso in self.dbrecord.isotopes
+                              if iso.molecular_weight.name == fi.name), None)
 
-        self.selector.db.commit()
+                db.add_fit(fit_hist, dbiso, fit=fi.fit)
+#                _f = proc_FitTable(history=fit_hist, fit=fi.fit)
+
+        db.commit()
 
     def set_status(self, status):
-        self._dbrecord.status = status
+        self.dbrecord.status = status
 
 #    def _age_dirty_changed(self):
 #        print 'asfdasfd'
@@ -160,8 +177,11 @@ class IsotopeRecord(DatabaseRecord):
 # database record
 #===============================================================================
     def load_graph(self, graph=None, xoffset=0):
-        dm = self.selector.data_manager
-        signals, baselines = self._load_signals()
+#        dm = self.selector.data_manager
+        self._load_signals()
+
+        signals = self._get_peak_time_data('signal')
+        baselines = self._get_peak_time_data('baseline')
         if signals:
             if 'signal' not in self.categories:
                 self.categories.append('signal')
@@ -173,21 +193,24 @@ class IsotopeRecord(DatabaseRecord):
                 self.categories.append('baseline')
             graph = self._load_stacked_graph(baselines)
             self.baseline_graph = EditableGraph(graph=graph)
-            self.baseline_graph.fit_selector = FitSelector(analysis=self,
+            self.baseline_graph.fit_selector = fs = FitSelector(analysis=self,
                                                            name='Baseline',
                                                            graph=self.baseline_graph)
+            fs.on_trait_change(self.analysis_summary.refresh, 'fits:[fit,filterstr,filter_outliers]')
 
-        sniffs = self._get_table_data(dm, 'sniffs')
-        if sniffs:
-            self.categories.append('sniff')
-            graph = self._load_stacked_graph(sniffs, regress=False)
-            self.sniff_graph = graph
+#            fs.on_trait_change()
 
-        peakcenter = self._get_peakcenter(dm)
-        if peakcenter:
-            self.categories.append('peak center')
-            graph = self._load_peak_center_graph(peakcenter)
-            self.peak_center_graph = graph
+#        sniffs = self._get_table_data(dm, 'sniffs')
+#        if sniffs:
+#            self.categories.append('sniff')
+#            graph = self._load_stacked_graph(sniffs, regress=False)
+#            self.sniff_graph = graph
+
+#        peakcenter = self._get_peakcenter(dm)
+#        if peakcenter:
+#            self.categories.append('peak center')
+#            graph = self._load_peak_center_graph(peakcenter)
+#            self.peak_center_graph = graph
 
         blanks = self._get_blanks()
         if blanks:
@@ -233,7 +256,9 @@ class IsotopeRecord(DatabaseRecord):
 
 
     def _calculate_age(self):
+
 #        self._load_signals()
+#        signals = self._signals
         signals = self.signals
 
         keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
@@ -245,7 +270,10 @@ class IsotopeRecord(DatabaseRecord):
 
         sigs = lambda name: [(signals[iso].value, signals[iso].error)
                                 for iso in map('{{}}{}'.format(name).format, keys)]
+
+
         fsignals = sigs('')
+#        print fsignals[0]
         bssignals = sigs('bs')
         blsignals = sigs('bl')
         bksignals = sigs('bg')
@@ -300,24 +328,93 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
 # loaders
 #===============================================================================
-    def _load_signals(self):
+    def _load_signals(self, caller=None):
+
+#        print self._no_load, caller
         if self._no_load:
+
             graph = self.signal_graph
             if graph:
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
-                    self._signals[iso] = Signal(_value=rs.coefficients[-1],
+                    if rs:
+                        self._signals[iso] = Signal(_value=rs.coefficients[-1],
                                                _error=rs.coefficient_errors[-1])
             graph = self.baseline_graph
             if graph:
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
-                    self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
+                    if rs:
+                        self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
                                                               _error=rs.coefficient_errors[-1])
-
-            return self._signals_table, self._baselines_table
+            return
+#            return self._signals_table, self._baselines_table
 
         self._no_load = True
-        dm = self.selector.data_manager
 
+        #load from file
+#        return self._load_from_file()
+        self._load_from_database()
+        self._load_histories()
+
+#        return signals, baseline
+
+    def _load_from_database(self):
+#        selhist = self._dbrecord.selected_histories
+#        selfithist = selhist.selected_fits
+#        fits = selfithist.fits
+        #get all the isotopes
+#        print id(self._dbrecord)
+
+        for iso in self._dbrecord.isotopes:
+            result = iso.results[-1]
+            key = '' if iso.kind == 'signal' else 'bs'
+#            if not self.filter_outliers:
+#                blob = iso.signals[-1].data
+#                fit = next((fi for fi in fits if fi.isotope == iso))
+#
+#                s = Signal(fit=fit.fit, filter_outliers=self.filter_outliers)
+#                s.set_blob(blob)
+#            else:
+#            print iso.molecular_weight.name, s.value, result.signal_
+            s = Signal(_value=result.signal_, _error=result.signal_err)
+            name = iso.molecular_weight.name
+            self._signals['{}{}'.format(name, key)] = s
+
+    def _get_peak_time_data(self, group):
+        #load from file
+#        dm = self.selector.data_manager
+#        if not dm.open_data(self.path):
+#            return
+#        
+#        data = self._get_table_data(dm, group)
+        #load from database
+#        item = next((iso for iso in self._dbrecord.isotopes if iso.kind == group), None)
+        selhist = self._dbrecord.selected_histories
+        selfithist = selhist.selected_fits
+        fits = selfithist.fits
+        data = dict()
+        for iso in self._dbrecord.isotopes:
+            if iso.kind != group:
+                continue
+
+            s = iso.signals[-1]
+            blob = s.data
+            x, y = zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+            n = iso.molecular_weight.name
+            det = iso.detector.name
+
+#            for fi in fits:
+#                print id(fi.isotope), id(iso)
+            fit = next((fi for fi in fits if fi.isotope == iso), None)
+            if fit is None:
+                fit = next((fi for fi in fits if fi.isotope.molecular_weight.name == n), None)
+
+            data[n] = (det, n, fit, (x, y))
+#            di, _iso, ofit, (xs, ys)
+        return data
+
+    @deprecated
+    def _load_from_file(self):
+        dm = self.selector.data_manager
         if not dm.open_data(self.path):
             return
 
@@ -336,7 +433,6 @@ class IsotopeRecord(DatabaseRecord):
                 self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
                                            _error=rs.coefficient_errors[-1])
 
-        self._load_histories()
         return signals, baselines
 
     def _load_histories(self):
@@ -371,69 +467,69 @@ class IsotopeRecord(DatabaseRecord):
                     s.ys = ys
                     s.es = es
 
-                self.signals['{}{}'.format(isotope, key)] = s
+                self._signals['{}{}'.format(isotope, key)] = s
 
 
 
-    def _load_regressors(self, data):
-        isos = [vi[1] for vi in data.itervalues()]
-        isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
-        def get_data(k):
-            try:
-                return data[k]
-            except KeyError:
-                return next((di for di in data.itervalues() if di[1] == k), None)
-
-        regs = dict()
-        for iso in isos:
-            try:
-                _di, _iso, ofit, (x, y) = get_data(iso)
-            except ValueError:
-                continue
-
-            fit = self._get_iso_fit(iso, ofit)
-
-            x = array(x)
-            y = array(y)
-
-#            if iso == 'Ar40':
-#                import numpy as np
-#                p = '/Users/ross/Sandbox/61311-36b'
-#                xs, ys = np.loadtxt(p, unpack=True)
-#                for ya, yb in zip(ys, y):
-#                    print ya, yb, ya - yb
-
-
-#            exc = RegressionGraph._apply_filter_outliers(x, y)
-#            x = delete(x[:], exc, 0)
-#            y = delete(y[:], exc, 0)
-
-            low = min(x)
-
-            fit = RegressionGraph._convert_fit(fit)
-            if fit in [1, 2, 3]:
-                if len(y) < fit + 1:
-                    return
-                st = low
-                xn = x - st
-#                print x[0], x[-1]
-                r = PolynomialRegressor(xs=xn, ys=y,
-                                        degree=fit)
-                t_fx, t_fy = x[:], y[:]
-                niterations = 1
-                for ni in range(niterations):
-                    excludes = list(r.calculate_outliers())
-                    t_fx = delete(t_fx, excludes, 0)
-                    t_fy = delete(t_fy, excludes, 0)
-                    r = PolynomialRegressor(xs=t_fx, ys=t_fy,
-                                    degree=fit)
-
-            else:
-                r = MeanRegressor(xs=x, ys=y)
-
-            regs[iso] = r
-
-        return regs
+#    def _load_regressors(self, data):
+#        isos = [vi[1] for vi in data.itervalues()]
+#        isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
+#        def get_data(k):
+#            try:
+#                return data[k]
+#            except KeyError:
+#                return next((di for di in data.itervalues() if di[1] == k), None)
+#
+#        regs = dict()
+#        for iso in isos:
+#            try:
+#                _di, _iso, ofit, (x, y) = get_data(iso)
+#            except ValueError:
+#                continue
+#
+#            fit = self._get_iso_fit(iso, ofit)
+#
+#            x = array(x)
+#            y = array(y)
+#
+##            if iso == 'Ar40':
+##                import numpy as np
+##                p = '/Users/ross/Sandbox/61311-36b'
+##                xs, ys = np.loadtxt(p, unpack=True)
+##                for ya, yb in zip(ys, y):
+##                    print ya, yb, ya - yb
+#
+#
+##            exc = RegressionGraph._apply_filter_outliers(x, y)
+##            x = delete(x[:], exc, 0)
+##            y = delete(y[:], exc, 0)
+#
+#            low = min(x)
+#
+#            fit = RegressionGraph._convert_fit(fit)
+#            if fit in [1, 2, 3]:
+#                if len(y) < fit + 1:
+#                    return
+#                st = low
+#                xn = x - st
+##                print x[0], x[-1]
+#                r = PolynomialRegressor(xs=xn, ys=y,
+#                                        degree=fit)
+#                t_fx, t_fy = x[:], y[:]
+#                niterations = 1
+#                for ni in range(niterations):
+#                    excludes = list(r.calculate_outliers())
+#                    t_fx = delete(t_fx, excludes, 0)
+#                    t_fy = delete(t_fy, excludes, 0)
+#                    r = PolynomialRegressor(xs=t_fx, ys=t_fy,
+#                                    degree=fit)
+#
+#            else:
+#                r = MeanRegressor(xs=x, ys=y)
+#
+#            regs[iso] = r
+#
+#        return regs
 
     def _load_stacked_graph(self, data, det=None, regress=True):
         if regress:
@@ -463,7 +559,7 @@ class IsotopeRecord(DatabaseRecord):
             except ValueError:
                 continue
 
-            fit = self._get_iso_fit(iso, ofit)
+            fit = self._get_iso_fit(iso, ofit.fit)
             gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
             gkw['xtitle'] = 'Time (s)'
             skw = dict()
@@ -472,8 +568,13 @@ class IsotopeRecord(DatabaseRecord):
 
             graph.new_plot(
                             **gkw)
+            fo_dict = dict(filter_outliers=ofit.filter_outliers,
+                             filter_outlier_iterations=ofit.filter_outlier_iterations,
+                             filter_outlier_std_devs=ofit.filter_outlier_std_devs)
             graph.new_series(xs, ys, plotid=i,
-                             type='scatter', marker='circle',
+                             type='scatter',
+                             marker='circle',
+                             filter_outliers_dict=fo_dict,
                              marker_size=1.25,
                              **skw)
 #            graph.set_series_label(key, plotid=i)
@@ -598,6 +699,7 @@ class IsotopeRecord(DatabaseRecord):
 
             return ([(r['time'], r['value']) for r in  ti.iterrows()], center, pcdacs, pcsignals)
 
+    @deprecated
     def _get_table_data(self, dm, grp):
         ds = dict()
         try:
@@ -687,9 +789,9 @@ class IsotopeRecord(DatabaseRecord):
     @cached_property
     def _get_irradiation_info(self):
         '''
-            return k4039, k3839, ca3937, ca3837, ca3637, cl3638, t
+            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments
         '''
-        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
+        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), []
         analysis = self.dbrecord
 #        labnumber = analysis.labnumber
 
@@ -707,28 +809,50 @@ class IsotopeRecord(DatabaseRecord):
                 if pr:
     #                    prs = self.production_ratios
                     prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-                           for pi in ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
 
                 chron = irradiation.chronology
+                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+
+                convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
                 if chron:
                     chronblob = chron.chronology
-                    dose = chronblob.split('$')[-1]
-                    start, _end = dose.split('%')
 
-#                    end = '2010-01-01 01:01:01'
+                    doses = chronblob.split('$')
+                    doses = [di.split('%') for di in doses]
+
+                    doses = [map(convert_datetime, d) for d in doses]
+#                    durs = [(b - a) for a, b in durs]
+#
+#
+#                    dose = chronblob.split('$')[]
+#                    start, end = dose.split('%')
+#
+##                    end = '2010-01-01 01:01:01'
+#
                     analts = '{} {}'.format(analysis.rundate, analysis.runtime)
                     analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-#                    irradts = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
-                    try:
-                        irradts = datetime.datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
-                        dt = analts - irradts
-                        t = dt.total_seconds()
-                        tt = t / (60. * 60 * 24 * 365.25)
-                    except ValueError:
-                        self.warning('Invalid chronology {} for irradiation {}. Using zero decay time'.format(chronblob, irradiation.name))
-                        tt = 0
+##                    irradts = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+#                    try:
+#                        irradts = convert_datetime(end)
+##                        irradts = convert_datetime(start)
+#                        dt = analts - irradts
+#                        tt = convert_days(dt)
+##                        t = dt.total_seconds()
+##                        tt = t / (60. * 60 * 24 * 365.25)
+#                    except ValueError:
+#                        self.warning('Invalid chronology {} for irradiation {}. Using zero decay time'.format(chronblob, irradiation.name))
+#                        tt = 0
+                    segments = []
+                    for st, en in doses:
+                        dur = en - st
+                        dt = analts - st
+                        segments.append((1, convert_days(dur), convert_days(dt)))
 
-                    prs.append(tt)
+                    decay_time = convert_days(analts - doses[0][0])
+#                    segments = [(1, convert_days(ti)) for ti in durs]
+                    prs.append(segments)
+                    prs.append(decay_time)
 
         return prs
 
@@ -736,22 +860,37 @@ class IsotopeRecord(DatabaseRecord):
     def _get_ic_factor(self):
         ic = (1.0, 0)
         name = 'detector_intercalibration'
-        item = self._get_history_item(name)
-        if item:
-            if not item.fit:
-#                s = Value(value=item.user_value, error=item.user_error)
-                self._ic_factor = item.user_value, item.user_error
-            else:
-                intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
-                data = map(intercal, item.sets)
-                xs, ys, es = zip(*data)
+        items = self._get_history_item(name)
 
-                s = InterpolatedRatio(timestamp=self.timestamp,
-                                      fit=item.fit,
-                                      xs=xs, ys=ys, es=es
-                                      )
+        if items:
 
-                ic = s.value, s.error
+            '''
+                only get the cdd ic factor for now 
+                its the only one with non unity
+            '''
+
+            #get Ar36 detector
+            det = next((iso.detector for iso in self.dbrecord.isotopes
+                      if iso.molecular_weight.name == 'Ar36'), None)
+            if det:
+
+                #get the intercalibration for this detector
+                item = next((item for item in items if item.detector == det), None)
+
+                if not item.fit:
+    #                s = Value(value=item.user_value, error=item.user_error)
+                    self._ic_factor = item.user_value, item.user_error
+                else:
+                    intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
+                    data = map(intercal, item.sets)
+                    xs, ys, es = zip(*data)
+
+                    s = InterpolatedRatio(timestamp=self.timestamp,
+                                          fit=item.fit,
+                                          xs=xs, ys=ys, es=es
+                                          )
+
+                    ic = s.value, s.error
 
         return ic
 
@@ -767,7 +906,7 @@ class IsotopeRecord(DatabaseRecord):
         item = AnalysisSummary(record=self,
                                fit_selector=fs
                                )
-        fs.on_trait_change(item.refresh, 'fits:fit, fits:filterstr')
+        fs.on_trait_change(item.refresh, 'fits:[fit,filterstr,filter_outliers]')
         return item
 
     @cached_property
@@ -837,8 +976,11 @@ class IsotopeRecord(DatabaseRecord):
         r = self._calculate_age()
         return r
 
+    @cached_property
     def _get_signals(self):
-        self._load_signals()
+#        if not self._signals:
+        self._load_signals(caller='get_signals')
+
         return self._signals
 
     @cached_property

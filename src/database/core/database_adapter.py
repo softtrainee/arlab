@@ -19,7 +19,7 @@ from traits.api import Password, Bool, Str, on_trait_change, Any
 from traitsui.api import View
 #=============standard library imports ========================
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 #=============local library imports  ==========================
 
 from src.loggable import Loggable
@@ -152,6 +152,16 @@ class DatabaseAdapter(Loggable):
 
         return self.connected
 
+    def new_session(self):
+        sess = scoped_session(self.session_factory)
+#        engine = create_engine(self.url)
+#        session_factory = sessionmaker(bind=engine)
+#        sess = session_factory()
+        sess.autoflush = False
+        return sess
+
+#        return create_engine(self.url)
+
     def initialize_database(self):
         pass
 
@@ -213,8 +223,11 @@ class DatabaseAdapter(Loggable):
         '''
         if self.sess is None:
             if self.session_factory is not None:
-                self.sess = self.session_factory()
-                self.sess.autoflush = False
+#                self.sess = self.session_factory()
+                self.sess = self.new_session()
+#                self.sess = scoped_session(self.session_factory)
+##                print type(self.sess)
+#                self.sess.autoflush = False
             else:
                 self.warning_dialog('Not connected to the database {}'.format(self.name))
 

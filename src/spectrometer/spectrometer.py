@@ -104,6 +104,8 @@ class Spectrometer(SpectrometerDevice):
             d.load()
 
     def get_detector(self, name):
+        if not isinstance(name, str):
+            name = str(name)
 
         return next((det for det in self.detectors if det.name == name), None)
 #    def get_hv_correction(self, current=False):

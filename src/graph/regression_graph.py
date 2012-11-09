@@ -92,6 +92,20 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.filter = fi
         self.redraw()
 
+    def set_filter_outliers(self, fi, plotid=0, series=0):
+        plot = self.plots[plotid]
+        scatter = plot.plots['data{}'.format(series)][0]
+        scatter.filter_outliers_dict['filter_outliers'] = fi
+        self.redraw()
+
+    def get_filter_outliers(self, fi, plotid=0, series=0):
+        plot = self.plots[plotid]
+        scatter = plot.plots['data{}'.format(series)][0]
+        return scatter.filter_outliers_dict['filter_outliers']
+
+#        scatter.filter_outliers = fi
+#        self.redraw()
+
     def get_filter(self, plotid=0, series=0):
         plot = self.plots[plotid]
         scatter = plot.plots['data{}'.format(series)][0]
@@ -101,7 +115,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         plot = self.plots[plotid]
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.fit = fi
-
+        scatter.index.metadata['selections'] = []
         self.redraw()
 
     def get_fit(self, plotid=0, series=0):
@@ -109,11 +123,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         return scatter.fit
 
-
-
     def _update_graph(self, obj=None, name=None, old=None, new=None):
-#        print obj, name, old, new
         if self.suppress_regression:
+            print 'speunca'
             return
 
         self.regressors = []
@@ -143,7 +155,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
             except ValueError, e:
-#                print e
+                print e
                 break
         else:
 #            regress = True
@@ -153,21 +165,26 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #                        self._plot_regression(plot, si, fl, ul, ll)
             self.regression_results = self.regressors
 
-
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
-
+            if not plot.visible:
+                self.regressors.append(None)
+                return
+#            print scatter.visible
 #            sel = scatter.index.metadata.get('selections', [])
-            args = self._regress(
-#                                 selection=sel,
-                                           plot=plot,
-                                           fit=scatter.fit,
-                                           filterstr=scatter.filter,
-                                           filter_outliers=scatter.filter_outliers,
-                                           index=scatter.index,
-                                           x=scatter.index.get_data(),
-                                           y=scatter.value.get_data(),
-                                           )
+#            args = self._regress(
+##                                 selection=sel,
+#                                           plot=plot,
+##                                           fit=scatter.fit,
+##                                           filterstr=scatter.filter,
+##                                           filter_outliers=scatter.filter_outlier,
+##                                           index=scatter.index,
+#                                           scatter,
+#                                           x=scatter.index.get_data(),
+#                                           y=scatter.value.get_data(),
+#                                           )
+
+            args = self._regress(plot, scatter)
             if args:
                 fx, fy, ly, uy = args
                 line.index.set_data(fx)
@@ -181,17 +198,24 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         except KeyError:
             pass
 
-    def _regress(self,
-                 x, y,
-#                 x=None, y=None,
-#                 selection=None,
-                 plotid=0,
-                 plot=None,
-                 index=None,
-                 filter_outliers=None,
-#                 component=None,
-                 filterstr=None,
-                 fit=None):
+#    def _regress(self,
+#                 x, y,
+##                 x=None, y=None,
+##                 selection=None,
+#                 plotid=0,
+#                 plot=None,
+#                 index=None,
+#                 filter_outlier_dict=None,
+##                 component=None,
+#                 filterstr=None,
+#                 fit=None):
+    def _regress(self, plot, scatter, filterstr=None):
+        x = scatter.index.get_data()
+        y = scatter.value.get_data()
+        index = scatter.index
+
+        fit = scatter.fit
+        fod = scatter.filter_outliers_dict
 
         ox = x[:]
         oy = y[:]
@@ -199,8 +223,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         if fit is None:
             return
 
-        if plot is None:
-            plot = self.plots[plotid]
+#        if plot is None:
+#            plot = self.plots[plotid]
 
 #        if x is None or y is None:
 #            x = plot.data.get_data('x0')
@@ -208,7 +232,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        print selection
 #        if not selection:
 
-        filtered = index.metadata.get('filtered', [])
         if filterstr:
             selection = self._apply_filter(filterstr, x)
             meta = dict(selections=selection)
@@ -216,9 +239,12 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         else:
             selection = index.metadata.get('selections', [])
 
-#        print selection, id(index)
+        filtered = index.metadata.get('filtered', [])
+#        print selection
         if selection:
             #dont delete the selections that are also in filtered
+            selection = list(set(selection) - set(filtered))
+
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
         else:
@@ -249,21 +275,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
             fx += low
 
-            if filter_outliers and not filtered:
-                t_fx, t_fy = ox[:], oy[:]
-                niterations = 1
+            if fod['filter_outliers']:
+#                if not filtered:
+                r = self._apply_outlier_filter(r, ox, oy, index, fod)
+            else:
+                index.metadata['selections'] = []
+#                index.metadata['filtered'] = []
+#                meta = dict(selections=[], filtered=[])
+#                index.trait_set(metadata=meta)
 
-                for ni in range(niterations):
-                    excludes = list(r.calculate_outliers())
-                    oxcl = excludes[:]
-                    sels = index.metadata['selections']
-                    excludes = sorted(list(set(sels + excludes)))
-                    meta = dict(selections=excludes, filtered=oxcl)
-                    index.trait_set(metadata=meta, trait_change_notify=False)
-                    t_fx = delete(t_fx, excludes, 0)
-                    t_fy = delete(t_fy, excludes, 0)
-                    r = PolynomialRegressor(xs=t_fx, ys=t_fy,
-                                    degree=fit)
+#            r = self._apply_outlier_filter(r, ox, oy, index, fit, include=True)
 
 #            if selection:
 #                x = delete(x[:], selection, 0)
@@ -272,6 +293,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             self.regressors.append(r)
         else:
             r = MeanRegressor(xs=x, ys=y)
+
+            if fod['filter_outliers']:
+#                if not filtered:
+                r = self._apply_outlier_filter(r, ox, oy, index, fod)
+            else:
+                index.metadata['selections'] = []
+#                index.metadata['filtered'] = []
+#                meta = dict(selections=[], filtered=[])
+#                index.trait_set(metadata=meta)
+
             self.regressors.append(r)
             n = 10
             fx = linspace(low, high, n)
@@ -290,6 +321,38 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             ly = fy - s
 
         return fx, fy, ly, uy
+
+    def _apply_outlier_filter(self, reg, ox, oy, index, fod):
+        t_fx, t_fy = ox[:], oy[:]
+        niterations = fod['filter_outlier_iterations']
+        n = fod['filter_outlier_std_devs']
+
+        for ni in range(niterations):
+            excludes = list(reg.calculate_outliers(n=n))
+            oxcl = excludes[:]
+            sels = index.metadata['selections']
+
+#            if not include:
+            excludes = sorted(list(set(sels + excludes)))
+            meta = dict(selections=excludes, filtered=oxcl)
+            index.trait_set(metadata=meta, trait_change_nofity=ni == niterations - 1)
+#                            , trait_change_notify = False)
+#            else:
+#                print 'exc', excludes
+#                print 'sel', sels
+##                sels = set(excludes) ^ set(sels)
+##                print sels
+#                meta = dict(selections=[], filtered=[])
+#                index.trait_set(metadata=meta, trait_change_notify=False)
+
+
+
+            t_fx = delete(t_fx, excludes, 0)
+            t_fy = delete(t_fy, excludes, 0)
+            reg.trait_set(xs=t_fx, ys=t_fy)
+#            reg = reg.__class__(xs=t_fx, ys=t_fy,
+#                            degree=fit)
+        return reg
 
     @classmethod
     def _convert_fit(cls, f):
@@ -411,7 +474,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                    ux=None, uy=None, lx=None, ly=None,
                    fx=None, fy=None,
                    fit='linear',
-                   filter_outliers=True,
+                   filter_outliers_dict=None,
+#                   filter_outliers=True,
+#                   filter_outliers=False,
                    marker='circle',
                    marker_size=2,
                    plotid=0, *args, **kw):
@@ -429,9 +494,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         si = len([p for p in plot.plots.keys() if p.startswith('data')])
 
-        rd['selection_color'] = 'red'
+        rd['selection_color'] = 'white'
         rd['selection_marker'] = marker
-        rd['selection_marker_size'] = marker_size + 2
+        rd['selection_marker_size'] = marker_size + 1
+        rd['selection_outline_color'] = 'red'
 
         scatter = plot.plot(names, **rd)[0]
         self.set_series_label('data{}'.format(si), plotid=plotid)
@@ -442,10 +508,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         scatter.fit = fit
         scatter.filter = None
-        scatter.filter_outliers = filter_outliers
+        scatter.filter_outliers_dict = filter_outliers_dict
 
         if x is not None and y is not None:
-            args = self._regress(x, y, plotid=plotid)
+            args = self._regress(plot, scatter)
             if args:
                 fx, fy, ly, uy = args
 
@@ -482,7 +548,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.value.on_trait_change(u, 'metadata_changed')
 
     def _update_info(self, scatter):
-
         hover = scatter.value.metadata.get('hover', None)
         if hover:
             hover = hover[0]

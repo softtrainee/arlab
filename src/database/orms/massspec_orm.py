@@ -70,7 +70,7 @@ class AnalysesTable(Base):
 #    araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
     changeable = relationship('AnalysesChangeableItemsTable',
                               backref='AnalysesTable',
-                              uselist=False)
+                              )
 
 
 class ArArAnalysisTable(Base):
@@ -99,6 +99,13 @@ class ArArAnalysisTable(Base):
     Age = Column(Float, default=0, primary_key=True)
     ErrAge = Column(Float, default=0)
 
+class BaselinesChangeableItemsTable(Base):
+    __tablename__ = 'baselineschangeableitemstable'
+    BslnID = Column(Integer, primary_key=True)
+#    BslnID = Column(Integer, index=True)
+#    BslnID = ForeignKey('baselinestable.BslnID')
+#    BslnID = Column(Integer, ForeignKey('baselinestable.BslnID'), primary_key=True)
+    Fit = Column(Integer, ForeignKey('fittypetable.Fit'))
 
 class BaselinesTable(Base):
     '''
@@ -109,6 +116,7 @@ class BaselinesTable(Base):
     NumCnts = Column(Integer)
     PeakTimeBlob = Column(BLOB, nullable=True)
     isotope = relationship('IsotopeTable', backref='baseline', uselist=False)
+#    changeable_item = relationship('baselineschangeableitemstable', uselist=False)
 
 class DatabaseVersionTable(Base):
     __tablename__ = 'databaseversiontable'
@@ -136,7 +144,7 @@ class DetectorTable(Base):
     ICFactor = Column(Float, default=1)
     ICFactorEr = Column(Float, default=0)
     IonCounterDeadtimeSec = Column(Float, default=0)
-    Label = Column(String(40))
+#    Label = Column(String(40))
 
     isotopes = relationship('IsotopeTable', backref='detector')
 
@@ -148,7 +156,7 @@ class DetectorTypeTable(Base):
     ResistorValue = Column(Float, default=None)
     ScaleFactor = Column(Float, default=None)
 
-    detectors = relationship('DetectorTable')
+    detectors = relationship('DetectorTable', backref='detector_type')
 
 
 
@@ -275,6 +283,9 @@ class FittypeTable(Base):
     results = relationship('IsotopeResultsTable', backref='fit',
 #                          uselist=False
                           )
+#    baseline_results = relationship('baselineschangeableitemstable', backref='fit',
+##                          uselist=False
+#                          )
 
 
 class LoginSessionTable(Base):
@@ -298,6 +309,12 @@ class MaterialTable(Base):
     Material = Column(String(40))
 
     irradpositions = relation('IrradiationPositionTable')
+
+class MolecularWeightTable(Base):
+    __tablename__ = 'molarweighttable'
+    ID = Column(Integer, primary_key=True)
+    Species = Column(String(40))
+    AtomicWeight = Column(Float)
 
 
 class PeakTimeTable(Base):

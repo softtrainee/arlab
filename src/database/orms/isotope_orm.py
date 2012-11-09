@@ -19,13 +19,14 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey, BLOB, Float, Time, Boolean, DateTime
+     ForeignKey, BLOB, Float, Time, Boolean, DateTime, Date
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
 from src.database.core.base_orm import BaseMixin, NameMixin
 from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
 from sqlalchemy.sql.expression import func
+from sqlalchemy.types import FLOAT
 
 Base = declarative_base()
 
@@ -127,7 +128,8 @@ class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
 class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
     detector_intercalibration = relationship('proc_DetectorIntercalibrationTable',
                                               backref='history',
-                                              uselist=False)
+#                                              uselist=False
+                                              )
 
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_detector_intercalibration',
@@ -137,6 +139,7 @@ class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
 
 class proc_DetectorIntercalibrationTable(Base, BaseMixin):
     history_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
+    detector_id = foreignkey('gen_DetectorTable')
     user_value = Column(Float)
     user_error = Column(Float)
 #    use_set = Column(Boolean)
@@ -149,7 +152,7 @@ class proc_FitHistoryTable(Base, HistoryMixin):
     fits = relationship('proc_FitTable', backref='history',
 #                        uselist=False
                         )
-
+    results = relationship('proc_IsotopeResultsTable', backref='history')
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_fits',
                             uselist=False
@@ -157,8 +160,12 @@ class proc_FitHistoryTable(Base, HistoryMixin):
 
 class proc_FitTable(Base, BaseMixin):
     history_id = foreignkey('proc_FitHistoryTable')
+    isotope_id = foreignkey('meas_IsotopeTable')
+
     fit = stringcolumn()
-    isotope = stringcolumn()
+    filter_outliers = Column(Boolean)
+    filter_outlier_iterations = Column(Integer)
+    filter_outlier_std_devs = Column(Integer)
 
 class proc_SelectedHistoriesTable(Base, BaseMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
@@ -167,7 +174,11 @@ class proc_SelectedHistoriesTable(Base, BaseMixin):
     selected_detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
     selected_fits_id = foreignkey('proc_FitHistoryTable')
 
-
+class proc_IsotopeResultsTable(Base, BaseMixin):
+    signal_ = Column(Float)
+    signal_err = Column(Float)
+    isotope_id = foreignkey('meas_IsotopeTable')
+    history_id = foreignkey('proc_FitHistoryTable')
 #class proc_WorkspaceHistoryTable(Base, HistoryMixin):
 #    workspace_id = foreignkey('WorkspaceTable')
 #
@@ -192,17 +203,24 @@ class proc_WorkspaceSettings(Base, BaseMixin):
 #===============================================================================
 # measurement
 #===============================================================================
-class meas_AnalysisPathTable(Base, PathMixin):
-    analysis_id = foreignkey('meas_AnalysisTable')
+#class meas_AnalysisPathTable(Base, PathMixin):
+#    analysis_id = foreignkey('meas_AnalysisTable')
+
+class meas_SignalTable(Base, BaseMixin):
+    data = Column(BLOB)
+    isotope_id = foreignkey('meas_IsotopeTable')
+#    detector_id = foreignkey('gen_DetectorTable')
 
 
-class meas_AnalysisTable(Base, ResultsMixin):
+class meas_AnalysisTable(Base, BaseMixin):
     lab_id = foreignkey('gen_LabTable')
     extraction_id = foreignkey('meas_ExtractionTable')
     measurement_id = foreignkey('meas_MeasurementTable')
     experiment_id = foreignkey('meas_ExperimentTable')
     import_id = foreignkey('gen_ImportTable')
-
+    uuid = stringcolumn(40)
+    runtime = Column(Time)
+    rundate = Column(Date)
     endtime = Column(Time)
     status = Column(Integer, default=1)
     aliquot = Column(Integer)
@@ -262,6 +280,10 @@ class meas_IsotopeTable(Base, BaseMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
     detector_id = foreignkey('gen_DetectorTable')
     kind = stringcolumn()
+
+    signals = relationship('meas_SignalTable', backref='isotope')
+    fits = relationship('proc_FitTable', backref='isotope')
+    results = relationship('proc_IsotopeResultsTable', backref='isotope')
 
 class meas_MeasurementTable(Base, ScriptTable):
     analysis = relationship('meas_AnalysisTable', backref='measurement',
@@ -348,7 +370,7 @@ class gen_DetectorTable(Base, NameMixin):
     kind = stringcolumn()
     isotopes = relationship('meas_IsotopeTable', backref='detector')
     deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
-
+    intercalibrations = relationship('proc_DetectorIntercalibrationTable', backref='detector')
 
 class gen_ExtractionDeviceTable(Base, NameMixin):
     extractions = relationship('meas_ExtractionTable', backref='extraction_device')

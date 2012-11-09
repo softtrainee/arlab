@@ -15,17 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, on_trait_change
+from traits.api import Bool, on_trait_change, Any, Str
 from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
+import wx
+from pyface.wx.drag_and_drop import PythonDropTarget, PythonDropSource
 class _TabularEditor(wxTabularEditor):
-
+    drop_target = Any
 #    def init(self, parent):
 #        wxTabularEditor.init(self, parent)
+#        control = self.control
+
+#        control.Bind(wx.EVT_KEY_DOWN, self._on_key)
+#
+#        self.sync_value(self.factory.drop_target, 'drop_target', 'from')
+#
+#        self.control.SetDropTarget(PythonDropTarget(self.drop_target))
+
 
     def update_editor(self):
         control = self.control
@@ -34,19 +43,43 @@ class _TabularEditor(wxTabularEditor):
         if self.factory.scroll_to_bottom:
             if not self.selected and not self.multi_selected:
                 control.EnsureVisible(control.GetItemCount() - 1)
+            else:
+
+                if self.selected_row != -1:
+                    control.EnsureVisible(self.selected_row + 1)
+                elif self.multi_selected_rows:
+                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
+
         else:
             if not self.selected and not self.multi_selected:
                 control.EnsureVisible(0)
 
-    def _key_down(self, event):
+#    def _key_down(self, event):
+    def _on_key(self, event):
         key = event.GetKeyCode()
+        print event, key
+        print event.CmdDown()
 #        print event.GetModifiers()
 
-        super(_TabularEditor, self)._key_down(event)
+#        super(_TabularEditor, self)._key_down(event)
+    def _begin_drag(self, event):
+        print event
+#        adapter = self.adapter
+#        object, name = self.object, self.name
+#        selected = self._get_selected()
+#        drag_items = []
+#        for row in selected:
+#            drag = adapter.get_drag(object, name, row)
+#            if drag is None:
+#                return
+#
+#            drag_items.append(drag)
+#
+#        PythonDropSource(self.drop_target, drag_items)
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
-
+    drop_target = Str
     def _get_klass(self):
         return _TabularEditor
 #============= EOF =============================================

@@ -35,13 +35,14 @@ class BaseRegressor(Loggable):
     yserr = Array
 
     dirty = Event
-    coefficients = Property(depends_on='dirty')
-    coefficient_errors = Property(depends_on='coefficients')
+    coefficients = Property(depends_on='dirty, xs, ys')
+    coefficient_errors = Property(depends_on='coefficients, xs, ys')
     _coefficients = List
     _coefficient_errors = List
     _result = None
     fit = Property
     _fit = None
+
 
     def percent_error(self, s, e):
         try:
@@ -80,7 +81,6 @@ class BaseRegressor(Loggable):
     def _calculate_coefficient_errors(self):
         raise NotImplementedError
 
-
     def calculate_devs(self):
         X = self.xs
         Y = self.ys
@@ -90,9 +90,9 @@ class BaseRegressor(Loggable):
         devs = self.calculate_devs()
         dd = devs ** 2
         cd = abs(devs)
-        std = (1.0 / (devs.shape[0]) * dd.sum()) ** 0.5
+        std = (1.0 / (devs.shape[0] - 2) * dd.sum()) ** 0.5
 #        print std * n
-        return where(cd > std * n)[0]
+        return where(cd > (std * n))[0]
 
     def calculate_ci(self, rx):
         if isinstance(rx, (float, int)):

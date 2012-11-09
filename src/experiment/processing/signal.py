@@ -16,14 +16,15 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Property, cached_property, Float, \
-    Instance, Array, Event
+    Instance, Array, Event, Int
 #============= standard library imports ========================
-from numpy import array, polyfit, polyval, where
+from numpy import array, polyfit, polyval, where, delete
 import random
 #from src.regression.regressor import Regressor
 from uncertainties import ufloat
 from src.regression.mean_regressor import MeanRegressor, WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
+import struct
 #============= local library imports  ==========================
 
 class Value(HasTraits):
@@ -38,6 +39,9 @@ class Signal(HasTraits):
     ys = Array
 #    es = Array
     fit = None
+    filter_outliers = True
+    filter_outlier_iterations = Int(1)
+    filter_outlier_std_devs = Int(2)
 #    dirty = Event
     uvalue = Property(depends='value, error, _value, _error')
     value = Property(depends_on='_value')
@@ -45,6 +49,11 @@ class Signal(HasTraits):
     _value = Float
     _error = Float
     regressor = Property(depends_on='xs,ys')
+
+    def set_blob(self, blob):
+        xs, ys = zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+        self.xs = xs
+        self.ys = ys
 
     def _set_error(self, v):
         self._error = v
@@ -74,6 +83,14 @@ class Signal(HasTraits):
 
         except Exception, e:
             reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
+
+        if self.filter_outliers:
+            for _ in range(self.filter_outlier_iterations):
+                excludes = list(reg.calculate_outliers(n=self.filter_outlier_std_devs))
+                xs = delete(self.xs, excludes, 0)
+                ys = delete(self.ys, excludes, 0)
+                reg.trait_set(xs=xs, ys=ys)
+
         return reg
 
     @cached_property
