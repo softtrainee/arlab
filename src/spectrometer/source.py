@@ -44,7 +44,7 @@ class Source(SpectrometerDevice):
     z_symmetry_high=Float(100.0)
     
     _extraction_lens = Float#Range(0.0, 100.)
-
+#    zlow=Float()
     def read_y_symmetry(self):
         return self._read_value('GetYSymmetry', '_y_symmetry')
 
