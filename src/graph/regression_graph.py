@@ -275,10 +275,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
             fx += low
 
-            if fod['filter_outliers']:
+            try:
+                if fod['filter_outliers']:
 #                if not filtered:
-                r = self._apply_outlier_filter(r, ox, oy, index, fod)
-            else:
+                    r = self._apply_outlier_filter(r, ox, oy, index, fod)
+                else:
+                    index.metadata['selections'] = []
+            except (KeyError, TypeError):
                 index.metadata['selections'] = []
 #                index.metadata['filtered'] = []
 #                meta = dict(selections=[], filtered=[])
@@ -294,10 +297,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         else:
             r = MeanRegressor(xs=x, ys=y)
 
-            if fod['filter_outliers']:
+            try:
+                if fod['filter_outliers']:
 #                if not filtered:
-                r = self._apply_outlier_filter(r, ox, oy, index, fod)
-            else:
+                    r = self._apply_outlier_filter(r, ox, oy, index, fod)
+                else:
+                    index.metadata['selections'] = []
+            except (KeyError, TypeError):
                 index.metadata['selections'] = []
 #                index.metadata['filtered'] = []
 #                meta = dict(selections=[], filtered=[])
