@@ -239,7 +239,7 @@ class AutomatedRun(Loggable):
         m = ast.parse(ms._text)
         docstr = ast.get_docstring(m)
         if docstr is not None:
-            params = yaml.load(ast.get_docstring(m))
+            params = yaml.load(docstr)
             try:
                 return params[key]
             except KeyError:

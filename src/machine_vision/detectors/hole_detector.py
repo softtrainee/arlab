@@ -72,6 +72,7 @@ class HoleDetector(Detector):
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
     display_processed_image = Bool(True)
+    filter_targets = Bool(True)
 #    display_processed_image = Bool(False)
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
@@ -495,8 +496,9 @@ class HoleDetector(Detector):
     def _segment_hook(self, src, segmenter, **kw):
         targets = self._locate_helper(segmenter.segment(src), **kw)
         if targets:
-            #use only targets that are close to cx,cy and the right size
-            targets = self._filter_targets(targets)
+            if self.filter_targets:
+                #use only targets that are close to cx,cy and the right size
+                targets = self._filter_targets(targets)
             return targets
 
     def _get_filter_target_area(self):

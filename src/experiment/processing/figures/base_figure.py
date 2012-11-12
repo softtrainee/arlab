@@ -250,7 +250,7 @@ class BaseFigure(Saveable, ColumnSorterMixin):
         if a.load_age():
             queue.put(a)
 #            self._analyses.append(a)
-        sess.expunge_all()
+#        sess.expunge_all()
         sess.close()
         sess.remove()
 
@@ -500,9 +500,12 @@ class BaseFigure(Saveable, ColumnSorterMixin):
     def _create_custom_function(self):
         p = os.path.join(paths.custom_queries_dir, 'get_irradiation_position.txt')
         sql = open(p, 'r').read()
+
         code = compile(sql, '<string>', 'exec')
         #namespace to execute query in
+        from sqlalchemy.sql.expression import and_
         ctx = dict(sess=self.db.get_session(),
+                   and_=and_
                    )
         exec code in ctx
         return ctx['query']
@@ -524,7 +527,6 @@ class BaseFigure(Saveable, ColumnSorterMixin):
         try:
             query = self._create_custom_function()
             recs = query()
-
             from src.database.records.isotope_record import IsotopeRecord
             recs = [IsotopeRecord(_dbrecord=ri,
                                   selector=ps.selector

@@ -88,6 +88,7 @@ class LabnumberEntry(Loggable):
     add_level_button = Button('Add Level')
     edit_monitor_button = Button('Edit Flux Monitor')
     calculate_flux_button = Button('Calculate Flux')
+    calculate_flux_enabled = Property(depends_on='selected[]')
 
     selected = Any
 
@@ -132,7 +133,7 @@ class LabnumberEntry(Loggable):
         # debug
         #=======================================================================
         from src.database.adapters.isotope_adapter import IsotopeAdapter
-        db = IsotopeAdapter(name='isotopedb_dev_import',
+        db = IsotopeAdapter(name='isotopedb_dev',
                           username='root',
                           host='localhost',
                           kind='mysql',
@@ -199,6 +200,8 @@ class LabnumberEntry(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _calculate_flux_button_fired(self):
+        print 'fasd'
     def _flux_monitor_changed(self):
         if self.flux_monitor:
             fx = self.db.get_flux_monitor(self.flux_monitor)
@@ -461,6 +464,10 @@ class LabnumberEntry(Loggable):
     def _get_map_path(self):
         return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
 
+    def _get_calculate_flux_enabled(self):
+        if self.selected:
+            return len(self.selected) >= 3
+
     def traits_view(self):
         irradiation = Group(
                             HGroup(
@@ -538,7 +545,7 @@ class LabnumberEntry(Loggable):
                      Item('flux_monitor_age', format_str='%0.3f', style='readonly', label='Monitor Age (Ma)'),
                      Spring(height=50, springy=False),
                      Item('calculate_flux_button',
-                          enabled_when='len(object.selected)>=3',
+                          enabled_when='calculate_flux_enabled',
                           show_label=False),
                      label='Flux',
                      show_border=True

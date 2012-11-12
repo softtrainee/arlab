@@ -123,7 +123,6 @@ class AnalysisSummary(Summary):
         except TypeError:
             ej = 0
 
-        print e, ej
         e = u'\u00b1{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
         ej = u'\u00b1{} ({})'.format(floatfmt(ej), self.calc_percent_error(v, ej))
 
@@ -134,7 +133,7 @@ class AnalysisSummary(Summary):
                                 fully_correct=False):
 #        d = self.display
 
-        pi = n - i
+#        pi = n - i
         sig, base = self._get_signal_and_baseline(iso)
 
         s1 = sig - base

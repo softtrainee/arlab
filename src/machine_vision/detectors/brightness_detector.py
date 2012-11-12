@@ -50,7 +50,7 @@ class BrightnessDetector(CO2HoleDetector):
         p = self.parent.get_new_frame()
         self.target_image.load(p)
 
-        self.target_image.set_frames([None])
+#        self.target_image.set_frames([None])
 
         s = self._crop_image(grayspace(self.target_image.source_frame),
                              self.cropwidth,
@@ -84,7 +84,7 @@ class BrightnessDetector(CO2HoleDetector):
         bm_m = nspx = spx_mask / area_mask
 
         #find and draw a target
-        area_target, target = self._get_intensity_area(invert(src), verbose)
+        area_target, target = self._get_intensity_area(asMat(invert(src)), verbose)
         if target:
             self._draw_result(csrc, target)
 
@@ -135,9 +135,8 @@ class BrightnessDetector(CO2HoleDetector):
 
             p = self.parent.get_new_frame()
             im.load(p)
-
-            cs = im.source_frame.clone()
-            gs = grayspace(cs)
+#            cs = im.source_frame.clone()
+            gs = grayspace(p)
             cs = self._crop_image(gs,
                                   self.cropwidth,
                                   self.cropheight,
@@ -146,15 +145,17 @@ class BrightnessDetector(CO2HoleDetector):
             mask_radius = self._get_mask_radius()
             nd = cs.ndarray
             self._apply_circular_mask(nd, radius=mask_radius)
-            src = asMat(invert(asarray(nd, dtype='uint8')))
-            src = self._apply_filters(src)
+#            src = asMat(invert(asarray(nd, dtype='uint8')))
+            src = asMat(asarray(nd, dtype='uint8'))
+###            src = self._apply_filters(src)
+            self.display_processed_image = False
             targets = self._segment_source(src, self.segmentation_style,
                                            verbose=False)
-
-            dsrc = im.get_frame(0)
-            x, y = nd.shape
-            self._draw_indicator(dsrc, (x / 2, y / 2),
-                             size=int(mask_radius) + 1, thickness=1)
+##
+#            dsrc = im.get_frame(0)
+#            x, y = nd.shape
+#            self._draw_indicator(dsrc, (x / 2, y / 2),
+#                             size=int(mask_radius) + 1, thickness=1)
             if targets:
                 for t in targets:
                     sr += max(*t.bounding_rect) / 2.0
@@ -173,9 +174,10 @@ class BrightnessDetector(CO2HoleDetector):
 
     def _get_intensity_area(self, src, verbose):
 
-        seg_src = self._apply_filters(src,
-#                                      contrast=True,
-                                       verbose=verbose)
+#        seg_src = self._apply_filters(src,
+##                                      contrast=True,
+#                                       verbose=verbose)
+        seg_src = src
         targets = self._segment_source(seg_src, self.segmentation_style,
                                        verbose=verbose
                                        )

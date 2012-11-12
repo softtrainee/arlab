@@ -69,6 +69,15 @@ class IsotopeAdapter(DatabaseAdapter):
 #        self.add_sample('B')
 #        self.commit()
 #        self.add_labnumber('A')
+    def clone_record(self, a):
+        sess = self.new_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.filter(meas_AnalysisTable.id == a.id)
+        r = q.one()
+#        sess.expunge_all()
+#        sess.close()
+#        sess.remove()
+        return r
 
 #===========================================================================
 # adders

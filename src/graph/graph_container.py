@@ -31,4 +31,5 @@ from chaco.plot_containers import HPlotContainer
 class HGraphContainer(HPlotContainer):
     def redraw(self):
         self.invalidate_and_redraw()
+
 #============= EOF =============================================
