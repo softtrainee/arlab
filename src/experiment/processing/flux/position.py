@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Int, Bool
+from traits.api import HasTraits, Float, Int, Bool, Any
 #from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Position(HasTraits):
-    labnumber = Int
+    labnumber = Any
     hole = Int
     x = Float
     y = Float

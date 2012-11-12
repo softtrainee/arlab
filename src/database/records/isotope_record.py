@@ -113,6 +113,7 @@ class IsotopeRecord(DatabaseRecord):
     irradiation_position = Property
     production_ratios = Property
     status = Property
+    uuid = Property
     age_scalar = 1e6
 
     _no_load = False
@@ -774,7 +775,8 @@ class IsotopeRecord(DatabaseRecord):
     @cached_property
     def _get_irradiation_level(self):
         try:
-            return self.irradiation_position.level
+            if self.irradiation_position:
+                return self.irradiation_position.level
         except AttributeError, e:
             print 'level', e
 
@@ -990,6 +992,8 @@ class IsotopeRecord(DatabaseRecord):
         isos = sorted(keys, key=lambda x: re.sub('\D', '', x))
         return isos
 
+    def _get_uuid(self):
+        return self._dbrecord.uuid
 #===============================================================================
 # factories
 #===============================================================================

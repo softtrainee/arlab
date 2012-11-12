@@ -34,9 +34,11 @@ class BrightnessManager(MachineVisionManager):
     def _test(self):
         det = self.detector
         do_later(det.edit_traits)
-        det.collect_baseline()
 
         import time
+        time.sleep(1)
+        det.collect_baseline()
+
         while 1:
             do_later(det.get_value, verbose=False)
             time.sleep(0.25)

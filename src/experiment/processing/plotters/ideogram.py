@@ -187,7 +187,8 @@ class Ideogram(Plotter):
                     ans = graph_groups[k]
                 except IndexError:
                     break
-                lns = map(str, list(set([ai.labnumber for ai in ans])))
+                lns = map(str, sorted(list(set([ai.labnumber for ai in ans]))))
+#                lns = map(str, list(set([ai.labnumber for ai in ans])))
                 g = self._build(
                                 ans,
                                 #analyses[i][j],

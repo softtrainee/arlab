@@ -34,7 +34,7 @@ class DatabaseManager(Manager):
         db = IsotopeAdapter(username='root',
                             password='Argon',
                             kind='mysql',
-                            name='isotopedb_FC',
+                            name='isotopedb_dev',
 
                             )
 

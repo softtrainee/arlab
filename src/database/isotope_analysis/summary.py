@@ -43,8 +43,8 @@ class Summary(HasTraits):
     def build_summary(self, *args, **kw):
         def do():
             d = self.display
-            d.clear(gui=False)
             d.freeze()
+            d.clear(gui=False)
             self._build_summary(*args, **kw)
             d.thaw()
 
