@@ -178,6 +178,12 @@ class Ideogram(Plotter):
         plots = []
         font = 'modern {}'.format(10)
         tfont = 'modern {}'.format(10)
+
+        aux_plots = [dict(func='analysis_number',
+                          ytitle='Analysis #',
+                          height=aux_plot_height
+                          )]
+
         for i in range(r):
             for j in range(c):
 
@@ -187,13 +193,13 @@ class Ideogram(Plotter):
                     ans = graph_groups[k]
                 except IndexError:
                     break
-                lns = map(str, sorted(list(set([ai.labnumber for ai in ans]))))
+                lns = map(str, sorted(list(set([ai.rid for ai in ans]))))
 #                lns = map(str, list(set([ai.labnumber for ai in ans])))
                 g = self._build(
                                 ans,
                                 #analyses[i][j],
-                                padding,
-                                aux_plot_height,
+                                padding=padding,
+                                aux_plots=aux_plots,
 #                                labnumber=ans[0].labnumber,
                                 title=', '.join(lns)
                                 )
@@ -202,8 +208,10 @@ class Ideogram(Plotter):
 
                 if j == 0:
                     g.set_y_title('Relative Probability')
-                    g.set_y_title('Analysis #', plotid=1)
-                    g.set_y_title('%40*', plotid=2)
+                    for k, ap in enumerate(aux_plots):
+                        print k
+                        g.set_y_title(ap['ytitle'], plotid=k + 1)
+#                        g.set_y_title('%40*', plotid=2)
 #                    g.set_y_title('k39', plotid=3)
 
 
@@ -248,7 +256,9 @@ class Ideogram(Plotter):
                                )
         return op, r, c
 
-    def _build(self, analyses, padding=None, aux_plot_height=100, title=''):
+    def _build(self, analyses, aux_plots=None, padding=None, title=''):
+        if aux_plots is None:
+            aux_plots = []
         if padding is None:
             padding = [50, 5 , 35, 35]
 
@@ -260,24 +270,25 @@ class Ideogram(Plotter):
         g.clear()
 #        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
         g._has_title = True
-        p = g.new_plot(
-#                   contextmenu=False,
-                   padding=padding)
+        p = g.new_plot(padding=padding)
+        p.value_range.tight_bounds = False
 
-        p.value_range.tight_bounds = False
-        p = g.new_plot(
-#                   contextmenu=False,
-                   padding=padding, #[padding_left, padding_right, 1, 0],
-                   bounds=[50, aux_plot_height],
-                   )
-        p.value_range.tight_bounds = False
-        p = g.new_plot(
-#                   contextmenu=False,
-                   padding=padding, #[padding_left, padding_right, 1, 0],
-                   bounds=[50, aux_plot_height],
-                   title=title
-                   )
-        p.value_range.tight_bounds = False
+        for i, ap in enumerate(aux_plots):
+            kwargs = dict(padding=padding,
+                       bounds=[50, ap['height']])
+
+            if i == len(aux_plots) - 1:
+                kwargs['title'] = title
+            p = g.new_plot(**kwargs)
+            p.value_range.tight_bounds = False
+
+#        p = g.new_plot(
+##                   contextmenu=False,
+#                   padding=padding, #[padding_left, padding_right, 1, 0],
+#                   bounds=[50, aux_plot_height],
+#                   title=title
+#                   )
+#        p.value_range.tight_bounds = False
 #        p = g.new_plot(
 #                   contextmenu=False,
 #                   padding=padding, #[padding_left, padding_right, 1, 0],
@@ -308,7 +319,7 @@ class Ideogram(Plotter):
             return aa, ee
 
         def get_rads(group_id):
-            rads = [a.rad40 for a in analyses if a.group_id == group_id]
+            rads = [a.rad40_percent for a in analyses if a.group_id == group_id]
             return rads
 
         def get_k39s(group_id):
@@ -329,7 +340,8 @@ class Ideogram(Plotter):
             offset = 0
             for group_id in group_ids:
                 ans = [a for a in analyses if a.group_id == group_id and a.age[0] in ages]
-                labnumber = ', '.join(sorted(list(set([str(a.labnumber) for a in ans]))))
+#                labnumber = ', '.join(sorted(list(set([str(a.labnumber) for a in ans]))))
+                labnumber = self.get_labnumber(ans)
                 nages, nerrors = get_ages_errors(group_id)
                 offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
                                start=start,
@@ -337,35 +349,36 @@ class Ideogram(Plotter):
                                offset=offset
                                )
 
-                #add analysis number plot
-                n = zip(nages, nerrors)
-                n = sorted(n, key=lambda x:x[0])
-                aages, xerrs = zip(*n)
-                maa = start + len(ages)
-                age_ys = linspace(start, maa, len(aages))
-                self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
-                                       plotid=1)
-                g.set_axis_traits(tick_visible=False,
-                  tick_label_formatter=lambda x:'',
-                  axis='y', plotid=1)
+                aux_namespace = dict(nages=nages, nerrors=nerrors,
+                                     start=start
+                                     )
 
+                for plotid, ap in enumerate(aux_plots):
+                    #get aux type and plot
+                    try:
+                        func = getattr(self, '_aux_plot_{}'.format(ap['func']))
+                        func(g, padding, plotid + 1, group_id, aux_namespace)
+                    except AttributeError, e:
+                        print e
+
+                #add analysis number plot
                 start = start + len(ans) + 1
 
-                #add rad plot
-                rads = get_rads(group_id)
-                n = zip(nages, rads)
-                n = sorted(n, key=lambda x:x[0])
-                aages, rads = zip(*n)
-                rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
-                self._add_aux_plot(g, aages,
-                                   rads,
-                                   None,
-                                   rad_errs,
-                                   padding,
-                                   group_id,
-                                       plotid=2)
+#                #add rad plot
+#                rads = get_rads(group_id)
+#                n = zip(nages, rads)
+#                n = sorted(n, key=lambda x:x[0])
+#                aages, rads = zip(*n)
+#                rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
+#                self._add_aux_plot(g, aages,
+#                                   rads,
+#                                   None,
+#                                   rad_errs,
+#                                   padding,
+#                                   group_id,
+#                                       plotid=2)
 
-                g.set_axis_traits(axis='y', plotid=2)
+#                g.set_axis_traits(axis='y', plotid=2)
 
 #                #add k39 plot
 #                k39s = get_k39s(group_id)
@@ -382,7 +395,7 @@ class Ideogram(Plotter):
 #                                   plotid=3)
 
 
-            maxp = g.maxprob
+#            maxp = g.maxprob
 
 #            step = maxp / len(group_ids)
 #            print step
@@ -397,8 +410,10 @@ class Ideogram(Plotter):
 #                    v[0].value.set_data([(i + 1) * step])
 
 
+
         g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=0)
-#        g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=1)
+        for i, _ in enumerate(aux_plots):
+            g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=i + 1)
 
         minp = 0
         maxp = g.maxprob
@@ -409,6 +424,22 @@ class Ideogram(Plotter):
 
         return g
 
+    def _aux_plot_analysis_number(self, g, padding, plotid, group_id, aux_namespace):
+        nages = aux_namespace['nages']
+        nerrors = aux_namespace['nerrors']
+        start = aux_namespace['start']
+
+
+        n = zip(nages, nerrors)
+        n = sorted(n, key=lambda x:x[0])
+        aages, xerrs = zip(*n)
+        maa = start + len(aages)
+        age_ys = linspace(start, maa, len(aages))
+        self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
+                               plotid=1)
+        g.set_axis_traits(tick_visible=False,
+          tick_label_formatter=lambda x:'',
+          axis='y', plotid=1)
     def _get_plot_label_text(self):
         ustr = u'data 1\u03c3, age ' + str(self.nsigma) + u'\u03c3'
         return ustr
@@ -490,7 +521,10 @@ class Ideogram(Plotter):
                              plotid=0
                              )
 
-        self._add_data_label(s, (wm, ym, we, mswd, ages.shape[0]))
+#        wm, ym, we, mswd, n = args
+        text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
+        self._add_data_label(s, text, (wm, ym))
+#        self._add_data_label(s, (wm, ym, we, mswd, ages.shape[0]))
         d = lambda *args: self._update_graph(g, *args)
 #        s.index_mapper.on_trait_change(self._update_graph, 'updated')
         s.index_mapper.on_trait_change(d, 'updated')
@@ -516,24 +550,22 @@ class Ideogram(Plotter):
             a.color = s.color
         return ym * 2.5
 
-    def _add_data_label(self, s, args):
-        wm, ym, we, mswd, n = args
-        label_text = self._build_label_text(*args)
-        label = DataLabel(component=s, data_point=(wm, ym),
-                          label_position='top right',
-                          label_text=label_text,
-                          border_visible=False,
-                          bgcolor='transparent',
-                          show_label_coords=False,
-                          marker_visible=False,
-                          text_color=s.color,
-                          arrow_color=s.color,
-                          )
-        s.overlays.append(label)
-        tool = DataLabelTool(label,
-#                             auto_arrow_root=False
-                             )
-        label.tools.append(tool)
+#    def _add_data_label(self, s, args):
+#        wm, ym, we, mswd, n = args
+#        label_text = self._build_label_text(*args)
+#        label = DataLabel(component=s, data_point=(wm, ym),
+#                          label_position='top right',
+#                          label_text=label_text,
+#                          border_visible=False,
+#                          bgcolor='transparent',
+#                          show_label_coords=False,
+#                          marker_visible=False,
+#                          text_color=s.color,
+#                          arrow_color=s.color,
+#                          )
+#        s.overlays.append(label)
+#        tool = DataLabelTool(label)
+#        label.tools.append(tool)
 
 
     def _build_label_text(self, x, y, we, mswd, n):

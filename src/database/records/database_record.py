@@ -75,18 +75,19 @@ class DatabaseRecord(Saveable):
 #            self._load_hook('')
 
     def initialize(self):
-        dm = self.selector.data_manager
-        try:
-            l = dm.open_data(self._get_path(), caller='_get_loadable {}'.format(self))
-        except Exception, e:
-            import traceback
-            print traceback.print_exc()
-            l = False
-        finally:
-            pass
-
-        self._loadable = l
-        return self.loadable
+        return True
+#        dm = self.selector.data_manager
+#        try:
+#            l = dm.open_data(self._get_path(), caller='_get_loadable {}'.format(self))
+#        except Exception, e:
+#            import traceback
+#            print traceback.print_exc()
+#            l = False
+#        finally:
+#            pass
+#
+#        self._loadable = l
+#        return self.loadable
 
 #===============================================================================
 # private

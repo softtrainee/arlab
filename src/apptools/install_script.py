@@ -123,7 +123,7 @@ def install_pychron_suite():
         if ai == 'pychron':
             temp = PychronTemplate()
         elif ai == 'remote_hardware_server':
-            RemoteHardwareServerTemplate()
+            temp = RemoteHardwareServerTemplate()
         else:
             temp = BakeoutTemplate()
 
@@ -198,13 +198,18 @@ class InstallTemplate():
     name = None
     prefix = None
     icon_name = None
+    bundle_name = None
+
     default_mods = ['paths', 'loggable', 'config_loadable',
-                    'viewable', 'managers/displays/rich_text_display',
+                    'viewable', 'displays/rich_text_display',
                     'managers/manager',
                     ]
     default_pkgs = ['rpc', 'helpers', 'led']
+
     def install(self, version, src_dir):
-        ins = Installer(self.name, self.prefix, icon_name=self.icon_name)
+        ins = Installer(self.name, self.prefix,
+                        bundle_name=self.bundle_name,
+                        icon_name=self.icon_name)
         ins.version = version
         self._install(ins, src_dir)
 
@@ -212,12 +217,14 @@ class PychronTemplate(InstallTemplate):
     name = 'pychron'
     prefix = 'pychron'
     icon_name = 'pyvalve_icon'
+    bundle_name = 'pyValve'
     def _install(self, ins, src_dir):
         ins.install(src_dir)
 
 class RemoteHardwareServerTemplate(InstallTemplate):
     name = 'remote_hardware_server'
     prefix = 'remote_hardware_server'
+    bundle_name = 'RemoteHardwareServer'
     def _install(self, ins, src_dir):
         ins.include_pkgs = ['remote_hardware', 'messaging'] + self.default_pkgs
         ins.include_mods = [
@@ -228,6 +235,7 @@ class RemoteHardwareServerTemplate(InstallTemplate):
 class BakeoutTemplate(InstallTemplate):
     name = 'bakeout'
     prefix = 'bakeout'
+    bundle_name = 'Bakeout'
     def _install(self, ins, src_dir):
         ins.include_mods = ['hardware/bakeout_controller',
                       'hardware/watlow_ezzone',

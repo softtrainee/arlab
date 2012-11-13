@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Range, Instance, Bool, Event, Property, \
-     Button, Any, DelegatesTo, Str, Float
+     Button, Any, DelegatesTo, Str, Float, Enum
 from traitsui.api import View, Item, TableEditor, EnumEditor
 from src.managers.manager import Manager
 from src.graph.graph import Graph
@@ -45,6 +45,8 @@ class IonOpticsManager(Manager):
     detector = Instance(Detector)
     isotope = Str('Ar40')
     dac = Float
+
+    directions = Enum('Increase', 'Decrease', 'Oscillate')
 
     def get_mass(self, isotope_key):
         spec = self.spectrometer
@@ -137,12 +139,16 @@ class IonOpticsManager(Manager):
         self.canceled = False
         self.alive = True
 
+
         t = Thread(name='ion_optics.peak_center', target=self._peak_center,
-                   args=(detector, isotope, center_dac, save, confirm_save, warn))
+                   args=(detector, isotope, center_dac,
+                         self.directions,
+                         save, confirm_save, warn))
         t.start()
         return t
 
     def _peak_center(self, detector, isotope, center_dac,
+                     directions,
                      save, confirm_save, warn):
 #        graph = self._graph_factory()
 
@@ -152,8 +158,8 @@ class IonOpticsManager(Manager):
 #        self.open_view(graph)
 
         spec = self.spectrometer
-
         self.peak_center = pc = PeakCenter(center_dac=center_dac,
+                                           directions=directions,
                                            reference_detector=detector,
                         reference_isotope=isotope,
 #                        graph=graph,
@@ -236,6 +242,7 @@ class IonOpticsManager(Manager):
         v = View(Item('detector', editor=EnumEditor(name='detectors')),
                Item('isotope'),
                Item('dac'),
+               Item('directions'),
                buttons=['OK', 'Cancel'],
                kind='livemodal',
                title='Peak Center'

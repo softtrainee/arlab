@@ -15,10 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Button, Instance, String
+from traits.api import Button, Instance, String, Property
 from traitsui.api import View, HGroup, Item, Handler
 #============= standard library imports ========================
 import socket
+import os
 from random import random
 from threading import Lock
 #============= local library imports  ==========================
@@ -41,9 +42,14 @@ class CommandRepeater(ConfigLoadable):
     '''
     '''
     path = String(enter_set=True, auto_set=False)
-
+    target_name = Property(depends_on='path')
     test = Button
     led = Instance(LED, ())
+
+    def _get_target_name(self):
+        ta = os.path.basename(self.path)
+        ta = ta.replace('hardware-', '')
+        return ta
 
     def load(self, *args, **kw):
         '''
@@ -71,7 +77,7 @@ class CommandRepeater(ConfigLoadable):
 
         return True
 
-    def get_response(self, rid, data, sender_address):
+    def get_response(self, rid, data, sender_address, verbose=True):
         '''
         '''
         #intercept the pychron ready command
@@ -95,9 +101,9 @@ class CommandRepeater(ConfigLoadable):
 
             s = '{}|{}|{}'.format(rid, data, sender_address)
 
-            send_success, rd = self._send_(s)
+            send_success, rd = self._send_(s, verbose=verbose)
             if send_success:
-                read_success, rd = self._read_()
+                read_success, rd = self._read_(verbose=verbose)
                 if read_success:
                     self.led.state = 'green'
 
@@ -151,12 +157,12 @@ class CommandRepeater(ConfigLoadable):
 #===============================================================================
 # commands
 #===============================================================================
-    def test_connection(self):
+    def test_connection(self, verbose=True):
         '''
         '''
         ra = '{:0.3f}'.format(random())
 
-        r = self.get_response('test', ra, None)
+        r = self.get_response('test', ra, None, verbose=verbose)
         connected = False
         if 'ERROR 6' in r:
             self.led.state = 'red'
@@ -164,7 +170,8 @@ class CommandRepeater(ConfigLoadable):
             self.led.state = 'green'
             connected = True
 
-        self.debug('Connection State - {}'.format(connected))
+        if verbose:
+            self.debug('Connection State - {}'.format(connected))
         return connected
 
     def remote_launch(self, name):
@@ -185,27 +192,27 @@ class CommandRepeater(ConfigLoadable):
 #===============================================================================
 # response helpers
 #===============================================================================
-    def _send_(self, s):
+    def _send_(self, s, verbose=True):
         success = True
         e = None
         try:
             self._sock.send(s)
         except socket.error, e:
-            success = self._handle_socket_send_error(e, s)
+            success = self._handle_socket_send_error(e, s, verbose)
 
         return success, e
 
-    def _read_(self, count=0):
+    def _read_(self, count=0, verbose=True):
         rd = None
         try:
             rd = self._sock.recv(2048)
             success = True
         except socket.error, e:
-            success, rd = self._handle_socket_read_error(e, count)
+            success, rd = self._handle_socket_read_error(e, count, verbose)
 
         return success, rd
 
-    def _handle_socket_send_error(self, e, s):
+    def _handle_socket_send_error(self, e, s, verbose):
         retries = 0
 
         for ei in ['Errno 32', 'Errno 9', 'Errno 11']:
@@ -213,7 +220,8 @@ class CommandRepeater(ConfigLoadable):
                 retries = 3
                 break
 
-        self.info('send failed - {} - retrying n={}'.format(e, retries))
+        if verbose:
+            self.info('send failed - {} - retrying n={}'.format(e, retries))
 
         #use a retry loop only if error is a broken pipe
         for i in range(retries):
@@ -222,22 +230,28 @@ class CommandRepeater(ConfigLoadable):
                 try:
                     self._sock.connect(self.path)
                 except socket.error, e:
-                    self.debug('connecting to {} failed. {}'.
-                               format(self.path, e))
+                    if verbose:
+                        self.debug('connecting to {} failed. {}'.
+                                   format(self.path, e))
 
                 self._sock.send(s)
-                self.debug('send success on retry {}'.format(i + 1))
+                if verbose:
+                    self.debug('send success on retry {}'.format(i + 1))
                 return True
 
             except socket.error, e:
-                self.debug('send retry {} failed. {}'.format(i + 1, e))
+                if verbose:
+                    self.debug('send retry {} failed. {}'.format(i + 1, e))
 
-        self.info('send failed after {} retries. {}'.format(retries, e))
+        if verbose:
+            self.info('send failed after {} retries. {}'.format(retries, e))
 
-    def _handle_socket_read_error(self, e, count):
-        self.debug('read error {}'.format(e))
+    def _handle_socket_read_error(self, e, count, verbose):
+        if verbose:
+            self.debug('read error {}'.format(e))
         if 'timed out' in e and count < 3:
-            self.debug('read timed out. doing recursive retry')
+            if verbose:
+                self.debug('read timed out. doing recursive retry')
             return self._read_(count=count + 1)
 
         return False, e
@@ -256,6 +270,17 @@ class CommandRepeater(ConfigLoadable):
         '''
         self.test_connection()
 
+    def simple_view(self):
+        v = View(
+                 HGroup(
+                        Item('led', editor=LEDEditor(), show_label=False),
+                        Item('target_name',
+                             style='readonly',
+                             width=100,
+                             show_label=False),
+                        ),
+                 )
+        return v
     def traits_view(self):
         '''
         '''

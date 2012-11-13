@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Int, Float, Property, cached_property, Dict, \
+from traits.api import HasTraits, Str, Int, Float, Property, cached_property, Dict, \
     List, Color, Any, Event
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
@@ -106,13 +106,16 @@ class Analysis(Loggable):
     rid = Property#(depends_on='dbrecord')
     sample = Property#(depends_on='dbrecord')
     labnumber = Property#(depends_on='dbrecord')
+    aliquot = Property
     irradiation = Property#(depends_on='dbrecord')
     group_id = Property#(depends_on='dbrecord')
     graph_id = Property#(depends_on='dbrecord')
     analysis_type = Property#(depends_on='labnumber')
     k39 = Property
     rad40 = Property
+    rad40_percent = Property
     status = Property
+    j = Property
 #    timestamp = Float
 
 #    signals = Dict
@@ -378,7 +381,14 @@ class Analysis(Loggable):
     def timestamp(self):
         return self.dbrecord.timestamp
 
+    def _get_j(self):
+        return self.dbrecord.j
+
     def _get_rad40(self):
+        rr = self.dbrecord.arar_result
+        return rr['rad40']
+
+    def _get_rad40_percent(self):
         rr = self.dbrecord.arar_result
         return rr['rad40'] / rr['tot40'] * 100
 
@@ -410,7 +420,8 @@ class Analysis(Loggable):
 #        dbr = self.dbrecord
 #        ln = dbr.labnumber
 #        return '{}-{}'.format(ln.labnumber, ln.aliquot)
-
+    def _get_aliquot(self):
+        return self.dbrecord.aliquot
 #    @cached_property
     def _get_sample(self):
         dbr = self.dbrecord
@@ -439,6 +450,39 @@ class Analysis(Loggable):
 
     def _set_graph_id(self, g):
         self.dbrecord.graph_id = g
+
+class DummyAnalysis(HasTraits):
+    age = Property
+    _age = Float
+    _error = Float
+    graph_id = Int
+    group_id = Int
+
+    rid = Property
+
+    labnumber = Int
+    aliquot = Str
+
+    def _set_rid(self, r):
+        ln, self.aliquot = r.split('-')
+        self.labnumber = int(ln)
+
+    def _get_rid(self):
+        return '{}-{}'.format(self.labnumber, self.aliquot)
+
+    def _get_age(self):
+        return (self._age, self._error)
+
+    @property
+    def age_string(self):
+        a, e = self.age
+        try:
+            pe = abs(e / a * 100)
+        except ZeroDivisionError:
+            pe = 'Inf'
+        return u'{:0.3f} \u00b1{:0.3f}({:0.2f}%)'.format(a, e, pe)
+
+
 #timeit
 if __name__ == '__main__':
     from tables import openFile

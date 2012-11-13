@@ -44,7 +44,11 @@ class Summary(HasTraits):
         def do():
             d = self.display
             d.freeze()
+
+            #double clear for safety 
             d.clear(gui=False)
+            d.clear(gui=False)
+
             self._build_summary(*args, **kw)
             d.thaw()
 

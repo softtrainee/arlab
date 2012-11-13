@@ -39,12 +39,14 @@ class Installer(object):
         self,
         prefix,
         name,
+        bundle_name=None,
         icon_name=None,
         include_pkgs=None,
         include_mods=None
         ):
         self.prefix = prefix
         self.name = name
+        self.bundle_name = bundle_name if bundle_name else name
         self.icon_name = icon_name
         if include_pkgs is None:
             include_pkgs = []
@@ -194,7 +196,7 @@ class Installer(object):
             tree = plistlib.readPlist(info_plist)
 
             tree['CFBundleIconFile'] = icon_file
-            tree['CFBundleName'] = self.name
+            tree['CFBundleName'] = self.bundle_name
 
             plistlib.writePlist(tree, info_plist)
             print 'Created {}'.format(os.path.join(launchers_root,
