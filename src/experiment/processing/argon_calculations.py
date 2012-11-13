@@ -26,7 +26,58 @@ import math
 from src.experiment.processing import constants
 from copy import copy, deepcopy
 #============= local library imports  ==========================
-def calculate_flux(ar40, ar39, age):
+
+
+
+
+def calculate_error_F(signals, F, k4039, ca3937, ca3637):
+    '''
+        McDougall and Harrison
+        p92 eq 3.43
+     
+    '''
+
+    m40, m39, m38, m37, m36 = signals
+    G = m40 / m39
+    B = m36 / m39
+    D = m37 / m39
+    C1 = 295.5
+    C2 = ca3637.nominal_value
+    C3 = k4039.nominal_value
+    C4 = ca3937.nominal_value
+
+
+    ssD = D.std_dev() ** 2
+    ssB = B.std_dev() ** 2
+    ssG = G.std_dev() ** 2
+    G = G.nominal_value
+    B = B.nominal_value
+    D = D.nominal_value
+
+
+    ssF = ssG + C1 ** 2 * ssB + ssD * (C4 * G - C1 * C4 * B + C1 * C2) ** 2
+    return ssF ** 0.5
+
+def calculate_error_t(F, ssF, j, ssJ):
+    '''
+        McDougall and Harrison
+        p92 eq. 3.43
+    '''
+    JJ = j * j
+    FF = F * F
+
+    ll = constants.lambdak.nominal_value ** 2
+    sst = (JJ * ssF + FF * ssJ) / (ll * (1 + F * j) ** 2)
+    return sst ** 0.5
+
+def calculate_flux(rad40, k39, age):
+    '''
+        rad40: radiogenic 40Ar
+        k39: 39Ar from potassium
+        age: age of monitor in years
+        
+        solve age equation for J
+    '''
     if isinstance(ar40, (list, tuple, str)):
         ar40 = ufloat(ar40)
     if isinstance(ar39, (list, tuple, str)):
@@ -42,7 +93,14 @@ def calculate_flux(ar40, ar39, age):
 
 def calculate_decay_factor(dc, segments):
     '''
-        see McDougall and Harrison p.75 equation 3.22
+        McDougall and Harrison 
+        p.75 equation 3.22
+        
+        the book suggests using ti==analysis_time-end of irradiation segment_i
+        
+        mass spec uses ti==analysis_time-start of irradiation segment_i
+        
+        using start seems more appropriate
     '''
 
 
@@ -59,7 +117,43 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        a37decayfactor=None,
                        a39decayfactor=None
                        ):
-#    print signals
+    '''
+        signals: measured uncorrected isotope intensities, tuple of value,error pairs
+            value==intensity, error==error in regression coefficient
+        baselines: measured baseline intensity
+        !!!
+            this method will not work if you want to make a time dependent baseline correction
+            mass spec corrects each signal point with a modeled baseline. 
+        !!!
+        blanks: time dependent background, same format as signals
+        background: static spectrometer background, same format as signals
+        j: flux, tuple(value,error)
+        irradinfo: tuple of production ratios + chronology + decay_time
+            production_ratios = k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638
+        
+        ic: CDD correction factor
+         
+         
+        return:
+            returns a results dictionary with computed values
+            result keys
+                age_err_wo_jerr,
+                rad40,
+                tot40,
+                k39,
+                ca37,
+                atm36,
+
+                s40,
+                s39,
+                s38,
+                s37,
+                s36,
+                ar39decayfactor,
+                ar37decayfactor
+            
+    '''
+
     s40, s39, s38, s37, s36 = map(ufloat, signals)
     s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
     s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
@@ -142,10 +236,17 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     try:
         R = ar40rad / k39
+
+#        print R.std_dev(), calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637)
+        ssF = calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637) ** 2
+        ssJ = j.std_dev() ** 2
+
 #        JR = j * R
 #        print 'we', JR
         #dont include error in decay constant
-        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R)
+#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R)
+        age = age_equation(j, R)
+#        print age.std_dev(), calculate_error_t(R.nominal_value, ssF, j.nominal_value, ssJ)
         age_with_jerr = deepcopy(age)
 #        age_with_jerr = ufloat((age.nominal_value, age.std_dev()))
 #        print 'we', aa, ae
@@ -155,7 +256,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #        print R.nominal_value, R.std_dev()
         #dont include error in decay constant
         j.set_std_dev(0)
-        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R)
+        age = age_equation(j, R)
+#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R)
         age_wo_jerr = deepcopy(age)
 #        age_wo_jerr = ufloat((age.nominal_value, age.std_dev()))
 #        aa, ae = age.nominal_value, age.std_dev()
@@ -183,6 +285,14 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                   ar37decayfactor=a37decayfactor
                   )
     return result
+
+def age_equation(j, R, scalar=1):
+    if isinstance(j, (tuple, str)):
+        j = ufloat(j)
+    if isinstance(R, (tuple, str)):
+        R = ufloat(R)
+
+    return (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R) / float(scalar)
 #def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                       j, irradinfo,
 #                       ic=(1.0, 0),

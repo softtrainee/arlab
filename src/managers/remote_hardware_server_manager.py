@@ -17,9 +17,9 @@
 
 
 #============= enthought library imports =======================
-from traits.api import List, Instance
+from traits.api import List, Instance, Any, Property, on_trait_change
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
-    ListEditor, TableEditor
+    ListEditor, TableEditor, CustomEditor, InstanceEditor, Handler
 from traitsui.table_column import ObjectColumn
 
 #============= standard library imports ========================
@@ -30,13 +30,25 @@ from src.messaging.command_repeater import CommandRepeater
 from src.messaging.remote_command_server import RemoteCommandServer
 from src.managers.manager import Manager, AppHandler
 from src.paths import paths
+from src.helpers.timer import Timer
 
 class RemoteHardwareServerManager(Manager):
     '''
     '''
+#    display = Any
     servers = List(RemoteCommandServer)
     selected = Instance(RemoteCommandServer)
     repeater = Instance(CommandRepeater)
+
+    repeaters = List(Instance(CommandRepeater))
+
+    def _check_connection(self):
+        for ri in self.repeaters:
+            ri.test_connection(verbose=False)
+
+    @on_trait_change('servers[]')
+    def _servers_changed(self):
+        self.repeaters = [si.repeater for si in self.servers]
 
     def _selected_changed(self):
         if self.selected:
@@ -54,6 +66,27 @@ class RemoteHardwareServerManager(Manager):
 
                 e.bootstrap()
                 self.servers.append(e)
+
+    def opened(self):
+        self.edit_traits(
+                 view='display_view',
+                 parent=self.ui.control
+                 )
+
+        Timer(1000, self._check_connection)
+
+    def display_view(self):
+
+        v = View(
+                 Item('repeaters',
+                 show_label=False,
+                 editor=ListEditor(mutable=False, style='custom',
+                                  editor=InstanceEditor(view='simple_view'))),
+                 style='readonly',
+                 title='Connection Status',
+                 width=200, height=100,
+                 )
+        return v
 
     def read_configuration(self):
         '''

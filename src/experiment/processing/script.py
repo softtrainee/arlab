@@ -23,13 +23,14 @@ from sqlalchemy.sql.expression import and_
 #============= local library imports  ==========================
 from src.experiment.processing.database_manager import DatabaseManager
 from src.experiment.processing.plotters.ideogram import Ideogram
-from src.experiment.processing.analysis import Analysis
+from src.experiment.processing.analysis import Analysis, DummyAnalysis
 from src.database.records.isotope_record import IsotopeRecord
 from src.graph.graph_container import HGraphContainer
 from enable.component_editor import ComponentEditor
 from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 from src.helpers.filetools import unique_path
 import os
+from src.experiment.processing.plotters.spectrum import Spectrum
 #from threading import Event as TEvent, Thread
 #from src.viewable import ViewableHandler, Viewable
 
@@ -67,8 +68,10 @@ class ProcessScript(DatabaseManager):
         ctx = dict(sess=self.db.get_session(),
                    and_=and_,
                    ideogram=self._ideogram,
+                   spectrum=self._spectrum,
                    save=self._save,
                    group_by_labnumber=self._group_by_labnumber,
+                   group_by_aliquot=self._group_by_aliquot,
                    convert_records=self._convert_records,
                    )
 
@@ -78,7 +81,14 @@ class ProcessScript(DatabaseManager):
 #===============================================================================
 # commands
 #===============================================================================
-    def _ideogram(self, analyses):
+    def _ideogram(self, analyses, use_ages=False, show=True):
+        '''
+            if use_ages=True
+            create a list of dummy analysis with fixed age,error
+        '''
+        if use_ages:
+            analyses = [DummyAnalysis(rid=ai[0],
+                                      _age=ai[1], _error=ai[2]) for ai in analyses]
 
         wparams = self.parameters_dict['window']
         g = Window(
@@ -93,7 +103,25 @@ class ProcessScript(DatabaseManager):
             gideo, plots = gideo
             self._figure = gideo
             g.container.add(gideo)
-            g.edit_traits()
+            if show:
+                g.edit_traits()
+
+    def _spectrum(self, analyses, show=True):
+        print len(analyses), 'analyses'
+        wparams = self.parameters_dict['window']
+        g = Window(
+                   window_width=wparams['width'],
+                   window_height=wparams['height'],
+                   )
+        self.window = g
+        spec = Spectrum()
+        spec_graph = spec.build(analyses)
+        if spec_graph:
+            self._figure = spec_graph.plotcontainer
+            g.container.add(spec_graph.plotcontainer)
+            if show:
+                g.edit_traits()
+            return spec
 
 
     def _save(self, p, figure=None):
@@ -117,6 +145,19 @@ class ProcessScript(DatabaseManager):
             gc.render_component(comp, valign='center')
             gc.save()
 
+    def _group_by_aliquot(self, ans):
+        groups = dict()
+        for ri in ans:
+            if ri.aliquot in groups:
+                group = groups[ri.aliquot]
+                group.append(ri.aliquot)
+            else:
+                groups[ri.aliquot] = [ri.aliquot]
+
+        keys = sorted(groups.keys())
+
+        for ri in ans:
+            ri.group_id = keys.index(ri.aliquot)
 
     def _group_by_labnumber(self, ans):
         groups = dict()

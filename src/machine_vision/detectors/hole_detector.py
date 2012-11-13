@@ -353,11 +353,10 @@ class HoleDetector(Detector):
         cy = self.croppixels[1] / 2.0
         return cx, cy
 
-    def _near_center(self, x, y, tol=0.9):
+    def _near_center(self, x, y, tol=0.75):
         cx, cy = self._get_center()
 
         tol *= self.pxpermm
-
         return abs(x - cx) < tol and abs(y - cy) < tol
 
     def _get_true_xy(self, src):

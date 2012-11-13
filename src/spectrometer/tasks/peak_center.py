@@ -97,6 +97,7 @@ class PeakCenter(MagnetScan):
 
 #    data = None
     result = None
+    directions = None
 
     def get_peak_center(self, ntries=2):
         self._alive = True
@@ -129,14 +130,17 @@ class PeakCenter(MagnetScan):
 #            print center_dac + 0.001, start, end, nsteps
 #            intensities = self._scan_dac(dac_values, self.detector)
 #            self.data = (dac_values, intensities)        
-            ok = self._do_scan(start, end, width, map_mass=False)
-            if ok:
+            ok = self._do_scan(start, end, width, directions=self.directions, map_mass=False)
+            if ok and self.directions != 'Oscillate':
                 if not self.canceled:
-
                     dac_values = graph.get_data()
                     intensities = graph.get_data(axis=1)
-#                    self.data = (dac_values, intensities)
 
+                    n = zip(dac_values, intensities)
+                    n = sorted(n, key=lambda x: x[0])
+                    dac_values, intensities = zip(*n)
+
+#                    self.data = (dac_values, intensities)
                     result = self._calculate_peak_center(dac_values, intensities)
                     self.result = result
                     if result is not None:

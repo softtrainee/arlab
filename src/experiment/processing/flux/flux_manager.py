@@ -167,7 +167,8 @@ class FluxManager(DatabaseManager):
             js, errs = zip(*[calc_j(ai) for ai in ans])
             errs = asarray(errs)
             wts = errs ** -2
-            return average(js, weights=wts), std(js)
+            m, ss = average(js, weights=wts, returned=True),
+            return m, ss ** -0.5
 
         def ir_factory(ai):
             a = self.db.clone_record(ai)

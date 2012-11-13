@@ -33,6 +33,8 @@ from enable.font_metrics_provider import font_metrics_provider
 from src.canvas.popup_window import PopupWindow
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.stacked_graph import StackedGraph
+from chaco.data_label import DataLabel
+from chaco.tools.data_label_tool import DataLabelTool
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     def set_status(self):
@@ -150,9 +152,28 @@ class Plotter(Viewable):
 
 
 #        self.metadata = scatter.index.metadata
+    def _add_data_label(self, s, text, point, **kw):
+        label = DataLabel(component=s, data_point=point,
+                          label_position='top right',
+                          label_text=text,
+                          border_visible=False,
+                          bgcolor='transparent',
+                          show_label_coords=False,
+                          marker_visible=False,
+                          text_color=s.color,
+                          arrow_color=s.color,
+                          **kw
+                          )
+        s.overlays.append(label)
+        tool = DataLabelTool(label)
+        label.tools.append(tool)
+        return label
 
     def _get_sorted_analyses(self):
         return sorted([a for a in self.analyses], key=self._cmp_analyses)
+
+    def get_labnumber(self, analyses):
+        return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
     def update_graph_metadata(self, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]

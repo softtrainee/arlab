@@ -289,7 +289,7 @@ class VideoStageManager(StageManager):
         rpos = None
         interp = False
         if self.use_autocenter:
-            time.sleep(0.4)
+            time.sleep(0.75)
             for _t in range(max(1, ntries)):
                 #use machine vision to calculate positioning error
                 rpos = self.autocenter_manager.locate_target(
@@ -302,7 +302,7 @@ class VideoStageManager(StageManager):
                                      use_calibration=False,
                                      update_hole=False
                                      )
-                    time.sleep(0.4)
+                    time.sleep(0.75)
                 else:
                     self.snapshot(auto=True,
                                   name='pos_err_{}_{}-'.format(holenum, _t))

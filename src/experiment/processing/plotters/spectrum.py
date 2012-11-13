@@ -15,18 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Int, List, Dict
+from traits.api import Any, Int
 #============= standard library imports ========================
-from numpy import array, Inf, hstack, where
+from numpy import array, Inf, where, average
 #============= local library imports  ==========================
-from src.graph.stacked_graph import StackedGraph
+#from src.graph.stacked_graph import StackedGraph
 from src.experiment.processing.plotters.results_tabular_adapter import SpectrumResults, \
     SpectrumResultsAdapter
-from src.experiment.processing.plotters.plotter import Plotter
+from src.experiment.processing.plotters.plotter import Plotter, mStackedGraph
 from src.stats.core import calculate_mswd
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
-from enable.enable_traits import Pointer
+#from enable.enable_traits import Pointer
+from enable.colors import color_table
+from src.experiment.processing.argon_calculations import age_equation
+#from chaco.plot_label import PlotLabel
+#from enable.font_metrics_provider import font_metrics_provider
+#from chaco.data_label import DataLabel
+
 
 class SpectrumTool(BaseTool):
     spectrum = Any
@@ -133,31 +139,39 @@ class SpectrumTool(BaseTool):
 
 class SpectrumErrorOverlay(AbstractOverlay):
     def overlay(self, component, gc, *args, **kw):
-        xs = self.component.index.get_data()
-        ys = self.component.value.get_data()
-        es = self.component.errors
-        sels = self.component.index.metadata['selections']
-#        print sels
-        n = len(xs)
-        xs = xs.reshape(n / 2, 2)
-        ys = ys.reshape(n / 2, 2)
-        es = es.reshape(n / 2, 2)
-        for i, ((xa, xb), (ya, yb), (ea, eb)) in enumerate(zip(xs, ys, es)):
-            p1 = xa, ya - ea
-            p2 = xa, ya + ea
-            p3 = xb, ya - ea
-            p4 = xb, ya + ea
-            p1, p2, p3, p4 = self.component.map_screen([p1, p2, p3, p4])
-            x = p1[0]
-            y = p1[1]
-            w = p3[0] - p1[0]
-            h = p2[1] - p1[1]
-            if i in sels:
-                gc.set_fill_color((1, 0, 0))
-            else:
-                gc.set_fill_color((0, 0, 0))
-            gc.rect(x, y, w + 1, h)
-            gc.fill_path()
+        with gc:
+            xs = self.component.index.get_data()
+            ys = self.component.value.get_data()
+            es = self.component.errors
+            sels = self.component.index.metadata['selections']
+
+
+    #        print sels
+            n = len(xs)
+            xs = xs.reshape(n / 2, 2)
+            ys = ys.reshape(n / 2, 2)
+            es = es.reshape(n / 2, 2)
+            for i, ((xa, xb), (ya, yb), (ea, eb)) in enumerate(zip(xs, ys, es)):
+                p1 = xa, ya - ea
+                p2 = xa, ya + ea
+                p3 = xb, ya - ea
+                p4 = xb, ya + ea
+                p1, p2, p3, p4 = self.component.map_screen([p1, p2, p3, p4])
+                x = p1[0]
+                y = p1[1]
+                w = p3[0] - p1[0]
+                h = p2[1] - p1[1]
+                if i in sels:
+                    gc.set_fill_color((1, 0, 0))
+                else:
+#                    gc.set_fill_color((0, 0, 0))
+                    c = self.component.color
+                    if isinstance(c, str):
+                        c = color_table[c]
+
+                    gc.set_fill_color(c)
+                gc.rect(x, y, w + 1, h)
+                gc.fill_path()
 
 class Spectrum(Plotter):
 
@@ -167,16 +181,28 @@ class Spectrum(Plotter):
     def build(self, analyses=None, padding=None, excludes=None):
         if analyses is None:
             analyses = self.analyses
-        if padding is None:
-            padding = self.padding
-
+##
+##        if padding is None:
+##            padding = self.padding
+#
         self.analyses = analyses
-        self.padding = padding
+##        self.padding = padding
+#
+#        g = StackedGraph(panel_height=200, equi_stack=False,
+#                         container_dict=dict(padding=5,
+#                                             bgcolor='lightgray')
+#                         )
 
-        g = StackedGraph(panel_height=200, equi_stack=False,
-                         container_dict=dict(padding=5,
-                                             bgcolor='lightgray')
-                         )
+        if padding is None:
+            padding = [50, 5 , 35, 35]
+
+        g = mStackedGraph(panel_height=200,
+                            equi_stack=False,
+                            container_dict=dict(padding=0),
+                            plotter=self
+                            )
+        g.clear()
+
         g.new_plot(padding=padding)
         g.set_x_title('cumulative 39Ar')
 
@@ -185,17 +211,40 @@ class Spectrum(Plotter):
         group_ids = list(set([a.group_id for a in analyses]))
         ma, mi = -Inf, Inf
         self.cumulative39s = []
+        labels = []
         for group_id in group_ids:
             anals = [a for a in analyses if a.group_id == group_id]
 #            print len(anals), len(analyses)
-            miage, maage = self._add_spectrum(g, anals, group_id)
+            miage, maage, label = self._add_spectrum(g, anals, group_id)
 
             ma = max(ma, maage)
             mi = min(mi, miage)
+            labels.append(label)
 
+        offset = (ma - mi) / len(labels) * 0.25
+        for i, l in enumerate(labels):
+            l.data_point = (50 + i,
+#                            mi,
+                            mi + offset * i
+                            )
         g.set_y_limits(min=mi, max=ma, pad='0.1')
         self.graph = g
         return g
+
+    def _calculate_total_gas_age(self, analyses):
+        '''
+            sum the corrected rad40 and k39 values
+             
+            not necessarily the same as isotopic recombination
+            
+        '''
+
+        rad40, k39 = zip(*[(a.rad40, a.k39) for a in analyses])
+        rad40 = sum(rad40)
+        k39 = sum(k39)
+
+        j = a.j
+        return age_equation(rad40 / k39, j, scalar=1e6)
 
     def _calculate_spectrum(self, analyses, index_key, excludes=None):
         if excludes is None:
@@ -273,21 +322,62 @@ class Spectrum(Plotter):
 
         mswd = calculate_mswd(ys, es)
 
-        ages = [a.age[0] for a in analyses]
+        ages, errors = zip(*[(a.age[0], a.age[1]) for a in analyses])
         ages = array(ages)
-        age = ages.mean()
-        error = ages.std()
+
+        mean_age = ages.mean()
+        mean_error = ages.std()
+
+        weights = array(errors) ** -2
+
+        weighted_mean_age, ss = average(ages, weights=weights, returned=True)
+        weighted_mean_error = ss ** -0.5
+
+#        weighted_mean_error
+        tga = self._calculate_total_gas_age(analyses)
+        #print 'tga', tga.nominal_value, tga.std_dev()
+        #print 'mean', mean_age, mean_error
+        #print 'wmean', weighted_mean_age, weighted_mean_error
+        print '----------'
+
+        age = mean_age
+        error = mean_error
+#        pl = DataLabel(
+#                       component=ds,
+#                       data_point=(50, miages),
+#                       label_position='top right',
+#                       label_text=u'{:0.3f} \u00b1{:0.3f}'.format(age, error),
+#                       border_visible=False,
+#                       bgcolor='transparent',
+#                       show_label_coords=False,
+#                       marker_visible=False,
+#                       font='modern 24'
+#                       )
+#        
+#        ds.overlays.append(pl)
+
+
+        text = u'{:0.3f} \u00b1{:0.3f}'.format(age, error)
+        dl = self._add_data_label(ds, text, (50, miages),
+                                  arrow_visible=False,
+                                  font='modern 18'
+                                  )
+
 
         self.results.append(SpectrumResults(
-                                           age=age,
-                                           error=error,
+                                           labnumber=self.get_labnumber(analyses),
+                                           mean_age=mean_age,
+                                           mean_error=mean_error,
+                                           weighted_mean_age=weighted_mean_age,
+                                           weighted_mean_error=weighted_mean_error,
+                                           tga=tga.nominal_value,
+                                           tga_error=tga.std_dev(),
                                            mswd=mswd
                                            ))
 
-        return miages, maages
+        return miages, maages, dl
 
     def _update_graph(self, new):
-        print 'meta change'
         g = self.graph
         for i, p in enumerate(g.plots):
             lp = p.plots['plot0'][0]
@@ -313,4 +403,11 @@ class Spectrum(Plotter):
 #            lp.errors = es
 
         g.redraw()
+
+    def get_ages(self, kind='weighted_mean'):
+        return [(r.labnumber,
+                 getattr(r, '{}_age'.format(r)),
+                 getattr(r, '{}_error'.format(r)),) for r in self.results]
+
+
 #============= EOF =============================================

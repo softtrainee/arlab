@@ -168,7 +168,27 @@ class MagnetScan(SpectrometerTask):
             self._alive = False
             self._post_execute()
 
-    def _do_scan(self, sm, em, stm, map_mass=True):
+    def _do_scan(self, sm, em, stm, directions=None, map_mass=True):
+        print directions
+        #default to forward scan
+        if directions is None:
+            directions = [1]
+        elif isinstance(directions, str):
+            if directions == 'Decrease':
+                directions = [-1]
+            elif directions == 'Oscillate':
+                def oscillate():
+                    i = 0
+                    while 1:
+                        if i % 2 == 0:
+                            yield 1
+                        else:
+                            yield -1
+                        i += 1
+                directions = oscillate()
+            else:
+                directions = [1]
+
         spec = self.spectrometer
         mag = spec.magnet
         if map_mass:
@@ -185,8 +205,17 @@ class MagnetScan(SpectrometerTask):
             stm = stm / float(massdev) * dacdev
             sm, em = ds, de
 
-        values = self._calc_step_values(sm, em, stm)
-        return self._scan_dac(values, self.reference_detector)
+        for di in directions:
+            if not self._alive:
+                return
+
+            if di == -1:
+                sm, em = em, sm
+            values = self._calc_step_values(sm, em, stm)
+            if not self._scan_dac(values, self.reference_detector):
+                return
+
+        return True
 
     def _post_execute(self):
         pass
