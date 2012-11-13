@@ -27,7 +27,12 @@ import math
 PLUSMINUS = u'\u00b1'
 #PLUSMINUS = '+/-'
 
-PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
+try:
+    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
+except UnicodeEncodeError:
+    PLUSMINUS = '+/-'
+    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
+    
 class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
 

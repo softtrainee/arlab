@@ -185,12 +185,12 @@ if __name__ == '__main__':
     logging_setup('processing')
 
     pm = ProcessingManager()
-    pm.connect_repo()
+#    pm.connect_repo()
 #    pm.workspace_root = '/Users/ross/Sandbox/workspace'
-    pm.username = 'bar'
-    pm.open_workspace('mobat')
+#    pm.username = 'bar'
+#    pm.open_workspace('mobat')
 
-    print pm.repo
+#    print pm.repo
 
 #    sl = pm.db.selector_factory()
 #    sl.configure_traits()

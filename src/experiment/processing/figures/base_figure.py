@@ -49,6 +49,7 @@ from multiprocessing.process import Process
 from threading import Thread
 from Queue import Queue
 import time
+from src.helpers.thread_pool import ThreadPool
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -302,19 +303,23 @@ class BaseFigure(Saveable, ColumnSorterMixin):
         adder = Thread(target=add_analysis, args=(q,))
         adder.start()
 
+        t=ThreadPool(20)
         for n, attr in zip(names, attrs):
             if not n in _names:
                 dbr = attr['dbrecord']
                 msg = 'loading analysis {} groupid={} graphid={}'.format(dbr.record_id, dbr.group_id, dbr.graph_id)
                 pd.change_message(msg)
                 self.info(msg)
-                t = Thread(target=self._load_analysis, args=(q, n,), kwargs=attr)
-                t.start()
+                
+                t.add_task(self._load_analysis, q,n, **attr)
+#                t = Thread(target=self._load_analysis, args=(q, n,), kwargs=attr)
+#                t.start()
 
             pd.increment()
 
         pd.change_message('Finishing calculations')
-        t.join()
+#        t.join()
+        t.wait_completion()
         pd.increment()
 
         #send stop signal to adder thread
