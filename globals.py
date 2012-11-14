@@ -35,8 +35,8 @@ class Globals(object):
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
 
-    video_test = False
-#    video_test = True
+#    video_test = False
+    video_test = True
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
 #    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
 #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
@@ -74,7 +74,9 @@ class Globals(object):
                            ('show_warnings', str_to_bool),
                            ('video_test', str_to_bool),
                            ('load_valve_states', str_to_bool),
-                           ('load_soft_locks', str_to_bool)
+                           ('load_soft_locks', str_to_bool),
+                           ('experiment_debug', str_to_bool),
+                           ('experiment_savedb', str_to_bool)
                             ]:
             a = ip.get_global(attr)
             if a:

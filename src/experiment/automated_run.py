@@ -41,6 +41,10 @@ from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
 from constants import NULL_STR
+from src.experiment.processing.signal import Signal
+import struct
+from src.managers.data_managers.data_manager import DataManager
+from src.database.adapters.isotope_adapter import IsotopeAdapter
 #from src.regression.ols_regressor import PolynomialRegressor
 
 
@@ -52,9 +56,9 @@ class AutomatedRun(Loggable):
     extraction_line_manager = Any
     experiment_manager = Any
     ion_optics_manager = Any
-    data_manager = Any
+    data_manager = Instance(DataManager)
 
-    db = Any
+    db = Instance(IsotopeAdapter)
     local_lab_db = Instance(LocalLabAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
     repository = Instance(Repository)
@@ -181,10 +185,10 @@ class AutomatedRun(Loggable):
         return [get_attr(ai) for ai in attr]
 
     def create_scripts(self):
-        self.extraction_script
-        self.measurement_script
-        self.post_equilibration_script
-        self.post_measurement_script
+        _a = self.extraction_script
+        _b = self.measurement_script
+        _c = self.post_equilibration_script
+        _d = self.post_measurement_script
 
     def truncate(self, style):
         self.info('truncating current run with style= {}'.format(style))
@@ -239,7 +243,7 @@ class AutomatedRun(Loggable):
         m = ast.parse(ms._text)
         docstr = ast.get_docstring(m)
         if docstr is not None:
-            params = yaml.load(docstr)
+            params = yaml.load(ast.get_docstring(m))
             try:
                 return params[key]
             except KeyError:
@@ -336,20 +340,24 @@ class AutomatedRun(Loggable):
             self.info('======== Post Measurement Finished unsuccessfully ========')
             return False
 
-    def do_equilibration(self):
-        inlet = self.get_measurement_parameter('inlet_valve')
+    def do_equilibration(self, eqtime=None, inlet=None, outlet=None):
+        if inlet is None:
+            inlet = self.get_measurement_parameter('inlet_valve')
+
         if inlet is None:
             return
 
-        event = TEvent()
+        evt = TEvent()
         if not self._alive:
-            event.set()
-            return event
+            evt.set()
+            return evt
 
         self.info('====== Equilibration Started ======')
-        t = Thread(name='equilibration', target=self._equilibrate, args=(event,))
+
+        t = Thread(name='equilibration', target=self._equilibrate, args=(evt,
+                                                                         eqtime, inlet, outlet))
         t.start()
-        return event
+        return evt
 
     def do_post_equilibration(self):
         if not self._alive:
@@ -392,7 +400,7 @@ class AutomatedRun(Loggable):
             self.plot_panel.isbaseline = False
 
         fits = ['', ] * len(self._active_detectors)
-        gn = 'sniffs'
+        gn = 'sniff'
         self._build_tables(gn)
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
@@ -422,7 +430,7 @@ class AutomatedRun(Loggable):
                     ion.position(mass, self._active_detectors[0].name, False)
                     time.sleep(2)
 
-            gn = 'baselines'
+            gn = 'baseline'
             fits = ['average_SEM', ] * len(self._active_detectors)
             self._build_tables(gn, fits=fits)
             result = self._measure_iteration(gn,
@@ -768,11 +776,11 @@ class AutomatedRun(Loggable):
 
         return True
 
-    def _equilibrate(self, evt):
-        eqtime = self.get_measurement_parameter('equilibration_time', default=15)
-        inlet = self.get_measurement_parameter('inlet_valve')
-        outlet = self.get_measurement_parameter('outlet_valve')
-        delay = self.get_measurement_parameter('inlet_delay', default=3)
+    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None, delay=3):
+#        eqtime = self.get_measurement_parameter('equilibration_time', default=15)
+#        inlet = self.get_measurement_parameter('inlet_valve')
+#        outlet = self.get_measurement_parameter('outlet_valve')
+#        delay = self.get_measurement_parameter('inlet_delay', default=3)
 
         elm = self.extraction_line_manager
         if elm:
@@ -851,6 +859,11 @@ class AutomatedRun(Loggable):
 
             if not keys or not signals:
                 continue
+
+            #if user forgot to set the time zero in measurement script
+            #do it here
+            if starttime is None:
+                starttime = time.time()
 
             x = time.time() - starttime# if not self._debug else i + starttime
 
@@ -931,11 +944,14 @@ class AutomatedRun(Loggable):
 
         cp = self.data_manager.get_current_path()
 
+        uuid, _ext = os.path.splitext(os.path.basename(cp))
+
         #commit repository
         self.repository.add_file(cp)
 
         #close h5 file
         self.data_manager.close()
+
 
         np = self.repository.get_file_path(cp)
 
@@ -962,11 +978,13 @@ class AutomatedRun(Loggable):
             d = get_datetime()
 
             self.info('analysis finished at {}'.format(d.time()))
-            a = db.add_analysis(lab, runtime=self._runtime,
-                                    rundate=self._rundate,
-                                    endtime=d.time(),
-                                    aliquot=aliquot,
-                                    step=self.step
+            a = db.add_analysis(lab,
+                                uuid=uuid,
+                                runtime=self._runtime,
+                                rundate=self._rundate,
+                                endtime=d.time(),
+                                aliquot=aliquot,
+                                step=self.step
                                 )
 
             experiment.analyses.append(a)
@@ -975,11 +993,18 @@ class AutomatedRun(Loggable):
             meas = self._save_measurement(a)
 
             #use a path relative to the repo repo
-            np = os.path.relpath(np, self.repository.root)
-            db.add_analysis_path(np, analysis=a)
+#            np = os.path.relpath(np, self.repository.root)
+#            db.add_analysis_path(np, analysis=a)
 
             self._save_spectrometer_info(meas)
-            self._save_isotope_info(a)
+
+            #do preliminary processing of data
+            ss = self._preliminary_processing(cp)
+
+            #add selected history
+            _sh = db.add_selected_histories(a)
+            self._save_isotope_info(a, ss)
+
             self._save_blank_info(a)
 
             if globalv.experiment_savedb:
@@ -987,6 +1012,35 @@ class AutomatedRun(Loggable):
 
         #save to massspec
         self._save_to_massspec()
+
+    def _preliminary_processing(self, p):
+        dm = self.data_manager
+        dm.open_data(p)
+        signals = [(iso, detname)
+                   for (iso, detname, kind) in self._save_isotopes
+                   if kind == 'signal']
+        baselines = [(iso, detname)
+                   for (iso, detname, kind) in self._save_isotopes
+                   if kind == 'baseline']
+
+        rsignals = dict()
+
+        for fit, (iso, detname) in zip(self.fits, signals):
+            tab = dm.get_table(detname, '/signal/{}'.format(iso))
+            x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
+            s = Signal(xs=x, ys=y, fit=fit)
+            rsignals['{}signal'.format(iso)] = s
+
+        self.baseline_fits = ['average_SEM', ] * len(baselines)
+        for fit, (iso, detname) in zip(self.baseline_fits, baselines):
+            tab = dm.get_table(detname, '/baseline/{}'.format(iso))
+            x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
+            bs = Signal(xs=x, ys=y, fit=fit)
+
+            rsignals['{}baseline'.format(iso)] = bs
+
+        return rsignals
+
 
     def _save_measurement(self, analysis):
         db = self.db
@@ -1038,8 +1092,8 @@ class AutomatedRun(Loggable):
         funchist = getattr(db, 'add_{}_history'.format(name))
         self.info('{} adding {} history for {}-{}'.format(user, name, analysis.labnumber.labnumber, analysis.aliquot))
         history = funchist(analysis, user=user)
-        sh = db.add_selected_histories(analysis)
-        setattr(sh, 'selected_{}'.format(name), history)
+
+        setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
 
         func = getattr(db, 'add_{}'.format(name))
         for isotope, v in pb:
@@ -1048,14 +1102,34 @@ class AutomatedRun(Loggable):
             func(history, uv, ue, isotope)
 
 
-    def _save_isotope_info(self, analysis):
+    def _save_isotope_info(self, analysis, signals):
         db = self.db
+
+        #add fit history
+        dbhist = db.add_fit_history(analysis, user=self.username)
         for iso, detname, kind in self._save_isotopes:
             det = db.get_detector(detname)
             if det is None:
                 det = db.add_detector(detname)
 
-            db.add_isotope(analysis, iso, det, kind=kind)
+            #add isotope
+            dbiso = db.add_isotope(analysis, iso, det, kind=kind)
+
+            s = signals['{}{}'.format(iso, kind)]
+
+            #add signal data
+            data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
+            db.add_signal(dbiso, data)
+
+            #add fit
+            db.add_fit(dbhist, dbiso, fit=s.fit)
+
+            #add isotope result
+            db.add_isotope_result(dbiso,
+                                  dbhist,
+                                  signal_=s.value, signal_err=s.error,
+                                  )
+
             if globalv.experiment_savedb:
                 db.commit()
 
@@ -1168,7 +1242,8 @@ class AutomatedRun(Loggable):
 
         ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
             name=mname,
-            automated_run=self
+            automated_run=self,
+            runner=self.runner
             )
         return ms
 #

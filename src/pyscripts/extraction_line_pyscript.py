@@ -22,11 +22,11 @@ from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import PyScript, verbose_skip
 from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.pyscripts.valve_pyscript import ValvePyScript
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
 
-class ExtractionLinePyScript(PyScript):
-    runner = Any
+class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
 
     _context = Dict
@@ -72,9 +72,6 @@ class ExtractionLinePyScript(PyScript):
 
         self._context.update(kw)
 
-    def _runner_changed(self):
-        self.runner.scripts.append(self)
-
     def _post_execute_hook(self):
         #remove ourselves from the script runner
         if self.runner:
@@ -85,14 +82,15 @@ class ExtractionLinePyScript(PyScript):
             self._resource_flag.clear()
 
     def get_script_commands(self):
-        cmds = [('open', '_m_open'), 'close',
+        cmds = super(ExtractionLinePyScript, self).get_script_commands()
+
+        cmds += [
                  'acquire', 'release',
                  'wait', 'set_resource',
                  'move_to_position',
                  'extract',
                  'end_extract',
                  'ramp',
-                 'is_open', 'is_closed',
                  ]
         return cmds
 
@@ -113,29 +111,27 @@ class ExtractionLinePyScript(PyScript):
     def gosub(self, *args, **kw):
 #        kw['analysis_type'] = self.analysis_type
         kw['_context'] = self._context
-        kw['runner'] = self.runner
-
         super(ExtractionLinePyScript, self).gosub(*args, **kw)
 
-    @verbose_skip
-    def is_open(self, name=None, description=''):
-        self.info('is {} ({}) open?'.format(name, description))
-        result = self._get_valve_state(name, description)
-        if result:
-            return result[0] == True
-
-    @verbose_skip
-    def is_closed(self, name=None, description=''):
-        self.info('is {} ({}) closed?'.format(name, description))
-        result = self._get_valve_state(name, description)
-        if result:
-            return result[0] == False
-
-    def _get_valve_state(self, name, description):
-        return self._manager_action([('open_valve', (name,), dict(
-                                                      mode='script',
-                                                      description=description
-                                                      ))], protocol=ELPROTOCOL)
+#    @verbose_skip
+#    def is_open(self, name=None, description=''):
+#        self.info('is {} ({}) open?'.format(name, description))
+#        result = self._get_valve_state(name, description)
+#        if result:
+#            return result[0] == True
+#
+#    @verbose_skip
+#    def is_closed(self, name=None, description=''):
+#        self.info('is {} ({}) closed?'.format(name, description))
+#        result = self._get_valve_state(name, description)
+#        if result:
+#            return result[0] == False
+#
+#    def _get_valve_state(self, name, description):
+#        return self._manager_action([('open_valve', (name,), dict(
+#                                                      mode='script',
+#                                                      description=description
+#                                                      ))], protocol=ELPROTOCOL)
 
     @verbose_skip
     def move_to_position(self, position=''):
@@ -227,30 +223,30 @@ class ExtractionLinePyScript(PyScript):
 
         return int(time.time() - st)
 
-    @verbose_skip
-    def _m_open(self, name=None, description=''):
-
-        if description is None:
-            description = '---'
-
-        self.info('opening {} ({})'.format(name, description))
-
-        self._manager_action([('open_valve', (name,), dict(
-                                                      mode='script',
-                                                      description=description
-                                                      ))], protocol=ELPROTOCOL)
-
-    @verbose_skip
-    def close(self, name=None, description=''):
-
-        if description is None:
-            description = '---'
-
-        self.info('closing {} ({})'.format(name, description))
-        self._manager_action([('close_valve', (name,), dict(
-                                                      mode='script',
-                                                      description=description
-                                                      ))], protocol=ELPROTOCOL)
+#    @verbose_skip
+#    def _m_open(self, name=None, description=''):
+#
+#        if description is None:
+#            description = '---'
+#
+#        self.info('opening {} ({})'.format(name, description))
+#
+#        self._manager_action([('open_valve', (name,), dict(
+#                                                      mode='script',
+#                                                      description=description
+#                                                      ))], protocol=ELPROTOCOL)
+#
+#    @verbose_skip
+#    def close(self, name=None, description=''):
+#
+#        if description is None:
+#            description = '---'
+#
+#        self.info('closing {} ({})'.format(name, description))
+#        self._manager_action([('close_valve', (name,), dict(
+#                                                      mode='script',
+#                                                      description=description
+#                                                      ))], protocol=ELPROTOCOL)
 
     @verbose_skip
     def acquire(self, name=None):
