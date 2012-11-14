@@ -175,6 +175,38 @@ class Plotter(Viewable):
     def get_labnumber(self, analyses):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
+    def _make_title(self, ans):
+        lns = dict()
+        for ai in ans:
+#            v = '{}{}'.format(ai.aliquot, ai.step)
+            v = (ai.aliquot, ai.step)
+            if ai.labnumber in lns:
+                lns[ai.labnumber].append(v)
+            else:
+                lns[ai.labnumber] = [v]
+
+        skeys = sorted(lns.keys())
+        grps = []
+        for si in skeys:
+            als = lns[si]
+            #if aliquots-steps list is continuous use bounds
+            #sort the list 
+            #test if first_value+len(list)-1=last_value
+            sals = sorted(als, key=lambda x: x[0])
+            aliquots, _steps = zip(*sals)
+            fv = int(aliquots[0])
+            lv = int(aliquots[-1])
+
+            if fv + len(als) - 1 == lv:
+                als = '{}-{}'.format(fv, lv)
+            else:
+                als = ['{}{}'.format(*a) for a in sals]
+                als = ','.join(als)
+
+            grps.append('{}-({})'.format(si, als))
+
+        return ', '.join(grps)
+
     def update_graph_metadata(self, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
 

@@ -143,7 +143,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                 k39,
                 ca37,
                 atm36,
-
+                cl36,
+                
                 s40,
                 s39,
                 s38,
@@ -275,6 +276,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                   k39=k39,
                   ca37=ca37,
                   atm36=atm36,
+                  cl36=cl36,
 
                   s40=s40,
                   s39=s39,
