@@ -15,8 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button, Instance, Str
-from traitsui.api import View, Item, TableEditor
+from traits.api import HasTraits, Any, Button, Instance, Str, Date, File, Int, \
+    List, Enum
+from traitsui.api import View, Item, TableEditor, VGroup, HGroup, EnumEditor, \
+    FileEditor, spring
 #============= standard library imports ========================
 import struct
 import os
@@ -27,7 +29,7 @@ from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdap
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.displays.rich_text_display import RichTextDisplay
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.repo.repository import Repository
+#from src.repo.repository import Repository
 from src.managers.data_managers.table_descriptions import TimeSeriesTableDescription
 from src.database.orms.massspec_orm import IrradiationLevelTable, \
     IrradiationChronologyTable, IrradiationPositionTable, AnalysesTable, \
@@ -39,7 +41,7 @@ from src.experiment.processing.signal import Signal
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable
 from sqlalchemy.sql.expression import and_
 #from src.helpers.datetime_tools import get_datetime
-from datetime import datetime
+#from datetime import datetime
 
 #from src.database.orms.isotope_orm import meas_AnalysisTable
 
@@ -52,6 +54,14 @@ class Importer(Loggable):
     repository = Any
     _dbimport = None
     import_count = 0
+
+    start_date = Date
+    end_date = Date
+    input_file = File
+    labnumber = Int
+    project = Str
+    import_choice = Str('labnumber')
+
     def info(self, msg, **kw):
         self.display.add_text(msg)
         super(Importer, self).info(msg, **kw)
@@ -110,7 +120,33 @@ class Importer(Loggable):
         return name
 
     def traits_view(self):
-        v = View(Item('import_button', show_label=False),
+        dategrp = HGroup(
+                    Item('start_date'),
+                    Item('end_date'),
+                    enabled_when='import_choice=="date"'
+                    )
+        filegrp = Item('input_file',
+#                       editor=FileEditor(root_path=paths.root_dir),
+                       enabled_when='import_choice=="file"'
+                       )
+        labnumbergrp = Item('labnumber',
+                       enabled_when='import_choice=="labnumber"'
+                       )
+        projectgrp = Item('project',
+                       enabled_when='import_choice=="project"'
+                       )
+
+        v = View(
+                 HGroup(Item('import_choice',
+                             show_label=False,
+                             style='custom',
+                             editor=EnumEditor(values=['date', 'file', 'labnumber', 'project'],
+                                               cols=1),
+                             ),
+                        VGroup(dategrp, filegrp, labnumbergrp,
+                               projectgrp)),
+
+                 HGroup(spring, Item('import_button', show_label=False)),
                  Item('display', show_label=False, style='custom', width=300, height=300)
                  )
         return v
@@ -498,26 +534,20 @@ class MassSpecImporter(Importer):
         '''
         src = self.source
         sess = src.get_session()
-#        return self._gather_data_by_labnumber(sess)
-#        return self._gather_data_by_project(sess)
-#        s = get_datetime('2012-10-01 00:00:00')
-#        e = get_datetime('2012-10-04 23:59:59')
+        import_choice = self.import_choice
+        if import_choice == 'labnumber':
+            return self._gather_data_by_labnumber(sess, self.labnumber)
+        elif import_choice == 'file':
+            lns = self._get_import_ids(self.input_file)
+            return self._gather_data_by_labnumber(sess, lns)
+        elif import_choice == 'project':
+            return self._gather_data_by_project(sess, self.project)
+        elif import_choice == 'date':
+            return self._gather_data_by_date_range(sess, self.start_date,
+                                                         self.end_date)
 
-        fmt = '%m/%d/%Y'
-        d = '10/24/2012'
-        s = datetime.strptime(d, fmt)
 
-        d = '10/31/2012'
-        e = datetime.strptime(d, fmt)
-
-        ans = self._gather_data_by_date_range(sess, s, e)
-#        print ans[0].RID,
-#        print ans[-1].RID
-#        print len(ans)
-#        return []
-        return ans
-
-    def _gather_data_by_labnumber(self, sess):
+    def _gather_data_by_labnumber(self, sess, labnumber):
         #get by labnumber
         def get_analyses(ip):
             q = sess.query(IrradiationPositionTable)
@@ -525,11 +555,13 @@ class MassSpecImporter(Importer):
             irrad_pos = q.one()
             return irrad_pos.analyses
 
-        ips = self._get_import_ids()
-        return [a for ip in ips
+        if not isinstance(labnumber, list):
+            labnumber = [labnumber]
+#        ips = self._get_import_ids()
+        return [a for ip in labnumber
                     for a in get_analyses(ip)]
 
-    def _gather_data_by_project(self, sess):
+    def _gather_data_by_project(self, sess, project):
         #get by project
         def get_analyses(ni):
             q = sess.query(IrradiationPositionTable)
@@ -538,9 +570,11 @@ class MassSpecImporter(Importer):
             q = q.filter(ProjectTable.Project == ni)
             return q.all()
 
+        if not isinstance(project, list):
+            project = [project]
 
-        prs = ['FC-Project']
-        ips = [ip for pr in prs
+#        prs = ['FC-Project']
+        ips = [ip for pr in project
                 for ip in get_analyses(pr)
                ]
         ans = [a for ipi in ips
@@ -548,35 +582,33 @@ class MassSpecImporter(Importer):
 
         return ans
 
-
     def _gather_data_by_date_range(self, sess, start, end):
+        '''
+            fmt = '%m/%d/%Y'
+            d = '10/24/2012'
+            s = datetime.strptime(d, fmt)
+    
+            d = '10/31/2012'
+            e = datetime.strptime(d, fmt)
+        '''
         #get by range
         q = sess.query(AnalysesTable)
         q = q.filter(and_(AnalysesTable.RunDateTime >= start, AnalysesTable.RunDateTime < end))
         return q.all()
 
+    def _get_import_ids(self, p):
+#        p = '/Users/ross/Sandbox/importtest/importfile2.txt'
 
-
-
-    def _get_import_ids(self):
-#        ips = ['17348']
         ips = []
-        p = '/Users/ross/Sandbox/importtest/importfile2.txt'
         with open(p, 'r') as f:
             for l in f:
                 l = l.strip()
                 if not l or l.startswith('#'):
                     continue
                 ips.append(l)
+
         ips = list(set(ips))
-#        with open('{}_out'.format(p), 'w') as f:
-#            f.write('\n'.join(ips))
-#        return ['58631']
-#        return ['58621']
-#        return ['57739']
-        return ips#[:1]
-
-
+        return ips
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
