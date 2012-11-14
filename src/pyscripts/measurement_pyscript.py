@@ -24,6 +24,7 @@ import os
 from src.paths import paths
 import random
 from ConfigParser import ConfigParser
+from src.pyscripts.valve_pyscript import ValvePyScript
 #============= local library imports  ==========================
 estimated_duration_ff = 1.35
 
@@ -67,14 +68,13 @@ class AutomatedRun(HasTraits):
     def do_data_collection(self, *args, **kw):
         pass
 
-class MeasurementPyScript(PyScript):
+class MeasurementPyScript(ValvePyScript):
     automated_run = Any
     _time_zero = None
 
     _series_count = 0
     _regress_id = 0
 
-    detector = None
     _detectors = None
 
     _use_abbreviated_counts = False
@@ -91,25 +91,52 @@ class MeasurementPyScript(PyScript):
         super(MeasurementPyScript, self).truncate(style=style)
 
     def get_script_commands(self):
-        cmds = ['baselines', 'position', 'set_time_zero', 'peak_center',
+        cmds = super(MeasurementPyScript, self).get_script_commands()
+
+        cmds += ['baselines', 'position', 'set_time_zero', 'peak_center',
                  'activate_detectors', 'multicollect', 'regress', 'sniff',
                  'peak_hop',
                  'coincidence',
-
+                 'equilibrate',
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
                  'set_extraction_lens', 'set_deflection',
                  'set_cdd_operating_voltage',
                  'set_source_parameters',
                  'set_source_optics',
+
+                 'get_intensity'
                  ]
+
+
         return cmds
 
     def get_variables(self):
-        return ['detector']
+#        return ['detectors']
+        return []
 
 #===============================================================================
 # commands
-#===============================================================================
+#===============================================================================    
+    @verbose_skip
+    def get_intensity(self, name):
+        if self._detectors:
+            try:
+                return self._detectors[name]
+            except KeyError:
+                pass
+
+    @verbose_skip
+    def equilibrate(self, eqtime=20, inlet=None, outlet=None):
+        evt = self._automated_run_call('do_equilibration', eqtime=eqtime,
+                                        inlet=inlet,
+                                        outlet=outlet
+                                        )
+        if not evt:
+            self.cancel()
+        else:
+            #wait for inlet to open
+            evt.wait()
+
     @count_verbose_skip
     def sniff(self, ncounts=0, calc_time=False, integration_time=1):
         if calc_time:
@@ -312,9 +339,10 @@ class MeasurementPyScript(PyScript):
 
         return config
 
-    def _get_detectors(self):
-        return self._detectors
-    detector = property(fget=_get_detectors)
+#    def _get_detectors(self):
+#        return self._detectors
+#
+#    detectors = property(fget=_get_detectors)
 
 #===============================================================================
 # handler
@@ -322,7 +350,7 @@ class MeasurementPyScript(PyScript):
     @on_trait_change('automated_run:signals')
     def update_signals(self, obj, name, old, new):
         try:
-            det = self.detector
+            det = self._detectors
             for k, v in new.iteritems():
                 det[k].signal = v
         except AttributeError:

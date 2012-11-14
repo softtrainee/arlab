@@ -100,16 +100,27 @@ class H5DataManager(DataManager):
         return self._frame
 
     def new_group(self, group_name, parent=None, description=''):
+        '''
+            if group already exists return it otherwise create a new group
+        '''
         if parent is None:
             parent = self._frame.root
 
-        grp = self._frame.createGroup(parent, group_name, description)
+        grp = self.get_group(group_name, parent)
+        if grp is None:
+            grp = self._frame.createGroup(parent, group_name, description)
+
         return grp
 
     def new_table(self, group, table_name, table_style='TimeSeries'):
-        table = self._frame.createTable(group, table_name,
+        '''
+            if table already exists return it otherwise create a new table
+        '''
+        tab = self.get_table(table_name, group)
+        if tab is None:
+            tab = self._frame.createTable(group, table_name,
                                         table_description_factory(table_style))
-        return table
+        return tab
 
     def new_array(self, group, name, data):
         self._frame.createArray(group, name, data)
@@ -117,16 +128,17 @@ class H5DataManager(DataManager):
     def get_table(self, name, group):
         f = self._frame
         try:
-            grp = getattr(f.root, group)
-            return getattr(grp, name)
+            if isinstance(group, str):
+                group = getattr(f.root, group)
+            return getattr(group, name)
         except AttributeError:
             try:
                 return getattr(f.root, name)
             except AttributeError:
                 pass
 
-    def get_group(self, name):
-        return next((g for g in self.get_groups() if g._v_name == name), None)
+    def get_group(self, name, grp=None):
+        return next((g for g in self.get_groups(grp=grp) if g._v_name == name), None)
 
     def get_groups(self, grp=None):
         if grp is not None:

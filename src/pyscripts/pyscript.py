@@ -45,6 +45,13 @@ class GosubError(Exception):
     def __str__(self):
         return 'GosubError: {} does not exist'.format(self.path)
 
+def KlassError(Exceotion):
+    def __init__(self, klass):
+        self.klass = klass
+
+    def __str__(self):
+        return 'KlassError: {} does not exist'.format(self.klass)
+
 
 class PyscriptError(Exception):
     def __init__(self, err):
@@ -189,7 +196,7 @@ class PyScript(Loggable):
         cmds = ['sleep',
             'begin_interval', 'complete_interval',
             'gosub', 'exit', ('info', '_m_info'),
-
+            'wait'
             ]
         return cmds
 
@@ -258,7 +265,7 @@ class PyScript(Loggable):
 #==============================================================================
 # commands
 #==============================================================================
-    def gosub(self, name=None, root=None, **kw):
+    def gosub(self, name=None, root=None, klass=None, **kw):
         if not name.endswith('.py'):
             name += '.py'
 
@@ -278,10 +285,19 @@ class PyScript(Loggable):
         p = os.path.join(root, name)
         if not os.path.isfile(p):
             raise GosubError(p)
-#        print self.__class__
 
+        if klass is None:
+            klass = self.__class__
+        else:
+            klassname = klass
+            pkg = 'src.pyscripts.api'
+            mod = __import__(pkg, fromlist=[klass])
+            klass = getattr(mod, klass)
 
-        s = self.__class__(root=root,
+        if not klass:
+            raise KlassError(klassname)
+
+        s = klass(root=root,
 #                          path=p,
                           name=name,
                           _syntax_checked=self._syntax_checked,
@@ -309,6 +325,11 @@ class PyScript(Loggable):
     def exit(self):
         self.info('doing EXIT')
         self.cancel()
+
+    @verbose_skip
+    def wait(self, evt):
+        if evt is not None:
+            evt.wait()
 
     def complete_interval(self):
         try:

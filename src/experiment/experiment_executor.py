@@ -474,15 +474,15 @@ class ExperimentExecutor(ExperimentManager):
         if not isAlive():
             return
 
-        #do_equilibration
-        evt = arun.do_equilibration()
-        if evt:
-            self.info('waiting for the inlet to open')
-            evt.wait()
-            self.info('inlet opened')
-
-        if not isAlive():
-            return
+#        #do_equilibration
+#        evt = arun.do_equilibration()
+#        if evt:
+#            self.info('waiting for the inlet to open')
+#            evt.wait()
+#            self.info('inlet opened')
+#
+#        if not isAlive():
+#            return
 
         arun.state = 'measurement'
         if not arun.do_measurement():
