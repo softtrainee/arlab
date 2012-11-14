@@ -104,6 +104,8 @@ class IsotopeRecord(DatabaseRecord):
 
     age = Property(depends_on='age_dirty')
     age_dirty = Event
+    kca = Property
+    cak = Property
 
     ic_factor = Property
     j = Property
@@ -114,6 +116,7 @@ class IsotopeRecord(DatabaseRecord):
     production_ratios = Property
     status = Property
     uuid = Property
+
     age_scalar = 1e6
 
     _no_load = False
@@ -254,7 +257,32 @@ class IsotopeRecord(DatabaseRecord):
 #            return getattr(self._dbrecord, attr)
 #        except AttributeError, e:
 #            print 'gettatrr', attr
+    def _calculate_kca(self):
+        result = self.arar_result
+        if result:
+            k = result['k39']
+            ca = result['ca37']
 
+            prs = self.production_ratios
+            k_ca_pr = 1
+            if prs:
+                k_ca_pr = 1 / prs.CA_K
+
+            return k / ca * k_ca_pr
+
+    def _calculate_kcl(self):
+        result = self.arar_result
+        if result:
+            k = result['k39']
+            cl = result['cl36']
+
+            prs = self.production_ratios
+            k_cl_pr = 1
+            if prs:
+                k_cl_pr = 1 / prs.Cl_K
+
+
+            return k / cl * k_cl_pr
 
     def _calculate_age(self):
 
@@ -977,6 +1005,22 @@ class IsotopeRecord(DatabaseRecord):
     def _get_age(self):
         r = self._calculate_age()
         return r
+
+    @cached_property
+    def _get_kca(self):
+        return self._calculate_kca()
+
+    @cached_property
+    def _get_cak(self):
+        return 1 / self.kca
+
+    @cached_property
+    def _get_kcl(self):
+        return self._calculate_kcl()
+
+    @cached_property
+    def _get_clk(self):
+        return 1 / self.kcl
 
     @cached_property
     def _get_signals(self):

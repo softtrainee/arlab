@@ -107,11 +107,13 @@ class Analysis(Loggable):
     sample = Property#(depends_on='dbrecord')
     labnumber = Property#(depends_on='dbrecord')
     aliquot = Property
+    step = Property
     irradiation = Property#(depends_on='dbrecord')
     group_id = Property#(depends_on='dbrecord')
     graph_id = Property#(depends_on='dbrecord')
     analysis_type = Property#(depends_on='labnumber')
     k39 = Property
+    kca = Property
     rad40 = Property
     rad40_percent = Property
     status = Property
@@ -392,18 +394,18 @@ class Analysis(Loggable):
         rr = self.dbrecord.arar_result
         return rr['rad40'] / rr['tot40'] * 100
 
-#    @cached_property
     def _get_age(self):
         return self.dbrecord.age
 
-#    @cached_property
+    def _get_kca(self):
+        return self.dbrecord.kca
+
     def _get_k39(self):
         return self.dbrecord.k39
-#    @cached_property
+
     def _get_age_error(self):
         return self.age[1]
 
-#    @cached_property
     def _get_analysis_type(self):
         dbr = self.dbrecord
         return dbr.measurement.analysis_type.name
@@ -422,6 +424,9 @@ class Analysis(Loggable):
 #        return '{}-{}'.format(ln.labnumber, ln.aliquot)
     def _get_aliquot(self):
         return self.dbrecord.aliquot
+
+    def _get_step(self):
+        return self.dbrecord.step
 #    @cached_property
     def _get_sample(self):
         dbr = self.dbrecord

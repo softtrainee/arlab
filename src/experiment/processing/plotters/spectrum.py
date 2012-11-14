@@ -338,7 +338,7 @@ class Spectrum(Plotter):
         #print 'tga', tga.nominal_value, tga.std_dev()
         #print 'mean', mean_age, mean_error
         #print 'wmean', weighted_mean_age, weighted_mean_error
-        print '----------'
+#        print '----------'
 
         age = mean_age
         error = mean_error
@@ -406,8 +406,8 @@ class Spectrum(Plotter):
 
     def get_ages(self, kind='weighted_mean'):
         return [(r.labnumber,
-                 getattr(r, '{}_age'.format(r)),
-                 getattr(r, '{}_error'.format(r)),) for r in self.results]
+                 getattr(r, '{}_age'.format(kind)),
+                 getattr(r, '{}_error'.format(kind)),) for r in self.results]
 
 
 #============= EOF =============================================
