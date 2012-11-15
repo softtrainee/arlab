@@ -199,10 +199,10 @@ class Ideogram(Plotter):
 #                          height=aux_plot_height
 #                          ),
 
-                     dict(func='kca',
-                          ytitle='K/Ca',
-                          height=aux_plot_height
-                          ),
+#                     dict(func='kca',
+#                          ytitle='K/Ca',
+#                          height=aux_plot_height
+#                          ),
 
                      ]
 
@@ -541,7 +541,7 @@ class Ideogram(Plotter):
 
 #        wm, ym, we, mswd, n = args
         text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
-        self._add_data_label(s, text, (wm, ym))
+        self._add_data_label(s, text, (wm, ym), font='Helvetica 24')
 #        self._add_data_label(s, (wm, ym, we, mswd, ages.shape[0]))
         d = lambda *args: self._update_graph(g, *args)
 #        s.index_mapper.on_trait_change(self._update_graph, 'updated')
@@ -564,8 +564,9 @@ class Ideogram(Plotter):
 
 #        if g.analyses:
         #set the color
-        for a in g.analyses:
-            a.color = s.color
+#        for a in g.analyses:
+#            a.color = s.color
+
         return ym * 2.5
 
 #    def _add_data_label(self, s, args):

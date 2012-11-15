@@ -404,10 +404,12 @@ class Spectrum(Plotter):
 
         g.redraw()
 
-    def get_ages(self, kind='weighted_mean'):
+    def get_ages(self, kind='weighted_mean', group_id=0):
         return [(r.labnumber,
                  getattr(r, '{}_age'.format(kind)),
-                 getattr(r, '{}_error'.format(kind)),) for r in self.results]
+                 getattr(r, '{}_error'.format(kind)),
+                 group_id,
+                 ) for r in self.results]
 
 
 #============= EOF =============================================

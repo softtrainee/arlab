@@ -23,7 +23,7 @@ from traitsui.api import View, Item, Group, HGroup, VGroup
 import struct
 #import os
 #from pylab import transpose
-#from numpy import loadtxt, array
+from numpy import array
 #============= local library imports  ==========================
 #from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
 #from src.loggable import Loggable
@@ -50,18 +50,41 @@ class MassSpecDatabaseImporter(Loggable):
     db = Instance(MassSpecDatabaseAdapter)
     test = Button
     def _test_fired(self):
-        self.add_analysis('19999-01', 'Unknown')
+        import numpy as np
+        regresults = None
+
+        xbase = np.linspace(430, 580, 150)
+        ybase = np.random.random(150)
+        base = [zip(xbase, ybase)]
+
+        xsig = np.linspace(20, 420, 410)
+        ysig = np.random.random(410)
+        sig = [zip(xsig, ysig)]
+
+
+        keys = [('H1', 'Ar40')]
+        self.add_analysis('4318', '01', '', '4318',
+                          base, sig, keys,
+                          regresults
+                          )
 
     def traits_view(self):
         v = View(Item('test', show_label=False))
         return v
 
     def _db_default(self):
-        db = MassSpecDatabaseAdapter(kind='mysql')
+        db = MassSpecDatabaseAdapter(kind='mysql',
+                                     host='localhost',
+                                     username='root',
+                                     password='Argon',
+                                     name='massspecdata_local'
+                                     )
+        db.connect()
 
         return db
 
-    def add_analysis(self, rid, aliquot, step, irradpos, baselines, signals, keys,
+    def add_analysis(self, rid, aliquot, step, irradpos,
+                     baselines, signals, keys,
                      regression_results):
         '''
             
@@ -97,6 +120,10 @@ class MassSpecDatabaseImporter(Loggable):
 
 #        add_results = False
 #        isos = []
+#        print keys
+#        print signals
+#        print baselines
+
         for ((det, iso), si, bi) in zip(keys, signals, baselines):
             #===================================================================
             # isotopes
@@ -110,12 +137,26 @@ class MassSpecDatabaseImporter(Loggable):
             label = '{} Baseline'.format(det.upper())
             ncnts = len(tb)
             db.add_baseline(blob, label, ncnts, iso)
+
+            baseline = array(vb).mean()
             #===================================================================
             # peak time
             #===================================================================
+            '''
+                build two blobs
+                blob 1 PeakTimeBlob
+                x, y-mean(baselines)
+                
+                blob 2
+                y list
+            '''
+
             tb, vb = zip(*si)
-            blob = self._build_timeblob(tb, vb)
-            db.add_peaktimeblob(blob, iso)
+            vb = array(vb) - baseline
+            blob1 = self._build_timeblob(tb, vb)
+
+            blob2 = [struct.pack('>f', float(v)) for v in vb]
+            db.add_peaktimeblob(blob1, blob2, iso)
 
 #            if add_results:
 #                i = regression_results[det].coefficients[-1]
@@ -150,6 +191,7 @@ class MassSpecDatabaseImporter(Loggable):
         for ti, vi in zip(t, v):
             blob += struct.pack('>ff', float(vi), float(ti))
         return blob
+
 
 
 

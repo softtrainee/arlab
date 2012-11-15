@@ -576,10 +576,14 @@ def get_capture_device(deviceid):
     cap = cv.VideoCapture(deviceid)
     return cap
 
-def query_frame(device):
-    frame = cv.Mat()
-    device >> frame
+def query_frame(device, frame=None):
+    if frame is None:
+        frame = cv.Mat()
+
+    device.retrieve(frame)
     return frame
+#    device >> frame
+#    return frame
 
 
 def write_frame(writer, src):

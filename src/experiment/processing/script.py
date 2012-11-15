@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Any, Event, on_trait_change, Either, Float
-from traitsui.api import View, Item, TableEditor
+from traits.api import HasTraits, Instance, Int, Any, Event, \
+     on_trait_change, Either, Float, Dict
+from traitsui.api import View, Item, TableEditor, ShellEditor
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import and_
@@ -31,6 +32,7 @@ from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 from src.helpers.filetools import unique_path
 import os
 from src.experiment.processing.plotters.spectrum import Spectrum
+from src.paths import paths
 #from threading import Event as TEvent, Thread
 #from src.viewable import ViewableHandler, Viewable
 
@@ -55,7 +57,26 @@ class Window(HasTraits):
 class ProcessScript(DatabaseManager):
     _figure = None
     window = Any
-    def run(self, p):
+    context = Dict
+    def _load_context(self):
+        ctx = dict(sess=self.db.get_session(),
+                   and_=and_,
+                   ideogram=self._ideogram,
+                   spectrum=self._spectrum,
+                   save=self._save,
+                   group_by_labnumber=self._group_by_labnumber,
+                   group_by_aliquot=self._group_by_aliquot,
+                   convert_records=self._convert_records,
+                   recall=self._recall,
+                   run=self._run
+                   )
+        return ctx
+
+    def _run(self, p):
+        if not p.endswith('.py'):
+            p = '{}.py'.format(p)
+
+        p = os.path.join('/Users/ross/Sandbox/scripts', p)
         txt = open(p, 'r').read()
         code = compile(txt, '<string>', 'exec')
 
@@ -65,16 +86,8 @@ class ProcessScript(DatabaseManager):
         docstr = ast.get_docstring(m)
         self.parameters_dict = yaml.load(docstr)
 
-        ctx = dict(sess=self.db.get_session(),
-                   and_=and_,
-                   ideogram=self._ideogram,
-                   spectrum=self._spectrum,
-                   save=self._save,
-                   group_by_labnumber=self._group_by_labnumber,
-                   group_by_aliquot=self._group_by_aliquot,
-                   convert_records=self._convert_records,
-                   )
-
+        ctx = self.context
+#        ctx = self._load_context()
         exec code in ctx
         ctx['main']()
 
@@ -88,7 +101,10 @@ class ProcessScript(DatabaseManager):
         '''
         if use_ages:
             analyses = [DummyAnalysis(rid=ai[0],
-                                      _age=ai[1], _error=ai[2]) for ai in analyses]
+                                      _age=ai[1],
+                                      _error=ai[2],
+                                      group_id=ai[3]
+                                      ) for ai in analyses]
 
         wparams = self.parameters_dict['window']
         g = Window(
@@ -96,7 +112,7 @@ class ProcessScript(DatabaseManager):
                    window_height=wparams['height'],
                    )
         self.window = g
-        p = Ideogram()
+        p = Ideogram(db=self.db)
 
         gideo = p.build(analyses)
         if gideo:
@@ -114,7 +130,7 @@ class ProcessScript(DatabaseManager):
                    window_height=wparams['height'],
                    )
         self.window = g
-        spec = Spectrum()
+        spec = Spectrum(db=self.db)
         spec_graph = spec.build(analyses)
         if spec_graph:
             self._figure = spec_graph.plotcontainer
@@ -124,11 +140,17 @@ class ProcessScript(DatabaseManager):
             return spec
 
 
-    def _save(self, p, figure=None):
-        root = os.path.dirname(p)
+    def _save(self, p, folder=None, figure=None):
+        if folder is None:
+            folder = paths.processing_dir
+
+        if not p.endswith('.pdf'):
+            p = '{}.pdf'.format(p)
+
+#        root = os.path.dirname(p)
         base = os.path.basename(p)
         base, ext = os.path.splitext(base)
-        p, _c = unique_path(root, base, extension=ext)
+        p, _c = unique_path(folder, base, extension=ext)
 
         if figure is None:
             figure = self._figure
@@ -144,6 +166,16 @@ class ProcessScript(DatabaseManager):
             comp = self._figure
             gc.render_component(comp, valign='center')
             gc.save()
+
+    def _recall(self, labnumber, aliquot, step=''):
+        db = self.db
+        labn = db.get_labnumber(labnumber)
+        if labn:
+            ans = next((ai for ai in labn.analyses if ai.aliquot == aliquot and ai.step == step), None)
+            if ans:
+                dbr = IsotopeRecord(_dbrecord=ans)
+                dbr.load_graph()
+                dbr.edit_traits()
 
     def _group_by_aliquot(self, ans):
         groups = dict()
@@ -177,12 +209,22 @@ class ProcessScript(DatabaseManager):
         return [Analysis(dbrecord=IsotopeRecord(_dbrecord=ri)) for ri in recs]
 
     def _test_fired(self):
-        p = '/Users/ross/Sandbox/scripts/a.py'
-        self.run(p)
+        p = 'a.py'
+        self._run(p)
 
     def traits_view(self):
-        v = View(Item('test'))
+        shell_grp = Item('context', editor=ShellEditor(share=True),
+                         style='custom', show_label=False)
+        v = View(Item('test'),
+                 shell_grp,
+                 resizable=True,
+                 width=500,
+                 height=500
+                 )
         return v
+
+    def _context_default(self):
+        return self._load_context()
 
 
 

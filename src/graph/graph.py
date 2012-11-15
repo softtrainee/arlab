@@ -1238,6 +1238,7 @@ class Graph(Loggable, ContextMenuMixin):
                                   dest_box_units='inch')
 
         pc = self.plotcontainer
+        pc.layout_needed = True
 #        ob = pc.bgcolor
 #        pc.bgcolor = 'white'
 #        if len(pc.components) == 1:
