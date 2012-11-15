@@ -76,6 +76,7 @@ class FluxManager(DatabaseManager):
 
         x = array(x)
         y = array(y)
+
         ys = array(ys)
         mys = array(mys)
 
@@ -134,6 +135,9 @@ class FluxManager(DatabaseManager):
                     color='green',
                     marker='_'
                     )
+        ax.set_xlabel('X (mm)')
+        ax.set_ylabel('Y (mm)')
+        ax.set_zlabel('Z (%change)')
         plt.show()
 
     def _calculate_button_fired(self):
@@ -204,7 +208,6 @@ class FluxManager(DatabaseManager):
                 self._interpolate_flux(reg, pi)
 
     def _model_flux(self, use_pred=False):
-
         xy = [(p.x, p.y) for p in self.positions if p.use_j]
         if use_pred:
             zs = [(p.pred_j, p.pred_jerr) for p in self.positions if p.use_j]
@@ -228,7 +231,7 @@ class FluxManager(DatabaseManager):
         v, _ = reg.predict([(p.x, p.y)])[0]
 
         p.pred_j = v
-        p.pred_jerr = 1
+        p.pred_jerr = p.jerr
 
     def _calculate_flux(self, p):
 #        j, jerr = calculate_flux(p.ar40, p.ar39, (self.age * 1e6, self.age_error * 1e6))
@@ -259,7 +262,13 @@ class FluxManager(DatabaseManager):
         geom = hd.geometry
         hs = [struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)]
         n = len(hs)
-        self.positions = [Position(hole=i + 1, x=x, y=y,
+        import math
+        theta = math.radians(0)
+        self.positions = [Position(hole=i + 1,
+#                                   x=x, 
+#                                   y=y,
+                                   x=math.cos(theta) * x - math.sin(theta) * y,
+                                   y=math.sin(theta) * x + math.cos(theta) * y,
                                    use_j=not i < n / 2,
                                    save=i < n / 2,
                                    j=0,

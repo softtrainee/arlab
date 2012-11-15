@@ -21,13 +21,14 @@ from chaco.api import AbstractOverlay
 
 #============= local library imports  ==========================
 from src.image.video import Video
-from src.helpers.memo import memoized
 
 
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
     video = Instance(Video)
+#    use_backbuffer = True
+    use_backbuffer = False
 #    swap_rb = True
 #    mirror = False
 #    flip = False
@@ -36,18 +37,17 @@ class VideoUnderlay(AbstractOverlay):
         '''
 
         '''
-        gc.save_state()
+        with gc:
+#            gc.save_state()
 #                                       flip=not self.flip,
 #                                     swap_rb=self.swap_rb,
 #                                         mirror=self.mirror,
 #                                     size=map(int, (component.width, component.height))
 #                                     )
-        gc.clip_to_rect(component.x, component.y,
+            gc.clip_to_rect(component.x, component.y,
                         component.width, component.height)
-        img = self.video.get_image_data()
-        gc.draw_image(img)
-        del img
-        gc.restore_state()
+            gc.draw_image(self.video.get_image_data())
+#            gc.restore_state()
 
 
 

@@ -154,7 +154,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                 ar37decayfactor
             
     '''
-
     s40, s39, s38, s37, s36 = map(ufloat, signals)
     s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
     s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
@@ -168,12 +167,43 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3839 = ufloat(k3839)
     cl3638 = ufloat(cl3638)
     k3739 = ufloat(k3739)
-    j = ufloat(j)
     ic = ufloat(ic)
+#    temp_ic = ufloat(ic)
 
-    s36 *= ic
-    s36bs *= ic
-    s36bk *= ic
+#    j = ufloat(j)
+#===============================================================================
+# debugging
+#===============================================================================
+    tmpj = ufloat(j)
+    j = ufloat((tmpj.nominal_value, tmpj.std_dev() * 100))
+
+    s40 = ufloat((300, 1))
+    s39 = ufloat((90, 1))
+    s38 = ufloat((1, 1))
+    s37 = ufloat((0.2, 0.01))
+    s36 = ufloat((0.005, 0.001))
+
+    s40bl = ufloat((1, 0.1))
+    s39bl = ufloat((1, 0.1))
+    s38bl = ufloat((0.0001, 0.00005))
+    s37bl = ufloat((0.0001, 0.00005))
+    s36bl = ufloat((0.0001, 0.00005))
+
+    s40bs = ufloat((0, 0))
+    s39bs = ufloat((0, 0))
+    s38bs = ufloat((0, 0))
+    s37bs = ufloat((0, 0))
+    s36bs = ufloat((0, 0))
+
+    s40bk = ufloat((0, 0))
+    s39bk = ufloat((0, 0))
+    s38bk = ufloat((0, 0))
+    s37bk = ufloat((0, 0))
+    s36bk = ufloat((0, 0))
+
+#===============================================================================
+# 
+#===============================================================================
 
     #subtract blanks and baselines
     s40 -= (s40bl + s40bs + s40bk)
@@ -182,15 +212,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s37 -= (s37bl + s37bs + s37bk)
     s36 -= (s36bl + s36bs + s36bk)
 
-#    print s40
-#    t = umath.log(2.884) / (constants.lambda_37.nominal_value * 365.25)
-
+    #apply intercalibration factor to corrected 36
+    s36 *= ic
 
     #calculate decay factors
     #2004-11-16 21:16:00
     if a37decayfactor is None:
         try:
-
             dc = constants.lambda_37.nominal_value
             a37decayfactor = calculate_decay_factor(dc, chronology_segments)
         except ZeroDivisionError:
@@ -226,7 +254,14 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         m = cl3638
 
     mcl = m / (m * constants.atm3836.nominal_value - 1)
-    cl36 = mcl * (constants.atm3836.nominal_value * (s36 - ca36) - s38 + k38 + ca38)
+    correct_for_cl = True
+    if correct_for_cl:
+        cl36 = mcl * (constants.atm3836.nominal_value * (s36 - ca36) - s38 + k38 + ca38)
+    else:
+        cl36 = 0
+
+#    s36 = s36 * ic
+#    print s36
     atm36 = s36 - ca36 - cl36
 
     #calculate rodiogenic
@@ -237,10 +272,10 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     try:
         R = ar40rad / k39
-
+#        R = ufloat((3.2181895, 0.0021006))
 #        print R.std_dev(), calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637)
-        ssF = calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637) ** 2
-        ssJ = j.std_dev() ** 2
+#        ssF = calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637) ** 2
+#        ssJ = j.std_dev() ** 2
 
 #        JR = j * R
 #        print 'we', JR
@@ -267,6 +302,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         age = ufloat((0, 0))
         age_wo_jerr = ufloat((0, 0))
 
+#    print s40 / s36
     result = dict(
                   age=age_with_jerr,
 #                 age=age_wo_jerr,
@@ -283,6 +319,10 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                   s38=s38,
                   s37=s37,
                   s36=s36,
+
+                  s37decay_cor=s37dec_cor,
+                  s39decay_cor=s39dec_cor,
+
                   ar39decayfactor=a39decayfactor,
                   ar37decayfactor=a37decayfactor
                   )

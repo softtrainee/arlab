@@ -32,7 +32,7 @@ try:
 except UnicodeEncodeError:
     PLUSMINUS = '+/-'
     PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
-    
+
 class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
 
@@ -49,7 +49,7 @@ class AnalysisSummary(Summary):
         self.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
         j, j_err = record.j
         self.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
-        def floatfmt(m, i=5):
+        def floatfmt(m, i=6):
             if abs(m) < 10 ** -i:
                 return '{:0.2e}'.format(m)
             else:
@@ -61,7 +61,7 @@ class AnalysisSummary(Summary):
         columns = [('Iso.', 5),
                    ('Int.', 12), (PLUSMINUS_ERR, 18),
                    ('Fit', 4),
-                   ('Baseline', 10), (PLUSMINUS_ERR, 18),
+                   ('Baseline', 13), (PLUSMINUS_ERR, 18),
                    ('Blank', 8), (PLUSMINUS_ERR, 18)
                    ]
         widths = [w for _, w in columns]
@@ -112,13 +112,18 @@ class AnalysisSummary(Summary):
             rad40 = arar_result['rad40']
             tot40 = arar_result['tot40']
             k39 = arar_result['k39']
-            atm36 = arar_result['atm36']
+#            atm36 = arar_result['atm36']
+
+            s36 = arar_result['s36']
+            s39dec_cor = arar_result['s39decay_cor']
+            s40 = arar_result['s40']
 
             make_ratio('%40*', rad40, tot40, scalar=100)
-            make_ratio('40/36', tot40, atm36)
-            make_ratio('40/39', tot40, k39)
-            make_ratio('40*/36', rad40, atm36)
-            make_ratio('40*/39', rad40, k39, underline=True)
+            make_ratio('40/36', s40, s36)
+            make_ratio('40/39K', s40, k39)
+            make_ratio('40/39', s40, s39dec_cor)
+            make_ratio('40*/36', rad40, s36)
+            make_ratio('40*/39K', rad40, k39, underline=True)
 
         self.add_text(' ')
 
@@ -131,7 +136,9 @@ class AnalysisSummary(Summary):
         e = u'\u00b1{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
         ej = u'\u00b1{} ({})'.format(floatfmt(ej), self.calc_percent_error(v, ej))
 
-        self.add_text('age={:0.3f} {}'.format(v, e))
+#        kca = self.record.kca
+#        self.add_text('k/ca={:0.2e}'.format(kca))
+        self.add_text('age={:0.4f} {}'.format(v, e))
         self.add_text('           {} (Exclude Error in J)'.format(ej))
 
     def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths,
@@ -175,7 +182,7 @@ class AnalysisSummary(Summary):
 #        return s
 
     def _get_signal_and_baseline(self, iso):
-        self.record._signals
+#        self.record._signals
         sig = self.record._signals[iso]
         base = self.record._signals['{}bs'.format(iso)]
 #        print sig.value
@@ -210,7 +217,6 @@ class AnalysisSummary(Summary):
             ble = blank.std_dev()
         except KeyError:
             bls, ble = 0, 0
-
 
         sv = sig.nominal_value
         se = sig.std_dev()

@@ -58,8 +58,12 @@ class Plotter(Viewable):
     _hover_cache = None
 #    hoverid = None
     def recall_analysis(self):
-        self.popup.Close()
+        if self.popup:
+            self.popup.Close()
+
         dbrecord = self.selected_analysis.dbrecord
+        if not dbrecord:
+            return
 
         from src.database.orms.isotope_orm import meas_AnalysisTable
         sess = self.db.new_session()
@@ -175,37 +179,46 @@ class Plotter(Viewable):
     def get_labnumber(self, analyses):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
-    def _make_title(self, ans):
-        lns = dict()
-        for ai in ans:
-#            v = '{}{}'.format(ai.aliquot, ai.step)
-            v = (ai.aliquot, ai.step)
-            if ai.labnumber in lns:
-                lns[ai.labnumber].append(v)
-            else:
-                lns[ai.labnumber] = [v]
+    def _make_title(self, analyses):
+        def _make_group_title(ans):
+            lns = dict()
+            for ai in ans:
+    #            v = '{}{}'.format(ai.aliquot, ai.step)
+                v = (ai.aliquot, ai.step)
+                if ai.labnumber in lns:
+                    lns[ai.labnumber].append(v)
+                else:
+                    lns[ai.labnumber] = [v]
 
-        skeys = sorted(lns.keys())
-        grps = []
-        for si in skeys:
-            als = lns[si]
-            #if aliquots-steps list is continuous use bounds
-            #sort the list 
-            #test if first_value+len(list)-1=last_value
-            sals = sorted(als, key=lambda x: x[0])
-            aliquots, _steps = zip(*sals)
-            fv = int(aliquots[0])
-            lv = int(aliquots[-1])
+            skeys = sorted(lns.keys())
+            grps = []
+            for si in skeys:
+                als = lns[si]
+                #if aliquots-steps list is continuous use bounds
+                #sort the list 
+                #test if first_value+len(list)-1=last_value
+                sals = sorted(als, key=lambda x: x[0])
+                aliquots, _steps = zip(*sals)
+                fv = int(aliquots[0])
+                lv = int(aliquots[-1])
 
-            if fv + len(als) - 1 == lv:
-                als = '{}-{}'.format(fv, lv)
-            else:
-                als = ['{}{}'.format(*a) for a in sals]
-                als = ','.join(als)
+                if fv + len(als) - 1 == lv:
+                    als = '{}-{}'.format(fv, lv)
+                else:
+                    als = ['{}{}'.format(*a) for a in sals]
+                    als = ','.join(als)
 
-            grps.append('{}-({})'.format(si, als))
+                grps.append('{}-({})'.format(si, als))
 
-        return ', '.join(grps)
+            return ', '.join(grps)
+
+        group_ids = list(set([a.group_id for a in analyses]))
+        gtitles = []
+        for gid in group_ids:
+            anss = [ai for ai in analyses if ai.group_id == gid]
+            gtitles.append(_make_group_title(anss))
+
+        return ', '.join(gtitles)
 
     def update_graph_metadata(self, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]

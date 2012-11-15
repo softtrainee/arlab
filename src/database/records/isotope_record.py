@@ -266,7 +266,8 @@ class IsotopeRecord(DatabaseRecord):
             prs = self.production_ratios
             k_ca_pr = 1
             if prs:
-                k_ca_pr = 1 / prs.CA_K
+                k_ca_pr = 1
+#                k_ca_pr = 1 / prs.CA_K
 
             return k / ca * k_ca_pr
 
@@ -279,7 +280,8 @@ class IsotopeRecord(DatabaseRecord):
             prs = self.production_ratios
             k_cl_pr = 1
             if prs:
-                k_cl_pr = 1 / prs.Cl_K
+                k_cl_pr = 1
+#                k_cl_pr = 1 / prs.Cl_K
 
 
             return k / cl * k_cl_pr
@@ -300,7 +302,6 @@ class IsotopeRecord(DatabaseRecord):
         sigs = lambda name: [(signals[iso].value, signals[iso].error)
                                 for iso in map('{{}}{}'.format(name).format, keys)]
 
-
         fsignals = sigs('')
 #        print fsignals[0]
         bssignals = sigs('bs')
@@ -310,7 +311,8 @@ class IsotopeRecord(DatabaseRecord):
         ic = self.ic_factor
         j = self.j
         irrad = self.irradiation_info
-        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irrad, ic)
+        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
+                                    j, irrad, ic)
 
         if result:
             self.arar_result = result
@@ -365,14 +367,17 @@ class IsotopeRecord(DatabaseRecord):
             graph = self.signal_graph
             if graph:
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
+
                     if rs:
-                        self._signals[iso] = Signal(_value=rs.coefficients[-1],
+                        v = rs.predict(0)
+                        self._signals[iso] = Signal(_value=v,
                                                _error=rs.coefficient_errors[-1])
             graph = self.baseline_graph
             if graph:
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
                     if rs:
-                        self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
+                        v = rs.predict(0)
+                        self._signals['{}bs'.format(iso)] = Signal(_value=v,
                                                               _error=rs.coefficient_errors[-1])
             return
 #            return self._signals_table, self._baselines_table
@@ -902,6 +907,9 @@ class IsotopeRecord(DatabaseRecord):
             #get Ar36 detector
             det = next((iso.detector for iso in self.dbrecord.isotopes
                       if iso.molecular_weight.name == 'Ar36'), None)
+#            for iso in self.dbrecord.isotopes:
+#                print iso
+#            print det
             if det:
 
                 #get the intercalibration for this detector
@@ -909,7 +917,7 @@ class IsotopeRecord(DatabaseRecord):
 
                 if not item.fit:
     #                s = Value(value=item.user_value, error=item.user_error)
-                    self._ic_factor = item.user_value, item.user_error
+                    ic = item.user_value, item.user_error
                 else:
                     intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
                     data = map(intercal, item.sets)
@@ -919,7 +927,6 @@ class IsotopeRecord(DatabaseRecord):
                                           fit=item.fit,
                                           xs=xs, ys=ys, es=es
                                           )
-
                     ic = s.value, s.error
 
         return ic

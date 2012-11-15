@@ -137,9 +137,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return bs, False
 
     @add
-    def add_peaktimeblob(self, blob, iso, **kw):
+    def add_peaktimeblob(self, blob1, blob2, iso, **kw):
         iso = self.get_isotope(iso)
-        pk = PeakTimeTable(PeakTimeBlob=blob)
+        pk = PeakTimeTable(PeakTimeBlob=blob1,
+                           PeakNeverBslnCorBlob=blob2
+                           )
         if iso is not None:
 #            iso.peak_time_series= pk
             iso.peak_time_series.append(pk)
@@ -222,7 +224,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             else:
                 item.PreferencesSetID = 0
 #            item.AnalysisID = analysis.AnalysisID
-            analysis.changeable = item
+            analysis.changeable.append(item)
             drs.changeable_items.append(item)
             return item, True
 

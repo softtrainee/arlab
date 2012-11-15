@@ -471,7 +471,10 @@ class MassSpecImporter(Importer):
             dbpr = dest.get_irradiation_production(prname)
             if not dbpr:
                 kw = dict(name=prname)
-                prs = ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', ('P36Cl38Cl', 'Cl3638')]
+                prs = ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637',
+                       ('P36Cl38Cl', 'Cl3638'),
+                       ('Ca_K')
+                       ]
                 for k in prs:
                     if not isinstance(k, tuple):
                         ko = k

@@ -467,6 +467,8 @@ class DummyAnalysis(HasTraits):
 
     labnumber = Int
     aliquot = Str
+    step = ''
+    dbrecord = None
 
     def _set_rid(self, r):
         ln, self.aliquot = r.split('-')
