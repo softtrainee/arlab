@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Any, Property, implements, DelegatesTo, Instance
 from traitsui.api import View, Item
@@ -29,9 +27,10 @@ from src.has_communicator import HasCommunicator
 from src.rpc.rpcable import RPCable
 from src.hardware.core.scanable_device import ScanableDevice
 from src.hardware.core.core_device import CoreDevice
+from src.hardware.core.viewable_device import ViewableDevice
 
 
-class AbstractDevice(RPCable, HasCommunicator):
+class AbstractDevice(RPCable, HasCommunicator, ViewableDevice):
     '''
     '''
     implements(ICoreDevice)
@@ -41,6 +40,7 @@ class AbstractDevice(RPCable, HasCommunicator):
 
     dev_klass = Property(depends_on='_cdevice')
     simulation = Property(depends_on='_cdevice')
+#    reinitialize = DelegatesTo('_cdevice')
 #    com_class = Property(depends_on='_cdevice')
 
 #    last_command = Property(depends_on='_cdevice.last_command')
@@ -133,15 +133,18 @@ class AbstractDevice(RPCable, HasCommunicator):
             r = self._cdevice.simulation
         return r
 
-    def traits_view(self):
-        v = View(Item('name', style='readonly'),
-                 Item('klass', style='readonly', label='Class'),
-                 Item('dev_klass', style='readonly', label='Dev. Class'),
-                 Item('connected', style='readonly'),
-                 Item('com_class', style='readonly', label='Com. Class'),
-                 Item('config_short_path', style='readonly'),
-                 Item('loaded', style='readonly'),
-
-               )
-        return v
+#    def info_view(self):
+#        v = View()
+#        return v
+#    def traits_view(self):
+#        v = View(Item('name', style='readonly'),
+#                 Item('klass', style='readonly', label='Class'),
+#                 Item('dev_klass', style='readonly', label='Dev. Class'),
+#                 Item('connected', style='readonly'),
+#                 Item('com_class', style='readonly', label='Com. Class'),
+#                 Item('config_short_path', style='readonly'),
+#                 Item('loaded', style='readonly'),
+#
+#               )
+#        return v
 #============= EOF =====================================

@@ -44,16 +44,17 @@ class ViewableDevice(ConfigLoadable):
     current_scan_value = CStr
 
     reinitialize_button = Button('Reinitialize')
-    
-    address=Property
-    def _get_address(self):
+
+    display_address = Property
+    def _get_display_address(self):
+
         if hasattr(self._communicator, 'host'):
             return self._communicator.host
         elif hasattr(self, 'port'):
             return self._communicator.port
-        
+
         return ''
-    
+
     def _reinitialize(self):
         self.bootstrap()
 
@@ -110,7 +111,7 @@ class ViewableDevice(ConfigLoadable):
         info_grp = VGroup(
                          Item('reinitialize_button', show_label=False),
                          Item('name', style='readonly'),
-                         Item('address', style='readonly'),
+                         Item('display_address', style='readonly'),
                          Item('klass', style='readonly', label='Class'),
                          Item('connected', style='readonly'),
                          Item('com_class', style='readonly', label='Com. Class'),
@@ -122,7 +123,7 @@ class ViewableDevice(ConfigLoadable):
         v = View(
                  Group(
                        info_grp,
-                       
+
                        layout='tabbed'
                        )
                  )

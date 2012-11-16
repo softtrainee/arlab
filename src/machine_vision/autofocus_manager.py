@@ -107,21 +107,27 @@ class AutofocusManager(Manager):
 #                kw['zoom'] = self.parameters.zoom
 #            except AttributeError:
 #                pass
+        g = self.graph
+        if not g:
+            g = Graph(plotcontainer_dict=dict(padding=10),
+                      window_x=0.70,
+                      window_y=20,
+                      window_width=325,
+                      window_height=325,
+                      window_title='Autofocus'
+                      )
+            self.graph = g
 
-        g = Graph(plotcontainer_dict=dict(padding=10),
-                  window_x=0.70,
-                  window_y=20,
-                  window_width=325,
-                  window_height=325,
-                  window_title='Autofocus'
-                  )
+        g.clear()
+
         g.new_plot(padding=[40, 10, 10, 40],
                    xtitle='Z (mm)',
                    ytitle='Focus Measure ({})'.format(oper)
                    )
         g.new_series()
         g.new_series()
-        self.graph = g
+
+
         do_later(self._open_graph)
 
         target = self._passive_focus
@@ -179,6 +185,11 @@ class AutofocusManager(Manager):
             self.info('''passive focus results:Operator={}
 ImageGradmin={} (z={})
 ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
+
+            do_later(self.graph.add_vertical_rule, fma)
+            do_later(self.graph.redraw)
+#            self.graph.add_vertical_rule(fma)
+
             self.info('calculated focus z= {}'.format(fma))
 
 #            if set_z:
@@ -238,9 +249,10 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             if self._cancel_sweep(vo):
                 return
             nstart, nend = max(0, nfocal - nwin), nfocal + pwin
-            mi = min(min(nstart, nend), min(start, end))
-            ma = max(max(nstart, nend), max(start, end))
-            self.graph.set_x_limits(mi, ma, pad=2)
+#            mi = min(min(nstart, nend), min(start, end))
+#            ma = max(max(nstart, nend), max(start, end))
+#            self.graph.set_x_limits(mi, ma, pad=2)
+
             # do a slow tight sweep around the nominal focal point
             self._do_sweep(nstart, nend, velocity=self.parameters.velocity_scalar2)
             fms, focussteps = self._collect_focus_measures(operator, roi, series=1)
@@ -268,9 +280,9 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
             controller.set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
                                                     key='z'))
-#            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
-#                                                    key='z'))
 
+        #pause before moving to end
+        time.sleep(0.5)
         controller.single_axis_move('z', end)
 
     def _collect_focus_measures(self, operator, roi, series=0):
@@ -282,9 +294,10 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                 src = self._load_source()
                 x = controller.get_current_position('z')
                 y = self._calculate_focus_measure(src, operator, roi)
+                self.graph.add_datum((x, y), series=series, do_after=1)
+
                 focussteps.append(x)
                 fms.append(y)
-                self.graph.add_datum((x, y), series=series, do_after=1)
                 time.sleep(0.05)
         return fms, focussteps
 
@@ -367,7 +380,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         return v
 
     def _load_source(self):
-        src = self.video._frame
+        src = self.video.get_frame()
         if src:
             self.image.load(src)
 

@@ -485,12 +485,7 @@ class VideoStageManager(StageManager):
     def _set_camera_xcoefficients(self, v):
         self._camera_coefficients = v
         self.canvas.camera.calibration_data.xcoeff_str = v
-
-        if self.parent is not None:
-            z = self.parent.zoom
-        else:
-            z = 0
-        self.canvas.camera.set_limits_by_zoom(z)
+        self._update_xy_limits()
 
     def _get_camera_ycoefficients(self):
         return self._camera_ycoefficients
@@ -498,12 +493,17 @@ class VideoStageManager(StageManager):
     def _set_camera_ycoefficients(self, v):
         self._camera_ycoefficients = v
         self.canvas.camera.calibration_data.ycoeff_str = v
+        self._update_xy_limits()
 
+    def _update_xy_limits(self):
         if self.parent is not None:
             z = self.parent.zoom
         else:
             z = 0
-        self.canvas.camera.set_limits_by_zoom(z)
+
+        x = self.stage_controller.get_current_position('x')
+        y = self.stage_controller.get_current_position('y')
+        self.canvas.camera.set_limits_by_zoom(z, x, y)
 
     def _get_record_label(self):
         return 'Record' if not self.is_recording else 'Stop'
@@ -597,7 +597,8 @@ class VideoStageManager(StageManager):
         return AutofocusManager(video=self.video,
                                 laser_manager=self.parent,
                                 stage_controller=self.stage_controller,
-                                canvas=self.canvas
+                                canvas=self.canvas,
+                                application=self.application
                                 )
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

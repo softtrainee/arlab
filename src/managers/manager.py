@@ -148,6 +148,7 @@ class Manager(Viewable, RPCable):
         self.add_window(self.ui)
 
     def add_window(self, ui):
+
         try:
             if self.application is not None:
                 self.application.uis.append(ui)
