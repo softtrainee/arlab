@@ -196,6 +196,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         '''
         self.joystick.disable_laser()
+
     def get_xy(self):
 
         v = self.ask('1TP?;2TP?', verbose=False)
@@ -857,7 +858,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if event is not None:
             event.set()
 
-    def _moving_(self, axis=None):
+    def _moving_(self, axis=None, verbose=False):
         '''
             use TX to read the controllers state.
             see manual 3-141
@@ -875,7 +876,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 return self.group_moving()
             else:
 
-                r = self.repeat_command(('MD?', axis), 5, check_type=int)
+                r = self.repeat_command(('MD?', axis), 5, check_type=int,
+                                         verbose=verbose)
                 if r is not None:
                     return not int(r)
 #                for _ in range(5):
@@ -891,7 +893,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         moving = False
         if not self.simulation:
 #        else:
-            r = self.repeat_command('TX', 5, check_type=str, verbose=False)
+            r = self.repeat_command('TX', 5, check_type=str, verbose=verbose)
 
             if r is not None:
                 if len(r) > 0:

@@ -85,6 +85,7 @@ class StageManager(Manager):
     save_points = Button
     clear_points = Button
     accept_point = Button
+    back_button = Button
 
     pattern_manager = Instance(PatternManager)
     stop_button = Button()
@@ -106,9 +107,7 @@ class StageManager(Manager):
 
     visualizer = Instance(StageVisualizer)
 
-
-
-
+    linear_move_history = List
 
     def __init__(self, *args, **kw):
         '''
@@ -215,6 +214,9 @@ class StageManager(Manager):
 
     def linear_move(self, x, y, update_hole=True, use_calibration=True, **kw):
 
+        cpos = self.get_uncalibrated_xy()
+        self.linear_move_history.append((cpos, {}))
+
         if update_hole:
             hole = self.get_calibrated_hole(x, y)
             if hole is not None:
@@ -225,6 +227,7 @@ class StageManager(Manager):
             pos = self.get_calibrated_position(pos)
 
         self.stage_controller.linear_move(*pos, **kw)
+
 
     def move_to_hole(self, hole, **kw):
         self._move_to_hole(hole, **kw)
@@ -468,7 +471,9 @@ class StageManager(Manager):
                                          editor=EnumEditor(name='object.stage_maps')),
                                     Item('_stage_map',
                                           show_label=False),
-
+                                    Item('back_button',
+                                         enabled_when='object.linear_move_history',
+                                         show_label=False),
                                      spring),
                              Item('canvas', style='custom', editor=editor ,
                                    show_label=False,
@@ -668,6 +673,12 @@ class StageManager(Manager):
 #===============================================================================
         '''
         '''
+    def _back_button_fired(self):
+        pos, kw = self.linear_move_history.pop(-1)
+        t = Thread(target=self.stage_controller.linear_move, args=pos, kwargs=kw)
+        t.start()
+#        self.stage_controller.linear_move(*pos, **kw)
+
     def __stage_map_changed(self):
         self.canvas.set_map(self._stage_map)
         self.tray_calibration_manager.load_calibration(stage_map=self._stage_map)
