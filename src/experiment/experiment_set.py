@@ -423,7 +423,7 @@ tray: {}
 
         ars = self.automated_runs
         ar = self.automated_run
-        if self.schedule_block:
+        if self.schedule_block and self.schedule_block!=NULL_STR:
 #            print self.schedule_block
             block = self._block_factory(self.schedule_block)
             nruns = block.render(ar, self._current_group_id)

@@ -52,9 +52,9 @@ class ExperimentManager(Manager):
     experiment_set = Instance(ExperimentSet)
     set_selector = Instance(SetSelector)
     db = Instance(IsotopeAdapter)
-    repository = Instance(Repository)
+#    repository = Instance(Repository)
 
-    repo_kind = Str
+#    repo_kind = Str
     experiment_sets = List
 
     title = DelegatesTo('experiment_set', prefix='name')
@@ -138,13 +138,13 @@ class ExperimentManager(Manager):
         prefid = 'pychron.experiment'
 
         bind_preference(self, 'username', '{}.username'.format(prefid))
-        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+#        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
 
-        if self.repo_kind == 'FTP':
-            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
+#        if self.repo_kind == 'FTP':
+#            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+#            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+#            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+#            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
         bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
         if self.db.kind == 'mysql':

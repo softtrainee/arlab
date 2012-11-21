@@ -1488,7 +1488,8 @@ class AutomatedRun(Loggable):
     @cached_property
     def _get_projects(self):
         prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
-        self.project = pi
+        if prs:
+            self.project = pi
         return prs
 
     def _get_labnumbers(self):
