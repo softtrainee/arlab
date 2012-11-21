@@ -1283,7 +1283,9 @@ class AutomatedRun(Loggable):
                               extract_units=self._extract_units,
                               cleanup=self.cleanup,
                               extract_device=hdn,
-                              analysis_type=an)
+                              analysis_type=an,
+                              ramp_rate=self.ramp_rate
+                              )
 
             return obj
 
