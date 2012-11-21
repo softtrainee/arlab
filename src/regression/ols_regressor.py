@@ -118,6 +118,10 @@ class OLSRegressor(BaseRegressor):
     def calculate_x(self, y):
         return 0
 
+    def calculate_fit_std(self, sum_sq_residuals, n):
+        q = self._degree
+        return (sum_sq_residuals / (n - 1 - q)) ** 0.5
+
     def _calculate_coefficients(self):
         '''
             params = [a,b,c]

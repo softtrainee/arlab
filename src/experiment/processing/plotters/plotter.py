@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any, Range
+from traits.api import Property, List, Any, Range, Dict
 from traitsui.api import View, Item, VGroup, TabularEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -55,7 +55,7 @@ class Plotter(Viewable):
     figure = Any
     popup = None
     _dehover_count = 0
-    _hover_cache = None
+    _hover_cache = Dict
 #    hoverid = None
     def recall_analysis(self):
         if self.popup:
@@ -151,7 +151,7 @@ class Plotter(Viewable):
 #                    )
 #        scatter.overlays.append(overlay)
 #        if popup:
-            u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
+            u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
             scatter.index.on_trait_change(u, 'metadata_changed')
 
 
@@ -220,18 +220,16 @@ class Plotter(Viewable):
 
         return ', '.join(gtitles)
 
-    def update_graph_metadata(self, group_id, obj, name, old, new):
+    def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
 
         hover = obj.metadata.get('hover')
         if hover:
-#            print hover, group_id
             hoverid = hover[0]
-#            self.hoverid = hoverid
-#            try:
-#                self._hover_cache[group_id] = hoverid
-#            except:
-#                self._hover_cache = {group_id:hoverid}
+            try:
+                self._hover_cache[group_id] = hoverid
+            except:
+                self._hover_cache = {group_id:hoverid}
 
             try:
                 self.selected_analysis = sa = sorted_ans[hoverid]
@@ -241,14 +239,16 @@ class Plotter(Viewable):
             if not self.popup:
                 self.popup = PopupWindow(None)
 
-#            print event.x, event.y
-            self._show_pop_up(self.popup, sa, obj)
+            value = scatter.value.get_data()[hoverid]
+            name = scatter.container.y_axis.title
+            value = '{}={:0.5f}'.format(name, value)
+            self._show_pop_up(self.popup, sa, value, obj)
         else:
-#            if self._dehover_count >= len(self._hover_cache.keys()):
-#                self._dehover_count = 0
-#            elif len(self._hover_cache.keys()):
-#                self._dehover_count += 1
-#                return
+            if self._dehover_count >= len(self._hover_cache.keys()) + 3:
+                self._dehover_count = 0
+            elif len(self._hover_cache.keys()):
+                self._dehover_count += 1
+                return
 
             if self.popup:
 #                self.popup.Freeze()
@@ -264,7 +264,7 @@ class Plotter(Viewable):
     def _cmp_analyses(self, x):
         return x.timestamp
 
-    def _show_pop_up(self, popup, analysis, obj):
+    def _show_pop_up(self, popup, analysis, value, obj):
         try:
             x, y = obj.metadata.get('mouse_xy')
         except Exception, e:
@@ -273,7 +273,8 @@ class Plotter(Viewable):
 
         lines = [
                  analysis.rid,
-                 analysis.age_string
+                 analysis.age_string,
+                 value
                ]
         t = '\n'.join(lines)
         gc = font_metrics_provider()

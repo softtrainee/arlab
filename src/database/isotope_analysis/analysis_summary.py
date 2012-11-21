@@ -58,44 +58,42 @@ class AnalysisSummary(Summary):
         width = lambda m, i: '{{:<{}s}}'.format(i).format(m)
 
         #add header
-        columns = [('Iso.', 5),
+        columns = [('Det.', 0),
+                   ('Iso.', 0),
                    ('Int.', 12), (PLUSMINUS_ERR, 18),
                    ('Fit', 4),
-                   ('Baseline', 13), (PLUSMINUS_ERR, 18),
-                   ('Blank', 8), (PLUSMINUS_ERR, 18)
+                   ('Baseline', 10), (PLUSMINUS_ERR, 18),
+                   ('Blank', 13), (PLUSMINUS_ERR, 18)
                    ]
         widths = [w for _, w in columns]
 
-        msg = 'Iso.  Int.       ' + PLUSMINUS_ERR + '           Fit '
-        msg += 'Baseline  ' + PLUSMINUS_ERR + '           Blank          ' + PLUSMINUS_ERR
+        msg = 'Det. Iso.  Int.       ' + PLUSMINUS_ERR + '           Fit '
+        msg += 'Baseline  ' + PLUSMINUS_ERR + '           Blank       ' + PLUSMINUS_ERR + '           '
 #        msg = ''.join([width(m, w) for m, w in columns])
         self.add_text(msg, underline=True, bold=True)
+        header = msg
 
         #add isotopes
         n = len(isos) - 1
         for i, iso in enumerate(isos):
             self._make_signals(n, i, iso, floatfmt, width, widths)
 
-#        m = 'Baseline Corrected Signals'
-#        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
-#
-#        for i, iso in enumerate(isos):
-#            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
+        underline_width = len(header)
 
         m = 'Baseline Corrected Signals          Fully Corrected Signals'
-        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
+        self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
 
-#        signals = dict()
+        widths = [5, 12, 10, 5, 12, 10]
         for i, iso in enumerate(isos):
-            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
+            self._make_corrected_signals(n, i, iso, floatfmt, width, widths, underline_width)
 
         m = 'Corrected Values'
-        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
+        self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
 #
         rec = self.record
         arar_result = rec.arar_result
         if arar_result:
-            def make_ratio(r, nom, dem, scalar=1, underline=False):
+            def make_ratio(r, nom, dem, scalar=1, underline_width=0):
                 try:
                     rr = nom / dem * scalar
                     v, e = rr.nominal_value, rr.std_dev()
@@ -105,9 +103,14 @@ class AnalysisSummary(Summary):
                 ee = '{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
                 ms = [floatfmt(v), ee]
                 msg = ''.join([width(m, 15) for m in ms])
+
+                underline = False
+                if underline_width:
+                    underline = True
+                    msg = '{{:<{}s}}'.format(underline_width).format(msg)
                 self.add_text(width(r, 10), bold=True, new_line=False,
                            underline=underline)
-                self.add_text(msg, underline=underline, size=11)
+                self.add_text(msg, size=11, underline=underline)
 
             rad40 = arar_result['rad40']
             tot40 = arar_result['tot40']
@@ -123,7 +126,7 @@ class AnalysisSummary(Summary):
             make_ratio('40/39K', s40, k39)
             make_ratio('40/39', s40, s39dec_cor)
             make_ratio('40*/36', rad40, s36)
-            make_ratio('40*/39K', rad40, k39, underline=True)
+            make_ratio('40*/39K', rad40, k39, underline_width=underline_width - 2)
 
         self.add_text(' ')
 
@@ -136,22 +139,27 @@ class AnalysisSummary(Summary):
         e = u'\u00b1{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
         ej = u'\u00b1{} ({})'.format(floatfmt(ej), self.calc_percent_error(v, ej))
 
-#        kca = self.record.kca
-#        self.add_text('k/ca={:0.2e}'.format(kca))
+        kca = self.record.kca
+        kv = kca.nominal_value
+        ek = kca.std_dev()
+        ek = u'\u00b1{} ({})'.format(floatfmt(ek), self.calc_percent_error(kv, ek))
+
+
+        self.add_text('K/Ca={:0.4e} {}'.format(kv, ek))
+        self.add_text(' ' * underline_width, underline=True)
+        self.add_text('  ')
         self.add_text('age={:0.4f} {}'.format(v, e))
         self.add_text('           {} (Exclude Error in J)'.format(ej))
 
-    def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths,
-                                fully_correct=False):
-#        d = self.display
-
-#        pi = n - i
+    def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths, lh):
         sig, base = self._get_signal_and_baseline(iso)
 
         s1 = sig - base
 #        if fully_correct:
         arar = self.record.arar_result
-        s2 = ufloat((0, 0))
+
+#        s2 = ufloat((0, 0))
+        s2 = None
         if arar:
             iso = iso.replace('Ar', 's')
             if iso in arar:
@@ -159,57 +167,46 @@ class AnalysisSummary(Summary):
 
         sv1 = s1.nominal_value
         se1 = s1.std_dev()
-        sv2 = s2.nominal_value
-        se2 = s2.std_dev()
+
+        if not s2 is None:
+            sv2 = s2.nominal_value
+            se2 = s2.std_dev()
+            bse2 = '{} ({})'.format(floatfmt(se2), self.calc_percent_error(sv2, se2))
+            sv2 = floatfmt(sv2)
+        else:
+            sv2 = '---'
+            bse2 = '---'
+
         bse1 = '{} ({})'.format(floatfmt(se1), self.calc_percent_error(sv1, se1))
-        bse2 = '{} ({})'.format(floatfmt(se2), self.calc_percent_error(sv2, se2))
         msgs = [
-#                iso,
                 floatfmt(sv1),
                 bse1,
-                '     ',
-                floatfmt(sv2),
+                ' ',
+                sv2,
                 bse2
                 ]
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
         if i == n:
-            msg += '\n'
-#        d.add_text(msg, underline=i == n)
+            lh = lh + widths[0] - 2
+            msg = '{{:<{}s}}\n'.format(lh).format(msg)
+
         self.add_text(width(iso, widths[0]), bold=True,
                   new_line=False,
                   underline=i == n)
         self.add_text(msg, size=11, underline=i == n)
-#        return s
 
     def _get_signal_and_baseline(self, iso):
-#        self.record._signals
-        sig = self.record._signals[iso]
-        base = self.record._signals['{}bs'.format(iso)]
-#        print sig.value
-#        sg = self.record.signal_graph
-#        bg = self.record.baseline_graph
-#        reg = sg.regressors[pi]
-#        inter = reg.predict(0)
-#        inter_err = reg.coefficient_errors[-1]
-#        if bg:
-#            reg = bg.regressors[pi]
-#            base = reg.predict(0)
-#            base_err = reg.coefficient_errors[-1]
-#        else:
-#            base = 0
-#            base_err = 0
-#        inter, inter_err = 0, 0
-#        base, base_err = 0, 0
-#        return ufloat((inter, inter_err)), ufloat((base, base_err))
+        sig = self.record.signals[iso]
+        base = self.record.signals['{}bs'.format(iso)]
         return sig.uvalue, base.uvalue
 
     def _make_signals(self, n, i, iso, floatfmt, width, widths):
         sg = self.record.signal_graph
-#        d = self.display
         pi = n - i
         fit = sg.get_fit(pi) if sg else ' '
         sig, base = self._get_signal_and_baseline(iso)
 
+        det = sg.plots[pi].detector
         try:
             blank = self.record.signals['{}bl'.format(iso)]
             blank = blank.uvalue
@@ -229,7 +226,6 @@ class AnalysisSummary(Summary):
         ble = '{} ({})'.format(floatfmt(ble), self.calc_percent_error(bls, ble))
 
         msgs = [
-#                iso,
                 floatfmt(sv),
                 sse,
                 fit[0].upper(),
@@ -240,13 +236,17 @@ class AnalysisSummary(Summary):
                 ble
                 ]
 
-        msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
+        msg = ''.join([width(m, w) for m, w in zip(msgs, widths[2:])])
         if i == n:
             msg += '\n'
 #        print width(iso, widths[0]), widths[0]
 #        d.add_text(iso, bold=True,
 #                  new_line=False,
 #                  underline=i == n)
+        self.add_text(width(det, 5),
+                   bold=True,
+                  new_line=False,
+                  underline=i == n)
         self.add_text(width(iso, 6),
                    bold=True,
                   new_line=False,

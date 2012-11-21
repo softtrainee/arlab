@@ -456,7 +456,8 @@ class Analysis(Loggable):
     def _set_graph_id(self, g):
         self.dbrecord.graph_id = g
 
-class DummyAnalysis(HasTraits):
+class IntegratedAnalysis(HasTraits):
+    rad40_percent = Property
     age = Property
     _age = Float
     _error = Float
@@ -469,6 +470,9 @@ class DummyAnalysis(HasTraits):
     aliquot = Str
     step = ''
     dbrecord = None
+
+    def _get_rad40_percent(self):
+        return self._rad40_percent
 
     def _set_rid(self, r):
         ln, self.aliquot = r.split('-')

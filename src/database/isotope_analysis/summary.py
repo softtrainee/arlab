@@ -33,14 +33,14 @@ class Summary(HasTraits):
             sigpee = 'Inf'
         return sigpee
 
-    def __init__(self, *args, **kw):
-        super(Summary, self).__init__(*args, **kw)
-        self.refresh()
+#    def __init__(self, *args, **kw):
+#        super(Summary, self).__init__(*args, **kw)
+#        self.refresh()
 
-    def refresh(self):
-        self.build_summary()
+    def refresh(self, gui=True):
+        self.build_summary(gui=gui)
 
-    def build_summary(self, *args, **kw):
+    def build_summary(self, gui=True, *args, **kw):
         def do():
             d = self.display
             #d.freeze()
@@ -51,8 +51,10 @@ class Summary(HasTraits):
 
             self._build_summary(*args, **kw)
             #d.thaw()
-
-        do_later(do)
+        if gui:
+            do_later(do)
+        else:
+            do()
 
     def add_text(self, *args, **kw):
         kw['gui'] = False
@@ -63,7 +65,7 @@ class Summary(HasTraits):
 
     def _display_default(self):
         return RichTextDisplay(default_size=12,
-                               width=700,
+                               width=750,
                                selectable=True,
                                default_color='black',
                                scroll_to_bottom=False,

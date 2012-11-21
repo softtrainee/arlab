@@ -168,10 +168,11 @@ class IsotopeRecord(DatabaseRecord):
 # viewable
 #===============================================================================
     def opened(self):
-        def d():
-#            self.selected = None
-            self.selected = 'summary'
-        do_later(d)
+#        def d():
+##            self.selected = None
+#            self.selected = 'summary'
+#        do_later(d)
+        self.selected = 'summary'
         super(IsotopeRecord, self).opened()
 
     def closed(self, isok):
@@ -190,7 +191,10 @@ class IsotopeRecord(DatabaseRecord):
             if 'signal' not in self.categories:
                 self.categories.append('signal')
             graph = self._load_stacked_graph(signals)
-            self.signal_graph = EditableGraph(graph=graph)
+            if self.signal_graph is None:
+                self.signal_graph = EditableGraph(graph=graph)
+            else:
+                self.signal_graph.graph = graph
 
         if baselines:
             if 'baseline' not in self.categories:
@@ -337,22 +341,25 @@ class IsotopeRecord(DatabaseRecord):
 
             if selected == 'summary':
                 item = self.analysis_summary
-                item.refresh()
+#                item.refresh()
 
             elif selected == 'blanks':
                 item = BlanksSummary(record=self)
-                item.refresh()
+#                item.refresh()
             elif selected == 'det._intercal.':
                 item = self.detector_intercalibration_summary
             elif selected == 'irradiation':
                 item = self.irradiation_summary
-                item.refresh()
+#                item.refresh()
 #                item = DetectorIntercalibrationSummary(record=self)
             else:
                 item = getattr(self, '{}_graph'.format(selected))
 
-            self.trait_set(display_item=item)
+            print 'selected change'
+            if hasattr(item, 'refresh'):
+                item.refresh()
 
+            self.trait_set(display_item=item)
     def _apply_history_change(self, new):
         self.changed = True
 
@@ -365,11 +372,12 @@ class IsotopeRecord(DatabaseRecord):
         if self._no_load:
 
             graph = self.signal_graph
+#            print 'iii', id(graph)
             if graph:
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
-
                     if rs:
                         v = rs.predict(0)
+#                        print rs, v
                         self._signals[iso] = Signal(_value=v,
                                                _error=rs.coefficient_errors[-1])
             graph = self.baseline_graph
@@ -596,6 +604,10 @@ class IsotopeRecord(DatabaseRecord):
             fit = self._get_iso_fit(iso, ofit.fit)
             gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
             gkw['xtitle'] = 'Time (s)'
+
+            gkw['detector'] = di if det is None else det
+            gkw['isotope'] = iso
+
             skw = dict()
             if regress:
                 skw['fit'] = fit
@@ -1077,7 +1089,7 @@ class IsotopeRecord(DatabaseRecord):
                                                                 selected='selected'
                                                                 ),
                              show_label=False,
-                             width=0.10
+                             width=0.05
                              ),
                         Item('display_item', show_label=False, style='custom'),
                         )
