@@ -100,6 +100,9 @@ class BaseSchedule(Saveable):
         # open the yaml config file
 #        import yaml
         p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+        if not os.path.isfile(p):
+            return 
+        
         with open(p, 'r') as fp:
             defaults = yaml.load(fp)
 
