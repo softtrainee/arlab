@@ -64,19 +64,20 @@ class RectSelectionTool(BaseTool):
         xx = self.container.x + event.x
         mxy = event.window.control.ClientToScreenXY(xx, yy)
 #        if self.update_mouse:
-#        plot.index.metadata['mouse_xy'] = mxy
+        plot.index.metadata['mouse_xy'] = mxy
 #        control = event.window.control
 #        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
         index = plot.map_index((event.x, event.y), threshold=self.threshold)
 
         if index is not None:
+#            plot.index.metadata['mouse_xy'] = mxy
+
             plot.index.metadata[self.hover_metadata_name] = [index]
 #            plot.index.metadata['hover_value'] = plot.value.get_data()[index]
 #            plot.index.metadata_changed = True
             if hasattr(plot, "value"):
                 plot.value.metadata[self.hover_metadata_name] = [index]
 
-            plot.index.metadata['mouse_xy'] = mxy
 
         elif not self.persistent_hover:
             plot.index.metadata.pop(self.hover_metadata_name, None)

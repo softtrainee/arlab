@@ -19,7 +19,7 @@ from traits.api import HasTraits, Array, List, Event, Property, cached_property,
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import math
-from numpy import array, polyval, asarray, where
+from numpy import array, polyval, asarray, where, std
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from tinv import tinv
@@ -63,7 +63,6 @@ class BaseRegressor(Loggable):
 
         return s
 
-
     def predict(self, x):
         return x
 
@@ -90,9 +89,27 @@ class BaseRegressor(Loggable):
         devs = self.calculate_devs()
         dd = devs ** 2
         cd = abs(devs)
-        std = (1.0 / (devs.shape[0] - 2) * dd.sum()) ** 0.5
-#        print std * n
-        return where(cd > (std * n))[0]
+#        s = std(devs)
+#        s = (dd.sum() / (devs.shape[0])) ** 0.5
+
+        '''
+            mass spec calculates error in fit as 
+            see LeastSquares.CalcResidualsAndFitError
+            
+            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
+  
+            NP = number of points
+            q= number of fit params... parabolic =3
+        '''
+        s = self.calculate_fit_std(dd.sum(), dd.shape[0])
+#        q = self.fit
+#        s = (dd.sum() / (n - q)) ** 0.5
+
+        return where(cd > (s * n))[0]
+
+    def calculate_fit_std(self, sum_sq_residuals, n):
+        q = 0
+        return (sum_sq_residuals / (n - q)) ** 0.5
 
     def calculate_ci(self, rx):
         if isinstance(rx, (float, int)):

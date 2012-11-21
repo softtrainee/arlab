@@ -96,6 +96,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         plot = self.plots[plotid]
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.filter_outliers_dict['filter_outliers'] = fi
+#        scatter.index.metadata['selections'] = []
+
         self.redraw()
 
     def get_filter_outliers(self, fi, plotid=0, series=0):
@@ -154,6 +156,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
                 for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
+
             except ValueError, e:
                 print e
                 break
@@ -167,9 +170,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
+#            print id(plot), plot.visible
             if not plot.visible:
                 self.regressors.append(None)
                 return
+
 #            print scatter.visible
 #            sel = scatter.index.metadata.get('selections', [])
 #            args = self._regress(
@@ -183,8 +188,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #                                           x=scatter.index.get_data(),
 #                                           y=scatter.value.get_data(),
 #                                           )
-
             args = self._regress(plot, scatter)
+
             if args:
                 fx, fy, ly, uy = args
                 line.index.set_data(fx)
@@ -236,25 +241,57 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             selection = self._apply_filter(filterstr, x)
             meta = dict(selections=selection)
             index.trait_set(metadata=meta, trait_change_notify=False)
-        else:
-            selection = index.metadata.get('selections', [])
+#        else:
+#        print fod
+        meta = index.metadata
+        apply_filter = False
+        if not fod['filter_outliers']:
+            apply_filter = False
+            csel = set(meta['selections'])
+            sel = list(csel)
+            if 'filtered' in meta:
+                fpts = meta['filtered']
+                if fpts:
+                    fpts = set(meta['filtered'])
+                    sel = list(csel - fpts)
 
-        filtered = index.metadata.get('filtered', [])
+
+            nmeta = dict(selections=sel,
+                          mouse_xy=meta.get('mouse_xy', None),
+                          filtered=None
+                       )
+#            index.trait_set(metadata=nmeta, trait_change_notify=False)
+            index.trait_set(metadata=nmeta)
+#            nmeta = meta['mouse_xy']
+#            meta['selections'] = sel
+#            meta['filtered'] = None
+
+        else:
+            if 'filtered' in meta:
+                apply_filter = True if meta['filtered'] is None else False
+            else:
+                apply_filter = True
+
+        selection = meta.get('selections', [])
+#        filtered = index.metadata.get('filtered', [])
+
 #        print selection
         if selection:
-            #dont delete the selections that are also in filtered
-            selection = list(set(selection) - set(filtered))
-
+#            #dont delete the selections that are also in filtered
+#            selection = list(set(selection))# - set(filtered))
+#
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
-        else:
-            filtered = False
+#            apply_filter = False
+#        else:
+#            filtered = False
 
         low = plot.index_range.low
         high = plot.index_range.high
         if fit in [1, 2, 3]:
             if len(y) < fit + 1:
                 return
+
             st = low
             xn = x - st
 #            ox = xn[:]
@@ -262,6 +299,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                                     degree=fit)
             fx = linspace(0, (high - low), 200)
 
+#            print r.predict(0), 'pos0', id(self)
             fy = r.predict(fx)
 
             if fy is None:
@@ -274,15 +312,18 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 ly, uy = fy, fy
 
             fx += low
-
-            try:
-                if fod['filter_outliers']:
-#                if not filtered:
-                    r = self._apply_outlier_filter(r, ox, oy, index, fod)
-                else:
-                    index.metadata['selections'] = []
-            except (KeyError, TypeError):
-                index.metadata['selections'] = []
+            if apply_filter:
+                r = self._apply_outlier_filter(r, ox, oy, index, fod)
+#            else:
+#                index.metadata['selections'] = []
+#            try:
+#                if fod['filter_outliers']:
+##                if not filtered:
+#                    r = self._apply_outlier_filter(r, ox, oy, index, fod)
+#                else:
+#                    index.metadata['selections'] = []
+#            except (KeyError, TypeError):
+#                index.metadata['selections'] = []
 #                index.metadata['filtered'] = []
 #                meta = dict(selections=[], filtered=[])
 #                index.trait_set(metadata=meta)
@@ -296,15 +337,19 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             self.regressors.append(r)
         else:
             r = MeanRegressor(xs=x, ys=y)
+            if apply_filter:
+                r = self._apply_outlier_filter(r, ox, oy, index, fod)
+#            else:
+#                index.metadata['selections'] = []
 
-            try:
-                if fod['filter_outliers']:
-#                if not filtered:
-                    r = self._apply_outlier_filter(r, ox, oy, index, fod)
-                else:
-                    index.metadata['selections'] = []
-            except (KeyError, TypeError):
-                index.metadata['selections'] = []
+#            try:
+#                if fod['filter_outliers']:
+##                if not filtered:
+#                    r = self._apply_outlier_filter(r, ox, oy, index, fod)
+#                else:
+#                    index.metadata['selections'] = []
+#            except (KeyError, TypeError):
+#                index.metadata['selections'] = []
 #                index.metadata['filtered'] = []
 #                meta = dict(selections=[], filtered=[])
 #                index.trait_set(metadata=meta)
@@ -329,35 +374,61 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         return fx, fy, ly, uy
 
     def _apply_outlier_filter(self, reg, ox, oy, index, fod):
-        t_fx, t_fy = ox[:], oy[:]
-        niterations = fod['filter_outlier_iterations']
-        n = fod['filter_outlier_std_devs']
 
-        for ni in range(niterations):
-            excludes = list(reg.calculate_outliers(n=n))
-            oxcl = excludes[:]
-            sels = index.metadata['selections']
+        try:
+            if fod['filter_outliers']:
+#                print 'fff'
+#                if not filtered:
+#                r = self._apply_outlier_filter(r, ox, oy, index, fod)
+                t_fx, t_fy = ox[:], oy[:]
+                niterations = fod['filter_outlier_iterations']
+                n = fod['filter_outlier_std_devs']
 
-#            if not include:
-            excludes = sorted(list(set(sels + excludes)))
-            meta = dict(selections=excludes, filtered=oxcl)
-            index.trait_set(metadata=meta, trait_change_nofity=ni == niterations - 1)
-#                            , trait_change_notify = False)
-#            else:
-#                print 'exc', excludes
-#                print 'sel', sels
-##                sels = set(excludes) ^ set(sels)
-##                print sels
-#                meta = dict(selections=[], filtered=[])
-#                index.trait_set(metadata=meta, trait_change_notify=False)
+                for ni in range(niterations):
+                    excludes = list(reg.calculate_outliers(n=n))
+                    oxcl = excludes[:]
+                    sels = index.metadata['selections']
 
+        #            if not include:
+                    excludes = sorted(list(set(sels + excludes)))
+#                    meta = dict(selections=excludes, filtered=oxcl)
+                    index.metadata['filtered'] = oxcl
+                    index.metadata['selections'] = excludes
+#                    index.trait_set(metadata=meta, 
+#                                    trait_change_nofity=ni == niterations - 1)
+        #                            , trait_change_notify = False)
+        #            else:
+        #                print 'exc', excludes
+        #                print 'sel', sels
+        ##                sels = set(excludes) ^ set(sels)
+        ##                print sels
+        #                meta = dict(selections=[], filtered=[])
+        #                index.trait_set(metadata=meta, trait_change_notify=False)
 
+                    t_fx = delete(t_fx, excludes, 0)
+                    t_fy = delete(t_fy, excludes, 0)
+                    reg.trait_set(xs=t_fx, ys=t_fy)
+        #            reg = reg.__class__(xs=t_fx, ys=t_fy,
+        #                            degree=fit)
+            else:
+                pass
+#                meta = index.metadata
+##                if 'filtered' in meta:
+##                    fpts = set(meta['filtered'])
+##                    csel = set(meta['selections'])
+##                    sel = list(csel - fpts)
+##
+##                else:
+##                    sel = []
+#
+#                index.metadata['selections'] = []
 
-            t_fx = delete(t_fx, excludes, 0)
-            t_fy = delete(t_fy, excludes, 0)
-            reg.trait_set(xs=t_fx, ys=t_fy)
-#            reg = reg.__class__(xs=t_fx, ys=t_fy,
-#                            degree=fit)
+        except (KeyError, TypeError):
+            index.metadata['selections'] = []
+            index.metadata['filtered'] = []
+#            meta = dict(selections=[], filtered=[])
+#            index.trait_set(metadata=meta)
+
         return reg
 
     @classmethod
@@ -555,6 +626,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _update_info(self, scatter):
         hover = scatter.value.metadata.get('hover', None)
+#        print hover
         if hover:
             hover = hover[0]
             from src.canvas.popup_window import PopupWindow

@@ -104,7 +104,6 @@ class Ideogram(Plotter):
     ages = None
     errors = None
 
-
     ideogram_of_means = Bool
     error_calc_method = Enum('SEM, but if MSWD>1 use SEM * sqrt(MSWD)', 'SEM')
 #    ideogram_of_means = Bool(False)
@@ -153,7 +152,9 @@ class Ideogram(Plotter):
         xmax += dev * 0.01
         return xmin, xmax
 
-    def build(self, analyses=None, padding=None):
+    def build(self, analyses=None, padding=None,
+              aux_plots=None
+              ):
 
         if analyses is None:
             analyses = self.analyses
@@ -181,30 +182,30 @@ class Ideogram(Plotter):
         op, r, c = self._create_grid_container(n)
         self._plotcontainer = op
 
-        aux_plot_height = 100 / r
+#        aux_plot_height = 100 / r
         self.graphs = []
         self.results = []
         plots = []
-        font = 'modern {}'.format(10)
-        tfont = 'modern {}'.format(10)
+#        font = 'modern {}'.format(10)
+#        tfont = 'modern {}'.format(10)
 
-        aux_plots = [
-                     dict(func='analysis_number',
-                          ytitle='Analysis #',
-                          height=aux_plot_height
-                          ),
-
+#        aux_plots = [
+##                     dict(func='analysis_number',
+##                          ytitle='Analysis #',
+##                          height=100
+##                          ),
+#
 #                     dict(func='radiogenic_percent',
 #                          ytitle='40Ar* %',
-#                          height=aux_plot_height
+#                          height=100
 #                          ),
-
-#                     dict(func='kca',
-#                          ytitle='K/Ca',
-#                          height=aux_plot_height
-#                          ),
-
-                     ]
+##
+##                     dict(func='kca',
+##                          ytitle='K/Ca',
+##                          height=aux_plot_height
+##                          ),
+#
+#                     ]
 
         for i in range(r):
             for j in range(c):

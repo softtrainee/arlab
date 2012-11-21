@@ -29,6 +29,8 @@ from chaco.abstract_overlay import AbstractOverlay
 #from enable.enable_traits import Pointer
 from enable.colors import color_table
 from src.experiment.processing.argon_calculations import age_equation
+from src.experiment.processing.analysis import IntegratedAnalysis
+from uncertainties import ufloat
 #from chaco.plot_label import PlotLabel
 #from enable.font_metrics_provider import font_metrics_provider
 #from chaco.data_label import DataLabel
@@ -231,6 +233,19 @@ class Spectrum(Plotter):
         self.graph = g
         return g
 
+    def _calculate_total_gas_rad40(self, analyses):
+        r, e = zip(*[(a.rad40_percent.nominal_value,
+                a.rad40_percent.std_dev())
+                for a in analyses])
+
+        r = array(r)
+        e = array(e)
+        wts = 1 / e ** 2
+
+        m, ee = average(r, weights=wts, returned=True)
+        ee = ee ** -0.5
+        return ufloat((m, ee))
+
     def _calculate_total_gas_age(self, analyses):
         '''
             sum the corrected rad40 and k39 values
@@ -339,7 +354,7 @@ class Spectrum(Plotter):
         #print 'mean', mean_age, mean_error
         #print 'wmean', weighted_mean_age, weighted_mean_error
 #        print '----------'
-
+        rad40_percent = self._calculate_total_gas_rad40(analyses)
         age = mean_age
         error = mean_error
 #        pl = DataLabel(
@@ -363,7 +378,6 @@ class Spectrum(Plotter):
                                   font='modern 18'
                                   )
 
-
         self.results.append(SpectrumResults(
                                            labnumber=self.get_labnumber(analyses),
                                            mean_age=mean_age,
@@ -372,6 +386,7 @@ class Spectrum(Plotter):
                                            weighted_mean_error=weighted_mean_error,
                                            tga=tga.nominal_value,
                                            tga_error=tga.std_dev(),
+                                           rad40_percent=rad40_percent,
                                            mswd=mswd
                                            ))
 
@@ -405,11 +420,22 @@ class Spectrum(Plotter):
         g.redraw()
 
     def get_ages(self, kind='weighted_mean', group_id=0):
-        return [(r.labnumber,
-                 getattr(r, '{}_age'.format(kind)),
-                 getattr(r, '{}_error'.format(kind)),
-                 group_id,
-                 ) for r in self.results]
+        def factory(r):
+            dm = IntegratedAnalysis(
+                                    rid=r.labnumber,
+                                    _age=r.weighted_mean_age,
+                                    _error=r.weighted_mean_error,
+                                    group_id=group_id,
+                                    _rad40_percent=r.rad40_percent
+                                    )
+            return dm
+
+        return [factory(ri) for ri in self.results]
+#        return [(r.labnumber,
+#                 getattr(r, '{}_age'.format(kind)),
+#                 getattr(r, '{}_error'.format(kind)),
+#                 group_id,
+#                 ) for r in self.results]
 
 
 #============= EOF =============================================

@@ -50,9 +50,9 @@ class AnalysisParameters(HasTraits):
         e = '{:0.6f}'.format(e)
         return u'\u00b1{:<12s}({}%)'.format(e, ee)
 
-    def _name_changed(self):
-        if self.name == 'Ar40':
-            self.show = True
+#    def _name_changed(self):
+#        if self.name == 'Ar40':
+#            self.show = True
 
     def traits_view(self):
         v = View(HGroup(Label(self.name),

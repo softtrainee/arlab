@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 
 #============= standard library imports ========================
@@ -26,9 +24,6 @@ import math
 from src.experiment.processing import constants
 from copy import copy, deepcopy
 #============= local library imports  ==========================
-
-
-
 
 def calculate_error_F(signals, F, k4039, ca3937, ca3637):
     '''
@@ -46,14 +41,12 @@ def calculate_error_F(signals, F, k4039, ca3937, ca3637):
     C3 = k4039.nominal_value
     C4 = ca3937.nominal_value
 
-
     ssD = D.std_dev() ** 2
     ssB = B.std_dev() ** 2
     ssG = G.std_dev() ** 2
     G = G.nominal_value
     B = B.nominal_value
     D = D.nominal_value
-
 
     ssF = ssG + C1 ** 2 * ssB + ssD * (C4 * G - C1 * C4 * B + C1 * C2) ** 2
     return ssF ** 0.5
@@ -78,14 +71,14 @@ def calculate_flux(rad40, k39, age):
         
         solve age equation for J
     '''
-    if isinstance(ar40, (list, tuple, str)):
-        ar40 = ufloat(ar40)
-    if isinstance(ar39, (list, tuple, str)):
-        ar39 = ufloat(ar39)
+    if isinstance(rad40, (list, tuple, str)):
+        rad40 = ufloat(rad40)
+    if isinstance(k39, (list, tuple, str)):
+        k39 = ufloat(k39)
     if isinstance(age, (list, tuple, str)):
         age = ufloat(age)
 #    age = (1 / constants.lambdak) * umath.log(1 + JR)
-    r = ar40 / ar39
+    r = rad40 / k39
 
     j = (umath.exp(age * constants.lambdak) - 1) / r
     return j.nominal_value, j.std_dev()
@@ -168,42 +161,52 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     cl3638 = ufloat(cl3638)
     k3739 = ufloat(k3739)
     ic = ufloat(ic)
+    j = ufloat(j)
 #    temp_ic = ufloat(ic)
 
-#    j = ufloat(j)
 #===============================================================================
 # debugging
 #===============================================================================
-    tmpj = ufloat(j)
-    j = ufloat((tmpj.nominal_value, tmpj.std_dev() * 100))
+    debug = False
+    if debug:
+        tmpj = ufloat(j)
+        j = ufloat((tmpj.nominal_value, tmpj.std_dev() * 100))
 
-    s40 = ufloat((300, 1))
-    s39 = ufloat((90, 1))
-    s38 = ufloat((1, 1))
-    s37 = ufloat((0.2, 0.01))
-    s36 = ufloat((0.005, 0.001))
+        s40 = ufloat((300, 1))
+        s39 = ufloat((90, 1))
+        s38 = ufloat((1, 1))
+        s37 = ufloat((0.2, 0.01))
+        s36 = ufloat((0.005, 0.001))
 
-    s40bl = ufloat((1, 0.1))
-    s39bl = ufloat((1, 0.1))
-    s38bl = ufloat((0.0001, 0.00005))
-    s37bl = ufloat((0.0001, 0.00005))
-    s36bl = ufloat((0.0001, 0.00005))
+        s40bl = ufloat((1, 0.1))
+        s39bl = ufloat((1, 0.1))
+        s38bl = ufloat((0.0001, 0.00005))
+        s37bl = ufloat((0.0001, 0.00005))
+        s36bl = ufloat((0.0001, 0.00005))
 
-    s40bs = ufloat((0, 0))
-    s39bs = ufloat((0, 0))
-    s38bs = ufloat((0, 0))
-    s37bs = ufloat((0, 0))
-    s36bs = ufloat((0, 0))
+        s40bs = ufloat((0, 0))
+        s39bs = ufloat((0, 0))
+        s38bs = ufloat((0, 0))
+        s37bs = ufloat((0, 0))
+        s36bs = ufloat((0, 0))
 
-    s40bk = ufloat((0, 0))
-    s39bk = ufloat((0, 0))
-    s38bk = ufloat((0, 0))
-    s37bk = ufloat((0, 0))
-    s36bk = ufloat((0, 0))
+        s40bk = ufloat((0, 0))
+        s39bk = ufloat((0, 0))
+        s38bk = ufloat((0, 0))
+        s37bk = ufloat((0, 0))
+        s36bk = ufloat((0, 0))
 
 #===============================================================================
 # 
 #===============================================================================
+#    s40bs.set_std_dev(0)
+#    s39bs.set_std_dev(0)
+#    s38bs.set_std_dev(0)
+#    s37bs.set_std_dev(0)
+#    s36bs.set_std_dev(0)
+#
+#    ic = ufloat((ic.nominal_value, 0))
+
 
     #subtract blanks and baselines
     s40 -= (s40bl + s40bs + s40bk)

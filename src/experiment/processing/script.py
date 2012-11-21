@@ -17,22 +17,18 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Int, Any, Event, \
      on_trait_change, Either, Float, Dict
-from traitsui.api import View, Item, TableEditor, ShellEditor
-from pyface.timer.do_later import do_later
+from traitsui.api import View, Item, ShellEditor
+#from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import and_
 #============= local library imports  ==========================
 from src.experiment.processing.database_manager import DatabaseManager
-from src.experiment.processing.plotters.ideogram import Ideogram
-from src.experiment.processing.analysis import Analysis, DummyAnalysis
-from src.database.records.isotope_record import IsotopeRecord
 from src.graph.graph_container import HGraphContainer
 from enable.component_editor import ComponentEditor
-from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 from src.helpers.filetools import unique_path
 import os
-from src.experiment.processing.plotters.spectrum import Spectrum
 from src.paths import paths
+from src.database.records.isotope_record import IsotopeRecord
 #from threading import Event as TEvent, Thread
 #from src.viewable import ViewableHandler, Viewable
 
@@ -68,9 +64,96 @@ class ProcessScript(DatabaseManager):
                    group_by_aliquot=self._group_by_aliquot,
                    convert_records=self._convert_records,
                    recall=self._recall,
-                   run=self._run
+                   run=self._run,
+                   fit=self._fit,
+                   analysis=self._analysis,
+                   filter_outliers=self._filter_outliers
                    )
         return ctx
+
+    def _filter_outliers(self, analysis, **filter_dict):
+        if not analysis.signal_graph:
+            analysis.load_graph()
+
+        g = analysis.signal_graph
+        n = len(g.fit_selector.fits)
+        vis = []
+        for k, v in filter_dict.iteritems():
+#            print k
+#            a = next(((n - i - 1, fi) for i, fi in enumerate(g.fit_selector.fits)
+#                                                  if fi.name == k), 0)
+            a = next((fi for i, fi in enumerate(g.fit_selector.fits)
+                                                  if fi.name == k), 0)
+            if a:
+#                plotid, fi = a
+#                plot = g.plots[plotid]
+#                print id(plot)
+#                vis.append((plot, plot.visible, fi))
+#                plot.visible = True
+#                fi.trait_set(filter_outliers=v, trait_change_notify=False)
+#                fi._suppress_update = True
+                a.filter_outliers = v
+#                fi._suppress_update = False
+
+#        return
+#        g._update_graph()
+
+        g = analysis.baseline_graph
+#        n = len(g.fit_selector.fits)
+        for k, v in filter_dict.iteritems():
+#            a = next(((n - i - 1, fi) for i, fi in enumerate(g.fit_selector.fits)
+#                                                  if fi.name == k[:-2]), 0)
+            a = next((fi for i, fi in enumerate(g.fit_selector.fits)
+                                                  if fi.name == k[:-2]), 0)
+
+            if a:
+#                plotid, fi = a
+#                plot = g.plots[plotid]
+#                vis.append((plot, plot.visible))
+#                plot.visible = True
+                a.filter_outliers = v
+
+#        g._update_graph()
+
+#        analysis.age_dirty = True
+#        analysis.analysis_summary.refresh()
+#        analysis.analysis_summary.refresh()
+#        try:
+#            for p, v in vis:
+#                p.visible = v
+#        except ValueError:
+#            pass
+
+    def _fit(self, analysis, **fit_dict):
+        '''
+            e.g. fit(a, Ar40='linear')
+        '''
+        if not analysis.signal_graph:
+            analysis.load_graph()
+
+        g = analysis.signal_graph
+        n = len(g.fit_selector.fits)
+        for k, v in fit_dict.iteritems():
+            a = next(((n - i - 1, fi) for i, fi in enumerate(g.fit_selector.fits)
+                                                  if fi.name == k), 0)
+            if a:
+                plotid, fi = a
+
+                vv = g.plots[plotid].visible
+                g.plots[plotid].visible = True
+                fi.fit = v
+                g._update_graph()
+                g.plots[plotid].visible = vv
+
+        analysis.age_dirty = True
+
+    def _analysis(self, labnumber, aliquot, step=''):
+        db = self.db
+        labn = db.get_labnumber(labnumber)
+        if labn:
+            ans = next((ai for ai in labn.analyses if ai.aliquot == aliquot and ai.step == step), None)
+            if ans:
+                return IsotopeRecord(_dbrecord=ans)
 
     def _run(self, p):
         if not p.endswith('.py'):
@@ -94,17 +177,20 @@ class ProcessScript(DatabaseManager):
 #===============================================================================
 # commands
 #===============================================================================
-    def _ideogram(self, analyses, use_ages=False, show=True):
+    def _ideogram(self, analyses, show=True,
+                  aux_plots=None):
         '''
-            if use_ages=True
-            create a list of dummy analysis with fixed age,error
         '''
-        if use_ages:
-            analyses = [DummyAnalysis(rid=ai[0],
-                                      _age=ai[1],
-                                      _error=ai[2],
-                                      group_id=ai[3]
-                                      ) for ai in analyses]
+        from src.experiment.processing.plotters.ideogram import Ideogram
+
+        if aux_plots is None:
+            aux_plots = []
+#        if use_ages:
+#            analyses = [DummyAnalysis(rid=ai[0],
+#                                      _age=ai[1],
+#                                      _error=ai[2],
+#                                      group_id=ai[3]
+#                                      ) for ai in analyses]
 
         wparams = self.parameters_dict['window']
         g = Window(
@@ -113,8 +199,21 @@ class ProcessScript(DatabaseManager):
                    )
         self.window = g
         p = Ideogram(db=self.db)
+        ps = []
 
-        gideo = p.build(analyses)
+        for ap in aux_plots:
+            if ap == 'radiogenic':
+                d = dict(func='radiogenic_percent',
+                          ytitle='40Ar* %',
+                          height=100
+                          )
+            elif ap == 'analysis_number':
+                d = dict(func='analysis_number',
+                     ytitle='Analysis #',
+                     height=100)
+            ps.append(d)
+
+        gideo = p.build(analyses, aux_plots=ps)
         if gideo:
             gideo, plots = gideo
             self._figure = gideo
@@ -123,6 +222,8 @@ class ProcessScript(DatabaseManager):
                 g.edit_traits()
 
     def _spectrum(self, analyses, show=True):
+        from src.experiment.processing.plotters.spectrum import Spectrum
+
         print len(analyses), 'analyses'
         wparams = self.parameters_dict['window']
         g = Window(
@@ -141,6 +242,8 @@ class ProcessScript(DatabaseManager):
 
 
     def _save(self, p, folder=None, figure=None):
+        from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+
         if folder is None:
             folder = paths.processing_dir
 
@@ -168,12 +271,15 @@ class ProcessScript(DatabaseManager):
             gc.save()
 
     def _recall(self, labnumber, aliquot, step=''):
-        db = self.db
-        labn = db.get_labnumber(labnumber)
-        if labn:
-            ans = next((ai for ai in labn.analyses if ai.aliquot == aliquot and ai.step == step), None)
-            if ans:
-                dbr = IsotopeRecord(_dbrecord=ans)
+#        db = self.db
+#        labn = db.get_labnumber(labnumber)
+#        if labn:
+#            ans = next((ai for ai in labn.analyses if ai.aliquot == aliquot and ai.step == step), None)
+#            if ans:
+#                dbr = IsotopeRecord(_dbrecord=ans)
+        dbr = self._analysis(labnumber, aliquot, step)
+        if dbr:
+            if dbr.age:
                 dbr.load_graph()
                 dbr.edit_traits()
 
@@ -206,6 +312,8 @@ class ProcessScript(DatabaseManager):
             ri.group_id = keys.index(ri.labnumber)
 
     def _convert_records(self, recs):
+        from src.experiment.processing.analysis import Analysis
+
         return [Analysis(dbrecord=IsotopeRecord(_dbrecord=ri)) for ri in recs]
 
     def _test_fired(self):

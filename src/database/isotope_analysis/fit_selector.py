@@ -116,34 +116,48 @@ class FitSelector(HasTraits):
         elif name == 'filter_outliers':
             g.set_filter_outliers(new, plotid=plotid)
 
-        self._suppress_update = True
+        vis = g.plots[plotid].visible
+#        print id(g.plots[plotid]), plotid
+        g.plots[plotid].visible = True
+#        self._suppress_update = True
         g._update_graph()
-        self._suppress_update = False
-        try:
-            reg = g.regressors[plotid]
-            obj._intercept = reg.predict(0)
-            obj._error = reg.coefficient_errors[-1]
+        g.plots[plotid].visible = vis
+#        self._suppress_update = False
+#        try:
+#        print g.regressors
+#        reg = g.regressors[plotid]
+##        print reg, plotid
+#        obj._intercept = reg.predict(0)
+#        obj._error = reg.coefficient_errors[-1]
+#
+#        except IndexError:
+#            obj._intercept = 0
+#            obj._error = 0
 
-        except IndexError:
-            obj._intercept = 0
-            obj._error = 0
-
-        self.analysis.age_dirty = True
+#        self.analysis.age_dirty = True
+#        self.graph.redraw()
 
     @on_trait_change('graph:graph:regression_results')
     def _update_values(self, new):
-        if self._suppress_update:
-            return
+#        print new
+#        print self._suppress_update
+#        if self._suppress_update:
+#
+#            return
 
         if new:
             n = len(self.fits) - 1
             for i, fi in enumerate(self.fits):
-                reg = new[n - i]
-                if reg:
-                    fi._intercept = reg.predict(0)
-                    fi._error = reg.coefficient_errors[-1]
+                try:
+                    reg = new[n - i]
+                    if reg:
+                        fi._intercept = reg.predict(0)
+                        fi._error = reg.coefficient_errors[-1]
+                except IndexError:
+                    pass
 
         self.analysis.age_dirty = True
+#        self.analysis.analysis_summary.refresh()
 
     def traits_view(self):
         v = View(
