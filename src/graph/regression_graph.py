@@ -583,6 +583,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        u = lambda obj, name, old, new: self._update_metadata(scatter, obj, name, old, new)
 #        scatter.index.on_trait_change(u, 'metadata_changed')
 
+        if filter_outliers_dict is None:
+            filter_outliers_dict = dict(filter_outliers=False)
+
         scatter.fit = fit
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict

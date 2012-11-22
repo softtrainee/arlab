@@ -256,10 +256,13 @@ class meas_ExtractionTable(Base, ScriptTable):
     extract_duration = Column(Float)
     cleanup_duration = Column(Float)
     experiment_blob = Column(BLOB)
+    weight = Column(Float)
+
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
+
 
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):

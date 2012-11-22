@@ -117,9 +117,9 @@ class ExperimentManager(Manager):
             self.warning_dialog('Failed connecting to database. {}'.format(self.db.url))
             return
 
-        if not self.repository.connect():
-            self.warning_dialog('Failed connecting to repository {}'.format(self.repository.url))
-            return
+#        if not self.repository.connect():
+#            self.warning_dialog('Failed connecting to repository {}'.format(self.repository.url))
+#            return
 
         return True
 
@@ -409,16 +409,16 @@ class ExperimentManager(Manager):
     def _db_default(self):
         return self._db_factory()
 
-    def _repository_default(self):
-        if self.repo_kind == 'local':
-            klass = Repository
-        else:
-            klass = FTPRepository
-
-        repo = klass()
-        #use local data dir
-        repo.root = paths.isotope_dir
-        return repo
+#    def _repository_default(self):
+#        if self.repo_kind == 'local':
+#            klass = Repository
+#        else:
+#            klass = FTPRepository
+#
+#        repo = klass()
+#        #use local data dir
+#        repo.root = paths.isotope_dir
+#        return repo
 
 #def main():
 #    paths.build('_experiment')

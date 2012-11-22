@@ -276,30 +276,24 @@ tray: {}
 
             if not na:
                 self._load_default_scripts(setter=setter, key=li)
-#                print names, name
                 ni = names[name]
                 if ni != NULL_STR:
                     na = self._add_mass_spectromter_name(ni)
-#                print na
-#                na = names[name] if names[name] != NULL_STR else ''
-
 
             if na and not na.endswith('.py'):
                 na = na + '.py'
-
 
             return na
 
         cextract_group = None
         for ai in runs:
             nruns.append(ai)
-#            print ai.labnumber
             try:
                 int(ai.labnumber)
                 i += 1
             except ValueError:
                 continue
-#            index_mapping = dict(before=lambda n:-1, after=lambda n: n)
+
             for name, ln in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
                 try:
                     _meta = meta[name]
@@ -314,7 +308,6 @@ tray: {}
                 params['labnumber'] = '{}'.format(ln)
                 params['configuration'] = self._build_configuration(make_script_name)
 
-#                print name, arun.labnumber, arun.aliquot
                 if isinstance(freq, int):
                     freq = [freq]
 
@@ -322,7 +315,6 @@ tray: {}
                     arun = self._automated_run_factory(**params)
                     if isinstance(fi, int):
                         if i % freq == 0:
-#                            arun = self._automated_run_factory(**params)
                             nruns.append(arun)
                     else:
                         if ai.extract_group:
@@ -335,7 +327,6 @@ tray: {}
 
                         if fi.lower() == 'before' and ai != runs[-1]:
                             if len(nruns) >= 2:
-#                                print nruns[-2].labnumber, ln, 'fff'
                                 if nruns[-2].labnumber != ln:
                                     nruns.insert(-1, arun)
                             else:
@@ -423,7 +414,7 @@ tray: {}
 
         ars = self.automated_runs
         ar = self.automated_run
-        if self.schedule_block and self.schedule_block!=NULL_STR:
+        if self.schedule_block and self.schedule_block != NULL_STR:
 #            print self.schedule_block
             block = self._block_factory(self.schedule_block)
             nruns = block.render(ar, self._current_group_id)
@@ -466,6 +457,9 @@ tray: {}
 
         self.automated_run = ar.clone_traits()
         self.automated_run.trait_set(**kw)
+
+        self._bind_automated_run(self.automated_run)
+
         self.update_aliquots_needed = True
 
     @on_trait_change('''extraction_script, measurement_script,
@@ -772,7 +766,8 @@ post_measurement_script, post_equilibration_script''')
               Item('tray',
                    editor=EnumEditor(name='trays'),
 #                                           show_label=False,
-                   )
+                   ),
+              Item('delay_between_analyses', label='Delay between Analyses (s)')
               )
         return gparams_grp
 
