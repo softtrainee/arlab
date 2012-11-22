@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from launchers.helpers import build_version
+build_version('_experiment')
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Int, Any, Event, \
@@ -54,6 +56,7 @@ class ProcessScript(DatabaseManager):
     _figure = None
     window = Any
     context = Dict
+    parameters_dict = Dict
     def _load_context(self):
         ctx = dict(sess=self.db.get_session(),
                    and_=and_,
@@ -192,10 +195,12 @@ class ProcessScript(DatabaseManager):
 #                                      group_id=ai[3]
 #                                      ) for ai in analyses]
 
-        wparams = self.parameters_dict['window']
+#        wparams = self.parameters_dict['window']
+        w = self.get_parameter('window', 'width', default=500)
+        h = self.get_parameter('window', 'height', default=600)
         g = Window(
-                   window_width=wparams['width'],
-                   window_height=wparams['height'],
+                   window_width=w,
+                   window_height=h,
                    )
         self.window = g
         p = Ideogram(db=self.db)
@@ -220,6 +225,8 @@ class ProcessScript(DatabaseManager):
             g.container.add(gideo)
             if show:
                 g.edit_traits()
+
+            return g, p
 
     def _spectrum(self, analyses, show=True):
         from src.experiment.processing.plotters.spectrum import Spectrum
@@ -316,6 +323,14 @@ class ProcessScript(DatabaseManager):
 
         return [Analysis(dbrecord=IsotopeRecord(_dbrecord=ri)) for ri in recs]
 
+    def get_parameter(self, a, b, default=None):
+        r = default
+        if a in self.parameters_dict:
+            ad = self.parameters_dict[a]
+            if b in ad:
+                r = ad[b]
+        return r
+
     def _test_fired(self):
         p = 'a.py'
         self._run(p)
@@ -336,7 +351,9 @@ class ProcessScript(DatabaseManager):
 
 
 
+
 if __name__ == '__main__':
+
     c = ProcessScript()
     c.db.connect()
     c.configure_traits()

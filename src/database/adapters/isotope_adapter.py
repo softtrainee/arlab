@@ -26,7 +26,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
-    proc_FitTable
+    proc_FitTable, meas_PeakCenterTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
@@ -368,6 +368,14 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_project(self, name, **kw):
         proj = gen_ProjectTable(name=name, **kw)
         return self._add_unique(proj, 'project', name)
+
+    @add
+    def add_peak_center(self, analysis, **kw):
+        pc = meas_PeakCenterTable(**kw)
+        if analysis:
+            analysis.peak_center = pc
+            return pc, True
+        return pc, False
 
     @add
     def add_user(self, name, project=None, **kw):

@@ -51,6 +51,9 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 #HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
 
 
+
+
+
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
     extraction_line_manager = Any
@@ -1001,13 +1004,18 @@ class AutomatedRun(Loggable):
             self._save_spectrometer_info(meas)
 
             #do preliminary processing of data
-            ss = self._preliminary_processing(cp)
+            #returns signals dict and peak_center table
+            ss, pc = self._preliminary_processing(cp)
 
             #add selected history
             _sh = db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
 
+            #save blanks
             self._save_blank_info(a)
+
+            #save peak center
+            self._save_peak_center(pc)
 
             if globalv.experiment_savedb:
                 db.commit()
@@ -1041,8 +1049,19 @@ class AutomatedRun(Loggable):
 
             rsignals['{}baseline'.format(iso)] = bs
 
-        return rsignals
+        peak_center = dm.get_table('peak_center', '/')
 
+        return rsignals, peak_center
+
+    def _save_peak_center(self, analysis, tab):
+        db = self.db
+        packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
+        points = ''.join(packed_xy)
+        center = tab.attrs.center_dac
+        pc = db.add_peak_center(
+                           analysis,
+                           center=center, points=points)
+        return pc
 
     def _save_measurement(self, analysis):
         db = self.db

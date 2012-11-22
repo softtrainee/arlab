@@ -16,6 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance
+from traitsui.api import View, Item
 from src.displays.rich_text_display import RichTextDisplay
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
@@ -73,5 +74,11 @@ class Summary(HasTraits):
 #                               font_name='Bitstream Vera Sans Mono'
 #                               font_name='monospace'
                                )
-
+    def traits_view(self):
+        v = View(
+                 Item('display',
+#                      height=0.8, 
+                      show_label=False, style='custom'),
+                 )
+        return v
 #============= EOF =============================================

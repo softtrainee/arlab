@@ -57,9 +57,5 @@ class IrradiationSummary(Summary):
         self.add_text(key, bold=True, new_line=False, *kw)
         self.add_text(value, **kw)
 
-    def traits_view(self):
-        v = View(
-                 Item('display', height=0.8, show_label=False, style='custom'),
-                 )
-        return v
+
 #============= EOF =============================================

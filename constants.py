@@ -20,5 +20,6 @@
 NULL_STR = '---'
 SCRIPT_KEYS = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
 FIT_TYPES = ['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM']
-DELIMITERS={',':'comma','\t':'tab',' ':'space'}
+DELIMITERS = {',':'comma', '\t':'tab', ' ':'space'}
+AGE_SCALARS = {'Ma':1e6, 'ka':1e3, 'a':1}
 #============= EOF =============================================

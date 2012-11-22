@@ -82,7 +82,13 @@ class ContextMenuMixin(HasTraits):
 
 
 class IsotopeContextMenuMixin(ContextMenuMixin):
-    def set_status(self):
+    def set_status_omit(self):
+        '''
+            override this method in a subclass 
+        '''
+        pass
+
+    def set_status_include(self):
         '''
             override this method in a subclass 
         '''
@@ -99,8 +105,8 @@ class IsotopeContextMenuMixin(ContextMenuMixin):
 
         contents.append(Menu(
                              self.action_factory('Recall', 'recall_analysis'),
-                             self.action_factory('Omit', 'set_status'),
-                             self.action_factory('Include', 'set_status'),
+                             self.action_factory('Omit', 'set_status_omit'),
+                             self.action_factory('Include', 'set_status_include'),
                              name='Analysis'))
         return contents
 

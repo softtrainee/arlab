@@ -18,24 +18,28 @@
 from traits.api import Instance
 from traitsui.api import View, Item
 #============= standard library imports ========================
-import re
-from uncertainties import ufloat
+#import re
+#from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.fit_selector import FitSelector
-import math
 PLUSMINUS = u'\u00b1'
-#PLUSMINUS = '+/-'
-
 try:
     PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 except UnicodeEncodeError:
     PLUSMINUS = '+/-'
     PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 
+def floatfmt(m, i=6):
+    if abs(m) < 10 ** -i:
+        return '{:0.2e}'.format(m)
+    else:
+        return '{{:0.{}f}}'.format(i).format(m)
+
+def fixed_width(m, i):
+    return '{{:<{}s}}'.format(i).format(m)
 class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
-
     def _build_summary(self):
         record = self.record
 
@@ -43,19 +47,6 @@ class AnalysisSummary(Summary):
         isos = list(reversed(isos))
         if not isos:
             isos = []
-
-        self.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
-        self.add_text('UUID={}'.format(record.uuid), bold=True)
-        self.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
-        j, j_err = record.j
-        self.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
-        def floatfmt(m, i=6):
-            if abs(m) < 10 ** -i:
-                return '{:0.2e}'.format(m)
-            else:
-                return '{{:0.{}f}}'.format(i).format(m)
-#        floatfmt = lambda m, i = 5: '{{:0.{}f}}'.format(i).format(m)
-        width = lambda m, i: '{{:<{}s}}'.format(i).format(m)
 
         #add header
         columns = [('Det.', 0),
@@ -67,72 +58,75 @@ class AnalysisSummary(Summary):
                    ]
         widths = [w for _, w in columns]
 
-        msg = 'Det. Iso.  Int.       ' + PLUSMINUS_ERR + '           Fit '
-        msg += 'Baseline  ' + PLUSMINUS_ERR + '           Blank       ' + PLUSMINUS_ERR + '           '
-#        msg = ''.join([width(m, w) for m, w in columns])
-        self.add_text(msg, underline=True, bold=True)
-        header = msg
+        header = 'Det. Iso.  Int.       ' + PLUSMINUS_ERR + '           Fit '
+        header += 'Baseline  ' + PLUSMINUS_ERR + '           Blank       ' + PLUSMINUS_ERR + '           '
+
+        underline_width = len(header)
+
+        #add metadata
+        self._make_keyword('Analysis ID', record.record_id, width=30)
+        self._make_keyword('Date', record.rundate)
+        self._make_keyword('Time', record.runtime, new_line=True)
+
+        #add extraction
+        self._make_keyword('Mass Spectrometer', record.mass_spectrometer, width=30)
+        self._make_keyword('Extraction Device', record.extract_device, new_line=True)
+        exs = [
+                ('Position', record.position),
+                ('Extract', '{} ({})'.format(record.extract_value, record.extract_units)),
+                ('Duration', '{} (s)'.format(record.extract_duration)),
+                ('Cleanup', '{} (s)'.format(record.cleanup_duration)),
+                ]
+        n = len(exs)
+        for i, (name, value) in enumerate(exs):
+            self._make_keyword(name, value, True if i == n - 1 else False)
+
+        #add j
+        j, je = record.j
+        ee = u'\u00b1{} ({})'.format(floatfmt(je), self.calc_percent_error(j, je))
+        self._make_keyword('J', '{} {}'.format(j, ee), new_line=True)
+
+        #added header
+        self.add_text(header, underline=True, bold=True)
 
         #add isotopes
         n = len(isos) - 1
         for i, iso in enumerate(isos):
-            self._make_signals(n, i, iso, floatfmt, width, widths)
+            self._make_signals(n, i, iso, widths)
 
-        underline_width = len(header)
-
+        #add corrected signals
         m = 'Baseline Corrected Signals          Fully Corrected Signals'
         self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
-
         widths = [5, 12, 10, 5, 12, 10]
         for i, iso in enumerate(isos):
-            self._make_corrected_signals(n, i, iso, floatfmt, width, widths, underline_width)
+            self._make_corrected_signals(n, i, iso, widths, underline_width)
 
+        #add corrected values
         m = 'Corrected Values'
         self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
 #
         rec = self.record
         arar_result = rec.arar_result
         if arar_result:
-            def make_ratio(r, nom, dem, scalar=1, underline_width=0):
-                try:
-                    rr = nom / dem * scalar
-                    v, e = rr.nominal_value, rr.std_dev()
-                except ZeroDivisionError:
-                    v, e = 0, 0
-
-                ee = '{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
-                ms = [floatfmt(v), ee]
-                msg = ''.join([width(m, 15) for m in ms])
-
-                underline = False
-                if underline_width:
-                    underline = True
-                    msg = '{{:<{}s}}'.format(underline_width).format(msg)
-                self.add_text(width(r, 10), bold=True, new_line=False,
-                           underline=underline)
-                self.add_text(msg, size=11, underline=underline)
-
             rad40 = arar_result['rad40']
             tot40 = arar_result['tot40']
             k39 = arar_result['k39']
-#            atm36 = arar_result['atm36']
-
             s36 = arar_result['s36']
             s39dec_cor = arar_result['s39decay_cor']
             s40 = arar_result['s40']
 
-            make_ratio('%40*', rad40, tot40, scalar=100)
-            make_ratio('40/36', s40, s36)
-            make_ratio('40/39K', s40, k39)
-            make_ratio('40/39', s40, s39dec_cor)
-            make_ratio('40*/36', rad40, s36)
-            make_ratio('40*/39K', rad40, k39, underline_width=underline_width - 2)
+            self._make_ratio('%40*', rad40, tot40, scalar=100)
+            self._make_ratio('40/36', s40, s36)
+            self._make_ratio('40/39K', s40, k39)
+            self._make_ratio('40/39', s40, s39dec_cor)
+            self._make_ratio('40*/36', rad40, s36)
+            self._make_ratio('40*/39K', rad40, k39, underline_width=underline_width - 2)
 
         self.add_text(' ')
 
         v, e = self.record.age
         try:
-            ej = arar_result['age_err_wo_jerr'] / self.record.age_scalar
+            ej = arar_result['age_err_wo_jerr'] / record.age_scalar
         except TypeError:
             ej = 0
 
@@ -142,16 +136,44 @@ class AnalysisSummary(Summary):
         kca = self.record.kca
         kv = kca.nominal_value
         ek = kca.std_dev()
-        ek = u'\u00b1{} ({})'.format(floatfmt(ek), self.calc_percent_error(kv, ek))
+        ek = u'\u00b1{} ({})'.format(floatfmt(ek, 3), self.calc_percent_error(kv, ek))
 
-
-        self.add_text('K/Ca={:0.4e} {}'.format(kv, ek))
-        self.add_text(' ' * underline_width, underline=True)
+        self._make_keyword('K/Ca', '{:0.2f} {}'.format(kv, ek),
+                           new_line=True, underline=underline_width)
         self.add_text('  ')
-        self.add_text('age={:0.4f} {}'.format(v, e))
-        self.add_text('           {} (Exclude Error in J)'.format(ej))
+        self._make_keyword('Age', '{:0.4f} {} ({})'.format(v, e, record.age_units), new_line=True)
+        self.add_text('             {} (Exclude Error in J)'.format(ej))
 
-    def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths, lh):
+    def _make_ratio(self, name, nom, dem, scalar=1, underline_width=0):
+        try:
+            rr = nom / dem * scalar
+            v, e = rr.nominal_value, rr.std_dev()
+        except ZeroDivisionError:
+            v, e = 0, 0
+
+        ee = '{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
+        ms = [floatfmt(v), ee]
+        msg = ''.join([fixed_width(m, 15) for m in ms])
+
+        underline = False
+        if underline_width:
+            underline = True
+            msg = '{{:<{}s}}'.format(underline_width).format(msg)
+        self.add_text(fixed_width(name, 10), bold=True, new_line=False,
+                   underline=underline)
+        self.add_text(msg, size=11, underline=underline)
+
+    def _make_keyword(self, name, value, new_line=False, underline=0, width=20):
+        name = '{}= '.format(name)
+        self.add_text(name, new_line=False, bold=True, underline=underline)
+        if not underline:
+            self.add_text(fixed_width(value, width - len(name)),
+                          new_line=new_line)
+        else:
+            self.add_text(fixed_width(value, underline - len(name)),
+                          new_line=new_line, underline=True)
+
+    def _make_corrected_signals(self, n, i, iso, widths, lh):
         sig, base = self._get_signal_and_baseline(iso)
 
         s1 = sig - base
@@ -185,12 +207,12 @@ class AnalysisSummary(Summary):
                 sv2,
                 bse2
                 ]
-        msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
+        msg = ''.join([fixed_width(m, w) for m, w in zip(msgs, widths[1:])])
         if i == n:
             lh = lh + widths[0] - 2
             msg = '{{:<{}s}}\n'.format(lh).format(msg)
 
-        self.add_text(width(iso, widths[0]), bold=True,
+        self.add_text(fixed_width(iso, widths[0]), bold=True,
                   new_line=False,
                   underline=i == n)
         self.add_text(msg, size=11, underline=i == n)
@@ -200,7 +222,7 @@ class AnalysisSummary(Summary):
         base = self.record.signals['{}bs'.format(iso)]
         return sig.uvalue, base.uvalue
 
-    def _make_signals(self, n, i, iso, floatfmt, width, widths):
+    def _make_signals(self, n, i, iso, widths):
         sg = self.record.signal_graph
         pi = n - i
         fit = sg.get_fit(pi) if sg else ' '
@@ -236,18 +258,18 @@ class AnalysisSummary(Summary):
                 ble
                 ]
 
-        msg = ''.join([width(m, w) for m, w in zip(msgs, widths[2:])])
+        msg = ''.join([fixed_width(m, w) for m, w in zip(msgs, widths[2:])])
         if i == n:
             msg += '\n'
 #        print width(iso, widths[0]), widths[0]
 #        d.add_text(iso, bold=True,
 #                  new_line=False,
 #                  underline=i == n)
-        self.add_text(width(det, 5),
+        self.add_text(fixed_width(det, 5),
                    bold=True,
                   new_line=False,
                   underline=i == n)
-        self.add_text(width(iso, 6),
+        self.add_text(fixed_width(iso, 6),
                    bold=True,
                   new_line=False,
                   underline=i == n)
