@@ -27,23 +27,23 @@ from uncertainties import ufloat
 
 
 class AnalysisTabularAdapter(TabularAdapter):
-    iso_keys = List
-    columns = Property(depends_on='iso_keys')
+#    iso_keys = List
+#    columns = Property(depends_on='iso_keys')
     age_text = Property
     age_error_format = Str('%0.2f')
-
     age_width = Int(60)
     age_error_width = Int(40)
-    rid_width = Int(60)
-    def get_column_keys(self):
-        '''
-            simple wrapper to add er columns
-        '''
-        isos = self.iso_keys
-        es = map(lambda xi:'{}_er'.format(xi), isos)
-        return [ci
-                for pi in zip(isos, es)
-                    for ci in pi]
+
+#    rid_width = Int(60)
+#    def get_column_keys(self):
+#        '''
+#            simple wrapper to add er columns
+#        '''
+#        isos = self.iso_keys
+#        es = map(lambda xi:'{}_er'.format(xi), isos)
+#        return [ci
+#                for pi in zip(isos, es)
+#                    for ci in pi]
 
     def get_font(self, obj, trait, row):
         import wx
@@ -53,31 +53,31 @@ class AnalysisTabularAdapter(TabularAdapter):
         w = wx.FONTWEIGHT_NORMAL
         return wx.Font(s, f, st, w)
 
-    def _get_columns(self):
-        return self._columns_factory()
-
-    def _columns_default(self):
-        return self._columns_factory()
-
-    def _columns_factory(self):
-        cols = [('Lab ID', 'rid'),
-               ('Age', 'age'),
-               ('Error', 'age_error'),
-               ]
-        colskeys = self.get_column_keys()
-        def get_name(n):
-            if n.endswith('_er'):
-                return u'\u00b11s'
-            else:
-                return n.capitalize()
-
-        cols += [(get_name(i), i) for i in colskeys]
-        for iso in colskeys:
-            self.add_trait('{}_format'.format(iso),
-                           '%0.4f')
-            self.add_trait('{}_width'.format(iso),
-                           60)
-        return cols
+#    def _get_columns(self):
+#        return self._columns_factory()
+#
+#    def _columns_default(self):
+#        return self._columns_factory()
+#
+#    def _columns_factory(self):
+#        cols = [('Lab ID', 'rid'),
+#               ('Age', 'age'),
+#               ('Error', 'age_error'),
+#               ]
+#        colskeys = self.get_column_keys()
+#        def get_name(n):
+#            if n.endswith('_er'):
+#                return u'\u00b11s'
+#            else:
+#                return n.capitalize()
+#
+#        cols += [(get_name(i), i) for i in colskeys]
+#        for iso in colskeys:
+#            self.add_trait('{}_format'.format(iso),
+#                           '%0.4f')
+#            self.add_trait('{}_width'.format(iso),
+#                           60)
+#        return cols
 
     def _get_age_text(self, trait, item):
         return '{:0.3f}'.format(self.item.age[0])
@@ -103,7 +103,7 @@ class Analysis(Loggable):
 
     dbrecord = Any
 
-    rid = Property#(depends_on='dbrecord')
+    record_id = Property#(depends_on='dbrecord')
     sample = Property#(depends_on='dbrecord')
     labnumber = Property#(depends_on='dbrecord')
     aliquot = Property
@@ -117,6 +117,7 @@ class Analysis(Loggable):
     rad40 = Property
     rad40_percent = Property
     status = Property
+    status_string = Property(depends_on='status')
     j = Property
 #    timestamp = Float
 
@@ -416,9 +417,10 @@ class Analysis(Loggable):
         return dbr.labnumber
 
 #    @cached_property
-    def _get_rid(self):
-        dbr = self.dbrecord
-        return '{}-{}{}'.format(self.labnumber, dbr.aliquot, dbr.step)
+    def _get_record_id(self):
+        return self.dbrecord.record_id
+#        dbr = self.dbrecord
+#        return '{}-{}{}'.format(self.labnumber, dbr.aliquot, dbr.step)
 #        dbr = self.dbrecord
 #        ln = dbr.labnumber
 #        return '{}-{}'.format(ln.labnumber, ln.aliquot)
@@ -443,6 +445,10 @@ class Analysis(Loggable):
 
     def _get_status(self):
         return self.dbrecord.status
+
+    @cached_property
+    def _get_status_string(self):
+        return '' if self.status == 0 else 'X'
 
     def _get_group_id(self):
         return self.dbrecord.group_id

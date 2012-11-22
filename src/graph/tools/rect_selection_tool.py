@@ -57,6 +57,9 @@ class RectSelectionTool(BaseTool):
     _end_pos = None
     group_id = 0
     update_mouse = True
+    def normal_mouse_leave(self, event):
+        plot = self.component
+        plot.index.metadata['mouse_xy'] = None
 
     def normal_mouse_move(self, event):
         plot = self.component
@@ -77,7 +80,6 @@ class RectSelectionTool(BaseTool):
 #            plot.index.metadata_changed = True
             if hasattr(plot, "value"):
                 plot.value.metadata[self.hover_metadata_name] = [index]
-
 
         elif not self.persistent_hover:
             plot.index.metadata.pop(self.hover_metadata_name, None)

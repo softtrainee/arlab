@@ -226,7 +226,9 @@ class meas_AnalysisTable(Base, BaseMixin):
     aliquot = Column(Integer)
     step = stringcolumn(10)
 
+    #meas relationships
     isotopes = relationship('meas_IsotopeTable', backref='analysis')
+    peak_center = relationship('meas_PeakCenterTable', backref='analysis', uselist=False)
 
     #proc relationships
     blanks_histories = relationship('proc_BlanksHistoryTable', backref='analysis')
@@ -301,10 +303,11 @@ class meas_MeasurementTable(Base, ScriptTable):
                                          )
     deflections = relationship('meas_SpectrometerDeflectionsTable', backref='measurement')
 
-class meas_SignalsTable(Base, BaseMixin):
-    analysis_id = foreignkey('meas_AnalysisTable')
-    datablob = Column(BLOB)
 
+class meas_PeakCenterTable(Base, BaseMixin):
+    center = Column(Float(32))
+    points = Column(BLOB)
+    analysis_id = foreignkey('meas_AnalysisTable')
 
 #===============================================================================
 # irradiation

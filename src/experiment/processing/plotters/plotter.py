@@ -35,10 +35,14 @@ from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.stacked_graph import StackedGraph
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
+from sqlalchemy.orm.session import object_session
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
-    def set_status(self):
-        self.plotter.set_status()
+    def set_status_omit(self):
+        self.plotter.set_status(1)
+
+    def set_status_include(self):
+        self.plotter.set_status(0)
 
     def recall_analysis(self):
         self.plotter.recall_analysis()
@@ -65,14 +69,14 @@ class Plotter(Viewable):
         if not dbrecord:
             return
 
-        from src.database.orms.isotope_orm import meas_AnalysisTable
-        sess = self.db.new_session()
-        self.db.sess = sess
-        q = sess.query(meas_AnalysisTable)
-        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
-        dbr = q.one()
-#        print id(dbr), dbr
-        dbrecord._dbrecord = dbr
+#        from src.database.orms.isotope_orm import meas_AnalysisTable
+#        sess = self.db.new_session()
+#        self.db.sess = sess
+#        q = sess.query(meas_AnalysisTable)
+#        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
+#        dbr = q.one()
+##        print id(dbr), dbr
+#        dbrecord._dbrecord = dbr
 
         dbrecord.load_graph()
         dbrecord.edit_traits()
@@ -80,6 +84,17 @@ class Plotter(Viewable):
 #        sess.close()
 #        sess.remove()
 #        self.selected_analysis.dbrecord.edit_traits()
+    def set_status(self, status):
+        if self.popup:
+            self.popup.Close()
+        dbrecord = self.selected_analysis.dbrecord
+        sess = object_session(dbrecord._dbrecord)
+        dbrecord._dbrecord.status = status
+        sess.commit()
+#        sess.close()
+#        for di in dir(dbrecord._dbrecord):
+#            print di
+
 
     def _get_adapter(self):
         return ResultsTabularAdapter
@@ -105,7 +120,10 @@ class Plotter(Viewable):
         if sigma_trait:
             self.on_trait_change(ebo.update_sigma, sigma_trait)
 
-    def _add_scatter_inspector(self, container, plot, scatter, group_id=0, add_tool=True, popup=True):
+    def _add_scatter_inspector(self, container, plot, scatter,
+                               group_id=0, add_tool=True,
+                               popup=True,
+                               value_format=None):
         #add a scatter hover tool
 #        bc = BroadcasterTool()
 #        broadcaster = BroadcasterTool()
@@ -153,7 +171,9 @@ class Plotter(Viewable):
 #        if popup:
             u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
             scatter.index.on_trait_change(u, 'metadata_changed')
-
+            if value_format is None:
+                value_format = lambda x:'{:0.5f}'.format(x)
+            scatter.value_format = value_format
 
 #        self.metadata = scatter.index.metadata
     def _add_data_label(self, s, text, point, **kw):
@@ -180,6 +200,32 @@ class Plotter(Viewable):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
     def _make_title(self, analyses):
+        def make_bounds(gi, sep='-'):
+            if len(gi) > 1:
+                m = '{}{}{}'.format(gi[0], sep, gi[-1])
+            else:
+                m = '{}'.format(gi[0])
+
+            return m
+
+        def make_step_bounds(si):
+            if not si:
+                return
+            grps = []
+            a = si[0]
+            pa = si[1]
+            cgrp = [pa]
+            for xi in si[2:]:
+                if ord(pa) + 1 == ord(xi):
+                    cgrp.append(xi)
+                else:
+                    grps.append(cgrp)
+                    cgrp = [xi]
+                pa = xi
+
+            grps.append(cgrp)
+            return ','.join(['{}{}'.format(a, make_bounds(gi, sep='...')) for gi in grps])
+
         def _make_group_title(ans):
             lns = dict()
             for ai in ans:
@@ -194,19 +240,60 @@ class Plotter(Viewable):
             grps = []
             for si in skeys:
                 als = lns[si]
-                #if aliquots-steps list is continuous use bounds
-                #sort the list 
-                #test if first_value+len(list)-1=last_value
                 sals = sorted(als, key=lambda x: x[0])
-                aliquots, _steps = zip(*sals)
-                fv = int(aliquots[0])
-                lv = int(aliquots[-1])
+                aliquots, steps = zip(*sals)
 
-                if fv + len(als) - 1 == lv:
-                    als = '{}-{}'.format(fv, lv)
-                else:
-                    als = ['{}{}'.format(*a) for a in sals]
-                    als = ','.join(als)
+                pa = aliquots[0]
+                ggrps = []
+                cgrp = [pa]
+                sgrp = []
+                sgrps = []
+
+                for xi, sti in zip(aliquots[1:], steps[1:]):
+                    #handle analyses with steps
+                    if sti != '':
+                        if not sgrp:
+                            sgrp.append(xi)
+                        elif sgrp[0] != xi:
+                            sgrps.append(sgrp)
+                            sgrp = [xi]
+                        sgrp.append(sti)
+                    else:
+                        if sgrp:
+                            sgrps.append(sgrp)
+                            sgrp = []
+
+                        if pa + 1 == xi:
+                            cgrp.append(xi)
+                        else:
+                            ggrps.append(cgrp)
+                            cgrp = [xi]
+
+                    pa = xi
+
+                sgrps.append(sgrp)
+                ggrps.append(cgrp)
+                fs = [make_bounds(gi) for gi in ggrps]
+
+                if sgrps[0]:
+                    #handle steps
+                    pa = sgrps[0][0]
+                    ggrps = []
+                    cgrp = [sgrps[0]]
+                    for sgi in sgrps[1:]:
+                    #    print si
+                        if pa + 1 == sgi[0]:
+                            cgrp.append(sgi)
+                        else:
+                            grps.append(cgrp)
+                            cgrp = [sgi]
+                        pa = sgi[0]
+                    ggrps.append(cgrp)
+                    ss = ['{}-{}'.format(make_step_bounds(gi[0]),
+                            make_step_bounds(gi[-1])) for gi in ggrps]
+                    fs.extend(ss)
+
+                als = ','.join(fs)
 
                 grps.append('{}-({})'.format(si, als))
 
@@ -241,7 +328,8 @@ class Plotter(Viewable):
 
             value = scatter.value.get_data()[hoverid]
             name = scatter.container.y_axis.title
-            value = '{}={:0.5f}'.format(name, value)
+            value = scatter.value_format(value)
+            value = '{}={}'.format(name, value)
             self._show_pop_up(self.popup, sa, value, obj)
         else:
             if self._dehover_count >= len(self._hover_cache.keys()) + 3:
@@ -268,13 +356,17 @@ class Plotter(Viewable):
         try:
             x, y = obj.metadata.get('mouse_xy')
         except Exception, e:
-#            popup.Show(False)
+            popup.Close()
             return
 
+        def make_status(s):
+            ss = 'OK' if s == 0 else 'Omitted'
+            return 'Status= {}'.format(ss)
         lines = [
-                 analysis.rid,
+                 analysis.record_id,
                  analysis.age_string,
-                 value
+                 value,
+                 make_status(analysis.status)
                ]
         t = '\n'.join(lines)
         gc = font_metrics_provider()

@@ -25,13 +25,14 @@ from src.viewable import Viewable
 from src.graph.graph import Graph
 import time
 from src.saveable import Saveable
+from src.deprecate import deprecated
 
 
 class DatabaseRecord(Saveable):
     dbrecord = Property(depends_on='_dbrecord')
     _dbrecord = Any
 
-    title = Str
+    title = Property(depends_on='_dbrecord')
     title_str = Str
     summary = Str
 #    graph = Instance(Graph)
@@ -65,11 +66,11 @@ class DatabaseRecord(Saveable):
     def opened(self):
         self.show()
 
-    def load(self):
-        dbr = self._dbrecord
-        if dbr is not None:
-            self.title = '{} {}'.format(self.title_str, self.record_id)
-            self._load_hook(dbr)
+#    def load(self):
+#        dbr = self._dbrecord
+#        if dbr is not None:
+#            self.title = '{} {}'.format(self.title_str, self.record_id)
+#            self._load_hook(dbr)
 #        elif self.filename is not None:
 #        elif self.directory is not None and self.filename is not None:
 #            self._load_hook('')
@@ -129,6 +130,10 @@ class DatabaseRecord(Saveable):
             if self._dbrecord.runtime:
                 return self._dbrecord.runtime.strftime('%H:%M:%S')
 
+    def _get_title(self):
+        return '{} {}'.format(self.title_str, self.record_id)
+
+    @deprecated
     @cached_property
     def _get_path(self):
         if self._dbrecord:
@@ -137,7 +142,8 @@ class DatabaseRecord(Saveable):
                 name = self._dbrecord.path.filename
                 return os.path.join(root, name)
 
-    @property
+#    @property
+    @deprecated
     def filename(self):
         return os.path.basename(self.path)
 
@@ -222,6 +228,6 @@ class DatabaseRecord(Saveable):
             v.width = self.window_width
         if self.window_height:
             v.height = self.window_height
-
+        print v.title
         return v
 #============= EOF =============================================
