@@ -380,7 +380,7 @@ class AutomatedRun(Loggable):
             self.plot_panel._ncounts = ncounts
             self.plot_panel.isbaseline = False
 
-        gn = 'signals'
+        gn = 'signal'
         fits = self.fits
         if fits is None:
             fits = ['linear', ] * len(self._active_detectors)
@@ -495,7 +495,8 @@ class AutomatedRun(Loggable):
 
     def set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
-        self.spectrometer_manager.spectrometer.set_parameter(name, v)
+        if self.spectrometer_manager:
+            self.spectrometer_manager.spectrometer.set_parameter(name, v)
 
     def set_position(self, pos, detector, dac=False):
         if not self._alive:
@@ -927,7 +928,8 @@ class AutomatedRun(Loggable):
         import uuid
         name = uuid.uuid4()
 
-        path = os.path.join(self.repository.root, '{}.h5'.format(name))
+#        path = os.path.join(self.repository.root, '{}.h5'.format(name))
+        path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
         frame = dm.new_frame(path=path)
 
         #save some metadata with the file
@@ -947,13 +949,13 @@ class AutomatedRun(Loggable):
         uuid, _ext = os.path.splitext(os.path.basename(cp))
 
         #commit repository
-        self.repository.add_file(cp)
+#        self.repository.add_file(cp)
 
         #close h5 file
         self.data_manager.close()
 
 
-        np = self.repository.get_file_path(cp)
+#        np = self.repository.get_file_path(cp)
 
         ln = self.labnumber
         ln = convert_identifier(ln)
@@ -966,7 +968,7 @@ class AutomatedRun(Loggable):
         ldb.add_analysis(labnumber=ln,
                          aliquot=aliquot,
                          collection_path=cp,
-                         repository_path=np,
+#                         repository_path=np,
                          commit=True)
 
         #save to a database
@@ -1063,19 +1065,20 @@ class AutomatedRun(Loggable):
                           extract_value=self.extract_value,
                           position=self.position,
                           extract_duration=self.duration,
-                          cleanup_duration=self.cleanup
+                          cleanup_duration=self.cleanup,
+                          weight=self.weight
                           )
         return ext
 
     def _save_spectrometer_info(self, meas):
         db = self.db
 
-        spec_dict = self.spectrometer_manager.make_parameters_dict()
-        db.add_spectrometer_parameters(meas, **spec_dict)
-
-        for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
-            det = db.add_detector(det)
-            db.add_deflection(meas, det, deflection)
+        if self.spectrometer_manager:
+            spec_dict = self.spectrometer_manager.make_parameters_dict()
+            db.add_spectrometer_parameters(meas, **spec_dict)
+            for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
+                det = db.add_detector(det)
+                db.add_deflection(meas, det, deflection)
 
     def _save_blank_info(self, analysis):
         self._save_history_info(analysis, 'blanks')
@@ -1144,15 +1147,15 @@ class AutomatedRun(Loggable):
         detectors = []
 
         for isotope, detname, kind in self._save_isotopes:
-            if kind == 'signals':
+            if kind == 'signal':
                 detectors.append((detname, isotope))
 
-                table = dm.get_table(detname, '/baselines/{}'.format(isotope))
+                table = dm.get_table(detname, '/baseline/{}'.format(isotope))
                 if table:
                     bi = [(row['time'], row['value']) for row in table.iterrows()]
                     baselines.append(bi)
 
-                table = dm.get_table(detname, '/signals/{}'.format(isotope))
+                table = dm.get_table(detname, '/signal/{}'.format(isotope))
                 if table:
                     si = [(row['time'], row['value']) for row in table.iterrows()]
                     signals.append(si)
@@ -1568,6 +1571,7 @@ class AutomatedRun(Loggable):
                             Item('extract_units',
                                  show_label=False),
                             ),
+                     Item('ramp_rate', label='Ramp Rate (C/s)'),
                      Item('duration', label='Duration'),
                      Item('weight'),
                      Item('comment'),

@@ -48,10 +48,10 @@ class Viewable(Loggable):
         pass
 
     def close(self, ok):
-        return ok
+        return True
 
     def closed(self, ok):
-        pass
+        return True
 
     def close_ui(self):
         if self.ui is not None:

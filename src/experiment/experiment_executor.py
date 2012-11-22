@@ -351,12 +351,13 @@ class ExperimentExecutor(ExperimentManager):
         return totalcnt
 
     def _launch_run(self, runsgen, cnt):
-        repo = self.repository
+#        repo = self.repository
         dm = self.data_manager
         runner = self.pyscript_runner
 
         run = runsgen.next()
-        self._setup_automated_run(cnt, run, repo, dm, runner)
+        self._setup_automated_run(cnt, run, dm, runner)
+#        self._setup_automated_run(cnt, run, repo, dm, runner)
 
         run.pre_extraction_save()
         ta = Thread(name=run.runid,
@@ -366,7 +367,8 @@ class ExperimentExecutor(ExperimentManager):
         ta.start()
         return ta, run
 
-    def _setup_automated_run(self, i, arun, repo, dm, runner):
+#    def _setup_automated_run(self, i, arun, repo, dm, runner):
+    def _setup_automated_run(self, i, arun, dm, runner):
         exp = self.experiment_set
         exp.current_run = arun
 
@@ -381,7 +383,7 @@ class ExperimentExecutor(ExperimentManager):
         arun.massspec_importer = self.massspec_importer
         arun.runner = runner
         arun.integration_time = 1.04
-        arun.repository = repo
+#        arun.repository = repo
         arun.info_display = self.info_display
         arun.username = self.username
 

@@ -46,7 +46,8 @@ class Globals(object):
     show_autocenter_debug_image = False
 #    show_autocenter_debug_image = True
 
-    test_experiment_set = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
+    test_experiment_set = None
+    #test_experiment_set = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
     #use_ipc = False == embed the remote hardware servers into pychron
     #= True == an instance of RemoteHardwareServer must be launched
 
@@ -76,7 +77,8 @@ class Globals(object):
                            ('load_valve_states', str_to_bool),
                            ('load_soft_locks', str_to_bool),
                            ('experiment_debug', str_to_bool),
-                           ('experiment_savedb', str_to_bool)
+                           ('experiment_savedb', str_to_bool),
+                           ('test_experiment_set', str)
                             ]:
             a = ip.get_global(attr)
             if a:
