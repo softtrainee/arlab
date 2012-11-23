@@ -58,8 +58,8 @@ class ManagerHandler(ViewableHandler):
         except ValueError:
             pass
 
-        import gc
-        gc.collect()
+#        import gc
+#        gc.collect()
 
         return True
 

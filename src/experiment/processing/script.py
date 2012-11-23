@@ -18,7 +18,7 @@ build_version('_experiment')
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Int, Any, Event, \
-     on_trait_change, Either, Float, Dict
+     on_trait_change, Either, Float, Dict, Str
 from traitsui.api import View, Item, ShellEditor
 #from pyface.timer.do_later import do_later
 #============= standard library imports ========================
@@ -38,8 +38,11 @@ class Window(HasTraits):
     container = Instance(HGraphContainer, ())
     window_width = Either(Int, Float)
     window_height = Either(Int, Float)
-    open_event = Any
+    window_x = Either(Int, Float)
+    window_y = Either(Int, Float)
 
+    open_event = Any
+    title = Str('  ')
 
     def traits_view(self):
         v = View(Item('container',
@@ -49,6 +52,9 @@ class Window(HasTraits):
                  resizable=True,
                  width=self.window_width,
                  height=self.window_height,
+                 x=self.window_x,
+                 y=self.window_y,
+                 title=self.title
                  )
         return v
 
@@ -188,14 +194,7 @@ class ProcessScript(DatabaseManager):
 
         if aux_plots is None:
             aux_plots = []
-#        if use_ages:
-#            analyses = [DummyAnalysis(rid=ai[0],
-#                                      _age=ai[1],
-#                                      _error=ai[2],
-#                                      group_id=ai[3]
-#                                      ) for ai in analyses]
 
-#        wparams = self.parameters_dict['window']
         w = self.get_parameter('window', 'width', default=500)
         h = self.get_parameter('window', 'height', default=600)
         g = Window(
@@ -207,15 +206,27 @@ class ProcessScript(DatabaseManager):
         ps = []
 
         for ap in aux_plots:
-            if ap == 'radiogenic':
+            name = ap.plot_name
+            if name == 'radiogenic':
                 d = dict(func='radiogenic_percent',
                           ytitle='40Ar* %',
-                          height=100
+#                          height=100
                           )
-            elif ap == 'analysis_number':
+            elif name == 'analysis_number':
                 d = dict(func='analysis_number',
                      ytitle='Analysis #',
-                     height=100)
+#                     height=100
+                     )
+            elif name == 'kca':
+                d = dict(func='kca',
+                     ytitle='K/Ca',
+#                     height=100
+                     )
+            else:
+                continue
+
+            d['height'] = 100
+            d['scale'] = ap.scale
             ps.append(d)
 
         gideo = p.build(analyses, aux_plots=ps)
