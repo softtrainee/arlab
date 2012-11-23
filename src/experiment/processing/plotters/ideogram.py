@@ -36,6 +36,7 @@ from chaco.tools.traits_tool import TraitsTool
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from chaco.ticks import AbstractTickGenerator, DefaultTickGenerator
+from pyface.timer.do_later import do_later
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -51,7 +52,7 @@ from chaco.ticks import AbstractTickGenerator, DefaultTickGenerator
 #class mStackedGraph(IsotopeContextMenuMixin, StackedGraph):
 #    pass
 
-N = 500
+N = 700
 
 
 class SparseTicks(DefaultTickGenerator):
@@ -59,8 +60,14 @@ class SparseTicks(DefaultTickGenerator):
     def get_ticks(self, *args, **kw):
         ticks = super(SparseTicks, self).get_ticks(*args, **kw)
         s = self.step
-        nticks = hstack((ticks[0], ticks[s:-s:s], ticks[-1]))
-        return nticks
+        try:
+            if len(ticks) > s + 2:
+                nticks = hstack((ticks[0], ticks[s:-s:s], ticks[-1]))
+                return nticks
+            else:
+                return ticks
+        except IndexError:
+            return ticks
 
 
 EInt = lambda x: Int(x, enter_set=True, auto_set=False)
@@ -230,7 +237,10 @@ class Ideogram(Plotter):
                 kwargs['title'] = title
 
             p = g.new_plot(**kwargs)
-            p.value_range.tight_bounds = False
+            if ap['scale'] == 'log':
+                p.value_range.tight_bounds = True
+            else:
+                p.value_range.tight_bounds = False
 
         g.set_grid_traits(visible=False)
         g.set_grid_traits(visible=False, grid='y')
@@ -256,9 +266,7 @@ class Ideogram(Plotter):
 
             ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
             xmin, xmax = self._get_limits(ages)
-            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses),
-#                           labnumber=labnumber
-                           )
+            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
 
         else:
             xmin, xmax = self._get_limits(ages)
@@ -266,7 +274,6 @@ class Ideogram(Plotter):
             offset = 0
             for group_id in group_ids:
                 ans = [a for a in analyses if a.group_id == group_id and a.age[0] in ages]
-#                labnumber = ', '.join(sorted(list(set([str(a.labnumber) for a in ans]))))
                 labnumber = self.get_labnumber(ans)
                 nages, nerrors = get_ages_errors(group_id)
                 offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
@@ -277,50 +284,20 @@ class Ideogram(Plotter):
 
                 aux_namespace = dict(nages=nages,
                                      nerrors=nerrors,
-                                     start=start
-                                     )
+                                     start=start)
 
                 for plotid, ap in enumerate(aux_plots):
                     #get aux type and plot
                     try:
                         func = getattr(self, '_aux_plot_{}'.format(ap['func']))
-                        func(analyses, g, padding, plotid + 1, group_id, aux_namespace)
+                        func(analyses, g, padding, plotid + 1, group_id, aux_namespace,
+                             value_scale=ap['scale']
+                             )
                     except AttributeError, e:
                         print e
 
                 #add analysis number plot
                 start = start + len(ans) + 1
-
-#                #add rad plot
-#                rads = get_rads(group_id)
-#                n = zip(nages, rads)
-#                n = sorted(n, key=lambda x:x[0])
-#                aages, rads = zip(*n)
-#                rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
-#                self._add_aux_plot(g, aages,
-#                                   rads,
-#                                   None,
-#                                   rad_errs,
-#                                   padding,
-#                                   group_id,
-#                                       plotid=2)
-
-#                g.set_axis_traits(axis='y', plotid=2)
-
-#                #add k39 plot
-#                k39s = get_k39s(group_id)
-#                n = zip(nages, k39s)
-#                n = sorted(n, key=lambda x:x[0])
-#                aages, k39s = zip(*n)
-#                k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
-#                self._add_aux_plot(g, aages,
-#                                   k39,
-#                                   None,
-#                                   k39_errs,
-#                                   padding,
-#                                   group_id,
-#                                   plotid=3)
-
 
 #            maxp = g.maxprob
 
@@ -351,7 +328,9 @@ class Ideogram(Plotter):
 
         return g
 
-    def _aux_plot_radiogenic_percent(self, analyses, g, padding, plotid, group_id, aux_namespace):
+    def _aux_plot_radiogenic_percent(self, analyses, g, padding, plotid, group_id, aux_namespace,
+                                     value_scale='linear'
+                                     ):
         nages = aux_namespace['nages']
         rads = [a.rad40_percent for a in analyses if a.group_id == group_id]
 
@@ -365,14 +344,18 @@ class Ideogram(Plotter):
                            rad_errs,
                            padding,
                            group_id,
-                           plotid=plotid)
+                           plotid=plotid,
+                           value_scale=value_scale
+                           )
 
-    def _aux_plot_kca(self, analyses, g, padding, plotid, group_id, aux_namespace):
+    def _aux_plot_kca(self, analyses, g, padding, plotid, group_id, aux_namespace,
+                      value_scale='linear'):
         nages = aux_namespace['nages']
         k39s = [a.k39 for a in analyses if a.group_id == group_id]
         n = zip(nages, k39s)
         n = sorted(n, key=lambda x:x[0])
         aages, k39s = zip(*n)
+
         k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
         self._add_aux_plot(g, aages,
                            k39,
@@ -380,11 +363,14 @@ class Ideogram(Plotter):
                            k39_errs,
                            padding,
                            group_id,
-                           plotid=plotid)
+                           plotid=plotid,
+                           value_scale=value_scale
+                           )
 
 
 
-    def _aux_plot_analysis_number(self, analyses, g, padding, plotid, group_id, aux_namespace):
+    def _aux_plot_analysis_number(self, analyses, g, padding, plotid, group_id, aux_namespace,
+                                  value_scale='linear'):
         nages = aux_namespace['nages']
         nerrors = aux_namespace['nerrors']
         start = aux_namespace['start']
@@ -396,7 +382,9 @@ class Ideogram(Plotter):
         age_ys = linspace(start, maa, len(aages))
         self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
                                value_format=lambda x: '{:d}'.format(int(x)),
-                               plotid=plotid)
+                               plotid=plotid,
+                               value_scale=value_scale
+                               )
         g.set_axis_traits(tick_visible=False,
           tick_label_formatter=lambda x:'',
           axis='y', plotid=1)
@@ -549,7 +537,8 @@ class Ideogram(Plotter):
 
     def _add_aux_plot(self, g, ages, ys, xerrors, yerrors, padding, group_id,
                       plotid=1,
-                      value_format=None
+                      value_format=None,
+                      value_scale='linear'
                       ):
 
         g.set_grid_traits(visible=False, plotid=plotid)
@@ -558,6 +547,7 @@ class Ideogram(Plotter):
         scatter, p = g.new_series(ages, ys,
                                    type='scatter', marker='circle',
                                    marker_size=2,
+                                   value_scale=value_scale,
 #                                   selection_marker='circle',
                                    selection_marker_size=3,
                                    plotid=plotid)
@@ -578,6 +568,22 @@ class Ideogram(Plotter):
         #use sparse ticks
         p = g.plots[plotid]
         p.value_axis.tick_generator = SparseTicks()
+
+        if value_scale == 'log':
+            pad = 0.1
+            mi = min(ys)
+            ma = max(ys)
+            dev = ma - mi
+
+            ma += dev * pad
+            nmi = mi - dev * pad
+            while nmi < 0:
+                pad /= 2.0
+                nmi = mi - dev * pad
+
+            mi = nmi
+            p.value_range.low_setting = mi
+            p.value_range.high_setting = ma
 
 
 #    def update_graph_metadata(self, obj, name, old, new):

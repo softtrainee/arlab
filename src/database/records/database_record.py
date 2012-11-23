@@ -228,6 +228,5 @@ class DatabaseRecord(Saveable):
             v.width = self.window_width
         if self.window_height:
             v.height = self.window_height
-        print v.title
         return v
 #============= EOF =============================================

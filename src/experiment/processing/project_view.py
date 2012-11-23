@@ -14,8 +14,9 @@
 # limitations under the License.
 #===============================================================================
 from launchers.helpers import build_version
+import os
+from src.paths import paths
 build_version('_experiment')
-from src.database.records.isotope_record import IsotopeRecord
 
 
 #============= enthought library imports =======================
@@ -23,16 +24,16 @@ from traits.api import HasTraits, Instance, cached_property, Property, Any, Str,
     List, Bool, Int, Event
 from traitsui.api import View, Item, TableEditor, HGroup, spring, VGroup, \
     EnumEditor, TabularEditor
+from traitsui.tabular_adapter import TabularAdapter
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.processing.database_manager import DatabaseManager
-from traitsui.tabular_adapter import TabularAdapter
 from src.experiment.processing.script import ProcessScript
-from threading import Thread
-from pyface.timer.do_later import do_later, do_after
 from src.initializer import MProgressDialog
-from src.helpers.thread_pool import ThreadPool
-from src.experiment.processing.analysis import Analysis, AnalysisTabularAdapter
+from src.experiment.processing.analysis import Analysis
+from src.database.records.isotope_record import IsotopeRecord
+from src.experiment.processing.plotters.plotter_options import PlotterOptions
 
 #class Panel(HasTraits):
 #    pass
@@ -72,6 +73,7 @@ class AnalysisAdapter(TabularAdapter):
 class ProjectView(DatabaseManager):
 #    lpanel = Instance(Panel)
 #    rpanel = Instance(Panel)
+    plotter_options = Instance(PlotterOptions)
     project = Any
     projects = Property
 
@@ -86,6 +88,8 @@ class ProjectView(DatabaseManager):
     only_fusions = Bool(True)
     include_omitted = Bool(True)
     display_omitted = Bool(True)
+
+    _window_count = 0
 #    def _lpanel_default(self):
 #        p = Panel()
 #        return p
@@ -93,6 +97,9 @@ class ProjectView(DatabaseManager):
 #    def _rpanel_default(self):
 #        p = Panel()
 #        return p
+    def close(self, ok):
+        self._dump_plotter_options()
+        return True
 
     def load_sample_ideogram(self):
         '''
@@ -122,7 +129,9 @@ class ProjectView(DatabaseManager):
             ai.load_age()
             progress.increment()
 
-        rr = ps._ideogram(ans, aux_plots=['analysis_number'], show=False)
+        po = self.plotter_options
+        rr = ps._ideogram(ans, aux_plots=po.get_aux_plots(), show=False)
+#        rr = ps._ideogram(ans, aux_plots=['analysis_number'], show=False)
         if rr is not None:
             g, ideo = rr
             if self.display_omitted:
@@ -132,7 +141,17 @@ class ProjectView(DatabaseManager):
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
                 ideo.set_excluded_points(sel, 0)
 
+            self._set_window_xy(g)
             g.edit_traits()
+            self._window_count += 1
+
+    def _set_window_xy(self, obj):
+        x = 50
+        y = 25
+        xoff = 25
+        yoff = 25
+        obj.window_x = x + xoff * self._window_count
+        obj.window_y = y + yoff * self._window_count
 #        do_later(g.edit_traits)
     def _open_progress(self, n):
         import wx
@@ -146,11 +165,32 @@ class ProjectView(DatabaseManager):
 
     def _sort_analyses(self):
         self.analyses.sort(key=lambda x:x.age)
+
+#===============================================================================
+# persistence
+#===============================================================================
+    def _load_plotter_options(self):
+        try:
+            p = os.path.join(paths.hidden_dir, 'plotter_options')
+            if os.path.isfile(p):
+                with open(p, 'rb') as fp:
+                    po = pickle.load(fp)
+            else:
+                po = PlotterOptions()
+        except pickle.PickleError:
+            po = PlotterOptions()
+
+        return po
+
+    def _dump_plotter_options(self):
+        p = os.path.join(paths.hidden_dir, 'plotter_options')
+        with open(p, 'wb') as fp:
+            pickle.dump(self.plotter_options, fp)
+
 #===============================================================================
 # handlers
 #===============================================================================
     def _update_selected_sample_fired(self):
-        print 'asdf'
         ss = self.selected_sample
         if ss is not None:
             self.load_sample_ideogram()
@@ -195,6 +235,9 @@ class ProjectView(DatabaseManager):
 #            return sorted(ans, key=lambda x: x.age)
         return []
 
+    def _plotter_options_default(self):
+        return self._load_plotter_options()
+
     def traits_view(self):
 #        l = Item('lpanel', style='custom', show_label=False, width=0.25)
 #        r = Item('rpanel', style='custom', show_label=False, width=0.75)
@@ -223,13 +266,16 @@ class ProjectView(DatabaseManager):
                            Item('display_omitted', label='Highlight Omitted Analyses',
                                 enabled_when='include_omitted')
                            )
+        graph_options = Item('plotter_options', show_label=False, style='custom')
         grp = VGroup(HGroup(prj, spring, options_grp),
+                     graph_options,
                      samples,
                      analyses
                      )
         v = View(grp,
                  width=500,
                  height=500,
+                 handler=self.handler_klass,
                  resizable=True
                  )
         return v
