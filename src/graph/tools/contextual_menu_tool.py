@@ -64,18 +64,19 @@ class ContextualMenuTool(Interactor):
         '''
         '''
         def display_menu(parent, event):
-            window = event.window.control
-            _w, h = window.GetSize()
+            control = event.window.control
+            _w, h = control.GetSize()
             x = event.x
             y = h - event.y
+#            y = event.y
 
 #            parent._control = window
 
-            menu = parent.get_contextual_menu()
-            wxmenu = menu.create_menu(window, None)
+            menu_manager = parent.get_contextual_menu()
+            menu = menu_manager.create_menu(control, None)
 
-            window.PopupMenu(wxmenu, (x, y))
-            wxmenu.Destroy()
+            menu.show(x, y)
+            menu_manager.destroy()
 
         comps = self.component.components_at(event.x, event.y)
         if comps:
@@ -89,6 +90,7 @@ class ContextualMenuTool(Interactor):
                     break
 
             self.parent.selected_plot = plot
+            self.parent.close_popup()
 #            print plot
 #            for ci in plot.components:
 #                if ci.is_in(event.x, event.y):

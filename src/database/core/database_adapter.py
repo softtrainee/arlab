@@ -27,6 +27,7 @@ from src.helpers.datetime_tools import get_datetime
 import os
 from sqlalchemy.sql.expression import asc, desc
 from src.database.core.base_orm import MigrateVersionTable
+from src.deprecate import deprecated
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
@@ -283,6 +284,7 @@ class DatabaseAdapter(Loggable):
 
         return q.all()
 
+    @deprecated
     def _get_query(self, klass, join_table=None, filter_str=None, *args, **clause):
         sess = self.get_session()
         q = sess.query(klass)
@@ -336,6 +338,12 @@ class DatabaseAdapter(Loggable):
         args['filename'] = n
         return args
 
+    def _retrieve_items(self, table):
+        sess = self.get_session()
+        q = sess.query(table)
+        return q.all()
+
+    @deprecated
     def _get_items(self, table, gtables,
                    join_table=None, filter_str=None,
                    limit=None,

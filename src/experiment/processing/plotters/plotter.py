@@ -38,6 +38,24 @@ from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
+    plotter = Any
+    selected_analysis = Property(
+#                                 depends_on='plotter'
+                                 )
+    def close_popup(self):
+        popup = self.plotter.popup
+        if popup:
+            popup.Close()
+
+    def _get_selected_analysis(self):
+
+        if self.plotter:
+            print self.plotter.selected_analysis, 'ffff'
+            if self.plotter.selected_analysis:
+                if hasattr(self.plotter.selected_analysis, 'dbrecord'):
+                    return self.plotter.selected_analysis
+#                if self.plotter.selected_analysis.dbrecord:
+#                    return self.plotter.selected_analysis
     def set_status_omit(self):
         self.plotter.set_status(1)
 
@@ -362,8 +380,9 @@ class Plotter(Viewable):
         def make_status(s):
             ss = 'OK' if s == 0 else 'Omitted'
             return 'Status= {}'.format(ss)
+
         lines = [
-                 analysis.record_id,
+                 '{}, {}'.format(analysis.record_id, analysis.sample),
                  analysis.age_string,
                  value,
                  make_status(analysis.status)

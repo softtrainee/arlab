@@ -23,35 +23,31 @@ from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group, spring, 
 import os
 import time
 import random
-from threading import Thread
-from threading import Event as TEvent
-#from numpy import linspace
+import ast
+import yaml
+import struct
+import uuid
+from threading import Thread, Event as TEvent
+#from threading import Event as TEvent
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.experiment.extract_schedule import ExtractStep
+#from src.experiment.extract_schedule import ExtractStep
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from globals import globalv
 from src.experiment.identifier import convert_identifier, get_analysis_type
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
-from constants import NULL_STR
 from src.experiment.processing.signal import Signal
-import struct
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-#from src.regression.ols_regressor import PolynomialRegressor
 
-
-#HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
-
-
-
+from globals import globalv
+from constants import NULL_STR
 
 
 class AutomatedRun(Loggable):
@@ -240,21 +236,10 @@ class AutomatedRun(Loggable):
         return s
 
     def get_measurement_parameter(self, key, default=None):
-        ms = self.measurement_script
-        import ast
-        import yaml
-        m = ast.parse(ms._text)
-        docstr = ast.get_docstring(m)
-        if docstr is not None:
-            params = yaml.load(ast.get_docstring(m))
-            try:
-                return params[key]
-            except KeyError:
-                pass
-            except TypeError:
-                self.warning('Invalid yaml docstring in {}. Could not retrieve {}'.format(ms.name, key))
+        return self._get_yaml_parameter(self.measurement_script, key, default)
 
-        return default
+    def get_extraction_parameter(self, key, default=None):
+        return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def start(self):
         self.measuring = False
@@ -928,7 +913,7 @@ class AutomatedRun(Loggable):
         dm = self.data_manager
         #make a new frame for saving data
 
-        import uuid
+
         name = uuid.uuid4()
 
 #        path = os.path.join(self.repository.root, '{}.h5'.format(name))
@@ -978,24 +963,30 @@ class AutomatedRun(Loggable):
         db = self.db
         if db:
             lab = db.get_labnumber(ln)
-
             experiment = db.get_experiment(self.experiment_name)
-            d = get_datetime()
 
-            self.info('analysis finished at {}'.format(d.time()))
+            endtime = get_datetime().time()
+            self.info('analysis finished at {}'.format(endtime))
             a = db.add_analysis(lab,
                                 uuid=uuid,
                                 runtime=self._runtime,
                                 rundate=self._rundate,
-                                endtime=d.time(),
+                                endtime=endtime,
                                 aliquot=aliquot,
                                 step=self.step
                                 )
 
+            #added analysis to experiment
             experiment.analyses.append(a)
 
-            _ext = self._save_extraction(a)
+            #save extraction
+            ext = self._save_extraction(a)
+
+            #save measurement
             meas = self._save_measurement(a)
+
+            #save sensitivity info to extraction 
+            self._save_sensitivity(ext, meas)
 
             #use a path relative to the repo repo
 #            np = os.path.relpath(np, self.repository.root)
@@ -1053,6 +1044,13 @@ class AutomatedRun(Loggable):
 
         return rsignals, peak_center
 
+    def _save_sensitivity(self, extraction, measurement):
+        #get the lastest sensitivity entry for this spectrometr
+        spec = measurement.mass_spectrometer
+        sen = spec.sensitivities[-1]
+
+        extraction.sensitivity = sen
+
     def _save_peak_center(self, analysis, tab):
         db = self.db
         packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
@@ -1085,7 +1083,8 @@ class AutomatedRun(Loggable):
                           position=self.position,
                           extract_duration=self.duration,
                           cleanup_duration=self.cleanup,
-                          weight=self.weight
+                          weight=self.weight,
+                          sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
         return ext
 
@@ -1122,7 +1121,6 @@ class AutomatedRun(Loggable):
             uv = v.nominal_value
             ue = v.std_dev()
             func(history, uv, ue, isotope)
-
 
     def _save_isotope_info(self, analysis, signals):
         db = self.db
@@ -1369,6 +1367,20 @@ class AutomatedRun(Loggable):
             tab.flush()
 
         return write_data
+
+    def _get_yaml_parameter(self, script, key, default):
+        m = ast.parse(script.text)
+        docstr = ast.get_docstring(m)
+        if docstr is not None:
+            params = yaml.load(docstr)
+            try:
+                return params[key]
+            except KeyError:
+                pass
+            except TypeError:
+                self.warning('Invalid yaml docstring in {}. Could not retrieve {}'.format(script.name, key))
+
+        return default
 
     @cached_property
     def _get_post_measurement_script(self):

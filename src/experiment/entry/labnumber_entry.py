@@ -26,9 +26,9 @@ from pyface.image_resource import ImageResource
 
 #============= standard library imports ========================
 import os
-import struct
+#import struct
 #============= local library imports  ==========================
-from src.loggable import Loggable
+#from src.loggable import Loggable
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
 from src.experiment.entry.irradiated_position import IrradiatedPosition, \
@@ -36,6 +36,7 @@ from src.experiment.entry.irradiated_position import IrradiatedPosition, \
 from src.experiment.entry.level import Level
 from src.experiment.entry.flux_monitor import FluxMonitor
 from src.helpers.alphas import ALPHAS
+from src.experiment.entry.db_entry import DBEntry
 
 
 #ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -48,8 +49,9 @@ from src.helpers.alphas import ALPHAS
 
 
 
-class LabnumberEntry(Loggable):
-    db = Any
+class LabnumberEntry(DBEntry):
+#class LabnumberEntry(Loggable):
+#    db = Any
     irradiation = Str
     level = Str
     irradiation_tray = Str
@@ -92,8 +94,8 @@ class LabnumberEntry(Loggable):
 
     selected = Any
 
-    def __init__(self, *args, **kw):
-        super(LabnumberEntry, self).__init__(*args, **kw)
+#    def __init__(self, *args, **kw):
+#        super(LabnumberEntry, self).__init__(*args, **kw)
 #        self._load_default_holders()
 
 #    def _load_default_holders(self):
@@ -128,22 +130,7 @@ class LabnumberEntry(Loggable):
             for ni in range(int(nholes)):
                 self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
 
-    def _db_default(self):
-        #=======================================================================
-        # debug
-        #=======================================================================
-        from src.database.adapters.isotope_adapter import IsotopeAdapter
-        db = IsotopeAdapter(name='isotopedb_dev',
-                          username='root',
-                          host='localhost',
-                          kind='mysql',
-                          password='Argon'
-                          )
-        db.connect()
-        return db
-        #=======================================================================
-        # 
-        #=======================================================================
+
     def _save_to_db(self):
         db = self.db
 

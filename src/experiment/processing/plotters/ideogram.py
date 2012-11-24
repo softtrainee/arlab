@@ -37,6 +37,7 @@ from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from chaco.ticks import AbstractTickGenerator, DefaultTickGenerator
 from pyface.timer.do_later import do_later
+from kiva.trait_defs.kiva_font_trait import KivaFont
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -155,13 +156,25 @@ class Ideogram(Plotter):
         plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
         plot.index.metadata['selections'] = exclude
 
+    def _get_plot_option(self, options, attr, default=None):
+        option = None
+        if options is not None:
+            if options.has_key(attr):
+                option = options[attr]
+
+        return default if option is None else option
+
     def build(self, analyses=None, padding=None,
-              aux_plots=None
+              options=None
               ):
 
         if analyses is None:
             analyses = self.analyses
 
+        if options is None:
+            options = self.options
+
+        self.options = options
         self.analyses = analyses
         graph_ids = sorted(list(set([a.graph_id for a in analyses])))
         def get_analyses(gii):
@@ -174,12 +187,16 @@ class Ideogram(Plotter):
         op, r, c = self._create_grid_container(n)
         self._plotcontainer = op
 
-#        aux_plot_height = 100 / r
         self.graphs = []
         self.results = []
         plots = []
-#        font = 'modern {}'.format(10)
-#        tfont = 'modern {}'.format(10)
+
+        aux_plots = self._get_plot_option(options, 'aux_plots', default=[])
+        title = self._get_plot_option(options, 'title')
+        xtick_font = self._get_plot_option(options, 'xtick_font', default='modern 10')
+        xtitle_font = self._get_plot_option(options, 'xtitle_font', default='modern 12')
+        ytick_font = self._get_plot_option(options, 'ytick_font', default='modern 10')
+        ytitle_font = self._get_plot_option(options, 'ytitle_font', default='modern 12')
 
         for i in range(r):
             for j in range(c):
@@ -190,17 +207,22 @@ class Ideogram(Plotter):
                 except IndexError:
                     break
 
-                g = self._build(ans, padding=padding, aux_plots=aux_plots,
-                                title=self._make_title(ans)
+                g = self._build(ans, padding=padding,
+                                aux_plots=aux_plots,
+                                title=self._make_title(ans) if title is None else title
                                 )
                 if i == r - 1:
-                    g.set_x_title('Age (Ma)')
+                    f, s = xtitle_font.split(' ')
+                    g.set_x_title('Age (Ma)', font=f, size=int(s))
+                    g.set_axis_traits(axis='x', tick_label_font=xtick_font)
 
                 if j == 0:
-                    g.set_y_title('Relative Probability')
+                    f, s = ytitle_font.split(' ')
+                    g.set_y_title('Relative Probability', font=f, size=int(s))
                     for k, ap in enumerate(aux_plots):
-                        g.set_y_title(ap['ytitle'], plotid=k + 1)
-#                        
+                        g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
+                        g.set_axis_traits(axis='y', tick_label_font=ytick_font)
+
                 for pi in g.plots:
                     pi.y_axis.tick_in = False
 
@@ -215,8 +237,10 @@ class Ideogram(Plotter):
     def _build(self, analyses, aux_plots=None, padding=None, title=''):
         if aux_plots is None:
             aux_plots = []
+
         if padding is None:
             padding = [50, 5 , 35, 35]
+
 
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
@@ -226,7 +250,8 @@ class Ideogram(Plotter):
         g.clear()
 #        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
         g._has_title = True
-        p = g.new_plot(padding=padding)
+
+        p = g.new_plot(padding=padding, title=None if aux_plots else title)
         p.value_range.tight_bounds = False
 
         for i, ap in enumerate(aux_plots):
@@ -279,7 +304,7 @@ class Ideogram(Plotter):
                 offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
                                start=start,
                                labnumber=labnumber,
-                               offset=offset
+                               offset=offset,
                                )
 
                 aux_namespace = dict(nages=nages,
@@ -417,12 +442,11 @@ class Ideogram(Plotter):
     def _add_ideo(self, g, ages, errors, xmi, xma, padding,
                    group_id, start=1,
                    labnumber=None,
-                   offset=0
-#                   analyses=None
+                   offset=0,
                    ):
+
         ages = asarray(ages)
         errors = asarray(errors)
-#        ages, errors = self._get_ages(analyses)
 
         wm, we = calculate_weighted_mean(ages, errors)
         mswd = calculate_mswd(ages, errors)
@@ -434,14 +458,9 @@ class Ideogram(Plotter):
                                         error=we,
                                         error_calc_method=self.error_calc_method
                                         ))
-#        print ages
         bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
         minp = min(probs)
         maxp = max(probs)
-#        dp = maxp - minp
-#        print dp
-#        if abs(dp) < 1e-6:
-#        dp = maxp
 
         percentH = 1 - 0.954 #2sigma
         s, _p = g.new_series(x=bins, y=probs, plotid=0)
@@ -455,19 +474,17 @@ class Ideogram(Plotter):
         ym = maxp * percentH + offset
         s, _p = g.new_series([wm], [ym],
                              type='scatter',
-#                             marker='plus',
                              marker='circle',
                              marker_size=3,
                              color=s.color,
                              plotid=0
                              )
 
-#        wm, ym, we, mswd, n = args
         text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
-        self._add_data_label(s, text, (wm, ym), font='Helvetica 24')
-#        self._add_data_label(s, (wm, ym, we, mswd, ages.shape[0]))
+        font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
+        self._add_data_label(s, text, (wm, ym), font=font)
+
         d = lambda *args: self._update_graph(g, *args)
-#        s.index_mapper.on_trait_change(self._update_graph, 'updated')
         s.index_mapper.on_trait_change(d, 'updated')
 
         self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
@@ -613,10 +630,13 @@ class Ideogram(Plotter):
 
         ideoplots = filter(lambda a:a[0] % 3 == 0, enumerate(g.plots[0].plots.iteritems()))
         for i, p in enumerate(ideoplots):
-            if not i in sels:
-                continue
+#            if not i in sels:
+#                continue
+            try:
+                sel = sels[i]
+            except KeyError:
+                sel = []
 
-            sel = sels[i]
             result = self.results[i]
 
             lp = ideo.plots['plot{}'.format(i * 3)][0]

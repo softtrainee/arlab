@@ -14,7 +14,11 @@
 # limitations under the License.
 #===============================================================================
 from launchers.helpers import build_version
+from src.helpers import alphas
 build_version('_experiment')
+
+from src.experiment.processing.analysis import NonDBAnalysis
+from src.experiment.processing.plotters.plotter_options import PlotterOptions
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Int, Any, Event, \
@@ -64,7 +68,9 @@ class ProcessScript(DatabaseManager):
     context = Dict
     parameters_dict = Dict
     def _load_context(self):
-        ctx = dict(sess=self.db.get_session(),
+        ctx = dict(
+                   PlotterOptions=PlotterOptions,
+                   show_plotter_options=self._show_plotter_options,
                    and_=and_,
                    ideogram=self._ideogram,
                    spectrum=self._spectrum,
@@ -76,9 +82,77 @@ class ProcessScript(DatabaseManager):
                    run=self._run,
                    fit=self._fit,
                    analysis=self._analysis,
-                   filter_outliers=self._filter_outliers
+                   filter_outliers=self._filter_outliers,
+
+                   load_text=self._load_text
                    )
+        with_db = False
+        if with_db:
+            ctx['sess'] = self.db.get_session()
         return ctx
+
+
+
+    def _run(self, p):
+        if not p.endswith('.py'):
+            p = '{}.py'.format(p)
+
+        p = os.path.join('/Users/ross/Sandbox/scripts', p)
+        txt = open(p, 'r').read()
+        code = compile(txt, '<string>', 'exec')
+
+        import ast
+        import yaml
+        m = ast.parse(txt)
+        docstr = ast.get_docstring(m)
+        self.parameters_dict = yaml.load(docstr)
+
+        ctx = self.context
+#        ctx = self._load_context()
+        exec code in ctx
+        ctx['main']()
+
+    def _load_text(self, p, delimiter='\t'):
+        '''
+            p= path to a text file
+            
+            parse text file and return list of analyses
+        '''
+        import csv
+        ans = []
+        with open(p, 'U') as fp:
+            reader = csv.reader(fp, delimiter=delimiter)
+            header = map(str.strip, reader.next())
+            _info = reader.next()
+
+            def get_value(li, attr, cast=float, offset=0):
+#                print li
+#                print header.index(attr)
+#                print li[header.index(attr) + offset]
+                return cast(li[header.index(attr) + offset])
+
+
+            for li in reader:
+
+                rc = get_value(li, 'Run ID# (pref. XXXX-XX)', cast=str)
+#                s = ''
+#                al = 1
+#                if '-' in ln:
+#                    ln, al = ln.split('-')
+#                    if al[-1].upper() in alphas:
+#                        s = int(al[-1])
+
+                an = NonDBAnalysis(
+                                   record_id=rc,
+                                   status=get_value(li, '"Status (0=OK, 1=Deleted)"', cast=int),
+                                   sample=get_value(li, 'Sample', cast=str),
+                                   _age=get_value(li, 'Age (w/o  J;  irr. Param. Opt.)'),
+                                   _error=get_value(li, 'Age (w/o  J;  irr. Param. Opt.)', offset=1)
+                                   )
+
+                ans.append(an)
+
+        return ans
 
     def _filter_outliers(self, analysis, **filter_dict):
         if not analysis.signal_graph:
@@ -163,31 +237,26 @@ class ProcessScript(DatabaseManager):
             ans = next((ai for ai in labn.analyses if ai.aliquot == aliquot and ai.step == step), None)
             if ans:
                 return IsotopeRecord(_dbrecord=ans)
+    def _show_plotter_options(self, plots=None):
+        po = PlotterOptions(view_id='processing.script.plotter_options')
+        if plots:
+            po.construct_plots(plots)
 
-    def _run(self, p):
-        if not p.endswith('.py'):
-            p = '{}.py'.format(p)
+        info = po.edit_traits(kind='livemodal')
+        if info.result:
+            return po
 
-        p = os.path.join('/Users/ross/Sandbox/scripts', p)
-        txt = open(p, 'r').read()
-        code = compile(txt, '<string>', 'exec')
-
-        import ast
-        import yaml
-        m = ast.parse(txt)
-        docstr = ast.get_docstring(m)
-        self.parameters_dict = yaml.load(docstr)
-
-        ctx = self.context
-#        ctx = self._load_context()
-        exec code in ctx
-        ctx['main']()
-
-#===============================================================================
-# commands
-#===============================================================================
     def _ideogram(self, analyses, show=True,
-                  aux_plots=None):
+                  aux_plots=None,
+                  title=None,
+                  xtick_font=None,
+                  xtitle_font=None,
+                  ytick_font=None,
+                  ytitle_font=None,
+                  data_label_font=None,
+                  highlight_omitted=False,
+                  display_omitted=False
+                  ):
         '''
         '''
         from src.experiment.processing.plotters.ideogram import Ideogram
@@ -197,16 +266,27 @@ class ProcessScript(DatabaseManager):
 
         w = self.get_parameter('window', 'width', default=500)
         h = self.get_parameter('window', 'height', default=600)
+        x = self.get_parameter('window', 'x', default=20)
+        y = self.get_parameter('window', 'y', default=20)
         g = Window(
                    window_width=w,
                    window_height=h,
+                   window_x=x, window_y=y
                    )
         self.window = g
         p = Ideogram(db=self.db)
         ps = []
 
         for ap in aux_plots:
-            name = ap.plot_name
+            if isinstance(ap, str):
+                name = ap
+                scale = 'linear'
+                height = 100
+            else:
+                name = ap.name
+                scale = ap.scale
+                height = ap.height
+
             if name == 'radiogenic':
                 d = dict(func='radiogenic_percent',
                           ytitle='40Ar* %',
@@ -225,15 +305,35 @@ class ProcessScript(DatabaseManager):
             else:
                 continue
 
-            d['height'] = 100
-            d['scale'] = ap.scale
+            d['height'] = height
+            d['scale'] = scale
             ps.append(d)
 
-        gideo = p.build(analyses, aux_plots=ps)
+        options = dict(aux_plots=ps,
+                       xtitle_font=xtitle_font,
+                       xtick_font=xtick_font,
+                       ytitle_font=ytitle_font,
+                       ytick_font=ytick_font,
+                       data_label_font=data_label_font,
+                       title=title,
+                       )
+
+        #filter out omitted results
+        if not display_omitted:
+            analyses = filter(lambda x: x.status == 0, analyses)
+
+        gideo = p.build(analyses, options=options)
         if gideo:
-            gideo, plots = gideo
+            gideo, _plots = gideo
             self._figure = gideo
             g.container.add(gideo)
+
+            if display_omitted and highlight_omitted:
+                ta = sorted(analyses, key=lambda x:x.age)
+                #find omitted ans
+                sel = [i for i, ai in enumerate(ta) if ai.status != 0]
+                p.set_excluded_points(sel, 0)
+
             if show:
                 g.edit_traits()
 
@@ -366,6 +466,6 @@ class ProcessScript(DatabaseManager):
 if __name__ == '__main__':
 
     c = ProcessScript()
-    c.db.connect()
+#    c.db.connect()
     c.configure_traits()
 #============= EOF =============================================
