@@ -24,6 +24,7 @@ from traitsui.tabular_adapter import TabularAdapter
 
 from src.loggable import Loggable
 from uncertainties import ufloat
+from src.helpers import alphas
 
 
 class AnalysisTabularAdapter(TabularAdapter):
@@ -462,30 +463,34 @@ class Analysis(Loggable):
     def _set_graph_id(self, g):
         self.dbrecord.graph_id = g
 
-class IntegratedAnalysis(HasTraits):
-    rad40_percent = Property
+
+class NonDBAnalysis(HasTraits):
+    record_id = Property
+    labnumber = Int
+    aliquot = Int
+    step = ''
     age = Property
     _age = Float
     _error = Float
     graph_id = Int
     group_id = Int
+    status = Int
+    sample = Str
 
-    rid = Property
+    def _set_record_id(self, r):
+        al = 1
+        if '-' in r:
+            r, al = r.split('-')
+            if al[-1].upper() in alphas:
+                s = al[-1]
+                al = al[:-1]
+                self.step = s
 
-    labnumber = Int
-    aliquot = Str
-    step = ''
-    dbrecord = None
+        self.aliquot = int(al)
+        self.labnumber = int(r)
 
-    def _get_rad40_percent(self):
-        return self._rad40_percent
-
-    def _set_rid(self, r):
-        ln, self.aliquot = r.split('-')
-        self.labnumber = int(ln)
-
-    def _get_rid(self):
-        return '{}-{}'.format(self.labnumber, self.aliquot)
+    def _get_record_id(self):
+        return '{}-{:02n}{}'.format(self.labnumber, self.aliquot, self.step)
 
     def _get_age(self):
         return (self._age, self._error)
@@ -498,6 +503,14 @@ class IntegratedAnalysis(HasTraits):
         except ZeroDivisionError:
             pe = 'Inf'
         return u'{:0.3f} \u00b1{:0.3f}({:0.2f}%)'.format(a, e, pe)
+
+class IntegratedAnalysis(NonDBAnalysis):
+    rad40_percent = Property
+#    dbrecord = None
+
+    def _get_rad40_percent(self):
+        return self._rad40_percent
+
 
 
 #timeit

@@ -26,7 +26,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
-    proc_FitTable, meas_PeakCenterTable
+    proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
@@ -553,6 +553,14 @@ class IsotopeAdapter(DatabaseAdapter):
         at = gen_AnalysisTypeTable(name=name)
         return self._add_unique(at, 'analysis_type', name)
 
+    @add
+    def add_sensitivity(self, ms, **kw):
+        si = gen_SensitivityTable(**kw)
+        ms = self.get_mass_spectrometer(ms)
+        if ms is not None:
+            ms.sensitivities.append(si)
+            return si, True
+        return si, False
 
 
 #    @add
@@ -741,6 +749,11 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_flux_monitors(self, **kw):
         return self._get_items(flux_MonitorTable, globals(), **kw)
+
+    def get_sensitivities(self, **kw):
+        return self._retrieve_items(gen_SensitivityTable)
+
+
 #===============================================================================
 # deleters
 #===============================================================================

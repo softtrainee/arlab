@@ -52,6 +52,7 @@ VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
 #               'Times New Roman',
                'Geneva',
+               'Courier'
 
            ]
 
@@ -141,6 +142,7 @@ class Graph(Loggable, ContextMenuMixin):
                                 )
 
         pc.tools.append(menu)
+
 
 
     def closed(self):
@@ -1312,10 +1314,10 @@ class Graph(Loggable, ContextMenuMixin):
             if not font in VALID_FONTS:
                 font = 'modern'
 
-            font = '{} {}'.format(font, size)
+#            font = '{} {}'.format(font, size)
             tfont = '{} {}'.format(font, size + 2)
             params.update(dict(
-                       tick_label_font=font,
+#                       tick_label_font=font,
                        title_font=tfont
                        ))
         axis.trait_set(**params)

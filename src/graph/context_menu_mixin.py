@@ -16,17 +16,25 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
-from traitsui.menu import Menu, Action
+from traitsui.menu import Action, Menu as MenuManager
+#from pyface.action.group import Group
+#from pyface.action.api import Group, MenuManager
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class ContextMenuMixin(HasTraits):
+    def close_popup(self):
+        pass
+
     def action_factory(self, name, func, **kw):
         '''
         '''
-        return Action(name=name, on_perform=getattr(self, func),
+        a = Action(name=name, on_perform=getattr(self, func),
+#                   visible_when='0',
                        **kw)
+
+        return a
 
     def get_contextual_menu_save_actions(self):
         '''
@@ -43,27 +51,29 @@ class ContextMenuMixin(HasTraits):
         for n, f, kw in self.get_contextual_menu_save_actions():
             save_actions.append(self.action_factory(n, f, **kw))
 
-        save_menu = Menu(
+        save_menu = MenuManager(
                        name='Save Figure',
                        *save_actions)
 
-        if not self.crosshairs_enabled:
-            crosshairs_action = self.action_factory('Show Crosshairs',
-                           'show_crosshairs'
-                           )
-        else:
-            crosshairs_action = self.action_factory('Hide Crosshairs',
-                           'destroy_crosshairs')
-
-        export_actions = [
-                          self.action_factory('Window', 'export_data'),
-                          self.action_factory('All', 'export_raw_data'),
-
-                          ]
-
-        export_menu = Menu(name='Export',
-                         *export_actions)
-        contents = [save_menu, crosshairs_action, export_menu]
+#        if not self.crosshairs_enabled:
+#            crosshairs_action = self.action_factory('Show Crosshairs',
+#                           'show_crosshairs'
+#                           )
+#        else:
+#            crosshairs_action = self.action_factory('Hide Crosshairs',
+#                           'destroy_crosshairs')
+#
+#        export_actions = [
+#                          self.action_factory('Window', 'export_data'),
+#                          self.action_factory('All', 'export_raw_data'),
+#
+#                          ]
+#
+#        export_menu = Menu(name='Export',
+#                         *export_actions)
+        contents = [save_menu,
+#                    crosshairs_action, export_menu
+                    ]
 
         if self.editor_enabled:
             pa = self.action_factory('Show Plot Editor', 'show_plot_editor')
@@ -76,9 +86,13 @@ class ContextMenuMixin(HasTraits):
     def get_contextual_menu(self):
         '''
         '''
-        menu = Menu(*self.contextual_menu_contents()
-                         )
-        return menu
+        ctx_menu = MenuManager(*self.contextual_menu_contents())
+
+        return ctx_menu
+#        menu = Menu(*self.contextual_menu_contents(),
+#                    _id= -1
+#                    )
+#        return menu
 
 
 class IsotopeContextMenuMixin(ContextMenuMixin):
@@ -101,12 +115,27 @@ class IsotopeContextMenuMixin(ContextMenuMixin):
         pass
 
     def contextual_menu_contents(self):
+
         contents = super(IsotopeContextMenuMixin, self).contextual_menu_contents()
 
-        contents.append(Menu(
-                             self.action_factory('Recall', 'recall_analysis'),
-                             self.action_factory('Omit', 'set_status_omit'),
-                             self.action_factory('Include', 'set_status_include'),
+        if hasattr(self, 'selected_analysis'):
+            enabled = self.selected_analysis is not None
+
+
+#        actions = [Action(name='Recall',
+#                          enabled=enabled,
+#                          on_perfom=getattr(self, 'recall_analysis'))]
+#
+#        for item in actions:
+#            analysis_group.append(item)
+#
+#        contents.append(analysis_group)
+#        return contents
+##        contents = []
+        contents.append(MenuManager(
+                             self.action_factory('Recall', 'recall_analysis', enabled=enabled),
+                             self.action_factory('Omit', 'set_status_omit', enabled=enabled),
+                             self.action_factory('Include', 'set_status_include', enabled=enabled),
                              name='Analysis'))
         return contents
 
@@ -120,7 +149,7 @@ class RegressionContextMenuMixin(ContextMenuMixin):
                  (u'average \u00b1SD', 'cm_average_std'),
                  (u'average \u00b1SEM', 'cm_average_sem')
                  ]
-        menu = Menu(
+        menu = MenuManager(
                     *[self.action_factory(name, func) for name, func in actions],
                     name='Fit')
 

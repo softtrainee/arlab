@@ -171,7 +171,7 @@ class ProjectView(DatabaseManager):
 #===============================================================================
     def _load_plotter_options(self):
         try:
-            p = os.path.join(paths.hidden_dir, 'plotter_options')
+            p = os.path.join(paths.hidden_dir, 'project_view.plotter_options')
             if os.path.isfile(p):
                 with open(p, 'rb') as fp:
                     po = pickle.load(fp)
@@ -183,7 +183,7 @@ class ProjectView(DatabaseManager):
         return po
 
     def _dump_plotter_options(self):
-        p = os.path.join(paths.hidden_dir, 'plotter_options')
+        p = os.path.join(paths.hidden_dir, 'project_view.plotter_options')
         with open(p, 'wb') as fp:
             pickle.dump(self.plotter_options, fp)
 

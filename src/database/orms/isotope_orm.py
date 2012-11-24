@@ -259,7 +259,9 @@ class meas_ExtractionTable(Base, ScriptTable):
     cleanup_duration = Column(Float)
     experiment_blob = Column(BLOB)
     weight = Column(Float)
+    sensitivity_multiplier = Column(Float)
 
+    sensitivity_id = foreignkey('gen_SensitivityTable')
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
@@ -403,7 +405,7 @@ class gen_LabTable(Base, BaseMixin):
 class gen_MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
     measurements = relationship('meas_MeasurementTable', backref='mass_spectrometer')
-
+    sensitivities = relationship('gen_SensitivityTable', backref='mass_spectrometer')
 
 class gen_MaterialTable(Base, NameMixin):
     samples = relationship('gen_SampleTable', backref='material')
@@ -424,6 +426,15 @@ class gen_SampleTable(Base, NameMixin):
     project_id = foreignkey('gen_ProjectTable')
     labnumbers = relationship('gen_LabTable', backref='sample')
 
+
+class gen_SensitivityTable(Base, BaseMixin):
+    mass_spectrometer_id = foreignkey('gen_MassSpectrometerTable')
+    sensitivity = Column(Float(32))
+    create_date = Column(DateTime, default=func.now())
+    user = stringcolumn()
+    note = Column(BLOB)
+
+    extractions = relationship('meas_ExtractionTable', backref='sensitivity')
 
 class gen_UserTable(Base, NameMixin):
     project_id = foreignkey('gen_ProjectTable')
