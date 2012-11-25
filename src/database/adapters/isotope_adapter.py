@@ -738,8 +738,9 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_materials(self, **kw):
         return self._get_items(gen_MaterialTable, globals(), **kw)
 
-    def get_projects(self, **kw):
-        return self._get_items(gen_ProjectTable, globals(), **kw)
+#    def get_projects(self, **kw):
+#        return self._get_items(gen_ProjectTable, globals(), **kw)
+
 
     def get_samples(self, **kw):
         return self._get_items(gen_SampleTable, globals(), **kw)
@@ -749,6 +750,13 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_flux_monitors(self, **kw):
         return self._get_items(flux_MonitorTable, globals(), **kw)
+
+    '''
+        new style using _retrieve_items, _get_items is deprecated. 
+        rewritten functionality if required
+    '''
+    def get_projects(self, **kw):
+        return self._retrieve_items(gen_ProjectTable)
 
     def get_sensitivities(self, **kw):
         return self._retrieve_items(gen_SensitivityTable)

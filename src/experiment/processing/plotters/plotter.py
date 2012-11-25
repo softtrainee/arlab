@@ -50,7 +50,6 @@ class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     def _get_selected_analysis(self):
 
         if self.plotter:
-            print self.plotter.selected_analysis, 'ffff'
             if self.plotter.selected_analysis:
                 if hasattr(self.plotter.selected_analysis, 'dbrecord'):
                     return self.plotter.selected_analysis
@@ -203,7 +202,11 @@ class Plotter(Viewable):
                           show_label_coords=False,
                           marker_visible=False,
                           text_color=s.color,
-                          arrow_color=s.color,
+
+                          #setting the arrow to visible causes an error when reading with illustrator
+                          #if the arrow is not drawn
+                          arrow_visible=False,
+
                           **kw
                           )
         s.overlays.append(label)

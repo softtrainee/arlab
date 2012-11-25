@@ -174,7 +174,7 @@ class Manager(Viewable, RPCable):
 ##        print self.name, 'close', is_ok
 #        return True
     def close(self, *args, **kw):
-        pass
+        return True
 
     def _kill_hook(self):
         pass

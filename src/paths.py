@@ -65,7 +65,8 @@ class Paths():
     scripts_dir = scripts_dir = None
     experiment_dir = None
     plugins_dir = None
-    hidden_dir = hidden_dir = None
+    hidden_dir = None
+    plotter_options_dir = None
     test_dir = None
     custom_queries_dir = None
     #===========================================================================
@@ -166,6 +167,7 @@ class Paths():
 
         self.experiment_dir = join(root, 'experiments')
         self.hidden_dir = join(root, '.hidden')
+        self.plotter_options_dir = join(self.hidden_dir, 'plotter_options')
         self.test_dir = join(root, 'testing')
         self.custom_queries_dir = join(root, 'custom_queries')
         #==============================================================================
@@ -225,8 +227,8 @@ def rec_make(pi):
             rec_make(path.split(pi)[0])
             mkdir(pi)
 
-def build_directories():
-    global paths
+def build_directories(paths):
+#    global paths
     #verify paths
 #    import copy
     for l in dir(paths):

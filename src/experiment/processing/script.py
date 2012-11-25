@@ -70,8 +70,10 @@ class ProcessScript(DatabaseManager):
     def _load_context(self):
         ctx = dict(
                    PlotterOptions=PlotterOptions,
-                   show_plotter_options=self._show_plotter_options,
                    and_=and_,
+                   os=os,
+
+                   show_plotter_options=self._show_plotter_options,
                    ideogram=self._ideogram,
                    spectrum=self._spectrum,
                    save=self._save,
@@ -83,8 +85,9 @@ class ProcessScript(DatabaseManager):
                    fit=self._fit,
                    analysis=self._analysis,
                    filter_outliers=self._filter_outliers,
-
                    load_text=self._load_text
+
+
                    )
         with_db = False
         if with_db:
@@ -94,6 +97,7 @@ class ProcessScript(DatabaseManager):
 
 
     def _run(self, p):
+
         if not p.endswith('.py'):
             p = '{}.py'.format(p)
 
@@ -254,8 +258,11 @@ class ProcessScript(DatabaseManager):
                   ytick_font=None,
                   ytitle_font=None,
                   data_label_font=None,
+                  metadata_label_font=None,
                   highlight_omitted=False,
-                  display_omitted=False
+                  display_omitted=False,
+                  display_mean_indicator=True,
+                  display_mean_text=True
                   ):
         '''
         '''
@@ -290,17 +297,14 @@ class ProcessScript(DatabaseManager):
             if name == 'radiogenic':
                 d = dict(func='radiogenic_percent',
                           ytitle='40Ar* %',
-#                          height=100
                           )
             elif name == 'analysis_number':
                 d = dict(func='analysis_number',
                      ytitle='Analysis #',
-#                     height=100
                      )
             elif name == 'kca':
                 d = dict(func='kca',
                      ytitle='K/Ca',
-#                     height=100
                      )
             else:
                 continue
@@ -315,11 +319,14 @@ class ProcessScript(DatabaseManager):
                        ytitle_font=ytitle_font,
                        ytick_font=ytick_font,
                        data_label_font=data_label_font,
+                       metadata_label_font=metadata_label_font,
                        title=title,
+                       display_mean_text=display_mean_text,
+                       display_mean_indicator=display_mean_indicator
                        )
 
         #filter out omitted results
-        if not display_omitted:
+        if not (display_omitted or highlight_omitted):
             analyses = filter(lambda x: x.status == 0, analyses)
 
         gideo = p.build(analyses, options=options)
@@ -328,7 +335,7 @@ class ProcessScript(DatabaseManager):
             self._figure = gideo
             g.container.add(gideo)
 
-            if display_omitted and highlight_omitted:
+            if highlight_omitted:
                 ta = sorted(analyses, key=lambda x:x.age)
                 #find omitted ans
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
@@ -359,7 +366,7 @@ class ProcessScript(DatabaseManager):
             return spec
 
 
-    def _save(self, p, folder=None, figure=None):
+    def _save(self, p, folder=None, figure=None, unique=True):
         from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 
         if folder is None:
@@ -369,13 +376,15 @@ class ProcessScript(DatabaseManager):
             p = '{}.pdf'.format(p)
 
 #        root = os.path.dirname(p)
-        base = os.path.basename(p)
-        base, ext = os.path.splitext(base)
-        p, _c = unique_path(folder, base, extension=ext)
+        if unique:
+            base = os.path.basename(p)
+            base, ext = os.path.splitext(base)
+            p, _c = unique_path(folder, base, extension=ext)
 
         if figure is None:
             figure = self._figure
 
+        print p
         if figure:
 
             gc = PdfPlotGraphicsContext(filename=p,

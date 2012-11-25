@@ -29,7 +29,7 @@ import os
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.paths import paths
-from constants import SCRIPT_KEYS, NULL_STR
+from src.contsants import SCRIPT_KEYS, NULL_STR
 from src.saveable import SaveableButtons
 
 def line_generator(path, delim='\t'):

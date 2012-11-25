@@ -560,7 +560,7 @@ class Graph(Loggable, ContextMenuMixin):
         '''
         self._set_title('y_axis', title, plotid, **font)
 
-    def add_plot_label(self, txt, x, y, plotid=0):
+    def add_plot_label(self, txt, x, y, plotid=0, **kw):
         '''
         '''
 
@@ -571,7 +571,9 @@ class Graph(Loggable, ContextMenuMixin):
         c = self.plots[plotid]
         pl = PlotLabel(txt, overlay_position='inside top',
                                          hjustify='left',
-                                         component=c)
+                                         component=c,
+                        **kw
+                        )
         c.overlays.append(pl)
         return pl
 
@@ -1225,19 +1227,21 @@ class Graph(Loggable, ContextMenuMixin):
 #                if not ext in IMAGE_EXTENSIONS:
 #                    path = ''.join((base, DEFAULT_IMAGE_EXT))
 
-    def _render_to_pdf(self, filename=None, dest_box=None, canvas=None):
+    def _render_to_pdf(self, filename=None, dest_box=None):
         '''
         '''
         from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 
         if not filename.endswith('.pdf'):
             filename += '.pdf'
-
+#        if dest_box is None:
+#            dest_box = [0.5, 0.5, 0.5, 0.5]
         gc = PdfPlotGraphicsContext(filename=filename,
-                                  pdf_canvas=canvas,
-                                  pagesize='letter',
-                                  dest_box=dest_box,
-                                  dest_box_units='inch')
+#                                  pd/f_canvas=canvas,
+#                                  pagesize='letter',
+#                                  dest_box=dest_box,
+#                                  dest_box_units='inch'
+                                  )
 
         pc = self.plotcontainer
 #        ob = pc.bgcolor
@@ -1245,6 +1249,7 @@ class Graph(Loggable, ContextMenuMixin):
 #        if len(pc.components) == 1:
 #            gc.render_component(pc.components[0])
 #        else:
+        pc.do_layout(force=True)
         gc.render_component(pc, valign='center')
         gc.save()
 #        pc.bgcolor = ob

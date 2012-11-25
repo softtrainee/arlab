@@ -22,7 +22,7 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from constants import NULL_STR
+from src.constants import NULL_STR
 from src.paths import paths
 from src.viewable import Viewable
 
@@ -77,12 +77,19 @@ class PlotterOptions(Viewable):
     ytitle_font_size = Enum(*SIZES)
     ytitle_font_name = Enum(*FONTS)
 
-    def __init__(self, *args, **kw):
-        super(PlotterOptions, self).__init__(*args, **kw)
-        self._load()
 
-    def closed(self, isok):
-        self._dump()
+    def __init__(self, clean=False, *args, **kw):
+        super(PlotterOptions, self).__init__(*args, **kw)
+        if not clean:
+            self._load()
+
+#    def closed(self, isok):
+#        self._dump()
+
+    def close(self, isok):
+        if isok:
+            self._dump()
+        return True
 
     def construct_plots(self, plist):
         '''
@@ -114,7 +121,9 @@ class PlotterOptions(Viewable):
 # persistence
 #===============================================================================
     def _dump(self):
-        p = os.path.join(paths.hidden_dir, 'plotter_options')
+        if not self.name:
+            return
+        p = os.path.join(paths.plotter_options_dir, self.name)
         with open(p, 'w') as fp:
             d = dict()
             attrs = ['title', 'aux_plots',
@@ -133,7 +142,7 @@ class PlotterOptions(Viewable):
             pickle.dump(d, fp)
 
     def _load(self):
-        p = os.path.join(paths.hidden_dir, 'plotter_options')
+        p = os.path.join(paths.plotter_options_dir, self.name)
         if os.path.isfile(p):
             with open(p, 'r') as fp:
                 try:
@@ -189,7 +198,7 @@ class PlotterOptions(Viewable):
 # views
 #===============================================================================
     def traits_view(self):
-        v = View(
+        v = View(Item('name'),
                  Item('title'),
                  VGroup(
                         self._create_axis_group('x', 'title'),
@@ -215,4 +224,8 @@ class PlotterOptions(Viewable):
                  handler=self.handler_klass
                  )
         return v
+
+
+    def __repr__(self):
+        return self.name
 #============= EOF =============================================

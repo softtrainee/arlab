@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float
-from traitsui.api import View, Item, FileEditor
+from traits.api import HasTraits, Str, Float, Instance
+from traitsui.api import View, Item, FileEditor, VGroup, Group
 from traitsui.menu import OKCancelButtons
 #============= standard library imports ========================
 import os
@@ -29,7 +29,12 @@ def uncamelcase(name):
     s1 = first_cap_re.sub(r'\1_\2', name)
     return all_cap_re.sub(r'\1_\2', s1).lower()
 
+readonly = lambda x, **kw: Item(x, style='readonly', show_label=False,
+                                 **kw)
+
 class Command(HasTraits):
+    description = Str
+    example = Str
     def to_string(self):
         m = '{}({})'.format(
                           self._get_command(),
@@ -63,6 +68,12 @@ class Command(HasTraits):
         ts = '    ' * n
         return '{}{}'.format(ts, m)
 
+
+    def get_text(self):
+        info = self.edit_traits(kind='livemodal')
+        if info.result:
+            return self.to_string()
+
     def traits_view(self):
         v = View(self._get_view(),
                  title=self.__class__.__name__,
@@ -70,23 +81,54 @@ class Command(HasTraits):
                  )
         return v
 
+    def help_view(self):
+        v = View(self._get_help_view())
+        return v
+
+    def _get_view(self):
+        raise NotImplementedError
+
+    def _get_help_view(self):
+        return VGroup(
+                      Group(
+                            readonly('description'),
+                            show_border=True,
+                            label='Description',
+                            ),
+                      Group(
+                            readonly('example',
+                                     height= -200
+                                     ),
+                            show_border=True,
+                            label='Example',
+                            ),
+                      )
+
+class Wait(Command):
     def get_text(self):
-        info = self.edit_traits(kind='livemodal')
-        if info.result:
-            return self.to_string()
+        return self.to_string()
+
+    def _to_string(self):
+        return 'evt'
 
 
 class Info(Command):
     message = Str
+
+    description = 'Display a message'
+    example = "info('This is a message')"
     def _get_view(self):
         return Item('message', width=500)
 
     def _to_string(self):
         return self._keyword('message', self.message)
 
-
 class Sleep(Command):
     duration = Float
+
+    description = 'Pause execution for N seconds'
+    example = 'sleep(5)'
+
     def _get_view(self):
         return Item('duration', label='Duration (s)')
 
@@ -97,8 +139,18 @@ class Sleep(Command):
 
 class Gosub(Command):
     path = Str(paths.scripts_dir)
+
+    description = 'Switch to another script'
+    example = '''1. gosub("gosubname")
+2. gosub(name='name', root=<path to folder>)
+    
+If <root> is omitted the path to the script is determined by the script type. e.i
+MeasurementPyScripts live in ../scripts/measurement
+
+'''
     def _get_view(self):
         return Item('path',
+                    style='custom',
                     editor=FileEditor(filter=['*.py']),
                     width=600,
                     )
@@ -130,4 +182,7 @@ class CompleteInterval(Command):
 class Exit(Command):
     def get_text(self):
         return self.indent('exit()')
+
+
+
 #============= EOF =============================================

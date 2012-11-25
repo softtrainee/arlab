@@ -52,9 +52,29 @@ class ValveCommand(Command):
 #                                           self._quote(self.items[self.item]))
 
 class Open(ValveCommand):
-    pass
+    description = 'Open a valve'
+    example = '''1. open("V")
+2. open(description="Bone to Turbo")
+'''
+
 class Close(ValveCommand):
-    pass
+    description = 'Close a valve'
+    example = '''1. open("V")
+2. close(description="Bone to Turbo")
+'''
+
+class IsOpen(ValveCommand):
+    description = 'Check if a valve is Open'
+    example = '''1. is_open("V")
+2. is_open(description="Bone to Turbo")
+'''
+
+class IsClosed(ValveCommand):
+    description = 'Check if a valve is Closed'
+    example = '''1. is_closed("V")
+2. is_closed(description="Bone to Turbo")
+'''
+
 
 
 class Release(Command):
