@@ -27,7 +27,7 @@ import numpy as np
 import csv
 from src.graph.stacked_graph import StackedGraph
 from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
-from constants import FIT_TYPES, NULL_STR, DELIMITERS
+from src.contsants import FIT_TYPES, NULL_STR, DELIMITERS
 from pyface.file_dialog import FileDialog
 from src.paths import paths
 from pyface.constant import OK

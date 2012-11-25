@@ -349,7 +349,8 @@ class Ideogram(Plotter):
         g.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
 
         #add meta plot info
-        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0)
+        font = self._get_plot_option(self.options, 'metadata_label_font', default='modern 10')
+        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0, font=font)
 
         return g
 
@@ -471,6 +472,7 @@ class Ideogram(Plotter):
                               line_style='dash',
                               )
 
+
         ym = maxp * percentH + offset
         s, _p = g.new_series([wm], [ym],
                              type='scatter',
@@ -479,10 +481,17 @@ class Ideogram(Plotter):
                              color=s.color,
                              plotid=0
                              )
+        display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
+        if not display_mean_indicator:
+            s.visible = False
 
-        text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
-        font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
-        self._add_data_label(s, text, (wm, ym), font=font)
+        display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
+        if display_mean:
+            text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
+            font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
+            self._add_data_label(s, text, (wm, ym),
+                                 font=font
+                                 )
 
         d = lambda *args: self._update_graph(g, *args)
         s.index_mapper.on_trait_change(d, 'updated')
@@ -735,7 +744,10 @@ class Ideogram(Plotter):
         return xmin, xmax
 
     def _get_plot_label_text(self):
-        ustr = u'data 1\u03c3, age ' + str(self.nsigma) + u'\u03c3'
+        #sigmas displayed as separate chars in Illustrator
+        #use the 's' instead
+        ustr = u'data 1\u03c3, age {}\u03c3'.format(self.nsigma)
+#        ustr = 'data 1s, age {}s'.format(self.nsigma)
         return ustr
 
     def _get_ages(self, analyses):

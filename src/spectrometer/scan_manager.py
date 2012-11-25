@@ -42,7 +42,7 @@ import time
 from threading import Thread
 from Queue import Queue
 from src.helpers.timer import Timer
-from constants import NULL_STR
+from src.contsants import NULL_STR
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):

@@ -22,13 +22,15 @@
 '''
 
 import warnings
+import inspect
 
 def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emmitted
     when the function is used."""
     def newFunc(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
+        caller = inspect.getframeinfo(inspect.currentframe().f_back)[2]
+        warnings.warn("Call to deprecated function {}. From {}".format(func.__name__, caller),
                       category=DeprecationWarning)
         return func(*args, **kwargs)
     newFunc.__name__ = func.__name__

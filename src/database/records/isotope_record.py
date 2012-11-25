@@ -43,7 +43,7 @@ from src.regression.mean_regressor import MeanRegressor
 from src.database.orms.isotope_orm import proc_FitHistoryTable, proc_FitTable
 import struct
 from src.deprecate import deprecated
-from constants import NULL_STR, AGE_SCALARS
+from src.constants import NULL_STR, AGE_SCALARS
 from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
 
 class EditableGraph(HasTraits):

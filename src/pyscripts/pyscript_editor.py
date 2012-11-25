@@ -18,7 +18,7 @@
 from traits.api import Str, Enum, Bool, Instance, String, Dict, Property, \
      Event, Button, Any, List, Int
 from traitsui.api import View, Item, HGroup, Group, spring, \
-    Handler, VGroup, HTMLEditor, CodeEditor, ShellEditor, ListStrEditor
+    Handler, VGroup, HTMLEditor, CodeEditor, ShellEditor, ListStrEditor, InstanceEditor
 
 #============= standard library imports ========================
 import os
@@ -32,6 +32,7 @@ from src.pyscripts.pyscript_runner import PyScriptRunner
 import time
 from pyface.message_dialog import information
 from src.saveable import SaveableHandler
+from src.pyscripts.code_editor import PyScriptCodeEditor
 #from traitsui.wx.code_editor import SourceEditor
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #from traitsui.editors.code_editor import ToolkitEditorFactory
@@ -85,7 +86,7 @@ class PyScriptManager(Manager):
     setpoint(150,4)
     ramp(0,-75)
 ''')
-    help_message = Str
+
     save_enabled = Bool(False)
     _executing = Bool(False)
     execute_enabled = Bool(False)
@@ -114,17 +115,7 @@ class PyScriptManager(Manager):
     script_commands = List
     selected_command = Str
     selected_index = Int
-
-    def _help_button_fired(self):
-        pass
-#        import webbrowser
-#        self.s
-#        print self.help_path
-
-        #to open in browser needs file:// prepended
-#        webbrowser.open('file://{}'.format(self.help_path))
-
-#        self.edit_traits(view='help_view')
+    selected_command_object = Property(depends_on='selected_command')
 
     def _get_execute_label(self):
         return 'Stop' if self._executing else 'Execute'
@@ -198,12 +189,6 @@ class PyScriptManager(Manager):
         ps.bootstrap()
 
         self.context = ps.get_context()
-
-#    def load_help(self):
-#        ps = self._pyscript_factory(self.kind)
-#        m = ps.get_help()
-##        self.help_path = ps.get_help_path()
-#        self.help_message = m
 
     def load_commands(self):
         ps = self._pyscript_factory(self.kind)
@@ -306,6 +291,8 @@ class PyScriptManager(Manager):
         with open(p, 'w') as f:
             f.write(self.body)
         self._original_body = self.body
+
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -317,44 +304,59 @@ class PyScriptManager(Manager):
                 self.execute_enabled = False
                 self.save_enabled = True
 
-    def _selected_command_changed(self):
-        scmd = self.selected_command
-        if scmd:
+    def _command_text_factory(self, scmd):
+        #convert to klass name.
+        #camel_case
 
-            #convert to klass name.
-            #camel_case
-            words = scmd.split('_')
-            klass = ''.join(map(str.capitalize, words))
+        cmd = self._command_object(scmd)
+        return cmd.get_text()
 
-            pkg = 'src.pyscripts.commands.api'
-            cmd_name = '{}_command_editor'.format(self.selected_command)
+    def _get_selected_command_object(self):
+        a = self._command_object(self.selected_command)
+        return a
+
+    def _command_object(self, scmd):
+        cmd = None
+        words = scmd.split('_')
+        klass = ''.join(map(str.capitalize, words))
+
+        pkg = 'src.pyscripts.commands.api'
+        cmd_name = '{}_command_editor'.format(scmd)
+#        print cmd_name, klass
+        try:
+            cmd = getattr(self, cmd_name)
+        except AttributeError:
+            m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
             try:
-                cmd = getattr(self, cmd_name)
-            except AttributeError:
-                m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
                 cmd = getattr(m, klass)()
                 setattr(self, cmd_name, cmd)
+            except AttributeError, e :
+                print e
 
-            m = cmd.get_text()
-            if m:
-                self.body += m + '\n'
-
-            self.selected_command = ''
+        return cmd
+#    def _selected_command_changed(self):
+#        scmd = self.selected_command
+#        if scmd:
+#            cmd = self._command_text_factory(scmd)
+#            m = cmd.get_text()
+#            if m:
+#                self.body += m + '\n'
+#            self.selected_command = ''
 
 #===============================================================================
 # views
 #===============================================================================
-    def help_view(self):
-        v = View(Item('help_message',
-                              editor=HTMLEditor(),
-                              show_label=False),
-                 resizable=True,
-                 width=700,
-                 height=0.85,
-                 x=0.5,
-                 title='{}PyScript Help'.format(self.kind)
-                 )
-        return v
+#    def help_view(self):
+#        v = View(Item('help_message',
+#                              editor=HTMLEditor(),
+#                              show_label=False),
+#                 resizable=True,
+#                 width=700,
+#                 height=0.85,
+#                 x=0.5,
+#                 title='{}PyScript Help'.format(self.kind)
+#                 )
+#        return v
 
     def _get_commands_group(self, name, label):
         return Group(Item(name,
@@ -362,7 +364,8 @@ class PyScriptManager(Manager):
                    show_label=False,
                    editor=ListStrEditor(operations=[],
                                         editable=False,
-                                        right_clicked='selected_command',
+#                                        right_clicked='',
+                                        selected='selected_command'
                                         ),
                          width=200,
                          height=200,
@@ -371,26 +374,41 @@ class PyScriptManager(Manager):
                      label=label,
                      show_border=True,
                      )
+
     def traits_view(self):
+        help_grp = Group(
+                       Item('selected_command_object',
+                            show_label=False,
+                            style='custom',
+                            height=300,
+                            editor=InstanceEditor(view='help_view')
+                            ),
+#                       label='Help',
+#                       show_border=True
+                       )
+
         editor = VGroup(HGroup(spring, 'kind', visible_when='show_kind'),
-                 Item('body', editor=CodeEditor(),
-                      show_label=False))
+                        Item('body', editor=PyScriptCodeEditor(),
+                             show_label=False),
+                        help_grp
+                        )
 
         command_grp = VGroup(self._get_commands_group('core_commands', 'Core'),
-                             self._get_commands_group('script_commands', self.kind)
+                             self._get_commands_group('script_commands', self.kind),
+
                         )
 
         v = View(VGroup(
-                 HGroup(
-                        command_grp,
-                        editor,
-                        ),
-                        HGroup(
-                               self._button_factory('execute_button', 'execute_label',
-                                      enabled_when='object.execute_enabled',
-                                      visible_when='object.execute_visible',
-                                      align='left'),
-                               Item('calc_graph_button', show_label=False)
+                    HGroup(
+                            command_grp,
+                            editor,
+                            ),
+                    HGroup(
+                           self._button_factory('execute_button', 'execute_label',
+                                  enabled_when='object.execute_enabled',
+                                  visible_when='object.execute_visible',
+                                  align='left'),
+#                               Item('calc_graph_button', show_label=False)
                        ),
                  ),
                  resizable=True,
