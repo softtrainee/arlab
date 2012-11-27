@@ -327,7 +327,7 @@ Add {}'.format(sd)):
                 self._duration -= (nsecs + self.cnt % nsecs) / 3600.
                 self.cnt = 0
 
-#        self.get_temperature(verbose=True)
+        #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
 #        self.get_temp_and_power(verbose=True)
