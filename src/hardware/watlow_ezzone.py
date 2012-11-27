@@ -312,6 +312,7 @@ class WatlowEZZone(CoreDevice):
             t = self.read_process_value(1, **kw)
             p = self.read_heat_power(**kw)
 
+#        print self.simulation
         if self.simulation:
 #            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
