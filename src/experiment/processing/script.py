@@ -475,6 +475,6 @@ class ProcessScript(DatabaseManager):
 if __name__ == '__main__':
 
     c = ProcessScript()
-#    c.db.connect()
+    c.db.connect()
     c.configure_traits()
 #============= EOF =============================================

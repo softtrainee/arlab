@@ -33,7 +33,7 @@ from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 #from src.experiment.file_listener import FileListener
 from src.experiment.identifier import convert_identifier, convert_labnumber
-from src.contsants import NULL_STR, SCRIPT_KEYS
+from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
 from src.experiment.blocks.block import Block
 

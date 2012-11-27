@@ -98,6 +98,7 @@ class OLSRegressor(BaseRegressor):
         X = self._get_X(xs=pos)
 #        print X
         res = self._result
+
         if res:
             pred = res.predict(X)
             if si is not None:
@@ -128,7 +129,8 @@ class OLSRegressor(BaseRegressor):
             where y=ax**2+bx+c
         '''
         if self._result:
-#        print 'dsaffsadf', self._result.params
+
+#            print 'dsaffsadf', self._result.params
             return self._result.params
 #        return polyfit(self.xs, self.ys, self.degree)
 
@@ -159,8 +161,8 @@ class OLSRegressor(BaseRegressor):
 
         if d is None:
             d = 1
-#        print 'set', d
         self._degree = d
+        self.dirty = True
 
     @property
     def summary(self):

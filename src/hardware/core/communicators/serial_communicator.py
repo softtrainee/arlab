@@ -168,21 +168,24 @@ class SerialCommunicator(Communicator):
             return
 
         #re=None
+
+        self.handle.flushInput()
+        self.handle.flushOutput()
         with self._lock:
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
             re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes)
 
-            re = self.process_response(re, replace, remove_eol)
+        re = self.process_response(re, replace, remove_eol)
 
-            if verbose:
-                #self.debug('lock acquired by {}'.format(currentThread().name))
-                self.log_response(cmd, re, info)
-                #self.debug('lock released by {}'.format(currentThread().name))
+        if verbose:
+            #self.debug('lock acquired by {}'.format(currentThread().name))
+            self.log_response(cmd, re, info)
+            #self.debug('lock released by {}'.format(currentThread().name))
 
 #            time.sleep(0.005)
 #            self.info('release lock {}'.format(self._lock))
-            return re
+        return re
 
     def open(self, **kw):
         '''
@@ -372,8 +375,6 @@ class SerialCommunicator(Communicator):
                 import traceback
                 traceback.print_exc()
 
-        self.handle.flushOutput()
-        self.handle.flushInput()
         return r
 
     def _get_nbytes(self, nbytes=8):
@@ -385,12 +386,14 @@ class SerialCommunicator(Communicator):
         timeout = 1
         tt = 0
         r = ''
-        while len(r) < nbytes * 2 and tt < timeout:
+        nbytes *= 2
+        while len(r) < nbytes and tt < timeout:
+            inw = handle.inWaiting()
+#            c = inw
+            c = min(inw, nbytes - len(r))
+            r += ''.join(map('{:02X}'.format, map(ord, handle.read(c))))
             d = 1 / 1000.
             time.sleep(d)
-            inw = handle.inWaiting()
-            c = min(inw, nbytes * 2 - len(r))
-            r += ''.join(['{:02X}'.format(ri) for ri in map(ord, handle.read(c))])
             tt += d
 
         return r, tt < timeout

@@ -47,7 +47,7 @@ from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 
 from globals import globalv
-from src.contsants import NULL_STR
+from src.constants import NULL_STR
 
 
 class AutomatedRun(Loggable):

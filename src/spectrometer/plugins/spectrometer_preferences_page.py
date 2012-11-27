@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,20 +14,19 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Float
+from traitsui.api import View, Item, TableEditor
+from apptools.preferences.ui.preferences_page import PreferencesPage
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from src.envisage.core.core_ui_plugin import CoreUIPlugin
-class SpectrometerUIPlugin(CoreUIPlugin):
-    def _action_sets_default(self):
-        from src.spectrometer.plugins.spectrometer_action_set import SpectrometerActionSet
-        return [SpectrometerActionSet]
 
-    def _preferences_pages_default(self):
-        from src.spectrometer.plugins.spectrometer_preferences_page import SpectrometerPreferencesPage
-        return [SpectrometerPreferencesPage]
+
+class SpectrometerPreferencesPage(PreferencesPage):
+    name = 'Spectrometer'
+    preferences_path = 'spectrometer'
+    abundant_sensitivity = Float
+    def traits_view(self):
+        v = View(Item('abundant_sensitivity'))
+        return v
 #============= EOF =============================================

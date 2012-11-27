@@ -49,7 +49,7 @@ from src.helpers.archiver import Archiver
 #from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
-from src.scripts.core.process_view import ProcessView
+#from src.scripts.core.process_view import ProcessView
 from pyface.timer.do_later import do_later, do_after
 #from pyface.wx.dialog import confirmation
 #from pyface.constant import NO, YES
