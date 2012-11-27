@@ -126,6 +126,8 @@ class IsotopeRecord(DatabaseRecord):
     irradiation_position = Property
     production_ratios = Property
     abundant_sensitivity = Property
+    sensitivity = Property
+    sensitivity_multiplier = Property
 
     status = Property
     uuid = Property
@@ -855,9 +857,7 @@ class IsotopeRecord(DatabaseRecord):
                 return ln
 
 
-    @cached_property
-    def _get_status(self):
-        return self._dbrecord.status
+
 
     @cached_property
     def _get_shortname(self):
@@ -874,16 +874,6 @@ class IsotopeRecord(DatabaseRecord):
         if self._dbrecord:
             if self._dbrecord.measurement:
                 return self._dbrecord.measurement.analysis_type.name
-
-    @cached_property
-    def _get_aliquot(self):
-        if self._dbrecord:
-            return self._dbrecord.aliquot
-
-    @cached_property
-    def _get_step(self):
-        if self._dbrecord:
-            return self._dbrecord.step
 
     @cached_property
     def _get_mass_spectrometer(self):
@@ -925,14 +915,57 @@ class IsotopeRecord(DatabaseRecord):
         isos = sorted(keys, key=lambda x: re.sub('\D', '', x))
         return isos
 
-    def _get_uuid(self):
-        return self._dbrecord.uuid
 
     def _get_age_scalar(self):
         try:
             return AGE_SCALARS[self.age_units]
         except KeyError:
             return 1
+
+#===============================================================================
+# dbrecord values
+#===============================================================================
+    @cached_property
+    def _get_status(self):
+        return self._get_dbrecord_value('status')
+
+    @cached_property
+    def _get_uuid(self):
+        return self._get_dbrecord_value('uuid')
+
+    @cached_property
+    def _get_aliquot(self):
+        return self._get_dbrecord_value('aliquot')
+
+    @cached_property
+    def _get_step(self):
+        return self._get_dbrecord_value('step')
+
+    @cached_property
+    def _get_sensitivity(self):
+        def func(dbr):
+            if dbr.extraction:
+                return dbr.extraction.sensitivity
+
+        return self._get_dbrecord_value('sensitivity', func=func)
+
+    @cached_property
+    def _get_sensitivity_multiplier(self):
+        def func(dbr):
+            if dbr.extraction:
+                return dbr.extraction.sensitivity_mutliplier
+        s = self._get_dbrecord_value('sensitivity_multiplier', func=func)
+        if s is None:
+            s = 1.0
+        return s
+
+    def _get_dbrecord_value(self, attr, func=None):
+        if self._dbrecord:
+            if func is not None:
+                return func(self._dbrecord)
+            else:
+                return getattr(self._dbrecord, attr)
+
 #===============================================================================
 # extraction
 #===============================================================================

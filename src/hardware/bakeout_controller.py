@@ -99,7 +99,9 @@ class BakeoutController(WatlowEZZone):
             they are not necessary for the bakeout manager currently
         '''
         #read the current max output setting
-        self._max_output = self.read_high_power_scale(nbytes=7)
+        p = self.read_high_power_scale(nbytes=7)
+        if p:
+            self._max_output = p
 
     def isAlive(self):
         return self.alive
@@ -308,7 +310,6 @@ Add {}'.format(sd)):
     def get_temp_and_power(self, **kw):
         pr = super(BakeoutController, self).get_temp_and_power(**kw)
         self.process_value_flag = True
-
         return pr
 
     def get_temperature(self, **kw):
@@ -326,15 +327,14 @@ Add {}'.format(sd)):
                 self._duration -= (nsecs + self.cnt % nsecs) / 3600.
                 self.cnt = 0
 
-        #self.get_temperature(verbose=False)
+#        self.get_temperature(verbose=True)
         #self.complex_query(verbose=False)
-#        self.get_temp_and_power(verbose=True)
         self.get_temp_and_power(verbose=False)
+#        self.get_temp_and_power(verbose=True)
 
         if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:
                 self.end()
-
 
 #===============================================================================
 # handlers

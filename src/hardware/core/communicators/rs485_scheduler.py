@@ -39,7 +39,7 @@ class RS485Scheduler(Loggable):
     '''
 
 #    collision_delay = Float(125)
-    collision_delay = Float(75)
+    collision_delay = Float(50)
 
     def __init__(self, *args, **kw):
         super(RS485Scheduler, self).__init__(*args, **kw)
@@ -71,8 +71,9 @@ class RS485Scheduler(Loggable):
 #            r = None
 
         with self._lock:
-#            time.sleep(self.collision_delay/1000.)
-            return func(*args, **kwargs)
+            r = func(*args, **kwargs)
+
+        return r
 
 
 #class Consumer(Thread):

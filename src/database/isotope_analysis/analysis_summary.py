@@ -21,8 +21,9 @@ from traitsui.api import View, Item
 #import re
 #from uncertainties import ufloat
 #============= local library imports  ==========================
-from src.database.isotope_analysis.summary import Summary
+from src.database.isotope_analysis.summary import Summary, fixed_width, floatfmt
 from src.database.isotope_analysis.fit_selector import FitSelector
+from src.constants import NULL_STR
 PLUSMINUS = u'\u00b1'
 try:
     PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
@@ -30,16 +31,10 @@ except UnicodeEncodeError:
     PLUSMINUS = '+/-'
     PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 
-def floatfmt(m, i=6):
-    if abs(m) < 10 ** -i:
-        return '{:0.2e}'.format(m)
-    else:
-        return '{{:0.{}f}}'.format(i).format(m)
 
-def fixed_width(m, i):
-    return '{{:<{}s}}'.format(i).format(m)
 class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
+
     def _build_summary(self):
         record = self.record
 
@@ -85,6 +80,20 @@ class AnalysisSummary(Summary):
         j, je = record.j
         ee = u'\u00b1{} ({})'.format(floatfmt(je), self.calc_percent_error(j, je))
         self._make_keyword('J', '{} {}'.format(j, ee), new_line=True)
+
+        #add sensitivity
+        s = record.sensitivity
+        m = record.sensitivity_multiplier
+
+        if s is not None:
+            if m is None:
+                m = 1
+            ss = s * m
+        else:
+            ss = NULL_STR
+
+        self._make_keyword('Sensitivity', ss, new_line=True)
+
 
         #added header
         self.add_text(header, underline=True, bold=True)
@@ -163,15 +172,7 @@ class AnalysisSummary(Summary):
                    underline=underline)
         self.add_text(msg, size=11, underline=underline)
 
-    def _make_keyword(self, name, value, new_line=False, underline=0, width=20):
-        name = '{}= '.format(name)
-        self.add_text(name, new_line=False, bold=True, underline=underline)
-        if not underline:
-            self.add_text(fixed_width(value, width - len(name)),
-                          new_line=new_line)
-        else:
-            self.add_text(fixed_width(value, underline - len(name)),
-                          new_line=new_line, underline=True)
+
 
     def _make_corrected_signals(self, n, i, iso, widths, lh):
         sig, base = self._get_signal_and_baseline(iso)

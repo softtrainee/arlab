@@ -22,7 +22,7 @@ from traitsui.api import Item, EnumEditor, VGroup, HGroup
 from src.loggable import Loggable
 from src.experiment.automated_run import AutomatedRun
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-from src.contsants import NULL_STR, SCRIPT_KEYS
+from src.constants import NULL_STR, SCRIPT_KEYS
 import os
 from src.paths import paths
 import yaml

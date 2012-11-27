@@ -21,7 +21,13 @@ from src.displays.rich_text_display import RichTextDisplay
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
+def fixed_width(m, i):
+    return '{{:<{}s}}'.format(i).format(m)
+def floatfmt(m, i=6):
+    if abs(m) < 10 ** -i:
+        return '{:0.2e}'.format(m)
+    else:
+        return '{{:0.{}f}}'.format(i).format(m)
 class Summary(HasTraits):
     display = Instance(RichTextDisplay)
     record = Any
@@ -60,6 +66,19 @@ class Summary(HasTraits):
     def add_text(self, *args, **kw):
         kw['gui'] = False
         self.display.add_text(*args, **kw)
+
+    def _make_keyword(self, name, value, new_line=False, underline=0, width=20):
+        value = str(value)
+
+        name = '{}= '.format(name)
+        self.add_text(name, new_line=False, bold=True, underline=underline)
+
+        if not underline:
+            self.add_text(fixed_width(value, max(0, width - len(name))),
+                          new_line=new_line)
+        else:
+            self.add_text(fixed_width(value, max(0, underline - len(name))),
+                          new_line=new_line, underline=True)
 
     def _build_summary(self, *args, **kw):
         pass

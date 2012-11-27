@@ -27,7 +27,7 @@ from scipy import optimize
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
 import wx
-from src.contsants import NULL_STR
+from src.constants import NULL_STR
 
 
 charge = 1.6021764874e-19

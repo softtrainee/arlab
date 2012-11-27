@@ -33,10 +33,10 @@ def main():
     '''
     from src.envisage.run import launch
     from src.helpers.logger_setup import logging_setup
-    from src.paths import build_directories
+    from src.paths import build_directories, paths
 
     # build directories
-    build_directories()
+    build_directories(paths)
 
     #
 

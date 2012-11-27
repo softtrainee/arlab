@@ -176,6 +176,7 @@ class BaseRegressor(Loggable):
 
     def _set_fit(self, v):
         self._fit = v
+        self.dirty = True
 
 #    fit = property(fset=_set_fit, fget=_get_fit)
 #            lower=[]
