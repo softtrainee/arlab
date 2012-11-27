@@ -578,9 +578,6 @@ class BakeoutManager(Manager):
         pv = getattr(obj, 'process_value')
         hp = getattr(obj, 'heat_power_value')
         with self._buffer_lock:
-
-            o = 10 * (len(self.data_buffer) + 1)
-            pv += o
             self.data_buffer.append((obj.name, pid, pv, hp))
 
             self.data_count_flag += 1
