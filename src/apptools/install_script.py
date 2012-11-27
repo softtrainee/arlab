@@ -201,7 +201,7 @@ class InstallTemplate():
     prefix = None
     icon_name = None
     default_mods = ['paths', 'loggable', 'config_loadable',
-                    'viewable', 'managers/displays/rich_text_display',
+                    'viewable', 'displays/rich_text_display',
                     'managers/manager',
                     ]
     default_pkgs = ['rpc', 'helpers', 'led']
@@ -233,6 +233,7 @@ class RemoteHardwareServerTemplate(InstallTemplate):
 class BakeoutTemplate(InstallTemplate):
     name = 'bakeout'
     prefix = 'bakeout'
+    icon_name='bakedpy_icon'
     def _install(self, ins, src_dir):
         ins.include_mods = ['hardware/bakeout_controller',
                       'hardware/watlow_ezzone',
