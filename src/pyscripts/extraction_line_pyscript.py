@@ -50,7 +50,12 @@ class ExtractionLinePyScript(ValvePyScript):
 
     @property
     def position(self):
-        return self.get_context()['position']
+        '''
+            if position is 0 return None 
+        '''
+        pos=self.get_context()['position']
+        if pos:
+            return pos
 
     @property
     def extract_value(self):
@@ -137,18 +142,22 @@ class ExtractionLinePyScript(ValvePyScript):
     def move_to_position(self, position=''):
         if position == '':
             position = self.position
-
-        self.info('{} move to position {}'.format(self.extract_device, position))
-        success = self._manager_action([('move_to_position', (position,), {})
-                                        ],
-                                      protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
-#                                      protocol=ILaserManager,
-                                      name=self.extract_device
-                                      )
-        if not success:
-            self.info('{} move to position failed')
+        
+        if position:
+            self.info('{} move to position {}'.format(self.extract_device, position))
+            success = self._manager_action([('move_to_position', (position,), {})
+                                            ],
+                                          protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
+    #                                      protocol=ILaserManager,
+                                          name=self.extract_device
+                                          )
+            if not success:
+                self.info('{} move to position failed')
+            else:
+                self.info('move to position suceeded')
+                return True
         else:
-            self.info('move to position suceeded')
+            self.info('not move required position is None')
             return True
 
 #    @verbose_skip

@@ -146,9 +146,7 @@ class TimeSeriesGraph(Graph):
         plota = plot.plot(names, **rd)[0]
 
 #        plota.unified_draw = True
-        plota.use_downsampling = True
-
-
+#        plota.use_downsampling = True
         #if the plot is not visible dont remove the underlays
         if plota.visible:
             self._set_bottom_axis(plota, plot, plotid, timescale=timescale)

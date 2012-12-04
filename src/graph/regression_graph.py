@@ -121,9 +121,12 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self.redraw()
 
     def get_fit(self, plotid=0, series=0):
-        plot = self.plots[plotid]
-        scatter = plot.plots['data{}'.format(series)][0]
-        return scatter.fit
+        try:
+            plot = self.plots[plotid]
+            scatter = plot.plots['data{}'.format(series)][0]
+            return scatter.fit
+        except IndexError:
+            pass
 
     def _update_graph(self, obj=None, name=None, old=None, new=None):
         if self.suppress_regression:

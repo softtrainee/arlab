@@ -197,6 +197,9 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
 # database record
 #===============================================================================
+    def load(self):
+        self._calculate_age()
+        
     def load_graph(self, graph=None, xoffset=0):
 #        dm = self.selector.data_manager
         self._load_signals()
@@ -311,15 +314,17 @@ class IsotopeRecord(DatabaseRecord):
 #        self._load_signals()
 #        signals = self._signals
         signals = self.signals
-
+        nsignals=dict()
         keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
         for iso in keys:
             for k in ['', 'bs', 'bl', 'bg']:
                 isok = iso + k
                 if not signals.has_key(isok):
-                    signals[isok] = self._signal_factory(isok, None)
-
-        sigs = lambda name: [(signals[iso].value, signals[iso].error)
+                    nsignals[isok] = self._signal_factory(isok, None)
+                else:
+                    nsignals[isok]=signals[isok]
+                    
+        sigs = lambda name: [(nsignals[iso].value, nsignals[iso].error)
                                 for iso in map('{{}}{}'.format(name).format, keys)]
 
         fsignals = sigs('')
@@ -420,19 +425,20 @@ class IsotopeRecord(DatabaseRecord):
 #        print id(self._dbrecord)
 
         for iso in self._dbrecord.isotopes:
-            result = iso.results[-1]
-            key = '' if iso.kind == 'signal' else 'bs'
-#            if not self.filter_outliers:
-#                blob = iso.signals[-1].data
-#                fit = next((fi for fi in fits if fi.isotope == iso))
-#
-#                s = Signal(fit=fit.fit, filter_outliers=self.filter_outliers)
-#                s.set_blob(blob)
-#            else:
-#            print iso.molecular_weight.name, s.value, result.signal_
-            s = Signal(_value=result.signal_, _error=result.signal_err)
-            name = iso.molecular_weight.name
-            self._signals['{}{}'.format(name, key)] = s
+            if iso.kind!='sniff':
+                result = iso.results[-1]
+                key = '' if iso.kind == 'signal' else 'bs'
+    #            if not self.filter_outliers:
+    #                blob = iso.signals[-1].data
+    #                fit = next((fi for fi in fits if fi.isotope == iso))
+    #
+    #                s = Signal(fit=fit.fit, filter_outliers=self.filter_outliers)
+    #                s.set_blob(blob)
+    #            else:
+    #            print iso.molecular_weight.name, s.value, result.signal_
+                s = Signal(_value=result.signal_, _error=result.signal_err)
+                name = iso.molecular_weight.name
+                self._signals['{}{}'.format(name, key)] = s
 
     def _get_peak_time_data(self, group):
         #load from file
@@ -577,7 +583,7 @@ class IsotopeRecord(DatabaseRecord):
 
         return graph
 
-    def _load_peak_center_graph(self, xs, ys, center_dac):
+    def _load_peak_center_graph(self, xs, ys, center_dac, pcdacs, pcsignals):
 #        xs = []
 #        ys = []
 #        if data:
@@ -599,12 +605,12 @@ class IsotopeRecord(DatabaseRecord):
                          type='scatter', marker='circle',
                          marker_size=1.25
                          )
-#        graph.new_series(
-#                         x=pcdacs,
-#                         y=pcsignals,
-#                         type='scatter', marker='circle',
-#                         marker_size=2
-#                         )
+        graph.new_series(
+                         x=pcdacs,
+                         y=pcsignals,
+                         type='scatter', marker='circle',
+                         marker_size=2
+                         )
         graph.add_vertical_rule(center_dac)
 
 #        graph.plots[0].value_range.tight_bounds = False
@@ -725,11 +731,11 @@ class IsotopeRecord(DatabaseRecord):
     @cached_property
     def _get_irradiation_info(self):
         '''
-            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments
+            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
         '''
-        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), []
+        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
         analysis = self.dbrecord
-
+    
         irradiation_level = self.irradiation_level
 
         if irradiation_level:
@@ -737,11 +743,21 @@ class IsotopeRecord(DatabaseRecord):
             if irradiation:
                 pr = irradiation.production
                 if pr:
-                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-
+                    prs=[]
+                    for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
+                        v,e=getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
+                        prs.append((v if v is not None else 1, e if e is not None else 0))
+                                                     
+#                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+#                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+                    
                 chron = irradiation.chronology
-                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+                def convert_datetime(x):
+                    try:
+                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        pass
+#                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
                 if chron:
@@ -749,18 +765,23 @@ class IsotopeRecord(DatabaseRecord):
 
                     doses = chronblob.split('$')
                     doses = [di.split('%') for di in doses]
-
+                    
                     doses = [map(convert_datetime, d) for d in doses]
 
                     analts = '{} {}'.format(analysis.rundate, analysis.runtime)
                     analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
                     segments = []
                     for st, en in doses:
-                        dur = en - st
-                        dt = analts - st
-                        segments.append((1, convert_days(dur), convert_days(dt)))
-
-                    decay_time = convert_days(analts - doses[0][0])
+                        if st is not None and en is not None:
+                            dur = en - st
+                            dt = analts - st
+                            segments.append((1, convert_days(dur), convert_days(dt)))
+                    
+                    decay_time=0
+                    d_o=doses[0][0]
+                    if d_o is not None:
+                        decay_time = convert_days(analts - doses[0][0])
+                    
 #                    segments = [(1, convert_days(ti)) for ti in durs]
                     prs.append(segments)
                     prs.append(decay_time)
@@ -953,7 +974,7 @@ class IsotopeRecord(DatabaseRecord):
     def _get_sensitivity_multiplier(self):
         def func(dbr):
             if dbr.extraction:
-                return dbr.extraction.sensitivity_mutliplier
+                return dbr.extraction.sensitivity_multiplier
         s = self._get_dbrecord_value('sensitivity_multiplier', func=func)
         if s is None:
             s = 1.0
@@ -995,8 +1016,8 @@ class IsotopeRecord(DatabaseRecord):
 #            return dbr.extraction.device.name
         def get(ex):
             r = NULL_STR
-            if ex.device:
-                r = ex.device.name
+            if ex.extraction_device:
+                r = ex.extraction_device.name
             return r
 
         return self._get_extraction_value(None, getter=get)

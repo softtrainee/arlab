@@ -35,7 +35,7 @@ class SpectrometerManager(Manager):
         spec = self.spectrometer
         d = dict()
         for attr, cmd in [('extraction_lens', 'ExtractionLens'), ('ysymmetry', 'YSymmetry'),
-                          ('zymmetry', 'ZSymmetry'), ('zfocus', 'ZFocus')
+                          ('zsymmetry', 'ZSymmetry'), ('zfocus', 'ZFocus')
                           ]:
             v = spec.get_parameter('Get{}'.format(cmd))
             if v is not None:

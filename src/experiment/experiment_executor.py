@@ -43,6 +43,7 @@ from src.lasers.laser_managers.laser_manager import ILaserManager
 from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
+from src.constants import NULL_STR
 
 
 class ExperimentExecutor(ExperimentManager):
@@ -56,9 +57,12 @@ class ExperimentExecutor(ExperimentManager):
 
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
+    delaying_between_runs = Bool(False)
+    resume_runs=Bool(False)
 
     show_sample_map = Button
     execute_button = Event
+    resume_button=Button('Resume')
     execute_label = Property(depends_on='_alive')
     truncate_button = Button('Truncate')
     truncate_style = Enum('Immediate', 'Quick', 'Next Integration')
@@ -208,7 +212,7 @@ class ExperimentExecutor(ExperimentManager):
             if not globalv.experiment_debug:
                 nonfound.append('extraction_line')
 
-        if exp.extract_device:
+        if exp.extract_device!=NULL_STR:
             extract_device = exp.extract_device.replace(' ', '_').lower()
             if not self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device)):
                 if not globalv.experiment_debug:
@@ -247,6 +251,11 @@ class ExperimentExecutor(ExperimentManager):
 #            return
 
         self._alive = True
+
+        #delay before starting
+        delay=exp.delay_before_analyses
+        self._delay(delay, message='before')
+        
         self.set_selector.selected_index = -2
         rc = 0
         ec = 0
@@ -263,7 +272,23 @@ class ExperimentExecutor(ExperimentManager):
 
         self.info('Executed {:n} sets. total runs={:n}'.format(ec, rc))
         self._alive = False
-
+    
+    def _delay(self, delay, message='between'):
+        self.delay_between_runs_readback = delay
+        self.info('Delay {} runs {}'.format(message,delay))
+        self.delaying_between_runs=True
+        self.resume_runs=False
+        st = time.time()
+        while time.time() - st < delay:
+            if not self.isAlive():
+                break
+            if self.resume_runs:
+                break
+            
+            time.sleep(0.5)
+            self.delay_between_runs_readback -= 0.5
+        self.delaying_between_runs=False
+        
     def _execute_automated_runs(self, iexp, exp):
 
         self.info('Starting automated runs set= Set{}'.format(iexp))
@@ -302,17 +327,10 @@ class ExperimentExecutor(ExperimentManager):
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
                                         not cnt == 0):
-                delay = exp.delay_between_analyses
-                self.delay_between_runs_readback = delay
-                self.info('Delay between runs {}'.format(delay))
-
                 #delay between runs
-                st = time.time()
-                while time.time() - st < delay:
-                    if not self.isAlive():
-                        break
-                    time.sleep(0.5)
-                    self.delay_between_runs_readback -= 0.5
+                delay = exp.delay_between_analyses
+                self._delay(delay)
+                
 
             try:
                 t, run = self._launch_run(rgen, cnt)
@@ -329,7 +347,9 @@ class ExperimentExecutor(ExperimentManager):
                 t.join()
 
             if run.analysis_type.startswith('blank'):
-                self._prev_blanks = run.get_corrected_signals()
+                pb= run.get_corrected_signals()
+                if pb is not None:
+                    self._prev_blanks =pb
 
             cnt += 1
             totalcnt += 1
@@ -414,10 +434,12 @@ class ExperimentExecutor(ExperimentManager):
             return True
 
         types = ['air', 'unknown', 'cocktail']
+        btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
         #get first air, unknown or cocktail
         aruns = self.experiment_set.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types), None)
+        
         if fa:
             ind, an = fa
             if ind == 0:
@@ -428,7 +450,7 @@ class ExperimentExecutor(ExperimentManager):
                     return
             else:
                 pa = aruns[ind - 1]
-                if not pa.analysis_type in types:
+                if not pa.analysis_type in btypes:
                     if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
                         if not self._get_blank(an.analysis_type):
                             return
@@ -459,7 +481,7 @@ class ExperimentExecutor(ExperimentManager):
             return
         else:
             arun.measurement_script.syntax_checked = True
-
+            
         if not arun.post_measurement_script:
             self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
             return
@@ -485,7 +507,6 @@ class ExperimentExecutor(ExperimentManager):
 #
 #        if not isAlive():
 #            return
-
         arun.state = 'measurement'
         if not arun.do_measurement():
             self._alive = False
@@ -519,6 +540,9 @@ class ExperimentExecutor(ExperimentManager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _resume_button_fired(self):
+        self.resume_runs=True
+        
     def _selected_changed(self):
         if self.selected:
             self.stats.calculate_at(self.selected)
@@ -555,10 +579,12 @@ class ExperimentExecutor(ExperimentManager):
                             )
 #        editor = self.experiment_set._automated_run_editor(update='object.experiment_set.current_run.update')
         tb = HGroup(
+                    Item('resume_button', enabled_when='object.delaying_between_runs', show_label=False),
                     Item('delay_between_runs_readback',
                          label='Delay Countdown',
                          style='readonly', format_str='%i',
                          width= -50),
+                    
                     spring,
                     Item('show_sample_map', show_label=False,
                          enabled_when='object.experiment_set.sample_map'
@@ -598,7 +624,7 @@ class ExperimentExecutor(ExperimentManager):
                  width=1150,
                  height=750,
                  resizable=True,
-                 title=self.experiment_set.name,
+                 title=self.title,
                  handler=self.handler_klass,
                  )
         return v

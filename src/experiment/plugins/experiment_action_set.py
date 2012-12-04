@@ -78,6 +78,10 @@ class ExperimentActionSet(WorkbenchActionSet):
                 Action(name='Labnumber Entry...',
                        path=PATH,
                        class_name='{}:LabnumberEntryAction'.format(BASE)
+                       ),
+                Action(name='Plot Series...',
+                       path=PATH,
+                       class_name='{}:MakePlotSeriesAction'.format(BASE)
                        )
              ]
 

@@ -141,18 +141,17 @@ class IsotopeAnalysisSelector(DatabaseSelector):
               'Irradiation Position':([gen_LabTable,
                               irrad_PositionTable,
                               irrad_LevelTable,
-                              irrad_IrradiationTable], irrad_PositionTable.position)
+                              irrad_IrradiationTable], irrad_PositionTable.position),
+              'Run Date':([], meas_AnalysisTable.rundate)
               }
         joined = []
         if queries:
             for qi in queries:
-
                 tabs, attr = mm[qi.parameter]
                 for tab in tabs:
                     if not tab in joined:
                         joined.append(tab)
                         q = q.join(tab)
-
 
                 q = qi.assemble_filter(q, attr)
 

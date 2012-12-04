@@ -52,6 +52,7 @@ class ExperimentSet(BaseSchedule):
     measuring = Property(depends_on='current_run.measuring')
 
     delay_between_analyses = Float(1)
+    delay_before_analyses = Float(1)
     name = Property(depends_on='path')
     path = Str
     ok_to_add = Property
@@ -102,6 +103,7 @@ class ExperimentSet(BaseSchedule):
 
 
         s = '''mass_spectrometer: {}
+delay_before_analyses: {}
 delay_between_analyses: {}
 extract_device: {}
 tray: {} 
@@ -110,6 +112,7 @@ tray: {}
 {}
 {}
 '''.format(self.mass_spectrometer,
+           self.delay_before_analyses,
            self.delay_between_analyses,
            self.extract_device,
            self.sample_map if self.sample_map else '',
@@ -228,6 +231,7 @@ tray: {}
         self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)
+        self._set_meta_param('delay_before_analyses', meta, default_int)
 
         delim = '\t'
 

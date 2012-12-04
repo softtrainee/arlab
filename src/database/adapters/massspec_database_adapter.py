@@ -41,7 +41,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return self._get_items(SampleTable, globals(), **kw)
 
     def get_database_version(self):
-        return self._get_items(DatabaseVersionTable, globals())
+        return self._retrieve_items(DatabaseVersionTable)
 #===============================================================================
 # getters
 #===============================================================================

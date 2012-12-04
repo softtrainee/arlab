@@ -101,7 +101,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     omit_bogus = Bool(True)
 
     limit = Int(200)
-    date_str = 'rundate'
+    date_str = 'Run Date'
 
     multi_select_graph = Bool(False)
     multi_graphable = Bool(False)
@@ -163,30 +163,32 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 # private
 #===============================================================================
     def _get_recent(self):
-        param = '{}.{}'.format(self.query_table.__tablename__, self.date_str)
+        #param = '{}.{}'.format(self.query_table.__tablename__, self.date_str)
         comp = '='
         criterion = 'this month'
         q = self.queries[0]
-        q.parameter = param
+        q.parameter = self.date_str
         q.comparator = comp
-        q.criterion = criterion
-        fs = q.get_filter_str()
-        return self._execute_query(fs)
+#        q.criterion = criterion
+        q.trait_set(criterion=criterion, trait_change_notify=False)
+        
+        return self._execute_query(queries=[q])
 
 #    def _generate_filter_str(self):
 #        qs = 'and '.join([q.get_filter_str() for q in self.queries])
 #        return qs
 
-    def _execute_query(self, filter_str):
+    def _execute_query(self,  queries=None):
 #        db = self.db
 #        if filter_str is None:
 #            filter_str = self._generate_filter_str()
-
+        if queries is None:
+            queries=self.queries
         query_dict = dict(
 #                          filter_str=filter_str,
                       limit=self.limit,
                       order=self._get_order(),
-                      queries=self.queries
+                      queries=queries
                       )
 
         dbs, query_str = self._get_selector_records(**query_dict)
@@ -214,10 +216,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        print self.selected_row
 
     def _load_records(self, records):
-        db = self.db
-        r = os.path.dirname(db.name)
+#        db = self.db
+#        r = os.path.dirname(db.name)
         if records:
-            nd = [self._result_factory(di, root=r) for di in records]
+#            nd = [self._result_factory(di, root=r) for di in records]
+            nd = [self._result_factory(di) for di in records]
             self.records.extend(nd)
 #            for di in records:
 #                r = os.path.dirname(db.name)

@@ -274,6 +274,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
+    age_with_jerr=ufloat((0,0))
+    age_wo_jerr=ufloat((0,0))
     try:
         R = ar40rad / k39
 #        R = ufloat((3.2181895, 0.0021006))

@@ -271,7 +271,7 @@ class meas_ExtractionTable(Base, ScriptTable):
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):
     measurement_id = foreignkey('meas_MeasurementTable')
-    extraction_len = Column('extraction_lens', Float)
+    extraction_lens = Column('extraction_lens', Float)
     ysymmetry = Column(Float)
     zsymmetry = Column(Float)
     zfocus = Column(Float)

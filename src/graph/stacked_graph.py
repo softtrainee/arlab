@@ -228,10 +228,13 @@ class StackedGraph(Graph):
             for k, ps in plot.plots.iteritems():
                 si = ps[0]
                 sii = int(series_id[0][-1])
-                pi = int(k[-1])
-                if isinstance(si, ScatterPlot):
-                    if not si.index is obj and pi == sii:
-                        si.index.trait_set(metadata=obj.metadata)
+                try:
+                    pi = int(k[-1])
+                    if isinstance(si, ScatterPlot):
+                        if not si.index is obj and pi == sii:
+                            si.index.trait_set(metadata=obj.metadata)
+                except ValueError:
+                    pass
 
     def _bind_index(self, scatter, series_id, bind_selection=True, **kw):
         if bind_selection:
