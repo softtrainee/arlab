@@ -172,15 +172,12 @@ class AnalysisSummary(Summary):
                    underline=underline)
         self.add_text(msg, size=11, underline=underline)
 
-
-
     def _make_corrected_signals(self, n, i, iso, widths, lh):
         sig, base = self._get_signal_and_baseline(iso)
 
         s1 = sig - base
 #        if fully_correct:
         arar = self.record.arar_result
-
 #        s2 = ufloat((0, 0))
         s2 = None
         if arar:
@@ -224,12 +221,14 @@ class AnalysisSummary(Summary):
         return sig.uvalue, base.uvalue
 
     def _make_signals(self, n, i, iso, widths):
+        
         sg = self.record.signal_graph
         pi = n - i
+        det = sg.plots[pi].detector
+        
         fit = sg.get_fit(pi) if sg else ' '
         sig, base = self._get_signal_and_baseline(iso)
-
-        det = sg.plots[pi].detector
+            
         try:
             blank = self.record.signals['{}bl'.format(iso)]
             blank = blank.uvalue

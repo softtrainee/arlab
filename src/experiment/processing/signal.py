@@ -39,7 +39,7 @@ class Signal(HasTraits):
     ys = Array
 #    es = Array
     fit = None
-    filter_outliers = True
+    filter_outliers = False
     filter_outlier_iterations = Int(1)
     filter_outlier_std_devs = Int(2)
 #    dirty = Event

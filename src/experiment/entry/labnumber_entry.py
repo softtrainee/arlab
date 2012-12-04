@@ -434,16 +434,17 @@ class LabnumberEntry(DBEntry):
 
     @cached_property
     def _get_trays(self):
-
+        
         p = os.path.join(self._get_map_path(), 'images')
         if not os.path.isdir(p):
             self.warning_dialog('{} does not exist'.format(p))
             return Undefined
 
-        ts = [pi for pi in os.listdir(p)
-                    if not (pi.endswith('.png')
-                            or pi.endswith('.pct')
-                            or pi.startswith('.'))]
+        ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
+#                    if not (pi.endswith('.png')
+#                            or pi.endswith('.pct')
+#                            or pi.startswith('.'))
+              ]
         if ts:
             self.tray = ts[-1]
 

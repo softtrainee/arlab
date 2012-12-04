@@ -107,7 +107,7 @@ class PlotPanel(Viewable):
             u, l = ra.split(':')
             try:
                 ru = self.signals[u]
-                rl = self.signals[l]
+                rl = self.signals[l] 
             except KeyError:
                 return ''
 
@@ -116,13 +116,13 @@ class PlotPanel(Viewable):
                 bl = ufloat((0, 0))
                 try:
                     bu = self.baselines[u]
-                    bl = self.baselines[u]
+                    bl = self.baselines[l]
                 except KeyError:
                     pass
                 rr = (ru - bu) / (rl - bl)
             else:
                 rr = ru / rl
-
+          
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
                     self._get_pee(rr)
@@ -256,7 +256,7 @@ class PlotPanel(Viewable):
                        layout='tabbed'
                        ),
                  width=600,
-                 height=875,
+                 height=0.85,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,
@@ -270,7 +270,7 @@ class PlotPanel(Viewable):
 # defaults
 #===============================================================================
     def _signal_display_default(self):
-        return RichTextDisplay(height=200,
+        return RichTextDisplay(height=220,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False,
@@ -278,7 +278,7 @@ class PlotPanel(Viewable):
 #                               width=0.25
                                )
     def _ratio_display_default(self):
-        return RichTextDisplay(height=200,
+        return RichTextDisplay(height=220,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False,

@@ -73,18 +73,21 @@ def convert_identifier(identifier):
     return identifier
 
 def get_analysis_type(idn):
+    
+    idn=idn.lower()
+    
     #check for Bg before B
-    if idn.startswith('Bg'):
+    if idn.startswith('bg'):
         return 'background'
-    elif idn.startswith('Ba'):
+    elif idn.startswith('ba'):
         return 'blank_air'
-    elif idn.startswith('Bu'):
+    elif idn.startswith('bu'):
         return 'blank_unknown'
-    elif idn.startswith('Bc'):
+    elif idn.startswith('bc'):
         return 'blank_cocktail'
-    elif idn.startswith('A'):
+    elif idn.startswith('a'):
         return 'air'
-    elif idn.startswith('C'):
+    elif idn.startswith('c'):
         return 'cocktail'
     else:
         return 'unknown'

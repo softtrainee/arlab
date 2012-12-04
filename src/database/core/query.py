@@ -66,11 +66,14 @@ class Query(HasTraits):
     add = Button('+')
     remove = Button('-')
     removable = Bool(True)
-    date_str = 'rundate'
+#    date_str = 'rundate'
 
     def assemble_filter(self, query, attr):
         comp = self.comparator
-        if comp in ['like', 'contains', '=']:
+        if self.parameter == 'Run Date':
+            query = self.date_query(query, attr)
+
+        elif comp in ['like', 'contains', '=']:
             c = self.criterion
             if comp == 'like':
                 c += '%'
@@ -78,8 +81,6 @@ class Query(HasTraits):
                 comp = 'like'
                 c = '%' + c + '%'
             query = query.filter(attr == c)
-        elif self.parameter == 'Run Date':
-            query = self.date_query(query, attr)
 
         return query
 
@@ -94,13 +95,13 @@ class Query(HasTraits):
             today = get_date()
             if '=' in comp:
                 d = d - timedelta(days=d.day)
-                query = query(and_(attr <= today,
+                query = query.filter(and_(attr <= today,
                                    attr >= d
                                    ))
             else:
                 comp = self._convert_comparator(comp)
                 c = d - timedelta(days=d.day - 1)
-                query = query(getattr(attr, comp)(c))
+                query = query.filter(getattr(attr, comp)(c))
 
 #        c = '{}'.format(c)
         return query

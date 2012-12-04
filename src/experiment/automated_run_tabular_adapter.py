@@ -42,6 +42,7 @@ class AutomatedRunAdapter(TabularAdapter):
     sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
+    cleanup_width = Int(60)
     overlap_width = Int(50)
     autocenter_width = Int(70)
     extract_value_width = Int(85)
@@ -64,6 +65,7 @@ class AutomatedRunAdapter(TabularAdapter):
     extract_value_text = Property
     extract_units_text = Property
     duration_text = Property
+    cleanup_text = Property
     autocenter_text = Property
     overlap_text = Property
     aliquot_text = Property
@@ -110,6 +112,7 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
                  ('Duration', 'duration'),
+                 ('Cleanup', 'cleanup'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
                  ('Post equilibration', 'post_equilibration_script'),
@@ -134,6 +137,9 @@ class AutomatedRunAdapter(TabularAdapter):
 
     def _get_duration_text(self, trait, item):
         return self._get_number('duration')
+
+    def _get_cleanup_text(self, trait, item):
+        return self._get_number('cleanup')
 
     def _get_overlap_text(self, trait, item):
         return self._get_number('overlap')

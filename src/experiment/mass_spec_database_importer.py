@@ -79,7 +79,6 @@ class MassSpecDatabaseImporter(Loggable):
                                      password='Argon',
                                      name='massspecdata_local'
                                      )
-        db.connect()
 
         return db
 
@@ -99,7 +98,7 @@ class MassSpecDatabaseImporter(Loggable):
             runtype = 'Unknown'
 
         db = self.db
-        #=======================================================================
+        #===============================================    ========================
         # add analysis
         #=======================================================================
         analysis = db.add_analysis(rid,

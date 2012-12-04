@@ -18,7 +18,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-__version__=005
+__version__=006
 */
 using System.IO;
 using System.Text;
@@ -41,6 +41,7 @@ class RemoteControl
 	
 	private static bool use_udp=true;
 	private static bool tag_data=true;
+	private static double max_magnet_step=1;
 	
 	public static string scan_data;
 	
@@ -57,6 +58,7 @@ class RemoteControl
     
 	private static double last_y_symmetry=0;
 	private static bool isblanked=false;
+	
 	
 	public static void Main ()
 	{
@@ -292,7 +294,9 @@ class RemoteControl
 			break;
 			
 		case "SetMagnetDAC":
-			result=SetParameter("Field Set",Convert.ToDouble(args[1]));
+		
+			result=SetMagnetDAC(Convert.ToDouble(args[1]));
+			//result=SetParameter("Field Set",Convert.ToDouble(args[1]));
 			break;
 			
 //============================================================================================
@@ -539,6 +543,44 @@ class RemoteControl
 		return result;
 	}
 	
+	public static string SetMagnetDAC(double d)
+	{
+		
+		string result="OK";
+		double current_dac;
+		
+		int sign=1;
+		int nsteps=1;
+		double rem=0;
+		double step=d;
+		
+		if (Instrument.GetParameter("Field Set", out current_dac))
+		{
+			if (current_dac >d){sign=-1}
+			double dev;
+			dev=Math.Abs(d-current_dac)
+			if (dev>max_magnet_step)
+			{
+				nsteps=Convert.ToInt32(dev/max_magnet_step)
+				rem=dev%max_magnet_step
+				step=max_magnet_step
+			}
+			
+			for(int i=1; i<=nsteps; i++)
+			{
+				nv=current_dac+sign*i*step
+				SetParameter("Field Set", nv)
+			}
+			if (rem>0)
+			{
+				Instrument.GetParameter("Field Set", out current_dac)
+				SetParameter("Field Set", current_dac+sign*rem)
+			}
+			
+		}
+		
+		
+	}
 	public static string SetIntegrationTime(double t)
 	{
 		//t in ms

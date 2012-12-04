@@ -433,15 +433,16 @@ class ExtractionLineManager(Manager):
     def _valve_manager_default(self):
         from src.extraction_line.valve_manager import ValveManager
         return ValveManager(extraction_line_manager=self)
-#    def _explanation_default(self):
-##        '''
-##        '''
-#        e = ExtractionLineExplanation()
-##        if self.valve_manager is not None:
-##            e.load(self.valve_manager.explanable_items)
-##            self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-##
-#        return e
+
+    def _explanation_default(self):
+#        '''
+#        '''
+        e = ExtractionLineExplanation()
+        if self.valve_manager is not None:
+            e.load(self.valve_manager.explanable_items)
+            self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
+
+        return e
 
     def _canvas_default(self):
         '''

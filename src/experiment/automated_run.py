@@ -303,7 +303,8 @@ class AutomatedRun(Loggable):
         self._pre_measurement_save()
         self.measuring = True
         if self.measurement_script.execute():
-            self._post_measurement_save()
+            if self._alive:
+                self._post_measurement_save()
 
             self.info('======== Measurement Finished ========')
             self.measuring = False
@@ -329,11 +330,11 @@ class AutomatedRun(Loggable):
             return False
 
     def do_equilibration(self, eqtime=None, inlet=None, outlet=None):
-        if inlet is None:
-            inlet = self.get_measurement_parameter('inlet_valve')
+#        if inlet is None:
+#            inlet = self.get_measurement_parameter('inlet_valve')
 
-        if inlet is None:
-            return
+#        if inlet is None:
+#            return
 
         evt = TEvent()
         if not self._alive:
@@ -454,7 +455,7 @@ class AutomatedRun(Loggable):
             self.peak_center = pc
             if pc.result:
                 dm = self.data_manager
-                tab = dm.new_table('/', 'peakcenter')
+                tab = dm.new_table('/', 'peak_center')
 
                 xs, ys = pc.graph.get_data(), pc.graph.get_data(axis=1)
 
@@ -510,7 +511,8 @@ class AutomatedRun(Loggable):
         self.plot_panel = p
         self.plot_panel.baselines = self.experiment_manager._prev_baselines
         self.plot_panel.blanks = self.experiment_manager._prev_blanks
-
+        self.plot_panel.correct_for_blank= True if (not self.analysis_type.startswith('blank') and not self.analysis_type.startswith('background')) else False
+        
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
             return
@@ -778,7 +780,7 @@ class AutomatedRun(Loggable):
                 elm.close_valve(outlet, mode='script')
 
             if inlet:
-                self.info('waiting {}s before opening inlet value {}'.format(inlet))
+                self.info('waiting {}s before opening inlet value {}'.format(delay,inlet))
                 time.sleep(delay)
                 #open inlet
                 elm.open_valve(inlet, mode='script')
@@ -913,7 +915,7 @@ class AutomatedRun(Loggable):
         dm = self.data_manager
         #make a new frame for saving data
 
-
+        
         name = uuid.uuid4()
 
 #        path = os.path.join(self.repository.root, '{}.h5'.format(name))
@@ -1006,7 +1008,7 @@ class AutomatedRun(Loggable):
             self._save_blank_info(a)
 
             #save peak center
-            self._save_peak_center(pc)
+            self._save_peak_center(a,pc)
 
             if globalv.experiment_savedb:
                 db.commit()
@@ -1021,6 +1023,9 @@ class AutomatedRun(Loggable):
                    for (iso, detname, kind) in self._save_isotopes
                    if kind == 'signal']
         baselines = [(iso, detname)
+                   for (iso, detname, kind) in self._save_isotopes
+                   if kind == 'baseline']
+        sniffs=[(iso, detname)
                    for (iso, detname, kind) in self._save_isotopes
                    if kind == 'baseline']
 
@@ -1039,6 +1044,12 @@ class AutomatedRun(Loggable):
             bs = Signal(xs=x, ys=y, fit=fit)
 
             rsignals['{}baseline'.format(iso)] = bs
+            
+        for (iso, detname) in sniffs:
+            tab=dm.get_table(detname,'/sniff/{}'.format(iso))
+            x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
+            sn = Signal(xs=x, ys=y)
+            rsignals['{}sniff'.format(iso)]=sn
 
         peak_center = dm.get_table('peak_center', '/')
 
@@ -1047,19 +1058,21 @@ class AutomatedRun(Loggable):
     def _save_sensitivity(self, extraction, measurement):
         #get the lastest sensitivity entry for this spectrometr
         spec = measurement.mass_spectrometer
-        sen = spec.sensitivities[-1]
-
-        extraction.sensitivity = sen
+        if spec:
+            sens=spec.sensitivities
+            if sens:
+                extraction.sensitivity = sens[-1]
 
     def _save_peak_center(self, analysis, tab):
-        db = self.db
-        packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
-        points = ''.join(packed_xy)
-        center = tab.attrs.center_dac
-        pc = db.add_peak_center(
-                           analysis,
-                           center=center, points=points)
-        return pc
+        if tab is not None:
+            db = self.db
+            packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
+            points = ''.join(packed_xy)
+            center = tab.attrs.center_dac
+            pc = db.add_peak_center(
+                               analysis,
+                               center=center, points=points)
+            return pc
 
     def _save_measurement(self, analysis):
         db = self.db
@@ -1103,6 +1116,10 @@ class AutomatedRun(Loggable):
 
     def _save_history_info(self, analysis, name):
         db = self.db
+
+        if self.analysis_type!='unknown':
+            return 
+            
         pb = getattr(self.experiment_manager, '_prev_{}'.format(name))
         if not pb:
             return
@@ -1117,11 +1134,12 @@ class AutomatedRun(Loggable):
         setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
 
         func = getattr(db, 'add_{}'.format(name))
-        for isotope, v in pb:
+        for isotope, v in pb.iteritems():
+            print isotope, v
             uv = v.nominal_value
             ue = v.std_dev()
-            func(history, uv, ue, isotope)
-
+            func(history, user_value=uv, user_error=ue, isotope=isotope)
+            
     def _save_isotope_info(self, analysis, signals):
         db = self.db
 
@@ -1141,17 +1159,21 @@ class AutomatedRun(Loggable):
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
             db.add_signal(dbiso, data)
 
-            #add fit
-            db.add_fit(dbhist, dbiso, fit=s.fit)
+            if s.fit:
+                #add fit
+                db.add_fit(dbhist, dbiso, fit=s.fit)
 
-            #add isotope result
-            db.add_isotope_result(dbiso,
-                                  dbhist,
-                                  signal_=s.value, signal_err=s.error,
-                                  )
-
-            if globalv.experiment_savedb:
-                db.commit()
+            if kind in ['signal', 'baseline']:
+                #add isotope result
+                db.add_isotope_result(dbiso,
+                                      dbhist,
+                                      signal_=s.value, signal_err=s.error,
+                                      )
+            
+            db.flush()
+            
+#        if globalv.experiment_savedb:
+#            db.commit()
 
     def _save_to_massspec(self):
         h = self.massspec_importer.db.host
@@ -1369,7 +1391,7 @@ class AutomatedRun(Loggable):
         return write_data
 
     def _get_yaml_parameter(self, script, key, default):
-        m = ast.parse(script.text)
+        m = ast.parse(script._text)
         docstr = ast.get_docstring(m)
         if docstr is not None:
             params = yaml.load(docstr)
