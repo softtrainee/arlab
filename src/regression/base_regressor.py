@@ -43,7 +43,6 @@ class BaseRegressor(Loggable):
     fit = Property
     _fit = None
 
-
     def percent_error(self, s, e):
         try:
             return abs(e / s * 100)
@@ -54,13 +53,34 @@ class BaseRegressor(Loggable):
 
         cs = self.coefficients
         ce = self.coefficient_errors
-
         pm = u'\u00b1'
         fmt = '{{}}={{:0.{}f}}{{}}{{:0.{}f}} ({{:0.2f}}%)'.format(sig_figs, error_sig_figs)
         s = ', '.join([fmt.format(a, ci, pm, cei, self.percent_error(ci, cei))
                        for a, ci, cei in zip(ALPHAS, cs, ce)
                        ])
 
+        return s
+
+    def make_equation(self):
+        '''
+            y=Ax+B
+            y=Ax2+Bx+C
+        '''
+        n = len(self.coefficients) - 1
+        constant = ALPHAS[n]
+        ps = []
+        for i in range(n):
+            a = ALPHAS[i]
+
+            e = n - i
+            if e > 1:
+                a = '{}x{}'.format(a, e)
+            else:
+                a = '{}x'.format(a)
+            ps.append(a)
+
+        eq = '+'.join(ps)
+        s = 'y={}+{}'.format(eq, constant)
         return s
 
     def predict(self, x):

@@ -28,7 +28,8 @@ from src.database.core.database_selector import DatabaseSelector
 #from src.database.core.base_db_result import DBResult
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
     gen_SampleTable, irrad_PositionTable, irrad_LevelTable, \
-    irrad_IrradiationTable
+    irrad_IrradiationTable, gen_ProjectTable, meas_MeasurementTable, \
+    gen_MassSpectrometerTable, gen_AnalysisTypeTable
 
 #from src.graph.regression_graph import StackedRegressionTimeSeriesGraph, \
 #    StackedRegressionGraph
@@ -71,6 +72,8 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
                ('Date', 'rundate'),
                ('Time', 'runtime'),
                ('Irradiation', 'irradiation'),
+               ('Mass Spec.', 'mass_spectrometer'),
+               ('Type', 'analysis_type')
 #               ('Irradiation', 'irradiation_level')
                ]
     font = 'monospace'
@@ -115,20 +118,20 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #            self.join_table_parameter = str(jt[0])
 #    def _selected_changed(self):
 #        print self.selected
-    def set_data_manager(self, kind, **kw):
-        if kind == 'FTP':
-            dm = FTPH5DataManager(**kw)
-        else:
-            dm = H5DataManager(**kw)
-
-        self.data_manager = dm
+#    def set_data_manager(self, kind, **kw):
+#        if kind == 'FTP':
+#            dm = FTPH5DataManager(**kw)
+#        else:
+#            dm = H5DataManager(**kw)
+#
+#        self.data_manager = dm
 
     def _get_selector_records(self, queries=None, limit=None, **kw):
         sess = self.db.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.filter(meas_AnalysisTable.status != -1)
 
-        mm = {'Labnumber':(gen_LabTable, gen_LabTable.labnumber),
+        mm = {'Labnumber':([gen_LabTable], gen_LabTable.labnumber),
               'Sample':([gen_LabTable, gen_SampleTable], gen_SampleTable.name),
               'Irradiation':([gen_LabTable,
                               irrad_PositionTable,
@@ -142,7 +145,11 @@ class IsotopeAnalysisSelector(DatabaseSelector):
                               irrad_PositionTable,
                               irrad_LevelTable,
                               irrad_IrradiationTable], irrad_PositionTable.position),
-              'Run Date':([], meas_AnalysisTable.rundate)
+              'Run Date':([], meas_AnalysisTable.rundate),
+              'Project':([ gen_LabTable, gen_SampleTable, gen_ProjectTable, ], gen_ProjectTable.name),
+              'Mass Spectrometer':([meas_MeasurementTable, gen_MassSpectrometerTable], gen_MassSpectrometerTable.name),
+              'Analysis Type':([meas_MeasurementTable, gen_AnalysisTypeTable], gen_AnalysisTypeTable.name)
+
               }
         joined = []
         if queries:

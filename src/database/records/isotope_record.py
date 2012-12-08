@@ -34,8 +34,8 @@ from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.experiment.identifier import convert_shortname, convert_labnumber
 from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
-from src.experiment.processing.argon_calculations import calculate_arar_age
-from src.experiment.processing.signal import InterpolatedRatio, Background, \
+from src.processing.argon_calculations import calculate_arar_age
+from src.processing.signal import InterpolatedRatio, Background, \
     Blank, Signal
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.regression.ols_regressor import PolynomialRegressor

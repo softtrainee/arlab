@@ -36,13 +36,13 @@ class Globals(object):
     ignore_chiller_unavailable = True
 
     video_test = False
-#    video_test = True
+    video_test = True
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
 #    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
 #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
     video_test_path = '/Users/ross/Sandbox/watershed_test2.jpg'
     video_test_path = '/Users/ross/Sandbox/snapshot002.jpg'
-#    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
+    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
     show_autocenter_debug_image = False
 #    show_autocenter_debug_image = True
 

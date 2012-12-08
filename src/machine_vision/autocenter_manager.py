@@ -34,7 +34,7 @@ class AutocenterManager(MachineVisionManager):
                 holedim = sm.g_dimension
             else:
                 holedim = 1.5
-                holedim = 3
+                holedim = 2.25
 
             params = self.detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
 

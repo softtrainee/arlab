@@ -169,9 +169,9 @@ class SerialCommunicator(Communicator):
 
         #re=None
 
-        self.handle.flushInput()
-        self.handle.flushOutput()
         with self._lock:
+            #self.handle.flushInput()
+            #self.handle.flushOutput()
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
             re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes)

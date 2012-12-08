@@ -41,13 +41,13 @@ from src.helpers.alphas import ALPHAS
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):
         if info.initialized:
-            if info.object.experiment_set is not None:  
+            if info.object.experiment_set is not None:
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
     def object_path_changed(self, info):
         if info.initialized:
-            if info.object.experiment_set is not None:  
+            if info.object.experiment_set is not None:
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
@@ -76,65 +76,65 @@ class ExperimentManager(Manager):
 # processing 
 # @todo: refractor to separate manager
 #===============================================================================
-    def plot_series1(self):
-        db=self.db
-        dbs=db.get_labnumber(1203)
-        from src.experiment.processing.analysis import Analysis
-        from src.database.records.isotope_record import IsotopeRecord
-        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
-        
-        #from src.graph.time_series_graph import TimeSeriesGraph
-        from src.graph.regression_graph import RegressionTimeSeriesGraph
-        g=RegressionTimeSeriesGraph(container_dict=dict(padding=5))
-        p=g.new_plot()
-        p.value_range.tight_bounds=False
-        x,y=zip(*[(ai.timestamp,(ai.signals['Ar40'].value-ai.signals['Ar40bs'].value)/ai.signals['Ar36'].value-ai.signals['Ar36bs'].value) for ai in ans])
-        
-        p,s,l=g.new_series(x,y, 
-                     type='scatter', marker_size=1.5, fit='average_SEM')
-        g.edit_traits()
-        
-        for ri in g.regressors:
-            print ri.coefficients
-            
-        db.close()
-    
-    def plot_series(self):
-        db=self.db
-        from src.experiment.processing.analysis import Analysis
-        from src.database.records.isotope_record import IsotopeRecord
-        dbs=db.get_labnumber(4)
-        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
-        bg=next((ai for ai in ans if ai.aliquot==8))
-        
-        dbs=db.get_labnumber(3)
-        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
-        bu=next((ai for ai in ans if ai.aliquot==23))
-        
-        dbs=db.get_labnumber(1203)
-        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
-        a=next((ai for ai in ans if ai.aliquot==10))
-        
-        
-        
-        bg40=bg.signals['Ar40'].value-bg.signals['Ar40bs'].value
-        bg36=bg.signals['Ar36'].value-bg.signals['Ar36bs'].value
-        
-        b40=a.signals['Ar40bl'].value-bg40
-        b36=a.signals['Ar36bl'].value-bg36
-        
-        c40=a.signals['Ar40'].value-a.signals['Ar40bs'].value-b40
-        c36=a.signals['Ar36'].value-a.signals['Ar36bs'].value-b36
-        
-        print c40/c36
-        
-        cbg40=c40-bg40
-        cbg36=c36-bg36
-        print cbg40/cbg36
-        
-        
-       
-             
+#    def plot_series1(self):
+#        db=self.db
+#        dbs=db.get_labnumber(1203)
+#        from src.processing.analysis import Analysis
+#        from src.database.records.isotope_record import IsotopeRecord
+#        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
+#        
+#        #from src.graph.time_series_graph import TimeSeriesGraph
+#        from src.graph.regression_graph import RegressionTimeSeriesGraph
+#        g=RegressionTimeSeriesGraph(container_dict=dict(padding=5))
+#        p=g.new_plot()
+#        p.value_range.tight_bounds=False
+#        x,y=zip(*[(ai.timestamp,(ai.signals['Ar40'].value-ai.signals['Ar40bs'].value)/ai.signals['Ar36'].value-ai.signals['Ar36bs'].value) for ai in ans])
+#        
+#        p,s,l=g.new_series(x,y, 
+#                     type='scatter', marker_size=1.5, fit='average_SEM')
+#        g.edit_traits()
+#        
+#        for ri in g.regressors:
+#            print ri.coefficients
+#            
+#        db.close()
+#    
+#    def plot_series(self):
+#        db=self.db
+#        from src.processing.analysis import Analysis
+#        from src.database.records.isotope_record import IsotopeRecord
+#        dbs=db.get_labnumber(4)
+#        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
+#        bg=next((ai for ai in ans if ai.aliquot==8))
+#        
+#        dbs=db.get_labnumber(3)
+#        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
+#        bu=next((ai for ai in ans if ai.aliquot==23))
+#        
+#        dbs=db.get_labnumber(1203)
+#        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
+#        a=next((ai for ai in ans if ai.aliquot==10))
+#        
+#        
+#        
+#        bg40=bg.signals['Ar40'].value-bg.signals['Ar40bs'].value
+#        bg36=bg.signals['Ar36'].value-bg.signals['Ar36bs'].value
+#        
+#        b40=a.signals['Ar40bl'].value-bg40
+#        b36=a.signals['Ar36bl'].value-bg36
+#        
+#        c40=a.signals['Ar40'].value-a.signals['Ar40bs'].value-b40
+#        c36=a.signals['Ar36'].value-a.signals['Ar36bs'].value-b36
+#        
+#        print c40/c36
+#        
+#        cbg40=c40-bg40
+#        cbg36=c36-bg36
+#        print cbg40/cbg36
+
+
+
+
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()

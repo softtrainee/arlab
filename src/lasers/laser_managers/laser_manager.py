@@ -67,7 +67,7 @@ class LaserManager(Manager):
     _requested_power = Float
     _calibrated_power = None
     use_calibrated_power = Bool(True)
-    internal_meter_response = DelegatesTo('laser_controller')
+#    internal_meter_response = DelegatesTo('laser_controller')
 
     _power_calibration = None
 #===============================================================================
@@ -139,7 +139,7 @@ class LaserManager(Manager):
                                        verbose=verbose)
 
         if verbose:
-            self.info('request power {:0.2f}, calibrated power {:0.2f}'.format(power, p))
+            self.info('request power {:0.3f}, calibrated power {:0.3f}'.format(power, p))
 
         self._requested_power = power
         self._calibrated_power = p

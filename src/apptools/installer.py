@@ -80,7 +80,7 @@ class Installer(object):
         if sys.platform == 'darwin':
             from BuildApplet import buildapplet
             print
-            print 'Building {}.py'.format(self.name)
+            print 'Building {}.py as {}.app'.format(self.name, self.bundle_name)
 
             launchers_root = os.path.join(root, 'launchers')
 
@@ -99,7 +99,8 @@ class Installer(object):
             buildapplet()
 
             dist_root = os.path.join(launchers_root,
-                    '{}.app/Contents'.format(self.prefix))
+                    '{}.app/Contents'.format(self.prefix)
+                    )
 
             if self.icon_name is not None:
                 icon_file = '{}.icns'.format(self.icon_name)
@@ -202,5 +203,22 @@ class Installer(object):
             print 'Created {}'.format(os.path.join(launchers_root,
                     '{}.py'.format(self.name)))
 
+            if self.bundle_name != self.prefix:
+                print 'renaming {} to {}'.format(self.prefix, self.bundle_name)
+                old = os.path.join(launchers_root, '{}.app'.format(self.prefix))
+                new = os.path.join(launchers_root, '{}.app'.format(self.bundle_name))
+                i = 0
+                while 1:
+                    try:
+                        os.rename(old, new)
+                        break
+                    except OSError:
+                        name = new[:-4]
+                        bk = '{}_{:03d}bk.app'.format(name, i)
+                        print '{} already exists. backing it up as {}'.format(new, bk)
+                        try:
+                            os.rename(new, bk)
+                        except OSError:
+                            i += 1
 
 # ============= EOF =====================================

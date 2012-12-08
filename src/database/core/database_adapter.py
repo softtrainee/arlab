@@ -340,8 +340,9 @@ class DatabaseAdapter(Loggable):
 
     def _retrieve_items(self, table):
         sess = self.get_session()
-        q = sess.query(table)
-        return q.all()
+        if sess is not None:
+            q = sess.query(table)
+            return q.all()
 
     @deprecated
     def _get_items(self, table, gtables,

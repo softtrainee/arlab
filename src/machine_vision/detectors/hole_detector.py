@@ -51,8 +51,8 @@ DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
 DEVX = 10
 DEVY = 0
-CX = 2
-CY = -2
+CX = 0
+CY = 0
 
 class HoleDetector(Detector):
     target_image = Instance(StandAloneImage, transient=True)
@@ -73,6 +73,7 @@ class HoleDetector(Detector):
     use_histogram = Bool(True)
     display_processed_image = Bool(True)
     filter_targets = Bool(True)
+#    filter_targets = Bool(False)
 #    display_processed_image = Bool(False)
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
@@ -174,7 +175,7 @@ class HoleDetector(Detector):
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
         contours, hieararchy = contour(src)
-#        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
+        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
 
 #        do polygon approximation
         polygons, brs, areas = get_polygons(contours, hieararchy,
@@ -372,13 +373,11 @@ class HoleDetector(Detector):
         return x, y
 
     def _crop_image(self, src, cw, ch, image=None):
-        xo = 0
-        yo = 0
         cw_px = int(cw * self.pxpermm)
         ch_px = int(ch * self.pxpermm)
         w, h = get_size(src)
-        x = int((w - cw_px) / 2 + xo)
-        y = int((h - ch_px) / 2 + yo)
+        x = int((w - cw_px) / 2 + CX)
+        y = int((h - ch_px) / 2 + CY)
         self.croppixels = (cw_px, ch_px)
 
         self.croprect = (x, y, cw_px, ch_px)
@@ -469,21 +468,30 @@ class HoleDetector(Detector):
                 segmenter.count = 0
                 for j in range(1, ni):
                     segmenter.count = j
+                    segmenter.use_inverted_image = not segmenter.use_inverted_image
                     npos = self._segment_hook(si, segmenter,
                                                **kw)
-
                     if npos:
                         break
+
+                    segmenter.use_inverted_image = not segmenter.use_inverted_image
+                    npos = self._segment_hook(si, segmenter,
+                                               **kw)
+                    if npos:
+                        break
+
                 return npos
 
             ni = segmenter.threshold_tries
             if segmenter.use_adaptive_threshold:
-                npos = self._segment_hook(src, segmenter,
-                                           **kw)
+                npos = self._segment_hook(src, segmenter, **kw)
                 if not npos:
-                    segmenter.use_adaptive_threshold = False
-                    npos = _region_iteration(ni, src)
-                    segmenter.use_adaptive_threshold = True
+                    segmenter.use_inverted_image = not segmenter.use_inverted_image
+                    npos = self._segment_hook(src, segmenter, **kw)
+                    if not npos:
+                        segmenter.use_adaptive_threshold = False
+                        npos = _region_iteration(ni, src)
+                        segmenter.use_adaptive_threshold = True
 
             else:
                 npos = _region_iteration(ni, src)
