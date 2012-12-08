@@ -25,6 +25,7 @@ from skimage.morphology import watershed
 from src.machine_vision.segmenters.base import BaseSegmenter
 from scipy import ndimage
 from pyface.timer.do_later import do_later
+import time
 show = True
 class RegionSegmenter(BaseSegmenter):
     threshold_low = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
@@ -36,6 +37,8 @@ class RegionSegmenter(BaseSegmenter):
     count = Int(1)
 
     use_adaptive_threshold = Bool(True)
+#    use_inverted_image = Bool(False)
+    use_inverted_image = Bool(True)
 #    use_adaptive_threshold = Bool(False)
     def traits_view(self):
         return View(
@@ -69,8 +72,13 @@ class RegionSegmenter(BaseSegmenter):
 #        markers = ndimage.label(local_maxi)[0]
 #        wsrc = watershed(-elmap, markers, mask=image)
 #        fwsrc = ndimage.binary_fill_holes(out)
+#        return wsrc
+        if self.use_inverted_image:
+            out = invert(wsrc)
+        else:
+            out = wsrc
 
-        out = invert(wsrc)
+        time.sleep(1)
 #        do_later(lambda:self.show_image(image, -elmap, out))
         return out
 

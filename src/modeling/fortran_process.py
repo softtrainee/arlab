@@ -27,7 +27,7 @@ import time
 
 #============= local library imports  ==========================
 from src.loggable import Loggable
-#from src.initializer import MProgressDialog
+#from src.progress_dialog import MProgressDialog
 
 class FortranProcess(Loggable):
     _thread = None

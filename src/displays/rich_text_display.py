@@ -201,7 +201,8 @@ class RichTextDisplay(HasTraits):
 
     def _add_(self, msg, color=None, size=None,
               bold=False,
-              underline=False, new_line=True, **kw):
+              underline=False, new_line=True,
+              **kw):
         '''
             
         '''

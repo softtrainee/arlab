@@ -27,11 +27,11 @@ class FusionsCO2LaserMonitor(FusionsLaserMonitor, CO2LaserMonitor):
 
     def update_imb(self, obj, name, old, new):
         if new is not None:
-            self.internal_meter_buffer.append(new)
-#            self._add_to_buffer(new)
+#            self.internal_meter_buffer.append(new)
+            self._add_to_buffer(new)
 
     def stop(self):
-        if self.setpoint:
+        if self.setpoint and self.internal_meter_buffer:
             tol = 4
             if abs(max(self.internal_meter_buffer) - self.setpoint) > tol:
                 self.manager.error_code = SetpointErrorCode(self.setpoint)
@@ -46,7 +46,7 @@ class FusionsCO2LaserMonitor(FusionsLaserMonitor, CO2LaserMonitor):
 #        self._add_to_buffer(w)
 
     def _add_to_buffer(self, n):
-        trim = 5
+        trim = 50
         self.internal_meter_buffer.append(n)
         self.internal_meter_buffer = self.internal_meter_buffer[-trim:]
 #            avg = sum(self.internal_meter_buffer) / len(self.internal_meter_buffer)

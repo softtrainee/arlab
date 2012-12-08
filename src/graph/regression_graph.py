@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event
-from traitsui.api import View, Item, TableEditor
+from traits.api import HasTraits, List, Any, Event, Instance, Dict, on_trait_change
+from traitsui.api import View, Item
 from src.graph.graph import Graph
 #============= standard library imports ========================
 from numpy import linspace, random, hstack, polyval, \
@@ -33,6 +33,7 @@ from src.regression.mean_regressor import MeanRegressor
 import copy
 from src.graph.context_menu_mixin import RegressionContextMenuMixin
 from enable.font_metrics_provider import font_metrics_provider
+from src.displays.rich_text_display import RichTextDisplay
 
 class StatsFilterParameters(object):
     '''
@@ -127,6 +128,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             return scatter.fit
         except IndexError:
             pass
+
+    def refresh(self):
+        self._update_graph()
 
     def _update_graph(self, obj=None, name=None, old=None, new=None):
         if self.suppress_regression:
@@ -295,12 +299,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             if len(y) < fit + 1:
                 return
 
-            st = low
-            xn = x - st
+#            st = low
+#            xn = x - st
 #            ox = xn[:]
-            r = PolynomialRegressor(xs=xn, ys=y,
+            r = PolynomialRegressor(xs=x, ys=y,
                                     degree=fit)
-            fx = linspace(0, (high - low), 200)
+#            fx = linspace(0, (high - low), 200)
+            fx = linspace(low, high, 200)
 
 #            print r.predict(0), 'pos0', id(self)
             fy = r.predict(fx)
@@ -314,7 +319,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             else:
                 ly, uy = fy, fy
 
-            fx += low
+#            fx += low
             if apply_filter:
                 r = self._apply_outlier_filter(r, ox, oy, index, fod)
 #            else:
@@ -777,6 +782,58 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
 
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
+
+
+class AnnotatedRegressionGraph(HasTraits):
+    klass = RegressionGraph
+    graph = Instance(RegressionGraph)
+    display = Instance(RichTextDisplay)
+
+    graph_dict = Dict
+    display_dict = Dict
+#===============================================================================
+#  view attrs
+#===============================================================================
+    width = 500
+    height = 500
+    title = ' '
+    def __init__(self, graph_dict=None, display_dict=None, *args, **kw):
+        if graph_dict:
+            self.graph_dict = graph_dict
+        if display_dict:
+            self.display_dict = display_dict
+        super(AnnotatedRegressionGraph, self).__init__(*args, **kw)
+
+    @on_trait_change('graph:regression_results')
+    def _update_display(self, new):
+        if new:
+            disp = self.display
+            disp.clear()
+            for ri in new:
+                self.display.add_text(ri.make_equation())
+                self.display.add_text(ri.tostring())
+
+    def traits_view(self):
+        v = View(Item('graph', show_label=False, style='custom'),
+               Item('display', show_label=False, style='custom'),
+               resizable=True,
+               width=self.width,
+               height=self.height,
+               title=self.title
+               )
+        return v
+
+    def _graph_default(self):
+        return self.klass(**self.graph_dict)
+
+    def _display_default(self):
+        d = RichTextDisplay(height=100,
+                            width=200,
+                            default_color='black', default_size=12)
+        return d
+
+class AnnotatedRegresssionTimeSeriesGraph(AnnotatedRegressionGraph):
+    klass = RegressionTimeSeriesGraph
 
 if __name__ == '__main__':
 

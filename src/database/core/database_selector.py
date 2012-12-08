@@ -138,6 +138,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #    def _selected_changed(self):
 #        print self.selected
 
+    def query_factory(self, **kw):
+        return self._query_factory(**kw)
 
     def add_query(self, table):
         self.queries.append(self._query_factory(table=table))
@@ -153,9 +155,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         dbs, _stmt = self._get_selector_records(limit=n)
         self.load_records(dbs)
 
-    def execute_query(self, filter_str=None):
-        dbs = self._execute_query(filter_str)
-        self.load_records(dbs)
+#    def execute_query(self, filter_str=None):
+    def execute_query(self, queries=None, load=True):
+        dbs = self._execute_query(queries)
+        self.load_records(dbs, load=load)
 
     def get_recent(self):
         return self._get_recent()
@@ -171,19 +174,19 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         q.comparator = comp
 #        q.criterion = criterion
         q.trait_set(criterion=criterion, trait_change_notify=False)
-        
+
         return self._execute_query(queries=[q])
 
 #    def _generate_filter_str(self):
 #        qs = 'and '.join([q.get_filter_str() for q in self.queries])
 #        return qs
 
-    def _execute_query(self,  queries=None):
+    def _execute_query(self, queries=None):
 #        db = self.db
 #        if filter_str is None:
 #            filter_str = self._generate_filter_str()
         if queries is None:
-            queries=self.queries
+            queries = self.queries
         query_dict = dict(
 #                          filter_str=filter_str,
                       limit=self.limit,
@@ -202,10 +205,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                 len(dbs) if dbs else 0))
         return dbs
 
-    def load_records(self, dbs):
+    def load_records(self, dbs, load=True):
 
         self.records = []
-        self._load_records(dbs)
+        self._load_records(dbs, load)
         self._sort_columns(self.records)
 
 #        self.selected = self.records[-1:]
@@ -215,12 +218,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        print self.selected
 #        print self.selected_row
 
-    def _load_records(self, records):
+    def _load_records(self, records, load):
 #        db = self.db
 #        r = os.path.dirname(db.name)
         if records:
 #            nd = [self._result_factory(di, root=r) for di in records]
-            nd = [self._result_factory(di) for di in records]
+            nd = [self._result_factory(di, load) for di in records]
             self.records.extend(nd)
 #            for di in records:
 #                r = os.path.dirname(db.name)
@@ -355,7 +358,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # factories
 #===============================================================================
-    def _query_factory(self, removable=True, table=None):
+    def _query_factory(self, removable=True, **kw):
 #        if table is None:
 #            table = self.query_table
 #        else:
@@ -366,16 +369,19 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         q = Query(selector=self,
                   removable=removable,
 #                  query_table=table,
-                  date_str=self.date_str
+                  date_str=self.date_str,
                   )
+
+        q.trait_set(trait_change_notify=False, **kw)
         return q
 
-    def _result_factory(self, di, **kw):
+    def _result_factory(self, di, load, **kw):
 
         d = self.record_klass(_dbrecord=di,
                                  selector=self,
                                  **kw)
-        d.load()
+        if load:
+            d.load()
         d.on_trait_change(self._changed, 'changed')
         return d
 #===============================================================================

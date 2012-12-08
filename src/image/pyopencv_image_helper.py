@@ -387,6 +387,7 @@ def get_polygons(contours, hierarchy,
 #                 hole=False, 
                  nsides=5,
                  min_area=100,
+                 perimeter_smooth_factor=0.001,
                  **kw):
     '''
     '''
@@ -398,7 +399,8 @@ def get_polygons(contours, hierarchy,
         cont = cv.asMat(cont)
 #        for i in [0.01]:
         m = cv.arcLength(cont, True)
-        result = cv.approxPolyDP_int(cont, m * 0.01, True)
+        result = cv.approxPolyDP_int(cont, m * perimeter_smooth_factor, True)
+
         res_mat = cv.asMat(result)
         area = abs(cv.contourArea(res_mat))
 #        print 'areas', area

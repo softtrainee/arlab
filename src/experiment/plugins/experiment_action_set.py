@@ -79,10 +79,6 @@ class ExperimentActionSet(WorkbenchActionSet):
                        path=PATH,
                        class_name='{}:LabnumberEntryAction'.format(BASE)
                        ),
-                Action(name='Plot Series...',
-                       path=PATH,
-                       class_name='{}:MakePlotSeriesAction'.format(BASE)
-                       )
              ]
 
     def _actions_default(self):

@@ -93,6 +93,7 @@ def buildapplet():
         if options and len(args) > 1:
             sys.stderr.write("Cannot use options when specifying multiple input files")
             sys.exit(1)
+
         dstfilename = None
         rsrcfilename = None
         raw = 0
@@ -125,7 +126,6 @@ def buildapplet():
         if sys.platform == 'mac' and not verbose:
             verbose = 'default'
         # Loop over all files to be processed
-
         for filename in args:
             print filename
             cr, tp = MacOS.GetCreatorAndType(filename)

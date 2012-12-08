@@ -17,56 +17,15 @@
 
 #============= enthought library imports =======================
 from traits.api import Any
-from pyface.api import ProgressDialog
 #============= standard library imports ========================
 import time
-from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
-    CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, \
-    DisplaySize
+from wx import DisplaySize
 #============= local library imports  ==========================
 from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
-
-
-class MProgressDialog(ProgressDialog):
-    def increment(self, step=1):
-        v = self.progress_bar.control.Value
-        self.update(v + step)
-
-    def increase_max(self, step=1):
-        self.max += step
-
-    def _create_control(self, parent):
-        '''
-        '''
-
-        style = DEFAULT_FRAME_STYLE | FRAME_NO_WINDOW_MENU \
-            | CLIP_CHILDREN
-
-        dialog = Frame(parent, -1, self.title, style=style)
-
-        sizer = BoxSizer(VERTICAL)
-        dialog.SetSizer(sizer)
-        dialog.SetAutoLayout(True)
-        dialog.SetBackgroundColour(NullColor)
-
-        self.dialog_size = Size(*self.size)
-
-        # The 'guts' of the dialog.
-
-        self._create_message(dialog, sizer)
-        self._create_gauge(dialog, sizer)
-        self._create_percent(dialog, sizer)
-        self._create_timer(dialog, sizer)
-        self._create_buttons(dialog, sizer)
-
-        dialog.SetClientSize(self.dialog_size)
-
-        # dialog.CentreOnParent()
-
-        return dialog
+from src.progress_dialog import MProgressDialog
 
 
 class Initializer(Loggable):
@@ -402,9 +361,7 @@ class Initializer(Loggable):
         pd = MProgressDialog(max=n, size=(550, 15))
 
         pd.open()
-        (w, h) = DisplaySize()
-        (ww, _hh) = pd.control.GetSize()
-        pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
+        pd.center()
         self.pd = pd
 
 

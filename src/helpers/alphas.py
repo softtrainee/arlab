@@ -22,4 +22,5 @@ seeds = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
                                     for a in seeds
                                         for b in seeds]
+
 #============= EOF =============================================

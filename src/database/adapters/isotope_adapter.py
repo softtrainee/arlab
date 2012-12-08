@@ -720,8 +720,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_analyses(self, **kw):
         return self._get_items(meas_AnalysisTable, globals(), **kw)
 
-    def get_analysis_types(self, **kw):
-        return self._get_items(gen_AnalysisTypeTable, globals(), **kw)
+#    def get_analysis_types(self, **kw):
+#        return self._get_items(gen_AnalysisTypeTable, globals(), **kw)
 
     def get_irradiations(self, **kw):
         return self._get_items(irrad_IrradiationTable, globals(), **kw)
@@ -732,8 +732,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_labnumbers(self, **kw):
         return self._get_items(gen_LabTable, globals(), **kw)
 
-    def get_mass_spectrometers(self, **kw):
-        return self._get_items(gen_MassSpectrometerTable, globals(), **kw)
+#    def get_mass_spectrometers(self, **kw):
+#        return self._get_items(gen_MassSpectrometerTable, globals(), **kw)
 
     def get_materials(self, **kw):
         return self._get_items(gen_MaterialTable, globals(), **kw)
@@ -761,6 +761,11 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_sensitivities(self, **kw):
         return self._retrieve_items(gen_SensitivityTable)
 
+    def get_mass_spectrometers(self, **kw):
+        return self._retrieve_items(gen_MassSpectrometerTable)
+
+    def get_analysis_types(self, **kw):
+        return self._retrieve_items(gen_AnalysisTypeTable)
 
 #===============================================================================
 # deleters

@@ -20,9 +20,10 @@ import os
 import sys
 #============= local library imports  ==========================
 
-def build_version(ver):
-    #insert pychron src dir into sys.path
-    build_sys_path(ver)
+def build_version(ver, set_path=False):
+    if set_path:
+#       insert pychron src dir into sys.path
+        build_sys_path(ver)
 
     #can now use src. 
     #build the global path structure

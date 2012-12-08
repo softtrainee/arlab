@@ -87,8 +87,8 @@ PACKAGE_DICT = dict(
 #                   ArArPlugin='src.arar.plugins.arar_plugin',
 #                   ArArUIPlugin='src.arar.plugins.arar_ui_plugin'
 
-                    ProcessingPlugin='src.experiment.plugins.processing_plugin',
-                    ProcessingUIPlugin='src.experiment.plugins.processing_ui_plugin'
+                    ProcessingPlugin='src.processing.plugins.processing_plugin',
+                    ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin'
                  )
 
 class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):

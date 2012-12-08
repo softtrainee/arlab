@@ -42,7 +42,7 @@ from src.experiment.identifier import convert_identifier, get_analysis_type
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
-from src.experiment.processing.signal import Signal
+from src.processing.signal import Signal
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 
