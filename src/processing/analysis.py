@@ -25,6 +25,7 @@ from traitsui.tabular_adapter import TabularAdapter
 from src.loggable import Loggable
 from uncertainties import ufloat
 from src.helpers import alphas
+from src.constants import NULL_STR
 
 
 class AnalysisTabularAdapter(TabularAdapter):
@@ -121,6 +122,7 @@ class Analysis(Loggable):
     status_string = Property(depends_on='status')
     j = Property
     arar_result = Property
+    isotope_keys = Property
 #    timestamp = Float
 
 #    signals = Dict
@@ -157,129 +159,23 @@ class Analysis(Loggable):
         else:
             self.warning('could not compute age for {}'.format(self.rid))
 
-#    @cached_property
-#    def _get_ic_factor(self):
-#        return self._ic_factor
+    def get_corrected_intercept(self, key):
+        '''
+            return signal corrected for baseline and background only
+        '''
+        s = self.signals[key]
+        try:
+            bs = self.signals['{}bs'.format(key)]
+        except KeyError:
+            bs = 0
 
+        try:
+            bg = self.signals['{}bg'.format(key)]
+        except KeyError:
+            bg = 0
 
-#        signals = self.signals
-#        j = self._get_j()
-#        irradinfo = self._get_irradinfo()
-#
-#        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-#        for iso in keys:
-#            for k in ['', 'bs', 'bl', 'bg']:
-#                isok = iso + k
-#                if not signals.has_key(isok):
-#                    signals[isok] = self._signal_factory(isok, None)
-#
-#        sigs = lambda name: [(signals[iso].value, signals[iso].error)
-#                                for iso in map('{{}}{}'.format(name).format, keys)]
-##        try:
-#        fsignals = sigs('')
-#        bssignals = sigs('bs')
-#        blsignals = sigs('bl')
-#        bksignals = sigs('bg')
-##        except Exception, e:
-##            print 'analysis._get_age', e
-##            return None
-#
-##        return 1, 0
-#        ic = self.ic_factor
-#        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo, ic)
-#
-#        if result:
-#            self.k39 = result['k39'].nominal_value
-#            self.k39err = result['k39'].std_dev()
-#            ai = result['age']
-#
-#            ai = ai / self.age_scalar
-#            age = ai.nominal_value
-#            err = ai.std_dev()
-#
-##            age = 10 + random.random()
-##            err = random.random()
-#            return age, err
+        return s - bs - bg
 
-#    def _open_file(self, name):
-#        p = os.path.join(self.workspace.root, name)
-#        if os.path.isfile(p):
-#            return openFile(p)
-#        else:
-#            rname = os.path.basename(p)
-#
-#            if self.repo.isfile(rname):
-#                self.info('fetching file from repo')
-##                out = open(p, 'wb')
-#                self.repo.retrieveFile(rname, p)
-#                return openFile(p)
-#            else:
-#                self.warning('{} is not a file'.format(name))
-
-#    def load_from_database(self, dbr=None):
-#        if dbr is None:
-#            dbr = self.dbrecord
-#
-#        #load blanks
-#        self._load_from_history(dbr, 'blanks', 'bl', Blank)
-#
-#        #load backgrounds
-#        self._load_from_history(dbr, 'backgrounds', 'bg', Background)
-#
-        #load airs for detector intercal
-#        self._load_detector_intercalibration(dbr)
-
-#    def _load_detector_intercalibration(self, dbr):
-#        self._ic_factor = (1.0, 0)
-#        name = 'detector_intercalibration'
-#        item = self._get_history_item(dbr, name)
-#        if item:
-#            if not item.fit:
-##                s = Value(value=item.user_value, error=item.user_error)
-#                self._ic_factor = item.user_value, item.user_error
-#            else:
-#                intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
-#                data = map(intercal, item.sets)
-#                xs, ys, es = zip(*data)
-#
-#                s = InterpolatedRatio(timestamp=self.timestamp,
-#                                      fit=item.fit,
-#                                      xs=xs, ys=ys, es=es
-#                                      )
-#
-#                self._ic_factor = s.value, s.error
-
-#    def _load_from_history(self, dbr, name, key, klass, **kw):
-#        item = self._get_history_item(dbr, name)
-#        if item:
-#            for bi in item:
-#                isotope = bi.isotope
-#                s = klass(timestamp=self.timestamp, **kw)
-#                if not bi.fit:
-##                if not bi.use_set:
-#                    s.value = bi.user_value
-#                    s.error = bi.user_error
-#                else:
-#                    s.fit = bi.fit.lower()
-#                    xs, ys, es = zip(*[(ba.timestamp, ba.signals[isotope].value, ba.signals[isotope].error)
-#                                   for ba in map(self._analysis_factory, bi.sets)])
-#                    s.xs = xs
-#                    s.ys = ys
-#                    s.es = es
-#                self.signals['{}{}'.format(isotope, key)] = s
-
-#    def _get_history_item(self, dbr, name):
-#        '''
-#            get the selected history item if available else use the last history
-#        '''
-#
-#        histories = getattr(dbr, '{}_histories'.format(name))
-#        if histories:
-#            hist = getattr(dbr.selected_histories, 'selected_{}'.format(name))
-#            if hist is None:
-#                hist = histories[-1]
-#
-#            return getattr(hist, name)
 
     def _analysis_factory(self, dbr):
         klass = self.__class__
@@ -303,76 +199,6 @@ class Analysis(Loggable):
         ic = ufloat((ri, ei)) / scalar
         return ti, ic.nominal_value, ic.std_dev()
 
-#    def load_from_file(self, name):
-#        df = self._open_file(name)
-#        if df:
-#            try:
-#                #get the signals
-#                for iso in df.root.signals:
-#                    name = iso._v_name
-#                    tab = next((n for n in iso._f_iterNodes()), None)
-#                    self.dbrecord.signals[name] = self.dbrecord._signal_factory(name, tab)
-#            except Exception, e:
-#                print 'load file', e
-#                pass
-#
-#            try:
-#                for biso in df.root.baselines:
-#                    name = biso._v_name
-#                    basetab = next((n for n in biso._f_iterNodes()), None)
-#                    self.dbrecord.signals['{}bs'.format(name)] = self.dbrecord._signal_factory(name, basetab)
-#            except Exception, e:
-#                print 'load base file', e
-#                pass
-#
-#            try:
-#                t = df.root._v_attrs['TIMESTAMP']
-#            except KeyError:
-#                t = -1
-#    #        print t, 'TIMESTAMP'
-#            self.timestamp = t
-#            return True
-
-#    def _blank_factory(self, iso, tab):
-#
-#        return self._signal_factory(iso, tab)
-#
-#    def _signal_factory(self, iso, tab):
-#        kw = dict()
-#        if tab is not None:
-#            xs, ys = self._get_xy(tab)
-#            try:
-#                fit = tab._v_attrs['fit']
-#            except Exception:
-#                fit = 1
-#
-#            kw = dict(xs=xs, ys=ys,
-#                      fit=fit,
-#                      detector=tab.name)
-#        sig = Signal(isotope=iso, **kw)
-#        return sig
-#
-#    def _get_xy(self, tab, x='time', y='value'):
-#        return zip(*[(r[x], r[y]) for r in tab.iterrows()])
-
-#    def _get_j(self):
-#        return (1e-4, 1e-7)
-#
-#    def _get_irradinfo(self):
-#        return (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
-
-#    def __getattr__(self, attr):
-#        try:
-##            print attr, self.signals[attr].value
-#            return self.signals[attr].value
-#        except KeyError:
-#            if attr.endswith('_er'):
-#                try:
-#                    attr = attr.replace('_er', '')
-#                    return self.signals[attr].error
-#                except KeyError:
-#                    print 'eee', 0
-#                    return 0
     @property
     def age_string(self):
         a, e = self.age
@@ -434,7 +260,10 @@ class Analysis(Loggable):
 #    @cached_property
     def _get_sample(self):
         dbr = self.dbrecord
-        return dbr.sample.name
+        if hasattr(dbr, 'sample'):
+            return dbr.sample.name
+        else:
+            return NULL_STR
 
 #    @cached_property
     def _get_irradiation(self):
@@ -444,6 +273,9 @@ class Analysis(Loggable):
 #    @cached_property
     def _get_signals(self):
         return self.dbrecord.signals
+
+    def _get_isotope_keys(self):
+        return self.dbrecord.isotope_keys
 
     def _get_arar_result(self):
         return self.dbrecord.arar_result

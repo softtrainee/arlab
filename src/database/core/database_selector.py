@@ -205,9 +205,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                 len(dbs) if dbs else 0))
         return dbs
 
-    def load_records(self, dbs, load=True):
-
-        self.records = []
+    def load_records(self, dbs, load=True, append=False):
+        if not append:
+            self.records = []
         self._load_records(dbs, load)
         self._sort_columns(self.records)
 

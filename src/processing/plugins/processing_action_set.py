@@ -53,6 +53,17 @@ class ProcessingActionSet(WorkbenchActionSet):
                       path=PATH,
                       class_name='{}:NewInverseIsochronAction'.format(BASE)
                     ),
+
+               Action(name='Blanks...',
+                      path=PATH + '/Apply Corrections',
+                      class_name='{}:ApplyBlankAction'.format(BASE)
+                    ),
+               Action(name='Backgrounds...',
+                      path=PATH + '/Apply Corrections',
+                      class_name='{}:ApplyBackgroundAction'.format(BASE)
+                    ),
+
+
 #               Action(name='New Workspace...',
 #                      path=PATH,
 #                      class_name='{}:NewWorkspaceAction'.format(BASE)

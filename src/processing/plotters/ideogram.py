@@ -71,43 +71,6 @@ class SparseTicks(DefaultTickGenerator):
             return ticks
 
 
-EInt = lambda x: Int(x, enter_set=True, auto_set=False)
-class GraphPanelInfo(HasTraits):
-    nrows = EInt(1)#Int(1, enter_set=True, auto_set=False)
-    ncols = EInt(2)#Int(2, enter_set=True, auto_set=False)
-    fixed = Str('cols')
-    padding_left = EInt(40)
-    padding_right = EInt(5)
-    padding_top = EInt(40)
-    padding_bottom = EInt(40)
-
-    padding = Property
-    def _get_padding(self):
-        return [self.padding_left, self.padding_right, self.padding_top, self.padding_bottom]
-
-    def traits_view(self):
-        v = View(HGroup(
-                        VGroup(
-                               Item('ncols'),
-                               Item('nrows'),
-                               ),
-                        Item('fixed',
-                             show_label=False,
-                             style='custom',
-                             editor=EnumEditor(values=['cols', 'rows'],
-                                               cols=1,
-                                               )
-                             ),
-                        VGroup(
-                               Item('padding_left', label='Left'),
-                               Item('padding_right', label='Right'),
-                               Item('padding_top', label='Top'),
-                               Item('padding_bottom', label='Bottom'),
-                               )
-                        )
-                 )
-        return v
-
 class Ideogram(Plotter):
     ages = None
     errors = None
@@ -127,7 +90,7 @@ class Ideogram(Plotter):
     plot_label = Any
     graphs = List
 
-    graph_panel_info = Instance(GraphPanelInfo, ())
+#    graph_panel_info = Instance(GraphPanelInfo, ())
 
 
 
@@ -156,120 +119,19 @@ class Ideogram(Plotter):
         plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
         plot.index.metadata['selections'] = exclude
 
-    def _get_plot_option(self, options, attr, default=None):
-        option = None
-        if options is not None:
-            if options.has_key(attr):
-                option = options[attr]
+    def _build_xtitle(self, g, xtitle_font, xtick_font):
+        f, s = xtitle_font.split(' ')
+        g.set_x_title('Age (Ma)', font=f, size=int(s))
+        g.set_axis_traits(axis='x', tick_label_font=xtick_font)
 
-        return default if option is None else option
+    def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots):
+        f, s = ytitle_font.split(' ')
+        g.set_y_title('Relative Probability', font=f, size=int(s))
+        for k, ap in enumerate(aux_plots):
+            g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
+            g.set_axis_traits(axis='y', tick_label_font=ytick_font)
 
-    def build(self, analyses=None, padding=None,
-              options=None
-              ):
-
-        if analyses is None:
-            analyses = self.analyses
-
-        if options is None:
-            options = self.options
-
-        self.options = options
-        self.analyses = analyses
-        graph_ids = sorted(list(set([a.graph_id for a in analyses])))
-        def get_analyses(gii):
-            return [a for a in analyses if a.graph_id == gii]
-
-        graph_groups = [get_analyses(gi)
-                            for gi in graph_ids]
-        self._ngroups = n = len(graph_groups)
-
-        op, r, c = self._create_grid_container(n)
-        self._plotcontainer = op
-
-        self.graphs = []
-        self.results = []
-        plots = []
-
-        aux_plots = self._get_plot_option(options, 'aux_plots', default=[])
-        title = self._get_plot_option(options, 'title')
-        xtick_font = self._get_plot_option(options, 'xtick_font', default='modern 10')
-        xtitle_font = self._get_plot_option(options, 'xtitle_font', default='modern 12')
-        ytick_font = self._get_plot_option(options, 'ytick_font', default='modern 10')
-        ytitle_font = self._get_plot_option(options, 'ytitle_font', default='modern 12')
-
-        for i in range(r):
-            for j in range(c):
-
-                k = i * c + j
-                try:
-                    ans = graph_groups[k]
-                except IndexError:
-                    break
-
-                g = self._build(ans, padding=padding,
-                                aux_plots=aux_plots,
-                                title=self._make_title(ans) if title is None else title
-                                )
-                if i == r - 1:
-                    f, s = xtitle_font.split(' ')
-                    g.set_x_title('Age (Ma)', font=f, size=int(s))
-                    g.set_axis_traits(axis='x', tick_label_font=xtick_font)
-
-                if j == 0:
-                    f, s = ytitle_font.split(' ')
-                    g.set_y_title('Relative Probability', font=f, size=int(s))
-                    for k, ap in enumerate(aux_plots):
-                        g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
-                        g.set_axis_traits(axis='y', tick_label_font=ytick_font)
-
-                for pi in g.plots:
-                    pi.y_axis.tick_in = False
-
-                op.add(g.plotcontainer)
-                self.graphs.append(g)
-                for pi in g.plots:
-                    plots.append(pi)
-
-        self._plots = plots
-        return op, plots
-
-    def _build(self, analyses, aux_plots=None, padding=None, title=''):
-        if aux_plots is None:
-            aux_plots = []
-
-        if padding is None:
-            padding = [50, 5 , 35, 35]
-
-
-        g = mStackedGraph(panel_height=200,
-                            equi_stack=False,
-                            container_dict=dict(padding=0),
-                            plotter=self
-                            )
-        g.clear()
-#        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
-        g._has_title = True
-
-        p = g.new_plot(padding=padding, title=None if aux_plots else title)
-        p.value_range.tight_bounds = False
-
-        for i, ap in enumerate(aux_plots):
-            kwargs = dict(padding=padding,
-                       bounds=[50, ap['height']])
-
-            if i == len(aux_plots) - 1:
-                kwargs['title'] = title
-
-            p = g.new_plot(**kwargs)
-            if ap['scale'] == 'log':
-                p.value_range.tight_bounds = True
-            else:
-                p.value_range.tight_bounds = False
-
-        g.set_grid_traits(visible=False)
-        g.set_grid_traits(visible=False, grid='y')
-
+    def _build_hook(self, g, analyses, padding, aux_plots=None):
         g.analyses = analyses
         g.maxprob = None
         g.minprob = None
@@ -754,29 +616,6 @@ class Ideogram(Plotter):
         ages = asarray(ages)
         errors = asarray(errors)
         return ages, errors
-#===============================================================================
-# factories
-#===============================================================================
-    def _create_grid_container(self, ngroups):
-        gpi = self.graph_panel_info
-        r = gpi.nrows
-        c = gpi.ncols
-
-        while ngroups > r * c:
-            if gpi.fixed == 'cols':
-                r += 1
-            else:
-                c += 1
-
-        if ngroups == 1:
-            r = c = 1
-
-        op = GridPlotContainer(shape=(r, c),
-                               bgcolor='white',
-                               fill_padding=True,
-                               padding_top=10
-                               )
-        return op, r, c
 
 #===============================================================================
 # views

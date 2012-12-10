@@ -32,8 +32,6 @@ class InverseIsochron(Plotter):
         if not analyses:
             return
 
-        ys = [a.arar_result['s36'] / a.arar_result['s40'] for a in analyses]
-
         xs, xerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
                           [a.arar_result['s39'] / a.arar_result['s40'] for a in analyses]
                           ])
@@ -72,7 +70,7 @@ class InverseIsochron(Plotter):
                 if coeffs is not None and cerrors is not None:
                     try:
                         trapped_4036 = 1 / coeffs[-1]
-                        trapped_4036err = 1 / cerrors[-1]
+                        trapped_4036err = cerrors[-1]
                     except IndexError, e:
                         print e
             except KeyError, e:
@@ -81,7 +79,7 @@ class InverseIsochron(Plotter):
             print e
 
         g.add_horizontal_rule(1 / 295.5)
-        txt = u'Trapped 40Ar= {:0.2f} \u00b1{:0.3f}'.format(trapped_4036, trapped_4036err)
+        txt = u'Trapped 40Ar= {:0.2f} \u00b1{:0.5f}'.format(trapped_4036, trapped_4036err)
         g.add_plot_label(txt, 0, 0)
         g.refresh()
 

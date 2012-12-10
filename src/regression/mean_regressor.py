@@ -74,6 +74,9 @@ sem={}
                        )
         return s
 
+    def make_equation(self):
+        return
+
 class WeightedMeanRegressor(MeanRegressor):
     errors = Array
     @property

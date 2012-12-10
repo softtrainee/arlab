@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, DelegatesTo, Button, Property, Str, Int, \
-    Event, Any
+    Event, Any, Bool
 from traitsui.api import View, Item, HGroup, VGroup, spring, HSplit, \
     InstanceEditor, ListStrEditor, EnumEditor, Spring
 from src.database.core.database_adapter import DatabaseAdapter
@@ -26,7 +26,7 @@ from traitsui.editors.tabular_editor import TabularEditor as traitsTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 from src.viewable import Viewable
 from src.database.core.database_selector import ColumnSorterMixin
-from src.helpers.color_generators import colorname_generator
+from src.helpers.color_generators import colorname_generator, colornames
 from src.constants import NULL_STR
 
 #============= standard library imports ========================
@@ -102,6 +102,7 @@ class SelectedrecordsAdapter(TabularAdapter):
     def _get_aliquot_text(self, trait, item):
         return '{}{}'.format(self.item.aliquot, self.item.step)
 
+
 class Marker(HasTraits):
     color = 'white'
     def __getattr__(self, attr):
@@ -124,8 +125,12 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     analysis_type = Str('---')
     analysis_types = Property
 
-    add_group_marker = Button('Set Group')
+    set_group = Button('Set Group')
+    set_graph = Button('Set Graph')
     graph_by_labnumber = Button('Graph By Labnumber')
+    group_by_labnumber = Button('Group By Labnumber')
+    _grouped_by_labnumber = Bool(False)
+    _graphed_by_labnumber = Bool(False)
 #    add_mean_marker = Button('Set Mean')
 
     update_data = Event
@@ -135,19 +140,22 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     selected_row = Any
     selected = Any
     group_cnt = 0
+    graph_cnt = 0
 
     def select_labnumber(self, ln):
         db = self.db
         selector = db.selector
-        rs = db.get_labnumber(ln)
+        if isinstance(ln, list):
+            for li in ln:
+                rs = db.get_labnumber(li)
+                selector.load_records(rs.analyses, append=True)
 
-#        from src.processing.analysis import Analysis
-#        from src.database.records.isotope_record import IsotopeRecord
-#        ans = [Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
-
-        selector.load_records(rs.analyses)
-        self.selected_records = selector.records
-
+            self.selected_records = selector.records
+            self._graph_by_labnumber_fired()
+        else:
+            rs = db.get_labnumber(ln)
+            selector.load_records(rs.analyses)
+            self.selected_records = selector.records
 
     def _load_selected_records(self):
         for r in self.selector.selected:
@@ -162,6 +170,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         return True
 
     def _group_by_labnumber(self):
+
         groups = dict()
         for ri in self.selected_records:
             if ri.labnumber in groups:
@@ -172,31 +181,73 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
         keys = sorted(groups.keys())
         return keys
-#        for ri in self.selected_records:
-#            ri.graph_id = keys.index(ri.labnumber)
+
+    def _set_grouping(self, attr, keys):
+        pid = 0
+        inserts = []
+        for i, ri in enumerate(self.selected_records):
+            if isinstance(ri, Marker):
+                continue
+
+            setattr(ri, attr, keys.index(ri.labnumber))
+#            ri.group_id = keys.index(ri.labnumber)
+            if getattr(ri, attr) != pid:
+                inserts.append(i)
+                pid = getattr(ri, attr)
+
+        for i, ii in enumerate(inserts):
+            if not isinstance(self.selected_records[ii + i - 1], Marker):
+                self.selected_records.insert(ii + i, Marker())
+
+    def _reset_grouping(self, attr):
+        func = lambda x: not isinstance(x, Marker)
+        nri = filter(func, self.selected_records)
+        for ri in nri:
+            setattr(ri, attr, 0)
+
+        self.selected_records = nri
+
 
 #===============================================================================
 # handlers
 #===============================================================================
+    def _group_by_labnumber_fired(self):
+        if self._grouped_by_labnumber:
+            self._reset_grouping('group_id')
+            if self._graphed_by_labnumber:
+                keys = self._group_by_labnumber()
+                self._set_grouping('graph_id', keys)
+        else:
+            keys = self._group_by_labnumber()
+            self._set_grouping('group_id', keys)
+
+        self._grouped_by_labnumber = not self._grouped_by_labnumber
+
     def _graph_by_labnumber_fired(self):
-        groups = dict()
-        for ri in self.selected_records:
-            if ri.labnumber in groups:
-                group = groups[ri.labnumber]
-                group.append(ri.labnumber)
-            else:
-                groups[ri.labnumber] = [ri.labnumber]
+        if self._graphed_by_labnumber:
+            self._reset_grouping('graph_id')
+            if self._grouped_by_labnumber:
+                keys = self._group_by_labnumber()
+                self._set_grouping('group_id', keys)
+        else:
+            keys = self._group_by_labnumber()
+            self._set_grouping('graph_id', keys)
+        self._graphed_by_labnumber = not self._graphed_by_labnumber
 
-        keys = sorted(groups.keys())
-        for ri in self.selected_records:
-            ri.graph_id = keys.index(ri.labnumber)
-
-
-    def _add_group_marker_fired(self):
+    def _set_group_fired(self):
+        self.group_cnt += 1
         for r in self.selected:
-            self.group_cnt += 1
             r.group_id = self.group_cnt
-            r.color = 'red'
+#            r.color = 'red'
+
+        oruns = set(self.selected_records) ^ set(self.selected)
+        self.selected_records = list(oruns) + [Marker()] + self.selected
+
+    def _set_graph_fired(self):
+        self.graph_cnt += 1
+        for r in self.selected:
+            r.graph_id = self.graph_cnt
+#            r.color = 'red'
 
         oruns = set(self.selected_records) ^ set(self.selected)
         self.selected_records = list(oruns) + [Marker()] + self.selected
@@ -278,6 +329,12 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                                 )
                               )
 
+        grouping_grp = VGroup(
+                              HGroup(Item('set_group', show_label=False),
+                                     Item('group_by_labnumber', show_label=False)),
+                              HGroup(Item('set_graph', show_label=False),
+                                     Item('graph_by_labnumber', show_label=False))
+                              )
 
         selected_grp = VGroup(
                               Item('selected_records',
@@ -301,11 +358,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 #                                          width=0.25,
                                           width= -140
                                           ),
-#                                    springy=False
-                                Item('add_group_marker', show_label=False),
-                                Item('graph_by_labnumber', show_label=False),
-#                                Item('add_mean_marker', show_label=False)
-                                )
+                                grouping_grp
+                              )
 
 
         v = View(HGroup(
@@ -323,7 +377,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                   height=500,
                   resizable=True,
                   id='processing_selector',
-                  title='Manage Data'
+                  title='Select Data'
 
                )
 
