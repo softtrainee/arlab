@@ -77,9 +77,13 @@ def get_time(timestamp=None):
     t = time.mktime(timestamp.timetuple())
     return t
 
-def convert_timestamp(timestamp):
+def convert_timestamp(timestamp, fmt=None):
+    if fmt is None:
+        fmt = ISO_FORMAT_STR
     t = get_datetime(timestamp)
-    return time.mktime(t.timetuple()) + 1e-6 * t.microsecond
+    return datetime.strftime(t, fmt)
+#    return time.mktime(t.timetuple()) + 1e-6 * t.microsecond
+#def convert_float(timestamp):
 
 def diff_timestamp(end, start=0):
     if not isinstance(end, datetime):

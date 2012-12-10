@@ -79,8 +79,9 @@ class BaseRegressor(Loggable):
                 a = '{}x'.format(a)
             ps.append(a)
 
+        fit = self.fit
         eq = '+'.join(ps)
-        s = 'y={}+{}'.format(eq, constant)
+        s = '{}    y={}+{}'.format(fit, eq, constant)
         return s
 
     def predict(self, x):

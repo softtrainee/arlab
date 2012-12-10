@@ -15,9 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any, Range, Dict
+from traits.api import Property, List, Any, Range, Dict, Instance
 from traitsui.api import View, Item, VGroup, TabularEditor
 #============= standard library imports ========================
+from numpy import linspace
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapter, \
@@ -36,6 +37,8 @@ from src.graph.stacked_graph import StackedGraph
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
+from chaco.plot_containers import GridPlotContainer
+from src.processing.plotters.graph_panel_info import GraphPanelInfo
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     plotter = Any
@@ -77,7 +80,115 @@ class Plotter(Viewable):
     popup = None
     _dehover_count = 0
     _hover_cache = Dict
+
+    graph_panel_info = Instance(GraphPanelInfo, ())
+
 #    hoverid = None
+
+    def build(self, analyses=None, padding=None,
+              options=None
+              ):
+
+        if analyses is None:
+            analyses = self.analyses
+
+        if options is None:
+            options = self.options
+
+        self.options = options
+        self.analyses = analyses
+        graph_ids = sorted(list(set([a.graph_id for a in analyses])))
+        def get_analyses(gii):
+            return [a for a in analyses if a.graph_id == gii]
+
+        graph_groups = [get_analyses(gi)
+                            for gi in graph_ids]
+        self._ngroups = n = len(graph_groups)
+
+        op, r, c = self._create_grid_container(n)
+        self._plotcontainer = op
+        self.graphs = []
+        self.results = []
+        plots = []
+
+        aux_plots = self._get_plot_option(options, 'aux_plots', default=[])
+        title = self._get_plot_option(options, 'title')
+        xtick_font = self._get_plot_option(options, 'xtick_font', default='modern 10')
+        xtitle_font = self._get_plot_option(options, 'xtitle_font', default='modern 12')
+        ytick_font = self._get_plot_option(options, 'ytick_font', default='modern 10')
+        ytitle_font = self._get_plot_option(options, 'ytitle_font', default='modern 12')
+        for i in range(r):
+            for j in range(c):
+                k = i * c + j
+                try:
+                    ans = graph_groups[k]
+                except IndexError:
+                    break
+
+                g = self._build(ans, padding=padding,
+                                aux_plots=aux_plots,
+                                title=self._make_title(ans) if title is None else title
+                                )
+                if i == r - 1:
+                    self._build_xtitle(g, xtitle_font, xtick_font)
+
+                if j == 0:
+                    self._build_ytitle(g, ytitle_font, ytick_font, aux_plots)
+
+                for pi in g.plots:
+                    pi.y_axis.tick_in = False
+
+                op.add(g.plotcontainer)
+                self.graphs.append(g)
+                for pi in g.plots:
+                    plots.append(pi)
+
+        self._plots = plots
+        return op, plots
+
+    def _build_xtitle(self, *args, **kw):
+        pass
+    def _build_ytitle(self, *args, **kw):
+        pass
+
+    def _build(self, analyses, aux_plots=None, padding=None, title=''):
+        if aux_plots is None:
+            aux_plots = []
+
+        if padding is None:
+            padding = [50, 5 , 35, 35]
+
+
+        g = mStackedGraph(panel_height=200,
+                            equi_stack=False,
+                            container_dict=dict(padding=0),
+                            plotter=self
+                            )
+        g.clear()
+#        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
+        g._has_title = True
+
+        p = g.new_plot(padding=padding, title=None if aux_plots else title)
+        p.value_range.tight_bounds = False
+
+        for i, ap in enumerate(aux_plots):
+            kwargs = dict(padding=padding,
+                       bounds=[50, ap['height']])
+
+            if i == len(aux_plots) - 1:
+                kwargs['title'] = title
+
+            p = g.new_plot(**kwargs)
+            if ap['scale'] == 'log':
+                p.value_range.tight_bounds = True
+            else:
+                p.value_range.tight_bounds = False
+
+        g.set_grid_traits(visible=False)
+        g.set_grid_traits(visible=False, grid='y')
+        self._build_hook(g, analyses, padding, aux_plots=aux_plots)
+        return g
+
     def recall_analysis(self):
         if self.popup:
             self.popup.Close()
@@ -329,8 +440,8 @@ class Plotter(Viewable):
 
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
+        hover = scatter.value.metadata.get('hover')
 
-        hover = obj.metadata.get('hover')
         if hover:
             hoverid = hover[0]
             try:
@@ -427,4 +538,37 @@ class Plotter(Viewable):
         vg = VGroup(tb, content) if tb is not None else VGroup(content)
         v = View(vg)
         return v
+
+#===============================================================================
+# factories
+#===============================================================================
+    def _get_plot_option(self, options, attr, default=None):
+        option = None
+        if options is not None:
+            if options.has_key(attr):
+                option = options[attr]
+
+        return default if option is None else option
+
+    def _create_grid_container(self, ngroups):
+        gpi = self.graph_panel_info
+        r = gpi.nrows
+        c = gpi.ncols
+
+        while ngroups > r * c:
+            if gpi.fixed == 'cols':
+                r += 1
+            else:
+                c += 1
+
+        if ngroups == 1:
+            r = c = 1
+
+        op = GridPlotContainer(shape=(r, c),
+                               bgcolor='white',
+                               fill_padding=True,
+                               padding_top=10
+                               )
+        return op, r, c
+
 #============= EOF =============================================

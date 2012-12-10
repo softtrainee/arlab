@@ -28,6 +28,9 @@ def get_manager(event):
     manager = app.get_service('src.processing.processing_manager.ProcessingManager')
     return manager
 
+#===============================================================================
+# display
+#===============================================================================
 class NewSeriesAction(Action):
     accelerator = 'Ctrl+k'
     def perform(self, event):
@@ -51,6 +54,22 @@ class NewInverseIsochronAction(Action):
     def perform(self, event):
         man = get_manager(event)
         man.new_isochron()
+
+#===============================================================================
+# corrections
+#===============================================================================
+
+class ApplyBlankAction(Action):
+    accelerator = 'Ctrl+b'
+    def perform(self, event):
+        man = get_manager(event)
+        man.apply_blank_correction()
+
+class ApplyBackgroundAction(Action):
+    accelerator = 'Ctrl+n'
+    def perform(self, event):
+        man = get_manager(event)
+        man.apply_background_correction()
 
 #class NewFigureAction(Action):
 #    accelerator = 'Ctrl+k'

@@ -34,6 +34,7 @@ import copy
 from src.graph.context_menu_mixin import RegressionContextMenuMixin
 from enable.font_metrics_provider import font_metrics_provider
 from src.displays.rich_text_display import RichTextDisplay
+from src.helpers.datetime_tools import convert_timestamp
 
 class StatsFilterParameters(object):
     '''
@@ -49,6 +50,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     regression_results = Event
     suppress_regression = False
     use_data_tool = True
+    use_inspector_tool = True
     popup = None
 #    fits = List
 #    def clear(self):
@@ -632,12 +634,12 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         index = scatter.index
         index.on_trait_change(self._update_graph, 'metadata_changed')
 
-        u = lambda **kw:self._update_info(scatter, **kw)
-        scatter.value.on_trait_change(u, 'metadata_changed')
+        if self.use_inspector_tool:
+            u = lambda **kw:self._update_info(scatter, **kw)
+            scatter.value.on_trait_change(u, 'metadata_changed')
 
     def _update_info(self, scatter):
         hover = scatter.value.metadata.get('hover', None)
-#        print hover
         if hover:
             hover = hover[0]
             from src.canvas.popup_window import PopupWindow
@@ -655,10 +657,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 self.popup.Show(False)
                 self.popup.Thaw()
 
+    def _convert_index(self, ind):
+        return '{:0.1f}'.format(ind)
+
     def _show_pop_up(self, popup, index, value, mxmy):
         x, y = mxmy
         lines = [
-                 'x={:0.1f}'.format(index),
+                 'x={}'.format(self._convert_index(index)),
                  'y={:0.5f}'.format(value)
                ]
         t = '\n'.join(lines)
@@ -691,22 +696,23 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
 
     def _add_tools(self, scatter, plotid):
-        plot = self.plots[plotid]
+        if self.use_inspector_tool:
+            plot = self.plots[plotid]
 
-#        broadcaster = BroadcasterTool()
-#        self.plots[plotid].container.tools.append(broadcaster)
+    #        broadcaster = BroadcasterTool()
+    #        self.plots[plotid].container.tools.append(broadcaster)
 
-        rect_tool = RectSelectionTool(scatter,
-                                      plot=plot,
-                                      plotid=plotid,
-                                      container=self.plotcontainer,
-#                                      update_mouse=False
-                                      )
-        rect_overlay = RectSelectionOverlay(
-                                            tool=rect_tool)
+            rect_tool = RectSelectionTool(scatter,
+                                          plot=plot,
+                                          plotid=plotid,
+                                          container=self.plotcontainer,
+    #                                      update_mouse=False
+                                          )
+            rect_overlay = RectSelectionOverlay(
+                                                tool=rect_tool)
 
-        scatter.tools.append(rect_tool)
-        scatter.overlays.append(rect_overlay)
+            scatter.tools.append(rect_tool)
+            scatter.overlays.append(rect_overlay)
 
 #        print scatter.tools
         #add a broadcaster so scatterinspector and rect selection will received events
@@ -735,7 +741,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        self._update_graph()
 
 class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
-    pass
+    def _convert_index(self, ind):
+        '''
+            ind is in secs since first epoch
+            convert to a timestamp
+            return a str
+        '''
+        return convert_timestamp(ind)
 
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
@@ -744,14 +756,14 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
         if bind_selection:
             scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
 
-    def _update_metadata(self, obj, name, old, new):
-        self.suppress_regression = True
-        for plot in self.plots:
-            ks = plot.plots.keys()
-            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
-            for si in scatters:
-                if not si.index is obj:
-                    pass
+#    def _update_metadata(self, obj, name, old, new):
+#        self.suppress_regression = True
+#        for plot in self.plots:
+#            ks = plot.plots.keys()
+#            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
+#            for si in scatters:
+#                if not si.index is obj:
+#                    pass
 #                    si.index.trait_set(metadata=obj.metadata)
 #                pass
 #    #                print id(obj), id(si.index), si.index
@@ -778,7 +790,7 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
 #                    si.index.trait_set(metadata=obj.metadata)
 #                    si.value.trait_set(metadata=obj.metadata)
 
-        self.suppress_regression = False
+#        self.suppress_regression = False
 
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
@@ -794,9 +806,11 @@ class AnnotatedRegressionGraph(HasTraits):
 #===============================================================================
 #  view attrs
 #===============================================================================
-    width = 500
-    height = 500
-    title = ' '
+    window_width = 500
+    window_height = 500
+    window_x = 20
+    window_y = 20
+    window_title = ' '
     def __init__(self, graph_dict=None, display_dict=None, *args, **kw):
         if graph_dict:
             self.graph_dict = graph_dict
@@ -810,16 +824,22 @@ class AnnotatedRegressionGraph(HasTraits):
             disp = self.display
             disp.clear()
             for ri in new:
-                self.display.add_text(ri.make_equation())
+                eq = ri.make_equation()
+                if eq:
+                    #mean regressor doesnt display an equation
+                    self.display.add_text(eq)
+
                 self.display.add_text(ri.tostring())
 
     def traits_view(self):
         v = View(Item('graph', show_label=False, style='custom'),
                Item('display', show_label=False, style='custom'),
                resizable=True,
-               width=self.width,
-               height=self.height,
-               title=self.title
+               x=self.window_x,
+               y=self.window_y,
+               width=self.window_width,
+               height=self.window_height,
+               title=self.window_title
                )
         return v
 

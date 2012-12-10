@@ -172,7 +172,7 @@ class OLSRegressor(BaseRegressor):
 #    def fit(self):
 #        fits = ['linear', 'parabolic', 'cubic']
 #        return fits[self._degree - 1]
-#    
+
     def _get_fit(self):
         fits = ['linear', 'parabolic', 'cubic']
         return fits[self._degree - 1]

@@ -32,6 +32,7 @@ from src.database.records.isotope_record import IsotopeRecord
 from src.processing.plotters.plotter_options import PlotterOptions
 from src.constants import NULL_STR
 from src.processing.processing_manager import ProcessingManager
+from src.processing.tabular_manager import AnalysisAdapter
 
 #class Panel(HasTraits):
 #    pass
@@ -45,34 +46,7 @@ class Sample(HasTraits):
     def _get_name(self):
         return self.dbrecord.name
 
-class AnalysisAdapter(TabularAdapter):
-    columns = [('Status', 'status_string'), ('ID', 'record_id'),
-               ('Age', 'age'),
-               (u'\u00b11s', 'age_error')
-#               (unicode('03c3', encoding='symbol'), 'error')
-               ]
-    status_string_width = Int(40)
-    age_text = Property
-    age_error_format = Str('%0.4f')
-    age_width = Int(80)
-    age_error_width = Int(80)
 
-    def _get_age_text(self, trait, item):
-        return '{:0.4f}'.format(self.item.age[0])
-
-    def get_font(self, obj, trait, row):
-        import wx
-        s = 9
-        f = wx.FONTFAMILY_DEFAULT
-        st = wx.FONTSTYLE_NORMAL
-        w = wx.FONTWEIGHT_NORMAL
-        return wx.Font(s, f, st, w)
-
-    def get_bg_color(self, obj, trait, row):
-        bgcolor = 'white'
-        if self.item.status != 0:
-            bgcolor = '#FF7373'
-        return bgcolor
 
 #class ProjectView(DatabaseManager):
 class ProjectView(ProcessingManager):

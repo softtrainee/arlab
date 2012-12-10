@@ -78,6 +78,7 @@ class ProcessScript(DatabaseManager):
                    spectrum=self._spectrum,
                    save=self._save,
                    group_by_labnumber=self._group_by_labnumber,
+                   graph_by_labnumber=self._graph_by_labnumber,
                    group_by_aliquot=self._group_by_aliquot,
                    convert_records=self._convert_records,
                    recall=self._recall,
@@ -424,6 +425,9 @@ class ProcessScript(DatabaseManager):
             ri.group_id = keys.index(ri.aliquot)
 
     def _group_by_labnumber(self, ans):
+        '''
+            set Analysis.group_id based on the Analysis.labnumber
+        '''
         groups = dict()
         for ri in ans:
             if ri.labnumber in groups:
@@ -436,6 +440,29 @@ class ProcessScript(DatabaseManager):
 
         for ri in ans:
             ri.group_id = keys.index(ri.labnumber)
+
+    def _graph_by_labnumber(self, ans):
+        self._group_by_attr(ans, 'graph_id')
+
+    def _group_by_attr(self, ans, attr):
+        groups = dict()
+        for ri in ans:
+            nattr = getattr(ri, attr)
+            if nattr in groups:
+                group = groups[nattr]
+                group.append(nattr)
+#            if ri.labnumber in groups:
+#                group = groups[ri.labnumber]
+#                group.append(ri.labnumber)
+            else:
+                groups[nattr] = [nattr]
+#                groups[ri.labnumber] = [ri.labnumber]
+
+        keys = sorted(groups.keys())
+
+        for ri in ans:
+            setattr(ri, attr, keys.index(getattr(ri, attr)))
+#            ri.group_id = keys.index(ri.labnumber)
 
     def _convert_records(self, recs):
         from src.processing.analysis import Analysis

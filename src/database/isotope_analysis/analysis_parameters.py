@@ -17,11 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Enum, Float, Any, List, Bool, Property
 from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
+from src.constants import FIT_TYPES
 #from constants import FIT_TYPES
 #============= standard library imports ========================
 #import wx
 #============= local library imports  ==========================
-FIT_TYPES = ['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM']
+#FIT_TYPES = ['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM']
 
 class AnalysisParameters(HasTraits):
     fit = Str#Enum('linear', 'parabolic', 'cubic')
@@ -32,7 +33,7 @@ class AnalysisParameters(HasTraits):
     _intercept = Float
     _error = Float
 #    analysis = Any
-    fittypes = List(FIT_TYPES)
+#    fittypes = List(FIT_TYPES)
     show = Bool(False)
     filter_outliers = Bool(True)
 
@@ -58,7 +59,7 @@ class AnalysisParameters(HasTraits):
         v = View(HGroup(Label(self.name),
                         Spring(width=50 - 10 * len(self.name), springy=False),
                         Item('show', show_label=False),
-                        Item('fit', editor=EnumEditor(name='fittypes'),
+                        Item('fit', editor=EnumEditor(values=FIT_TYPES),
                              show_label=False,
                              enabled_when='show'
                              ),

@@ -17,101 +17,32 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, cached_property, Property, List, Event, \
     Bool, Button
-from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup
-import apptools.sweet_pickle as pickle
+#from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup
+#import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-import os
-
+#import os
+from numpy import array
 #============= local library imports  ==========================
 from src.processing.database_manager import DatabaseManager
 from src.processing.processing_selector import ProcessingSelector
 from src.processing.analysis import Analysis
-from src.processing.script import ProcessScript
-from src.paths import paths
-from src.processing.plotters.plotter_options import PlotterOptions
+#from src.processing.script import ProcessScript
 #from src.constants import NULL_STR
 from src.progress_dialog import MProgressDialog
-from src.viewable import Viewable
+from src.processing.plotter_options_manager import PlotterOptionsManager
+from src.processing.window import Window
+from src.processing.series_manager import SeriesManager
+from src.processing.tabular_analysis_manager import TabularAnalysisManager
+from src.processing.plotters.series import Series
+from src.processing.corrections.corrections_manager import BlankCorrectionsManager, \
+    BackgroundCorrectionsManager
 
-class PlotterOptionsManager(Viewable):
-    plotter_options_list = Property(List(PlotterOptions), depends_on='_plotter_options_list_dirty')
-    _plotter_options_list_dirty = Event
-    plotter_options = Instance(PlotterOptions)
-    plotter_options_name = 'main'
 
-    delete_options = Button('-')
-    def close(self, ok):
-        if ok:
-            #dump the default plotter options
-            p = os.path.join(paths.plotter_options_dir, '{}.default'.format(self.plotter_options_name))
-            with open(p, 'w') as fp:
-                obj = self.plotter_options.name
-                pickle.dump(obj, fp)
-
-            self.plotter_options.dump()
-
-        return True
-#===============================================================================
-# handlers
-#===============================================================================
-    def _delete_options_fired(self):
-        po = self.plotter_options
-        if self.confirmation_dialog('Are you sure you want to delete {}'.format(po.name)):
-            p = os.path.join(paths.plotter_options_dir, po.name)
-            os.remove(p)
-            self._plotter_options_list_dirty = True
-            self.plotter_options = self.plotter_options_list[0]
-
-    def traits_view(self):
-        v = View(HGroup(
-                    Item('plotter_options', show_label=False,
-                                   editor=EnumEditor(name='plotter_options_list')
-                                ),
-                    Item('delete_options',
-                         enabled_when='object.plotter_options.name!="Default"',
-                         show_label=False),
-                        ),
-                 Item('plotter_options', show_label=False,
-                      style='custom'),
-#                               Item('edit_plotter_options', show_label=False),    
-                 buttons=['OK', 'Cancel'],
-                 handler=self.handler_klass
-                )
-        return v
-
-    @cached_property
-    def _get_plotter_options_list(self):
-        r = paths.plotter_options_dir
-        ps = [PlotterOptions(name='Default')]
-        for n in os.listdir(r):
-            if n.startswith('.') or n.endswith('.default') or n == 'Default':
-                continue
-
-            po = PlotterOptions(name=n)
-            ps.append(po)
-
-        return ps
-
-    def _plotter_options_default(self):
-        p = os.path.join(paths.plotter_options_dir, '{}.default'.format(self.plotter_options_name))
-
-        n = 'Default'
-        if os.path.isfile(p):
-            with open(p, 'r') as fp:
-                try:
-                    n = pickle.load(fp)
-                except pickle.PickleError:
-                    n = 'Default'
-
-        po = next((pi for pi in self.plotter_options_list if pi.name == n), None)
-        if not po:
-            po = self.plotter_options_list[0]
-
-        return po
 
 class ProcessingManager(DatabaseManager):
     processing_selector = Instance(ProcessingSelector)
-
+    blank_corrections_manager = Instance(BlankCorrectionsManager)
+    background_corrections_manager = Instance(BackgroundCorrectionsManager)
     plotter_options_manager = Instance(PlotterOptionsManager, ())
     only_fusions = Bool(True)
     include_omitted = Bool(True)
@@ -119,15 +50,31 @@ class ProcessingManager(DatabaseManager):
 
     _window_count = 0
 
-    def new_series(self):
-        #gather data
+#===============================================================================
+# apply corrections
+#===============================================================================
+    def apply_blank_correction(self):
+        bm = self.blank_corrections_manager
+        self._apply_correction(bm)
+
+    def apply_background_correction(self):
+        bm = self.background_corrections_manager
+        self._apply_correction(bm)
+
+    def _apply_correction(self, bm):
         if self._gather_data():
 
-            #display tabular data
-            self._display_tabular_data()
+            bm.analyses = self._get_analyses()
 
-            #display plot
-            self._display_series(key='Ar40/Ar36')
+            info = bm.edit_traits(kind='livemodal')
+            if info.result:
+                bm.apply_correction()
+
+#===============================================================================
+# display
+#===============================================================================
+    def new_series(self):
+        self._new_figure('series')
 
     def new_ideogram(self):
         self._new_figure('ideogram')
@@ -139,15 +86,33 @@ class ProcessingManager(DatabaseManager):
         self._new_figure('isochron')
 
     def _new_figure(self, name):
+        '''
+            ask for data and plot options
+        '''
+
         if self._gather_data():
-            pom = self.plotter_options_manager
-            info = pom.edit_traits(kind='livemodal')
-            if info.result:
+            if name != 'series':
+                pom = self.plotter_options_manager
+                info = pom.edit_traits(kind='livemodal')
                 po = pom.plotter_options
-                ps = ProcessScript()
+                result = info.result
+            else:
+                result = True
+                po = None
+
+            if result:
                 ans = self._get_analyses()
-                func = getattr(self, '_display_{}'.format(name))
-                func(ps, ans, po)
+                if ans:
+                    progress = self._open_progress(len(ans))
+                    for ai in ans:
+                        msg = 'loading {}'.format(ai.record_id)
+                        progress.change_message(msg)
+                        ai.load_age()
+                        progress.increment()
+
+                    func = getattr(self, '_display_{}'.format(name))
+                    if func(ans, po):
+                        self._display_tabular_data()
 
 #===============================================================================
 # 
@@ -158,46 +123,33 @@ class ProcessingManager(DatabaseManager):
             
             by default use a db connection
         '''
-#        return True
-        db = self.db
-        db.connect()
         d = self.processing_selector
-
-        d.select_labnumber(22233)
-        info = d.edit_traits(kind='livemodal')
-        if info.result:
-            return True
+        return True
+#        info = d.edit_traits(kind='livemodal')
+#        if info.result:
+#            return True
 
     def _display_tabular_data(self):
-        pass
+        tm = TabularAnalysisManager(analyses=self._get_analyses())
+        tm.edit_traits()
 
-    def _display_isochron(self, ps, ans, po):
-        rr = ps._isochron(ans, show=False)
+    def _display_isochron(self, ans, po):
+        rr = self._isochron(ans)
         if rr is not None:
             g, _isochron = rr
             self.open_view(g)
+            return True
 
-    def _display_spectrum(self, ps, ans, po):
-        rr = ps._spectrum(ans, show=False)
+    def _display_spectrum(self, ans, po):
+        rr = self._spectrum(ans, aux_plots=po.get_aux_plots())
         if rr is not None:
             g, _spec = rr
             self.open_view(g)
+            return True
 
-    def _display_ideogram(self, ps, ans, po):
-        ps = ProcessScript()
-        ans = self._get_analyses()
+    def _display_ideogram(self, ans, po):
 
-#        ans = ps._convert_records(recs)
-#        ps._group_by_labnumber(ans)
-
-        progress = self._open_progress(len(ans))
-        for ai in ans:
-            msg = 'loading {}'.format(ai.record_id)
-            progress.change_message(msg)
-            ai.load_age()
-            progress.increment()
-
-        rr = ps._ideogram(ans, aux_plots=po.get_aux_plots(), show=False)
+        rr = self._ideogram(ans, aux_plots=po.get_aux_plots())
 #        rr = ps._ideogram(ans, aux_plots=['analysis_number'], show=False)
         if rr is not None:
             g, ideo = rr
@@ -210,54 +162,36 @@ class ProcessingManager(DatabaseManager):
 
             self._set_window_xy(g)
             self.open_view(g)
-            self._window_count += 1
+            return True
 
-    def _display_series(self, key='Ar40'):
-        ans = self._get_analyses()
-        from src.graph.regression_graph import AnnotatedRegresssionTimeSeriesGraph
-        an = AnnotatedRegresssionTimeSeriesGraph(
-                                               graph_dict=dict(container_dict=dict(padding=5)),
-
-                                               )
-        g = an.graph
-        p = g.new_plot(padding=[50, 5, 5, 35], xtitle='Time')
-        p.value_range.tight_bounds = False
-
-        def func(analysis, k):
-            if '/' in k:
-                n, d = k.split('/')
-                nv = analysis.signals[n] - analysis.signals['{}bs'.format(n)]
-                dv = analysis.signals[d] - analysis.signals['{}bs'.format(d)]
-                v = (nv / dv).nominal_value
-
+    def _display_series(self, ans, po):
+        #open a series manager
+        sm = SeriesManager(analyses=ans)
+        info = sm.edit_traits(kind='livemodal')
+        if info.result:
+            if sm.use_single_window:
+                pass
             else:
-                v = analysis.signals[k].value
+                self._build_series(ans, sm.calculated_values)
+                self._build_series(ans, sm.measured_values)
+                self._build_series(ans, sm.baseline_values)
+                self._build_series(ans, sm.blank_values)
 
-            return v
+            return True
 
-        x, y = zip(*[(ai.timestamp, func(ai, key)) for ai in ans])
-
-#        import numpy as np
-#        x = np.linspace(0, 10)
-#        a = 1
-#        b = 20
-#        c = 3
-#        y = a * x * x + b * x + c
-#        y = a * x ** 1 + b
-        p, s, l = g.new_series(x, y,
-                     type='scatter', marker_size=1.5,
-                     fit='parabolic'
-#                     fit='average_SEM'
-                     )
-
-        g.set_x_limits(min(x), max(x), pad='0.1')
-        g.refresh()
-        self.open_view(an)
-
+    def _build_series(self, ans, ss):
+        for si in ss:
+            if not si.show:
+                continue
+            s = Series(analyses=ans)
+            g = s.build(ans, si)
+            self._set_window_xy(g)
+            self.open_view(g)
 
     def _get_analyses(self):
         ps = self.processing_selector
-        ans = [Analysis(dbrecord=ri) for ri in ps.selected_records]
+        from src.processing.processing_selector import Marker
+        ans = [Analysis(dbrecord=ri) for ri in ps.selected_records if not isinstance(ri, Marker)]
         return ans
 
     def _set_window_xy(self, obj):
@@ -267,6 +201,7 @@ class ProcessingManager(DatabaseManager):
         yoff = 25
         obj.window_x = x + xoff * self._window_count
         obj.window_y = y + yoff * self._window_count
+        self._window_count += 1
 #        do_later(g.edit_traits)
 
     def _open_progress(self, n):
@@ -278,8 +213,156 @@ class ProcessingManager(DatabaseManager):
     def _sort_analyses(self):
         self.analyses.sort(key=lambda x:x.age)
 
+#===============================================================================
+# plotters
+#===============================================================================
+    def _window_factory(self):
+#        w = self.get_parameter('window', 'width', default=500)
+#        h = self.get_parameter('window', 'height', default=600)
+#        x = self.get_parameter('window', 'x', default=20)
+#        y = self.get_parameter('window', 'y', default=20)
+        x, y, w, h = 20, 20, 500, 600
+        g = Window(
+                   window_width=w,
+                   window_height=h,
+                   window_x=x, window_y=y
+                   )
+        self.window = g
+        return g
+
+    def _ideogram(self, analyses, show=True,
+                  aux_plots=None,
+                  title=None,
+                  xtick_font=None,
+                  xtitle_font=None,
+                  ytick_font=None,
+                  ytitle_font=None,
+                  data_label_font=None,
+                  metadata_label_font=None,
+                  highlight_omitted=False,
+                  display_omitted=False,
+                  display_mean_indicator=True,
+                  display_mean_text=True
+                  ):
+        '''
+        '''
+        from src.processing.plotters.ideogram import Ideogram
+
+
+        g = self._window_factory()
+        p = Ideogram(db=self.db)
+        ps = self._build_aux_plots(aux_plots)
+        options = dict(aux_plots=ps,
+                       xtitle_font=xtitle_font,
+                       xtick_font=xtick_font,
+                       ytitle_font=ytitle_font,
+                       ytick_font=ytick_font,
+                       data_label_font=data_label_font,
+                       metadata_label_font=metadata_label_font,
+                       title=title,
+                       display_mean_text=display_mean_text,
+                       display_mean_indicator=display_mean_indicator
+                       )
+
+        #filter out omitted results
+        if not (display_omitted or highlight_omitted):
+            analyses = filter(lambda x: x.status == 0, analyses)
+
+        gideo = p.build(analyses, options=options)
+        if gideo:
+            gideo, _plots = gideo
+#            self._figure = gideo
+            g.container.add(gideo)
+
+            if highlight_omitted:
+                ta = sorted(analyses, key=lambda x:x.age)
+                #find omitted ans
+                sel = [i for i, ai in enumerate(ta) if ai.status != 0]
+                p.set_excluded_points(sel, 0)
+
+#            if show:
+#                g.edit_traits()
+
+            return g, p
+
+    def _spectrum(self, analyses, aux_plots=None):
+        from src.processing.plotters.spectrum import Spectrum
+        g = self._window_factory()
+        spec = Spectrum(db=self.db)
+
+        options = dict(aux_plots=self._build_aux_plots(aux_plots))
+
+        spec_graph = spec.build(analyses, options=options)
+
+        if spec_graph:
+            spec_graph, _plots = spec_graph
+#            self._figure = spec_graph.plotcontainer
+            g.container.add(spec_graph)
+
+            return g, spec
+
+    def _isochron(self, analyses, show=False):
+        from src.processing.plotters.inverse_isochron import InverseIsochron
+        g = self._window_factory()
+        isochron = InverseIsochron(db=self.db)
+        graph = isochron.build(analyses)
+        if graph:
+            self._figure = graph.plotcontainer
+            g.container.add(graph.plotcontainer)
+            if show:
+                g.edit_traits()
+            return g, isochron
+
+    def _build_aux_plots(self, aux_plots):
+        ps = []
+        if aux_plots is None:
+            aux_plots = []
+        for ap in aux_plots:
+            if isinstance(ap, str):
+                name = ap
+                scale = 'linear'
+                height = 100
+            else:
+                name = ap.name
+                scale = ap.scale
+                height = ap.height
+
+            if name == 'radiogenic':
+                d = dict(func='radiogenic_percent',
+                          ytitle='40Ar* %',
+                          )
+            elif name == 'analysis_number':
+                d = dict(func='analysis_number',
+                     ytitle='Analysis #',
+                     )
+            elif name == 'kca':
+                d = dict(func='kca',
+                     ytitle='K/Ca',
+                     )
+            else:
+                continue
+
+            d['height'] = height
+            d['scale'] = scale
+            ps.append(d)
+        return ps
+
+#===============================================================================
+# defaults
+#===============================================================================
     def _processing_selector_default(self):
-        return ProcessingSelector(db=self.db)
+        d = ProcessingSelector(db=self.db)
+        db = self.db
+        db.connect()
 
+        d.select_labnumber([22233, 22234])
+        return d
 
+    def _blank_corrections_manager_default(self):
+        bm = BlankCorrectionsManager(db=self.db)
+        return bm
+
+    def _background_corrections_manager_default(self):
+        bm = BackgroundCorrectionsManager(db=self.db)
+        return bm
 #============= EOF =============================================
