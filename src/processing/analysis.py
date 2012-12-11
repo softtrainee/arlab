@@ -121,6 +121,7 @@ class Analysis(Loggable):
     status = Property
     status_string = Property(depends_on='status')
     j = Property
+    ic_factor = Property
     arar_result = Property
     isotope_keys = Property
 #    timestamp = Float
@@ -265,12 +266,13 @@ class Analysis(Loggable):
         else:
             return NULL_STR
 
-#    @cached_property
     def _get_irradiation(self):
         dbr = self.dbrecord
         return dbr.irradiation.name
 
-#    @cached_property
+    def _get_ic_factor(self):
+        return self.dbrecord.ic_factor
+
     def _get_signals(self):
         return self.dbrecord.signals
 

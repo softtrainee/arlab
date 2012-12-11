@@ -71,6 +71,12 @@ class ApplyBackgroundAction(Action):
         man = get_manager(event)
         man.apply_background_correction()
 
+class ApplyDetectorIntercalibrationAction(Action):
+    accelerator = 'Ctrl+d'
+    def perform(self, event):
+        man = get_manager(event)
+        man.apply_detector_intercalibration_correction()
+
 #class NewFigureAction(Action):
 #    accelerator = 'Ctrl+k'
 #    def perform(self, event):

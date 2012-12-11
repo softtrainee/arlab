@@ -156,128 +156,128 @@ class Baseline(Signal):
 
 
 
-def preceeding_predictors(xs, ys, es, tm, attr='value'):
-
-    ti = where(xs < tm)[0][0]
-    if attr == 'value':
-        return ys[ti]
-    else:
-        return es[ti]
-
-def bracketing_average_predictors(xs, ys, es, tm, attr='value'):
-    try:
-        pb, ab, _ = _bracketing_predictors(xs, ys, es, tm, attr)
-
-        return (pb + ab) / 2.0
-    except TypeError:
-        return 0
-
-def bracketing_interpolate_predictors(xs, ys, es, tm, attr='value'):
-    try:
-        pb, ab, ti = _bracketing_predictors(xs, ys, es, tm, attr)
-
-        x = [xs[ti], xs[ti + 1]]
-        y = [pb, ab]
-        return polyval(polyfit(x, y, 1), tm)
-    except TypeError:
-        return 0
-
-def _bracketing_predictors(ts, ys, es, tm, attr):
-    try:
-        ti = where(ts < tm)[0][-1]
-        if attr == 'value':
-            pb = ys[ti]
-            ab = ys[ti + 1]
-        else:
-            pb = es[ti]
-            ab = es[ti + 1]
-
-        return pb, ab, ti
-    except IndexError:
-        return 0
+#def preceeding_predictors(xs, ys, es, tm, attr='value'):
+#
+#    ti = where(xs < tm)[0][0]
+#    if attr == 'value':
+#        return ys[ti]
+#    else:
+#        return es[ti]
+#
+#def bracketing_average_predictors(xs, ys, es, tm, attr='value'):
+#    try:
+#        pb, ab, _ = _bracketing_predictors(xs, ys, es, tm, attr)
+#
+#        return (pb + ab) / 2.0
+#    except TypeError:
+#        return 0
+#
+#def bracketing_interpolate_predictors(xs, ys, es, tm, attr='value'):
+#    try:
+#        pb, ab, ti = _bracketing_predictors(xs, ys, es, tm, attr)
+#
+#        x = [xs[ti], xs[ti + 1]]
+#        y = [pb, ab]
+#        return polyval(polyfit(x, y, 1), tm)
+#    except TypeError:
+#        return 0
+#
+#def _bracketing_predictors(ts, ys, es, tm, attr):
+#    try:
+#        ti = where(ts < tm)[0][-1]
+#        if attr == 'value':
+#            pb = ys[ti]
+#            ab = ys[ti + 1]
+#        else:
+#            pb = es[ti]
+#            ab = es[ti + 1]
+#
+#        return pb, ab, ti
+#    except IndexError:
+#        return 0
 
 
 
 class InterpolatedSignal(Signal):
     timestamp = None
     es = Array
-    def _mean_regressor_factory(self):
-        print 'asdfasdf', self.es
-        if len(self.es):
-            reg = WeightedMeanRegressor(xs=self.xs, ys=self.ys, errors=self.es)
-        else:
-            reg = super(InterpolatedSignal, self)._mean_regressor_factory()
-        return reg
-
-    @cached_property
-    def _get_value(self):
-        tm = self.timestamp
-        fit = self.fit
-        xs = self.xs
-        ys = self.ys
-        es = self.es
-        if fit and xs is not None and ys is not None:
-            xsyses = zip(xs, ys, es)
-            xsyses = array(sorted(xsyses, key=lambda x: x[0]))
-            xs, ys, es = zip(*xsyses)
-            if fit == 'preceeding':
-                return preceeding_predictors(xs, ys, es, tm)
-            elif fit == 'bracketing interpolate':
-                return bracketing_interpolate_predictors(xs, ys, es, tm)
-            elif fit == 'bracketing average':
-                v = bracketing_average_predictors(xs, ys, es, tm)
-                return v
-            else:
-                v = self.regressor.predict([tm])[0]
-                return v
-        else:
-            return self._value
-
-    @cached_property
-    def _get_error(self):
-        tm = self.timestamp
-        fit = self.fit
-        xs = self.xs
-        ys = self.ys
-        es = self.es
-        if fit and xs is not None and ys is not None:
-            xsyses = zip(xs, ys, es)
-            xsyses = array(sorted(xsyses, key=lambda x: x[0]))
-            xs, ys, es = zip(*xsyses)
-            if fit == 'preceeding':
-                return preceeding_predictors(xs, ys, es, tm, attr='error')
-            elif fit == 'bracketing interpolate':
-                return bracketing_interpolate_predictors(xs, ys, es, tm, attr='error')
-            elif fit == 'bracketing average':
-                return bracketing_average_predictors(xs, ys, es, tm, attr='error')
-            else:
-
-                try:
-                    reg = self.regressor
-                    if 'average' in fit:
-
-                        if fit.endswith('SEM'):
-                            n = reg.sem
-                        else:
-                            n = reg.std
-                    else:
-
-                        t = tm - xs[0]
-                        try:
-                            lci, uci = reg.calculate_ci([t])
-                            n = (lci[0] + uci[0]) / 2.0
-                        except TypeError, e:
-                            n = 2
-                            #could not compute confidence interval
-                            #use preceeding error
-#                            n = preceeding_predictors(ts=ts, *args, attr='error')
-                except IndexError:
-                    n = 0.1
-
-                return n
-#                return self.regressor.get_value(fit, (xs, ys), tm)
-        else:
-            return self._error
+#    def _mean_regressor_factory(self):
+#        print 'asdfasdf', self.es
+#        if len(self.es):
+#            reg = WeightedMeanRegressor(xs=self.xs, ys=self.ys, errors=self.es)
+#        else:
+#            reg = super(InterpolatedSignal, self)._mean_regressor_factory()
+#        return reg
+#
+#    @cached_property
+#    def _get_value(self):
+#        tm = self.timestamp
+#        fit = self.fit
+#        xs = self.xs
+#        ys = self.ys
+#        es = self.es
+#        if fit and xs is not None and ys is not None:
+#            xsyses = zip(xs, ys, es)
+#            xsyses = array(sorted(xsyses, key=lambda x: x[0]))
+#            xs, ys, es = zip(*xsyses)
+#            if fit == 'preceeding':
+#                return preceeding_predictors(xs, ys, es, tm)
+#            elif fit == 'bracketing interpolate':
+#                return bracketing_interpolate_predictors(xs, ys, es, tm)
+#            elif fit == 'bracketing average':
+#                v = bracketing_average_predictors(xs, ys, es, tm)
+#                return v
+#            else:
+#                v = self.regressor.predict([tm])[0]
+#                return v
+#        else:
+#            return self._value
+#
+#    @cached_property
+#    def _get_error(self):
+#        tm = self.timestamp
+#        fit = self.fit
+#        xs = self.xs
+#        ys = self.ys
+#        es = self.es
+#        if fit and xs is not None and ys is not None:
+#            xsyses = zip(xs, ys, es)
+#            xsyses = array(sorted(xsyses, key=lambda x: x[0]))
+#            xs, ys, es = zip(*xsyses)
+#            if fit == 'preceeding':
+#                return preceeding_predictors(xs, ys, es, tm, attr='error')
+#            elif fit == 'bracketing interpolate':
+#                return bracketing_interpolate_predictors(xs, ys, es, tm, attr='error')
+#            elif fit == 'bracketing average':
+#                return bracketing_average_predictors(xs, ys, es, tm, attr='error')
+#            else:
+#
+#                try:
+#                    reg = self.regressor
+#                    if 'average' in fit:
+#
+#                        if fit.endswith('SEM'):
+#                            n = reg.sem
+#                        else:
+#                            n = reg.std
+#                    else:
+#
+#                        t = tm - xs[0]
+#                        try:
+#                            lci, uci = reg.calculate_ci([t])
+#                            n = (lci[0] + uci[0]) / 2.0
+#                        except TypeError, e:
+#                            n = 2
+#                            #could not compute confidence interval
+#                            #use preceeding error
+##                            n = preceeding_predictors(ts=ts, *args, attr='error')
+#                except IndexError:
+#                    n = 0.1
+#
+#                return n
+##                return self.regressor.get_value(fit, (xs, ys), tm)
+#        else:
+#            return self._error
 
 
 
