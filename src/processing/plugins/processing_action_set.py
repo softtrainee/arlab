@@ -62,6 +62,10 @@ class ProcessingActionSet(WorkbenchActionSet):
                       path=PATH + '/Apply Corrections',
                       class_name='{}:ApplyBackgroundAction'.format(BASE)
                     ),
+               Action(name='Detector Intercalibration...',
+                      path=PATH + '/Apply Corrections',
+                      class_name='{}:ApplyDetectorIntercalibrationAction'.format(BASE)
+                    ),
 
 
 #               Action(name='New Workspace...',

@@ -35,7 +35,7 @@ from src.processing.series_manager import SeriesManager
 from src.processing.tabular_analysis_manager import TabularAnalysisManager
 from src.processing.plotters.series import Series
 from src.processing.corrections.corrections_manager import BlankCorrectionsManager, \
-    BackgroundCorrectionsManager
+    BackgroundCorrectionsManager, DetectorIntercalibrationCorrectionsManager
 
 
 
@@ -43,6 +43,7 @@ class ProcessingManager(DatabaseManager):
     processing_selector = Instance(ProcessingSelector)
     blank_corrections_manager = Instance(BlankCorrectionsManager)
     background_corrections_manager = Instance(BackgroundCorrectionsManager)
+    detector_intercalibration_corrections_manager = Instance(DetectorIntercalibrationCorrectionsManager)
     plotter_options_manager = Instance(PlotterOptionsManager, ())
     only_fusions = Bool(True)
     include_omitted = Bool(True)
@@ -59,6 +60,10 @@ class ProcessingManager(DatabaseManager):
 
     def apply_background_correction(self):
         bm = self.background_corrections_manager
+        self._apply_correction(bm)
+
+    def apply_detector_intercalibration_correction(self):
+        bm = self.detector_intercalibration_corrections_manager
         self._apply_correction(bm)
 
     def _apply_correction(self, bm):
@@ -365,4 +370,9 @@ class ProcessingManager(DatabaseManager):
     def _background_corrections_manager_default(self):
         bm = BackgroundCorrectionsManager(db=self.db)
         return bm
+
+    def _detector_intercalibration_corrections_manager_default(self):
+        bm = DetectorIntercalibrationCorrectionsManager(db=self.db)
+        return bm
+
 #============= EOF =============================================

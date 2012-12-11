@@ -57,31 +57,34 @@ class CorrectionsManager(Loggable):
             self.interpolation_correction.load_predictors()
 
             #load fixed values
-            keys = None
-            for a in self.analyses:
-                nkeys = a.isotope_keys
-                if keys is None:
-                    keys = set(nkeys)
-                else:
-                    keys = set(nkeys).intersection(keys)
+            self._load_fixed_values()
 
-            keys = sorted(keys,
-                          key=lambda x: re.sub('\D', '', x),
-                          reverse=True
-                          )
-            nfixed_values = [FixedValueCorrection(name=ki) for ki in keys]
-            if self.fixed_values:
-                nn = []
-                for ni in nfixed_values:
-                    obj = next((fi for fi in self.fixed_values
-                                if fi.name == ni.name), None)
-                    if obj:
-                        nn.append(obj)
-                    else:
-                        nn.append(ni)
+    def _load_fixed_values(self):
+        keys = None
+        for a in self.analyses:
+            nkeys = a.isotope_keys
+            if keys is None:
+                keys = set(nkeys)
             else:
-                nn = nfixed_values
-            self.fixed_values = nn
+                keys = set(nkeys).intersection(keys)
+
+        keys = sorted(keys,
+                      key=lambda x: re.sub('\D', '', x),
+                      reverse=True
+                      )
+        nfixed_values = [FixedValueCorrection(name=ki) for ki in keys]
+        if self.fixed_values:
+            nn = []
+            for ni in nfixed_values:
+                obj = next((fi for fi in self.fixed_values
+                            if fi.name == ni.name), None)
+                if obj:
+                    nn.append(obj)
+                else:
+                    nn.append(ni)
+        else:
+            nn = nfixed_values
+        self.fixed_values = nn
 
     def apply_correction(self):
         if self.use_fixed_values:
@@ -194,50 +197,16 @@ class BlankCorrectionsManager(CorrectionsManager):
     correction_name = 'blanks'
     signal_key = 'bl'
     signal_klass = Blank
-#    def _update_value(self, analysis, isotope, value, error):
-#        b = Blank(_value=value, _error=error)
-#        key = '{}bl'.format(isotope)
-#        analysis.signals[key] = b
-
-#    def _apply_fixed_correction(self, analysis, history, isotope, value, error):
-#        dbrecord = analysis.dbrecord._dbrecord
-#        db = self.db
-#
-#        histories = dbrecord.blanks_histories
-#        phistory = histories[-1] if histories else None
-#
-#        db.add_blanks(history, isotope=isotope, use_set=False, user_value=value, user_error=error)
-#        self._copy_from_previous(phistory, history, isotope)
-
-
-#    def _add_history(self, analysis):
-#        dbrecord = analysis.dbrecord._dbrecord
-#        db = self.db
-#
-#        #new history
-#        history = db.add_blanks_history(dbrecord, user=db.save_username)
-#
-#        #set analysis' selected history
-#        sh = db.add_selected_histories(dbrecord)
-#        sh.selected_blanks = history
-#        return history
-
 
 class BackgroundCorrectionsManager(CorrectionsManager):
     correction_name = 'backgrounds'
     signal_key = 'bg'
     signal_klass = Background
-#    def _add_history(self, analysis):
-#        dbrecord = analysis.dbrecord._dbrecord
-#        db = self.db
-#
-#        #new history
-#        history = db.add_backgrounds_history(dbrecord, user=db.save_username)
-#
-#        #set analysis' selected history
-#        sh = db.add_selected_histories(dbrecord)
-#        sh.selected_backgrounds = history
-#        return history
 
+class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
+    correction_name = 'detector_intercalibration'
+    def _load_fixed_values(self):
+        if not self.fixed_values:
+            self.fixed_values = [FixedValueCorrection(name='ICFactor')]
 
 #============= EOF =============================================
