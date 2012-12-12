@@ -117,7 +117,7 @@ class _ImageEditor(Editor):
             frame = self.value.render()
         except AttributeError:
             return
-        
+
         if not frame:
             return
         try:

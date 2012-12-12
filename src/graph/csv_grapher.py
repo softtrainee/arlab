@@ -33,7 +33,7 @@ from src.paths import paths
 from pyface.constant import OK
 import os
 from src.loggable import Loggable
-from src.data_processing.time_series.time_series import smooth
+from src.time_series.time_series import smooth
 from pyface.timer.do_later import do_later
 class DataSelector(HasTraits):
     index = Str
@@ -46,12 +46,12 @@ class DataSelector(HasTraits):
     removable = Bool(True)
     fit = Enum([NULL_STR] + FIT_TYPES)
     plot_type = Enum('line', 'scatter')
-    use_filter=Bool(True)
+    use_filter = Bool(True)
     def traits_view(self):
         header = HGroup(Label('X'), Spring(width=60, springy=False),
                         Label('Y'), Spring(width=60, springy=False),
                         Label('Fit'), Spring(width=120, springy=False),
-                        Label('Type'),Spring(width=80, springy=False),
+                        Label('Type'), Spring(width=80, springy=False),
                         Label('Filter'),
                         spring,
                         defined_when='not removable'
@@ -135,7 +135,7 @@ class CSVGrapher(Loggable):
     short_name = Property(depends_on='_path')
 
     _graph_count = 0
-    delimiter=Str(',')
+    delimiter = Str(',')
     def quick_graph(self, p):
         kind = 'scatter'
 #        for det in ['H2']:
@@ -213,8 +213,8 @@ class CSVGrapher(Loggable):
             self._path = dlg.path
 
         with open(self._path, 'U') as fp:
-            
-                
+
+
             reader = csv.reader(fp, delimiter=self.delimiter)
             self.column_names = names = reader.next()
             try:
@@ -226,7 +226,7 @@ class CSVGrapher(Loggable):
                                     )
                 self.data_selectors.append(cs)
             except IndexError:
-                
+
                 self.warning_dialog('Invalid delimiter {} for {}'.format(DELIMITERS[self.delimiter],
                                                                          os.path.basename(self._path)
                                                                          ))
@@ -236,7 +236,7 @@ class CSVGrapher(Loggable):
         while 1:
             lines = []
             for l in reader:
-                l=[li.strip() for li in l]
+                l = [li.strip() for li in l]
                 if not l or not any(l):
                     data = np.array([map(float, l) for l in lines])
                     data = data.transpose()
@@ -299,9 +299,9 @@ class CSVGrapher(Loggable):
                 xmin = min(xmin, min(x))
                 xmax = max(xmax, max(x))
                 fit = csi.fit if csi.fit != NULL_STR else None
-                g.new_series(x, y, fit=fit, 
+                g.new_series(x, y, fit=fit,
                              filter_outliers=csi.use_filter,
-                             type=csi.plot_type, 
+                             type=csi.plot_type,
                              plotid=plotid)
 
                 g.set_x_title(csi.index, plotid=plotid)
@@ -349,7 +349,7 @@ class CSVGrapher(Loggable):
 # views
 #===============================================================================
     def traits_view(self):
-        v = View(Item('as_series'),Item('delimiter', editor=EnumEditor(values=DELIMITERS)),
+        v = View(Item('as_series'), Item('delimiter', editor=EnumEditor(values=DELIMITERS)),
                  HGroup(Item('open_button', show_label=False),
                         Item('plot_button', enabled_when='_path', show_label=False),
                         Item('file_name', show_label=False, style='readonly')),

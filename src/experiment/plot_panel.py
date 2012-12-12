@@ -107,7 +107,7 @@ class PlotPanel(Viewable):
             u, l = ra.split(':')
             try:
                 ru = self.signals[u]
-                rl = self.signals[l] 
+                rl = self.signals[l]
             except KeyError:
                 return ''
 
@@ -122,7 +122,7 @@ class PlotPanel(Viewable):
                 rr = (ru - bu) / (rl - bl)
             else:
                 rr = ru / rl
-          
+
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
                     self._get_pee(rr)

@@ -55,13 +55,13 @@ def convert_shortname(ln):
 
 def convert_identifier(identifier):
     ids = ['Ba', 'Bc', 'Bu', 'Bg', 'A', 'C']
-    l_ids=map(str.lower, ids)
+    l_ids = map(str.lower, ids)
 #    ids.extend(map(str.lower, ids))
     if identifier in ids:
         identifier = ids.index(identifier) + 1
     elif identifier in l_ids:
         identifier = l_ids.index(identifier) + 1
-        
+
 #    if identifier == 'Ba':
 #        identifier = 1
 #    elif identifier == 'A':
@@ -73,9 +73,9 @@ def convert_identifier(identifier):
     return identifier
 
 def get_analysis_type(idn):
-    
-    idn=idn.lower()
-    
+
+    idn = idn.lower()
+
     #check for Bg before B
     if idn.startswith('bg'):
         return 'background'

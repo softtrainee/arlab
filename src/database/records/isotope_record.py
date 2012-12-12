@@ -199,7 +199,7 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
     def load(self):
         self._calculate_age()
-        
+
     def load_graph(self, graph=None, xoffset=0):
 #        dm = self.selector.data_manager
         self._load_signals()
@@ -314,7 +314,7 @@ class IsotopeRecord(DatabaseRecord):
 #        self._load_signals()
 #        signals = self._signals
         signals = self.signals
-        nsignals=dict()
+        nsignals = dict()
         keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
         for iso in keys:
             for k in ['', 'bs', 'bl', 'bg']:
@@ -322,8 +322,8 @@ class IsotopeRecord(DatabaseRecord):
                 if not signals.has_key(isok):
                     nsignals[isok] = self._signal_factory(isok, None)
                 else:
-                    nsignals[isok]=signals[isok]
-                    
+                    nsignals[isok] = signals[isok]
+
         sigs = lambda name: [(nsignals[iso].value, nsignals[iso].error)
                                 for iso in map('{{}}{}'.format(name).format, keys)]
 
@@ -425,7 +425,7 @@ class IsotopeRecord(DatabaseRecord):
 #        print id(self._dbrecord)
 
         for iso in self._dbrecord.isotopes:
-            if iso.kind!='sniff':
+            if iso.kind != 'sniff':
                 result = iso.results[-1]
                 key = '' if iso.kind == 'signal' else 'bs'
     #            if not self.filter_outliers:
@@ -735,7 +735,7 @@ class IsotopeRecord(DatabaseRecord):
         '''
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
         analysis = self.dbrecord
-    
+
         irradiation_level = self.irradiation_level
 
         if irradiation_level:
@@ -743,14 +743,14 @@ class IsotopeRecord(DatabaseRecord):
             if irradiation:
                 pr = irradiation.production
                 if pr:
-                    prs=[]
+                    prs = []
                     for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
-                        v,e=getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
+                        v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
                         prs.append((v if v is not None else 1, e if e is not None else 0))
-                                                     
+
 #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
 #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-                    
+
                 chron = irradiation.chronology
                 def convert_datetime(x):
                     try:
@@ -765,7 +765,7 @@ class IsotopeRecord(DatabaseRecord):
 
                     doses = chronblob.split('$')
                     doses = [di.split('%') for di in doses]
-                    
+
                     doses = [map(convert_datetime, d) for d in doses]
 
                     analts = '{} {}'.format(analysis.rundate, analysis.runtime)
@@ -776,12 +776,12 @@ class IsotopeRecord(DatabaseRecord):
                             dur = en - st
                             dt = analts - st
                             segments.append((1, convert_days(dur), convert_days(dt)))
-                    
-                    decay_time=0
-                    d_o=doses[0][0]
+
+                    decay_time = 0
+                    d_o = doses[0][0]
                     if d_o is not None:
                         decay_time = convert_days(analts - doses[0][0])
-                    
+
 #                    segments = [(1, convert_days(ti)) for ti in durs]
                     prs.append(segments)
                     prs.append(decay_time)

@@ -46,7 +46,7 @@ class Globals(object):
     show_autocenter_debug_image = False
 #    show_autocenter_debug_image = True
 
-    test_experiment_set=None
+    test_experiment_set = None
 #    test_experiment_set = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
     #use_ipc = False == embed the remote hardware servers into pychron
     #= True == an instance of RemoteHardwareServer must be launched

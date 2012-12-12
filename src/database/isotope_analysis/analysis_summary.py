@@ -221,14 +221,14 @@ class AnalysisSummary(Summary):
         return sig.uvalue, base.uvalue
 
     def _make_signals(self, n, i, iso, widths):
-        
+
         sg = self.record.signal_graph
         pi = n - i
         det = sg.plots[pi].detector
-        
+
         fit = sg.get_fit(pi) if sg else ' '
         sig, base = self._get_signal_and_baseline(iso)
-            
+
         try:
             blank = self.record.signals['{}bl'.format(iso)]
             blank = blank.uvalue

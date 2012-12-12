@@ -434,7 +434,7 @@ class LabnumberEntry(DBEntry):
 
     @cached_property
     def _get_trays(self):
-        
+
         p = os.path.join(self._get_map_path(), 'images')
         if not os.path.isdir(p):
             self.warning_dialog('{} does not exist'.format(p))

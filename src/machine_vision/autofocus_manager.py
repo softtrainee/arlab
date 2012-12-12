@@ -25,7 +25,7 @@ from numpy import linspace, argmin, argmax, random
 import time
 import os
 #============= local library imports  ==========================
-from src.data_processing.time_series.time_series import smooth
+from src.time_series.time_series import smooth
 from src.image.cvwrapper import grayspace, get_focus_measure, crop, resize
 from scipy.ndimage.measurements import variance
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel

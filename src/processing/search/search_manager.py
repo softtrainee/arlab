@@ -67,7 +67,8 @@ class SearchManager(Viewable, ColumnSorterMixin):
             q = selector.query_factory(parameter='Analysis Type', criterion=an)
             qs.append(q)
 
-        selector.execute_query(queries=qs, load=False)
+        if qs:
+            selector.execute_query(queries=qs, load=False)
 
 #===============================================================================
 # property get/set

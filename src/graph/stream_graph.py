@@ -135,7 +135,7 @@ class StreamGraph(Graph):
         for i, yi in enumerate(ys):
             kw['track_x'] = False
             self.record(yi, x=x, series=i, **kw)
-        
+
         ma = max(ys)
         mi = min(ys)
         if ma < self.cur_max[plotid]:

@@ -53,7 +53,7 @@ class ExtractionLinePyScript(ValvePyScript):
         '''
             if position is 0 return None 
         '''
-        pos=self.get_context()['position']
+        pos = self.get_context()['position']
         if pos:
             return pos
 
@@ -142,7 +142,7 @@ class ExtractionLinePyScript(ValvePyScript):
     def move_to_position(self, position=''):
         if position == '':
             position = self.position
-        
+
         if position:
             self.info('{} move to position {}'.format(self.extract_device, position))
             success = self._manager_action([('move_to_position', (position,), {})
