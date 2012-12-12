@@ -106,6 +106,7 @@ class BaselinesChangeableItemsTable(Base):
 #    BslnID = ForeignKey('baselinestable.BslnID')
 #    BslnID = Column(Integer, ForeignKey('baselinestable.BslnID'), primary_key=True)
     Fit = Column(Integer, ForeignKey('fittypetable.Fit'))
+    DataReductionSessionID = Column(Integer)
 
 class BaselinesTable(Base):
     '''
@@ -129,6 +130,7 @@ class DataReductionSessionTable(Base):
     DataReductionSessionID = Column(Integer, primary_key=True)
     SessionDate = Column(DateTime)
     changeable_items = relationship('AnalysesChangeableItemsTable')
+
 
 
 class DetectorTable(Base):

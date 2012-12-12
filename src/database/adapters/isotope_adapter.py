@@ -582,6 +582,11 @@ class IsotopeAdapter(DatabaseAdapter):
 #    @get_one
 #    def get_analysis(self):
 
+
+    @get_one
+    def get_analysis_record(self, db_id):
+        return meas_AnalysisTable, 'id'
+
     @get_one
     def get_analysis(self, rid):
         return meas_AnalysisTable, 'lab_id'

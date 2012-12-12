@@ -67,6 +67,13 @@ class ProcessingActionSet(WorkbenchActionSet):
                       class_name='{}:ApplyDetectorIntercalibrationAction'.format(BASE)
                     ),
 
+               Action(name='Find...',
+                      path=PATH,
+                      class_name='{}:OpenSelectorAction'.format(BASE)
+                    ),
+
+
+
 
 #               Action(name='New Workspace...',
 #                      path=PATH,

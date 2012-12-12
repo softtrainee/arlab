@@ -18,7 +18,7 @@
 from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event
 
 from traitsui.api import View, Item, ButtonEditor, \
-    HGroup, spring, ListEditor, InstanceEditor, Handler
+    HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
@@ -350,25 +350,17 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self._open_selected()
 
     def _search_fired(self):
-        self.execute_query()
+        self.execute_query(load=False)
 
     def _limit_changed(self):
-        self.execute_query()
+        self.execute_query(load=False)
 
 #===============================================================================
 # factories
 #===============================================================================
     def _query_factory(self, removable=True, **kw):
-#        if table is None:
-#            table = self.query_table
-#        else:
-#            table = '{}Table'.format(table)
-#            m = __import__(self.orm_path, fromlist=[table])
-#            table = getattr(m, table)
-
         q = Query(selector=self,
                   removable=removable,
-#                  query_table=table,
                   date_str=self.date_str,
                   )
 
@@ -382,16 +374,14 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                  **kw)
         if load:
             d.load()
+
         d.on_trait_change(self._changed, 'changed')
         return d
 #===============================================================================
 # views
 #===============================================================================
     def _get_button_grp(self):
-        return HGroup(
-#                        Item('open_button', editor=ButtonEditor(label_value='open_button_label'),
-#                             show_label=False),
-                        spring, Item('search', show_label=False), defined_when='style=="normal"')
+        return HGroup(spring, Item('search', show_label=False), defined_when='style=="normal"')
 
     def panel_view(self):
         v = self._view_factory()
@@ -416,10 +406,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                auto_update=True,
                                column_clicked='object.column_clicked',
                                editable=False,
-#                               operations=[
-#                                           'move',
-#                                           'drag'
-#                                           ],
                                multi_select=not self.style == 'single',
 
                                )
@@ -427,6 +413,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         button_grp = self._get_button_grp()
         qgrp = Item('queries', show_label=False,
                     style='custom',
+                    height=0.25,
                     editor=ListEditor(mutable=False,
                                       style='custom',
                                       editor=InstanceEditor()),
@@ -436,16 +423,18 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                             defined_when='multi_graphable'
 #                             ),
 #                             spring, Item('limit')),
-                 Item('records',
-                      style='custom',
-                      editor=editor,
-                      show_label=False,
-                      height= -400,
-                      width= -300,
-                      ),
+                VGroup(
+                       Item('records',
+                          style='custom',
+                          editor=editor,
+                          show_label=False,
+                          height=0.75,
+                          width=600,
+                          ),
 
-                 qgrp,
-                 button_grp,
+                          qgrp,
+                          button_grp,
+                    ),
                  resizable=True,
                  handler=SelectorHandler
                  )

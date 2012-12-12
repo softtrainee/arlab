@@ -18,7 +18,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-__version__=006
+__version__=007
 */
 using System.IO;
 using System.Text;
@@ -41,7 +41,11 @@ class RemoteControl
 	
 	private static bool use_udp=true;
 	private static bool tag_data=true;
-	private static double max_magnet_step=1;
+	private static bool use_beam_blank=false;	
+	private static double max_magnet_step=0.5;
+	private static boo use_magnet_step=true;
+	private static double magnet_move_time=2000; //millisecs
+	
 	
 	public static string scan_data;
 	
@@ -155,8 +159,6 @@ class RemoteControl
 		string[] args = cmd.Trim().Split (' ');
 		double r;
 		switch (args[0]) {
-
-		
 		case "GetTuningSettingsList":
 			result = GetTuningSettings();
 			break;
@@ -181,6 +183,12 @@ class RemoteControl
 			break;
 			
 		case "BlankBeam":
+			if (!use_beam_blank)
+			{
+				result="OK";
+				break;
+			}
+		
 			double yval=last_y_symmetry;
 			bool blankbeam=false;
 			if (args[1]=="true")
@@ -286,7 +294,6 @@ class RemoteControl
 //   Magnet
 //============================================================================================					
 		case "GetMagnetDAC":
-			//double r;
 			if (Instrument.GetParameter("Field Set", out r))
 			{
 				result=r.ToString();
@@ -294,9 +301,14 @@ class RemoteControl
 			break;
 			
 		case "SetMagnetDAC":
-		
-			result=SetMagnetDAC(Convert.ToDouble(args[1]));
-			//result=SetParameter("Field Set",Convert.ToDouble(args[1]));
+			if (use_magnet_step)
+			{
+				result=SetMagnetDAC(Convert.ToDouble(args[1]));
+			}
+			else
+			{
+				result=SetParameter("Field Set",Convert.ToDouble(args[1]));
+			}
 			break;
 			
 //============================================================================================
@@ -545,8 +557,7 @@ class RemoteControl
 	
 	public static string SetMagnetDAC(double d)
 	{
-		
-		string result="OK";
+		string result="Fail"
 		double current_dac;
 		
 		int sign=1;
@@ -558,27 +569,29 @@ class RemoteControl
 		{
 			if (current_dac >d){sign=-1}
 			double dev;
-			dev=Math.Abs(d-current_dac)
+			dev=Math.Abs(d-current_dac);
 			if (dev>max_magnet_step)
 			{
-				nsteps=Convert.ToInt32(dev/max_magnet_step)
-				rem=dev%max_magnet_step
-				step=max_magnet_step
+				nsteps=Convert.ToInt32(dev/max_magnet_step);
+				rem=dev%max_magnet_step;
+				step=max_magnet_step;
 			}
 			
 			for(int i=1; i<=nsteps; i++)
 			{
-				nv=current_dac+sign*i*step
-				SetParameter("Field Set", nv)
+				nv=current_dac+sign*i*step;
+				result=SetParameter("Field Set", nv);
+				Thread.CurrentThread.Sleep(magnet_move_time/nsteps)
+				
 			}
 			if (rem>0)
 			{
-				Instrument.GetParameter("Field Set", out current_dac)
-				SetParameter("Field Set", current_dac+sign*rem)
+				Instrument.GetParameter("Field Set", out current_dac);
+				result=SetParameter("Field Set", current_dac+sign*rem);
 			}
 			
 		}
-		
+		return result;
 		
 	}
 	public static string SetIntegrationTime(double t)

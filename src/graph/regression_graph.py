@@ -649,9 +649,9 @@ class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
     def _bind_index(self, scatter, bind_selection=True, **kw):
         super(StackedRegressionGraph, self)._bind_index(scatter)
-        if bind_selection:
-            scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
-
+#        if bind_selection:
+#            scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
+#
 #    def _update_metadata(self, obj, name, old, new):
 #        self.suppress_regression = True
 #        for plot in self.plots:

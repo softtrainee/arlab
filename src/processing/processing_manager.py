@@ -36,11 +36,15 @@ from src.processing.tabular_analysis_manager import TabularAnalysisManager
 from src.processing.plotters.series import Series
 from src.processing.corrections.corrections_manager import BlankCorrectionsManager, \
     BackgroundCorrectionsManager, DetectorIntercalibrationCorrectionsManager
-
+from src.processing.search.search_manager import SearchManager
+from src.processing.search.selector_manager import SelectorManager
+from src.processing.search.selected_view import Marker
 
 
 class ProcessingManager(DatabaseManager):
-    processing_selector = Instance(ProcessingSelector)
+    selector_manager = Instance(SelectorManager)
+    search_manager = Instance(SearchManager)
+
     blank_corrections_manager = Instance(BlankCorrectionsManager)
     background_corrections_manager = Instance(BackgroundCorrectionsManager)
     detector_intercalibration_corrections_manager = Instance(DetectorIntercalibrationCorrectionsManager)
@@ -50,6 +54,13 @@ class ProcessingManager(DatabaseManager):
     display_omitted = Bool(True)
 
     _window_count = 0
+
+#===============================================================================
+# find/display analysis
+#===============================================================================
+    def open_search(self):
+        ps = self.search_manager
+        ps.edit_traits()
 
 #===============================================================================
 # apply corrections
@@ -128,11 +139,11 @@ class ProcessingManager(DatabaseManager):
             
             by default use a db connection
         '''
-        d = self.processing_selector
-        return True
-#        info = d.edit_traits(kind='livemodal')
-#        if info.result:
-#            return True
+        d = self.selector_manager
+#        return True
+        info = d.edit_traits(kind='livemodal')
+        if info.result:
+            return True
 
     def _display_tabular_data(self):
         tm = TabularAnalysisManager(analyses=self._get_analyses())
@@ -194,8 +205,7 @@ class ProcessingManager(DatabaseManager):
             self.open_view(g)
 
     def _get_analyses(self):
-        ps = self.processing_selector
-        from src.processing.processing_selector import Marker
+        ps = self.selector_manager
         ans = [Analysis(dbrecord=ri) for ri in ps.selected_records if not isinstance(ri, Marker)]
         return ans
 
@@ -252,7 +262,6 @@ class ProcessingManager(DatabaseManager):
         '''
         '''
         from src.processing.plotters.ideogram import Ideogram
-
 
         g = self._window_factory()
         p = Ideogram(db=self.db)
@@ -355,12 +364,20 @@ class ProcessingManager(DatabaseManager):
 #===============================================================================
 # defaults
 #===============================================================================
-    def _processing_selector_default(self):
-        d = ProcessingSelector(db=self.db)
+    def _selector_manager_default(self):
+        d = SelectorManager(db=self.db)
         db = self.db
-        db.connect()
+        if not db.connected:
+            db.connect()
 
-        d.select_labnumber([22233, 22234])
+#        d.select_labnumber([22233, 22234])
+        return d
+
+    def _search_manager_default(self):
+        d = SearchManager(db=self.db)
+        db = self.db
+        if not db.connected:
+            db.connect()
         return d
 
     def _blank_corrections_manager_default(self):

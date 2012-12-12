@@ -29,6 +29,15 @@ def get_manager(event):
     return manager
 
 #===============================================================================
+# find 
+#===============================================================================
+class OpenSelectorAction(Action):
+    accelerator = 'Ctrl+f'
+    def perform(self, event):
+        man = get_manager(event)
+        man.open_search()
+
+#===============================================================================
 # display
 #===============================================================================
 class NewSeriesAction(Action):
