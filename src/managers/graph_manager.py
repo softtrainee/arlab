@@ -29,7 +29,7 @@ from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
 from src.paths import paths
 from manager import Manager
-from src.data_processing.time_series.time_series import downsample_1d, smooth
+from src.time_series.time_series import downsample_1d, smooth
 from src.graph.time_series_graph import TimeSeriesGraph
 import dateutil
 import time

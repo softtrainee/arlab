@@ -53,7 +53,7 @@ class FitSelector(HasTraits):
             if fit == 'average':
                 fit = u'average \u00b1' + reg.error_calc.upper()
         except IndexError:
-            inte, er, fit, fo= 0, 0, '---', False
+            inte, er, fit, fo = 0, 0, '---', False
 
         obj = AnalysisParameters(name=name,
                                  fit=fit,

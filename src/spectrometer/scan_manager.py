@@ -512,7 +512,7 @@ class ScanManager(Manager):
                               HGroup(
                                      spring,
                                      Label('Deflection'),
-                                     Spring(springy=False, width=70), 
+                                     Spring(springy=False, width=70),
                                      ),
                               Item('detectors',
                                    show_label=False,

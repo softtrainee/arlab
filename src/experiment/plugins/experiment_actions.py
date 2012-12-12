@@ -138,11 +138,11 @@ class OpenRecentTableAction(Action):
         manager.open_recent()
 
 class MakePlotSeriesAction(Action):
-    description='Plot series of analysis'
-    name='Plot Series'
-    accelerator='Ctrl+P'
-    def perform(self,event):
-        manager=get_manager(event)
+    description = 'Plot series of analysis'
+    name = 'Plot Series'
+    accelerator = 'Ctrl+P'
+    def perform(self, event):
+        manager = get_manager(event)
         manager.plot_series()
 #class RecallAnalysisAction(Action):
 #    '''

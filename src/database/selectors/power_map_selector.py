@@ -89,7 +89,7 @@ class PowerMapResult(DBResult):
 
     def load_graph(self, *args, **kw):
         data = os.path.join(self.directory, self.filename)
-        from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
+        from src.lasers.power.power_map_processor import PowerMapProcessor
         pmp = PowerMapProcessor()
         if data.endswith('.h5') or data.endswith('.hdf5'):
             reader = self._data_manager_factory()

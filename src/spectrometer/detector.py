@@ -41,8 +41,8 @@ class Detector(SpectrometerDevice):
 #    intensity = Property(depends_on='spectrometer:intensity_dirty')
 #    intensity = Float
 #    std = Float
-    intensity=Str
-    std=Str
+    intensity = Str
+    std = Str
     intensities = Array
     nstd = Int(10)
     active = Bool(True)
@@ -64,12 +64,12 @@ class Detector(SpectrometerDevice):
                 intensity = new[self.name]
                 self.intensities = hstack((self.intensities[-n:], [intensity]))
                 self.std = '{:0.5f}'.format(self.intensities.std())
-                
+
                 self.intensity = '{:0.5f}'.format(intensity)
             except KeyError:
-                self.intensity=NULL_STR
-                self.std=NULL_STR
-                
+                self.intensity = NULL_STR
+                self.std = NULL_STR
+
     def _get_isotopes(self):
         molweights = self.spectrometer.molecular_weights
         return sorted(molweights.keys(), key=lambda x: int(x[2:]))
@@ -144,10 +144,10 @@ class Detector(SpectrometerDevice):
                              show_label=False
                              ),
                         Spring(width=50, springy=False),
-                        Item('intensity',  style='readonly',
+                        Item('intensity', style='readonly',
                              ),
                         Spring(springy=False, width=150),
-                        Item('std',  style='readonly',
+                        Item('std', style='readonly',
                              ),
 #                        spring,
                         Spring(springy=False, width=100),

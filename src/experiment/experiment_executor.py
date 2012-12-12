@@ -58,11 +58,11 @@ class ExperimentExecutor(ExperimentManager):
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
     delaying_between_runs = Bool(False)
-    resume_runs=Bool(False)
+    resume_runs = Bool(False)
 
     show_sample_map = Button
     execute_button = Event
-    resume_button=Button('Resume')
+    resume_button = Button('Resume')
     execute_label = Property(depends_on='_alive')
     truncate_button = Button('Truncate')
     truncate_style = Enum('Immediate', 'Quick', 'Next Integration')
@@ -212,7 +212,7 @@ class ExperimentExecutor(ExperimentManager):
             if not globalv.experiment_debug:
                 nonfound.append('extraction_line')
 
-        if exp.extract_device!=NULL_STR:
+        if exp.extract_device != NULL_STR:
             extract_device = exp.extract_device.replace(' ', '_').lower()
             if not self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device)):
                 if not globalv.experiment_debug:
@@ -253,9 +253,9 @@ class ExperimentExecutor(ExperimentManager):
         self._alive = True
 
         #delay before starting
-        delay=exp.delay_before_analyses
+        delay = exp.delay_before_analyses
         self._delay(delay, message='before')
-        
+
         self.set_selector.selected_index = -2
         rc = 0
         ec = 0
@@ -272,23 +272,23 @@ class ExperimentExecutor(ExperimentManager):
 
         self.info('Executed {:n} sets. total runs={:n}'.format(ec, rc))
         self._alive = False
-    
+
     def _delay(self, delay, message='between'):
         self.delay_between_runs_readback = delay
-        self.info('Delay {} runs {}'.format(message,delay))
-        self.delaying_between_runs=True
-        self.resume_runs=False
+        self.info('Delay {} runs {}'.format(message, delay))
+        self.delaying_between_runs = True
+        self.resume_runs = False
         st = time.time()
         while time.time() - st < delay:
             if not self.isAlive():
                 break
             if self.resume_runs:
                 break
-            
+
             time.sleep(0.5)
             self.delay_between_runs_readback -= 0.5
-        self.delaying_between_runs=False
-        
+        self.delaying_between_runs = False
+
     def _execute_automated_runs(self, iexp, exp):
 
         self.info('Starting automated runs set= Set{}'.format(iexp))
@@ -330,7 +330,7 @@ class ExperimentExecutor(ExperimentManager):
                 #delay between runs
                 delay = exp.delay_between_analyses
                 self._delay(delay)
-                
+
 
             try:
                 t, run = self._launch_run(rgen, cnt)
@@ -347,9 +347,9 @@ class ExperimentExecutor(ExperimentManager):
                 t.join()
 
             if run.analysis_type.startswith('blank'):
-                pb= run.get_corrected_signals()
+                pb = run.get_corrected_signals()
                 if pb is not None:
-                    self._prev_blanks =pb
+                    self._prev_blanks = pb
 
             cnt += 1
             totalcnt += 1
@@ -439,7 +439,7 @@ class ExperimentExecutor(ExperimentManager):
         aruns = self.experiment_set.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types), None)
-        
+
         if fa:
             ind, an = fa
             if ind == 0:
@@ -481,7 +481,7 @@ class ExperimentExecutor(ExperimentManager):
             return
         else:
             arun.measurement_script.syntax_checked = True
-            
+
         if not arun.post_measurement_script:
             self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
             return
@@ -541,8 +541,8 @@ class ExperimentExecutor(ExperimentManager):
 # handlers
 #===============================================================================
     def _resume_button_fired(self):
-        self.resume_runs=True
-        
+        self.resume_runs = True
+
     def _selected_changed(self):
         if self.selected:
             self.stats.calculate_at(self.selected)
@@ -584,7 +584,7 @@ class ExperimentExecutor(ExperimentManager):
                          label='Delay Countdown',
                          style='readonly', format_str='%i',
                          width= -50),
-                    
+
                     spring,
                     Item('show_sample_map', show_label=False,
                          enabled_when='object.experiment_set.sample_map'

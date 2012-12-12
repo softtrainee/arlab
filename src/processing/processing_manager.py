@@ -24,7 +24,7 @@ from traits.api import HasTraits, Instance, cached_property, Property, List, Eve
 from numpy import array
 #============= local library imports  ==========================
 from src.processing.database_manager import DatabaseManager
-from src.processing.processing_selector import ProcessingSelector
+#from src.processing.processing_selector import ProcessingSelector
 from src.processing.analysis import Analysis
 #from src.processing.script import ProcessScript
 #from src.constants import NULL_STR

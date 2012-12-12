@@ -49,12 +49,12 @@ class ExperimentPreferencesPage(PreferencesPage):
     db_host = Str
     db_kind = Enum('---', 'mysql', 'sqlite')
 
-    repo_kind = Enum('---', 'local', 'FTP')
-
-    ftp_username = Str
-    ftp_password = Password
-    ftp_host = Str
-    repo_root = Str
+#    repo_kind = Enum('---', 'local', 'FTP')
+#
+#    ftp_username = Str
+#    ftp_password = Password
+#    ftp_host = Str
+#    repo_root = Str
 
     massspec_dbname = Str
     massspec_username = Str
@@ -120,14 +120,14 @@ class ExperimentPreferencesPage(PreferencesPage):
                             label='Authentication'
                             )
 
-        ftp_auth_grp = Group(Item('ftp_host', label='Host'),
-                             Item('ftp_username', label='Name'),
-                             Item('ftp_password', label='Password'),
-                             Item('repo_root', label='Data directory'),
-                             enabled_when='repo_kind=="FTP"',
-                             show_border=True,
-                             label='Authentication'
-                             )
+#        ftp_auth_grp = Group(Item('ftp_host', label='Host'),
+#                             Item('ftp_username', label='Name'),
+#                             Item('ftp_password', label='Password'),
+#                             Item('repo_root', label='Data directory'),
+#                             enabled_when='repo_kind=="FTP"',
+#                             show_border=True,
+#                             label='Authentication'
+#                             )
 
         fav_grp = VGroup(Item('db_fav_name',
 #                              editor=EnumEditor(name='favorites'),
@@ -147,17 +147,18 @@ class ExperimentPreferencesPage(PreferencesPage):
 
                                 )
                          )
+
         db_grp = Group(HGroup(Item('db_kind', show_label=False)),
                        Item('db_name', label='Name'),
                        HGroup(fav_grp, db_auth_grp),
                        show_border=True, label='Database')
 
-        repo_grp = Group(
-                         Item('repo_kind', show_label=False),
-                         ftp_auth_grp,
-                         show_border=True, label='Repo'
-                         )
-#
+#        repo_grp = Group(
+#                         Item('repo_kind', show_label=False),
+#                         ftp_auth_grp,
+#                         show_border=True, label='Repo'
+#                         )
+##
         massspec_grp = Group(
                              Group(
                                  Item('massspec_dbname', label='Database'),
@@ -172,7 +173,7 @@ class ExperimentPreferencesPage(PreferencesPage):
         return View(
 #                        user_grp,
                         db_grp,
-                        repo_grp,
+#                        repo_grp,
                         massspec_grp,
                     )
 #============= EOF =============================================

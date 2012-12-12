@@ -16,7 +16,7 @@
 
 import pyopencv as cv
 from numpy import array, ones, zeros
-from src.data_processing.centroid.calculate_centroid import calculate_centroid
+from src.image.centroid.calculate_centroid import calculate_centroid
 
 #
 #def clone(src):

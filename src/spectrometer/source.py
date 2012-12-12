@@ -37,12 +37,12 @@ class Source(SpectrometerDevice):
 
     _y_symmetry = Float#Range(0.0, 100.)
     _z_symmetry = Float#Range(0.0, 100.)
-    
-    y_symmetry_low=Float(-50.0)
-    y_symmetry_high=Float(50.0)    
-    z_symmetry_low=Float(-50.0)
-    z_symmetry_high=Float(100.0)
-    
+
+    y_symmetry_low = Float(-50.0)
+    y_symmetry_high = Float(50.0)
+    z_symmetry_low = Float(-50.0)
+    z_symmetry_high = Float(100.0)
+
     _extraction_lens = Float#Range(0.0, 100.)
 #    zlow=Float()
     def read_y_symmetry(self):
@@ -77,11 +77,11 @@ class Source(SpectrometerDevice):
         v = View(
                Item('nominal_hv'),
                Item('current_hv', style='readonly'),
-               Item('y_symmetry',editor=RangeEditor(low_name='y_symmetry_low',
+               Item('y_symmetry', editor=RangeEditor(low_name='y_symmetry_low',
                                                     high_name='y_symmetry_high',
                                                     mode='slider'
                                                     )),
-               Item('z_symmetry',editor=RangeEditor(low_name='z_symmetry_low',
+               Item('z_symmetry', editor=RangeEditor(low_name='z_symmetry_low',
                                                     high_name='z_symmetry_high',
                                                     mode='slider'
                                                     )),

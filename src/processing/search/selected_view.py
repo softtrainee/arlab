@@ -93,6 +93,9 @@ class SelectedView(ColumnSorterMixin):
 
     def dump_selection(self):
         records = self.selected_records
+        if not records:
+            return
+
         ans = [ai.dbrecord.id  for ai in records]
 
         s = records[0]
