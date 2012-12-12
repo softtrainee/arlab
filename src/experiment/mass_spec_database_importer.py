@@ -31,6 +31,9 @@ from numpy import array
 #from src.data_processing.regression.ols import OLS
 from src.loggable import Loggable
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+from src.regression.ols_regressor import PolynomialRegressor
+from src.regression.mean_regressor import MeanRegressor
+from uncertainties import ufloat
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 
@@ -51,22 +54,40 @@ class MassSpecDatabaseImporter(Loggable):
     test = Button
     def _test_fired(self):
         import numpy as np
-        regresults = None
 
         xbase = np.linspace(430, 580, 150)
         ybase = np.random.random(150)
-        base = [zip(xbase, ybase)]
+        base = [zip(xbase, ybase), zip(xbase, ybase)]
 
         xsig = np.linspace(20, 420, 410)
-        ysig = np.random.random(410)
-        sig = [zip(xsig, ysig)]
+        m = -0.5
+        b = 600
+        ysig = m * xsig + b
+        sig = [zip(xsig, ysig), zip(xsig, ysig - 100)]
 
 
-        keys = [('H1', 'Ar40')]
-        self.add_analysis('4318', '01', '', '4318',
-                          base, sig, keys,
-                          regresults
+        regbs = MeanRegressor(xs=xbase, ys=ybase)
+        reg = PolynomialRegressor(xs=xsig, ys=ysig, fit='linear')
+
+        reg1 = PolynomialRegressor(xs=xsig, ys=ysig - 100, fit='linear')
+
+        keys = [
+                ('H1', 'Ar40'),
+                ('AX', 'Ar39'),
+
+                ]
+
+        regresults = dict(
+                          H1=reg,
+                          H1bs=regbs,
+                          AX=reg1,
+                          AXbs=regbs
                           )
+        blanks = [ufloat((1, 0.1)), ufloat((Ar39=(0.1, 0.001))]
+        self.add_analysis('4318', '12', '', '4318',
+                          base, sig, blanks,
+                          keys,
+                          regresults)
 
     def traits_view(self):
         v = View(Item('test', show_label=False))
@@ -77,13 +98,14 @@ class MassSpecDatabaseImporter(Loggable):
                                      host='localhost',
                                      username='root',
                                      password='Argon',
-                                     name='massspecdata_local'
+                                     name='massspecdata_import'
                                      )
+        db.connect()
 
         return db
 
     def add_analysis(self, rid, aliquot, step, irradpos,
-                     baselines, signals, keys,
+                     baselines, signals, blanks, keys,
                      regression_results):
         '''
             
@@ -98,7 +120,7 @@ class MassSpecDatabaseImporter(Loggable):
             runtype = 'Unknown'
 
         db = self.db
-        #===============================================    ========================
+        #=======================================================================
         # add analysis
         #=======================================================================
         analysis = db.add_analysis(rid,
@@ -117,13 +139,9 @@ class MassSpecDatabaseImporter(Loggable):
         item = db.add_changeable_items(analysis, drs, commit=True)
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-#        add_results = False
-#        isos = []
-#        print keys
-#        print signals
-#        print baselines
+        add_results = True
 
-        for ((det, iso), si, bi) in zip(keys, signals, baselines):
+        for ((det, iso), si, bi, ublank) in zip(keys, signals, baselines, blanks):
             #===================================================================
             # isotopes
             #===================================================================
@@ -136,7 +154,7 @@ class MassSpecDatabaseImporter(Loggable):
             label = '{} Baseline'.format(det.upper())
             ncnts = len(tb)
             db.add_baseline(blob, label, ncnts, iso)
-
+            db.add_baseline_changeable_item(drs, 'Average Y')
             baseline = array(vb).mean()
             #===================================================================
             # peak time
@@ -144,7 +162,7 @@ class MassSpecDatabaseImporter(Loggable):
             '''
                 build two blobs
                 blob 1 PeakTimeBlob
-                x, y-mean(baselines)
+                x, y - mean(baselines)
                 
                 blob 2
                 y list
@@ -157,29 +175,25 @@ class MassSpecDatabaseImporter(Loggable):
             blob2 = [struct.pack('>f', float(v)) for v in vb]
             db.add_peaktimeblob(blob1, blob2, iso)
 
-#            if add_results:
-#                i = regression_results[det].coefficients[-1]
-#                ierr = regression_results[det].coefficient_errors[-1]
-#                db.add_isotope_result(iso, drs, i, ierr)
-#            isos.append(iso)
+            if add_results:
+                i = regression_results[det].coefficients[-1]
+                ierr = regression_results[det].coefficient_errors[-1]
+                fit = regression_results[det].fit
 
-#        for bi in baselines:
-#            #===================================================================
-#            # baselines
-#            #===================================================================
-#            tb, vb = zip(*bi)
-#            blob = self._build_timeblob(tb, vb)
-#            label = '{} Baseline'.format(det.upper())
-#            ncnts = len(tb)
-#            db.add_baseline(blob, label, ncnts)
-#
-#        for iso, si in zip(isos, signals):
-#            #===================================================================
-#            # peak time
-#            #===================================================================
-#            tb, vb = zip(*si)
-#            blob = self._build_timeblob(tb, vb)
-#            db.add_peaktimeblob(blob, iso)
+                b = regression_results['{}bs'.format(det)].coefficients[-1]
+                berr = regression_results['{}bs'.format(det)].coefficient_errors[-1]
+
+                #in mass spec the intercept is alreay baseline corrected
+                #mass spec also doesnt propograte baseline errors
+
+                db.add_isotope_result(iso, drs,
+                                      ufloat((i, ierr)),
+                                      ufloat((b, berr)),
+                                      ublank,
+                                      fit
+                                      )
+
+
 
         db.commit()
 
@@ -190,9 +204,6 @@ class MassSpecDatabaseImporter(Loggable):
         for ti, vi in zip(t, v):
             blob += struct.pack('>ff', float(vi), float(ti))
         return blob
-
-
-
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

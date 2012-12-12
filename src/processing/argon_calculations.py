@@ -235,13 +235,14 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         except ZeroDivisionError:
             a39decayfactor = 1
 
+    #calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
-    #calculate interference corrections
 
     k37 = ufloat((0, 0))
+
     #iteratively calculate 37, 39
-    for _ in range(3):
+    for _ in range(5):
         ca37 = s37dec_cor - k37
         ca39 = ca3937 * ca37
         k39 = s39dec_cor - ca39
@@ -252,21 +253,20 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     ca38 = ca3837 * ca37
     ca39 = ca3937 * ca37
 
-    if constants.lambda_cl36.nominal_value < 0.1:
-        m = cl3638 * constants.lambda_cl36.nominal_value * decay_time
-    else:
-        m = cl3638
-
-    mcl = m / (m * constants.atm3836.nominal_value - 1)
-    correct_for_cl = True
-    if correct_for_cl:
-        cl36 = mcl * (constants.atm3836.nominal_value * (s36 - ca36) - s38 + k38 + ca38)
-    else:
-        cl36 = 0
-
-#    s36 = s36 * ic
-#    print s36
-    atm36 = s36 - ca36 - cl36
+    '''
+        McDougall and Harrison
+        Roddick 1983
+        Foland 1993
+        
+        iteratively calculate atm36
+    '''
+    m = cl3638 * constants.lambda_cl36.nominal_value * decay_time
+    atm36 = ufloat((0, 0))
+    for _ in range(5):
+        ar38atm = constants.atm3836.nominal_value * atm36
+        cl38 = s38 - ar38atm - k38 - ca38
+        cl36 = cl38 * m
+        atm36 = s36 - ca36 - cl36
 
     #calculate rodiogenic
     #dont include error in 40/36
@@ -274,36 +274,20 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
-    age_with_jerr=ufloat((0,0))
-    age_wo_jerr=ufloat((0,0))
+    age_with_jerr = ufloat((0, 0))
+    age_wo_jerr = ufloat((0, 0))
     try:
         R = ar40rad / k39
-#        R = ufloat((3.2181895, 0.0021006))
-#        print R.std_dev(), calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637)
-#        ssF = calculate_error_F((s40, s39, s38, s37, s36), R, k4039, ca3937, ca3637) ** 2
-#        ssJ = j.std_dev() ** 2
 
-#        JR = j * R
-#        print 'we', JR
         #dont include error in decay constant
-#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R)
         age = age_equation(j, R)
-#        print age.std_dev(), calculate_error_t(R.nominal_value, ssF, j.nominal_value, ssJ)
         age_with_jerr = deepcopy(age)
-#        age_with_jerr = ufloat((age.nominal_value, age.std_dev()))
-#        print 'we', aa, ae
 
-#        JR = j * R
-#        print 'wo', JR
-#        print R.nominal_value, R.std_dev()
         #dont include error in decay constant
         j.set_std_dev(0)
         age = age_equation(j, R)
-#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R)
         age_wo_jerr = deepcopy(age)
-#        age_wo_jerr = ufloat((age.nominal_value, age.std_dev()))
-#        aa, ae = age.nominal_value, age.std_dev()
-#        print 'wo', aa, ae
+
     except (ZeroDivisionError, ValueError):
         age = ufloat((0, 0))
         age_wo_jerr = ufloat((0, 0))

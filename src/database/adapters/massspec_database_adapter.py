@@ -24,7 +24,8 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
      IsotopeTable, AnalysesTable, ArArAnalysisTable, \
     IrradiationPositionTable, MaterialTable, SampleTable, ProjectTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
-    PreferencesTable, DatabaseVersionTable
+    PreferencesTable, DatabaseVersionTable, FittypeTable, \
+    BaselinesChangeableItemsTable
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.functions import add, get_one, delete_one, get_first
 from sqlalchemy.sql.expression import func
@@ -78,6 +79,20 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     @get_one
     def get_preferences_set(self, pid):
         return PreferencesTable, 'PreferenceSetID'
+
+    def get_fittype(self, label):
+        '''
+            convert label to mass spec format
+        '''
+        if isinstance(label, int):
+            pass
+        elif isinstance(label, str):
+            label = label.capitalize()
+
+        return self._get_fittype(label)
+    @get_one
+    def _get_fittype(self, label):
+        return FittypeTable, 'Label'
 #===============================================================================
 # adders
 #===============================================================================
@@ -129,12 +144,19 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         bs = BaselinesTable(PeakTimeBlob=blob,
                             Label=label,
                             NumCnts=cnts)
-
         if iso is not None:
             iso.baseline = bs
             return bs, True
 
         return bs, False
+
+    @add
+    def add_baseline_changeable_item(self, data_reduction_session, fit):
+        fit = self.get_fittype(fit)
+        bs = BaselinesChangeableItemsTable(Fit=fit.Fit,
+                                           DataReductionSessionID=data_reduction_session.DataReductionSessionID)
+
+        return bs, True
 
     @add
     def add_peaktimeblob(self, blob1, blob2, iso, **kw):
@@ -165,7 +187,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             #assume is a detector label e.i H1
             det = self.get_detector_type(det)
             if det is not None:
-                det = det.DetectorTypeID
+                det = det.detectors[-1]
 
         detector = self.get_detector(det)
         iso = IsotopeTable(Label=label,
@@ -176,22 +198,52 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             analysis.isotopes.append(iso)
         if detector is not None:
             detector.isotopes.append(iso)
+            iso.BkgdDetectorID = detector.DetectorID
 
         return iso, True
 
     @add
     def add_isotope_result(self, isotope, data_reduction_session,
-                           intercept, intercept_err
+                           intercept, baseline, blank,
+                           fit
+#                           intercept, intercept_err,
+#                           baseline, baseline_err,
+#                           blank, blank_err
                            ):
+        '''
+            intercept, baseline and blank should be ufloats
+            
+            mass spec does not propogate baseline error
+        '''
 
         isotope = self.get_isotope(isotope)
         data_reduction_session = self.get_data_reduction_session(data_reduction_session)
+
+        #in mass spec intercept is baseline corrected
+        #mass spec does not propogate baseline error
+        #convert baseline to scalar
+        baseline = baseline.nominal_value
+
+        intercept = intercept - baseline
+
+        #isotope is corrected for background (blank in pychron parlance)
+        isotope_value = intercept - blank
+
+        fit = self.get_fittype(fit)
+
         iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session.DataReductionSessionID,
-                                    Intercept=intercept,
-                                    InterceptEr=intercept_err,
-                                    Iso=intercept,
-                                    IsoEr=intercept_err,
-                                    BkgdDetTypeID=1
+                                    Intercept=intercept.nominal_value,
+                                    InterceptEr=intercept.std_dev(),
+
+                                    Iso=isotope_value.nominal_value,
+                                    IsoEr=isotope_value.std_dev(),
+
+                                    Bkgd=blank.nominal_value,
+                                    BkgdEr=blank.std_dev(),
+
+                                    BkgdDetTypeID=1,
+
+                                    Fit=fit.Fit
                                     )
         if isotope:
             isotope.results.append(iso_r)

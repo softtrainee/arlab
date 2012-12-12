@@ -39,7 +39,6 @@ class Series(Plotter):
         p.value_range.tight_bounds = False
 
         key = options.key
-        print key
         x, ys = zip(*[(ai.timestamp, self.get_value(ai, key)) for ai in analyses])
         y, es = zip(*ys)
         '''

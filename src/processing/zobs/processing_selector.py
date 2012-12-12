@@ -28,6 +28,9 @@ from src.viewable import Viewable
 from src.database.core.database_selector import ColumnSorterMixin
 from src.helpers.color_generators import colorname_generator, colornames
 from src.constants import NULL_STR
+import os
+from src.paths import paths
+from src.deprecate import deprecate_klass
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -108,13 +111,16 @@ class Marker(HasTraits):
     def __getattr__(self, attr):
         return ' '
 
+class StoredSelection(HasTraits):
+    analysis_ids = List
 
+@deprecate_klass()
 class ProcessingSelector(Viewable, ColumnSorterMixin):
+    db = Instance(DatabaseAdapter)
+    selector = DelegatesTo('db')
+
     selected_record_labels = Property(depends_on='selected_records')
     selected_records = List
-    db = Instance(DatabaseAdapter)
-
-    selector = DelegatesTo('db')
 
     append = Button
     replace = Button
@@ -133,7 +139,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     _graphed_by_labnumber = Bool(False)
 #    add_mean_marker = Button('Set Mean')
 
-    update_data = Event
+#    update_data = Event
 
     dclicked = Any
 
@@ -141,6 +147,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     selected = Any
     group_cnt = 0
     graph_cnt = 0
+
+    stored_selections = List(StoredSelection)
 
     def select_labnumber(self, ln):
         db = self.db
@@ -157,6 +165,25 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
             selector.load_records(rs.analyses)
             self.selected_records = selector.records
 
+    def opened(self):
+        self._load_stored_selections()
+
+    def close(self, isok):
+        if isok:
+            self._dump_stored_selections()
+
+    def _load_stored_selections(self):
+        p = os.path.join(paths.hidden_dir, 'stored_selections')
+        if os.path.isfile(p):
+            pass
+#        for si in os.listdir(p):
+#            if si.startswith('.'):
+#                continue
+#            ss = StoredSelection()
+#            ss
+
+
+
     def _load_selected_records(self):
         for r in self.selector.selected:
             if r not in self.selected_records:
@@ -164,10 +191,11 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
         self.selected_row = self.selected_records[-1]
 
-    def close(self, isok):
-        if isok:
-            self.update_data = True
-        return True
+
+#    def close(self, isok):
+#        if isok:
+#            self.update_data = True
+#        return True
 
     def _group_by_labnumber(self):
 
@@ -206,7 +234,6 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
             setattr(ri, attr, 0)
 
         self.selected_records = nri
-
 
 #===============================================================================
 # handlers
@@ -337,6 +364,10 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                               )
 
         selected_grp = VGroup(
+#                              Item('stored_selection', show_label=False,
+#                                   editor=EnumEditor(name='stored_selections')
+#                                   ),
+
                               Item('selected_records',
                                           show_label=False,
                                           style='custom',
@@ -386,6 +417,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # property get/set
 #===============================================================================
+
+
     def _get_projects(self):
         db = self.db
 #        db.reset()

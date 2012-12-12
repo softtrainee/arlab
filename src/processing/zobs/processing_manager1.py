@@ -28,10 +28,12 @@ from src.repo.repository import FTPRepository, Repository, SFTPRepository, \
 from src.processing.figures.figure import Figure
 from src.processing.database_manager import DatabaseManager
 from src.paths import paths
+from src.deprecate import deprecate_klass
 class ProcessingRepository(Repository):
     pass
 
 
+@deprecate_klass()
 class ProcessingManager(DatabaseManager):
     workspace_root = paths.workspace_root_dir
     workspace = None
