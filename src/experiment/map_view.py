@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, on_trait_change, Str, List
+from traits.api import HasTraits, Instance, on_trait_change, Str, List, Property
 from traitsui.api import View, Item, HGroup, VGroup, spring
 from src.lasers.stage_managers.stage_map import StageMap
 from src.graph.graph import Graph
@@ -81,6 +81,11 @@ class MapView(Viewable):
     holenumber = Str
 
     labnumbers = List
+    name=Property(depends_on='stage_map')
+    
+    def _get_name(self):
+        return self.stage_map.name
+    
     @on_trait_change('stage_map')
     def _build_map(self):
 #        xs = [1, 2, 3, 4]
