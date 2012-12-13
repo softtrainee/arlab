@@ -150,13 +150,11 @@ class ExperimentManager(Manager):
         self._update_aliquots()
 
     def check_for_mods(self):
-        try:
-            currenthash = hashlib.new(self._text).hexdigest()
-            with open(self.path, 'r') as f:
-                diskhash = hashlib.new(f.read()).hexdigest()
-            return currenthash != diskhash
-        except:
-            self.filelistener.stop()
+
+        currenthash = hashlib.sha1(self._text).hexdigest()
+        with open(self.path, 'r') as f:
+            diskhash = hashlib.sha1(f.read()).hexdigest()
+        return currenthash != diskhash
 
     def start_file_listener(self, path):
         fl = FileListener(
@@ -169,9 +167,8 @@ class ExperimentManager(Manager):
     def stop_file_listener(self):
         self.filelistener.stop()
 
-#    def opened(self):
-#        self.info_display.clear()
-#        self.start_file_listener()
+    def opened(self):
+        self.info_display.clear()
 
     def close(self, isok):
         if self.filelistener:
@@ -445,6 +442,12 @@ class ExperimentManager(Manager):
 #===============================================================================
 # handlers
 #===============================================================================
+#    def _experiment_set_changed(self):
+#        if self.filelistener:
+#            self.filelistener.stop()
+#
+#        path = self.experiment_set.path
+#        self.start_file_listener(path)
 #===============================================================================
 # views
 #===============================================================================

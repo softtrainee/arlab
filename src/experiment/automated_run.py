@@ -99,6 +99,7 @@ class AutomatedRun(Loggable):
 
     extract_device = Str
 
+    tray = Str
     position = CInt
     endposition = Int
     multiposition = Bool
@@ -1203,15 +1204,33 @@ class AutomatedRun(Loggable):
         for _di, iso in detectors:
             blanks.append(pb[iso])
 
+        #only add sample loading on the first analysis
+        self.massspec_importer.add_sample_loading(self.mass_spectrometer, self.tray)
+        self.massspec_importer.add_login_session(self.mass_spectrometer)
+        self.massspec_importer.add_data_reduction_session()
+
         self.massspec_importer.add_analysis(self.labnumber,
                                             self.aliquot,
                                             self.step,
                                             self.labnumber,
+
                                             baselines,
                                             signals,
                                             blanks,
                                             detectors,
-                                            self.regression_results
+                                            self.regression_results,
+
+                                            self.mass_spectrometer,
+                                            self.extract_device,
+                                            self.position,
+                                            self.extract_value, #power requested
+                                            self.extract_value, #power achieved,
+
+                                            self.duration, #total extraction
+                                            self.duration, #time at extract_value
+
+                                            self.cleanup, # first stage delay
+                                            0, #second stage delay
                                             )
 
 #===============================================================================

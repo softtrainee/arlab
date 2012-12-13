@@ -250,7 +250,8 @@ tray: {}
 
                 params['mass_spectrometer'] = self.mass_spectrometer
                 params['extract_device'] = self.extract_device
-
+                params['db'] = self.db
+                params['tray'] = self.tray
                 arun = self._automated_run_factory(**params)
                 aruns.append(arun)
 
