@@ -100,8 +100,7 @@ class ExperimentSet(BaseSchedule):
   post_measurement: {{}}'''.format(name)
             s = tmp.format(0, '', '', '', '')
             return s
-
-
+        
         s = '''mass_spectrometer: {}
 delay_before_analyses: {}
 delay_between_analyses: {}
@@ -115,7 +114,7 @@ tray: {}
            self.delay_before_analyses,
            self.delay_between_analyses,
            self.extract_device,
-           self.sample_map if self.sample_map else '',
+           self.tray if self.tray else '',
            make_frequency_runs('blanks'),
            make_frequency_runs('airs'),
            make_frequency_runs('cocktails'),
@@ -228,6 +227,8 @@ tray: {}
 
         default = lambda x: x if x else '---'
         default_int = lambda x: x if x is not None else 1
+        
+        self._set_meta_param('tray', meta, default)
         self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)

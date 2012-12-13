@@ -449,10 +449,18 @@ class IsotopeAdapter(DatabaseAdapter):
 #                                                                           ))
             return sam, False
         else:
+            if isinstance(project, str):
+                project=None
+
             if project is not None:
                 project.samples.append(sample)
+            
+            if isinstance(material, str):
+                material=None
+                
             if material is not None:
                 material.samples.append(sample)
+                
             self.info('adding sample {} project={}, material={}'.format(name,
                                                                         project.name if project else 'None',
                                                                         material.name if material else 'None',))

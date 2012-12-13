@@ -27,7 +27,7 @@ from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 #from src.monitors.pumping_monitor import PumpingMonitor
 #from src.helpers.paths import canvas2D_dir, scripts_dir, hidden_dir
 from src.paths import paths
-from src.scripts.extraction_line_script import ExtractionLineScript
+#from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
 from src.managers.manager import Manager
@@ -362,20 +362,20 @@ class ExtractionLineManager(Manager):
 
         return result, change
 
-    def execute_run_script(self, runscript_name):
-        runscript_dir = os.path.join(paths.scripts_dir, 'runscripts')
-        if self.runscript is None:
-            e = ExtractionLineScript(source_dir=runscript_dir ,
-                                     file_name=runscript_name,
-                                     manager=self,
-
-                                     )
-
-            e.bootstrap()
-        elif self.runscript.isAlive():
-            self.warning('{} already running'.format(runscript_name))
-        else:
-            self.runscript = None
+#    def execute_run_script(self, runscript_name):
+#        runscript_dir = os.path.join(paths.scripts_dir, 'runscripts')
+#        if self.runscript is None:
+#            e = ExtractionLineScript(source_dir=runscript_dir ,
+#                                     file_name=runscript_name,
+#                                     manager=self,
+#
+#                                     )
+#
+#            e.bootstrap()
+#        elif self.runscript.isAlive():
+#            self.warning('{} already running'.format(runscript_name))
+#        else:
+#            self.runscript = None
 
     def execute_pyscript(self, name):
         if not name.endswith('.py'):

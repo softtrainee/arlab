@@ -167,7 +167,7 @@ class MassSpecDatabaseImporter(Loggable):
                                      password='Argon',
                                      name='massspecdata_import'
                                      )
-        db.connect()
+#        db.connect()
 
         return db
 
