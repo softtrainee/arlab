@@ -267,7 +267,11 @@ class InitializationParser(XMLParser):
 #                if p.text.strip() == name:
 #                    return p
         else:
-            iterator = lambda: tree.find(category).findall(tag)
+            cat = tree.find(category)
+            if cat:
+                iterator = lambda: cat.findall(tag)
+            else:
+                iterator = lambda: ''
 #            for plugin in cat.findall(tag):
 #                if plugin.text.strip() == name:
 #                    return plugin

@@ -24,7 +24,8 @@ import os
 from threading import Thread, Condition
 #============= local library imports  ==========================
 from src.paths import paths
-from src.scripts.wait_dialog import WaitDialog
+from src.pyscripts.wait_dialog import WaitDialog
+
 
 
 class PulseHandler(Handler):

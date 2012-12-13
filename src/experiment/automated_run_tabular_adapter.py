@@ -70,7 +70,7 @@ class AutomatedRunAdapter(TabularAdapter):
     overlap_text = Property
     aliquot_text = Property
 
-    can_edit = False
+#    can_edit = False
 #    position_can_edit = True
 #    duration_can_edit = True
 #    extract_value_can_edit = True
@@ -119,6 +119,9 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Post Measurement', 'post_measurement_script'),
                  ]
 
+    def _set_extract_value_text(self, value):
+#        setattr(self.item, 'extract_value', value)
+        self._set_float('extract_value', value)
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
 
@@ -132,17 +135,31 @@ class AutomatedRunAdapter(TabularAdapter):
 #            return '{:0.2f},{}'.format(*self.item.extract_value)
 #        else:
 #            return ''
-    def _get_aliquot_text(self, trait, item):
-        return '{}{}'.format(self.item.aliquot, self.item.step)
+
+
+    def _set_duration_text(self, value):
+#        setattr(self.item, 'duration', value)
+        self._set_int('duration', value)
 
     def _get_duration_text(self, trait, item):
         return self._get_number('duration')
 
+    def _set_cleanup_text(self, value):
+        self._set_int('cleanup', value)
+#        setattr(self.item, 'cleanup', value)
+
     def _get_cleanup_text(self, trait, item):
         return self._get_number('cleanup')
 
+    def _set_overlap_text(self, value):
+        self._set_int('overlap', value)
+#        setattr(self.item, 'overlap', value)
+
     def _get_overlap_text(self, trait, item):
         return self._get_number('overlap')
+
+    def _set_position_text(self, value):
+        self._set_int('position', value)
 
     def _get_position_text(self, trait, item):
         return self._get_number('position')
@@ -157,8 +174,46 @@ class AutomatedRunAdapter(TabularAdapter):
         else:
             return ''
 
+    def _set_float(self, attr, value):
+        try:
+            setattr(self.item, attr, float(value))
+        except Exception:
+            pass
+
+    def _set_int(self, attr, value):
+        try:
+            setattr(self.item, attr, int(value))
+        except Exception:
+            pass
+    def _set_autocenter_text(self, value):
+        value = value.lower()
+        if value in ['yes', 'y', 'x']:
+            self.item.autocenter = True
+        else:
+            self.item.autocenter = False
+
     def _get_autocenter_text(self, trait, item):
         return 'yes' if self.item.autocenter else ''
+
+#===============================================================================
+# nonsettable
+#===============================================================================
+    def _get_aliquot_text(self, trait, item):
+        return '{}{}'.format(self.item.aliquot, self.item.step)
+
+    def _set_aliquot_text(self, value):
+        pass
+    def _set_extraction_script_text(self, *args, **kw):
+        pass
+
+    def _set_measurement_script_text(self, *args, **kw):
+        pass
+
+    def _set_post_extraction_script_text(self, *args, **kw):
+        pass
+
+    def _set_post_equilibration_script_text(self, *args, **kw):
+        pass
 
     @get_name
     def _get_extraction_script_text(self, trait, item):

@@ -84,7 +84,8 @@ class OpenExperimentSetAction(Action):
         '''
         '''
         manager = get_editor(event)
-        if manager.load_experiment_set(set_names=True):
+#        if manager.load_experiment_set(set_names=True):
+        if manager.load_experiment_set():
             open_manager(event.window.application, manager)
 #class EnableableAction(Action):
 #

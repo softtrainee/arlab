@@ -86,8 +86,11 @@ class SelectedView(ColumnSorterMixin):
                 if si.startswith('.'):
                     continue
                 with open(os.path.join(p, si), 'r') as fp:
-                    ss = pickle.load(fp)
-                    ps.append(ss)
+                    try:
+                        ss = pickle.load(fp)
+                        ps.append(ss)
+                    except Exception:
+                        pass
 
         self.previous_selections = ps
 
@@ -96,16 +99,15 @@ class SelectedView(ColumnSorterMixin):
         if not records:
             return
 
-        ans = [ai.dbrecord.id  for ai in records]
+#        ans = [ai.dbrecord.id  for ai in records]
 
         s = records[0]
         e = records[-1]
 
         name = '{} - {}'.format(s.record_id, e.record_id)
 
-        ps = PreviousSelection(analysis_ids=ans,
-                               name=name
-                               )
+        records = filter(lambda ri:not isinstance(ri, Marker), records)
+        ps = PreviousSelection(records, name=name)
         p = os.path.join(paths.hidden_dir, 'stored_selections')
         if not os.path.isdir(p):
             os.mkdir(p)
@@ -128,19 +130,21 @@ class SelectedView(ColumnSorterMixin):
         keys = sorted(groups.keys())
         return keys
 
-    def _set_grouping(self, attr, keys):
+    def _set_grouping(self, attr, keys=None):
         pid = 0
         inserts = []
         for i, ri in enumerate(self.selected_records):
             if isinstance(ri, Marker):
                 continue
+            if keys:
+                setattr(ri, attr, keys.index(ri.labnumber))
 
-            setattr(ri, attr, keys.index(ri.labnumber))
-#            ri.group_id = keys.index(ri.labnumber)
             if getattr(ri, attr) != pid:
                 inserts.append(i)
                 pid = getattr(ri, attr)
+        self._set_markers(inserts)
 
+    def _set_markers(self, inserts):
         for i, ii in enumerate(inserts):
             if not isinstance(self.selected_records[ii + i - 1], Marker):
                 self.selected_records.insert(ii + i, Marker())
@@ -158,9 +162,19 @@ class SelectedView(ColumnSorterMixin):
 #===============================================================================
     def _previous_selection_changed(self):
         db = self.selector.db
-        ps = [IsotopeRecord(_dbrecord=db.get_analysis_record(si))
+        def func(pi):
+            iso = IsotopeRecord(_dbrecord=db.get_analysis_record(pi.record_id),
+                          graph_id=pi.graph_id,
+                          group_id=pi.group_id
+                          )
+            return iso
+
+        ps = [func(si)
               for si in self.previous_selection.analysis_ids]
+
         self.selected_records = ps
+        self._set_grouping('graph_id')
+        self._set_grouping('group_id')
 
     def _dclicked_changed(self):
         self.selector.open_record(self.selected)

@@ -15,13 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str
+from traits.api import HasTraits, List, Str, Int, Long
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class TempAnalysis(HasTraits):
+    record_id = Long
+    group_id = Int
+    graph_id = Int
+
 class PreviousSelection(HasTraits):
-    analysis_ids = List
+    analysis_ids = List(TempAnalysis)
     name = Str
+    def __init__(self, records, **kw):
+        super(PreviousSelection, self).__init__(**kw)
+
+        ps = []
+        for ai in records:
+            ps.append(TempAnalysis(record_id=ai._dbrecord.id,
+                                   group_id=ai.group_id,
+                                   graph_id=ai.graph_id
+                                   ))
+
+        self.analysis_ids = ps
+
     def __repr__(self):
         return self.name
 

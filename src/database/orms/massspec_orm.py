@@ -23,6 +23,7 @@ from sqlalchemy import Column, Integer, Float, String, \
      ForeignKey, DateTime, Date, BLOB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation, relationship
+from sqlalchemy.sql.expression import func
 
 #=============local library imports  ==========================
 Base = declarative_base()
@@ -39,6 +40,14 @@ class AnalysesChangeableItemsTable(Base):
     SignalNormalizationFactor = Column(Float, default=1)
     PreferencesSetID = Column(Integer, ForeignKey('PreferencesTable.PreferencesSetID'))
 
+class AnalysisPositionTable(Base):
+    __tablename__ = 'AnalysisPositionTable'
+    PositionID = Column(Integer, primary_key=True)
+    AnalysisID = Column(Integer, ForeignKey('AnalysesTable.AnalysisID'))
+    PositionOrder = Column(Integer, default=1)
+    Hole = Column(Integer)
+    X = Column(Float(32), default=0)
+    Y = Column(Float(32))
 
 class AnalysesTable(Base):
     '''
@@ -51,14 +60,25 @@ class AnalysesTable(Base):
     Aliquot = Column(Integer)
     Increment = Column(String(20))
     SpecParametersID = Column(Integer, default=0)
+
+    HeatingItemName = Column(String(80))
+    FinalSetPwr = Column(Float, default=0)
     PwrAchievedSD = Column(Float, default=0)
     PwrAchieved_Max = Column(Float, default=0)
+    TotDurHeating = Column(Integer)
+    TotDurHeatingAtReqPwr = Column(Integer)
+
+    FirstStageDly = Column(Integer)
+    SecondStageDly = Column(Integer)
+
     DetInterCalibID = Column(Integer, default=0)
     AssociatedProjectID = Column(Integer, default=0)
     TrapCurrent = Column(Float, default=0)
     ManifoldOpt = Column(Integer, default=0)
     OriginalImportID = Column(String(1), default=0)
     RedundantSampleID = Column(Integer, ForeignKey('SampleTable.SampleID'))
+
+    SampleLoadingID = Column(Integer, ForeignKey('sampleloadingtable.SampleLoadingID'))
     ChangeableItemsID = Column(Integer, default=0)
 
     RunDateTime = Column(DateTime)
@@ -71,7 +91,7 @@ class AnalysesTable(Base):
     changeable = relationship('AnalysesChangeableItemsTable',
                               backref='AnalysesTable',
                               )
-
+    positions = relationship('AnalysisPositionTable')
 
 class ArArAnalysisTable(Base):
     '''
@@ -107,6 +127,7 @@ class BaselinesChangeableItemsTable(Base):
 #    BslnID = Column(Integer, ForeignKey('baselinestable.BslnID'), primary_key=True)
     Fit = Column(Integer, ForeignKey('fittypetable.Fit'))
     DataReductionSessionID = Column(Integer)
+    InfoBlob = Column(BLOB)
 
 class BaselinesTable(Base):
     '''
@@ -130,7 +151,6 @@ class DataReductionSessionTable(Base):
     DataReductionSessionID = Column(Integer, primary_key=True)
     SessionDate = Column(DateTime)
     changeable_items = relationship('AnalysesChangeableItemsTable')
-
 
 
 class DetectorTable(Base):
@@ -366,3 +386,12 @@ class SampleTable(Base):
     irradpositions = relationship('IrradiationPositionTable', backref='sample')
     analyses = relation('AnalysesTable', backref='sample')
 
+
+class SampleLoadingTable(Base):
+    __tablename__ = 'sampleloadingtable'
+    SampleLoadingID = Column(Integer, primary_key=True)
+    SampleHolder = Column(String(40))
+    SpecSysN = Column(Integer)
+    LoadingDate = Column(DateTime, default=func.now())
+
+    analyses = relationship('AnalysesTable', backref='sample_loading')

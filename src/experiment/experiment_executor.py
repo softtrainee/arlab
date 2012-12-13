@@ -113,9 +113,10 @@ class ExperimentExecutor(ExperimentManager):
         return '{}\n{}'.format(self.path, self._text)
 
     def opened(self):
-        self.info_display.clear()
+#        self.info_display.clear()
         self._was_executed = False
         self.stats.reset()
+        super(ExperimentExecutor, self).opened()
 
     def _get_all_automated_runs(self):
         ans = super(ExperimentExecutor, self)._get_all_automated_runs()

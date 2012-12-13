@@ -25,7 +25,8 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
     IrradiationPositionTable, MaterialTable, SampleTable, ProjectTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
     PreferencesTable, DatabaseVersionTable, FittypeTable, \
-    BaselinesChangeableItemsTable
+    BaselinesChangeableItemsTable, SampleLoadingTable, MachineTable, \
+    AnalysisPositionTable, LoginSessionTable
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.functions import add, get_one, delete_one, get_first
 from sqlalchemy.sql.expression import func
@@ -80,6 +81,10 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_preferences_set(self, pid):
         return PreferencesTable, 'PreferenceSetID'
 
+    @get_one
+    def get_system(self, name):
+        return MachineTable, 'Label'
+
     def get_fittype(self, label):
         '''
             convert label to mass spec format
@@ -96,6 +101,34 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #===============================================================================
 # adders
 #===============================================================================
+    @add
+    def add_sample_loading(self, ms, tray):
+
+        if isinstance(ms, str):
+            ms = ms.capitalize()
+            system = self.get_system(ms)
+            ms = system.SpecSysN
+
+        sm = SampleLoadingTable(SampleHolder=tray,
+                                SpecSysN=ms
+                                )
+        return sm, True
+
+    def add_analysis_positions(self, analysis, positions):
+        if not isinstance(positions, list):
+            positions = [positions]
+
+        analysis = self.get_analysis(analysis)
+        if analysis:
+            for i, pi in enumerate(positions):
+                self._add_analysis_position(analysis, pi, i + 1)
+
+    @add
+    def _add_analysis_position(self, analysis, pi, po):
+        a = AnalysisPositionTable(Hole=pi, PositionOrder=po)
+        analysis.positions.append(a)
+        return a, True
+
     @add
     def add_analysis(self, rid, aliquot, step, irradpos, runtype, **kw):
         '''
@@ -118,6 +151,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                          SpecRunType=runtype,
                          Increment=step
                          )
+
             #IrradPosition cannot be null
             if irradpos is not None:
                 ip = irradpos.IrradPosition
@@ -128,6 +162,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
             params['RedundantSampleID'] = sa
             params['IrradPosition'] = ip
+            params.update(kw)
             analysis = AnalysesTable(**params)
 
 #            sample = self.get_sample(sample)
@@ -151,10 +186,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return bs, False
 
     @add
-    def add_baseline_changeable_item(self, data_reduction_session, fit):
+    def add_baseline_changeable_item(self, data_reduction_session, fit, infoblob):
         fit = self.get_fittype(fit)
         bs = BaselinesChangeableItemsTable(Fit=fit.Fit,
-                                           DataReductionSessionID=data_reduction_session.DataReductionSessionID)
+                                           DataReductionSessionID=data_reduction_session.DataReductionSessionID,
+                                           InfoBlob=infoblob
+                                           )
 
         return bs, True
 
@@ -250,11 +287,23 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             return iso_r, True
 
         return iso_r, False
+
     @add
     def add_data_reduction_session(self):
         drs = DataReductionSessionTable(
                                    SessionDate=func.current_timestamp()
                                    )
+        return drs, True
+
+    @add
+    def add_login_session(self, ms):
+
+        if isinstance(ms, str):
+            ms = ms.capitalize()
+            system = self.get_system(ms)
+            ms = system.SpecSysN
+
+        drs = LoginSessionTable(SpecSysN=ms)
         return drs, True
 
     @add

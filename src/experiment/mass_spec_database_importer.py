@@ -34,6 +34,7 @@ from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdap
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
+from src.experiment.info_blob import encode_infoblob
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 
@@ -52,28 +53,55 @@ DEBUG = True
 class MassSpecDatabaseImporter(Loggable):
     db = Instance(MassSpecDatabaseAdapter)
     test = Button
+    sample_loading = None
+    data_reduction_session = None
+    login_session = None
     def _test_fired(self):
         import numpy as np
 
         xbase = np.linspace(430, 580, 150)
-        ybase = np.random.random(150)
-        base = [zip(xbase, ybase), zip(xbase, ybase)]
+        ybase = np.zeros(150)
+        cddybase = np.zeros(150)
+#        ybase = np.random.random(150)
+#        cddybase = np.random.random(150) * 0.001
+        base = [zip(xbase, ybase),
+                zip(xbase, ybase),
+                zip(xbase, ybase),
+                zip(xbase, ybase),
+                zip(xbase, cddybase),
+                ]
 
         xsig = np.linspace(20, 420, 410)
-        m = -0.5
-        b = 600
-        ysig = m * xsig + b
-        sig = [zip(xsig, ysig), zip(xsig, ysig - 100)]
+        y40 = np.ones(410) * 680
+        y39 = np.ones(410) * 107
+        y38 = np.zeros(410) * 1.36
+        y37 = np.zeros(410) * 0.5
+        y36 = np.ones(410) * 0.001
+
+        sig = [zip(xsig, y40),
+               zip(xsig, y39),
+               zip(xsig, y38),
+               zip(xsig, y37),
+               zip(xsig, y36),
+
+               ]
 
 
         regbs = MeanRegressor(xs=xbase, ys=ybase)
-        reg = PolynomialRegressor(xs=xsig, ys=ysig, fit='linear')
+        cddregbs = MeanRegressor(xs=xbase, ys=cddybase)
+        reg = PolynomialRegressor(xs=xsig, ys=y40, fit='linear')
 
-        reg1 = PolynomialRegressor(xs=xsig, ys=ysig - 100, fit='linear')
+        reg1 = PolynomialRegressor(xs=xsig, ys=y39, fit='linear')
+        reg2 = PolynomialRegressor(xs=xsig, ys=y38, fit='linear')
+        reg3 = PolynomialRegressor(xs=xsig, ys=y37, fit='linear')
+        reg4 = PolynomialRegressor(xs=xsig, ys=y36, fit='linear')
 
         keys = [
                 ('H1', 'Ar40'),
                 ('AX', 'Ar39'),
+                ('L1', 'Ar38'),
+                ('L2', 'Ar37'),
+                ('CDD', 'Ar36'),
 
                 ]
 
@@ -81,13 +109,52 @@ class MassSpecDatabaseImporter(Loggable):
                           H1=reg,
                           H1bs=regbs,
                           AX=reg1,
-                          AXbs=regbs
+                          AXbs=regbs,
+                          L1=reg2,
+                          L1bs=regbs,
+                          L2=reg3,
+                          L2bs=regbs,
+                          CDD=reg4,
+                          CDDbs=cddregbs
                           )
-        blanks = [ufloat((1, 0.1)), ufloat((Ar39=(0.1, 0.001))]
-        self.add_analysis('4318', '12', '', '4318',
+        blanks = [ufloat((1, 0.1)),
+                  ufloat((0.1, 0.001)),
+                  ufloat((0.01, 0.001)),
+                  ufloat((0.01, 0.001)),
+                  ufloat((0.00001, 0.0001)),
+
+                  ]
+
+        mass_spectrometer = 'obama'
+        extract_device = 'Laser Furnace'
+        extract_value = 10
+        position = 1
+        duration = 10
+        first_stage_delay = 0
+        second_stage_delay = 30
+        tray = '100-hole'
+
+        self.add_login_session(mass_spectrometer)
+        self.add_data_reduction_session()
+        self.add_sample_loading(mass_spectrometer, tray)
+
+        self.add_analysis('4318', '30', '', '4318',
                           base, sig, blanks,
                           keys,
-                          regresults)
+                          regresults,
+
+                          mass_spectrometer,
+                          extract_device,
+                          position,
+                          extract_value, #power requested
+                          extract_value, #power achieved
+
+                          duration, #total extraction
+                          duration, #time at extract_value
+
+                          first_stage_delay,
+                          second_stage_delay
+                          )
 
     def traits_view(self):
         v = View(Item('test', show_label=False))
@@ -104,9 +171,38 @@ class MassSpecDatabaseImporter(Loggable):
 
         return db
 
+    def add_sample_loading(self, ms, tray):
+        if self.sample_loading is None:
+            db = self.db
+            self.sample_loading = db.add_sample_loading(ms, tray)
+            db.flush()
+
+    def add_login_session(self, ms):
+        if self.login_session is None:
+            db = self.db
+            self.login_session = db.add_login_session(ms)
+            db.flush()
+
+    def add_data_reduction_session(self):
+        if self.data_reduction_session is None:
+            db = self.db
+            self.data_reduction_session = db.add_data_reduction_session()
+            db.flush()
+
     def add_analysis(self, rid, aliquot, step, irradpos,
                      baselines, signals, blanks, keys,
-                     regression_results):
+                     regression_results,
+
+                     spectrometer,
+                     heating_device_name,
+                     position,
+                     power_requested,
+                     power_achieved,
+                     duration,
+                     duration_at_request,
+                     first_stage_delay,
+                     second_stage_delay
+                     ):
         '''
             
         '''
@@ -123,20 +219,37 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         # add analysis
         #=======================================================================
+        #save spectrometer, cleanup, position, heating device
+
         analysis = db.add_analysis(rid,
                                    aliquot,
                                    step,
                                    irradpos,
-                                   RUN_TYPE_DICT[runtype])
-        #=======================================================================
-        # add data reduction session
-        #=======================================================================
-        drs = db.add_data_reduction_session()
+                                   RUN_TYPE_DICT[runtype],
+
+                                   HeatingItemName=heating_device_name,
+                                   PwrAchieved_Max=power_achieved,
+                                   PwrAchievedSD=0,
+                                   FinalSetPwr=power_requested,
+                                   TotDurHeating=duration,
+                                   TotDurHeatingAtReqPwr=duration_at_request,
+                                   FirstStageDly=first_stage_delay,
+                                   SecondStageDly=second_stage_delay
+                                   )
+        if self.sample_loading:
+            self.sample_loading.analyses.append(analysis)
+
+        if self.login_session:
+            self.login_session.analyses.append(analysis)
+
+        db.add_analysis_positions(analysis, position)
+#        drs = db.add_data_reduction_session()
+
         #=======================================================================
         # add changeable items
         #=======================================================================
 
-        item = db.add_changeable_items(analysis, drs, commit=True)
+        item = db.add_changeable_items(analysis, self.data_reduction_session, commit=True)
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
         add_results = True
@@ -154,8 +267,13 @@ class MassSpecDatabaseImporter(Loggable):
             label = '{} Baseline'.format(det.upper())
             ncnts = len(tb)
             db.add_baseline(blob, label, ncnts, iso)
-            db.add_baseline_changeable_item(drs, 'Average Y')
-            baseline = array(vb).mean()
+
+#            baseline = array(vb).mean()
+            baseline = regression_results['{}bs'.format(det)].coefficients[-1]
+            baseline_err = regression_results['{}bs'.format(det)].coefficient_errors[-1]
+
+            infoblob = self._make_infoblob(baseline, baseline_err)
+            db.add_baseline_changeable_item(self.data_reduction_session, 'Average Y', infoblob)
             #===================================================================
             # peak time
             #===================================================================
@@ -180,15 +298,12 @@ class MassSpecDatabaseImporter(Loggable):
                 ierr = regression_results[det].coefficient_errors[-1]
                 fit = regression_results[det].fit
 
-                b = regression_results['{}bs'.format(det)].coefficients[-1]
-                berr = regression_results['{}bs'.format(det)].coefficient_errors[-1]
-
                 #in mass spec the intercept is alreay baseline corrected
                 #mass spec also doesnt propograte baseline errors
 
-                db.add_isotope_result(iso, drs,
+                db.add_isotope_result(iso, self.data_reduction_session,
                                       ufloat((i, ierr)),
-                                      ufloat((b, berr)),
+                                      ufloat((baseline, baseline_err)),
                                       ublank,
                                       fit
                                       )
@@ -204,6 +319,14 @@ class MassSpecDatabaseImporter(Loggable):
         for ti, vi in zip(t, v):
             blob += struct.pack('>ff', float(vi), float(ti))
         return blob
+
+    def _make_infoblob(self, baseline, baseline_err):
+        rpts = 0
+        pos_segments = []
+        bs_segments = [1.0000000200408773e+20]
+        bs_seg_params = [[baseline, 0, 0, 0]]
+        bs_seg_errs = [baseline_err]
+        return encode_infoblob(rpts, pos_segments, bs_segments, bs_seg_params, bs_seg_errs)
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

@@ -144,6 +144,9 @@ class IsotopeRecord(DatabaseRecord):
 #    filter_outliers = False
 #    def _age_dirty_fired(self):
 #        self._signals = dict()
+    def initialize(self):
+        self.load()
+        return True
 
     def save(self):
         fit_hist = None
