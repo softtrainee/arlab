@@ -270,16 +270,18 @@ class PyScript(Loggable):
             name += '.py'
 
         if root is None:
-
+            d = None
             if '/' in name:
                 d = '/'
             elif ':' in name:
                 d = ':'
 
-            dirs = name.split(d)
-            name = dirs[0]
-            for di in dirs[1:]:
-                name = os.path.join(name, di)
+            if d:
+                dirs = name.split(d)
+                name = dirs[0]
+                for di in dirs[1:]:
+                    name = os.path.join(name, di)
+
             root = self.root
 
         p = os.path.join(root, name)
@@ -459,19 +461,10 @@ class PyScript(Loggable):
         self.syntax_checked = True
         self._syntax_checking = False
 
-    def _execute(self):
-
-        if not self._text:
-            return 'No script text'
-
-        self._cancel = False
-        self._completed = False
-        self._truncate = False
+    def execute_snippet(self, snippet):
         safe_dict = self.get_context()
-
-#        safe_dict['isblank'] = False
         try:
-            code = compile(self._text, '<string>', 'exec')
+            code = compile(snippet, '<string>', 'exec')
             exec code in safe_dict
             safe_dict['main']()
         except KeyError:
@@ -483,6 +476,20 @@ class PyScript(Loggable):
 #            self.warning_dialog(str(e))
             return e
 #            return  traceback.format_exc()
+
+    def _execute(self):
+
+        if not self._text:
+            return 'No script text'
+
+        self._cancel = False
+        self._completed = False
+        self._truncate = False
+
+#        safe_dict['isblank'] = False
+        error = self.execute_snippet(self._text)
+        if error:
+            return error
 
         if self._syntax_checking:
             return

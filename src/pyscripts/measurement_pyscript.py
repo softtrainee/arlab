@@ -70,13 +70,14 @@ class AutomatedRun(HasTraits):
 
 class MeasurementPyScript(ValvePyScript):
     automated_run = Any
+    ncounts = 0
+
     _time_zero = None
 
     _series_count = 0
     _regress_id = 0
 
     _detectors = None
-
     _use_abbreviated_counts = False
 #    def __init__(self, *args, **kw):
 #        super(MeasurementPyScript, self).__init__(*args, **kw)
@@ -104,6 +105,11 @@ class MeasurementPyScript(ValvePyScript):
                  'set_source_parameters',
                  'set_source_optics',
 
+                 'set_ncounts',
+                 'add_termination',
+                 'add_truncation',
+                 'add_action',
+
                  'get_intensity'
                  ]
 
@@ -111,38 +117,17 @@ class MeasurementPyScript(ValvePyScript):
         return cmds
 
     def get_variables(self):
-#        return ['detectors']
-        return []
+        return ['truncated']
 
 #===============================================================================
 # commands
 #===============================================================================    
-    @verbose_skip
-    def get_intensity(self, name):
-        if self._detectors:
-            try:
-                return self._detectors[name]
-            except KeyError:
-                pass
-
-    @verbose_skip
-    def equilibrate(self, eqtime=20, inlet=None, outlet=None):
-        evt = self._automated_run_call('do_equilibration', eqtime=eqtime,
-                                        inlet=inlet,
-                                        outlet=outlet
-                                        )
-        if not evt:
-            self.cancel()
-        else:
-            #wait for inlet to open
-            evt.wait()
-
     @count_verbose_skip
     def sniff(self, ncounts=0, calc_time=False, integration_time=1):
         if calc_time:
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
             return
-
+        self.ncounts = ncounts
         if not self._automated_run_call('do_sniff', ncounts,
                            self._time_zero,
                            series=self._series_count):
@@ -150,34 +135,19 @@ class MeasurementPyScript(ValvePyScript):
             self.cancel()
         self._series_count += 1
 
-    @verbose_skip
-    def regress(self, *fits):
-        if not fits:
-            fits = 'linear'
-
-        self._automated_run_call('set_regress_fits', fits)
-
     @count_verbose_skip
     def multicollect(self, ncounts=200, integration_time=1, calc_time=False):
         if calc_time:
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
             return
 
+        self.ncounts = ncounts
         if not self._automated_run_call('do_data_collection', ncounts, self._time_zero,
                       series=self._series_count):
             self.cancel()
 
 #        self._regress_id = self._series_count
         self._series_count += 4
-
-    @verbose_skip
-    def activate_detectors(self, *dets):
-
-        if dets:
-            self._detectors = dict()
-            self._automated_run_call('activate_detectors', list(dets))
-            for di in list(dets):
-                self._detectors[di] = 0
 
     @count_verbose_skip
     def baselines(self, counts=1, cycles=5, mass=None, detector='', calc_time=False):
@@ -196,6 +166,7 @@ class MeasurementPyScript(ValvePyScript):
         if self._use_abbreviated_counts:
             counts *= 0.25
 
+        self.ncounts = counts
         if not self._automated_run_call('do_baselines', counts, self._time_zero,
                                mass,
                                detector,
@@ -226,6 +197,42 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('do_peak_center', detector=detector, isotope=isotope)
 
     @verbose_skip
+    def get_intensity(self, name):
+        if self._detectors:
+            try:
+                return self._detectors[name]
+            except KeyError:
+                pass
+
+    @verbose_skip
+    def equilibrate(self, eqtime=20, inlet=None, outlet=None):
+        evt = self._automated_run_call('do_equilibration', eqtime=eqtime,
+                                        inlet=inlet,
+                                        outlet=outlet
+                                        )
+        if not evt:
+            self.cancel()
+        else:
+            #wait for inlet to open
+            evt.wait()
+
+    @verbose_skip
+    def regress(self, *fits):
+        if not fits:
+            fits = 'linear'
+
+        self._automated_run_call('set_regress_fits', fits)
+
+    @verbose_skip
+    def activate_detectors(self, *dets):
+
+        if dets:
+            self._detectors = dict()
+            self._automated_run_call('activate_detectors', list(dets))
+            for di in list(dets):
+                self._detectors[di] = 0
+
+    @verbose_skip
     def position(self, pos, detector='AX', dac=False):
         '''
             position(4.54312, dac=True) # detector is not relevant
@@ -239,10 +246,16 @@ class MeasurementPyScript(ValvePyScript):
     def coincidence(self):
         self._automated_run_call('do_coincidence_scan')
 
-    def _automated_run_call(self, funcname, *args, **kw):
+#===============================================================================
+# 
+#===============================================================================
+    def _automated_run_call(self, func, *args, **kw):
         if self.automated_run is None:
             return
-        func = getattr(self.automated_run, funcname)
+
+        if isinstance(func, str):
+            func = getattr(self.automated_run, func)
+
         return func(*args, **kw)
 
     def _set_spectrometer_parameter(self, *args, **kw):
@@ -251,6 +264,45 @@ class MeasurementPyScript(ValvePyScript):
 #===============================================================================
 # set commands
 #===============================================================================
+    @verbose_skip
+    def add_termination(self, attr, comp, value, start_count=0, frequency=10):
+        self._automated_run_call('add_termination', attr, comp, value,
+                                 start_count=start_count,
+                                 frequency=frequency
+                                 )
+    @verbose_skip
+    def add_truncation(self, attr, comp, value, start_count=0, frequency=10):
+        self._automated_run_call('add_truncation', attr, comp, value,
+                                 start_count=start_count,
+                                 frequency=frequency
+                                 )
+
+    def add_action(self, attr, comp, value, start_count=0, frequency=10,
+                   action=None,
+                   resume=False
+                   ):
+        if self._syntax_checking:
+            if isinstance(action, str):
+                self.execute_snippet(action)
+        self._add_action(attr, comp, value, start_count, frequency, action, resume)
+
+    @verbose_skip
+    def _add_action(self, attr, comp, value, start_count, frequency, action, resume):
+        self._automated_run_call('add_action', attr, comp, value,
+                                 start_count=start_count,
+                                 frequency=frequency,
+                                 action=action,
+                                 resume=resume
+                                 )
+
+    @verbose_skip
+    def set_ncounts(self, ncounts=0):
+        try:
+            ncounts = int(ncounts)
+            self.ncounts = ncounts
+        except Exception, e:
+            print 'set_ncounts', e
+
     @verbose_skip
     def set_time_zero(self):
         self._time_zero = time.time()
@@ -338,6 +390,10 @@ class MeasurementPyScript(ValvePyScript):
         config.read(p)
 
         return config
+
+    @property
+    def truncated(self):
+        return self._automated_run_call(lambda:self.automated_run.truncated)
 
 #    def _get_detectors(self):
 #        return self._detectors

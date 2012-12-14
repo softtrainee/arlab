@@ -143,8 +143,10 @@ class Ideogram(Plotter):
 
         ages, errors = self._get_ages(analyses)
         def get_ages_errors(group_id):
-            nages = [a.age[0] for a in analyses if a.group_id == group_id]
-            nerrors = [a.age[1] for a in analyses if a.group_id == group_id]
+#            nages = [a.age[0] for a in analyses if a.group_id == group_id]
+#            nerrors = [a.age[1] for a in analyses if a.group_id == group_id]
+
+            nages, nerrors = zip(*[(a.nominal_value, a.std_dev()) for a in analyses if a.group_id == group_id])
             aa = array(nages)
             ee = array(nerrors)
             return aa, ee
@@ -612,7 +614,10 @@ class Ideogram(Plotter):
         return ustr
 
     def _get_ages(self, analyses):
-        ages, errors = zip(*[a.age for a in analyses if a.age[0] is not None])
+        ages, errors = zip(*[(a.age.nominal_value,
+                              a.age.std_dev())
+                               for a in analyses
+                                    if a.age is not None])
         ages = asarray(ages)
         errors = asarray(errors)
         return ages, errors

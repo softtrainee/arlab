@@ -152,9 +152,10 @@ class ExperimentManager(Manager):
     def check_for_mods(self):
 
         currenthash = hashlib.sha1(self._text).hexdigest()
-        with open(self.path, 'r') as f:
-            diskhash = hashlib.sha1(f.read()).hexdigest()
-        return currenthash != diskhash
+        if self.path:
+            with open(self.path, 'r') as f:
+                diskhash = hashlib.sha1(f.read()).hexdigest()
+            return currenthash != diskhash
 
     def start_file_listener(self, path):
         fl = FileListener(

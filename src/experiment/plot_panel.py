@@ -40,7 +40,7 @@ class PlotPanel(Viewable):
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
     _ncounts = Int
 
-    detector = None
+#    detector = None
     detectors = List
     isotopes = Property(depends_on='detectors')
 
@@ -106,46 +106,39 @@ class PlotPanel(Viewable):
             wrapper(self.summary_display,
                     self._print_summary
                     )
-#            self.signal_display.freeze()
-#            self.signal_display.clear(gui=False)
-#            self._print_signals()
-#            self._print_baselines()
-#            self.signal_display.thaw()
-#
-#            self.ratio_display.freeze()
-#            self.ratio_display.clear(gui=False)
-#            self._print_ratios()
-#            self._print_blanks()
-#            self.ratio_display.thaw()
+
         do_later(func)
 
     def add_text(self, disp, *args, **kw):
         kw['gui'] = False
         disp.add_text(*args, **kw)
 
+    def _print_parameter(self, display, name, uvalue):
+        name = '{:<15s}'.format(name)
+        msg = u'{}= {:0.3f} \u00b1{:0.4f}{}'.format(name,
+                                                    uvalue.nominal_value,
+                                                    uvalue.std_dev(),
+                                                    self._get_pee(uvalue)
+                                                    )
+        self.add_text(display, msg)
+
     def _print_summary(self, display):
         arar_age = self.automated_run.arar_age
-        age, err = arar_age.age
-        rad40 = arar_age.rad40_percent
-        kca = arar_age.kca
-        kcl = arar_age.kcl
+        if arar_age:
+            #call age first
+            #loads all the other attrs
+            age = arar_age.age
 
-        self.add_text(display, u'age= {:0.3f} \u00b1{:0.4f}{}'.format(age, err,
-                                                                      self._get_pee(ufloat((age, err)))))
-        self.add_text(display, u'% rad40= {:0.3f} \u00b1{:0.4f}{}'.format(rad40.nominal_value,
-                                                                          rad40.std_dev(),
-                                                                          self._get_pee(rad40)
-                                                                          ))
+            j = ufloat(arar_age.j)
+            rad40 = arar_age.rad40_percent
+            kca = arar_age.kca
+            kcl = arar_age.kcl
 
-        self.add_text(display, u'K/Ca= {:0.3f} \u00b1{:0.4f}{}'.format(kca.nominal_value,
-                                                                          kca.std_dev(),
-                                                                          self._get_pee(kca)
-                                                                          ))
-        self.add_text(display, u'K/Cl= {:0.3f} \u00b1{:0.4f}{}'.format(kcl.nominal_value,
-                                                                          kcl.std_dev(),
-                                                                          self._get_pee(kcl)
-                                                                          ))
-
+            self._print_parameter(display, 'Age', age)
+            self._print_parameter(display, 'J', j)
+            self._print_parameter(display, '% rad40', rad40)
+            self._print_parameter(display, 'K/Ca', kca)
+            self._print_parameter(display, 'K/Cl', kcl)
 
     def _print_ratios(self, display):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
@@ -280,7 +273,8 @@ class PlotPanel(Viewable):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
                                                 stack_order=self.stack_order
                                              ),
-                                      use_data_tool=False
+                                      use_data_tool=False,
+                                      use_inspector_tool=False
                                       )
     def traits_view(self):
         v = View(
