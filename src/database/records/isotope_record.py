@@ -24,11 +24,12 @@ from uncertainties import ufloat
 import re
 import datetime
 from numpy import array, delete
+import struct
 #============= local library imports  ==========================
 from src.database.isotope_analysis.blanks_summary import BlanksSummary
 from src.graph.graph import Graph
 from src.database.isotope_analysis.fit_selector import FitSelector
-from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
+from src.graph.regression_graph import StackedRegressionGraph
 from src.graph.stacked_graph import StackedGraph
 from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
@@ -38,13 +39,10 @@ from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import InterpolatedRatio, Background, \
     Blank, Signal
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
-from src.regression.ols_regressor import PolynomialRegressor
-from src.regression.mean_regressor import MeanRegressor
-from src.database.orms.isotope_orm import proc_FitHistoryTable, proc_FitTable
-import struct
 from src.deprecate import deprecated
-from src.constants import NULL_STR, AGE_SCALARS
+from src.constants import NULL_STR
 from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
+from src.database.records.arar_age import ArArAge
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -67,7 +65,9 @@ class EditableGraph(HasTraits):
 
         return v
 
-class IsotopeRecord(DatabaseRecord):
+
+
+class IsotopeRecord(DatabaseRecord, ArArAge):
     title_str = 'Analysis'
     window_height = 780
     window_width = 875
@@ -90,8 +90,8 @@ class IsotopeRecord(DatabaseRecord):
     display_item = Instance(HasTraits)
 
     isotope_keys = Property
-    signals = Property(depends_on='age_dirty')
-    _signals = Dict
+#    signals = Property(depends_on='age_dirty')
+#    _signals = Dict
 #    signals = Dict
 #    baselines = None
 #    backgrounds = None
@@ -113,33 +113,24 @@ class IsotopeRecord(DatabaseRecord):
 
     changed = Event
 
-    age = Property(depends_on='age_dirty')
-    age_dirty = Event
-    kca = Property
-    cak = Property
+#    age = Property(depends_on='age_dirty')
+#    age_dirty = Event
+#    kca = Property
+#    cak = Property
 
     ic_factor = Property
-    j = Property
     irradiation = Property
-    irradiation_info = Property
-    irradiation_level = Property
-    irradiation_position = Property
-    production_ratios = Property
-    abundant_sensitivity = Property
+#    production_ratios = Property
     sensitivity = Property
     sensitivity_multiplier = Property
 
     status = Property
     uuid = Property
 
-#    age_scalar = 1e6
-    age_units = 'Ma'
-    age_scalar = Property(depends_on='age_units')
     _no_load = False
 
-    k39 = None
-    rad40 = None
-    arar_result = None
+#    rad40 = None
+#    arar_result = None
 #    filter_outliers = True
 #    filter_outliers = False
 #    def _age_dirty_fired(self):
@@ -283,76 +274,76 @@ class IsotopeRecord(DatabaseRecord):
 #            return getattr(self._dbrecord, attr)
 #        except AttributeError, e:
 #            print 'gettatrr', attr
-    def _calculate_kca(self):
-        result = self.arar_result
-        if result:
-            k = result['k39']
-            ca = result['ca37']
+#    def _calculate_kca(self):
+#        result = self.arar_result
+#        if result:
+#            k = result['k39']
+#            ca = result['ca37']
+#
+#            prs = self.production_ratios
+#            k_ca_pr = 1
+#            if prs:
+#                k_ca_pr = 1
+##                k_ca_pr = 1 / prs.CA_K
+#
+#            return k / ca * k_ca_pr
+#
+#    def _calculate_kcl(self):
+#        result = self.arar_result
+#        if result:
+#            k = result['k39']
+#            cl = result['cl36']
+#
+#            prs = self.production_ratios
+#            k_cl_pr = 1
+#            if prs:
+#                k_cl_pr = 1
+##                k_cl_pr = 1 / prs.Cl_K
+#
+#
+#            return k / cl * k_cl_pr
 
-            prs = self.production_ratios
-            k_ca_pr = 1
-            if prs:
-                k_ca_pr = 1
-#                k_ca_pr = 1 / prs.CA_K
-
-            return k / ca * k_ca_pr
-
-    def _calculate_kcl(self):
-        result = self.arar_result
-        if result:
-            k = result['k39']
-            cl = result['cl36']
-
-            prs = self.production_ratios
-            k_cl_pr = 1
-            if prs:
-                k_cl_pr = 1
-#                k_cl_pr = 1 / prs.Cl_K
-
-
-            return k / cl * k_cl_pr
-
-    def _calculate_age(self):
-
-#        self._load_signals()
-#        signals = self._signals
-        signals = self.signals
-        nsignals = dict()
-        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-        for iso in keys:
-            for k in ['', 'bs', 'bl', 'bg']:
-                isok = iso + k
-                if not signals.has_key(isok):
-                    nsignals[isok] = self._signal_factory(isok, None)
-                else:
-                    nsignals[isok] = signals[isok]
-
-        sigs = lambda name: [(nsignals[iso].value, nsignals[iso].error)
-                                for iso in map('{{}}{}'.format(name).format, keys)]
-
-        fsignals = sigs('')
-#        print fsignals[0]
-        bssignals = sigs('bs')
-        blsignals = sigs('bl')
-        bksignals = sigs('bg')
-
-        ic = self.ic_factor
-        j = self.j
-        irrad = self.irradiation_info
-        ab = self.abundant_sensitivity
-
-        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    j, irrad, ic=ic, abundant_sensitivity=ab)
-
-        if result:
-            self.arar_result = result
-            self.k39 = result['k39']
-            ai = result['age']
-
-            ai = ai / self.age_scalar
-            age = ai.nominal_value
-            err = ai.std_dev()
-            return age, err
+#    def _calculate_age(self):
+#
+##        self._load_signals()
+##        signals = self._signals
+#        signals = self.signals
+#        nsignals = dict()
+#        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+#        for iso in keys:
+#            for k in ['', 'bs', 'bl', 'bg']:
+#                isok = iso + k
+#                if not signals.has_key(isok):
+#                    nsignals[isok] = self._signal_factory(isok, None)
+#                else:
+#                    nsignals[isok] = signals[isok]
+#
+#        sigs = lambda name: [(nsignals[iso].value, nsignals[iso].error)
+#                                for iso in map('{{}}{}'.format(name).format, keys)]
+#
+#        fsignals = sigs('')
+##        print fsignals[0]
+#        bssignals = sigs('bs')
+#        blsignals = sigs('bl')
+#        bksignals = sigs('bg')
+#
+#        ic = self.ic_factor
+#        j = self.j
+#        irrad = self.irradiation_info
+#        ab = self.abundant_sensitivity
+#
+#        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
+#                                    j, irrad, ic=ic, abundant_sensitivity=ab)
+#
+#        if result:
+#            self.arar_result = result
+#            self.k39 = result['k39']
+#            ai = result['age']
+#
+#            ai = ai / self.age_scalar
+#            age = ai.nominal_value
+#            err = ai.std_dev()
+#            return age, err
 
 #===============================================================================
 # handlers
@@ -381,6 +372,7 @@ class IsotopeRecord(DatabaseRecord):
                 item.refresh()
 
             self.trait_set(display_item=item)
+
     def _apply_history_change(self, new):
         self.changed = True
 
@@ -682,30 +674,15 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
 # property get/set
 #===============================================================================
-    @cached_property
-    def _get_j(self):
-        s = 1.0
-        e = 1e-3
-        analysis = self.dbrecord
-        labnumber = analysis.labnumber
-        try:
-            f = labnumber.selected_flux_history.flux
-            s = f.j
-            e = f.j_err
-        except AttributeError:
-            pass
-
-        return (s, e)
-
-    @cached_property
-    def _get_production_ratios(self):
-        try:
-            lev = self.irradiation_level
-            ir = lev.irradiation
-            pr = ir.production
-            return pr
-        except AttributeError:
-            pass
+#    @cached_property
+#    def _get_production_ratios(self):
+#        try:
+#            lev = self.irradiation_level
+#            ir = lev.irradiation
+#            pr = ir.production
+#            return pr
+#        except AttributeError:
+#            pass
 
     @cached_property
     def _get_irradiation(self):
@@ -716,80 +693,11 @@ class IsotopeRecord(DatabaseRecord):
             pass
 
     @cached_property
-    def _get_irradiation_level(self):
-        try:
-            if self.irradiation_position:
-                return self.irradiation_position.level
-        except AttributeError, e:
-            print 'level', e
-
-    @cached_property
-    def _get_irradiation_position(self):
-        try:
-            return self.dbrecord.labnumber.irradiation_position
-        except AttributeError, e:
-            print 'pos', e
-#            print e
-
-    @cached_property
-    def _get_irradiation_info(self):
-        '''
-            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
-        '''
-        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
+    def _get_analysis_timestamp(self):
         analysis = self.dbrecord
-
-        irradiation_level = self.irradiation_level
-
-        if irradiation_level:
-            irradiation = irradiation_level.irradiation
-            if irradiation:
-                pr = irradiation.production
-                if pr:
-                    prs = []
-                    for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
-                        v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
-                        prs.append((v if v is not None else 1, e if e is not None else 0))
-
-#                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-#                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-
-                chron = irradiation.chronology
-                def convert_datetime(x):
-                    try:
-                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-                    except ValueError:
-                        pass
-#                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-
-                convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
-                if chron:
-                    chronblob = chron.chronology
-
-                    doses = chronblob.split('$')
-                    doses = [di.split('%') for di in doses]
-
-                    doses = [map(convert_datetime, d) for d in doses]
-
-                    analts = '{} {}'.format(analysis.rundate, analysis.runtime)
-                    analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-                    segments = []
-                    for st, en in doses:
-                        if st is not None and en is not None:
-                            dur = en - st
-                            dt = analts - st
-                            segments.append((1, convert_days(dur), convert_days(dt)))
-
-                    decay_time = 0
-                    d_o = doses[0][0]
-                    if d_o is not None:
-                        decay_time = convert_days(analts - doses[0][0])
-
-#                    segments = [(1, convert_days(ti)) for ti in durs]
-                    prs.append(segments)
-                    prs.append(decay_time)
-
-        return prs
+        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+        return analts
 
     @cached_property
     def _get_ic_factor(self):
@@ -832,10 +740,6 @@ class IsotopeRecord(DatabaseRecord):
         return ic
 
     @cached_property
-    def _get_abundant_sensitivity(self):
-        return 3e-6
-
-    @cached_property
     def _get_analysis_summary(self):
         fs = FitSelector(analysis=self,
                          graph=self.signal_graph,
@@ -871,6 +775,10 @@ class IsotopeRecord(DatabaseRecord):
         return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
     @cached_property
+    def _get_labnumber_record(self):
+        return self.dbrecord.labnumber
+
+    @cached_property
     def _get_labnumber(self):
         if self._dbrecord:
 #            print 'get aasfd', self._dbrecord.labnumber
@@ -879,9 +787,6 @@ class IsotopeRecord(DatabaseRecord):
                 ln = convert_labnumber(ln)
     #        ln = '{}-{}'.format(ln, self.aliquot)
                 return ln
-
-
-
 
     @cached_property
     def _get_shortname(self):
@@ -904,33 +809,33 @@ class IsotopeRecord(DatabaseRecord):
         if self._dbrecord:
             return self._dbrecord.measurement.mass_spectrometer.name.lower()
 
-    @cached_property
-    def _get_age(self):
-        r = self._calculate_age()
-        return r
+#    @cached_property
+#    def _get_age(self):
+#        r = self._calculate_age()
+#        return r
 
-    @cached_property
-    def _get_kca(self):
-        return self._calculate_kca()
+#    @cached_property
+#    def _get_kca(self):
+#        return self._calculate_kca()
+#
+#    @cached_property
+#    def _get_cak(self):
+#        return 1 / self.kca
+#
+#    @cached_property
+#    def _get_kcl(self):
+#        return self._calculate_kcl()
+#
+#    @cached_property
+#    def _get_clk(self):
+#        return 1 / self.kcl
 
-    @cached_property
-    def _get_cak(self):
-        return 1 / self.kca
-
-    @cached_property
-    def _get_kcl(self):
-        return self._calculate_kcl()
-
-    @cached_property
-    def _get_clk(self):
-        return 1 / self.kcl
-
-    @cached_property
-    def _get_signals(self):
-#        if not self._signals:
-        self._load_signals(caller='get_signals')
-
-        return self._signals
+#    @cached_property
+#    def _get_signals(self):
+##        if not self._signals:
+#        self._load_signals(caller='get_signals')
+#
+#        return self._signals
 
     @cached_property
     def _get_isotope_keys(self):
@@ -940,11 +845,11 @@ class IsotopeRecord(DatabaseRecord):
         return isos
 
 
-    def _get_age_scalar(self):
-        try:
-            return AGE_SCALARS[self.age_units]
-        except KeyError:
-            return 1
+#    def _get_age_scalar(self):
+#        try:
+#            return AGE_SCALARS[self.age_units]
+#        except KeyError:
+#            return 1
 
 #===============================================================================
 # dbrecord values

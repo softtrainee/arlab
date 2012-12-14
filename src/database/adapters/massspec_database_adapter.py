@@ -188,7 +188,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     @add
     def add_baseline_changeable_item(self, data_reduction_session, fit, infoblob):
         fit = self.get_fittype(fit)
-        bs = BaselinesChangeableItemsTable(Fit=fit.Fit,
+        if fit:
+            fit = fit.Fit
+        else:
+            fit = 0
+
+        bs = BaselinesChangeableItemsTable(Fit=fit,
                                            DataReductionSessionID=data_reduction_session.DataReductionSessionID,
                                            InfoBlob=infoblob
                                            )
@@ -219,14 +224,16 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
     @add
     def add_isotope(self, rid, det, label, **kw):
+        detector = None
         analysis = self.get_analysis(rid)
         if isinstance(det, str):
             #assume is a detector label e.i H1
-            det = self.get_detector_type(det)
-            if det is not None:
-                det = det.detectors[-1]
+            dettype = self.get_detector_type(det)
+            if dettype is not None and len(dettype.detectors):
+                det = dettype.detectors[-1]
 
-        detector = self.get_detector(det)
+            detector = self.get_detector(det)
+
         iso = IsotopeTable(Label=label,
                            NumCnts=1
                            )

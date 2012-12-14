@@ -148,10 +148,22 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                 ar37decayfactor
             
     '''
-    s40, s39, s38, s37, s36 = map(ufloat, signals)
-    s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
-    s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
-    s40bk, s39bk, s38bk, s37bk, s36bk = map(ufloat, backgrounds)
+    def to_ufloat(v):
+        if isinstance(v, tuple):
+            v = ufloat(v)
+        return v
+#    if isinstance(signals[0], tuple):
+    s40, s39, s38, s37, s36 = map(to_ufloat, signals)
+
+#    if isinstance(baselines[0], tuple):
+    s40bs, s39bs, s38bs, s37bs, s36bs = map(to_ufloat, baselines)
+
+#    if isinstance(blanks[0], tuple):
+    s40bl, s39bl, s38bl, s37bl, s36bl = map(to_ufloat, blanks)
+
+#    if isinstance(backgrounds[0], tuple):
+    s40bk, s39bk, s38bk, s37bk, s36bk = map(to_ufloat, backgrounds)
+
     k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments , decay_time = irradinfo
 
     ca3637 = ufloat(ca3637)

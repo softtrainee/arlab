@@ -22,6 +22,7 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from traits.trait_errors import TraitError
 from src.loggable import Loggable
 from src.saveable import Saveable
+from src.helpers.traitsui_shortcuts import instance_item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ProductionRatio(HasTraits):
@@ -56,6 +57,10 @@ class ProductionRatioInput(Saveable):
 #    #Cl interference
     cl3638 = Instance(ProductionRatio, (), {'name':'Cl 36/38'})
 
+    #elemental production ratio
+    Ca_K = Instance(ProductionRatio, (), {'name':'Ca/K'})
+    Cl_K = Instance(ProductionRatio, (), {'name':'Cl/K'})
+
     def _get_names(self):
         db = self.db
         ns = [str(ni.name) for ni in db.get_irradiation_productions()]
@@ -68,7 +73,9 @@ class ProductionRatioInput(Saveable):
         keys = [
                 'k4039', 'k3839', 'k3739',
                 'ca3937', 'ca3837', 'ca3637',
-                'cl3638'
+                'cl3638',
+                'Ca_K'
+                'Cl_K'
                 ]
         ekeys = ['{}_err'.format(ki) for ki in keys]
         values = [getattr(self, ki).value for ki in keys]
@@ -127,6 +134,13 @@ class ProductionRatioInput(Saveable):
 
             self.cl3638.value = ip.Cl3638
             self.cl3638.error = ip.Cl3638_err
+
+            self.Ca_K.value = ip.Ca_K
+            self.Ca_K.error = ip.Ca_K_err
+
+            self.Cl_K.value = ip.Cl_K
+            self.Cl_K.error = ip.Cl_K_err
+
         except TraitError:
             pass
 
@@ -134,20 +148,23 @@ class ProductionRatioInput(Saveable):
 #        print 'asdfasd'
 
     def traits_view(self):
-        def item(n):
-            return Item(n, style='custom', show_label=False)
-        kgrp = VGroup(item('k4039'),
-                      item('k3839'),
-                      item('k3739'),
+        kgrp = VGroup(instance_item('k4039'),
+                      instance_item('k3839'),
+                      instance_item('k3739'),
                        label='K', show_border=True)
         cagrp = VGroup(
-                       item('ca3937'),
-                       item('ca3837'),
-                       item('ca3637'),
+                       instance_item('ca3937'),
+                       instance_item('ca3837'),
+                       instance_item('ca3637'),
                        label='Ca', show_border=True)
         clgrp = VGroup(
-                       item('cl3638'),
+                       instance_item('cl3638'),
                        label='Cl', show_border=True)
+        elem_grp = VGroup(
+                        instance_item('Ca_K'),
+                        instance_item('Cl_K'),
+                        label='Elemental', show_border=True)
+
         v = View(
                  VGroup(
                      HGroup(Item('name'),
@@ -158,6 +175,7 @@ class ProductionRatioInput(Saveable):
                      VGroup(kgrp,
                             cagrp,
                             clgrp,
+                            elem_grp
                             )
                         ),
                  width=300,

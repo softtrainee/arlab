@@ -25,11 +25,14 @@ class Level(HasTraits):
     tray = Str
     trays = List
     def traits_view(self):
-        v = View(HGroup(Item('name'), Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
+        v = View(HGroup(Item('name'),
+                        Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
                  buttons=['OK', 'Cancel']
                  )
         return v
 
-    def _tray_default(self):
-        return self.trays[0]
+    def _trays_changed(self):
+        self.tray = self.trays[0]
+#    def _tray_default(self):
+#        return self.trays[0]
 #============= EOF =============================================

@@ -268,7 +268,7 @@ class InitializationParser(XMLParser):
 #                    return p
         else:
             cat = tree.find(category)
-            if cat:
+            if cat is not None:
                 iterator = lambda: cat.findall(tag)
             else:
                 iterator = lambda: ''

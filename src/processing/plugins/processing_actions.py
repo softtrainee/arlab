@@ -69,19 +69,19 @@ class NewInverseIsochronAction(Action):
 #===============================================================================
 
 class ApplyBlankAction(Action):
-    accelerator = 'Ctrl+b'
+    accelerator = 'Ctrl+Shift+b'
     def perform(self, event):
         man = get_manager(event)
         man.apply_blank_correction()
 
 class ApplyBackgroundAction(Action):
-    accelerator = 'Ctrl+n'
+    accelerator = 'Ctrl+Shift+n'
     def perform(self, event):
         man = get_manager(event)
         man.apply_background_correction()
 
 class ApplyDetectorIntercalibrationAction(Action):
-    accelerator = 'Ctrl+d'
+    accelerator = 'Ctrl+Shift+d'
     def perform(self, event):
         man = get_manager(event)
         man.apply_detector_intercalibration_correction()

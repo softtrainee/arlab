@@ -350,6 +350,12 @@ class irrad_ProductionTable(Base, NameMixin):
     Cl3638 = Column(Float)
     Cl3638_err = Column(Float)
 
+    Ca_K = Column(Float)
+    Ca_K_err = Column(Float)
+
+    Cl_K = Column(Float)
+    Cl_K_err = Column(Float)
+
     irradiations = relationship('irrad_IrradiationTable', backref='production')
 
 class irrad_IrradiationTable(Base, NameMixin):

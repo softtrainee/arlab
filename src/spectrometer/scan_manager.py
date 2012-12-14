@@ -44,6 +44,7 @@ from Queue import Queue
 from src.helpers.timer import Timer
 from src.constants import NULL_STR
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
+from src.spectrometer.readout_view import ReadoutView
 #class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
 #        self._file = open(p, mode)
@@ -61,6 +62,8 @@ class ScanManager(Manager):
     spectrometer = Any
 
     graph = Instance(TimeSeriesStreamGraph)
+    readout_view = Instance(ReadoutView)
+
     integration_time = Enum(0.065536, 0.131072, 0.262144, 0.524288,
                             1.048576, 2.097152, 4.194304, 8.388608,
                             16.777216, 33.554432, 67.108864)
@@ -490,6 +493,15 @@ class ScanManager(Manager):
     def _scanner_default(self):
         s = MagnetScan(spectrometer=self.spectrometer)
         return s
+
+    def _readout_view_default(self):
+        rd = ReadoutView(spectrometer=self.spectrometer)
+        p = os.path.join(paths.spectrometer_dir, 'readout.cfg')
+        config = self.get_configuration(path=p)
+        rd.load(config)
+
+        return rd
+
 #===============================================================================
 # views
 #===============================================================================
@@ -554,11 +566,19 @@ class ScanManager(Manager):
                                Item('detectors',
                                    show_label=False,
                                    editor=ListEditor(style='custom', mutable=False,
-                                                     editor=InstanceEditor(view='intensity_view'))))
+                                                     editor=InstanceEditor(view='intensity_view'))),
+                               label='Intensities',
+                               show_border=True
+                               )
+        display_grp = VGroup(
+                          Group(custom('readout_view'), show_border=True, label='Readout'),
+                          intensity_grp,
+                          )
         graph_grp = custom('graph')
         v = View(
                     HGroup(
-                           VGroup(control_grp, intensity_grp),
+#                           VGroup(control_grp, intensity_grp),
+                           VGroup(control_grp, display_grp),
                            graph_grp,
                            ),
                     title='Scan',

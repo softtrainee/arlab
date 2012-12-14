@@ -23,6 +23,7 @@ from src.displays.rich_text_display import RichTextDisplay
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
 from pyface.timer.do_later import do_later
+from src.helpers.traitsui_shortcuts import instance_item
 #============= standard library imports ========================
 #from numpy import Inf
 #from pyface.timer.do_later import do_later
@@ -47,6 +48,7 @@ class PlotPanel(Viewable):
     series_cnt = 0
     ratio_display = Instance(RichTextDisplay)
     signal_display = Instance(RichTextDisplay)
+    summary_display = Instance(RichTextDisplay)
 
     signals = Dict
     baselines = Dict
@@ -60,47 +62,95 @@ class PlotPanel(Viewable):
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
+            arar_age = self.automated_run.arar_age
             for iso, reg in zip(self.isotopes, new):
                 try:
                     vv = reg.coefficients[-1]
                     ee = abs(reg.coefficient_errors[-1])
                     if self.isbaseline:
-                        self.baselines[iso] = ufloat((vv, ee))
+                        self.baselines[iso] = u = ufloat((vv, ee))
+                        if arar_age:
+                            arar_age.signals['{}bs'.format(iso)] = u
                     else:
-                        self.signals[iso] = ufloat((vv, ee))
+                        self.signals[iso] = u = ufloat((vv, ee))
+                        if arar_age:
+                            arar_age.signals[iso] = u
+
                 except TypeError:
                     break
                 except AssertionError:
                     continue
             else:
+                if arar_age:
+                    arar_age.age_dirty = True
                 self._print_results()
 
     @on_trait_change('correct_for_baseline, correct_for_blank')
     def _print_results(self):
+        def wrapper(display, *args):
+            display.freeze()
+            display.clear(gui=False)
+            for ai in args:
+                ai(display)
+            display.thaw()
+
         def func():
-            self.signal_display.freeze()
-            self.signal_display.clear(gui=False)
-            self._print_signals()
-            self._print_baselines()
-            self.signal_display.thaw()
-
-
-            self.ratio_display.freeze()
-            self.ratio_display.clear(gui=False)
-            self._print_ratios()
-            self._print_blanks()
-            self.ratio_display.thaw()
-
+            wrapper(self.signal_display,
+                    self._print_signals,
+                    self._print_baselines
+                    )
+            wrapper(self.ratio_display,
+                    self._print_ratios,
+                    self._print_blanks
+                    )
+            wrapper(self.summary_display,
+                    self._print_summary
+                    )
+#            self.signal_display.freeze()
+#            self.signal_display.clear(gui=False)
+#            self._print_signals()
+#            self._print_baselines()
+#            self.signal_display.thaw()
+#
+#            self.ratio_display.freeze()
+#            self.ratio_display.clear(gui=False)
+#            self._print_ratios()
+#            self._print_blanks()
+#            self.ratio_display.thaw()
         do_later(func)
-#        func()
+
     def add_text(self, disp, *args, **kw):
         kw['gui'] = False
         disp.add_text(*args, **kw)
 
-    def _print_ratios(self):
+    def _print_summary(self, display):
+        arar_age = self.automated_run.arar_age
+        age, err = arar_age.age
+        rad40 = arar_age.rad40_percent
+        kca = arar_age.kca
+        kcl = arar_age.kcl
+
+        self.add_text(display, u'age= {:0.3f} \u00b1{:0.4f}{}'.format(age, err,
+                                                                      self._get_pee(ufloat((age, err)))))
+        self.add_text(display, u'% rad40= {:0.3f} \u00b1{:0.4f}{}'.format(rad40.nominal_value,
+                                                                          rad40.std_dev(),
+                                                                          self._get_pee(rad40)
+                                                                          ))
+
+        self.add_text(display, u'K/Ca= {:0.3f} \u00b1{:0.4f}{}'.format(kca.nominal_value,
+                                                                          kca.std_dev(),
+                                                                          self._get_pee(kca)
+                                                                          ))
+        self.add_text(display, u'K/Cl= {:0.3f} \u00b1{:0.4f}{}'.format(kcl.nominal_value,
+                                                                          kcl.std_dev(),
+                                                                          self._get_pee(kcl)
+                                                                          ))
+
+
+    def _print_ratios(self, display):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
 
-        display = self.ratio_display
+#        display = self.ratio_display
         cfb = self.correct_for_baseline
 
         def func(ra):
@@ -132,14 +182,12 @@ class PlotPanel(Viewable):
         self.add_text(display, '\n'.join(ts))
         self.add_text(display, ' ' * 80, underline=True)
 
-    def _print_signals(self):
+    def _print_signals(self, display):
         def get_value(iso):
             try:
                 us = self.signals[iso]
             except KeyError:
                 us = ufloat((0, 0))
-
-
             ubs = ufloat((0, 0))
             ubl = ufloat((0, 0))
             if self.correct_for_baseline:
@@ -155,11 +203,11 @@ class PlotPanel(Viewable):
 
             return us - ubs - ubl
 
-        self._print_('', get_value, self.signal_display)
-        self.add_text(self.signal_display, ' ' * 80, underline=True)
+        self._print_('', get_value, display)
+        self.add_text(display, ' ' * 80, underline=True)
 
 
-    def _print_baselines(self):
+    def _print_baselines(self, display):
         def get_value(iso):
             try:
                 ub = self.baselines[iso]
@@ -167,9 +215,9 @@ class PlotPanel(Viewable):
                 ub = ufloat((0, 0))
             return ub
 
-        self._print_('bs', get_value, self.signal_display)
+        self._print_('bs', get_value, display)
 
-    def _print_blanks(self):
+    def _print_blanks(self, display):
         def get_value(iso):
             try:
                 ub = self.blanks[iso]
@@ -177,7 +225,7 @@ class PlotPanel(Viewable):
                 ub = ufloat((0, 0))
             return ub
 
-        self._print_('bl', get_value, self.ratio_display)
+        self._print_('bl', get_value, display)
 
     def _print_(self, name, get_value, display):
 #        display = self.signal_display
@@ -250,6 +298,10 @@ class PlotPanel(Viewable):
                            label='Results'
                            ),
                      Group(
+                           instance_item('summary_display'),
+                           label='Summary'),
+
+                     Group(
                            Item('ncounts'),
                            label='Controls',
                            ),
@@ -269,6 +321,14 @@ class PlotPanel(Viewable):
 #===============================================================================
 # defaults
 #===============================================================================
+    def _summary_display_default(self):
+        return RichTextDisplay(height=220,
+                               default_color='black',
+                               default_size=12,
+                               scroll_to_bottom=False,
+                               bg_color='#FFFFCC'
+                               )
+
     def _signal_display_default(self):
         return RichTextDisplay(height=220,
                                default_color='black',

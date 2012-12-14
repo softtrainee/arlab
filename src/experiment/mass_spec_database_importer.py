@@ -191,8 +191,9 @@ class MassSpecDatabaseImporter(Loggable):
 
     def add_analysis(self, rid, aliquot, step, irradpos,
                      baselines, signals, blanks, keys,
-                     regression_results,
-
+#                     regression_results,
+                     intercepts,
+                     fits,
                      spectrometer,
                      heating_device_name,
                      position,
@@ -237,7 +238,8 @@ class MassSpecDatabaseImporter(Loggable):
                                    SecondStageDly=second_stage_delay
                                    )
         if self.sample_loading:
-            self.sample_loading.analyses.append(analysis)
+            analysis.SampleLoadingID = self.sample_loading.SampleLoadingID
+#            self.sample_loading.analyses.append(analysis)
 
         if self.login_session:
             self.login_session.analyses.append(analysis)
@@ -254,11 +256,14 @@ class MassSpecDatabaseImporter(Loggable):
 
         add_results = True
 
-        for ((det, iso), si, bi, ublank) in zip(keys, signals, baselines, blanks):
+        signal_dict, baseline_dict = intercepts
+        signal_fits, baseline_fits = fits
+        for ((det, isok), si, bi, ublank) in zip(keys, signals, baselines, blanks):
+
             #===================================================================
             # isotopes
             #===================================================================
-            iso = db.add_isotope(analysis, det, iso)
+            iso = db.add_isotope(analysis, det, isok)
             #===================================================================
             # baselines
             #===================================================================
@@ -269,11 +274,12 @@ class MassSpecDatabaseImporter(Loggable):
             db.add_baseline(blob, label, ncnts, iso)
 
 #            baseline = array(vb).mean()
-            baseline = regression_results['{}bs'.format(det)].coefficients[-1]
-            baseline_err = regression_results['{}bs'.format(det)].coefficient_errors[-1]
+#            baseline = regression_results['{}bs'.format(det)].coefficients[-1]
+#            baseline_err = regression_results['{}bs'.format(det)].coefficient_errors[-1]
+            baseline = baseline_dict[isok]
 
-            infoblob = self._make_infoblob(baseline, baseline_err)
-            db.add_baseline_changeable_item(self.data_reduction_session, 'Average Y', infoblob)
+            infoblob = self._make_infoblob(baseline.nominal_value, baseline.std_dev())
+            db.add_baseline_changeable_item(self.data_reduction_session, baseline_fits[isok], infoblob)
             #===================================================================
             # peak time
             #===================================================================
@@ -287,23 +293,26 @@ class MassSpecDatabaseImporter(Loggable):
             '''
 
             tb, vb = zip(*si)
-            vb = array(vb) - baseline
+            vb = array(vb) - baseline.nominal_value
             blob1 = self._build_timeblob(tb, vb)
 
             blob2 = [struct.pack('>f', float(v)) for v in vb]
             db.add_peaktimeblob(blob1, blob2, iso)
 
             if add_results:
-                i = regression_results[det].coefficients[-1]
-                ierr = regression_results[det].coefficient_errors[-1]
-                fit = regression_results[det].fit
-
+#                i = regression_results[det].coefficients[-1]
+#                ierr = regression_results[det].coefficient_errors[-1]
+#                fit = regression_results[det].fit
+                intercept = signal_dict[isok]
+                fit = signal_fits[isok]
                 #in mass spec the intercept is alreay baseline corrected
                 #mass spec also doesnt propograte baseline errors
 
                 db.add_isotope_result(iso, self.data_reduction_session,
-                                      ufloat((i, ierr)),
-                                      ufloat((baseline, baseline_err)),
+#                                      ufloat((i, ierr)),
+                                      intercept,
+                                      baseline,
+#                                      ufloat((baseline, baseline_err)),
                                       ublank,
                                       fit
                                       )

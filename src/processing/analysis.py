@@ -221,8 +221,9 @@ class Analysis(Loggable):
         return rr['rad40']
 
     def _get_rad40_percent(self):
-        rr = self.dbrecord.arar_result
-        return rr['rad40'] / rr['tot40'] * 100
+        return self.dbrecord.rad40_percent
+#        rr = self.dbrecord.arar_result
+#        return rr['rad40'] / rr['tot40'] * 100
 
     def _get_age(self):
         return self.dbrecord.age

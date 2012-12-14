@@ -122,8 +122,14 @@ class AutomatedRunAdapter(TabularAdapter):
     def _set_extract_value_text(self, value):
 #        setattr(self.item, 'extract_value', value)
         self._set_float('extract_value', value)
+
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
+
+    def _set_extract_units_text(self, value):
+        value = value.lower()
+        if value in ['watts', 'percent', 'temp']:
+            self.item.extract_units = value
 
     def _get_extract_units_text(self):
         if self.item.extract_units == '---':
@@ -177,14 +183,17 @@ class AutomatedRunAdapter(TabularAdapter):
     def _set_float(self, attr, value):
         try:
             setattr(self.item, attr, float(value))
+            self.item.dirty = True
         except Exception:
             pass
 
     def _set_int(self, attr, value):
         try:
             setattr(self.item, attr, int(value))
+            self.item.dirty = True
         except Exception:
             pass
+
     def _set_autocenter_text(self, value):
         value = value.lower()
         if value in ['yes', 'y', 'x']:
