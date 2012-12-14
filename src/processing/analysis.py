@@ -235,7 +235,7 @@ class Analysis(Loggable):
         return self.dbrecord.k39
 
     def _get_age_error(self):
-        return self.age[1]
+        return self.age.std_dev()
 
     def _get_analysis_type(self):
         dbr = self.dbrecord

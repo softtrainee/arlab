@@ -56,6 +56,12 @@ class ArArAge(HasTraits):
     age = Property(depends_on='age_dirty')
     age_dirty = Event
 
+    Ar40 = Property(depends_on='age_dirty')
+    Ar39 = Property(depends_on='age_dirty')
+    Ar38 = Property(depends_on='age_dirty')
+    Ar37 = Property(depends_on='age_dirty')
+    Ar36 = Property(depends_on='age_dirty')
+
     def _calculate_kca(self):
         result = self.arar_result
         if result:
@@ -128,9 +134,10 @@ class ArArAge(HasTraits):
             ai = result['age']
 
             ai = ai / self.age_scalar
-            age = ai.nominal_value
-            err = ai.std_dev()
-            return age, err
+            return ai
+#            age = ai.nominal_value
+#            err = ai.std_dev()
+#            return age, err
 
     def _load_signals(self):
         pass
@@ -278,10 +285,6 @@ class ArArAge(HasTraits):
         s = 1.0
         e = 1e-3
 
-#        analysis = self.dbrecord
-#        labnumber = analysis.labnumber
-
-
         try:
             f = self.labnumber_record.selected_flux_history.flux
             s = f.j
@@ -298,6 +301,26 @@ class ArArAge(HasTraits):
     @cached_property
     def _get_rad40_percent(self):
         return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
+
+    @cached_property
+    def get_Ar40(self):
+        return self.arar_result['s40']
+
+    @cached_property
+    def get_Ar39(self):
+        return self.arar_result['s39']
+
+    @cached_property
+    def get_Ar38(self):
+        return self.arar_result['s38']
+
+    @cached_property
+    def get_Ar37(self):
+        return self.arar_result['s37']
+
+    @cached_property
+    def get_Ar36(self):
+        return self.arar_result['s36']
 #        rr = self.dbrecord.arar_result
 #        return rr['rad40'] / rr['tot40'] * 100
 

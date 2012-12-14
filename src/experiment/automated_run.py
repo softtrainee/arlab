@@ -51,6 +51,8 @@ from globals import globalv
 from src.constants import NULL_STR
 from uncertainties import ufloat
 from src.database.records.arar_age import ArArAge
+from src.experiment.automated_run_condition import TruncationCondition, \
+    ActionCondition, TerminationCondition
 
 
 class AutomatedRun(Loggable):
@@ -159,12 +161,38 @@ class AutomatedRun(Loggable):
     _save_isotopes = List
     update = Event
     _truncate_signal = Bool
+    truncated = Bool
     measuring = Bool(False)
     dirty = Bool(False)
 
     uuid = Str
-#    def _aliquot_changed(self):
-#        print self.labnumber, self.aliquot
+
+    termination_conditions = List
+    truncation_conditions = List
+    action_conditions = List
+    def add_termination(self, attr, comp, value, start_count, frequency):
+        '''
+            attr must be an attribute of arar_age
+        '''
+        self.termination_conditions.append(TerminationCondition(attr, comp, value,
+                                                                start_count,
+                                                                frequency))
+    def add_truncation(self, attr, comp, value, start_count, frequency):
+        '''
+            attr must be an attribute of arar_age
+        '''
+        self.truncation_conditions.append(TruncationCondition(attr, comp, value,
+                                                                start_count,
+                                                                frequency))
+    def add_action(self, attr, comp, value, start_count, frequency, action, resume):
+        '''
+            attr must be an attribute of arar_age
+        '''
+        self.action_conditions.append(ActionCondition(attr, comp, value,
+                                                                start_count,
+                                                                frequency,
+                                                                action=action,
+                                                                resume=resume))
 
     def get_corrected_signals(self):
         d = dict()
@@ -220,10 +248,10 @@ class AutomatedRun(Loggable):
         if self.coincidence_scan:
             self.coincidence_scan.graph.close()
 
-    def info(self, msg, *args, **kw):
+    def info(self, msg, color='green', *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.info_display:
-            self.info_display.add_text(msg)
+            self.info_display.add_text(msg, color=color)
 #            do_later(self.info_display.add_text, msg)
 
     def get_estimated_duration(self):
@@ -303,6 +331,9 @@ class AutomatedRun(Loggable):
             self.info('======== Extraction Finished ========')
             return True
         else:
+            self.do_post_measurement()
+            self.finish()
+
             self.info('======== Extraction Finished unsuccessfully ========')
             return False
 
@@ -324,6 +355,9 @@ class AutomatedRun(Loggable):
             self.measuring = False
             return True
         else:
+            self.do_post_measurement()
+            self.finish()
+
             self.info('======== Measurement Finished unsuccessfully ========')
             self.measuring = False
             return False
@@ -389,10 +423,12 @@ class AutomatedRun(Loggable):
             fits = ['linear', ] * len(self._active_detectors)
 
         self._build_tables(gn, fits)
-
+        check_conditions = True
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series, fits)
+                                ncounts, starttime, series, fits,
+                                check_conditions
+                                )
 
     def do_sniff(self, ncounts, starttime, series=0):
         if not self._alive:
@@ -405,10 +441,11 @@ class AutomatedRun(Loggable):
         fits = ['', ] * len(self._active_detectors)
         gn = 'sniff'
         self._build_tables(gn)
+        check_conditions = False
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series,
-                                fits
+                                ncounts, starttime, series, fits,
+                                check_conditions
                                 )
 
     def do_baselines(self, ncounts, starttime, mass, detector,
@@ -423,10 +460,6 @@ class AutomatedRun(Loggable):
                 self.plot_panel._ncounts = ncounts
                 self.plot_panel.isbaseline = True
                 self.plot_panel.show()
-#            else:
-#                p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
-#                self.plot_panel = p
-
 
             if mass:
                 if ion is not None:
@@ -436,9 +469,11 @@ class AutomatedRun(Loggable):
             gn = 'baseline'
             fits = ['average_SEM', ] * len(self._active_detectors)
             self._build_tables(gn, fits=fits)
+            check_conditions = False
             result = self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series, fits)
+                                ncounts, starttime, series, fits,
+                                check_conditions)
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
         else:
             isotopes = [di.isotope for di in self._active_detectors]
@@ -819,29 +854,70 @@ class AutomatedRun(Loggable):
             self.do_post_equilibration()
             self.overlap_evt.set()
 
+    def _check_conditions(self, conditions, cnt):
+        for ti in conditions:
+            if ti.check(self.arar_age, cnt):
+                return ti
+
+    def _check_iteration(self, i, ncounts, check_conditions):
+        if check_conditions:
+            termination_condition = self._check_conditions(self.termination_conditions, i)
+            if termination_condition:
+                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, i, ncounts),
+                          color='red'
+                          )
+                return 'cancel'
+
+            truncation_condition = self._check_conditions(self.truncation_conditions, i)
+            if truncation_condition:
+                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, i, ncounts),
+                          color='red'
+                          )
+                self.truncated = True
+                return 'break'
+
+            action_condition = self._check_conditions(self.action_conditions, i)
+            if action_condition:
+                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, i, ncounts),
+                          color='red'
+                          )
+                action_condition.perform(self.measurement_script)
+                if not action_condition.resume:
+                    return 'break'
+
+        if i > self.measurement_script.ncounts:
+            self.info('script termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
+            return 'break'
+
+        if i > self.plot_panel.ncounts:
+            self.info('user termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
+            return 'break'
+
+        if self._truncate_signal:
+            self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+            self._truncate_signal = False
+            return 'break'
+
+        if not self._alive:
+            self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+            return 'cancel'
+
     def _measure_iteration(self, grpname, data_write_hook,
-                           ncounts, starttime, series, fits):
+                           ncounts, starttime, series, fits, check_conditions):
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts))
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
             return True
 
+        self.truncated = False
+
         spec = self.spectrometer_manager.spectrometer
-
-
         graph = self.plot_panel.graph
         for i in xrange(1, ncounts + 1, 1):
-            if i > self.plot_panel.ncounts:
-                self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+            ck = self._check_iteration(i, ncounts, check_conditions)
+            if ck == 'break':
                 break
-
-            if self._truncate_signal:
-                self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
-                self._truncate_signal = False
-                break
-
-            if not self._alive:
-                self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+            elif ck == 'cancel':
                 return False
 
             if i % 50 == 0:

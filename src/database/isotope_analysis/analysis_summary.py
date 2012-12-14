@@ -133,7 +133,9 @@ class AnalysisSummary(Summary):
 
         self.add_text(' ')
 
-        v, e = self.record.age
+        age = self.record.age
+        v = age.nominal_value
+        e = age.std_dev()
         try:
             ej = arar_result['age_err_wo_jerr'] / record.age_scalar
         except TypeError:
