@@ -280,6 +280,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             s = (s,)
 
         for si in s:
+
+            if isinstance(si, str):
+                di = self.db.get_analysis_uuid(si)
+                si = self._result_factory(di, False)
+
             if not si.initialize():
                 continue
 
@@ -289,11 +294,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                 if c is None:
                     self.opened_windows.pop(sid)
                 else:
-                    si.opened()
-#                    try:
-#                        c.Raise()
-#                    except:
-#                        self.opened_windows.pop(sid)
+                    do_later(c.Raise)
 
             else:
                 try:

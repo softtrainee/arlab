@@ -39,19 +39,8 @@ from src.helpers.alphas import ALPHAS
 from src.experiment.entry.db_entry import DBEntry
 
 
-#ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-#ALPHAS = [a for a in ALPHAS] + ['{}{}'.format(a, b)
-#                                    for a in ALPHAS
-#                                        for b in ALPHAS]
-
-
-
-
-
-
 class LabnumberEntry(DBEntry):
-#class LabnumberEntry(Loggable):
-#    db = Any
+
     irradiation = Str
     level = Str
     irradiation_tray = Str
@@ -60,11 +49,12 @@ class LabnumberEntry(DBEntry):
     levels = Property(depends_on='irradiation,saved')
     trays = Property
 
+    edit_irradiation_button = Button('Edit')
+
     saved = Event
 #    irradiation_trays = Property
     tray_name = Str
     irradiation_tray_image = Property(Image, depends_on='level, irradiation')
-
     irradiated_positions = List(IrradiatedPosition)
 
     auto_assign = Bool
@@ -184,11 +174,42 @@ class LabnumberEntry(DBEntry):
                 add_flux()
 
             db.commit()
+    def _add_irradiation(self, irrad):
+        db = self.db
+        ir = db.get_irradiation(irrad.name)
+        if ir is not None:
+            self.warning_dialog('Irradiation already exists')
+            return
+        else:
+            prn = irrad.pr_name
+            if not prn:
+                prn = irrad.production_ratio_input.names[0]
+
+            def make_ci(ci):
+                return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
+                                        ci.enddate, ci.endtime)
+            err = irrad.chronology_input.validate_chronology()
+#            if err :
+#                self.warning_dialog('Invalid Chronology. {}'.format(err))
+#                return
+
+            chronblob = '$'.join([make_ci(ci) for ci in irrad.chronology_input.dosages])
+            cr = db.add_irradiation_chronology(chronblob)
+
+            ir = db.add_irradiation(irrad.name, prn, cr)
+
+#            holder = db.get_irradiation_holder(self.holder)
+#            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
+#            for ni in alpha:
+#                db.add_irradiation_level(ni, ir, holder)
+
+            db.commit()
 #===============================================================================
 # handlers
 #===============================================================================
     def _calculate_flux_button_fired(self):
         print 'fasd'
+
     def _flux_monitor_changed(self):
         if self.flux_monitor:
             fx = self.db.get_flux_monitor(self.flux_monitor)
@@ -228,36 +249,13 @@ class LabnumberEntry(DBEntry):
             self.irradiation = irrad.name
             self.saved = True
 
-    def _add_irradiation(self, irrad):
-        db = self.db
-        ir = db.get_irradiation(irrad.name)
-        if ir is not None:
-            self.warning_dialog('Irradiation already exists')
-            return
-        else:
-            prn = irrad.pr_name
-            if not prn:
-                prn = irrad.production_ratio_input.names[0]
+    def _edit_irradiation_button_fired(self):
+        irrad = Irradiation(db=self.db,
+                            trays=self.trays,
+                            name=self.irradiation
+                            )
 
-            def make_ci(ci):
-                return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
-                                        ci.enddate, ci.endtime)
-            err = irrad.chronology_input.validate_chronology()
-#            if err :
-#                self.warning_dialog('Invalid Chronology. {}'.format(err))
-#                return
-
-            chronblob = '$'.join([make_ci(ci) for ci in irrad.chronology_input.dosages])
-            cr = db.add_irradiation_chronology(chronblob)
-
-            ir = db.add_irradiation(irrad.name, prn, cr)
-
-#            holder = db.get_irradiation_holder(self.holder)
-#            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
-#            for ni in alpha:
-#                db.add_irradiation_level(ni, ir, holder)
-
-            db.commit()
+        info = irrad.edit_traits(kind='livemodal')
 
 
     def _add_level_button_fired(self):
@@ -459,9 +457,11 @@ class LabnumberEntry(DBEntry):
     def traits_view(self):
         irradiation = Group(
                             HGroup(
-                                   VGroup(Item('irradiation',
-                                               editor=EnumEditor(name='irradiations')
-                                               ),
+                                   VGroup(HGroup(Item('irradiation',
+                                                      editor=EnumEditor(name='irradiations')
+                                                      ),
+                                                 Item('edit_irradiation_button', show_label=False)
+                                                 ),
                                         Item('level',
                                              editor=EnumEditor(name='levels')
                                              ),
@@ -546,8 +546,10 @@ class LabnumberEntry(DBEntry):
                  resizable=True,
                  width=0.75,
                  height=600,
+                 title='Labnumber Entry'
                  )
         return v
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     paths.build('_experiment')

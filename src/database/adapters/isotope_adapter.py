@@ -450,17 +450,17 @@ class IsotopeAdapter(DatabaseAdapter):
             return sam, False
         else:
             if isinstance(project, str):
-                project=None
+                project = None
 
             if project is not None:
                 project.samples.append(sample)
-            
+
             if isinstance(material, str):
-                material=None
-                
+                material = None
+
             if material is not None:
                 material.samples.append(sample)
-                
+
             self.info('adding sample {} project={}, material={}'.format(name,
                                                                         project.name if project else 'None',
                                                                         material.name if material else 'None',))
@@ -587,9 +587,10 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
-#    @get_one
-#    def get_analysis(self):
 
+    @get_one
+    def get_analysis_uuid(self, uuid):
+        return meas_AnalysisTable, 'uuid'
 
     @get_one
     def get_analysis_record(self, db_id):
@@ -736,11 +737,11 @@ class IsotopeAdapter(DatabaseAdapter):
 #    def get_analysis_types(self, **kw):
 #        return self._get_items(gen_AnalysisTypeTable, globals(), **kw)
 
-    def get_irradiations(self, **kw):
-        return self._get_items(irrad_IrradiationTable, globals(), **kw)
+#    def get_irradiations(self, **kw):
+#        return self._get_items(irrad_IrradiationTable, globals(), **kw)
 
-    def get_irradiation_productions(self, **kw):
-        return self._get_items(irrad_ProductionTable, globals(), **kw)
+#    def get_irradiation_productions(self, **kw):
+#        return self._get_items(irrad_ProductionTable, globals(), **kw)
 
     def get_labnumbers(self, **kw):
         return self._get_items(gen_LabTable, globals(), **kw)
@@ -761,13 +762,23 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_users(self, **kw):
         return self._get_items(gen_UserTable, globals(), **kw)
 
-    def get_flux_monitors(self, **kw):
-        return self._get_items(flux_MonitorTable, globals(), **kw)
+#    def get_flux_monitors(self, **kw):
+#        return self._get_items(flux_MonitorTable, globals(), **kw)
 
     '''
         new style using _retrieve_items, _get_items is deprecated. 
         rewritten functionality if required
     '''
+
+    def get_flux_monitors(self, **kw):
+        return self._retrieve_items(flux_MonitorTable)
+
+    def get_irradiations(self, **kw):
+        return self._retrieve_items(irrad_IrradiationTable)
+
+    def get_irradiation_productions(self, **kw):
+        return self._retrieve_items(irrad_ProductionTable)
+
     def get_projects(self, **kw):
         return self._retrieve_items(gen_ProjectTable)
 

@@ -74,6 +74,7 @@ class ExperimentSet(BaseSchedule):
     extract_devices = Property
 
     right_clicked = Any
+    dclicked = Any
 
     _cached_runs = None
     _alive = False
@@ -100,7 +101,7 @@ class ExperimentSet(BaseSchedule):
   post_measurement: {{}}'''.format(name)
             s = tmp.format(0, '', '', '', '')
             return s
-        
+
         s = '''mass_spectrometer: {}
 delay_before_analyses: {}
 delay_between_analyses: {}
@@ -227,7 +228,7 @@ tray: {}
 
         default = lambda x: x if x else '---'
         default_int = lambda x: x if x is not None else 1
-        
+
         self._set_meta_param('tray', meta, default)
         self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
@@ -342,40 +343,53 @@ tray: {}
 
         return nruns
 
+    def _dclicked_changed(self):
+        self._right_clicked_changed()
+
     def _right_clicked_changed(self):
-        self.debug('Right click currently disabled')
-        return
+#        self.debug('Right click currently disabled')
+#        return
 
         selected = self.selected
         if selected:
             selected = selected[0]
-            ms = selected.measurement_script.name
-            es = selected.extraction_script.name
-            be = BatchEdit(
-                           batch=len(self.selected) > 1,
-                           measurement_scripts=self.measurement_scripts,
-                           measurement_script=ms,
-                           orig_measurement_script=ms,
 
-                           extraction_scripts=self.extraction_scripts,
-                           extraction_script=es,
-                           orig_extraction_script=es,
+            if selected.state == 'success':
+                #recall the analysis and display
 
-                           power=selected.extract_value,
-                           orig_power=selected.extract_value,
+                db = self.db
+                print selected.uuid
+#                dbrecord = db.get_analysis_uuid(selected.uuid)
+                db.selector.open_record(selected.uuid)
 
-                           duration=selected.duration,
-                           orig_duration=selected.duration,
+    def _batch_edit(self, selected):
+        ms = selected.measurement_script.name
+        es = selected.extraction_script.name
+        be = BatchEdit(
+                       batch=len(self.selected) > 1,
+                       measurement_scripts=self.measurement_scripts,
+                       measurement_script=ms,
+                       orig_measurement_script=ms,
 
-                           position=selected.position,
-                           orig_position=selected.position
-                           )
+                       extraction_scripts=self.extraction_scripts,
+                       extraction_script=es,
+                       orig_extraction_script=es,
 
-            be.reset()
-            info = be.edit_traits()
-            if info.result:
-                be.apply_edits(self.selected)
-                self.automated_run.update = True
+                       power=selected.extract_value,
+                       orig_power=selected.extract_value,
+
+                       duration=selected.duration,
+                       orig_duration=selected.duration,
+
+                       position=selected.position,
+                       orig_position=selected.position
+                       )
+
+        be.reset()
+        info = be.edit_traits()
+        if info.result:
+            be.apply_edits(self.selected)
+            self.automated_run.update = True
 
     def save_to_db(self):
         self.info('saving experiment {} to database'.format(self.name))
@@ -462,8 +476,13 @@ tray: {}
                 kw['position'] = npos
 
         self.automated_run = ar.clone_traits()
-        self.automated_run.trait_set(**kw)
+        #if analysis type is bg, b- or a overwrite a few defaults
+        if not ar.analysis_type == 'unknown':
+            kw['position'] = 0
+            kw['extract_value'] = 0
 
+
+        self.automated_run.trait_set(**kw)
         self._bind_automated_run(self.automated_run)
 
         self.update_aliquots_needed = True
@@ -480,15 +499,16 @@ post_measurement_script, post_equilibration_script''')
             self._update_run_script(self.automated_run, name)
 
     def _update_run_script(self, run, sname):
-        ssname = '{}_script'.format(sname)
-        name = getattr(self, ssname)
-        name = self._add_mass_spectromter_name(name)
-        if run.configuration:
-            run.configuration[ssname] = os.path.join(paths.scripts_dir,
-                                                        sname,
-                                                        name
-                                                        )
-            setattr(run, '{}_script_dirty'.format(sname), True)
+        if run.state == 'not run':
+            ssname = '{}_script'.format(sname)
+            name = getattr(self, ssname)
+            name = self._add_mass_spectromter_name(name)
+            if run.configuration:
+                run.configuration[ssname] = os.path.join(paths.scripts_dir,
+                                                            sname,
+                                                            name
+                                                            )
+                setattr(run, '{}_script_dirty'.format(sname), True)
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -496,6 +516,11 @@ post_measurement_script, post_equilibration_script''')
             self.dirty = True
         else:
             self.dirty = False
+
+    @on_trait_change('automated_runs:dirty')
+    def _update_dirty(self, dirty):
+        if dirty:
+            self.dirty = dirty
 
     @on_trait_change('automated_run:labnumber')
     def _update_labnumber(self, labnumber):
@@ -566,14 +591,16 @@ post_measurement_script, post_equilibration_script''')
 #        print new
         self.selected_runs = new
         if len(new) == 1:
-            self.automated_run = new[0].clone_traits()
+            run = new[0]
+            if run.state == 'not run':
+                self.automated_run = run.clone_traits()
 
-            for si in SCRIPT_KEYS:
-                try:
-                    n = self._clean_script_name(getattr(new[0], '{}_script'.format(si)).name)
-                    setattr(self, '{}_script'.format(si), n)
-                except AttributeError:
-                    pass
+                for si in SCRIPT_KEYS:
+                    try:
+                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
+                        setattr(self, '{}_script'.format(si), n)
+                    except AttributeError:
+                        pass
 
 #===============================================================================
 # property get/set
@@ -749,7 +776,9 @@ post_measurement_script, post_equilibration_script''')
                              selected='object.selected',
 #                             refresh='object.refresh',
 #                             activated_row='object.activated_row',
-                            operations=['delete', 'edit'],
+                            operations=['delete',
+                                        'move',
+                                        'edit'],
 #                            editable=False,
                              auto_resize=True,
                              multi_select=True,

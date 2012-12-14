@@ -41,6 +41,7 @@ class Irradiation(Saveable):
     tray = Str
     trays = List
     add_pr_button = Button('+')
+    edit_pr_button = Button('Edit')
     set_chron_button = Button('Set Chronology')
 
 
@@ -49,8 +50,21 @@ class Irradiation(Saveable):
     previd = 0
 #    pr_names = DelegatesTo('production_ratio_input', prefix='names')
 
+#===============================================================================
+# handlers
+#===============================================================================
     def _add_pr_button_fired(self):
         pr = self.production_ratio_input
+        pr.db.reset()
+        pr.edit_traits()
+
+    def _edit_pr_button_fired(self):
+        pr = self.production_ratio_input
+        if self.pr_name:
+            pr.name = self.pr_name
+        else:
+            pr.name = pr.names[0]
+
         pr.db.reset()
         pr.edit_traits()
 
@@ -58,6 +72,7 @@ class Irradiation(Saveable):
         pr = self.chronology_input
         pr.db.reset()
         pr.edit_traits()
+
 
 #    def save(self):
 #
@@ -100,7 +115,8 @@ class Irradiation(Saveable):
         v = View(Item('name'),
 #                 Item('ntrays', label='N. Trays'),
                  HGroup(Item('pr_name', editor=EnumEditor(name='object.production_ratio_input.names')),
-                        Item('add_pr_button', show_label=False)
+                        Item('edit_pr_button', show_label=False),
+                        Item('add_pr_button', show_label=False),
                         ),
                  HGroup(spring, Item('set_chron_button', show_label=False)),
 

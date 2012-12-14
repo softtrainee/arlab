@@ -145,7 +145,7 @@ class BaseSchedule(Saveable):
 # persistence
 #===============================================================================
     def dump(self, stream):
-        self.dirty = False
+#        self.dirty = False
 
         header, attrs = self._get_dump_attrs()
 

@@ -72,6 +72,7 @@ class ExperimentExecutor(ExperimentManager):
         next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
     '''
 
+    right_clicked = Any
     selected_row = Any
     selected = Any
 
@@ -541,6 +542,7 @@ class ExperimentExecutor(ExperimentManager):
 #===============================================================================
 # handlers
 #===============================================================================
+
     def _resume_button_fired(self):
         self.resume_runs = True
 
@@ -548,6 +550,7 @@ class ExperimentExecutor(ExperimentManager):
         if self.selected:
             self.stats.calculate_at(self.selected)
             self.stats.calculate()
+            self.experiment_set.selected = [self.selected]
 
     def _execute_button_fired(self):
         self._execute()
@@ -568,7 +571,8 @@ class ExperimentExecutor(ExperimentManager):
     def traits_view(self):
         editor = myTabularEditor(adapter=AutomatedRunAdapter(),
 #                             update=update,
-                             right_clicked='object.right_clicked',
+                             right_clicked='object.experiment_set.right_clicked',
+                             dclicked='object.experiment_set.dclicked',
                              selected='object.selected',
                              selected_row='object.selected_row',
 #                             refresh='object.refresh',

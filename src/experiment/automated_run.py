@@ -38,7 +38,8 @@ from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.identifier import convert_identifier, get_analysis_type
+from src.experiment.identifier import convert_identifier, get_analysis_type, \
+    SPECIAL_NAMES, convert_special_name
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
@@ -48,6 +49,8 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 
 from globals import globalv
 from src.constants import NULL_STR
+from uncertainties import ufloat
+from src.database.records.arar_age import ArArAge
 
 
 class AutomatedRun(Loggable):
@@ -65,11 +68,13 @@ class AutomatedRun(Loggable):
     runner = Any
     plot_panel = Any
     peak_plot_panel = Any
+    arar_age = Instance(ArArAge)
 
     sample = Str
 
     experiment_name = Str
     labnumber = String(enter_set=True, auto_set=False)
+    special_labnumber = Str
 
     _labnumber = Int
     labnumbers = Property(depends_on='project')
@@ -144,7 +149,7 @@ class AutomatedRun(Loggable):
     _executable = Bool(True)
     _alive = False
 
-    regression_results = None
+#    regression_results = None
     peak_center = None
 #    info_display = DelegatesTo('experiment_manager')
     info_display = None#DelegatesTo('experiment_manager')
@@ -155,11 +160,11 @@ class AutomatedRun(Loggable):
     update = Event
     _truncate_signal = Bool
     measuring = Bool(False)
+    dirty = Bool(False)
 
+    uuid = Str
 #    def _aliquot_changed(self):
 #        print self.labnumber, self.aliquot
-
-
 
     def get_corrected_signals(self):
         d = dict()
@@ -243,6 +248,14 @@ class AutomatedRun(Loggable):
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def start(self):
+        if self.analysis_type == 'unknown':
+            #load arar_age object for age calculation
+            self.arar_age = ArArAge()
+            ln = self.labnumber
+            ln = convert_identifier(ln)
+            ln = self.db.get_labnumber(ln)
+            self.arar_age.labnumber_record = ln
+
         self.measuring = False
         self.update = True
         self.overlap_evt = TEvent()
@@ -510,9 +523,16 @@ class AutomatedRun(Loggable):
 
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
-        self.plot_panel.baselines = self.experiment_manager._prev_baselines
-        self.plot_panel.blanks = self.experiment_manager._prev_blanks
+        self.plot_panel.baselines = baselines = self.experiment_manager._prev_baselines
+        self.plot_panel.blanks = blanks = self.experiment_manager._prev_blanks
         self.plot_panel.correct_for_blank = True if (not self.analysis_type.startswith('blank') and not self.analysis_type.startswith('background')) else False
+
+        #sync the arar_age object's signals
+        if self.analysis_type == 'unknown':
+            for iso, v in blanks:
+                self.arar_age.signals['{}bl'.format(iso)] = v
+            for iso, v in baselines:
+                self.arar_age.signals['{}bs'.format(iso)] = v
 
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
@@ -918,7 +938,7 @@ class AutomatedRun(Loggable):
 
 
         name = uuid.uuid4()
-
+        self.uuid = str(name)
 #        path = os.path.join(self.repository.root, '{}.h5'.format(name))
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
         frame = dm.new_frame(path=path)
@@ -937,7 +957,7 @@ class AutomatedRun(Loggable):
 
         cp = self.data_manager.get_current_path()
 
-        uuid, _ext = os.path.splitext(os.path.basename(cp))
+#        uuid, _ext = os.path.splitext(os.path.basename(cp))
 
         #commit repository
 #        self.repository.add_file(cp)
@@ -971,7 +991,7 @@ class AutomatedRun(Loggable):
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
             a = db.add_analysis(lab,
-                                uuid=uuid,
+                                uuid=self.uuid,
                                 runtime=self._runtime,
                                 rundate=self._rundate,
                                 endtime=endtime,
@@ -1028,7 +1048,7 @@ class AutomatedRun(Loggable):
                    if kind == 'baseline']
         sniffs = [(iso, detname)
                    for (iso, detname, kind) in self._save_isotopes
-                   if kind == 'baseline']
+                   if kind == 'sniff']
 
         rsignals = dict()
 
@@ -1202,13 +1222,19 @@ class AutomatedRun(Loggable):
         blanks = []
         pb = self.experiment_manager._prev_blanks
         for _di, iso in detectors:
-            blanks.append(pb[iso])
+            if iso in pb:
+                blanks.append(pb[iso])
+            else:
+                blanks.append(ufloat((0, 0)))
 
         #only add sample loading on the first analysis
         self.massspec_importer.add_sample_loading(self.mass_spectrometer, self.tray)
         self.massspec_importer.add_login_session(self.mass_spectrometer)
         self.massspec_importer.add_data_reduction_session()
 
+        intercepts = [self.plot_panel.signals, self.plot_panel.baselines]
+        fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
+                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
         self.massspec_importer.add_analysis(self.labnumber,
                                             self.aliquot,
                                             self.step,
@@ -1218,7 +1244,9 @@ class AutomatedRun(Loggable):
                                             signals,
                                             blanks,
                                             detectors,
-                                            self.regression_results,
+                                            intercepts,
+                                            fits,
+#                                            self.regression_results,
 
                                             self.mass_spectrometer,
                                             self.extract_device,
@@ -1238,6 +1266,10 @@ class AutomatedRun(Loggable):
 #===============================================================================
     def __labnumber_changed(self):
         self.labnumber = self._labnumber
+
+    def _special_labnumber_changed(self):
+        if self.special_labnumber != NULL_STR:
+            self.labnumber = convert_special_name(self.special_labnumber)
 
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
@@ -1636,19 +1668,21 @@ class AutomatedRun(Loggable):
                  VGroup(
                      Group(
                            Item('project', editor=EnumEditor(name='projects')),
+                           Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES)),
                            HGroup(Item('labnumber'), Item('_labnumber',
                                                           show_label=False,
                                                           editor=EnumEditor(name='labnumbers'))),
                      readonly('sample'),
                      readonly('irrad_level', label='Irradiation'),
 
-                     HGroup(sspring(width=33), Item('extract_value', label='Heat'),
+                     HGroup(sspring(width=33), Item('extract_value', label='Extract'),
                             spring,
                             Item('extract_units',
                                  show_label=False),
                             ),
                      Item('ramp_rate', label='Ramp Rate (C/s)'),
-                     Item('duration', label='Duration'),
+                     Item('duration', label='Duration (s)'),
+                     Item('cleanup', label='Cleanup (s)'),
                      Item('weight'),
                      Item('comment'),
 

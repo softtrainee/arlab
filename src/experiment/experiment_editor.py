@@ -25,8 +25,8 @@ from src.paths import paths
 import os
 
 class ExperimentEditor(ExperimentManager):
-    dirty = Property(depends_on='_dirty,_path')
-    _path = Str
+    dirty = Property(depends_on='_dirty,path')
+#    _path = Str
     _dirty = Bool
 
     dirty_save_as = Bool(False)
@@ -34,6 +34,16 @@ class ExperimentEditor(ExperimentManager):
 #===============================================================================
 # persistence
 #===============================================================================
+    def load_experiment_set(self, *args, **kw):
+        r = super(ExperimentEditor, self).load_experiment_set(*args, **kw)
+
+        #loading the experiment set will set dirty =True 
+        #change back to false. not really dirty
+#        self.dirty = False
+        if r:
+            self.experiment_set.dirty = False
+        return r
+
     def save(self):
         self.save_experiment_sets()
 
@@ -46,7 +56,7 @@ class ExperimentEditor(ExperimentManager):
         self._path = p
 
     def save_experiment_sets(self):
-        self._dump_experiment_sets(self._path)
+        self._dump_experiment_sets(self.path)
         self.dirty = False
 
     def _dump_experiment_sets(self, p):
@@ -118,6 +128,6 @@ class ExperimentEditor(ExperimentManager):
         self._dirty = d
 
     def _get_dirty(self):
-        return self._dirty and os.path.isfile(self._path)
+        return self._dirty and os.path.isfile(self.path)
 
 #============= EOF =============================================

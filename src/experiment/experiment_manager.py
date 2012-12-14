@@ -62,8 +62,8 @@ class ExperimentManager(Manager):
     experiment_sets = List
 
     title = Property(depends_on='experiment_set')#DelegatesTo('experiment_set', prefix='name')
-    path = DelegatesTo('experiment_set')
-
+#    path = DelegatesTo('experiment_set')
+    path = Property(depends_on='experiment_set')
 #    editing_signal = None
     filelistener = None
     username = Str
@@ -439,6 +439,10 @@ class ExperimentManager(Manager):
     def _get_title(self):
         if self.experiment_set:
             return 'Experiment {}'.format(self.experiment_set.name)
+
+    def _get_path(self):
+        if self.experiment_set:
+            return self.experiment_set.path
 #===============================================================================
 # handlers
 #===============================================================================
@@ -468,7 +472,7 @@ class ExperimentManager(Manager):
         return lne
 
     def _db_factory(self):
-        db = IsotopeAdapter()
+        db = IsotopeAdapter(application=self.application)
         return db
 
 #===============================================================================
