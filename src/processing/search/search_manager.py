@@ -52,23 +52,26 @@ class SearchManager(Viewable, ColumnSorterMixin):
     def _refresh_results(self):
         selector = self.selector
 
-        ma = self.machine
         pr = self.project
-        an = self.analysis_type
 
-        qs = []
-        if pr != NULL_STR:
-            q = selector.query_factory(parameter='Project', criterion=pr)
-            qs.append(q)
-        if ma != NULL_STR:
-            q = selector.query_factory(parameter='Mass Spectrometer', criterion=ma)
-            qs.append(q)
-        if an != NULL_STR:
-            q = selector.query_factory(parameter='Analysis Type', criterion=an)
-            qs.append(q)
+        if pr == 'recent':
+            selector.load_recent()
+        else:
+            ma = self.machine
+            an = self.analysis_type
+            qs = []
+            if pr != NULL_STR:
+                q = selector.query_factory(parameter='Project', criterion=pr)
+                qs.append(q)
+            if ma != NULL_STR:
+                q = selector.query_factory(parameter='Mass Spectrometer', criterion=ma)
+                qs.append(q)
+            if an != NULL_STR:
+                q = selector.query_factory(parameter='Analysis Type', criterion=an)
+                qs.append(q)
 
-        if qs:
-            selector.execute_query(queries=qs, load=False)
+            if qs:
+                selector.execute_query(queries=qs, load=False)
 
 #===============================================================================
 # property get/set

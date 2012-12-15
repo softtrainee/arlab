@@ -72,6 +72,16 @@ class ProcessingActionSet(WorkbenchActionSet):
                       class_name='{}:OpenSelectorAction'.format(BASE)
                     ),
 
+               Action(name='Figures...',
+                      path=PATH,
+                      class_name='{}:OpenFiguresAction'.format(BASE)
+                    ),
+               Action(name='Save Figure...',
+                      path=PATH,
+                      class_name='{}:SaveFigureAction'.format(BASE)
+                    ),
+
+
 
 
 

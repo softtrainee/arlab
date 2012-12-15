@@ -148,6 +148,21 @@ class proc_DetectorIntercalibrationTable(Base, BaseMixin):
                         backref='detector_intercalibration',
                         )
 
+
+class proc_FigureTable(Base, NameMixin):
+    create_date = Column(DateTime, default=func.now())
+    user = stringcolumn()
+    project_id = foreignkey('gen_ProjectTable')
+
+    analyses = relationship('proc_FigureAnalysisTable', backref='figure')
+
+class proc_FigureAnalysisTable(Base, BaseMixin):
+    figure_id = foreignkey('proc_FigureTable')
+    analysis_id = foreignkey('meas_AnalysisTable')
+    status = Column(Integer)
+    graph = Column(Integer)
+    group = Column(Integer)
+
 class proc_FitHistoryTable(Base, HistoryMixin):
     fits = relationship('proc_FitTable', backref='history',
 #                        uselist=False
@@ -247,6 +262,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)
 
+    figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
 
 class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')
@@ -425,7 +441,7 @@ class gen_MolecularWeightTable(Base, NameMixin):
 class gen_ProjectTable(Base, NameMixin):
     users = relationship('gen_UserTable', backref='project')
     samples = relationship('gen_SampleTable', backref='project')
-
+    figures = relationship('proc_FigureTable', backref='project')
 
 class gen_SampleTable(Base, NameMixin):
     material_id = foreignkey('gen_MaterialTable')

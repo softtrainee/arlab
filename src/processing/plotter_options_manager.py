@@ -15,20 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Event, Instance, Button, cached_property
-from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup
+from traits.api import HasTraits, Property, List, Event, Instance, Button, cached_property, Enum
+from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup, Group
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.viewable import Viewable
-from src.processing.plotters.plotter_options import PlotterOptions
+from src.processing.plotters.plotter_options import PlotterOptions, \
+    IdeogramOptions
 from src.paths import paths
 class PlotterOptionsManager(Viewable):
     plotter_options_list = Property(List(PlotterOptions), depends_on='_plotter_options_list_dirty')
     _plotter_options_list_dirty = Event
     plotter_options = Instance(PlotterOptions)
     plotter_options_name = 'main'
+    plotter_options_klass = PlotterOptions
 
     delete_options = Button('-')
     def close(self, ok):
@@ -54,7 +56,8 @@ class PlotterOptionsManager(Viewable):
             self.plotter_options = self.plotter_options_list[0]
 
     def traits_view(self):
-        v = View(HGroup(
+        v = View(
+                 HGroup(
                     Item('plotter_options', show_label=False,
                                    editor=EnumEditor(name='plotter_options_list')
                                 ),
@@ -62,8 +65,9 @@ class PlotterOptionsManager(Viewable):
                          enabled_when='object.plotter_options.name!="Default"',
                          show_label=False),
                         ),
-                 Item('plotter_options', show_label=False,
+                   Item('plotter_options', show_label=False,
                       style='custom'),
+                 resizable=True,
 #                               Item('edit_plotter_options', show_label=False),    
                  buttons=['OK', 'Cancel'],
                  handler=self.handler_klass,
@@ -74,12 +78,13 @@ class PlotterOptionsManager(Viewable):
     @cached_property
     def _get_plotter_options_list(self):
         r = paths.plotter_options_dir
-        ps = [PlotterOptions(name='Default')]
+        klass = self.plotter_options_klass
+        ps = [klass(name='Default')]
         for n in os.listdir(r):
             if n.startswith('.') or n.endswith('.default') or n == 'Default':
                 continue
 
-            po = PlotterOptions(name=n)
+            po = klass(name=n)
             ps.append(po)
 
         return ps
@@ -100,4 +105,9 @@ class PlotterOptionsManager(Viewable):
             po = self.plotter_options_list[0]
 
         return po
+
+
+class IdeogramOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = IdeogramOptions
+
 #============= EOF =============================================

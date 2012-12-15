@@ -17,13 +17,34 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance
 from traitsui.api import View, Item, TableEditor
-from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.loggable import Loggable
-from src.managers.manager import Manager
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.managers.manager import Manager
+
 class DatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
+    def __init__(self, *args, **kw):
+        super(DatabaseManager, self).__init__(*args, **kw)
+        if self.application:
+            self.bind_preferences()
+
+    def bind_preferences(self):
+        try:
+#            bind_preference(self, 'username', 'envisage.ui.workbench.username')
+            bind_preference(self.db, 'save_username', 'envisage.ui.workbench.username')
+            prefid = 'pychron.experiment'
+            bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
+            if self.db.kind == 'mysql':
+                bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
+                bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
+                bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
+
+            bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
+        except (AttributeError, NameError):
+            pass
+
     def _db_factory(self):
         db = IsotopeAdapter(username='massspec',
                             password='DBArgon',
@@ -35,9 +56,11 @@ class DatabaseManager(Manager):
                             password='Argon',
                             kind='mysql',
                             name='isotopedb_dev',
+                            application=self.application
                             )
 
         return db
+
     def _db_default(self):
         db = self._db_factory()
         return db

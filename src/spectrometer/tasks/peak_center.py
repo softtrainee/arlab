@@ -87,6 +87,8 @@ def calculate_peak_center(x, y, min_peak_height=1.0, percent=80):
 
         return [lx, cx, hx ], [ly, cy, hy], mx, my
 
+
+
 class PeakCenter(MagnetScan):
     center_dac = Float
 

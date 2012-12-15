@@ -98,6 +98,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #    blanks = None
 
     labnumber = Property
+    project = Property
     shortname = Property
     analysis_type = Property
     aliquot = Property
@@ -854,6 +855,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # dbrecord values
 #===============================================================================
+
+    @cached_property
+    def _get_project(self):
+        if self.dbrecord:
+            ln = self.dbrecord.labnumber
+            sample = ln.sample
+            return sample.project.name
+
     @cached_property
     def _get_status(self):
         return self._get_dbrecord_value('status')
