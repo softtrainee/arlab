@@ -32,7 +32,7 @@ from src.database.records.isotope_record import IsotopeRecord
 from src.processing.plotters.plotter_options import PlotterOptions
 from src.constants import NULL_STR
 from src.processing.processing_manager import ProcessingManager
-from src.processing.tabular_manager import AnalysisAdapter
+from src.processing.tabular_analysis_manager import AnalysisAdapter
 
 #class Panel(HasTraits):
 #    pass
@@ -223,7 +223,7 @@ class ProjectView(ProcessingManager):
     def _get_analyses(self):
         sample = self.selected_sample
         if sample:
-            ans = [Analysis(dbrecord=IsotopeRecord(_dbrecord=ri))
+            ans = [Analysis(isotope_record=IsotopeRecord(_dbrecord=ri))
                         for ln in sample.dbrecord.labnumbers
                             for ri in ln.analyses]
             if self.only_fusions:

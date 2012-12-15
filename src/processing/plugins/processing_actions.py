@@ -46,6 +46,20 @@ class SaveFigureAction(Action):
     def perform(self, event):
         man = get_manager(event)
         man.save_figure()
+
+class ExportCSVFigureTableAction(Action):
+    def perform(self, event):
+        man = get_manager(event)
+        man.export_figure_table(kind='csv')
+class ExportPDFFigureTableAction(Action):
+    def perform(self, event):
+        man = get_manager(event)
+        man.export_figure_table(kind='pdf')
+
+class ExportPDFFigureAction(Action):
+    def perform(self, event):
+        man = get_manager(event)
+        man.export_figure()
 #===============================================================================
 # display
 #===============================================================================

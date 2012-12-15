@@ -82,7 +82,7 @@ class AnalysisTabularAdapter(TabularAdapter):
 #        return cols
 
     def _get_age_text(self, trait, item):
-        return '{:0.3f}'.format(self.item.age[0])
+        return '{:0.3f}'.format(self.item.age_value)
 
     def get_text_color(self, obj, trait, row):
         o = getattr(obj, trait)[row]
@@ -103,60 +103,33 @@ class Analysis(Loggable):
     sample = Str
     irradiation = Str
 
-    dbrecord = Any
-
-    record_id = Property#(depends_on='dbrecord')
-    sample = Property#(depends_on='dbrecord')
-    labnumber = Property#(depends_on='dbrecord')
-    project = Property
-    aliquot = Property
-    step = Property
-    irradiation = Property#(depends_on='dbrecord')
-    group_id = Property#(depends_on='dbrecord')
-    graph_id = Property#(depends_on='dbrecord')
+    isotope_record = Any
+    irradiation = Property#(depends_on='isotope_record')
+    group_id = Property#(depends_on='isotope_record')
+    graph_id = Property#(depends_on='isotope_record')
     analysis_type = Property#(depends_on='labnumber')
-    k39 = Property
-    kca = Property
     rad40 = Property
-    rad40_percent = Property
-    status = Property
     status_string = Property(depends_on='status')
-    j = Property
-    ic_factor = Property
-    arar_result = Property
-    isotope_keys = Property
-#    timestamp = Float
 
-#    signals = Dict
-#    signals = DelegatesTo('dbrecord')
-    signals = Property
-#    age = Property(depends_on='age_dirty, signals[]')
-    age = Property#(depends_on='age_dirty, signals[]')
     age_error = Property
+    age_value = Property
 #    age_dirty = Event
 
-#    k39 = Float
-#    k39err = Float
-
-#    group_id = Int
-#    graph_id
     color = Color('black')
     bgcolor = Color('white')
     uuid = Str
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
-
-#    ic_factor = Property
-#    _ic_factor = Tuple
-
     temp_status = Int
+
 #    @on_trait_change('signals:blank_signal')
 #    def _change(self):
 #        print 'fiafsd'
 #        self.age_dirty = True
+
     def load_age(self):
         if self.age is not None:
-            #self.info('{} age={}'.format(self.dbrecord.record_id, a))
+            #self.info('{} age={}'.format(self.isotope_record.record_id, a))
             return True
         else:
             self.warning('could not compute age for {}'.format(self.rid))
@@ -203,7 +176,7 @@ class Analysis(Loggable):
 
     @property
     def age_string(self):
-        a, e = self.age.nominal_value, self.age.std_dev()
+        a, e = self.age_value, self.age_error
         try:
             pe = abs(e / a * 100)
         except ZeroDivisionError:
@@ -212,99 +185,53 @@ class Analysis(Loggable):
 
     @property
     def timestamp(self):
-        return self.dbrecord.timestamp
-
-    def _get_j(self):
-        return self.dbrecord.j
+        return self.isotope_record.timestamp
 
     def _get_rad40(self):
-        rr = self.dbrecord.arar_result
+        rr = self.isotope_record.arar_result
         return rr['rad40']
 
-    def _get_rad40_percent(self):
-        return self.dbrecord.rad40_percent
-#        rr = self.dbrecord.arar_result
-#        return rr['rad40'] / rr['tot40'] * 100
+    def __getattr__(self, attr):
+        if hasattr(self.isotope_record, attr):
+            return getattr(self.isotope_record, attr)
 
-    def _get_age(self):
-        return self.dbrecord.age
-
-    def _get_kca(self):
-        return self.dbrecord.kca
-
-    def _get_k39(self):
-        return self.dbrecord.k39
+    def _get_age_value(self):
+        return self.age.nominal_value
 
     def _get_age_error(self):
         return self.age.std_dev()
 
     def _get_analysis_type(self):
-        dbr = self.dbrecord
+        dbr = self.isotope_record
         return dbr.measurement.analysis_type.name
 
-#    @cached_property
-    def _get_labnumber(self):
-        dbr = self.dbrecord
-        return dbr.labnumber
 
-    def _get_project(self):
-        dbr = self.dbrecord
-        return dbr.project
-
-#    @cached_property
-    def _get_record_id(self):
-        return self.dbrecord.record_id
-#        dbr = self.dbrecord
-#        return '{}-{}{}'.format(self.labnumber, dbr.aliquot, dbr.step)
-#        dbr = self.dbrecord
-#        ln = dbr.labnumber
-#        return '{}-{}'.format(ln.labnumber, ln.aliquot)
-    def _get_aliquot(self):
-        return self.dbrecord.aliquot
-
-    def _get_step(self):
-        return self.dbrecord.step
 #    @cached_property
     def _get_sample(self):
-        dbr = self.dbrecord
+        dbr = self.isotope_record
         if hasattr(dbr, 'sample'):
             return dbr.sample.name
         else:
             return NULL_STR
 
     def _get_irradiation(self):
-        dbr = self.dbrecord
+        dbr = self.isotope_record
         return dbr.irradiation.name
-
-    def _get_ic_factor(self):
-        return self.dbrecord.ic_factor
-
-    def _get_signals(self):
-        return self.dbrecord.signals
-
-    def _get_isotope_keys(self):
-        return self.dbrecord.isotope_keys
-
-    def _get_arar_result(self):
-        return self.dbrecord.arar_result
-
-    def _get_status(self):
-        return self.dbrecord.status
 
     def _get_status_string(self):
         return '' if self.status == 0 else 'X'
 
     def _get_group_id(self):
-        return self.dbrecord.group_id
+        return self.isotope_record.group_id
 
     def _get_graph_id(self):
-        return self.dbrecord.graph_id
+        return self.isotope_record.graph_id
 
     def _set_group_id(self, g):
-        self.dbrecord.group_id = g
+        self.isotope_record.group_id = g
 
     def _set_graph_id(self, g):
-        self.dbrecord.graph_id = g
+        self.isotope_record.graph_id = g
 
 
 class NonDBAnalysis(HasTraits):
@@ -349,7 +276,7 @@ class NonDBAnalysis(HasTraits):
 
 class IntegratedAnalysis(NonDBAnalysis):
     rad40_percent = Property
-#    dbrecord = None
+#    isotope_record = None
 
     def _get_rad40_percent(self):
         return self._rad40_percent
@@ -376,3 +303,51 @@ if __name__ == '__main__':
         
     '''
 #============= EOF =============================================
+#    @cached_property
+#    def _get_labnumber(self):
+#        dbr = self.isotope_record
+#        return dbr.labnumber
+#
+#    def _get_project(self):
+#        dbr = self.isotope_record
+#        return dbr.project
+#
+##    @cached_property
+#    def _get_record_id(self):
+#        return self.isotope_record.record_id
+#        dbr = self.isotope_record
+#        return '{}-{}{}'.format(self.labnumber, dbr.aliquot, dbr.step)
+#        dbr = self.isotope_record
+#        ln = dbr.labnumber
+#        return '{}-{}'.format(ln.labnumber, ln.aliquot)
+#    def _get_aliquot(self):
+#        return self.isotope_record.aliquot
+
+#    def _get_step(self):
+#        return self.isotope_record.step
+#    def _get_ic_factor(self):
+#        return self.isotope_record.ic_factor
+#
+#    def _get_signals(self):
+#        return self.isotope_record.signals
+#
+#    def _get_isotope_keys(self):
+#        return self.isotope_record.isotope_keys
+#
+#    def _get_arar_result(self):
+#        return self.isotope_record.arar_result
+#
+#    def _get_status(self):
+#        return self.isotope_record.status
+#    def _get_age(self):
+#        return self.isotope_record.age
+
+#    def _get_kca(self):
+#        return self.isotope_record.kca
+
+#    def _get_k39(self):
+#        return self.isotope_record.k39
+#    def _get_rad40_percent(self):
+#        return self.isotope_record.rad40_percent
+#        rr = self.isotope_record.arar_result
+#        return rr['rad40'] / rr['tot40'] * 100

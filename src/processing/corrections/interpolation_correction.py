@@ -78,7 +78,7 @@ class InterpolationCorrection(HasTraits):
         return pi.get_corrected_intercept(key)
 
     def _predictor_factory(self, predictor):
-        a = Analysis(dbrecord=IsotopeRecord(_dbrecord=predictor))
+        a = Analysis(isotope_record=IsotopeRecord(_dbrecord=predictor))
         return a
 
     def _get_predictors(self, analysis):

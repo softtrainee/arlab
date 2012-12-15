@@ -39,9 +39,12 @@ from src.processing.corrections.corrections_manager import BlankCorrectionsManag
 from src.processing.search.search_manager import SearchManager
 from src.processing.search.selector_manager import SelectorManager
 from src.processing.search.selected_view import Marker
-from src.processing.series_manager import SeriesManager
 from src.processing.search.figure_manager import FigureManager
 from src.database.records.isotope_record import IsotopeRecord
+import csv
+from src.processing.publisher.publisher import  CSVWriter, \
+    PDFWriter, MassSpecCSVWriter
+from src.processing.series_manager import SeriesManager
 
 
 class ProcessingManager(DatabaseManager):
@@ -77,14 +80,21 @@ class ProcessingManager(DatabaseManager):
 #===============================================================================
 # figures
 #===============================================================================
+    def _get_active_figure(self):
+        figure = next((obj for win, obj in self.figures if win.ui.control.IsActive()), None)
+        return figure
+
+    def _get_active_window(self):
+        window = next((win for win, obj in self.figures if win.ui.control.IsActive()), None)
+        return window
+
     def open_figures(self):
         fm = self.figure_manager
         fm.edit_traits()
 
     def save_figure(self):
         fm = self.figure_manager
-
-        figure = next((obj for win, obj in self.figures if win.ui.control.IsActive()), None)
+        figure = self._get_active_figure()
         if figure:
             fm.project_name = figure.analyses[0].project
             info = fm.edit_traits(view='save_view')
@@ -93,7 +103,7 @@ class ProcessingManager(DatabaseManager):
 
     def open_figure(self, figure_record):
 
-        ans = [Analysis(dbrecord=IsotopeRecord(_dbrecord=ai)) for ai in figure_record.analyses]
+        ans = [Analysis(isotope_record=IsotopeRecord(_dbrecord=ai)) for ai in figure_record.analyses]
 
         if ans:
             progress = self._open_progress(len(ans))
@@ -108,6 +118,69 @@ class ProcessingManager(DatabaseManager):
             po = pom.plotter_options
             if func(ans, po):
                 self._display_tabular_data()
+#===============================================================================
+# export
+#===============================================================================
+    def export_figure(self):
+        '''
+            save figure as a pdf
+        '''
+        win = self._get_active_window()
+        if win:
+            from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+#            p = self.save_file_dialog()
+            p = '/Users/ross/Sandbox/figure_export.pdf'
+            if p:
+                gc = PdfPlotGraphicsContext(filename=p,
+                                              pagesize='letter',
+                                              dest_box_units='inch')
+                gc.render_component(win.container, valign='center')
+                gc.save()
+                self.info('saving figure to {}'.format(p))
+
+
+    def export_figure_table(self, kind='csv'):
+        '''
+            save a figures analyses as a table
+        '''
+        grouped_analyses = None
+        figure = self._get_active_figure()
+        if figure is not None:
+            grouped_analyses = figure._get_grouped_analyses()
+        else:
+            if self._gather_data():
+                ans = self._get_analyses()
+                group_ids = list(set([a.group_id for a in ans]))
+
+                grouped_analyses = [[ai for ai in ans if ai.group_id == gid]
+                                  for gid in group_ids
+                                  ]
+
+        if grouped_analyses:
+#            p = self.save_file_dialog()
+            p = '/Users/ross/Sandbox/figure_export.csv'
+            if p:
+                if kind == 'csv':
+                    klass = CSVWriter
+                elif kind == 'pdf':
+                    p = '/Users/ross/Sandbox/figure_export.pdf'
+                    klass = PDFWriter
+                elif kind == 'massspec':
+                    klass = MassSpecCSVWriter
+
+                self._export(klass, p, grouped_analyses)
+                self.info('exported figure to {}'.format(p))
+
+    def _export(self, klass, p, grouped_analyses):
+        pub = klass(filename=p)
+        n = len(grouped_analyses)
+        for i, ans in enumerate(grouped_analyses):
+            pub.add_ideogram_table(ans,
+                                   title=i == 0,
+                                   header=i == 0,
+                                   add_group_marker=i < n - 1)
+
+        pub.publish()
 
 #===============================================================================
 # apply corrections
@@ -271,7 +344,7 @@ class ProcessingManager(DatabaseManager):
 
     def _get_analyses(self):
         ps = self.selector_manager
-        ans = [Analysis(dbrecord=ri) for ri in ps.selected_records if not isinstance(ri, Marker)]
+        ans = [Analysis(isotope_record=ri) for ri in ps.selected_records if not isinstance(ri, Marker)]
         return ans
 
     def _set_window_xy(self, obj):
