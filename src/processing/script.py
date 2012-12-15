@@ -467,7 +467,7 @@ class ProcessScript(DatabaseManager):
     def _convert_records(self, recs):
         from src.processing.analysis import Analysis
 
-        return [Analysis(dbrecord=IsotopeRecord(_dbrecord=ri)) for ri in recs]
+        return [Analysis(isotope_record=IsotopeRecord(_dbrecord=ri)) for ri in recs]
 
     def get_parameter(self, a, b, default=None):
         r = default

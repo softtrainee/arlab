@@ -120,8 +120,8 @@ class proc_BackgroundsTable(Base, BaseMixin):
 
 
 class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
-    detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationTable')
-    detector_intercalibration_analysis_id = foreignkey('meas_AnalysisTable')
+    intercalibration_id = foreignkey('proc_DetectorIntercalibrationTable')
+    ic_analysis_id = foreignkey('meas_AnalysisTable')
 
 
 
@@ -186,7 +186,7 @@ class proc_SelectedHistoriesTable(Base, BaseMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
     selected_blanks_id = foreignkey('proc_BlanksHistoryTable')
     selected_backgrounds_id = foreignkey('proc_BackgroundsHistoryTable')
-    selected_detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
+    selected_det_intercal_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
     selected_fits_id = foreignkey('proc_FitHistoryTable')
 
 class proc_IsotopeResultsTable(Base, BaseMixin):

@@ -131,6 +131,14 @@ class Ideogram(Plotter):
             g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
             g.set_axis_traits(axis='y', tick_label_font=ytick_font)
 
+    def _get_grouped_analyses(self):
+        analyses = self.analyses
+        group_ids = list(set([a.group_id for a in analyses]))
+
+        return [[ai for ai in analyses if ai.group_id == gid]
+                for gid in group_ids
+                ]
+
     def _build_hook(self, g, analyses, padding, aux_plots=None):
         g.analyses = analyses
         g.maxprob = None

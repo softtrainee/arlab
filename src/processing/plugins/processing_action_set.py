@@ -80,6 +80,18 @@ class ProcessingActionSet(WorkbenchActionSet):
                       path=PATH,
                       class_name='{}:SaveFigureAction'.format(BASE)
                     ),
+               Action(name='Export PDF...',
+                      path=PATH + '/Export Figure Table',
+                      class_name='{}:ExportPDFFigureTableAction'.format(BASE)
+                    ),
+               Action(name='Export CSV...',
+                      path=PATH + '/Export Figure Table',
+                      class_name='{}:ExportCSVFigureTableAction'.format(BASE)
+                    ),
+               Action(name='Export Figure...',
+                      path=PATH,
+                      class_name='{}:ExportPDFFigureAction'.format(BASE)
+                    ),
 
 
 
