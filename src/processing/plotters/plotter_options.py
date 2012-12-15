@@ -129,16 +129,7 @@ class PlotterOptions(Viewable):
         p = os.path.join(paths.plotter_options_dir, self.name)
         with open(p, 'w') as fp:
             d = dict()
-            attrs = ['title', 'aux_plots',
-                     'xtick_font_size',
-                     'xtick_font_name',
-                     'xtitle_font_size',
-                     'xtitle_font_name',
-                     'ytick_font_size',
-                     'ytick_font_name',
-                     'ytitle_font_size',
-                     'ytitle_font_name',
-                     ]
+            attrs = self._get_dump_attrs()
             for t in attrs:
                 d[t] = getattr(self, t)
 
@@ -155,7 +146,18 @@ class PlotterOptions(Viewable):
                 except (pickle.PickleError, TypeError):
                     pass
 
-
+    def _get_dump_attrs(self):
+        attrs = ['title', 'aux_plots',
+                     'xtick_font_size',
+                     'xtick_font_name',
+                     'xtitle_font_size',
+                     'xtitle_font_name',
+                     'ytick_font_size',
+                     'ytick_font_name',
+                     'ytitle_font_size',
+                     'ytitle_font_name',
+                     ]
+        return attrs
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -200,27 +202,42 @@ class PlotterOptions(Viewable):
 #===============================================================================
 # views
 #===============================================================================
+    def _get_groups(self):
+        pass
+
     def traits_view(self):
-        v = View(Item('name'),
-                 Item('title'),
-                 VGroup(
-                        self._create_axis_group('x', 'title'),
-                        self._create_axis_group('x', 'tick'),
-                        show_border=True,
-                        label='X'),
+        default_grp = VGroup(Item('name'),
+                             Item('title'),
+                             VGroup(
+                                    self._create_axis_group('x', 'title'),
+                                    self._create_axis_group('x', 'tick'),
+                                    show_border=True,
+                                    label='X'),
 
-                 VGroup(
-                        self._create_axis_group('y', 'title'),
-                        self._create_axis_group('y', 'tick'),
-                        show_border=True,
-                        label='Y'),
+                             VGroup(
+                                    self._create_axis_group('y', 'title'),
+                                    self._create_axis_group('y', 'tick'),
+                                    show_border=True,
+                                    label='Y'),
 
-                 Item('aux_plots',
-                      style='custom',
-                      show_label=False,
-                      editor=ListEditor(mutable=False,
-                                        style='custom',
-                                        editor=InstanceEditor())),
+                             Item('aux_plots',
+                                  style='custom',
+                                  show_label=False,
+                                  editor=ListEditor(mutable=False,
+                                                    style='custom',
+                                                    editor=InstanceEditor()))
+                             )
+        grps = self._get_groups()
+        if grps:
+            default_grp.label = 'Plot'
+            g = Group(default_grp, layout='tabbed')
+            g.content.append(grps)
+
+        else:
+            g = Group(default_grp)
+
+        v = View(
+                 g,
                  resizable=True,
 #                 title='Plotter Options',
                  buttons=['OK', 'Cancel'],
@@ -228,7 +245,27 @@ class PlotterOptions(Viewable):
                  )
         return v
 
-
     def __repr__(self):
         return self.name
+
+class IdeogramOptions(PlotterOptions):
+    probability_curve_kind = Enum('cumulative', 'kernel')
+    mean_calculation_kind = Enum('weighted mean', 'kernel')
+    def _get_groups(self):
+        g = Group(
+                  Item('probability_curve_kind',
+                       label='Probability Curve Method'),
+                  Item('mean_calculation_kind',
+                       label='Mean Calculation Method'),
+                  label='Calculations'
+                  )
+        return g
+
+    def _get_dump_attrs(self):
+        attrs = super(IdeogramOptions, self)._get_dump_attrs()
+        return attrs + [
+                        'probability_curve_kind',
+                        'mean_calculation_kind'
+                        ]
+
 #============= EOF =============================================

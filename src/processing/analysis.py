@@ -108,6 +108,7 @@ class Analysis(Loggable):
     record_id = Property#(depends_on='dbrecord')
     sample = Property#(depends_on='dbrecord')
     labnumber = Property#(depends_on='dbrecord')
+    project = Property
     aliquot = Property
     step = Property
     irradiation = Property#(depends_on='dbrecord')
@@ -202,7 +203,7 @@ class Analysis(Loggable):
 
     @property
     def age_string(self):
-        a, e = self.age
+        a, e = self.age.nominal_value, self.age.std_dev()
         try:
             pe = abs(e / a * 100)
         except ZeroDivisionError:
@@ -245,6 +246,10 @@ class Analysis(Loggable):
     def _get_labnumber(self):
         dbr = self.dbrecord
         return dbr.labnumber
+
+    def _get_project(self):
+        dbr = self.dbrecord
+        return dbr.project
 
 #    @cached_property
     def _get_record_id(self):

@@ -15,35 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Float, Either, Any, Str
+from traits.api import HasTraits, Property
 from traitsui.api import View, Item, TableEditor
-from src.graph.graph_container import HGraphContainer
-from enable.component_editor import ComponentEditor
-from src.viewable import Viewable
+from src.database.records.database_record import DatabaseRecord
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class Window(Viewable):
-    container = Instance(HGraphContainer, ())
-    window_width = Either(Int, Float)
-    window_height = Either(Int, Float)
-    window_x = Either(Int, Float)
-    window_y = Either(Int, Float)
+class FigureRecord(DatabaseRecord):
+    name = Property
+    create_date = Property
+    analyses = Property
+    kind = Property
+    def _get_kind(self):
+        return 'ideogram'
 
-    open_event = Any
-    title = Str('  ')
+    def _get_analyses(self):
+        ans = [ai.analysis for ai in self.dbrecord.analyses]
+        return ans
 
-    def traits_view(self):
-        v = View(Item('container',
-                         show_label=False, style='custom',
-                         editor=ComponentEditor(),
-                         ),
-                 handler=self.handler_klass,
-                 resizable=True,
-                 width=self.window_width,
-                 height=self.window_height,
-                 x=self.window_x,
-                 y=self.window_y,
-                 title=self.title
-                 )
-        return v
+    def _get_name(self):
+        return self.dbrecord.name
+    def _get_create_date(self):
+        return self.dbrecord.create_date
 #============= EOF =============================================

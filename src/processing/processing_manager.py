@@ -29,9 +29,9 @@ from src.processing.analysis import Analysis
 #from src.processing.script import ProcessScript
 #from src.constants import NULL_STR
 from src.progress_dialog import MProgressDialog
-from src.processing.plotter_options_manager import PlotterOptionsManager
+from src.processing.plotter_options_manager import PlotterOptionsManager, \
+    IdeogramOptionsManager
 from src.processing.window import Window
-from src.processing.series_manager import SeriesManager
 from src.processing.tabular_analysis_manager import TabularAnalysisManager
 from src.processing.plotters.series import Series
 from src.processing.corrections.corrections_manager import BlankCorrectionsManager, \
@@ -39,6 +39,9 @@ from src.processing.corrections.corrections_manager import BlankCorrectionsManag
 from src.processing.search.search_manager import SearchManager
 from src.processing.search.selector_manager import SelectorManager
 from src.processing.search.selected_view import Marker
+from src.processing.series_manager import SeriesManager
+from src.processing.search.figure_manager import FigureManager
+from src.database.records.isotope_record import IsotopeRecord
 
 
 class ProcessingManager(DatabaseManager):
@@ -48,7 +51,14 @@ class ProcessingManager(DatabaseManager):
     blank_corrections_manager = Instance(BlankCorrectionsManager)
     background_corrections_manager = Instance(BackgroundCorrectionsManager)
     detector_intercalibration_corrections_manager = Instance(DetectorIntercalibrationCorrectionsManager)
-    plotter_options_manager = Instance(PlotterOptionsManager, ())
+
+    ideogram_options_manager = Instance(IdeogramOptionsManager, ())
+    spectrum_plotter_options_manager = Instance(PlotterOptionsManager, ())
+    isochron_plotter_options_manager = Instance(PlotterOptionsManager, ())
+
+    figure_manager = Instance(FigureManager)
+    figures = List
+
     only_fusions = Bool(True)
     include_omitted = Bool(True)
     display_omitted = Bool(True)
@@ -60,7 +70,44 @@ class ProcessingManager(DatabaseManager):
 #===============================================================================
     def open_search(self):
         ps = self.search_manager
+#        ps.selector.load_recent()
+        ps.selector.load_last()
         ps.edit_traits()
+
+#===============================================================================
+# figures
+#===============================================================================
+    def open_figures(self):
+        fm = self.figure_manager
+        fm.edit_traits()
+
+    def save_figure(self):
+        fm = self.figure_manager
+
+        figure = next((obj for win, obj in self.figures if win.ui.control.IsActive()), None)
+        if figure:
+            fm.project_name = figure.analyses[0].project
+            info = fm.edit_traits(view='save_view')
+            if info.result:
+                fm.save_figure(figure)
+
+    def open_figure(self, figure_record):
+
+        ans = [Analysis(dbrecord=IsotopeRecord(_dbrecord=ai)) for ai in figure_record.analyses]
+
+        if ans:
+            progress = self._open_progress(len(ans))
+            for ai in ans:
+                msg = 'loading {}'.format(ai.record_id)
+                progress.change_message(msg)
+                ai.load_age()
+                progress.increment()
+
+            func = getattr(self, '_display_{}'.format(figure_record.kind))
+            pom = getattr(self, '{}_options_manager'.format(figure_record.kind))
+            po = pom.plotter_options
+            if func(ans, po):
+                self._display_tabular_data()
 
 #===============================================================================
 # apply corrections
@@ -107,11 +154,14 @@ class ProcessingManager(DatabaseManager):
         '''
 
         if self._gather_data():
+
             if name != 'series':
-                pom = self.plotter_options_manager
-                info = pom.edit_traits(kind='livemodal')
+#                pom = self.plotter_options_manager
+                pom = getattr(self, '{}_options_manager'.format(name))
                 po = pom.plotter_options
+                info = pom.edit_traits(kind='livemodal')
                 result = info.result
+
             else:
                 result = True
                 po = None
@@ -130,6 +180,11 @@ class ProcessingManager(DatabaseManager):
                     if func(ans, po):
                         self._display_tabular_data()
 
+    def _open_figure(self, fig, obj=None):
+        self._set_window_xy(fig)
+        self.figures.append((fig, obj))
+        self.open_view(fig)
+
 #===============================================================================
 # 
 #===============================================================================
@@ -146,38 +201,48 @@ class ProcessingManager(DatabaseManager):
             return True
 
     def _display_tabular_data(self):
-        tm = TabularAnalysisManager(analyses=self._get_analyses())
-        tm.edit_traits()
+        tm = TabularAnalysisManager(analyses=self._get_analyses(),
+                                    db=self.db
+                                    )
+        ui = tm.edit_traits()
+        self.add_window(ui)
 
     def _display_isochron(self, ans, po):
         rr = self._isochron(ans)
         if rr is not None:
             g, _isochron = rr
-            self.open_view(g)
+            self._open_figure(g)
+#            self.open_view(g)
             return True
 
     def _display_spectrum(self, ans, po):
         rr = self._spectrum(ans, aux_plots=po.get_aux_plots())
         if rr is not None:
             g, _spec = rr
-            self.open_view(g)
+            self._open_figure(g)
+#            self.open_view(g)
             return True
 
     def _display_ideogram(self, ans, po):
 
-        rr = self._ideogram(ans, aux_plots=po.get_aux_plots())
+        rr = self._ideogram(ans,
+                            aux_plots=po.get_aux_plots(),
+                            probability_curve_kind=po.probability_curve_kind,
+                            mean_calculation_kind=po.mean_calculation_kind
+                            )
 #        rr = ps._ideogram(ans, aux_plots=['analysis_number'], show=False)
         if rr is not None:
             g, ideo = rr
             if self.display_omitted:
                 #sort ans by age
-                ta = sorted(ans, key=lambda x:x.age)
+                ta = sorted(ans, key=lambda x:x.age.nominal_value)
                 #find omitted ans
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
                 ideo.set_excluded_points(sel, 0)
 
-            self._set_window_xy(g)
-            self.open_view(g)
+
+            self._open_figure(g, ideo)
+#            self.open_view(g)
             return True
 
     def _display_series(self, ans, po):
@@ -246,6 +311,8 @@ class ProcessingManager(DatabaseManager):
         return g
 
     def _ideogram(self, analyses, show=True,
+                  probability_curve_kind=None,
+                  mean_calculation_kind=None,
                   aux_plots=None,
                   title=None,
                   xtick_font=None,
@@ -264,7 +331,11 @@ class ProcessingManager(DatabaseManager):
         from src.processing.plotters.ideogram import Ideogram
 
         g = self._window_factory()
-        p = Ideogram(db=self.db)
+        p = Ideogram(db=self.db,
+                     probability_curve_kind=probability_curve_kind,
+                     mean_calculation_kind=mean_calculation_kind
+                     )
+
         ps = self._build_aux_plots(aux_plots)
         options = dict(aux_plots=ps,
                        xtitle_font=xtitle_font,
@@ -275,7 +346,7 @@ class ProcessingManager(DatabaseManager):
                        metadata_label_font=metadata_label_font,
                        title=title,
                        display_mean_text=display_mean_text,
-                       display_mean_indicator=display_mean_indicator
+                       display_mean_indicator=display_mean_indicator,
                        )
 
         #filter out omitted results
@@ -365,8 +436,8 @@ class ProcessingManager(DatabaseManager):
 # defaults
 #===============================================================================
     def _selector_manager_default(self):
-        d = SelectorManager(db=self.db)
         db = self.db
+        d = SelectorManager(db=db)
         if not db.connected:
             db.connect()
 
@@ -374,11 +445,21 @@ class ProcessingManager(DatabaseManager):
         return d
 
     def _search_manager_default(self):
-        d = SearchManager(db=self.db)
         db = self.db
+        d = SearchManager(db=db)
         if not db.connected:
             db.connect()
         return d
+
+    def _figure_manager_default(self):
+        db = self.db
+        fm = FigureManager(db=db,
+                           processing_manager=self
+                           )
+        if not db.connected:
+            db.connect()
+        return fm
+
 
     def _blank_corrections_manager_default(self):
         bm = BlankCorrectionsManager(db=self.db)

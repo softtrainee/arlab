@@ -26,7 +26,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
-    proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable
+    proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable, proc_FigureTable, \
+    proc_FigureAnalysisTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
@@ -196,6 +197,29 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_extraction_device(self, name, **kw):
         item = gen_ExtractionDeviceTable(name=name, **kw)
         return self._add_unique(item, 'extraction_device', name)
+
+    @add
+    def add_figure(self, project=None, **kw):
+        fig = proc_FigureTable(
+                               user=self.save_username,
+                               **kw
+                               )
+        project = self.get_project(project)
+        if project:
+            project.figures.append(fig)
+        return fig, True
+
+    @add
+    def add_figure_analysis(self, figure, analysis, **kw):
+        fa = proc_FigureAnalysisTable(**kw)
+        figure = self.get_figure(figure)
+        if figure:
+            figure.analyses.append(fa)
+            if analysis:
+                analysis.figure_analyses.append(fa)
+                return fa, True
+        else:
+            return fa, False
 
     @add
     def add_fit_history(self, analysis, **kw):
@@ -641,6 +665,10 @@ class IsotopeAdapter(DatabaseAdapter):
         return gen_ExtractionDeviceTable
 
     @get_one
+    def get_figure(self, name):
+        return proc_FigureTable
+
+    @get_one
     def get_irradiation_chronology(self, name):
         return irrad_ChronologyTable
 
@@ -765,6 +793,14 @@ class IsotopeAdapter(DatabaseAdapter):
 #    def get_flux_monitors(self, **kw):
 #        return self._get_items(flux_MonitorTable, globals(), **kw)
 
+    def get_figures(self, project=None):
+        if project:
+            project = self.get_project(project)
+            if project:
+                return project.figures
+
+        else:
+            return self._retrieve_items(proc_FigureTable)
     '''
         new style using _retrieve_items, _get_items is deprecated. 
         rewritten functionality if required

@@ -26,6 +26,7 @@ from src.paths import paths
 from src.database.core.database_selector import ColumnSorterMixin
 from src.processing.search.previous_selection import PreviousSelection
 from src.database.records.isotope_record import IsotopeRecord
+import shelve
 
 
 class SelectedrecordsAdapter(TabularAdapter):
@@ -78,42 +79,69 @@ class SelectedView(ColumnSorterMixin):
     previous_selection = Any#Instance(PreviousSelection)
     previous_selections = List(PreviousSelection)
 
-    def load_previous_selections(self):
-        ps = []
+    def _open_shelve(self):
         p = os.path.join(paths.hidden_dir, 'stored_selections')
-        if os.path.isdir(p):
-            for si in os.listdir(p):
-                if si.startswith('.'):
-                    continue
-                with open(os.path.join(p, si), 'r') as fp:
-                    try:
-                        ss = pickle.load(fp)
-                        ps.append(ss)
-                    except Exception:
-                        pass
+        d = shelve.open(p)
+        return d
 
-        self.previous_selections = ps
+    def load_previous_selections(self):
+#        ps = []
+#        p = os.path.join(paths.hidden_dir, 'stored_selections')
+#        if os.path.isdir(p):
+#            for si in os.listdir(p):
+#                if si.startswith('.'):
+#                    continue
+#                with open(os.path.join(p, si), 'r') as fp:
+#                    try:
+#                        ss = pickle.load(fp)
+#                        ps.append(ss)
+#                    except Exception:
+#                        pass
+#        self.previous_selections = ps
+
+        d = self._open_shelve()
+        keys = sorted(d.keys())
+        self.previous_selections = [d[ki] for ki in keys]
 
     def dump_selection(self):
         records = self.selected_records
         if not records:
             return
+        d = self._open_shelve()
+
+
+        exists = next((v for v in d.itervalues() if v.name == self.previous_selection.name), None)
+        if not exists:
+            keys = sorted(d.keys())
+            next_key = '001'
+            if keys:
+                next_key = '{:03n}'.format(int(keys[-1]) + 1)
+
+            s = records[0]
+            e = records[-1]
+            name = '{} - {}'.format(s.record_id, e.record_id)
+
+            records = filter(lambda ri:not isinstance(ri, Marker), records)
+            ps = PreviousSelection(records, name=name)
+
+            d[next_key] = ps
+
+        d.close()
 
 #        ans = [ai.dbrecord.id  for ai in records]
 
-        s = records[0]
-        e = records[-1]
-
-        name = '{} - {}'.format(s.record_id, e.record_id)
-
-        records = filter(lambda ri:not isinstance(ri, Marker), records)
-        ps = PreviousSelection(records, name=name)
-        p = os.path.join(paths.hidden_dir, 'stored_selections')
-        if not os.path.isdir(p):
-            os.mkdir(p)
-
-        with open(os.path.join(p, name), 'w') as fp:
-            pickle.dump(ps, fp)
+#        s = records[0]
+#        e = records[-1]
+#        name = '{} - {}'.format(s.record_id, e.record_id)
+#
+#        records = filter(lambda ri:not isinstance(ri, Marker), records)
+#        ps = PreviousSelection(records, name=name)
+#        p = os.path.join(paths.hidden_dir, 'stored_selections')
+#        if not os.path.isdir(p):
+#            os.mkdir(p)
+#
+#        with open(os.path.join(p, name), 'w') as fp:
+#            pickle.dump(ps, fp)
 
 #===============================================================================
 # grouping

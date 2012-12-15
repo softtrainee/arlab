@@ -20,24 +20,19 @@ from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range, P
 from traitsui.api import View, Item, HGroup, spring, Group, VGroup, EnumEditor
 #from chaco.api import ArrayDataSource
 #============= standard library imports ========================
-from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack
-#============= local library imports  ==========================
-
-from src.graph.stacked_graph import StackedGraph
-#from src.graph.error_bar_overlay import ErrorBarOverlay
-from src.processing.plotters.results_tabular_adapter import IdeoResults, \
-    IdeoResultsAdapter
-from src.processing.plotters.plotter import Plotter, mStackedGraph
-from src.stats.core import calculate_weighted_mean, calculate_mswd
-from src.graph.context_menu_mixin import IsotopeContextMenuMixin
-from src.graph.graph import Graph
-from chaco.plot_containers import GridPlotContainer
-from chaco.tools.traits_tool import TraitsTool
+from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack, max
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from chaco.ticks import AbstractTickGenerator, DefaultTickGenerator
-from pyface.timer.do_later import do_later
-from kiva.trait_defs.kiva_font_trait import KivaFont
+#============= local library imports  ==========================
+
+#from src.graph.stacked_graph import StackedGraph
+#from src.graph.error_bar_overlay import ErrorBarOverlay
+from src.processing.plotters.results_tabular_adapter import IdeoResults, \
+    IdeoResultsAdapter
+from src.processing.plotters.plotter import Plotter
+from src.stats.core import calculate_weighted_mean, calculate_mswd
+from src.stats.peak_detection import find_peaks
 #from src.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -54,7 +49,6 @@ from kiva.trait_defs.kiva_font_trait import KivaFont
 #    pass
 
 N = 700
-
 
 class SparseTicks(DefaultTickGenerator):
     step = Int(2)
@@ -90,6 +84,8 @@ class Ideogram(Plotter):
     plot_label = Any
     graphs = List
 
+    probability_curve_kind = Str
+    mean_calculation_kind = Str
 #    graph_panel_info = Instance(GraphPanelInfo, ())
 
 
@@ -116,8 +112,12 @@ class Ideogram(Plotter):
             return
 
         graph = self.graphs[graph_id]
-        plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
-        plot.index.metadata['selections'] = exclude
+
+        try:
+            plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
+            plot.index.metadata['selections'] = exclude
+        except IndexError:
+            pass
 
     def _build_xtitle(self, g, xtitle_font, xtick_font):
         f, s = xtitle_font.split(' ')
@@ -146,7 +146,7 @@ class Ideogram(Plotter):
 #            nages = [a.age[0] for a in analyses if a.group_id == group_id]
 #            nerrors = [a.age[1] for a in analyses if a.group_id == group_id]
 
-            nages, nerrors = zip(*[(a.nominal_value, a.std_dev()) for a in analyses if a.group_id == group_id])
+            nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev()) for a in analyses if a.group_id == group_id])
             aa = array(nages)
             ee = array(nerrors)
             return aa, ee
@@ -162,7 +162,7 @@ class Ideogram(Plotter):
             start = 1
             offset = 0
             for group_id in group_ids:
-                ans = [a for a in analyses if a.group_id == group_id and a.age[0] in ages]
+                ans = [a for a in analyses if a.group_id == group_id]
                 labnumber = self.get_labnumber(ans)
                 nages, nerrors = get_ages_errors(group_id)
                 offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
@@ -279,10 +279,26 @@ class Ideogram(Plotter):
           tick_label_formatter=lambda x:'',
           axis='y', plotid=1)
 
-
-
     def _calculate_probability_curve(self, ages, errors, xmi, xma):
+#        print self.probability_curve_kind
+        if self.probability_curve_kind == 'kernel':
+            return self._kernel_density(ages, errors, xmi, xma)
 
+        else:
+            return self._cumulative_probability(ages, errors, xmi, xma)
+
+    def _kernel_density(self, ages, errors, xmi, xma):
+        from scipy.stats.kde import gaussian_kde
+        pdf = gaussian_kde(ages)
+        x = linspace(xmi, xma, N)
+
+
+        y = pdf(x)
+#        maxs, mins = find_peaks(y, 1, x)
+
+        return x, y
+
+    def _cumulative_probability(self, ages, errors, xmi, xma):
         bins = linspace(xmi, xma, N)
         probs = zeros(N)
 
@@ -304,6 +320,18 @@ class Ideogram(Plotter):
 
         return bins, probs
 
+    def _calculate_stats(self, ages, errors, xs, ys):
+        mswd = calculate_mswd(ages, errors)
+        if self.mean_calculation_kind == 'kernel':
+            wm , we = 0, 0
+            delta = 1
+            maxs, mins = find_peaks(ys, delta, xs)
+            wm = max(maxs, axis=1)[0]
+        else:
+            wm, we = calculate_weighted_mean(ages, errors)
+            we = self._calc_error(we, mswd)
+        return wm, we, mswd
+
     def _add_ideo(self, g, ages, errors, xmi, xma, padding,
                    group_id, start=1,
                    labnumber=None,
@@ -312,10 +340,9 @@ class Ideogram(Plotter):
 
         ages = asarray(ages)
         errors = asarray(errors)
+        bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
+        wm, we, mswd = self._calculate_stats(ages, errors, bins, probs)
 
-        wm, we = calculate_weighted_mean(ages, errors)
-        mswd = calculate_mswd(ages, errors)
-        we = self._calc_error(we, mswd)
         self.results.append(IdeoResults(
                                         labnumber=labnumber,
                                         age=wm,
@@ -323,7 +350,6 @@ class Ideogram(Plotter):
                                         error=we,
                                         error_calc_method=self.error_calc_method
                                         ))
-        bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
         minp = min(probs)
         maxp = max(probs)
 
@@ -483,7 +509,7 @@ class Ideogram(Plotter):
 #            self.selected_analysis = sorted([a for a in self.analyses], key=lambda x:x.age)[hoverid]
 
     def _cmp_analyses(self, x):
-        return x.age[0]
+        return x.age.nominal_value
 
     def _update_graph(self, g):
         xmi, xma = g.get_x_limits()
@@ -516,17 +542,17 @@ class Ideogram(Plotter):
             sp = ideo.plots['plot{}'.format(i * 3 + 2)][0]
 
             try:
-                ages_errors = sorted([a.age for a in g.analyses if a.group_id == i], key=lambda x: x[0])
-                ages, errors = zip(*[ai for j, ai in enumerate(ages_errors) if not j in sel])
-                wm, we = calculate_weighted_mean(ages, errors)
-                mswd = calculate_mswd(ages, errors)
-                we = self._calc_error(we, mswd)
+                ages_errors = sorted([a.age for a in g.analyses if a.group_id == i],
+                                     key=lambda x: x.nominal_value)
+                ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors) if not j in sel])
+
+                xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
+                wm, we, mswd = self._calculate_stats(ages, errors, xs, ys)
 
                 result.age = wm
                 result.error = we
                 result.mswd = mswd
                 result.error_calc_method = self.error_calc_method
-                xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
             except ValueError:
                 wm, we = 0, 0
                 ys = zeros(N)
@@ -545,7 +571,7 @@ class Ideogram(Plotter):
 
             if sel:
                 dp.visible = True
-                ages, errors = zip(*ages_errors)
+                ages, errors = zip(*[(a.nominal_value, a.std_dev()) for a in ages_errors])
                 wm, we = calculate_weighted_mean(ages, errors)
                 mswd = calculate_mswd(ages, errors)
                 we = self._calc_error(we, mswd)

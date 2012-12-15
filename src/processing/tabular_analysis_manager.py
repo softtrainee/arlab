@@ -34,7 +34,7 @@ class AnalysisAdapter(TabularAdapter):
     age_error_width = Int(80)
 
     def _get_age_text(self, trait, item):
-        return '{:0.4f}'.format(self.item.age[0])
+        return '{:0.4f}'.format(self.item.age.nominal_value)
 
     def get_font(self, obj, trait, row):
         import wx
@@ -54,6 +54,7 @@ class TabularAnalysisManager(HasTraits):
     analyses = List
     update_selected_analysis = Event
     selected_analysis = Any
+    db = Any
     def traits_view(self):
         v = View(Item('analyses',
                       show_label=False,
@@ -74,6 +75,7 @@ class TabularAnalysisManager(HasTraits):
         sa = self.selected_analysis
         if sa is not None:
             dbr = sa.dbrecord
-            dbr.load_graph()
-            dbr.edit_traits()
+            self.db.selector.open_record(dbr)
+#            dbr.load_graph()
+#            dbr.edit_traits()
 #============= EOF =============================================

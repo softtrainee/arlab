@@ -149,11 +149,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def load_recent(self):
         dbs = self._get_recent()
-        self.load_records(dbs)
+        self.load_records(dbs, load=False)
 
     def load_last(self, n=None):
         dbs, _stmt = self._get_selector_records(limit=n)
-        self.load_records(dbs)
+        self.load_records(dbs, load=False)
 
 #    def execute_query(self, filter_str=None):
     def execute_query(self, queries=None, load=True):
