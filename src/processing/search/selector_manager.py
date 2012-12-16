@@ -83,20 +83,20 @@ class SelectorManager(SearchManager):
         return v
 #============= EOF =============================================
 
-#    def select_labnumber(self, ln):
-#        db = self.db
-#        selector = db.selector
-#        if isinstance(ln, list):
-#            for li in ln:
-#                rs = db.get_labnumber(li)
-#                selector.load_records(rs.analyses, append=True)
-#
-#            self.selected_records = selector.records
+    def select_labnumber(self, ln):
+        db = self.db
+        selector = db.selector
+        if isinstance(ln, list):
+            for li in ln:
+                rs = db.get_labnumber(li)
+                selector.load_records(rs.analyses, load=False, append=True)
+
+            self.selected_records = selector.records
 #            self._graph_by_labnumber_fired()
-#        else:
-#            rs = db.get_labnumber(ln)
-#            selector.load_records(rs.analyses)
-#            self.selected_records = selector.records
+        else:
+            rs = db.get_labnumber(ln)
+            selector.load_records(rs.analyses, load=False)
+            self.selected_records = selector.records
 
     def opened(self):
         self.selected_view.load_previous_selections()

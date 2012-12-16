@@ -58,26 +58,26 @@ class StackedGraph(Graph):
         '''
 #        self.plotcontainer.stack_order = 'bottom_to_top'
         bottom = self.plotcontainer.stack_order == 'bottom_to_top'
-        if self.equi_stack:
-            kw['resizable'] = 'h'
-            if 'bounds' not in kw:
-                kw['bounds'] = (1, self.panel_height)
+#        if self.equi_stack:
+#            kw['resizable'] = 'h'
+#            if 'bounds' not in kw:
+#                kw['bounds'] = (1, self.panel_height)
 #
         n = len(self.plotcontainer.components)
 #        print n
         if 'title' in kw:
             self._has_title = True
-
+#
         if n > 0:
-#            key = 'padding_top'
-#            if 'title' not in kw:
-#                kw['padding_top'] = 
-
-
-#        else:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
                 kw['bounds'] = (1, self.panel_height)
+##            key = 'padding_top'
+##            if 'title' not in kw:
+##                kw['padding_top'] = 
+#
+#            pass
+#        else:
 
 #            if bottom:
 #                kw['padding_bottom'] = 0

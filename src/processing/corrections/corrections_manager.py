@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Bool, Float, Str, Any, Instance
+from traits.api import HasTraits, List, Bool, Float, Str, Any, Instance, Button
 from traitsui.api import View, Item, TableEditor, HGroup, Group, VGroup, Spring, spring, \
     Label
 #============= standard library imports ========================
@@ -36,10 +36,12 @@ class CorrectionsManager(Loggable):
         known subclasses blank_corrections_manager, background_corrections_manager
     '''
     db = Any
+    processing_manager = Any
     analyses = List(Analysis)
     fixed_values = List(FixedValueCorrection)
     use_fixed_values = Bool(False)
     interpolation_correction = Instance(InterpolationCorrection)
+    edit_predictors = Button('Edit')
 
     '''
         subclass needs to set the following values
@@ -47,19 +49,72 @@ class CorrectionsManager(Loggable):
     correction_name = None
     signal_klass = None
     signal_key = None
+
+    def apply_correction(self):
+        if self.use_fixed_values:
+            for ai in self.analyses:
+                history = self._add_history(ai)
+
+                for fi in self.fixed_values:
+                    if not fi.use_value:
+                        continue
+
+                    self._apply_fixed_correction(ai, history, fi.name, fi.value, fi.error)
+        else:
+            self._apply_interpolation_correction()
+
+        self.db.commit()
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _edit_predictors_fired(self):
+
+        #set the selector.selected_records to the predictors
+        ps = self.interpolation_correction.predictors
+        selector = self.processing_manager.selector_manager
+        selector.selected_records = sorted([ri.isotope_record for ri in ps],
+                                           key=lambda x:x.timestamp
+                                           )
+        ans = self.processing_manager.gather_data()
+        if ans:
+            self.interpolation_correction._predictors = ans
+            self.interpolation_correction.dirty = True
+            self.interpolation_correction.refresh()
+
     def _analyses_changed(self):
         if self.analyses:
             #load a fit series
             self.interpolation_correction = InterpolationCorrection(analyses=self.analyses,
                                                                     kind=self.correction_name,
-                                                                    db=self.db
+                                                                    db=self.db,
                                                                     )
+            self.interpolation_correction.load_fits(self._get_isotope_names())
             self.interpolation_correction.load_predictors()
 
             #load fixed values
             self._load_fixed_values()
 
-    def _load_fixed_values(self):
+    def _apply_interpolation_correction(self):
+        db = self.db
+        func = getattr(db, 'add_{}'.format(self.correction_name))
+        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
+        for ai in self.analyses:
+            history = self._add_history(ai)
+            for si in self.interpolation_correction.fits:
+                if not si.use:
+                    continue
+
+                ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+                item = func(history, isotope=si.name,
+                            user_value=ss.value,
+                            user_error=ss.error,
+                            use_set=True, fit=si.fit)
+                ps = self.interpolation_correction.predictors
+                for pi in ps:
+                    func2(item, pi.dbrecord)
+
+    def _get_isotope_names(self):
         keys = None
         for a in self.analyses:
             nkeys = a.isotope_keys
@@ -72,35 +127,11 @@ class CorrectionsManager(Loggable):
                       key=lambda x: re.sub('\D', '', x),
                       reverse=True
                       )
-        nfixed_values = [FixedValueCorrection(name=ki) for ki in keys]
-        if self.fixed_values:
-            nn = []
-            for ni in nfixed_values:
-                obj = next((fi for fi in self.fixed_values
-                            if fi.name == ni.name), None)
-                if obj:
-                    nn.append(obj)
-                else:
-                    nn.append(ni)
-        else:
-            nn = nfixed_values
-        self.fixed_values = nn
+        return keys
 
-    def apply_correction(self):
-        if self.use_fixed_values:
-            for ai in self.analyses:
-                history = self._add_history(ai)
-
-                for fi in self.fixed_values:
-                    if not fi.use_value:
-                        continue
-
-                    self._apply_fixed_correction(ai, history, fi.name, fi.value, fi.error)
-
-        self.db.commit()
 
     def _add_history(self, analysis):
-        dbrecord = analysis.dbrecord._dbrecord
+        dbrecord = analysis.dbrecord
         db = self.db
 
         #new history
@@ -115,7 +146,7 @@ class CorrectionsManager(Loggable):
         return history
 
     def _apply_fixed_correction(self, analysis, history, isotope, value, error):
-        dbrecord = analysis.dbrecord._dbrecord
+        dbrecord = analysis.dbrecord
         db = self.db
 
 #        histories = dbrecord.blanks_histories
@@ -162,6 +193,22 @@ class CorrectionsManager(Loggable):
         key = '{}{}'.format(isotope, self.signal_key)
         analysis.dbrecord.signals[key] = b
 
+    def _load_fixed_values(self):
+        keys = self._get_isotope_names()
+        nfixed_values = [FixedValueCorrection(name=ki) for ki in keys]
+        if self.fixed_values:
+            nn = []
+            for ni in nfixed_values:
+                obj = next((fi for fi in self.fixed_values
+                            if fi.name == ni.name), None)
+                if obj:
+                    nn.append(obj)
+                else:
+                    nn.append(ni)
+        else:
+            nn = nfixed_values
+        self.fixed_values = nn
+
     def traits_view(self):
         fixed_value_grp = Group(VGroup(
                                        HGroup(spring, Label('Value'),
@@ -180,7 +227,8 @@ class CorrectionsManager(Loggable):
                  VGroup(
                         HGroup(
                                Item('use_fixed_values'),
-                               spring
+                               spring,
+                               Item('edit_predictors', show_label=False)
                                ),
                         Group(
                             series_grp,
@@ -188,6 +236,7 @@ class CorrectionsManager(Loggable):
                             layout='tabbed'
                             )
                         ),
+                 title=self.title,
                  resizable=True,
                  buttons=['OK', 'Cancel']
                  )
@@ -197,13 +246,16 @@ class BlankCorrectionsManager(CorrectionsManager):
     correction_name = 'blanks'
     signal_key = 'bl'
     signal_klass = Blank
+    title = 'Set Blanks'
 
 class BackgroundCorrectionsManager(CorrectionsManager):
     correction_name = 'backgrounds'
     signal_key = 'bg'
     signal_klass = Background
+    title = 'Set Backgrounds'
 
 class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
+    title = 'Set Detector Intercalibration'
     correction_name = 'detector_intercalibration'
     def _load_fixed_values(self):
         if not self.fixed_values:

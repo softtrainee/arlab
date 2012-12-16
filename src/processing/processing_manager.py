@@ -185,6 +185,10 @@ class ProcessingManager(DatabaseManager):
 #===============================================================================
 # apply corrections
 #===============================================================================
+    def gather_data(self):
+        if self._gather_data():
+            return self._get_analyses()
+
     def apply_blank_correction(self):
         bm = self.blank_corrections_manager
         self._apply_correction(bm)
@@ -514,7 +518,7 @@ class ProcessingManager(DatabaseManager):
         if not db.connected:
             db.connect()
 
-#        d.select_labnumber([22233, 22234])
+        d.select_labnumber([22233, 22234])
         return d
 
     def _search_manager_default(self):
@@ -535,15 +539,20 @@ class ProcessingManager(DatabaseManager):
 
 
     def _blank_corrections_manager_default(self):
-        bm = BlankCorrectionsManager(db=self.db)
+        bm = BlankCorrectionsManager(db=self.db,
+                                     processing_manager=self
+                                     )
         return bm
 
     def _background_corrections_manager_default(self):
-        bm = BackgroundCorrectionsManager(db=self.db)
+        bm = BackgroundCorrectionsManager(db=self.db,
+                                          processing_manager=self)
         return bm
 
     def _detector_intercalibration_corrections_manager_default(self):
-        bm = DetectorIntercalibrationCorrectionsManager(db=self.db)
+        bm = DetectorIntercalibrationCorrectionsManager(db=self.db,
+                                                        processing_manager=self
+                                                        )
         return bm
 
 #============= EOF =============================================

@@ -117,7 +117,7 @@ class Analysis(Loggable):
 
     color = Color('black')
     bgcolor = Color('white')
-    uuid = Str
+
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
     temp_status = Int
@@ -151,7 +151,6 @@ class Analysis(Loggable):
 
         return s - bs - bg
 
-
     def _analysis_factory(self, dbr):
         klass = self.__class__
         c = klass(repo=self.repo, workspace=self.workspace)
@@ -183,17 +182,20 @@ class Analysis(Loggable):
             pe = 'Inf'
         return u'{:0.3f} \u00b1{:0.3f}({:0.2f}%)'.format(a, e, pe)
 
-    @property
-    def timestamp(self):
-        return self.isotope_record.timestamp
+#    @property
+#    def timestamp(self):
+#        return self.isotope_record.timestamp
 
     def _get_rad40(self):
         rr = self.isotope_record.arar_result
         return rr['rad40']
 
     def __getattr__(self, attr):
+#        if self.isotope_record:
         if hasattr(self.isotope_record, attr):
             return getattr(self.isotope_record, attr)
+#            else:
+#                raise AttributeError('Analysis has not attribute= {}'.format(attr))
 
     def _get_age_value(self):
         return self.age.nominal_value

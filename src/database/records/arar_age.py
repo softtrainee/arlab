@@ -44,7 +44,7 @@ class ArArAge(HasTraits):
     labnumber_record = Property
     _labnumber_record = None
 
-    analysis_timestamp = Property
+    timestamp = Property
     irradiation_info = Property
     irradiation_level = Property
     irradiation_position = Property
@@ -190,7 +190,7 @@ class ArArAge(HasTraits):
         return r
 
     @cached_property
-    def _get_analysis_timestamp(self):
+    def _get_timestamp(self):
         return datetime.datetime.now()
 
     @cached_property
@@ -248,7 +248,7 @@ class ArArAge(HasTraits):
 
                     doses = [map(convert_datetime, d) for d in doses]
 
-                    analts = self.analysis_timestamp
+                    analts = self.timestamp
 #                    analts = '{} {}'.format(analysis.rundate, analysis.runtime)
 #                    analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
                     segments = []
