@@ -247,6 +247,13 @@ class Pattern(Viewable):
 #
 #        return cbx, cby
 
+    def clear_graph(self):
+        graph = self.graph
+        graph.set_data([], series=1, axis=0)
+        graph.set_data([], series=1, axis=1)
+        graph.set_data([], series=2, axis=0)
+        graph.set_data([], series=2, axis=1)
+
     def reset_graph(self, **kw):
         self.graph = self._graph_factory(**kw)
 
@@ -300,6 +307,7 @@ class Pattern(Viewable):
         lp.overlays.append(overlap_overlay)
 
         g.new_series(type='scatter', marker='circle')
+        g.new_series(type='line', color='red')
         return g
 
     def _graph_default(self):
