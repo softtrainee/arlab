@@ -23,13 +23,14 @@ import re
 #============= local library imports  ==========================
 from src.processing.analysis import Analysis
 from src.helpers.traitsui_shortcuts import listeditor
-from src.loggable import Loggable
+
 from src.processing.signal import Blank, Background
 from src.processing.corrections.fixed_value_correction import FixedValueCorrection
 from src.processing.corrections.interpolation_correction import InterpolationCorrection
+from src.viewable import Viewable
 
 
-class CorrectionsManager(Loggable):
+class CorrectionsManager(Viewable):
     '''
         base class for managers that apply corrections
         
@@ -49,6 +50,11 @@ class CorrectionsManager(Loggable):
     correction_name = None
     signal_klass = None
     signal_key = None
+    def close(self, isok):
+        if isok:
+            self.apply_correction()
+            self.interpolation_correction.dump_fits()
+        return True
 
     def apply_correction(self):
         if self.use_fixed_values:
@@ -64,7 +70,6 @@ class CorrectionsManager(Loggable):
             self._apply_interpolation_correction()
 
         self.db.commit()
-
 #===============================================================================
 # handlers
 #===============================================================================
@@ -73,9 +78,10 @@ class CorrectionsManager(Loggable):
         #set the selector.selected_records to the predictors
         ps = self.interpolation_correction.predictors
         selector = self.processing_manager.selector_manager
-        selector.selected_records = sorted([ri.isotope_record for ri in ps],
-                                           key=lambda x:x.timestamp
-                                           )
+        selector.selected_records = [ri.isotope_record for ri in ps]
+#        selector.selected_records = sorted([ri.isotope_record for ri in ps],
+#                                           key=lambda x:x.timestamp
+#                                           )
         ans = self.processing_manager.gather_data()
         if ans:
             self.interpolation_correction._predictors = ans
@@ -87,6 +93,8 @@ class CorrectionsManager(Loggable):
             #load a fit series
             self.interpolation_correction = InterpolationCorrection(analyses=self.analyses,
                                                                     kind=self.correction_name,
+                                                                    signal_key=self.signal_key,
+                                                                    signal_klass=self.signal_klass,
                                                                     db=self.db,
                                                                     )
             self.interpolation_correction.load_fits(self._get_isotope_names())
@@ -236,6 +244,7 @@ class CorrectionsManager(Loggable):
                             layout='tabbed'
                             )
                         ),
+                 handler=self.handler_klass,
                  title=self.title,
                  resizable=True,
                  buttons=['OK', 'Cancel']

@@ -249,6 +249,9 @@ class ArArAge(HasTraits):
                     doses = [map(convert_datetime, d) for d in doses]
 
                     analts = self.timestamp
+                    #convert float to datetime
+#                    time_tuple = time.localtime(analts)
+                    analts = datetime.datetime.fromtimestamp(analts)
 #                    analts = '{} {}'.format(analysis.rundate, analysis.runtime)
 #                    analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
                     segments = []

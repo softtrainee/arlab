@@ -204,8 +204,8 @@ class ProcessingManager(DatabaseManager):
     def _apply_correction(self, bm):
         if self._gather_data():
 
-            bm.analyses = self._get_analyses()
-
+            ans = self._get_analyses()
+            bm.analyses = ans
             info = bm.edit_traits(kind='livemodal')
             if info.result:
                 bm.apply_correction()
@@ -246,13 +246,7 @@ class ProcessingManager(DatabaseManager):
             if result:
                 ans = self._get_analyses()
                 if ans:
-                    progress = self._open_progress(len(ans))
-                    for ai in ans:
-                        msg = 'loading {}'.format(ai.record_id)
-                        progress.change_message(msg)
-                        ai.load_age()
-                        progress.increment()
-
+                    self._load_analyses(ans)
                     func = getattr(self, '_display_{}'.format(name))
                     if func(ans, po):
                         self._display_tabular_data()
@@ -262,6 +256,13 @@ class ProcessingManager(DatabaseManager):
         self.figures.append((fig, obj))
         self.open_view(fig)
 
+    def _load_analyses(self, ans):
+        progress = self._open_progress(len(ans))
+        for ai in ans:
+            msg = 'loading {}'.format(ai.record_id)
+            progress.change_message(msg)
+            ai.load_age()
+            progress.increment()
 #===============================================================================
 # 
 #===============================================================================
