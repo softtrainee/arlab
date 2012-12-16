@@ -39,7 +39,7 @@ from src.managers.motion_controller_managers.motion_controller_manager \
 from tray_calibration_manager import TrayCalibrationManager
 from stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
-from pattern.pattern_manager import PatternManager
+#from pattern.pattern_manager import PatternManager
 from stage_map import StageMap
 #from affine import AffineTransform
 
@@ -87,7 +87,7 @@ class StageManager(Manager):
     accept_point = Button
     back_button = Button
 
-    pattern_manager = Instance(PatternManager)
+#    pattern_manager = Instance(PatternManager)
     stop_button = Button()
     stop_label = String('Stop')
 
@@ -523,11 +523,11 @@ class StageManager(Manager):
         '''
         '''
         return Group(
-                     Item('pattern_manager',
-                          label='Pattern',
-                          editor=InstanceEditor(view='execute_view'),
-                           show_label=False, style='custom'
-                          ),
+#                     Item('pattern_manager',
+#                          label='Pattern',
+#                          editor=InstanceEditor(view='execute_view'),
+#                           show_label=False, style='custom'
+#                          ),
 
                      Group(
 
@@ -806,8 +806,8 @@ class StageManager(Manager):
         '''
         return '%s Stage Manager' % self.name[:-5].capitalize()
 
-    def _pattern_manager_default(self):
-        return PatternManager(parent=self)
+#    def _pattern_manager_default(self):
+#        return PatternManager(parent=self)
 
     def _tray_calibration_manager_default(self):
         t = TrayCalibrationManager(parent=self,

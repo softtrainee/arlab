@@ -23,6 +23,8 @@ from numpy import linspace
 from src.pyscripts.pyscript import PyScript, verbose_skip
 from src.lasers.laser_managers.laser_manager import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
+import os
+from src.paths import paths
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
 
@@ -39,6 +41,12 @@ class ExtractionLinePyScript(ValvePyScript):
 #
 #    analysis_type = property(fset=_set_analysis_type,
 #                             fget=_get_analysis_type)
+
+    @property
+    def pattern(self):
+        ctx = self.get_context()
+        if 'pattern' in ctx:
+            return ctx['pattern']
 
     @property
     def analysis_type(self):
@@ -160,6 +168,18 @@ class ExtractionLinePyScript(ValvePyScript):
             self.info('not move required position is None')
             return True
 
+    @verbose_skip
+    def execute_pattern(self, pattern='', block=False):
+        if pattern == '':
+            pattern = self.pattern
+
+        st = time.time()
+        #set block=True to wait for pattern completion
+        self._manager_action([('execute_pattern', pattern, {'block':block})],
+                             name=self.extract_device,
+                              protocol=ILaserManager)
+
+        return time.time() - st
 #    @verbose_skip
 #    def set_stage_map(self, mapname=None):
 #        self.info('set stage map to {}, using position correction={}'.format(mapname))

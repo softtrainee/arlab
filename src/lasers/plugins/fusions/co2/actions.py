@@ -21,7 +21,8 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenVideoAction, FOpenPo
     FOpenPowerMapAction, FOpenPowerCalibrationAction, FLoadStageVisualizerAction, \
     FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction, \
     FOpenMotionControllerManagerAction, FOpenLaserManagerAction, \
-    FOpenPatternManagerAction, FMotorConfigureAction
+    FOpenPatternAction, FNewPatternAction, FMotorConfigureAction, \
+    FExecutePatternAction
 from src.lasers.laser_managers.laser_manager import ILaserManager
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
@@ -98,7 +99,11 @@ class OpenVideoAction(FOpenVideoAction):
 #===============================================================================
 # patterning
 #===============================================================================
-class OpenPatternManagerAction(FOpenPatternManagerAction):
+class OpenPatternAction(FOpenPatternAction):
+    get_manager = get_manager
+class NewPatternAction(FNewPatternAction):
+    get_manager = get_manager
+class ExecutePatternAction(FExecutePatternAction):
     get_manager = get_manager
 #===============================================================================
 # unused

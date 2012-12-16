@@ -230,25 +230,35 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return self.error_response(err)
 
     def GetJogProcedures(self, manager, *args):
-        jogs = manager.stage_manager.pattern_manager.get_pattern_names()
+        jogs = manager.get_pattern_names()
         return ','.join(jogs)
 
-    def DoJog(self, manager, name, *args):
+    def DoPattern(self, manager, name, *args):
         if name is None:
-            err = InvalidArgumentsErrorCode('DoJog', name)
+            err = InvalidArgumentsErrorCode('DoJog/DoPattern', name)
         else:
-            err = manager.stage_manager.pattern_manager.execute_pattern(name)
+            err = manager.execute_pattern(name)
+#            err = manager.stage_manager.pattern_manager.execute_pattern(name)
         return self.error_response(err)
 
-    def AbortJog(self, manager, *args):
-        err = manager.stage_manager.pattern_manager.stop_pattern()
+    def AbortPattern(self, manager, *args):
+        err = manager.stop_pattern()
         return self.error_response(err)
 
-    def IsJogging(self, manager, *args):
-        err = manager.stage_manager.pattern_manager.isAlive()
+    def IsPatterning(self, manager, *args):
+        err = manager.isPatterning()
 
         # returns "True" or "False"
         return self.error_response(str(err))
+
+    def DoJog(self, *args):
+        return self.DoPattern(*args)
+
+    def AbortJog(self, *args):
+        return self.AbortPattern(*args)
+
+    def IsJogging(self, *args):
+        return self.IsPatterning(*args)
 
     def SetBeamDiameter(self, manager, data, *args):
         try:

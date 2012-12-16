@@ -26,10 +26,11 @@ from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class LaserAction(Action):
+    client_action = False
     def __init__(self, window=None, *args, **kw):
         super(LaserAction, self).__init__(window=window, *args, **kw)
         man = window.workbench.application.get_service(ILaserManager)
-        if isinstance(man, PychronLaserManager):
+        if isinstance(man, PychronLaserManager) and not self.client_action:
             self.enabled = False
 
 class FOpenLaserManagerAction(LaserAction):
@@ -166,11 +167,22 @@ class FMotorConfigureAction(LaserAction):
 #===============================================================================
 # patterning
 #===============================================================================
-class FOpenPatternManagerAction(LaserAction):
+class FOpenPatternAction(Action):
     def perform(self, event):
         manager = self.get_manager(event)
         if manager is not None:
-            app = self.window.application
-            open_manager(app,
-                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
+            manager.open_pattern_maker()
+
+class FNewPatternAction(Action):
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            manager.new_pattern_maker()
+
+class FExecutePatternAction(Action):
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            manager.execute_pattern()
+
 #============= EOF =============================================

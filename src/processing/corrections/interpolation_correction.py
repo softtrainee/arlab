@@ -209,12 +209,6 @@ class InterpolationCorrection(HasTraits):
                 else:
                     uuids.append(pi.uuid)
                     pp.append(pi)
-#                print pi.uuid in uuids, pi.uuid
-#                if pi.uuid in uuids:
-#                    continue
-#                else:
-#                    uuids.append(pi.uuid)
-#                    pp.append(pi)
 
             n = len(pp)
             progress = MProgressDialog(max=n, size=(550, 15))

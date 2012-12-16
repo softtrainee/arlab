@@ -102,9 +102,17 @@ class FusionsActionSet(WorkbenchActionSet):
                 #===============================================================
                 # patterning
                 #===============================================================
-                Action(name='Pattern...',
-                       path=laser_path,
-                       class_name='{}OpenPatternManagerAction'.format(self.action_path)
+                Action(name='Open...',
+                       path=laser_path + '/Pattern',
+                       class_name='{}OpenPatternAction'.format(self.action_path)
+                       ),
+                Action(name='New...',
+                       path=laser_path + '/Pattern',
+                       class_name='{}NewPatternAction'.format(self.action_path)
+                       ),
+                Action(name='Execute...',
+                       path=laser_path + '/Pattern',
+                       class_name='{}ExecutePatternAction'.format(self.action_path)
                        )
 
                 ]

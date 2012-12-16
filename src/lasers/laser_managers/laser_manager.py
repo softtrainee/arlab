@@ -31,24 +31,63 @@ from src.managers.graph_manager import GraphManager
 from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
 from src.hardware.meter_calibration import MeterCalibration
+from src.lasers.pattern.pattern_maker_view import PatternMakerView
+from src.lasers.pattern.pattern_executor import PatternExecutor
 
 class ILaserManager(Interface):
     def move_to_position(self, pos):
         pass
 
-class LaserManager(Manager):
+class BaseLaserManager(Manager):
+    implements(ILaserManager)
+
+    pattern_executor = Instance(PatternExecutor)
+    def new_pattern_maker(self):
+        pm = PatternMakerView()
+        self.open_view(pm)
+
+    def open_pattern_maker(self):
+        pm = PatternMakerView()
+        pm.load_pattern()
+        self.open_view(pm)
+
+    def execute_pattern(self, name=None, block=False):
+        pm = self._pattern_executor_factory()
+        if pm.load_pattern(name):
+            pm.execute(block)
+            self.pattern_executor = pm
+
+    def stop_pattern(self):
+        if self.pattern_executor:
+            self.pattern_executor.stop()
+            self.pattern_executor = None
+
+    def isPatterning(self):
+        if self.pattern_executor:
+            return self.pattern_executor.isPatterning()
+
+    def _pattern_executor_factory(self):
+        return self.pattern_executor
+
+    def _pattern_executor_default(self):
+        pm = PatternExecutor(application=self.application)
+        return pm
+
+
+class LaserManager(BaseLaserManager):
     '''
         Base class for a GUI representation of a laser device
     '''
-    implements(ILaserManager)
 
     enable = Event
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
 
-    graph_manager = Instance(GraphManager, ())
+#    graph_manager = Instance(GraphManager, ())
     stage_manager = Instance(StageManager)
+#    pattern_executor = Instance(PatternExecutor)
+
     use_video = Bool(False)
     record_lasing_video = Bool(False)
     record_lasing_power = Bool(False)
@@ -87,6 +126,16 @@ class LaserManager(Manager):
         bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
 
         self.stage_manager.bind_preferences(pref_id)
+#===============================================================================
+# patterning
+#===============================================================================
+    def _pattern_executor_factory(self):
+        pm = self.pattern_executor
+        pm.controller = self.stage_manager.stage_controller
+        return pm
+
+    def get_pattern_names(self):
+        return self.get_file_list(paths.pattern_dir, extension='.lp')
 
     def enable_laser(self):
 

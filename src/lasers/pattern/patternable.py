@@ -15,29 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool
-from traitsui.api import Handler
-from traitsui.menu import Action
+from traits.api import HasTraits, Instance, Property, Str, DelegatesTo
+from traitsui.api import View, Item, TableEditor
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.viewable import Viewable, ViewableHandler
+from src.lasers.pattern.patterns import Pattern
+from src.managers.manager import Manager
 
-class SaveableHandler(ViewableHandler):
-    def save(self, info):
-        info.object.save()
+class Patternable(Manager):
+    pattern = Instance(Pattern)
+    pattern_name = DelegatesTo('pattern', prefix='name')
+    def _load_pattern(self, fileobj, path):
+        '''
+            unpickle fileobj as a pattern
+        '''
+        try:
+            obj = pickle.load(fileobj)
+            self.pattern = obj
+            self.pattern.path = path
+            return obj
+        except pickle.PickleError:
+            pass
 
-    def save_as(self, info):
-        info.object.save_as()
-
-
-class Saveable(Viewable):
-    handler_klass = SaveableHandler
-    save_enabled = Bool(False)
-
-SaveButton = Action(name='Save', action='save',
-                                enabled_when='object.save_enabled')
-SaveAsButton = Action(name='Save As', action='save_as')
-
-SaveableButtons = [SaveButton,
-                          SaveAsButton]
 #============= EOF =============================================

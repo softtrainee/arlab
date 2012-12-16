@@ -22,7 +22,8 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FOpenStageVisualizerAction, FOpenPowerCalibrationAction, \
     FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
-    FOpenPatternManagerAction, LaserAction, FMotorConfigureAction
+    FOpenPatternAction, FNewPatternAction, LaserAction, FMotorConfigureAction, \
+    FExecutePatternAction
     #FInitializeZoomAction, FInitializeBeamAction, \
 from src.lasers.laser_managers.laser_manager import ILaserManager
 #from traits.api import on_trait_change
@@ -120,7 +121,11 @@ class MotorConfigureAction(FMotorConfigureAction):
 #===============================================================================
 # patterning
 #===============================================================================
-class OpenPatternManagerAction(FOpenPatternManagerAction):
+class OpenPatternAction(FOpenPatternAction):
+    get_manager = get_manager
+class NewPatternAction(FNewPatternAction):
+    get_manager = get_manager
+class ExecutePatternAction(FExecutePatternAction):
     get_manager = get_manager
 #===============================================================================
 # unused
