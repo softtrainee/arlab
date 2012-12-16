@@ -109,8 +109,14 @@ class MeasurementPyScript(ValvePyScript):
                  'add_termination',
                  'add_truncation',
                  'add_action',
+                 'clear_conditions',
+                 'clear_terminations',
+                 'clear_truncations',
+                 'clear_actions',
 
-                 'get_intensity'
+                 'get_intensity',
+
+                 'extraction_gosub'
                  ]
 
 
@@ -122,6 +128,11 @@ class MeasurementPyScript(ValvePyScript):
 #===============================================================================
 # commands
 #===============================================================================    
+    @verbose_skip
+    def extraction_gosub(self, *args, **kw):
+        kw['klass'] = 'ExtractionLinePyScript'
+        super(MeasurementPyScript, self).gosub(*args, **kw)
+
     @count_verbose_skip
     def sniff(self, ncounts=0, calc_time=False, integration_time=1):
         if calc_time:
@@ -150,24 +161,24 @@ class MeasurementPyScript(ValvePyScript):
         self._series_count += 4
 
     @count_verbose_skip
-    def baselines(self, counts=1, cycles=5, mass=None, detector='', calc_time=False):
+    def baselines(self, ncounts=1, cycles=5, mass=None, detector='', calc_time=False):
         '''
             if detector is not none then it is peak hopped
         '''
         if calc_time:
             if not detector:
-                ns = counts
+                ns = ncounts
             else:
-                ns = counts * cycles
+                ns = ncounts * cycles
 
             self._estimated_duration += ns * estimated_duration_ff
             return
 
         if self._use_abbreviated_counts:
-            counts *= 0.25
+            ncounts *= 0.25
 
-        self.ncounts = counts
-        if not self._automated_run_call('do_baselines', counts, self._time_zero,
+        self.ncounts = ncounts
+        if not self._automated_run_call('do_baselines', ncounts, self._time_zero,
                                mass,
                                detector,
                                series=self._series_count,
@@ -205,10 +216,11 @@ class MeasurementPyScript(ValvePyScript):
                 pass
 
     @verbose_skip
-    def equilibrate(self, eqtime=20, inlet=None, outlet=None):
+    def equilibrate(self, eqtime=20, inlet=None, outlet=None, do_post_equilibration=True):
         evt = self._automated_run_call('do_equilibration', eqtime=eqtime,
                                         inlet=inlet,
-                                        outlet=outlet
+                                        outlet=outlet,
+                                        do_post_equilibration=do_post_equilibration
                                         )
         if not evt:
             self.cancel()
@@ -264,6 +276,22 @@ class MeasurementPyScript(ValvePyScript):
 #===============================================================================
 # set commands
 #===============================================================================
+    @verbose_skip
+    def clear_conditions(self):
+        self._automated_run_call('clear_conditions')
+
+    @verbose_skip
+    def clear_terminations(self):
+        self._automated_run_call('clear_terminations')
+
+    @verbose_skip
+    def clear_truncations(self):
+        self._automated_run_call('clear_truncations')
+
+    @verbose_skip
+    def clear_actions(self):
+        self._automated_run_call('clear_actions')
+
     @verbose_skip
     def add_termination(self, attr, comp, value, start_count=0, frequency=10):
         self._automated_run_call('add_termination', attr, comp, value,
