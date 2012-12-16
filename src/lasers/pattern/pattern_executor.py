@@ -31,6 +31,30 @@ from threading import Thread
 class PatternExecutor(Patternable):
     controller = Any
     show_patterning = Bool(True)
+    _alive = Bool(False)
+    def start(self, show=True):
+        self._alive = True
+        if show is None:
+            show = self.show_patterning
+        if show:
+            self.show_pattern()
+
+        if self.pattern:
+            self.pattern.clear_graph()
+
+    def finish(self):
+        self._alive = False
+        self.close_pattern()
+
+    def set_current_position(self, x, y, z):
+        if self.isPatterning():
+            graph = self.pattern.graph
+            graph.set_data([x], series=1, axis=0)
+            graph.set_data([y], series=1, axis=1)
+
+            graph.add_datum((x, y), series=2)
+
+            graph.redraw()
 
     def load_pattern(self, name_or_pickle):
         '''
@@ -92,14 +116,15 @@ class PatternExecutor(Patternable):
             if block is true wait for patterning to finish
             before returning
         '''
-        if self.show_patterning:
-            self.show_pattern()
+        self.start()
 
         t = Thread(target=self._execute)
         t.start()
 
         if block:
             t.join()
+
+        self.finish()
 
     def _execute(self):
         pat = self.pattern

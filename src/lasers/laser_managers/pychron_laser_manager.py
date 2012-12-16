@@ -66,6 +66,9 @@ class PychronLaserManager(BaseLaserManager):
                                                        port=port)
         return ec.open()
 
+#===============================================================================
+# patterning
+#===============================================================================
     def execute_pattern(self, name=None, block=False):
         '''
             name is either a name of a file 
@@ -89,7 +92,13 @@ class PychronLaserManager(BaseLaserManager):
         name = pattern.name
         self.info('executing pattern {}'.format(name))
         pm = self.pattern_executor
-        pm.show_pattern()
+
+        pm.start()
+
+        xyz = self.get_position()
+        if xyz:
+            pm.set_current_position(*xyz)
+
 
         '''
             look for pattern name in local pattern dir
@@ -108,13 +117,21 @@ class PychronLaserManager(BaseLaserManager):
         self._communicator.info(msg)
 
         time.sleep(0.5)
-        self._block('IsPatterning')
-        self.pattern_executor.close_pattern()
+
+        if not self._block('IsPatterning',
+                           position_callback=self.pattern_executor.set_current_position):
+            cmd = 'AbortPattern'
+            self._ask(cmd)
+
+        pm.finish()
 
     @on_trait_change('pattern_executor:pattern:canceled')
     def pattern_canceled(self):
         self._cancel_blocking = True
 
+#===============================================================================
+# 
+#===============================================================================
     def move_to_position(self, pos, *args, **kw):
         cmd = 'GoToHole {}'.format(pos)
         self.info('sending {}'.format(cmd))
@@ -135,7 +152,19 @@ class PychronLaserManager(BaseLaserManager):
         self.info('set laser power {}'.format(v))
         return self._ask('SetLaserPower {}'.format(v)) == 'OK'
 
-    def _block(self, cmd='GetDriveMoving'):
+    def get_position(self):
+        xyz = self._ask('GetPosition')
+        if xyz:
+            try:
+                x, y, z = map(float, xyz.split(','))
+                return x, y, z
+            except Exception, e:
+                print 'pychron laser manager get_position', e
+
+        if self._communicator.simulation:
+            return 0, 0, 0
+
+    def _block(self, cmd='GetDriveMoving', position_callback=None):
 
         ask = self._ask
 
@@ -152,8 +181,7 @@ class PychronLaserManager(BaseLaserManager):
             resp = ask(cmd)
 
             if self._communicator.simulation:
-                cnt = nsuccess + 1
-                continue
+                resp = 'False'
 
             if resp is not None:
                 try:
@@ -161,11 +189,22 @@ class PychronLaserManager(BaseLaserManager):
                         cnt += 1
                 except:
                     cnt = 0
+
+                if position_callback:
+
+                    if self._communicator.simulation:
+                        x, y, z = cnt / 3., cnt / 3., 0
+                        position_callback(x, y, z)
+                    else:
+                        xyz = self.get_position()
+                        if xyz:
+                            position_callback(*xyz)
+
             else:
                 cnt = 0
             tries += 1
 
-        state = cnt > nsuccess
+        state = cnt >= nsuccess
         if state:
             self.info('Move completed')
         else:
