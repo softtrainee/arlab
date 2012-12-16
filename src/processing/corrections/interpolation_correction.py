@@ -18,6 +18,12 @@
 from traits.api import HasTraits, Str, List, Any, Instance, Property, cached_property, \
     Event
 from traitsui.api import View, Item, TableEditor, EnumEditor, CheckListEditor
+import apptools.sweet_pickle as pickle
+
+import os
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.paths import paths
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_MeasurementTable, gen_AnalysisTypeTable, \
     gen_LabTable
@@ -30,8 +36,6 @@ from src.progress_dialog import MProgressDialog
 from src.regression.interpolation_regressor import InterpolationRegressor
 from src.helpers.traitsui_shortcuts import listeditor
 from src.processing.corrections.regression_correction import RegressionCorrection
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 class InterpolationGraph(StackedRegressionTimeSeriesGraph):
     pass
@@ -39,17 +43,36 @@ class InterpolationGraph(StackedRegressionTimeSeriesGraph):
 class InterpolationCorrection(HasTraits):
     analyses = List
     kind = Str
+    signal_key = Str
+    signal_klass = Any
     db = Any
     graph = Instance(InterpolationGraph)
     fits = List(RegressionCorrection)
     dirty = Event
     predictors = Property(depends_on='dirty')
     _predictors = List
+    def dump_fits(self):
+        p = os.path.join(paths.hidden_dir, '{}_interpolation_correction_fits'.format(self.kind))
+        obj = dict([(di.name, di) for di in self.fits])
+        with open(p, 'w') as fp:
+            pickle.dump(obj, fp)
 
     def load_fits(self, isotope_names):
 #        fs = [RegressionCorrection(name=ki) for ki in isotope_names]
+        cors = dict()
+        p = os.path.join(paths.hidden_dir, '{}_interpolation_correction_fits'.format(self.kind))
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                try:
+                    cors = pickle.load(fp)
+                except pickle.PickleError:
+                    pass
+
         for ki in isotope_names:
-            fi = RegressionCorrection(name=ki)
+            if ki in cors:
+                fi = cors[ki]
+            else:
+                fi = RegressionCorrection(name=ki)
             fi.on_trait_change(self.refresh, 'use')
             fi.on_trait_change(self.refresh_fit, 'fit')
             self.fits.append(fi)
@@ -80,21 +103,24 @@ class InterpolationCorrection(HasTraits):
             g.redraw()
 
     def refresh(self):
-        self.refresh_plot()
+        self.refresh_graph()
 
     def load_predictors(self):
         #force load predictors
         _ = self.predictors
-        self.refresh_plot()
+        self.refresh_graph()
 
-    def refresh_plot(self):
+    def refresh_graph(self):
         graph = self.graph
         graph.clear()
 
         fits = filter(lambda x:x.use, self.fits)
+        fits = reversed(fits)
         for plotid, si in enumerate(fits):
             graph.new_plot(padding_right=5,
-                           ytitle=si.name
+                           padding_bottom=50,
+                           ytitle=si.name,
+                           xtitle='Time'
                            )
             self.add_plot(si.name, si.fit.lower(), plotid)
 
@@ -125,8 +151,13 @@ class InterpolationCorrection(HasTraits):
 
         #sync the analysis' signals
         for yi, ai in zip(ys, self.analyses):
-            sig = ai.signals['{}bl'.format(key)]
-            sig.value = yi
+            k = '{}{}'.format(key, self.signal_key)
+            if k in ai.signals:
+                sig = ai.signals[k]
+                sig.value = yi
+            else:
+                sig = self.signal_klass(value=yi)
+                ai.signals[k] = sig
 
         graph.new_series(xs, ys, fit=False, type='scatter', plotid=plotid)
         graph.set_x_limits(mn, mx, pad='0.1', plotid=plotid)
@@ -246,8 +277,7 @@ class InterpolationCorrection(HasTraits):
         return v
 
     def _graph_default(self):
-        g = InterpolationGraph(container_dict=dict(stack_order='top_to_bottom',
-                                                   padding=5))
+        g = InterpolationGraph(container_dict=dict(padding=5))
         return g
 
 class DetectorIntercalibrationInterpolationCorrection(InterpolationCorrection):

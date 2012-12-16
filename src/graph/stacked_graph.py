@@ -128,6 +128,7 @@ class StackedGraph(Graph):
 #                pi.padding_top = 0
 #                pi.padding_bottom = 0
         self.set_paddings()
+        self._bounds_changed(self.plotcontainer.bounds)
 #        p.border_visible = False
         return p
 
