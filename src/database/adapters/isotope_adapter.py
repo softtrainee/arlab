@@ -30,8 +30,10 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     proc_FigureAnalysisTable
 
 #proc_
-from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
-    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable
+from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
+    proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
+    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
+    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
 
 #irrad_
 from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, irrad_ChronologyTable, irrad_LevelTable, \
@@ -102,7 +104,7 @@ class IsotopeAdapter(DatabaseAdapter):
         analysis = self.get_analysis(analysis)
 
         if analysis:
-            setattr(nset, '_analysis_id'.format(key), analysis)
+            setattr(nset, '{}_analysis_id'.format(key), analysis.id)
 #            bs.blank_analysis_id = analysis.id
         if pa:
             pa.sets.append(nset)

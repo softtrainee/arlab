@@ -132,6 +132,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         except IndexError:
             pass
 
+    def clear(self):
+        super(RegressionGraph, self).clear()
+        self.regressors = []
+
     def refresh(self):
         self._update_graph()
 

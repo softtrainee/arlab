@@ -15,21 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Bool, Float
-from traitsui.api import View, Item, HGroup
+from traits.api import HasTraits, Str, Bool
+from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.corrections.correction import Correction
-
-class FixedValueCorrection(Correction):
-    value = Float
-    error = Float
-    def traits_view(self):
-        v = View(HGroup(
-                        Item('name', style='readonly', show_label=False),
-                        Item('use', show_label=False),
-                        Item('value', show_label=False),
-                        Item('error', show_label=False),
-                        ))
-        return v
+class Correction(HasTraits):
+    name = Str
+    use = Bool(False)
 #============= EOF =============================================

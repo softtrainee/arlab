@@ -136,7 +136,7 @@ class TimeSeriesGraph(Graph):
             if scale:
                 xd = xd * scale
 
-        plot, names, rd = self._series_factory(xd, y, None, plotid=plotid, **kw)
+        plot, names, rd = self._series_factory(xd, y, plotid=plotid, **kw)
         if 'type' in rd:
             if rd['type'] == 'line_scatter':
                 plot.plot(names, type='scatter', marker_size=2,

@@ -36,8 +36,8 @@ class InterpolationRegressor(BaseRegressor):
             xs = [xs]
         xs = asarray(xs)
 
-        return func(xs)
-#        return [func(xi) for xi in xs]
+#        return func(xs)
+        return [func(xi) for xi in xs]
 
 
     def preceeding_predictors(self, timestamp, attr='value'):

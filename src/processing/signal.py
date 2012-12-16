@@ -25,6 +25,9 @@ from uncertainties import ufloat
 from src.regression.mean_regressor import MeanRegressor, WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 import struct
+from src.regression.interpolation_regressor import InterpolationRegressor
+from src.constants import INTERPOLATE_TYPES
+import time
 #============= local library imports  ==========================
 
 class Value(HasTraits):
@@ -209,14 +212,15 @@ class InterpolatedSignal(Signal):
 #            reg = super(InterpolatedSignal, self)._mean_regressor_factory()
 #        return reg
 #
-#    @cached_property
+
 #    def _get_value(self):
-#        tm = self.timestamp
-#        fit = self.fit
-#        xs = self.xs
-#        ys = self.ys
-#        es = self.es
-#        if fit and xs is not None and ys is not None:
+#        if self.fit:
+#            tm = self.timestamp
+#            reg = self.regressor
+#            if reg:
+#                return reg.predict(tm)
+#        else:
+#            return self._value
 #            xsyses = zip(xs, ys, es)
 #            xsyses = array(sorted(xsyses, key=lambda x: x[0]))
 #            xs, ys, es = zip(*xsyses)
@@ -235,11 +239,23 @@ class InterpolatedSignal(Signal):
 #
 #    @cached_property
 #    def _get_error(self):
-#        tm = self.timestamp
-#        fit = self.fit
-#        xs = self.xs
-#        ys = self.ys
-#        es = self.es
+#        if self.fit:
+#            return 0
+#        else:
+#            return self._error
+
+    def _get_regressor(self):
+        if self.fit:
+            fit = self.fit.lower()
+            xs = self.xs
+            ys = self.ys
+            es = self.es
+            if fit and xs is not None and ys is not None:
+                if fit in map(str.lower, INTERPOLATE_TYPES):
+                    return InterpolationRegressor(xs=xs, ys=ys, yserr=es, kind=fit)
+                else:
+                    return super(InterpolatedSignal, self)._get_regressor()
+
 #        if fit and xs is not None and ys is not None:
 #            xsyses = zip(xs, ys, es)
 #            xsyses = array(sorted(xsyses, key=lambda x: x[0]))

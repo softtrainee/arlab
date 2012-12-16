@@ -43,6 +43,7 @@ from src.deprecate import deprecated
 from src.constants import NULL_STR
 from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
 from src.database.records.arar_age import ArArAge
+import time
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -486,28 +487,49 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _load_detector_intercalibration(self):
         pass
 
+    def _record_factory(self, ri):
+        return self.__class__(_dbrecord=ri.analysis)
+
     def _load_from_history(self, name, key, klass, **kw):
         item = self._get_history_item(name)
         if item:
             for bi in item:
                 isotope = bi.isotope
                 s = klass(timestamp=self.timestamp, **kw)
-                if not bi.fit:
-#                if not bi.use_set:
-                    s.value = bi.user_value
-                    s.error = bi.user_error
-                else:
-                    s.fit = bi.fit.lower()
-                    xs, ys, es = zip(*[(ba.timestamp, ba.signals[isotope].value, ba.signals[isotope].error)
-                                   for ba in map(self._analysis_factory, bi.sets)])
-                    s.xs = xs
-                    s.ys = ys
-                    s.es = es
+                s.value = bi.user_value if bi.user_value else 0
+                s.error = bi.user_error if bi.user_error else 0
+                s.fit = bi.fit
 
+#                if not bi.fit:
+##                if not bi.use_set:
+#                    s = klass(timestamp=self.timestamp, **kw)
+#                    s.value = bi.user_value
+#                    s.error = bi.user_error
+#                else:
+#                    xs, ys, es = zip(*[(ba.timestamp,
+#                                        ba.signals[isotope].value,
+#                                        ba.signals[isotope].error)
+#                                   for ba in map(self._record_factory, bi.sets)])
+#                    xs = []
+#                    ys = []
+#                    for ba in bi.sets:
+#                        bb = self.__class__(_dbrecord=ba.analysis)
+#                        a = bb.timestamp
+#                        b = bb.signals[isotope].value
+#                        xs.append(a)
+#                        ys.append(b)
+
+#                    s = klass(timestamp=self.timestamp,
+#                              xs=xs, ys=ys, es=es,
+#                              fit=bi.fit.lower(),
+#                              **kw)
+#                    print 'ssss', s
+#                    s.xs = xs
+#                    s.ys = ys
+#                    s.es = es
+#                    s.fit = bi.fit.lower()
+#                print isotope, key
                 self._signals['{}{}'.format(isotope, key)] = s
-
-
-
 
 
     def _load_stacked_graph(self, data, det=None, regress=True):
@@ -694,11 +716,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             pass
 
     @cached_property
-    def _get_analysis_timestamp(self):
+    def _get_timestamp(self):
         analysis = self.dbrecord
         analts = '{} {}'.format(analysis.rundate, analysis.runtime)
         analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-        return analts
+        return time.mktime(analts.timetuple())
+#        return analts
 
     @cached_property
     def _get_ic_factor(self):
@@ -840,6 +863,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_isotope_keys(self):
+        if not self._signals:
+            self._load_signals()
+
         keys = [k[:4] for k in self._signals.keys()]
         keys = list(set(keys))
         isos = sorted(keys, key=lambda x: re.sub('\D', '', x))

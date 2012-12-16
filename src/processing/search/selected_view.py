@@ -109,8 +109,10 @@ class SelectedView(ColumnSorterMixin):
             return
         d = self._open_shelve()
 
+        exists = False
+        if self.previous_selection:
+            exists = next((v for v in d.itervalues() if v.name == self.previous_selection.name), None)
 
-        exists = next((v for v in d.itervalues() if v.name == self.previous_selection.name), None)
         if not exists:
             keys = sorted(d.keys())
             next_key = '001'
