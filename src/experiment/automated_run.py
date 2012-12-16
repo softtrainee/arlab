@@ -193,6 +193,19 @@ class AutomatedRun(Loggable):
                                                                 frequency,
                                                                 action=action,
                                                                 resume=resume))
+    def clear_conditions(self):
+        self.clear_terminations()
+        self.clear_truncations()
+        self.clear_actions()
+
+    def clear_terminations(self):
+        self.termination_conditions = []
+
+    def clear_truncations(self):
+        self.truncation_conditions = []
+
+    def clear_actions(self):
+        self.action_conditions = []
 
     def get_corrected_signals(self):
         d = dict()
@@ -377,7 +390,9 @@ class AutomatedRun(Loggable):
             self.info('======== Post Measurement Finished unsuccessfully ========')
             return False
 
-    def do_equilibration(self, eqtime=None, inlet=None, outlet=None):
+    def do_equilibration(self, eqtime=None, inlet=None, outlet=None,
+                         do_post_equilibration=True
+                         ):
 #        if inlet is None:
 #            inlet = self.get_measurement_parameter('inlet_valve')
 
@@ -392,7 +407,9 @@ class AutomatedRun(Loggable):
         self.info('====== Equilibration Started ======')
 
         t = Thread(name='equilibration', target=self._equilibrate, args=(evt,
-                                                                         eqtime, inlet, outlet))
+                                                                         eqtime, inlet, outlet,
+                                                                         do_post_equilibration
+                                                                         ))
         t.start()
         return evt
 
@@ -823,7 +840,9 @@ class AutomatedRun(Loggable):
 
         return True
 
-    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None, delay=3):
+    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None, delay=3,
+                     do_post_equilibration=True
+                     ):
 #        eqtime = self.get_measurement_parameter('equilibration_time', default=15)
 #        inlet = self.get_measurement_parameter('inlet_valve')
 #        outlet = self.get_measurement_parameter('outlet_valve')
@@ -851,7 +870,8 @@ class AutomatedRun(Loggable):
             if elm and inlet:
                 elm.close_valve(inlet)
 
-            self.do_post_equilibration()
+            if do_post_equilibration:
+                self.do_post_equilibration()
             self.overlap_evt.set()
 
     def _check_conditions(self, conditions, cnt):
