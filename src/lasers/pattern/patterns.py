@@ -17,10 +17,10 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Float, Button, Instance, Range, Any, Str, Property
+from traits.api import HasTraits, Bool, Float, Button, Instance, Range, Any, Str, Property, \
+    Event
 from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring
 from chaco.api import AbstractOverlay
-
 #============= standard library imports ========================
 from numpy import array, transpose, flipud
 #============= local library imports  ==========================
@@ -33,8 +33,9 @@ import os
 #from chaco.data_range_1d import DataRange1D
 #from chaco.linear_mapper import LinearMapper
 import math
-from src.lasers.stage_managers.pattern.pattern_generators import circular_contour_pattern, \
+from src.lasers.pattern.pattern_generators import circular_contour_pattern, \
     diamond_pattern
+from src.viewable import Viewable
 
 
 class TargetOverlay(AbstractOverlay):
@@ -82,7 +83,7 @@ class OverlapOverlay(AbstractOverlay):
         gc.restore_state()
 
 
-class Pattern(HasTraits):
+class Pattern(Viewable):
 
     graph = Instance(Graph, (), transient=True)
     cx = Float(transient=True)
@@ -107,16 +108,22 @@ class Pattern(HasTraits):
     calculated_transit_time = Float
 
     niterations = Range(1, 200)
+
+    canceled = Event
 #    def map_pt(self, x, y):
 #
 #        return self.pxpermm * x + self.image_width / 2, self.pxpermm * y + self.image_height / 2
+    def close(self, isok):
+        self.canceled = True
+        return True
+
     @property
     def kind(self):
         return self.__class__.__name__
 
     def _get_name(self):
         if not self.path:
-            return 'Pattern'
+            return 'New Pattern'
         return os.path.basename(self.path).split('.')[0]
 
     def _anytrait_changed(self, name, new):
@@ -214,9 +221,11 @@ class Pattern(HasTraits):
         return [pt for pt in gen_out]
 
     def graph_view(self):
-        v = View(Item('graph', style='custom', show_label=False,
+        v = View(Item('graph',
+                      style='custom', show_label=False,
                       ),
-                 #title=self.name
+                 handler=self.handler_klass,
+                 title=self.name
                  )
         return v
 

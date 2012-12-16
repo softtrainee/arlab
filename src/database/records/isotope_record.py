@@ -979,6 +979,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_cleanup_duration(self):
         return self._get_extraction_value('cleanup_duration')
 
+
 #===============================================================================
 # factories
 #===============================================================================

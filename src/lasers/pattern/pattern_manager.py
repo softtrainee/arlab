@@ -26,8 +26,10 @@ import time
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
-from src.lasers.stage_managers.pattern.patterns import Pattern
+from src.lasers.pattern.patterns import Pattern
+from src.deprecate import deprecate_klass
 
+@deprecate_klass()
 class PatternManager(Manager):
     kind = Property(Enum(
                          'Polygon',
@@ -275,7 +277,7 @@ class PatternManager(Manager):
     def pattern_factory(self, kind):
         name = '{}Pattern'.format(kind)
         try:
-            factory = __import__('src.lasers.stage_managers.pattern.patterns',
+            factory = __import__('src.lasers.pattern.patterns',
                              fromlist=[name])
             pattern = getattr(factory, name)()
     #        pattern = globals()['{}Pattern'.format(kind)]()
