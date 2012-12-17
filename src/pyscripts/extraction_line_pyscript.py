@@ -15,38 +15,37 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Dict
 #============= standard library imports ========================
 import time
 from numpy import linspace
 #============= local library imports  ==========================
-from src.pyscripts.pyscript import PyScript, verbose_skip
+from src.pyscripts.pyscript import verbose_skip, makeRegistry
 from src.lasers.laser_managers.laser_manager import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
-import os
-from src.paths import paths
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
+command_register = makeRegistry()
 
 class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
 
-    _context = Dict
+    def get_command_register(self):
+        return command_register.commands.items()
 
-#    def _set_analysis_type(self, v):
-#        self._context['analysis_type'] = v
-#
-#    def _get_analysis_type(self):
-#        return self.get_context()['analysis_type']
-#
-#    analysis_type = property(fset=_set_analysis_type,
-#                             fget=_get_analysis_type)
+    def _post_execute_hook(self):
+        #remove ourselves from the script runner
+        if self.runner:
+            self.runner.scripts.remove(self)
 
+    def _cancel_hook(self):
+        if self._resource_flag:
+            self._resource_flag.clear()
+#===============================================================================
+# properties
+#===============================================================================
     @property
     def pattern(self):
-        ctx = self.get_context()
-        if 'pattern' in ctx:
-            return ctx['pattern']
+        return self.get_context()['pattern']
 
     @property
     def analysis_type(self):
@@ -55,6 +54,10 @@ class ExtractionLinePyScript(ValvePyScript):
     @property
     def extract_device(self):
         return self.get_context()['extract_device']
+
+    @property
+    def tray(self):
+        return self.get_context()['tray']
 
     @property
     def position(self):
@@ -68,85 +71,11 @@ class ExtractionLinePyScript(ValvePyScript):
     @property
     def extract_value(self):
         return self.get_context()['extract_value']
-
-    def setup_context(self, **kw):
-#        ctx = dict()
-#        for attr in [
-#                     'analysis_type',
-#                     'extract_device',
-#                     'position',
-#                     'extract_units',
-#                     'extract_value',
-#                     'duration', 'cleanup']:
-#            try:
-#                ctx[attr] = kw[attr]
-#            except KeyError:
-#                pass
-
-        self._context.update(kw)
-
-    def _post_execute_hook(self):
-        #remove ourselves from the script runner
-        if self.runner:
-            self.runner.scripts.remove(self)
-
-    def _cancel_hook(self):
-        if self._resource_flag:
-            self._resource_flag.clear()
-
-    def get_script_commands(self):
-        cmds = super(ExtractionLinePyScript, self).get_script_commands()
-
-        cmds += [
-                 'acquire', 'release',
-                 'wait', 'set_resource',
-                 'move_to_position',
-                 'extract',
-                 'end_extract',
-                 'ramp',
-                 ]
-        return cmds
-
-    def get_context(self):
-        d = super(ExtractionLinePyScript, self).get_context()
-
-        #=======================================================================
-        #Parameters
-        # this are directly referencable in the script
-        # e.g if OverlapRuns:
-        #    or
-        #    move_to_hole(holeid)
-        #=======================================================================
-
-        d.update(self._context)
-        return d
-
-    def gosub(self, *args, **kw):
-#        kw['analysis_type'] = self.analysis_type
-        kw['_context'] = self._context
-        super(ExtractionLinePyScript, self).gosub(*args, **kw)
-
-#    @verbose_skip
-#    def is_open(self, name=None, description=''):
-#        self.info('is {} ({}) open?'.format(name, description))
-#        result = self._get_valve_state(name, description)
-#        if result:
-#            return result[0] == True
-#
-#    @verbose_skip
-#    def is_closed(self, name=None, description=''):
-#        self.info('is {} ({}) closed?'.format(name, description))
-#        result = self._get_valve_state(name, description)
-#        if result:
-#            return result[0] == False
-#
-#    def _get_valve_state(self, name, description):
-#        return self._manager_action([('open_valve', (name,), dict(
-#                                                      mode='script',
-#                                                      description=description
-#                                                      ))], protocol=ELPROTOCOL)
-
+#===============================================================================
+# commands
+#===============================================================================
     @verbose_skip
+    @command_register
     def move_to_position(self, position=''):
         if position == '':
             position = self.position
@@ -169,6 +98,7 @@ class ExtractionLinePyScript(ValvePyScript):
             return True
 
     @verbose_skip
+    @command_register
     def execute_pattern(self, pattern='', block=False):
         if pattern == '':
             pattern = self.pattern
@@ -180,17 +110,23 @@ class ExtractionLinePyScript(ValvePyScript):
                               protocol=ILaserManager)
 
         return time.time() - st
-#    @verbose_skip
-#    def set_stage_map(self, mapname=None):
-#        self.info('set stage map to {}, using position correction={}'.format(mapname))
-#        result = self._manager_action([('set_stage_map', (mapname), {})
-#                                        ],
-#                                      protocol=ILaserManager,
-#                                      name=self.extract_device
-#                                      )
-#        self.report_result(result)
 
     @verbose_skip
+    @command_register
+    def set_tray(self, tray=''):
+        if tray == '':
+            tray = self.tray
+
+        self.info('set tray to {}'.format(tray))
+        result = self._manager_action([('set_stage_map', (tray), {})
+                                        ],
+                                      protocol=ILaserManager,
+                                      name=self.extract_device
+                                      )
+        return result
+
+    @verbose_skip
+    @command_register
     def extract(self, power=''):
         if power == '':
             power = self.extract_value
@@ -204,6 +140,7 @@ class ExtractionLinePyScript(ValvePyScript):
                              )
 
     @verbose_skip
+    @command_register
     def end_extract(self):
         self._manager_action([('disable_laser', (), {})],
                              protocol=ILaserManager,
@@ -211,6 +148,7 @@ class ExtractionLinePyScript(ValvePyScript):
                              )
 
     @verbose_skip
+    @command_register
     def ramp(self, setpoint=0, rate=0, start=0, period=2):
 
         setpoint = float(setpoint)
@@ -252,32 +190,8 @@ class ExtractionLinePyScript(ValvePyScript):
 
         return int(time.time() - st)
 
-#    @verbose_skip
-#    def _m_open(self, name=None, description=''):
-#
-#        if description is None:
-#            description = '---'
-#
-#        self.info('opening {} ({})'.format(name, description))
-#
-#        self._manager_action([('open_valve', (name,), dict(
-#                                                      mode='script',
-#                                                      description=description
-#                                                      ))], protocol=ELPROTOCOL)
-#
-#    @verbose_skip
-#    def close(self, name=None, description=''):
-#
-#        if description is None:
-#            description = '---'
-#
-#        self.info('closing {} ({})'.format(name, description))
-#        self._manager_action([('close_valve', (name,), dict(
-#                                                      mode='script',
-#                                                      description=description
-#                                                      ))], protocol=ELPROTOCOL)
-
     @verbose_skip
+    @command_register
     def acquire(self, name=None):
         if self.runner is None:
             return
@@ -302,6 +216,7 @@ class ExtractionLinePyScript(ValvePyScript):
             self.info('{} acquired'.format(name))
 
     @verbose_skip
+    @command_register
     def wait(self, name=None, criterion=0):
         self.info('waiting for {} < {}'.format(name, criterion))
         r = self.runner.get_resource(name)
@@ -318,6 +233,7 @@ class ExtractionLinePyScript(ValvePyScript):
         self.info('finished waiting')
 
     @verbose_skip
+    @command_register
     def release(self, name=None):
 
         self.info('release {}'.format(name))
@@ -325,8 +241,71 @@ class ExtractionLinePyScript(ValvePyScript):
         r.clear()
 
     @verbose_skip
+    @command_register
     def set_resource(self, name=None, value=1):
         r = self.runner.get_resource(name)
         r.set(value)
 
 #============= EOF ====================================
+#    @verbose_skip
+#    def _m_open(self, name=None, description=''):
+#
+#        if description is None:
+#            description = '---'
+#
+#        self.info('opening {} ({})'.format(name, description))
+#
+#        self._manager_action([('open_valve', (name,), dict(
+#                                                      mode='script',
+#                                                      description=description
+#                                                      ))], protocol=ELPROTOCOL)
+#
+#    @verbose_skip
+#    def close(self, name=None, description=''):
+#
+#        if description is None:
+#            description = '---'
+#
+#        self.info('closing {} ({})'.format(name, description))
+#        self._manager_action([('close_valve', (name,), dict(
+#                                                      mode='script',
+#                                                      description=description
+#                                                      ))], protocol=ELPROTOCOL)
+#    def get_context(self):
+#        d = super(ExtractionLinePyScript, self).get_context()
+
+#        #=======================================================================
+#        #Parameters
+#        # this are directly referencable in the script
+#        # e.g if OverlapRuns:
+#        #    or
+#        #    move_to_hole(holeid)
+#        #=======================================================================
+#
+#        d.update(self._context)
+#        return d
+
+#    def gosub(self, *args, **kw):
+#        kw['analysis_type'] = self.analysis_type
+#        kw['_context'] = self._context
+#        super(ExtractionLinePyScript, self).gosub(*args, **kw)
+
+#    @verbose_skip
+#    def is_open(self, name=None, description=''):
+#        self.info('is {} ({}) open?'.format(name, description))
+#        result = self._get_valve_state(name, description)
+#        if result:
+#            return result[0] == True
+#
+#    @verbose_skip
+#    def is_closed(self, name=None, description=''):
+#        self.info('is {} ({}) closed?'.format(name, description))
+#        result = self._get_valve_state(name, description)
+#        if result:
+#            return result[0] == False
+#
+#    def _get_valve_state(self, name, description):
+#        return self._manager_action([('open_valve', (name,), dict(
+#                                                      mode='script',
+#                                                      description=description
+#                                                      ))], protocol=ELPROTOCOL)

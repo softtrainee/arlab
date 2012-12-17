@@ -95,10 +95,10 @@ class PychronLaserManager(BaseLaserManager):
 
         pm.start()
 
+        #set the current position
         xyz = self.get_position()
         if xyz:
             pm.set_current_position(*xyz)
-
 
         '''
             look for pattern name in local pattern dir
@@ -112,14 +112,19 @@ class PychronLaserManager(BaseLaserManager):
             msg = 'Do Pattern {}'.format(name)
 
         cmd = 'DoPattern {}'.format(txt)
-        self._ask(cmd, verbose=False)
 
+        '''
+            display an alternate message
+            if is local pattern then txt is a binary str
+            log msg instead of cmd
+        '''
+        self._ask(cmd, verbose=False)
         self._communicator.info(msg)
 
         time.sleep(0.5)
 
         if not self._block('IsPatterning',
-                           position_callback=self.pattern_executor.set_current_position):
+                           position_callback=pm.set_current_position):
             cmd = 'AbortPattern'
             self._ask(cmd)
 
@@ -127,6 +132,9 @@ class PychronLaserManager(BaseLaserManager):
 
     @on_trait_change('pattern_executor:pattern:canceled')
     def pattern_canceled(self):
+        '''
+            this patterning window was closed so cancel the blocking loop
+        '''
         self._cancel_blocking = True
 
 #===============================================================================
@@ -170,14 +178,15 @@ class PychronLaserManager(BaseLaserManager):
 
         cnt = 0
         tries = 0
-        maxtries = 200 #timeout after 200 s
+        maxtries = 200 #timeout after 50 s
         nsuccess = 4
         self._cancel_blocking = False
+        period = 0.25
         while tries < maxtries and cnt < nsuccess:
             if self._cancel_blocking:
                 break
 
-            time.sleep(0.25)
+            time.sleep(period)
             resp = ask(cmd)
 
             if self._communicator.simulation:
@@ -211,7 +220,7 @@ class PychronLaserManager(BaseLaserManager):
             if self._cancel_blocking:
                 self.info('Move failed. canceled by user')
             else:
-                self.info('Move failed. timeout after {}s'.format(maxtries / 4))
+                self.info('Move failed. timeout after {}s'.format(maxtries * period))
 
         return state
 

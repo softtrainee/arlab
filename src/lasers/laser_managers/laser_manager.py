@@ -27,7 +27,7 @@ from src.led.led import LED
 from src.lasers.stage_managers.stage_manager import StageManager
 #
 from src.monitors.laser_monitor import LaserMonitor
-from src.managers.graph_manager import GraphManager
+#from src.managers.graph_manager import GraphManager
 from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
 from src.hardware.meter_calibration import MeterCalibration
