@@ -19,7 +19,8 @@ from traits.api import Any, on_trait_change
 #============= standard library imports ========================
 from pyscript import PyScript
 import time
-from src.pyscripts.pyscript import verbose_skip, count_verbose_skip
+from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
+    makeRegistry
 import os
 from src.paths import paths
 import random
@@ -68,6 +69,8 @@ class AutomatedRun(HasTraits):
     def do_data_collection(self, *args, **kw):
         pass
 
+command_register = makeRegistry()
+
 class MeasurementPyScript(ValvePyScript):
     automated_run = Any
     ncounts = 0
@@ -85,6 +88,8 @@ class MeasurementPyScript(ValvePyScript):
 #                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
 #                                  [40, 39, 38, 37, 36, 35])
 #                              ])
+    def get_command_register(self):
+        return command_register.commands.items()
 
     def truncate(self, style=None):
         if style == 'quick':
@@ -94,29 +99,30 @@ class MeasurementPyScript(ValvePyScript):
     def get_script_commands(self):
         cmds = super(MeasurementPyScript, self).get_script_commands()
 
-        cmds += ['baselines', 'position', 'set_time_zero', 'peak_center',
-                 'activate_detectors', 'multicollect', 'regress', 'sniff',
-                 'peak_hop',
-                 'coincidence',
-                 'equilibrate',
-                 'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
-                 'set_extraction_lens', 'set_deflection',
-                 'set_cdd_operating_voltage',
-                 'set_source_parameters',
-                 'set_source_optics',
+        cmds += [
+#                 'baselines', 'position', 'set_time_zero', 'peak_center',
+#                 'activate_detectors', 'multicollect', 'regress', 'sniff',
+#                 'peak_hop',
+#                 'coincidence',
+#                 'equilibrate',
+#                 'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
+#                 'set_extraction_lens', 'set_deflection',
+#                 'set_cdd_operating_voltage',
+#                 'set_source_parameters',
+#                 'set_source_optics',
+#
+#                 'set_ncounts',
+#                 'add_termination',
+#                 'add_truncation',
+#                 'add_action',
+#                 'clear_conditions',
+#                 'clear_terminations',
+#                 'clear_truncations',
+#                 'clear_actions',
+#
+#                 'get_intensity',
 
-                 'set_ncounts',
-                 'add_termination',
-                 'add_truncation',
-                 'add_action',
-                 'clear_conditions',
-                 'clear_terminations',
-                 'clear_truncations',
-                 'clear_actions',
-
-                 'get_intensity',
-
-                 'extraction_gosub'
+#                 'extraction_gosub'
                  ]
 
 
@@ -129,11 +135,13 @@ class MeasurementPyScript(ValvePyScript):
 # commands
 #===============================================================================    
     @verbose_skip
+    @command_register
     def extraction_gosub(self, *args, **kw):
         kw['klass'] = 'ExtractionLinePyScript'
         super(MeasurementPyScript, self).gosub(*args, **kw)
 
     @count_verbose_skip
+    @command_register
     def sniff(self, ncounts=0, calc_time=False, integration_time=1):
         if calc_time:
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
@@ -147,6 +155,7 @@ class MeasurementPyScript(ValvePyScript):
         self._series_count += 1
 
     @count_verbose_skip
+    @command_register
     def multicollect(self, ncounts=200, integration_time=1, calc_time=False):
         if calc_time:
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
@@ -161,6 +170,7 @@ class MeasurementPyScript(ValvePyScript):
         self._series_count += 4
 
     @count_verbose_skip
+    @command_register
     def baselines(self, ncounts=1, cycles=5, mass=None, detector='', calc_time=False):
         '''
             if detector is not none then it is peak hopped
@@ -188,6 +198,7 @@ class MeasurementPyScript(ValvePyScript):
         self._series_count += 1
 
     @count_verbose_skip
+    @command_register
     def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
         if calc_time:
             self._estimated_duration += (cycles * integrations * estimated_duration_ff)
@@ -201,6 +212,7 @@ class MeasurementPyScript(ValvePyScript):
         self._series_count += 3
 
     @count_verbose_skip
+    @command_register
     def peak_center(self, detector='AX', isotope='Ar40', calc_time=False):
         if calc_time:
             self._estimated_duration += 45
@@ -208,6 +220,7 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('do_peak_center', detector=detector, isotope=isotope)
 
     @verbose_skip
+    @command_register
     def get_intensity(self, name):
         if self._detectors:
             try:
@@ -216,6 +229,7 @@ class MeasurementPyScript(ValvePyScript):
                 pass
 
     @verbose_skip
+    @command_register
     def equilibrate(self, eqtime=20, inlet=None, outlet=None, do_post_equilibration=True):
         evt = self._automated_run_call('do_equilibration', eqtime=eqtime,
                                         inlet=inlet,
@@ -229,6 +243,7 @@ class MeasurementPyScript(ValvePyScript):
             evt.wait()
 
     @verbose_skip
+    @command_register
     def regress(self, *fits):
         if not fits:
             fits = 'linear'
@@ -236,6 +251,7 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('set_regress_fits', fits)
 
     @verbose_skip
+    @command_register
     def activate_detectors(self, *dets):
 
         if dets:
@@ -245,6 +261,7 @@ class MeasurementPyScript(ValvePyScript):
                 self._detectors[di] = 0
 
     @verbose_skip
+    @command_register
     def position(self, pos, detector='AX', dac=False):
         '''
             position(4.54312, dac=True) # detector is not relevant
@@ -255,6 +272,7 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('set_position', pos, detector, dac=dac)
 
     @verbose_skip
+    @command_register
     def coincidence(self):
         self._automated_run_call('do_coincidence_scan')
 
@@ -277,34 +295,40 @@ class MeasurementPyScript(ValvePyScript):
 # set commands
 #===============================================================================
     @verbose_skip
+    @command_register
     def clear_conditions(self):
         self._automated_run_call('clear_conditions')
 
     @verbose_skip
+    @command_register
     def clear_terminations(self):
         self._automated_run_call('clear_terminations')
 
     @verbose_skip
+    @command_register
     def clear_truncations(self):
         self._automated_run_call('clear_truncations')
 
     @verbose_skip
+    @command_register
     def clear_actions(self):
         self._automated_run_call('clear_actions')
 
     @verbose_skip
+    @command_register
     def add_termination(self, attr, comp, value, start_count=0, frequency=10):
         self._automated_run_call('add_termination', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency
                                  )
     @verbose_skip
+    @command_register
     def add_truncation(self, attr, comp, value, start_count=0, frequency=10):
         self._automated_run_call('add_truncation', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency
                                  )
-
+    @command_register
     def add_action(self, attr, comp, value, start_count=0, frequency=10,
                    action=None,
                    resume=False
@@ -324,6 +348,7 @@ class MeasurementPyScript(ValvePyScript):
                                  )
 
     @verbose_skip
+    @command_register
     def set_ncounts(self, ncounts=0):
         try:
             ncounts = int(ncounts)
@@ -332,32 +357,39 @@ class MeasurementPyScript(ValvePyScript):
             print 'set_ncounts', e
 
     @verbose_skip
+    @command_register
     def set_time_zero(self):
         self._time_zero = time.time()
 
     @verbose_skip
+    @command_register
     def set_ysymmetry(self, v):
         self._set_spectrometer_parameter('SetYSymmetry', v)
 
     @verbose_skip
+    @command_register
     def set_zsymmetry(self, v):
         self._set_spectrometer_parameter('SetZSymmetry', v)
 
     @verbose_skip
+    @command_register
     def set_zfocus(self, v):
         self._set_spectrometer_parameter('SetZFocus', v)
 
     @verbose_skip
+    @command_register
     def set_extraction_lens(self, v):
         self._set_spectrometer_parameter('SetExtractionLens', v)
 
     @verbose_skip
+    @command_register
     def set_deflection(self, detname, v):
 
         v = '{},{}'.format(detname, v)
         self._set_spectrometer_parameter('SetDeflection', v)
 
     @verbose_skip
+    @command_register
     def set_cdd_operating_voltage(self, v=''):
         '''
             if v is None use value from file
@@ -372,6 +404,7 @@ class MeasurementPyScript(ValvePyScript):
         self._set_spectrometer_parameter('SetIonCounterVoltage', v)
 
     @verbose_skip
+    @command_register
     def set_source_optics(self, **kw):
         ''' 
         set_source_optics(YSymmetry=10.0)
@@ -382,6 +415,7 @@ class MeasurementPyScript(ValvePyScript):
         self._set_from_file(attrs, 'SourceOptics', **kw)
 
     @verbose_skip
+    @command_register
     def set_source_parameters(self, **kw):
         '''            
         '''
@@ -389,6 +423,7 @@ class MeasurementPyScript(ValvePyScript):
         self._set_from_file(attrs, 'SourceParameters')
 
     @verbose_skip
+    @command_register
     def set_deflections(self):
         func = self._set_spectrometer_parameter
 

@@ -145,24 +145,19 @@ class BaseSchedule(Saveable):
 # persistence
 #===============================================================================
     def dump(self, stream):
-#        self.dirty = False
-
         header, attrs = self._get_dump_attrs()
 
         writeline = lambda m: stream.write(m + '\n')
 
-#        with open(p, 'wb') as f:
         tab = lambda l: writeline('\t'.join(map(str, l)))
 
         #write metadata
-
         self._meta_dumper(stream)
         writeline('#' + '=' * 80)
 
         tab(header)
         for arun in self.automated_runs:
             vs = arun.to_string_attrs(attrs)
-#            vs = [getattr(arun, ai) for ai in attrs]
             vals = [v if v and v != NULL_STR else '' for v in vs]
             tab(vals)
 
@@ -170,6 +165,7 @@ class BaseSchedule(Saveable):
 #               
     def _get_dump_attrs(self):
         header = ['labnumber',
+                  'pattern',
                   'position',
                   'overlap',
                   'extract_group',
@@ -180,6 +176,7 @@ class BaseSchedule(Saveable):
                   'autocenter',
                   'extraction', 'measurement', 'post_equilibration', 'post_measurement']
         attrs = ['labnumber',
+                  'pattern',
                   'position',
                   'overlap',
                   'extract_group',
@@ -208,6 +205,7 @@ class BaseSchedule(Saveable):
         for attr in ['labnumber',
                      'measurement', 'extraction', 'post_measurement',
                      'post_equilibration',
+                     'pattern'
                      ]:
             params[attr] = args[header.index(attr)]
 
@@ -274,12 +272,9 @@ class BaseSchedule(Saveable):
                 self.automated_runs.insert(ind + 1, ri)
         self.selected = []
 
-
 #===============================================================================
 # views
 #===============================================================================
-
-
     def _get_script_group(self):
         script_grp = VGroup(
                         Item('extraction_script',

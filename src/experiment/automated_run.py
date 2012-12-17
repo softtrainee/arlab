@@ -117,6 +117,8 @@ class AutomatedRun(Loggable):
 
     weight = Float
     comment = Str
+    pattern = Str
+    patterns = Property
 
     scripts = Dict
     signals = Dict
@@ -1390,7 +1392,6 @@ class AutomatedRun(Loggable):
             return
         fname = fname if fname.endswith('.py') else fname + '.py'
 
-#        print self.scripts.keys(), fname
         if fname in self.scripts:
 #            self.debug('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname]
@@ -1416,7 +1417,7 @@ class AutomatedRun(Loggable):
             if s and os.path.isfile(s.filename):
                 if s.bootstrap():
                     try:
-                        s._test()
+                        s.test()
                         setattr(self, '_{}_script'.format(name), s)
                     except Exception, e:
                         self.warning(e)
@@ -1428,6 +1429,7 @@ class AutomatedRun(Loggable):
             else:
                 self._executable = False
                 self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
+
     def measurement_script_factory(self, ec):
         ec = self.configuration
         mname = os.path.basename(ec['measurement_script'])
@@ -1453,14 +1455,12 @@ class AutomatedRun(Loggable):
         return self._extraction_script_factory(ec, key)
 
     def _extraction_script_factory(self, ec, key):
-        #get the klass
         source_dir = os.path.dirname(ec[key])
         file_name = os.path.basename(ec[key])
 
         file_name = self._add_script_extension(file_name)
 
         if os.path.isfile(os.path.join(source_dir, file_name)):
-#        if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
             hdn = self.extract_device.replace(' ', '_').lower()
             obj = klass(
@@ -1469,15 +1469,19 @@ class AutomatedRun(Loggable):
                     runner=self.runner
                     )
             an = self.analysis_type.split('_')[0]
-#            print self.position, 'positino',an
-            obj.setup_context(position=self.position,
+            '''
+                setup_context to expose variables to the pyscript
+            '''
+            obj.setup_context(tray=self.tray,
+                              position=self.position,
                               duration=self.duration,
                               extract_value=self._extract_value,
                               extract_units=self._extract_units,
                               cleanup=self.cleanup,
                               extract_device=hdn,
                               analysis_type=an,
-                              ramp_rate=self.ramp_rate
+                              ramp_rate=self.ramp_rate,
+                              pattern=self.pattern
                               )
 
             return obj
@@ -1708,6 +1712,18 @@ class AutomatedRun(Loggable):
                     for s in self.project.samples
                         for ln in s.labnumbers]
         return sorted(lns)
+
+    @cached_property
+    def _get_patterns(self):
+        p = paths.pattern_dir
+        patterns = [NULL_STR]
+        extension = '.lp'
+        if os.path.isdir(p):
+            ps = os.listdir(p)
+            if extension is not None:
+                patterns += [os.path.splitext(pi)[0] for pi in ps if pi.endswith(extension)]
+
+        return patterns
 #===============================================================================
 # views
 #===============================================================================
@@ -1779,6 +1795,9 @@ class AutomatedRun(Loggable):
                      Item('ramp_rate', label='Ramp Rate (C/s)'),
                      Item('duration', label='Duration (s)'),
                      Item('cleanup', label='Cleanup (s)'),
+#                     HGroup(Item('use_pattern', show_label=False),
+                            Item('pattern', editor=EnumEditor(name='patterns')),
+#                            ),
                      Item('weight'),
                      Item('comment'),
 

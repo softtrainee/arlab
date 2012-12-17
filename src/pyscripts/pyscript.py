@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Any, Bool, DelegatesTo
+from traits.api import Str, Any, Bool, DelegatesTo, Dict, Property
 from pyface.timer.do_later import do_later
 from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
@@ -131,12 +131,25 @@ def count_verbose_skip(func):
         return func(obj, *args, **kw)
     return decorator
 
+def makeRegistry():
+    registry = {}
+    def registrar(func):
+        registry[func.__name__] = func.__name__
+        return func # normally a decorator returns a wrapped function, 
+                    # but here we return func unmodified, after registering it
+    registrar.commands = registry
+    return registrar
+
+command_register = makeRegistry()
 
 class PyScript(Loggable):
-    _text = None
+    text = Property
+    _text = Str
+
     manager = Any
     parent = Any
     root = Str
+    _ctx = Dict
 
     parent_script = Any
 
@@ -147,6 +160,7 @@ class PyScript(Loggable):
     _completed = False
     _truncate = False
 
+    syntax_checked = Property
     _syntax_checking = False
     _syntax_checked = False
     _gosub_script = None
@@ -160,68 +174,53 @@ class PyScript(Loggable):
 
     _graph_calc = False
 
-    @property
-    def filename(self):
-        return os.path.join(self.root, self.name)
-
     def toblob(self):
-        return self._text
+        return self.text
 
     def get_estimated_duration(self):
         return self._estimated_duration
 
-    def _cancel_flag_changed(self, v):
-        if v:
-            result = confirmation(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
-            if result != 5104:
-                self.cancel()
-            else:
-                self.cancel_flag = False
-
     def setup_context(self, **kw):
-        pass
+        self._ctx.update(kw)
 
     def get_context(self):
-        ks = [((k[0], k[1]) if isinstance(k, tuple) else (k, k))
-               for k in self.get_commands()]
+        ctx = dict()
+        for k  in self.get_commands():
+            if isinstance(k, tuple):
+                ka, kb = k
+                name, func = ka, getattr(self, kb)
+            else:
+                name, func = k, getattr(self, k)
 
-        ks += [(v, v) for v in self.get_variables()]
+            ctx[name] = func
 
-        return dict([(k, getattr(self, fname)) for k, fname in ks])
+        for v in self.get_variables():
+            ctx[v] = getattr(self, v)
+
+        ctx.update(self._ctx)
+        return ctx
 
     def get_variables(self):
         return []
 
     def get_core_commands(self):
-        cmds = ['sleep',
-            'begin_interval', 'complete_interval',
-            'gosub', 'exit', ('info', '_m_info'),
-            'wait'
-            ]
+        cmds = [
+                ('info', '_m_info')
+                ]
+
         return cmds
 
     def get_commands(self):
-        return self.get_core_commands() + self.get_script_commands()
+        return self.get_core_commands() + \
+                 self.get_script_commands() + \
+                    self.get_command_register() + \
+                        command_register.commands.items()
+
+    def get_command_register(self):
+        pass
 
     def get_script_commands(self):
         return []
-
-    def set_text(self, t):
-        self._text = t
-
-    @property
-    def state(self):
-        #states
-        #0=running
-        #1=canceled
-        #2=completed
-        if self._cancel:
-            return '1'
-
-        if self._completed:
-            return '2'
-
-        return '0'
 
     def truncate(self, style=None):
         if style is None:
@@ -248,8 +247,6 @@ class PyScript(Loggable):
 
         self._cancel_hook()
 
-    def _cancel_hook(self):
-        pass
 
     def bootstrap(self, load=True, **kw):
         self._interval_flag = Event()
@@ -259,12 +256,25 @@ class PyScript(Loggable):
 #            p = os.path.join(self.root, self.name)
 #            self.syntax_checked = False
             with open(self.filename, 'r') as f:
-                self._text = f.read()
+                self.text = f.read()
             return True
 
+#===============================================================================
+# private
+#===============================================================================
+    def _cancel_hook(self):
+        pass
+    def _cancel_flag_changed(self, v):
+        if v:
+            result = confirmation(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
+            if result != 5104:
+                self.cancel()
+            else:
+                self.cancel_flag = False
 #==============================================================================
 # commands
 #==============================================================================
+    @command_register
     def gosub(self, name=None, root=None, klass=None, **kw):
         if not name.endswith('.py'):
             name += '.py'
@@ -304,7 +314,9 @@ class PyScript(Loggable):
                           name=name,
                           _syntax_checked=self._syntax_checked,
                           manager=self.manager,
-                          parent_script=self, **kw
+                          parent_script=self,
+                          _ctx=self._ctx,
+                          ** kw
                           )
 #        s.bootstrap()
 
@@ -312,7 +324,7 @@ class PyScript(Loggable):
 #            if not self.parent._syntax_checked:
 #                self._syntax_checked = True
                 s.bootstrap()
-                err = s._test()
+                err = s.test()
                 if err:
                     raise PyscriptError(err)
         else:
@@ -324,15 +336,18 @@ class PyScript(Loggable):
                 if not self._cancel:
                     self.info('gosub finished')
     @verbose_skip
+    @command_register
     def exit(self):
         self.info('doing EXIT')
         self.cancel()
 
     @verbose_skip
+    @command_register
     def wait(self, evt):
         if evt is not None:
             evt.wait()
 
+    @command_register
     def complete_interval(self):
         try:
             pi = self._interval_stack.get(timeout=0.01)
@@ -358,6 +373,7 @@ class PyScript(Loggable):
             self._interval_flag.clear()
 
     @verbose_skip
+    @command_register
     def begin_interval(self, duration=0):
         def wait(t):
             self._sleep(t)
@@ -387,6 +403,7 @@ class PyScript(Loggable):
             pass
 #            do_later(self.info_display.add_text, message)
 
+    @command_register
     def sleep(self, duration=0, message=None):
         self._estimated_duration += duration
         if self.parent_script is not None:
@@ -413,9 +430,8 @@ class PyScript(Loggable):
                 self.bootstrap()
 
             ok = True
-#            print id(self), self.name, self.syntax_checked
             if not self.syntax_checked:
-                self._test()
+                self.test()
 
             if ok:
                 self._execute()
@@ -430,16 +446,7 @@ class PyScript(Loggable):
         else:
             return _ex_()
 
-
-    def _calculate_graph(self):
-        self._xs = [0]
-        self._ys = [0]
-        self._graph_calc = True
-        self.bootstrap()
-        self._test()
-        return self._xs, self._ys
-
-    def _test(self):
+    def test(self):
 
         self._syntax_checking = True
         self.info('testing syntax')
@@ -479,7 +486,7 @@ class PyScript(Loggable):
 
     def _execute(self):
 
-        if not self._text:
+        if not self.text:
             return 'No script text'
 
         self._cancel = False
@@ -487,7 +494,7 @@ class PyScript(Loggable):
         self._truncate = False
 
 #        safe_dict['isblank'] = False
-        error = self.execute_snippet(self._text)
+        error = self.execute_snippet(self.text)
         if error:
             return error
 
@@ -587,15 +594,37 @@ class PyScript(Loggable):
                     break
                 self._sleep(0.5)
 
+#===============================================================================
+# properties
+#===============================================================================
+    @property
+    def filename(self):
+        return os.path.join(self.root, self.name)
+    @property
+    def state(self):
+        #states
+        #0=running
+        #1=canceled
+        #2=completed
+        if self._cancel:
+            return '1'
+
+        if self._completed:
+            return '2'
+
+        return '0'
+
+    def _get_text(self):
+        return self._text
+
+    def _set_text(self, t):
+        self._text = t
 
     def _get_syntax_checked(self):
         return self._syntax_checked
 
     def _set_syntax_checked(self, v):
         self._syntax_checked = v
-
-    syntax_checked = property(fget=_get_syntax_checked,
-                              fset=_set_syntax_checked)
 
     def __str__(self):
         return self.name

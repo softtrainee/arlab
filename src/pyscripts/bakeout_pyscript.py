@@ -21,10 +21,11 @@ from traits.api import Any
 #============= standard library imports ========================
 from numpy import linspace
 #============= local library imports  ==========================
-from src.pyscripts.pyscript import PyScript
+from src.pyscripts.pyscript import PyScript, makeRegistry
 import time
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
+command_register = makeRegistry()
 
 class BakeoutPyScript(PyScript):
     controller = Any
@@ -48,9 +49,15 @@ class BakeoutPyScript(PyScript):
         g.set_y_limits(min(ys), max(ys), pad=10)
         g.edit_traits()
 
-    def get_script_commands(self):
-        return ['setpoint', 'ramp']
+    def _calculate_graph(self):
+        self._xs = [0]
+        self._ys = [0]
+        self._graph_calc = True
+        self.bootstrap()
+        self.test()
+        return self._xs, self._ys
 
+    @command_register
     def ramp(self, temperature=0, rate=0, start=None, period=60):
         temperature = float(temperature)
         rate = float(rate)
@@ -112,6 +119,7 @@ class BakeoutPyScript(PyScript):
             else:
                 time.sleep(period)
 
+    @command_register
     def setpoint(self, temperature=0, duration=0, units='h'):
         ts = TIMEDICT[units]
         if self._graph_calc:

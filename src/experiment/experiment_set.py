@@ -31,7 +31,6 @@ from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
-#from src.experiment.file_listener import FileListener
 from src.experiment.identifier import convert_identifier, convert_labnumber
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
@@ -39,8 +38,6 @@ from src.experiment.blocks.block import Block
 
 
 class ExperimentSet(BaseSchedule):
-#    automated_runs = List(AutomatedRun)
-#    automated_run = Instance(AutomatedRun)
     current_run = Instance(AutomatedRun)
     selected_runs = List(AutomatedRun)
     extract_schedule = Instance(ExtractSchedule, ())
@@ -107,19 +104,15 @@ delay_before_analyses: {}
 delay_between_analyses: {}
 extract_device: {}
 tray: {} 
-{}
-{}
-{}
-{}
 '''.format(self.mass_spectrometer,
            self.delay_before_analyses,
            self.delay_between_analyses,
            self.extract_device,
            self.tray if self.tray else '',
-           make_frequency_runs('blanks'),
-           make_frequency_runs('airs'),
-           make_frequency_runs('cocktails'),
-           make_frequency_runs('backgrounds'),
+#           make_frequency_runs('blanks'),
+#           make_frequency_runs('airs'),
+#           make_frequency_runs('cocktails'),
+#           make_frequency_runs('backgrounds'),
            )
 
         if fp:
@@ -209,6 +202,8 @@ tray: {}
             metastr += '{}\n'.format(line)
 
         meta = yaml.load(metastr)
+        if meta is None:
+            self.warning_dialog('Invalid experiment set file. Poorly formatted metadata {}'.format(metastr))
 
         from src.lasers.stage_managers.stage_map import StageMap
         from src.experiment.map_view import MapView
@@ -481,7 +476,6 @@ tray: {}
             kw['position'] = 0
             kw['extract_value'] = 0
 
-
         self.automated_run.trait_set(**kw)
         self._bind_automated_run(self.automated_run)
 
@@ -517,10 +511,10 @@ post_measurement_script, post_equilibration_script''')
         else:
             self.dirty = False
 
-    @on_trait_change('automated_runs:dirty')
-    def _update_dirty(self, dirty):
-        if dirty:
-            self.dirty = dirty
+#    @on_trait_change('automated_runs:dirty')
+#    def _update_dirty(self, dirty):
+#        if dirty:
+#            self.dirty = dirty
 
     @on_trait_change('automated_run:labnumber')
     def _update_labnumber(self, labnumber):

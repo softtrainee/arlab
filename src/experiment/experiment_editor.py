@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Bool, Str
+from traits.api import Property, Bool, on_trait_change
 from traitsui.api import View, Item, HGroup
 from traitsui.menu import Action
 #============= standard library imports ========================
@@ -23,13 +23,12 @@ from traitsui.menu import Action
 from src.experiment.experiment_manager import ExperimentManager
 from src.paths import paths
 import os
+from src.saveable import SaveableButtons, Saveable
 
-class ExperimentEditor(ExperimentManager):
-    dirty = Property(depends_on='_dirty,path')
-#    _path = Str
-    _dirty = Bool
-
-    dirty_save_as = Bool(False)
+class ExperimentEditor(ExperimentManager, Saveable):
+#    dirty = Property(depends_on='_dirty,path')
+#    _dirty = Bool
+#    dirty_save_as = Bool(False)
 
 #===============================================================================
 # persistence
@@ -39,9 +38,9 @@ class ExperimentEditor(ExperimentManager):
 
         #loading the experiment set will set dirty =True 
         #change back to false. not really dirty
-#        self.dirty = False
-        if r:
-            self.experiment_set.dirty = False
+#        if r:
+#            self.experiment_set.dirty = False
+        self.save_enabled = False
         return r
 
     def save(self):
@@ -53,11 +52,12 @@ class ExperimentEditor(ExperimentManager):
     def save_as_experiment_sets(self):
         p = self.save_file_dialog(default_directory=paths.experiment_dir)
         p = self._dump_experiment_sets(p)
-        self._path = p
+        self.path = p
+        self.save_enabled = True
 
     def save_experiment_sets(self):
         self._dump_experiment_sets(self.path)
-        self.dirty = False
+        self.save_enabled = False
 
     def _dump_experiment_sets(self, p):
 
@@ -99,15 +99,15 @@ class ExperimentEditor(ExperimentManager):
                  resizable=True,
                  width=0.85,
                  height=0.75,
-                 buttons=['OK', 'Cancel',
-                          Action(name='Save', action='save',
-                                 enabled_when='dirty'),
-                          Action(name='Save As',
-                                 action='save_as',
-                                 enabled_when='dirty_save_as'
-                                 ),
+                 buttons=['OK', 'Cancel'] + SaveableButtons,
+#                          Action(name='Save', action='save',
+#                                 enabled_when='dirty'),
+#                          Action(name='Save As',
+#                                 action='save_as',
+##                                 enabled_when='dirty_save_as'
+#                                 ),
 
-                          ],
+#                          ],
                  handler=self.handler_klass,
 #                 handler=SaveableManagerHandler,
                  title='Experiment'
@@ -117,17 +117,15 @@ class ExperimentEditor(ExperimentManager):
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('experiment_set:automated_runs:dirty')
     def _update_dirty(self, n):
-        self.dirty_save_as = n
-        self._dirty = n
+#        self._dirty = n
+        self.save_enabled = n
 
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _set_dirty(self, d):
-        self._dirty = d
-
-    def _get_dirty(self):
-        return self._dirty and os.path.isfile(self.path)
+#    def _get_dirty(self):
+#        return self._dirty and os.path.isfile(self.path)
 
 #============= EOF =============================================

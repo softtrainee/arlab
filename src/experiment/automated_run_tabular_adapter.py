@@ -45,6 +45,7 @@ class AutomatedRunAdapter(TabularAdapter):
     cleanup_width = Int(60)
     overlap_width = Int(50)
     autocenter_width = Int(70)
+    pattern_width = Int(125)
     extract_value_width = Int(85)
     extract_units_width = Int(50)
     extract_device_width = Int(125)
@@ -92,6 +93,7 @@ class AutomatedRunAdapter(TabularAdapter):
         item = getattr(obj, trait)[row]
         if not item.executable:
             return 'red'
+
     def _columns_default(self):
         return self._columns_factory()
 
@@ -107,8 +109,8 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Sample', 'sample'),
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
+                 ('Pattern', 'pattern'),
                  ('Overlap', 'overlap'),
-                 #('Heat Device', 'extract_device'),
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
                  ('Duration', 'duration'),
@@ -120,7 +122,6 @@ class AutomatedRunAdapter(TabularAdapter):
                  ]
 
     def _set_extract_value_text(self, value):
-#        setattr(self.item, 'extract_value', value)
         self._set_float('extract_value', value)
 
     def _get_extract_value_text(self, trait, item):
@@ -136,15 +137,8 @@ class AutomatedRunAdapter(TabularAdapter):
             return ''
         else:
             return self.item.extract_units
-#        v, u = self.item.extract_value
-#        if u and v:
-#            return '{:0.2f},{}'.format(*self.item.extract_value)
-#        else:
-#            return ''
-
 
     def _set_duration_text(self, value):
-#        setattr(self.item, 'duration', value)
         self._set_int('duration', value)
 
     def _get_duration_text(self, trait, item):
@@ -152,14 +146,12 @@ class AutomatedRunAdapter(TabularAdapter):
 
     def _set_cleanup_text(self, value):
         self._set_int('cleanup', value)
-#        setattr(self.item, 'cleanup', value)
 
     def _get_cleanup_text(self, trait, item):
         return self._get_number('cleanup')
 
     def _set_overlap_text(self, value):
         self._set_int('overlap', value)
-#        setattr(self.item, 'overlap', value)
 
     def _get_overlap_text(self, trait, item):
         return self._get_number('overlap')

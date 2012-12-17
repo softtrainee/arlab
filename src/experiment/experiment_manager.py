@@ -465,7 +465,7 @@ class ExperimentManager(Manager):
                              db=self.db,
                              **kw)
         exp.on_trait_change(self._update_aliquots, 'update_aliquots_needed')
-        exp.on_trait_change(self._update_dirty, 'dirty')
+#        exp.on_trait_change(self._update_dirty, 'dirty')
         return exp
 
     def _labnumber_entry_factory(self):
