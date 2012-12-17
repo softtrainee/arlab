@@ -29,6 +29,8 @@ class SaveableHandler(ViewableHandler):
     def save_as(self, info):
         info.object.save_as()
 
+    def apply(self, info):
+        info.object.apply()
 
 class Saveable(Viewable):
     handler_klass = SaveableHandler

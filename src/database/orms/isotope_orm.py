@@ -237,7 +237,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     runtime = Column(Time)
     rundate = Column(Date)
     endtime = Column(Time)
-    status = Column(Integer, default=1)
+    status = Column(Integer, default=0)
     aliquot = Column(Integer)
     step = stringcolumn(10)
 

@@ -18,19 +18,23 @@
 from traits.api import HasTraits, List, Bool, Float, Str, Any, Instance, Button
 from traitsui.api import View, Item, TableEditor, HGroup, Group, VGroup, Spring, spring, \
     Label
+from traitsui.menu import Action
+
 #============= standard library imports ========================
 import re
 #============= local library imports  ==========================
 from src.processing.analysis import Analysis
 from src.helpers.traitsui_shortcuts import listeditor
 
-from src.processing.signal import Blank, Background
+from src.processing.signal import Blank, Background, Signal
 from src.processing.corrections.fixed_value_correction import FixedValueCorrection
-from src.processing.corrections.interpolation_correction import InterpolationCorrection
-from src.viewable import Viewable
+from src.processing.corrections.interpolation_correction import InterpolationCorrection, \
+    DetectorIntercalibrationInterpolationCorrection
+#from src.viewable import Viewable
+from src.saveable import Saveable
 
 
-class CorrectionsManager(Viewable):
+class CorrectionsManager(Saveable):
     '''
         base class for managers that apply corrections
         
@@ -42,21 +46,27 @@ class CorrectionsManager(Viewable):
     fixed_values = List(FixedValueCorrection)
     use_fixed_values = Bool(False)
     interpolation_correction = Instance(InterpolationCorrection)
+    interpolation_correction_klass = InterpolationCorrection
     edit_predictors = Button('Edit')
 
     '''
         subclass needs to set the following values
     '''
     correction_name = None
-    signal_klass = None
+    signal_klass = Signal
     signal_key = None
+    analysis_type = None
+
     def close(self, isok):
         if isok:
-            self.apply_correction()
             self.interpolation_correction.dump_fits()
         return True
 
+    def apply(self):
+        self.apply_correction()
+
     def apply_correction(self):
+        print 'asdfsdf'
         if self.use_fixed_values:
             for ai in self.analyses:
                 history = self._add_history(ai)
@@ -91,10 +101,11 @@ class CorrectionsManager(Viewable):
     def _analyses_changed(self):
         if self.analyses:
             #load a fit series
-            self.interpolation_correction = InterpolationCorrection(analyses=self.analyses,
+            self.interpolation_correction = self.interpolation_correction_klass(analyses=self.analyses,
                                                                     kind=self.correction_name,
                                                                     signal_key=self.signal_key,
                                                                     signal_klass=self.signal_klass,
+                                                                    analysis_type=self.analysis_type,
                                                                     db=self.db,
                                                                     )
             self.interpolation_correction.load_fits(self._get_isotope_names())
@@ -108,19 +119,41 @@ class CorrectionsManager(Viewable):
         func = getattr(db, 'add_{}'.format(self.correction_name))
         func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
         for ai in self.analyses:
+
+            histories = getattr(ai.dbrecord, '{}_histories'.format(self.correction_name))
+            phistory = histories[-1] if histories else None
+
             history = self._add_history(ai)
             for si in self.interpolation_correction.fits:
                 if not si.use:
-                    continue
+                    if phistory:
+                        bs = getattr(phistory, self.correction_name)
+                        bs = reversed(bs)
+                        prev = next((bi for bi in bs if bi.isotope == si.name), None)
+                        if prev:
+                            uv = prev.user_value
+                            ue = prev.user_error
+                            func = getattr(db, 'add_{}'.format(self.correction_name))
+                            func(history,
+                                  isotope=prev.isotope,
+                                  fit=prev.fit,
+                                  use_set=prev.use_set,
+                                  user_value=uv,
+                                  user_error=ue
+                                  )
+                else:
 
-                ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
-                item = func(history, isotope=si.name,
-                            user_value=ss.value,
-                            user_error=ss.error,
-                            use_set=True, fit=si.fit)
-                ps = self.interpolation_correction.predictors
-                for pi in ps:
-                    func2(item, pi.dbrecord)
+                    ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+                    item = func(history, isotope=si.name,
+                                user_value=ss.value,
+                                user_error=ss.error,
+                                use_set=True, fit=si.fit)
+                    ps = self.interpolation_correction.predictors
+                    if ps:
+                        for pi in ps:
+                            func2(item, pi.dbrecord)
+
+
 
     def _get_isotope_names(self):
         keys = None
@@ -164,37 +197,52 @@ class CorrectionsManager(Viewable):
         func = getattr(db, 'add_{}'.format(self.correction_name))
         func(history, isotope=isotope, use_set=False, user_value=value, user_error=error)
 #        db.add_blanks(history, isotope=isotope, use_set=False, user_value=value, user_error=error)
-        self._copy_from_previous(phistory, history, isotope)
+
+        #need to reimplement copy from previous
+#        self._copy_from_previous(phistory, history, isotope)
+
 
         self._update_value(analysis, isotope, value, error)
 
-    def _copy_from_previous(self, phistory, chistory, isotope):
-        if phistory is None:
-            return
-
-        sn = self.correction_name
-        db = self.db
-
-        #copy configs from a previous history
-        bs = getattr(phistory, sn)
-        bss = [bi for bi in bs if bi.isotope != isotope]
-
-        get_config = lambda x: next((ci for ci in self.fixed_values if ci.name == x))
-        for bi in bss:
-            li = bi.isotope
-            if get_config(li).save:
-                #dont copy from history if were going to save
-                continue
-
-            uv = bi.user_value
-            ue = bi.user_error
-            func = getattr(db, 'add_{}'.format(sn))
-            func(chistory,
-                  isotope=li,
-                  use_set=bi.use_set,
-                  user_value=uv,
-                  user_error=ue
-                  )
+#    def _copy_from_previous(self, phistory, chistory, isotope):
+#        if phistory is None:
+#            return
+#
+#        sn = self.correction_name
+#        db = self.db
+#
+#        #copy configs from a previous history
+#        bs = getattr(phistory, sn)
+#        bs = reversed(bs)
+#
+#        prev_values = []
+#        bb = []
+#        for bi in bs:
+#            if bi.isotope in prev_values:
+#                continue
+#            elif bi.isotope != isotope:
+#                prev_values.append(bi.isotope)
+#                bb.append(bi)
+#
+##        bss = [bi for bi in bs if bi.isotope != isotope]
+##        get_config = lambda x: next((ci for ci in self.fixed_values if ci.name == x))
+#        for bi in bb:
+#
+##            print bi, li
+##            if get_config(li).save:
+##                #dont copy from history if were going to save
+##                continue
+#
+#            uv = bi.user_value
+#            ue = bi.user_error
+#            func = getattr(db, 'add_{}'.format(sn))
+#            func(chistory,
+#                  isotope=bi.isotope,
+#                  fit=bi.fit,
+#                  use_set=bi.use_set,
+#                  user_value=uv,
+#                  user_error=ue
+#                  )
 
     def _update_value(self, analysis, isotope, value, error):
         b = self.signal_klass(_value=value, _error=error)
@@ -247,7 +295,7 @@ class CorrectionsManager(Viewable):
                  handler=self.handler_klass,
                  title=self.title,
                  resizable=True,
-                 buttons=['OK', 'Cancel']
+                 buttons=[Action(name='Apply', action='apply')]
                  )
         return v
 
@@ -255,6 +303,7 @@ class BlankCorrectionsManager(CorrectionsManager):
     correction_name = 'blanks'
     signal_key = 'bl'
     signal_klass = Blank
+    analysis_type = 'blank'
     title = 'Set Blanks'
 
 class BackgroundCorrectionsManager(CorrectionsManager):
@@ -262,12 +311,17 @@ class BackgroundCorrectionsManager(CorrectionsManager):
     signal_key = 'bg'
     signal_klass = Background
     title = 'Set Backgrounds'
+    analysis_type = 'background'
 
 class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
     title = 'Set Detector Intercalibration'
     correction_name = 'detector_intercalibration'
+    analysis_type = 'air'
+    signal_key = ''
+    interpolation_correction_klass = DetectorIntercalibrationInterpolationCorrection
     def _load_fixed_values(self):
         if not self.fixed_values:
             self.fixed_values = [FixedValueCorrection(name='ICFactor')]
+
 
 #============= EOF =============================================

@@ -96,6 +96,7 @@ class ArArAge(HasTraits):
 #        self._load_signals()
 #        signals = self._signals
         signals = self.signals
+
         nsignals = dict()
         keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
         for iso in keys:
@@ -120,7 +121,6 @@ class ArArAge(HasTraits):
         bssignals = sigs('bs')
         blsignals = sigs('bl')
         bksignals = sigs('bg')
-
 #        ic = self.ic_factor
         j = self.j
         irrad = self.irradiation_info
