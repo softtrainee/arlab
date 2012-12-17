@@ -36,6 +36,9 @@ from src.progress_dialog import MProgressDialog
 from src.regression.interpolation_regressor import InterpolationRegressor
 from src.helpers.traitsui_shortcuts import listeditor
 from src.processing.corrections.regression_correction import RegressionCorrection
+import time
+import datetime
+from sqlalchemy.sql.expression import and_
 
 class InterpolationGraph(StackedRegressionTimeSeriesGraph):
     pass
@@ -43,6 +46,7 @@ class InterpolationGraph(StackedRegressionTimeSeriesGraph):
 class InterpolationCorrection(HasTraits):
     analyses = List
     kind = Str
+    analysis_type = Str
     signal_key = Str
     signal_klass = Any
     db = Any
@@ -73,6 +77,7 @@ class InterpolationCorrection(HasTraits):
                 fi = cors[ki]
             else:
                 fi = RegressionCorrection(name=ki)
+
             fi.on_trait_change(self.refresh, 'use')
             fi.on_trait_change(self.refresh_fit, 'fit')
             self.fits.append(fi)
@@ -117,11 +122,12 @@ class InterpolationCorrection(HasTraits):
         fits = filter(lambda x:x.use, self.fits)
         fits = reversed(fits)
         for plotid, si in enumerate(fits):
-            graph.new_plot(padding_right=5,
+            p = graph.new_plot(padding_right=5,
                            padding_bottom=50,
                            ytitle=si.name,
                            xtitle='Time'
                            )
+            p.value_range.tight_bounds = False
             self.add_plot(si.name, si.fit.lower(), plotid)
 
 #        graph.on_trait_change(self._update_interpolation, 'regression_results')
@@ -130,28 +136,44 @@ class InterpolationCorrection(HasTraits):
     def add_plot(self, key, fit, plotid):
         ps = self.predictors
         graph = self.graph
-        xs, ys = zip(*[(pi.timestamp, self._get_predictor_value(pi, key)) for pi in ps])
-        ys, es = zip(*[(yi.nominal_value, yi.std_dev()) for yi in ys])
-        mn = min(xs)
-        mx = max(xs)
-        if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
-            p, _ = graph.new_series(xs, ys, yer=es,
-                                    type='scatter',
-                                    fit=False, plotid=plotid)
-            reg = InterpolationRegressor(xs=xs, ys=ys, kind=fit)
-        else:
-            p, s, l = graph.new_series(xs, ys, yer=es, fit=fit, plotid=plotid)
-            reg = graph.regressors[plotid]
+        k = '{}{}'.format(key, self.signal_key)
+        axs = [ai.timestamp for ai in self.analyses]
+        mn = None
+        mx = None
+        if ps:
+            xs, ys = zip(*[(pi.timestamp, self._get_predictor_value(pi, key)) for pi in ps])
+            ys, es = zip(*[(yi.nominal_value, yi.std_dev()) for yi in ys])
+            mn = min(xs)
+            mx = max(xs)
+            if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+                _, _ = graph.new_series(xs, ys, yer=es,
+                                        type='scatter',
+                                        fit=False, plotid=plotid)
+                reg = InterpolationRegressor(xs=xs, ys=ys, kind=fit)
+            else:
+                p, s, l = graph.new_series(xs, ys, yer=es, fit=fit, plotid=plotid)
+                reg = graph.regressors[plotid]
 
-        p.value_range.tight_bounds = False
-        xs = [ai.timestamp for ai in self.analyses]
-        mn = min(min(xs), mn)
-        mx = max(max(xs), mx)
-        ys = reg.predict(xs)
+            ys = reg.predict(axs)
+        else:
+            ys = []
+            for ai in self.analyses:
+                if ai.signals.has_key(k):
+                    ys.append(ai.signals[k].value)
+                else:
+                    ys.append(0)
+        if mn:
+            mn = min(min(axs), mn)
+        else:
+            mn = min(axs)
+        if mx:
+            mx = max(max(axs), mx)
+        else:
+            mx = max(axs)
+#        ys = reg.predict(xs)
 
         #sync the analysis' signals
         for yi, ai in zip(ys, self.analyses):
-            k = '{}{}'.format(key, self.signal_key)
             if k in ai.signals:
                 sig = ai.signals[k]
                 sig.value = yi
@@ -159,7 +181,7 @@ class InterpolationCorrection(HasTraits):
                 sig = self.signal_klass(value=yi)
                 ai.signals[k] = sig
 
-        graph.new_series(xs, ys, fit=False, type='scatter', plotid=plotid)
+        graph.new_series(axs, ys, fit=False, type='scatter', plotid=plotid)
         graph.set_x_limits(mn, mx, pad='0.1', plotid=plotid)
 
     def _get_predictor_value(self, pi, key):
@@ -172,19 +194,60 @@ class InterpolationCorrection(HasTraits):
 
     def _find_predictors(self, analysis):
         sess = self.db.get_session()
-#        exp = analysis.dbrecord.experiment
-#
-        q = sess.query(meas_AnalysisTable)
-        q = q.join(gen_LabTable)
-        q = q.filter(gen_LabTable.labnumber == -1)
 
-#        q = q.join(meas_ExperimentTable)
-#        q = q.join(meas_MeasurementTable)
-#        q = q.join(gen_AnalysisTypeTable)
-#        q = q.filter(gen_AnalysisTypeTable.name == self.kind)
-#        q = q.filter(meas_ExperimentTable.id == exp.id)
-#        q = q.filter(meas_AnalysisTable.id != analysis.id)
-        return q.all()[:10]
+#        q = sess.query(meas_AnalysisTable)
+#        q = q.join(gen_LabTable)
+#        q = q.filter(gen_LabTable.labnumber == -1)
+#        return q.all()[:10]
+
+        exp = analysis.experiment
+        if exp is  None:
+            '''
+                analysis doesnt belong to an experiment
+                get kind_analyses before and after analysis rundate and runtime
+            '''
+            post = analysis.timestamp
+            dt = datetime.datetime.fromtimestamp(post)
+            win = datetime.timedelta(hours=6)
+            udt = dt + win
+            ldt = dt - win
+
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(meas_MeasurementTable)
+            q = q.join(gen_AnalysisTypeTable)
+
+            q = q.order_by(meas_AnalysisTable.rundate.desc())
+            q = q.order_by(meas_AnalysisTable.runtime.desc())
+
+            if self.kind == 'blanks':
+                at = 'blank_{}'.format(analysis.analysis_type)
+            else:
+                at = self.analysis_type
+
+            q = q.filter(and_(
+                              gen_AnalysisTypeTable.name == at,
+                              meas_AnalysisTable.rundate >= ldt.date(),
+                              meas_AnalysisTable.runtime > ldt.time(),
+                              meas_AnalysisTable.rundate <= udt.date(),
+                              meas_AnalysisTable.runtime < udt.time(),
+                              meas_AnalysisTable.id != analysis.id))
+        else:
+            '''
+                find all kind_analyses in this analysis' experiment
+            '''
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(meas_ExperimentTable)
+            q = q.join(meas_MeasurementTable)
+            q = q.join(gen_AnalysisTypeTable)
+            q = q.filter(and_(gen_AnalysisTypeTable.name == self.kind,
+                              meas_ExperimentTable.id == exp.id,
+                              meas_AnalysisTable.id != analysis.id))
+
+#            q = q.filter(meas_ExperimentTable.id == exp.id)
+#            q = q.filter(meas_AnalysisTable.id != analysis.id)
+
+        return q.all()
+
 
 
 #===============================================================================
@@ -274,8 +337,21 @@ class InterpolationCorrection(HasTraits):
         g = InterpolationGraph(container_dict=dict(padding=5))
         return g
 
+    def _correction_factory(self, name):
+        fi = RegressionCorrection(name=name)
+        fi.on_trait_change(self.refresh, 'use')
+        fi.on_trait_change(self.refresh_fit, 'fit')
+        return fi
+
 class DetectorIntercalibrationInterpolationCorrection(InterpolationCorrection):
     def _get_predictor_value(self, pi, key):
-        return (pi.get_corrected_signals('Ar40') / pi.get_corrected_signals('Ar36')) / 295.5
+        v = (pi.get_corrected_intercept('Ar40') / pi.get_corrected_intercept('Ar36'))
+        if key == 'IC':
+            v /= 295.5
+        return  v
+
+    def load_fits(self, names):
+        for ri in ['IC', 'Ar40/Ar36']:
+            self.fits.append(self._correction_factory(ri))
 
 #============= EOF =============================================

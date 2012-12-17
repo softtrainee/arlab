@@ -206,9 +206,11 @@ class ProcessingManager(DatabaseManager):
 
             ans = self._get_analyses()
             bm.analyses = ans
-            info = bm.edit_traits(kind='livemodal')
-            if info.result:
-                bm.apply_correction()
+            bm.edit_traits()
+#            self._load_analyses(ans)
+#            info = bm.edit_traits(kind='livemodal')
+#            if info.result:
+#                bm.apply_correction()
 
 #===============================================================================
 # display

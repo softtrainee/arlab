@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str
-from traitsui.api import View, Item, EnumEditor, HGroup
+from traitsui.api import View, Item, EnumEditor, HGroup, spring, Spring
 from src.constants import FIT_TYPES_INTERPOLATE
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -27,11 +27,13 @@ class RegressionCorrection(Correction):
 
     def traits_view(self):
         v = View(HGroup(Item('name', style='readonly', show_label=False),
+                        spring,
                         Item('use', show_label=False),
                         Item('fit', editor=EnumEditor(values=FIT_TYPES_INTERPOLATE),
                              show_label=False,
                              enabled_when='use'
                              ),
+                        Spring(springy=False, width=100)
                         )
                  )
         return v

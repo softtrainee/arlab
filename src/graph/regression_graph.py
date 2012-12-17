@@ -36,6 +36,8 @@ from enable.font_metrics_provider import font_metrics_provider
 from src.displays.rich_text_display import RichTextDisplay
 from src.helpers.datetime_tools import convert_timestamp
 from src.regression.interpolation_regressor import InterpolationRegressor
+from src.graph.tools.regression_inspector import RegressionInspectorTool, \
+    RegressionInspectorOverlay
 
 class StatsFilterParameters(object):
     '''
@@ -184,7 +186,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 self.regressors.append(None)
                 return
 
-            args = self._regress(plot, scatter)
+            args = self._regress(plot, scatter, line)
 
             if args:
                 fx, fy, ly, uy = args
@@ -199,7 +201,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         except KeyError:
             pass
 
-    def _regress(self, plot, scatter, filterstr=None):
+    def _regress(self, plot, scatter, line, filterstr=None):
         x = scatter.index.get_data()
         y = scatter.value.get_data()
         index = scatter.index
@@ -291,12 +293,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             if apply_filter:
                 r = self._apply_outlier_filter(r, ox, oy, index, fod)
 
+            if line:
+                line.regressor = r
             self.regressors.append(r)
 
         else:
             r = MeanRegressor(xs=x, ys=y)
             if apply_filter:
                 r = self._apply_outlier_filter(r, ox, oy, index, fod)
+            if line:
+                line.regressor = r
             self.regressors.append(r)
 
             n = 10
@@ -500,17 +506,27 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict
 
+
         if x is not None and y is not None:
-            args = self._regress(plot, scatter)
+            args = self._regress(plot, scatter, None)
             if args:
                 fx, fy, ly, uy = args
 
         kw['color'] = 'black'
         kw['type'] = 'line'
         kw['render_style'] = 'connectedpoints'
-        plot, names, rd = self._series_factory(fx, fy, plotid=plotid, **kw)
+        plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
+                                               **kw)
         line = plot.plot(names, **rd)[0]
+        line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
+
+        #add a regression inspector tool to the line
+        tool = RegressionInspectorTool(component=line)
+        overlay = RegressionInspectorOverlay(component=line,
+                                             tool=tool)
+        line.tools.append(tool)
+        line.overlays.append(overlay)
 
         kw['color'] = 'red'
         plot, names, rd = self._series_factory(fx, uy, line_style='dash', plotid=plotid, **kw)

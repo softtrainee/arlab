@@ -136,20 +136,19 @@ class Analysis(Loggable):
 
     def get_corrected_intercept(self, key):
         '''
-            return signal corrected for baseline and background only
+            return signal corrected for baseline background and blank only
         '''
-        s = self.signals[key]
-        try:
-            bs = self.signals['{}bs'.format(key)]
-        except KeyError:
-            bs = 0
+        sigs = self.signals
+        s = sigs[key]
+        for ki in ['bs', 'bg', 'bl']:
+            kk = '{}{}'.format(key, ki)
+            if kk in sigs:
+                v = sigs[kk]
+            else:
+                v = 0
+            s -= v
 
-        try:
-            bg = self.signals['{}bg'.format(key)]
-        except KeyError:
-            bg = 0
-
-        return s - bs - bg
+        return s
 
     def _analysis_factory(self, dbr):
         klass = self.__class__
