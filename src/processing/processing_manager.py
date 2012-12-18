@@ -275,7 +275,7 @@ class ProcessingManager(DatabaseManager):
             by default use a db connection
         '''
         d = self.selector_manager
-#        return True
+        return True
         info = d.edit_traits(kind='livemodal')
         if info.result:
             return True
@@ -521,7 +521,7 @@ class ProcessingManager(DatabaseManager):
         if not db.connected:
             db.connect()
 
-        d.select_labnumber([22233, 22234])
+        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):

@@ -116,6 +116,8 @@ class Graph(Loggable, ContextMenuMixin):
     _title_font = None
     _title_size = None
 
+    _convert_index = None
+
     _control = None
 
     status_text = Str

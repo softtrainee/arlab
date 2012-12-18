@@ -105,6 +105,7 @@ class InterpolationCorrection(HasTraits):
                 g.set_series_visiblity(False, series='upper CI0', plotid=plotid)
                 g.set_series_visiblity(False, series='lower CI0', plotid=plotid)
 
+                self.sync_analyses(ys, '{}{}'.format(obj.name, self.signal_key))
             g.redraw()
 
     def refresh(self):
@@ -130,38 +131,46 @@ class InterpolationCorrection(HasTraits):
             p.value_range.tight_bounds = False
             self.add_plot(si.name, si.fit.lower(), plotid)
 
-#        graph.on_trait_change(self._update_interpolation, 'regression_results')
+        graph.on_trait_change(self._update_interpolation, 'regression_results')
         graph.refresh()
 
     def add_plot(self, key, fit, plotid):
-        ps = self.predictors
         graph = self.graph
         k = '{}{}'.format(key, self.signal_key)
+        ps = self.predictors
         axs = [ai.timestamp for ai in self.analyses]
-        mn = None
-        mx = None
+        xs, ys, mn, mx, reg = None, None, None, None, None
+
         if ps:
             xs, ys = zip(*[(pi.timestamp, self._get_predictor_value(pi, key)) for pi in ps])
             ys, es = zip(*[(yi.nominal_value, yi.std_dev()) for yi in ys])
             mn = min(xs)
             mx = max(xs)
-            if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
-                _, _ = graph.new_series(xs, ys, yer=es,
-                                        type='scatter',
-                                        fit=False, plotid=plotid)
-                reg = InterpolationRegressor(xs=xs, ys=ys, kind=fit)
-            else:
-                p, s, l = graph.new_series(xs, ys, yer=es, fit=fit, plotid=plotid)
-                reg = graph.regressors[plotid]
 
-            ys = reg.predict(axs)
+            if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+                reg = InterpolationRegressor(xs=xs, ys=ys, kind=fit)
+                graph.new_series(xs, ys, yer=es,
+                                    type='scatter',
+                                    fit=False, plotid=plotid)
+                ays = reg.predict(axs)
+            else:
+                graph.new_series(xs, ys, yer=es, fit=fit, plotid=plotid)
+                ays = [1, ] * len(axs)
         else:
-            ys = []
+            ays = []
+            k = '{}{}'.format(key, self.signal_key)
             for ai in self.analyses:
                 if ai.signals.has_key(k):
-                    ys.append(ai.signals[k].value)
+                    ays.append(ai.signals[k].value)
                 else:
-                    ys.append(0)
+                    ays.append(0)
+
+        #sync the analysis' signals
+        self.sync_analyses(ays, k)
+
+        #display the predicted values
+        graph.new_series(axs, ays, fit=False, type='scatter', plotid=plotid)
+
         if mn:
             mn = min(min(axs), mn)
         else:
@@ -170,19 +179,17 @@ class InterpolationCorrection(HasTraits):
             mx = max(max(axs), mx)
         else:
             mx = max(axs)
-#        ys = reg.predict(xs)
 
-        #sync the analysis' signals
-        for yi, ai in zip(ys, self.analyses):
+        graph.set_x_limits(mn, mx, pad='0.1', plotid=plotid)
+
+    def sync_analyses(self, ays, k):
+        for yi, ai in zip(ays, self.analyses):
             if k in ai.signals:
                 sig = ai.signals[k]
                 sig.value = yi
             else:
                 sig = self.signal_klass(value=yi)
                 ai.signals[k] = sig
-
-        graph.new_series(axs, ys, fit=False, type='scatter', plotid=plotid)
-        graph.set_x_limits(mn, mx, pad='0.1', plotid=plotid)
 
     def _get_predictor_value(self, pi, key):
         return pi.get_corrected_intercept(key)
@@ -194,11 +201,20 @@ class InterpolationCorrection(HasTraits):
 
     def _find_predictors(self, analysis):
         sess = self.db.get_session()
-
 #        q = sess.query(meas_AnalysisTable)
 #        q = q.join(gen_LabTable)
 #        q = q.filter(gen_LabTable.labnumber == -1)
 #        return q.all()[:10]
+
+        '''
+            if kind is blanks then look for all blank_kind analyses
+            e.g if analysis is an unknown look for blank_unknown
+            
+        '''
+        if self.kind == 'blanks':
+            atype = 'blank_{}'.format(analysis.analysis_type)
+        else:
+            atype = self.analysis_type
 
         exp = analysis.experiment
         if exp is  None:
@@ -206,31 +222,46 @@ class InterpolationCorrection(HasTraits):
                 analysis doesnt belong to an experiment
                 get kind_analyses before and after analysis rundate and runtime
             '''
-            post = analysis.timestamp
-            dt = datetime.datetime.fromtimestamp(post)
-            win = datetime.timedelta(hours=6)
-            udt = dt + win
-            ldt = dt - win
+            def filter_analyses(post, delta, at):
+                q = sess.query(meas_AnalysisTable)
+                q = q.join(meas_MeasurementTable)
+                q = q.join(gen_AnalysisTypeTable)
 
-            q = sess.query(meas_AnalysisTable)
-            q = q.join(meas_MeasurementTable)
-            q = q.join(gen_AnalysisTypeTable)
+                q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
 
-            q = q.order_by(meas_AnalysisTable.rundate.desc())
-            q = q.order_by(meas_AnalysisTable.runtime.desc())
+                win = datetime.timedelta(hours=delta)
+                dt = post + win
+                if delta < 0:
+                    a, b = dt, post
+                else:
+                    a, b = post, dt
 
-            if self.kind == 'blanks':
-                at = 'blank_{}'.format(analysis.analysis_type)
-            else:
-                at = self.analysis_type
+                q = q.filter(and_(
+                                  gen_AnalysisTypeTable.name == at,
+                                  meas_AnalysisTable.id != analysis.id,
+                                  meas_AnalysisTable.analysis_timestamp >= a,
+                                  meas_AnalysisTable.analysis_timestamp <= b,
+                                  ))
+                return q.all()
 
-            q = q.filter(and_(
-                              gen_AnalysisTypeTable.name == at,
-                              meas_AnalysisTable.rundate >= ldt.date(),
-                              meas_AnalysisTable.runtime > ldt.time(),
-                              meas_AnalysisTable.rundate <= udt.date(),
-                              meas_AnalysisTable.runtime < udt.time(),
-                              meas_AnalysisTable.id != analysis.id))
+            def find_analyses(post, delta, atype, step=100, maxtries=10):
+                if delta < 0:
+                    step = -step
+
+                for i in range(maxtries):
+                    rs = filter_analyses(post, delta + i * step, atype)
+                    if rs:
+                        return rs
+                else:
+                    return []
+
+            pi = analysis.timestamp
+            pi = datetime.datetime.fromtimestamp(pi)
+
+            br = find_analyses(pi, -6, atype)
+            ar = find_analyses(pi, 6, atype, maxtries=1) #dont search forward was much as backward
+            return br + ar
+
         else:
             '''
                 find all kind_analyses in this analysis' experiment
@@ -239,16 +270,11 @@ class InterpolationCorrection(HasTraits):
             q = q.join(meas_ExperimentTable)
             q = q.join(meas_MeasurementTable)
             q = q.join(gen_AnalysisTypeTable)
-            q = q.filter(and_(gen_AnalysisTypeTable.name == self.kind,
+            q = q.filter(and_(gen_AnalysisTypeTable.name == atype,
                               meas_ExperimentTable.id == exp.id,
                               meas_AnalysisTable.id != analysis.id))
 
-#            q = q.filter(meas_ExperimentTable.id == exp.id)
-#            q = q.filter(meas_AnalysisTable.id != analysis.id)
-
         return q.all()
-
-
 
 #===============================================================================
 # propert get/set
@@ -288,15 +314,19 @@ class InterpolationCorrection(HasTraits):
 # handlers
 #===============================================================================
     def _update_interpolation(self, regressors):
-        pass
-#        if not self.fit.lower() in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+        g = self.graph
+        for fi, reg in zip(self.fits, regressors):
+            if not fi.fit.lower() in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+                xs = g.get_data(series=4)
+                ys = reg.predict(xs)
+                g.set_data(ys, axis=1, series=4)
+
+
+
+        g.redraw()
+
 #            if regressors:
-#                g = self.graph
-#                reg = regressors[0]
-#                xs = g.get_data(series=4)
-#                ys = reg.predict(xs)
-#                g.set_data(ys, axis=1, series=4)
-#
+
 #    def _fit_changed(self):
 #        g = self.graph
 #        fi = self.fit.lower()

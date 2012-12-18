@@ -60,6 +60,7 @@ class AnalysisSummary(Summary):
 
         #add metadata
         self._make_keyword('Analysis ID', record.record_id, width=30)
+
         self._make_keyword('Date', record.rundate)
         self._make_keyword('Time', record.runtime, new_line=True)
 

@@ -15,27 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Event, Any, on_trait_change, Tuple, Str
+from traits.api import HasTraits, Instance, Event, on_trait_change, Callable
 from traitsui.api import View, Item, TableEditor
-from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
+from enable.base_tool import BaseTool
 from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-
-class RegressionInspectorTool(InfoInspector):
+class PointInspector(InfoInspector):
+    convert_index = Callable
 #    def _build_metadata(self, xy):
-#        d = dict(regressor=self.component.regressor)
-#        return d
-
+#        point = self.component.hittest(xy)
+#        md = dict(point=point)
+#        return md
     def assemble_lines(self):
-        reg = self.component.regressor
-        lines = [reg.make_equation()]
-        lines += map(str.strip, map(str, reg.tostring().split(',')))
-        return lines
+        pt = self.current_position
+        if pt:
+            x, y = self.component.map_data(pt)
+            if self.convert_index:
+                x = self.convert_index(x)
+            return ['{},{}'.format(x, y)]
+        else:
+            return []
 
-class RegressionInspectorOverlay(InfoOverlay):
+class PointInspectorOverlay(InfoOverlay):
     pass
-
+#            print comp
 #============= EOF =============================================

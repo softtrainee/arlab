@@ -715,12 +715,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         except AttributeError:
             pass
 
-    @cached_property
-    def _get_timestamp(self):
-        analysis = self.dbrecord
-        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
-        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-        return time.mktime(analts.timetuple())
+#    @cached_property
+#    def _get_timestamp(self):
+#        analysis = self.dbrecord
+#        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+#        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+#        return time.mktime(analts.timetuple())
 #        return analts
 
     @cached_property

@@ -148,6 +148,7 @@ class AutomatedRun(Loggable):
 
     _rundate = None
     _runtime = None
+    _timestamp = None
 
     check_executable = Bool(True)
     _executable = Bool(True)
@@ -1022,8 +1023,9 @@ class AutomatedRun(Loggable):
 #===============================================================================
     def pre_extraction_save(self):
         d = get_datetime()
+        self._timestamp = d
         self._runtime = d.time()
-        self._rundate = d.date()
+#        self._rundate = d.date()
         self.info('Analysis started at {}'.format(self._runtime))
 
     def _post_extraction_save(self):
@@ -1090,8 +1092,9 @@ class AutomatedRun(Loggable):
             self.info('analysis finished at {}'.format(endtime))
             a = db.add_analysis(lab,
                                 uuid=self.uuid,
-                                runtime=self._runtime,
-                                rundate=self._rundate,
+                                timestamp=self._timestamp,
+#                                runtime=self._runtime,
+#                                rundate=self._rundate,
                                 endtime=endtime,
                                 aliquot=aliquot,
                                 step=self.step
