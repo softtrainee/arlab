@@ -15,10 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any, Range, Dict, Instance
+from traits.api import Property, List, Any, Range, Dict, Instance, Callable
 from traitsui.api import View, Item, VGroup, TabularEditor
 #============= standard library imports ========================
-from numpy import linspace
+from numpy import linspace, where
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapter, \
@@ -30,8 +30,8 @@ from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
 from chaco.tools.broadcaster import BroadcasterTool
-from enable.font_metrics_provider import font_metrics_provider
-from src.canvas.popup_window import PopupWindow
+#from enable.font_metrics_provider import font_metrics_provider
+#from src.canvas.popup_window import PopupWindow
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.stacked_graph import StackedGraph
 from chaco.data_label import DataLabel
@@ -39,25 +39,47 @@ from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
 from chaco.plot_containers import GridPlotContainer
 from src.processing.plotters.graph_panel_info import GraphPanelInfo
+from src.graph.tools.point_inspector import PointInspector, \
+    PointInspectorOverlay
+
+class AnalysisPointInspector(PointInspector):
+    analyses = List
+    value_format = Callable
+    def assemble_lines(self):
+        lines = []
+        if self.current_position:
+            xxyy = self.component.hittest(self.current_position)
+            if xxyy:
+                x, y = self.component.map_data((xxyy))
+                d = self.component.index.get_data()
+                ind = where(d == x)[0]
+                analysis = self.analyses[ind]
+                rid = analysis.record_id
+                name = self.component.container.y_axis.title
+                if self.value_format:
+                    y = self.value_format(y)
+
+                if analysis.temp_status != 0:
+                    status = 'Temp. Omitted'
+                else:
+                    status = 'OK' if analysis.status == 0 else 'Omitted'
+
+                lines = ['Analysis= {}'.format(rid),
+                         'Status= {}'.format(status),
+                         '{}= {}'.format(name, y)
+                         ]
+        return lines
+
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     plotter = Any
-    selected_analysis = Property(
-#                                 depends_on='plotter'
-                                 )
-    def close_popup(self):
-        popup = self.plotter.popup
-        if popup:
-            popup.Close()
-
+    selected_analysis = Property
     def _get_selected_analysis(self):
-
         if self.plotter:
             if self.plotter.selected_analysis:
-                if hasattr(self.plotter.selected_analysis, 'dbrecord'):
+                if hasattr(self.plotter.selected_analysis, 'isotope_record'):
                     return self.plotter.selected_analysis
-#                if self.plotter.selected_analysis.dbrecord:
-#                    return self.plotter.selected_analysis
+
     def set_status_omit(self):
         self.plotter.set_status(1)
 
@@ -190,39 +212,19 @@ class Plotter(Viewable):
         return g
 
     def recall_analysis(self):
-        if self.popup:
-            self.popup.Close()
-
-        dbrecord = self.selected_analysis.dbrecord
-        if not dbrecord:
+        iso_record = self.selected_analysis.isotope_record
+        if not iso_record:
             return
 
-#        from src.database.orms.isotope_orm import meas_AnalysisTable
-#        sess = self.db.new_session()
-#        self.db.sess = sess
-#        q = sess.query(meas_AnalysisTable)
-#        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
-#        dbr = q.one()
-##        print id(dbr), dbr
-#        dbrecord._dbrecord = dbr
+        if iso_record.initialize():
+            iso_record.load_graph()
+            iso_record.edit_traits()
 
-        dbrecord.load_graph()
-        dbrecord.edit_traits()
-
-#        sess.close()
-#        sess.remove()
-#        self.selected_analysis.dbrecord.edit_traits()
     def set_status(self, status):
-        if self.popup:
-            self.popup.Close()
         dbrecord = self.selected_analysis.dbrecord
-        sess = object_session(dbrecord._dbrecord)
-        dbrecord._dbrecord.status = status
+        sess = object_session(dbrecord)
+        dbrecord.status = status
         sess.commit()
-#        sess.close()
-#        for di in dir(dbrecord._dbrecord):
-#            print di
-
 
     def _get_adapter(self):
         return ResultsTabularAdapter
@@ -249,9 +251,11 @@ class Plotter(Viewable):
             self.on_trait_change(ebo.update_sigma, sigma_trait)
 
     def _add_scatter_inspector(self, container, plot, scatter,
-                               group_id=0, add_tool=True,
-                               popup=True,
-                               value_format=None):
+                               group_id=0,
+                               add_tool=True,
+#                               popup=True,
+                               value_format=None
+                               ):
         #add a scatter hover tool
 #        bc = BroadcasterTool()
 #        broadcaster = BroadcasterTool()
@@ -271,21 +275,44 @@ class Plotter(Viewable):
 #                                      plotid=1
 #                                      )
         if add_tool:
-            rect_tool = RectSelectionTool(scatter,
-    #                                      parent=self,
-                                          container=container,
-                                          plot=plot,
-                                          group_id=group_id
-    #                                      plotid=1
-                                          )
-            rect_overlay = RectSelectionOverlay(
-                                                tool=rect_tool)
+#            rect_tool = RectSelectionTool(scatter,
+#    #                                      parent=self,
+#                                          container=container,
+#                                          plot=plot,
+#                                          group_id=group_id
+#    #                                      plotid=1
+#                                          )
+#            rect_overlay = RectSelectionOverlay(
+#                                                tool=rect_tool)
+#            scatter.tools.append(rect_tool)
+#            scatter.overlays.append(rect_overlay)
+            broadcaster = BroadcasterTool()
+            scatter.tools.append(broadcaster)
 
-    #        broadcaster.tools.append(rect_tool)
-            scatter.tools.append(rect_tool)
+            rect_tool = RectSelectionTool(scatter)
+            rect_overlay = RectSelectionOverlay(tool=rect_tool)
+
             scatter.overlays.append(rect_overlay)
+            broadcaster.tools.append(rect_tool)
 
+            if value_format is None:
+                value_format = lambda x:'{:0.5f}'.format(x)
+            point_inspector = AnalysisPointInspector(scatter,
+                                                     analyses=[a for a in self.sorted_analyses
+                                                                    if a.group_id == group_id],
+                                                     convert_index=lambda x: '{:0.3f}'.format(x),
+                                                     value_format=value_format
+                                                     )
 
+            pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                       tool=point_inspector,
+                                                       )
+#
+            scatter.overlays.append(pinspector_overlay)
+            broadcaster.tools.append(point_inspector)
+
+            u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
+            scatter.index.on_trait_change(u, 'metadata_changed')
 #        scatter.overlays.append(rect_tool)
 #        overlay = ScatterInspectorOverlay(scatter,
 #                    hover_color="red",
@@ -297,11 +324,9 @@ class Plotter(Viewable):
 #                    )
 #        scatter.overlays.append(overlay)
 #        if popup:
-            u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
-            scatter.index.on_trait_change(u, 'metadata_changed')
-            if value_format is None:
-                value_format = lambda x:'{:0.5f}'.format(x)
-            scatter.value_format = value_format
+#            u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
+#            scatter.index.on_trait_change(u, 'metadata_changed')
+
 
 #        self.metadata = scatter.index.metadata
     def _add_data_label(self, s, text, point, **kw):
@@ -441,92 +466,65 @@ class Plotter(Viewable):
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
         hover = scatter.value.metadata.get('hover')
-
         if hover:
             hoverid = hover[0]
             try:
-                self._hover_cache[group_id] = hoverid
-            except:
-                self._hover_cache = {group_id:hoverid}
-
-            try:
-                self.selected_analysis = sa = sorted_ans[hoverid]
+                self.selected_analysis = sorted_ans[hoverid]
             except IndexError:
                 return
-
-            if not self.popup:
-                self.popup = PopupWindow(None)
-
-            value = scatter.value.get_data()[hoverid]
-            name = scatter.container.y_axis.title
-            value = scatter.value_format(value)
-            value = '{}={}'.format(name, value)
-            self._show_pop_up(self.popup, sa, value, obj)
-        else:
-            if self._dehover_count >= len(self._hover_cache.keys()) + 3:
-                self._dehover_count = 0
-            elif len(self._hover_cache.keys()):
-                self._dehover_count += 1
-                return
-
-            if self.popup:
-#                self.popup.Freeze()
-                self.popup.Show(False)
-#                self.popup.Thaw()
-                self.popup.Destroy()
 
         sel = obj.metadata.get('selections', [])
         #set the temp_status for all the analyses
         for i, a in enumerate(sorted_ans):
-            a.temp_status = -1 if i in sel else 1
+            a.temp_status = -1 if i in sel else 0
 
     def _cmp_analyses(self, x):
         return x.timestamp
 
-    def _show_pop_up(self, popup, analysis, value, obj):
-        try:
-            x, y = obj.metadata.get('mouse_xy')
-        except Exception, e:
-            popup.Close()
-            return
-
-        def make_status(s):
-            ss = 'OK' if s == 0 else 'Omitted'
-            return 'Status= {}'.format(ss)
-
-        lines = [
-                 '{}, {}'.format(analysis.record_id, analysis.sample),
-                 analysis.age_string,
-                 value,
-                 make_status(analysis.status)
-               ]
-        t = '\n'.join(lines)
-        gc = font_metrics_provider()
-        with gc:
-            font = popup.GetFont()
-            from kiva.fonttools import Font
-            gc.set_font(Font(face_name=font.GetFaceName(),
-                             size=font.GetPointSize(),
-                             family=font.GetFamily(),
-#                             weight=font.GetWeight(),
-#                             style=font.GetStyle(),
-#                             underline=0, 
-#                             encoding=DEFAULT
-                             ))
-            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-#            print linewidths, lineheights
-            ml = max(linewidths)
-            mh = max(lineheights)
-
-#        ch = popup.GetCharWidth()
-        mh = mh * len(lines)
-#        print ml, mh
-#        popup.Freeze()
-        popup.SetPosition((x + 55, y + 25))
-        popup.set_size(ml, mh)
-        popup.SetText(t)
-        popup.Show(True)
-#        popup.Thaw()
+#    def _show_pop_up(self, popup, analysis, value, obj):
+#        try:
+#            x, y = obj.metadata.get('mouse_xy')
+#        except Exception, e:
+#            popup.Close()
+#            return
+#
+#        def make_status(s):
+#            ss = 'OK' if s == 0 else 'Omitted'
+#            return 'Status= {}'.format(ss)
+#
+#        lines = [
+#                 '{}, {}'.format(analysis.record_id, analysis.sample),
+#                 analysis.age_string,
+#                 value,
+#                 make_status(analysis.status)
+#               ]
+#        t = '\n'.join(lines)
+#        gc = font_metrics_provider()
+#        with gc:
+#            font = popup.GetFont()
+#            from kiva.fonttools import Font
+#            gc.set_font(Font(face_name=font.GetFaceName(),
+#                             size=font.GetPointSize(),
+#                             family=font.GetFamily(),
+##                             weight=font.GetWeight(),
+##                             style=font.GetStyle(),
+##                             underline=0, 
+##                             encoding=DEFAULT
+#                             ))
+#            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
+##            print linewidths, lineheights
+#            ml = max(linewidths)
+#            mh = max(lineheights)
+#
+##        ch = popup.GetCharWidth()
+#        mh = mh * len(lines)
+##        print ml, mh
+##        popup.Freeze()
+#        popup.SetPosition((x + 55, y + 25))
+#        popup.set_size(ml, mh)
+#        popup.SetText(t)
+#        popup.Show(True)
+##        popup.Thaw()
 
 #===============================================================================
 # views

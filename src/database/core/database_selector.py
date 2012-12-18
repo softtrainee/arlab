@@ -330,7 +330,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _get_order(self):
         from sqlalchemy.sql.expression import desc
         try:
-            return [desc(getattr(self.query_table, attr)) for attr in ['rundate', 'runtime']]
+#            return [desc(getattr(self.query_table, attr)) for attr in ['rundate', 'runtime']]
+            return [desc(getattr(self.query_table, attr)) for attr in ['timestamp']]
         except AttributeError:
             pass
 

@@ -249,8 +249,9 @@ class MassSpecImporter(Importer):
                                    uuid=uuid.uuid4(),
                                    aliquot=aliquot,
                                    step=step,
-                                   runtime=rdt.time(),
-                                   rundate=rdt.date(),
+                                   timestamp=rdt,
+#                                   runtime=rdt.time(),
+#                                   rundate=rdt.date(),
                                    status=status
                                    )
         ms = msrecord.login_session.machine

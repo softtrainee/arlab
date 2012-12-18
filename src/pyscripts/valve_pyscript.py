@@ -17,27 +17,37 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
 from traitsui.api import View, Item, TableEditor
-from src.pyscripts.pyscript import PyScript, verbose_skip
+from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
+    makeNamedRegistry
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+command_register = makeRegistry()
+named_register = makeNamedRegistry(command_register)
 
 class ValvePyScript(PyScript):
     runner = Any
     def _runner_changed(self):
         self.runner.scripts.append(self)
 
-    def get_script_commands(self):
-        cmds = [('open', '_m_open'), 'close',
-               'is_open', 'is_closed']
-        return cmds
+    def get_command_register(self):
+        return command_register.commands.items()
+
+#    def get_script_commands(self):
+#        cmds = [
+#                #('open', '_m_open'),
+#                 'close',
+##               'is_open', 'is_closed'
+#                ]
+#        return cmds
 
     def gosub(self, *args, **kw):
         kw['runner'] = self.runner
         super(ValvePyScript, self).gosub(*args, **kw)
 
     @verbose_skip
+    @named_register('open')
     def _m_open(self, name=None, description=''):
 
         if description is None:
@@ -51,6 +61,7 @@ class ValvePyScript(PyScript):
                                                       ))], protocol=ELPROTOCOL)
 
     @verbose_skip
+    @command_register
     def close(self, name=None, description=''):
 
         if description is None:
@@ -63,6 +74,7 @@ class ValvePyScript(PyScript):
                                                       ))], protocol=ELPROTOCOL)
 
     @verbose_skip
+    @command_register
     def is_open(self, name=None, description=''):
         self.info('is {} ({}) open?'.format(name, description))
         result = self._get_valve_state(name, description)
@@ -70,6 +82,7 @@ class ValvePyScript(PyScript):
             return result[0] == True
 
     @verbose_skip
+    @command_register
     def is_closed(self, name=None, description=''):
         self.info('is {} ({}) closed?'.format(name, description))
         result = self._get_valve_state(name, description)

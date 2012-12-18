@@ -30,7 +30,8 @@ class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
 
     def get_command_register(self):
-        return command_register.commands.items()
+        cm = super(ExtractionLinePyScript, self).get_command_register()
+        return command_register.commands.items() + cm
 
     def _post_execute_hook(self):
         #remove ourselves from the script runner

@@ -140,7 +140,17 @@ def makeRegistry():
     registrar.commands = registry
     return registrar
 
+def makeNamedRegistry(cmd_register):
+    def named_register(name):
+        def decorator(func):
+            cmd_register.commands[name] = func.__name__
+            return func
+        return decorator
+
+    return named_register
+
 command_register = makeRegistry()
+named_register = makeNamedRegistry(command_register)
 
 class PyScript(Loggable):
     text = Property
@@ -205,7 +215,7 @@ class PyScript(Loggable):
 
     def get_core_commands(self):
         cmds = [
-                ('info', '_m_info')
+#                ('info', '_m_info')
                 ]
 
         return cmds
@@ -217,7 +227,7 @@ class PyScript(Loggable):
                         command_register.commands.items()
 
     def get_command_register(self):
-        pass
+        return []
 
     def get_script_commands(self):
         return []
@@ -392,6 +402,7 @@ class PyScript(Loggable):
         t.start()
 
     @skip
+    @named_register('info')
     def _m_info(self, message=None):
         message = str(message)
         self.info(message)

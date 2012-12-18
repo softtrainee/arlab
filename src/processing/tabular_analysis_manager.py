@@ -74,7 +74,7 @@ class TabularAnalysisManager(HasTraits):
     def _update_selected_analysis_fired(self):
         sa = self.selected_analysis
         if sa is not None:
-            dbr = sa.dbrecord
+            dbr = sa.isotope_record
             self.db.selector.open_record(dbr)
 #            dbr.load_graph()
 #            dbr.edit_traits()

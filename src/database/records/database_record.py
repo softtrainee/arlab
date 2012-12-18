@@ -20,6 +20,7 @@ from traitsui.api import View, Item, Group, HGroup, VGroup, spring
 from traitsui.menu import Action
 #============= standard library imports ========================
 import os
+import datetime
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.graph.graph import Graph
@@ -111,24 +112,34 @@ class DatabaseRecord(Saveable):
     def _get_dbrecord(self):
         return self._dbrecord
 
-    @cached_property
-    def _get_timestamp(self):
-        return self.make_timestamp(self.rundate, self.runtime)
+#    @cached_property
+#    def _get_timestamp(self):
+#        return self.dbrecord
+#        return self.make_timestamp(self.rundate, self.runtime)
 #        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
 #        ts = ' '.join((self.rundate, self.runtime))
 #        return timefunc(ts)
+    @cached_property
+    def _get_timestamp(self):
+        analysis = self.dbrecord
+        analts = analysis.analysis_timestamp
+#        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+#        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+        return time.mktime(analts.timetuple())
 
     @cached_property
     def _get_rundate(self):
-        if self._dbrecord:
-            if self._dbrecord.rundate:
-                return self._dbrecord.rundate.strftime('%Y-%m-%d')
+        dbr = self.dbrecord
+        if dbr and dbr.analysis_timestamp:
+            date = dbr.analysis_timestamp.date()
+            return date.strftime('%Y-%m-%d')
 
     @cached_property
     def _get_runtime(self):
-        if self._dbrecord:
-            if self._dbrecord.runtime:
-                return self._dbrecord.runtime.strftime('%H:%M:%S')
+        dbr = self.dbrecord
+        if dbr and dbr.analysis_timestamp:
+            ti = dbr.analysis_timestamp.time()
+            return ti.strftime('%H:%M:%S')
 
     def _get_title(self):
         return '{} {}'.format(self.title_str, self.record_id)

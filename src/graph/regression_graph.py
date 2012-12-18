@@ -38,6 +38,8 @@ from src.helpers.datetime_tools import convert_timestamp
 from src.regression.interpolation_regressor import InterpolationRegressor
 from src.graph.tools.regression_inspector import RegressionInspectorTool, \
     RegressionInspectorOverlay
+from src.graph.tools.point_inspector import PointInspector, \
+    PointInspectorOverlay
 
 class StatsFilterParameters(object):
     '''
@@ -479,9 +481,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        self.filters.append(None)
 
         if not fit:
-            return super(RegressionGraph, self).new_series(x, y,
+            s, p = super(RegressionGraph, self).new_series(x, y,
                                                            plotid=plotid,
                                                            *args, **kw)
+            self._add_tools(p, s, None)
+            return s, p
 
         kw['type'] = 'scatter'
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
@@ -506,7 +510,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict
 
-
         if x is not None and y is not None:
             args = self._regress(plot, scatter, None)
             if args:
@@ -520,13 +523,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         line = plot.plot(names, **rd)[0]
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
-
-        #add a regression inspector tool to the line
-        tool = RegressionInspectorTool(component=line)
-        overlay = RegressionInspectorOverlay(component=line,
-                                             tool=tool)
-        line.tools.append(tool)
-        line.overlays.append(overlay)
 
         kw['color'] = 'red'
         plot, names, rd = self._series_factory(fx, uy, line_style='dash', plotid=plotid, **kw)
@@ -543,96 +539,118 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             pass
 
         self._bind_index(scatter, **kw)
-        self._add_tools(scatter, plotid)
+        self._add_tools(plot, scatter, line)
         return plot, scatter, line
 
     def _bind_index(self, scatter, **kw):
         index = scatter.index
         index.on_trait_change(self._update_graph, 'metadata_changed')
 
+#        if self.use_inspector_tool:
+#            u = lambda **kw:self._update_info(scatter, **kw)
+#            scatter.value.on_trait_change(u, 'metadata_changed')
+
+#    def _update_info(self, scatter):
+#        hover = scatter.value.metadata.get('hover', None)
+#        if hover:
+#            hover = hover[0]
+#            from src.canvas.popup_window import PopupWindow
+#            if not self.popup:
+#                self.popup = PopupWindow(None)
+#
+#            mouse_xy = scatter.index.metadata.get('mouse_xy')
+#            if mouse_xy:
+#                x = scatter.index.get_data()[hover]
+#                y = scatter.value.get_data()[hover]
+#                self._show_pop_up(self.popup, x, y, mouse_xy)
+#        else:
+#            if self.popup:
+#                self.popup.Freeze()
+#                self.popup.Show(False)
+#                self.popup.Thaw()
+
+#    def _convert_index(self, ind):
+#        print 'ffff'
+#        return '{:0.1f}'.format(ind)
+
+#    def _show_pop_up(self, popup, index, value, mxmy):
+#        x, y = mxmy
+#        lines = [
+#                 'x={}'.format(self._convert_index(index)),
+#                 'y={:0.5f}'.format(value)
+#               ]
+#        t = '\n'.join(lines)
+#        gc = font_metrics_provider()
+#        with gc:
+#            font = popup.GetFont()
+#            from kiva.fonttools import Font
+#            gc.set_font(Font(face_name=font.GetFaceName(),
+#                             size=font.GetPointSize(),
+#                             family=font.GetFamily(),
+##                             weight=font.GetWeight(),
+##                             style=font.GetStyle(),
+##                             underline=0, 
+##                             encoding=DEFAULT
+#                             ))
+#            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
+##            print linewidths, lineheights
+#            ml = max(linewidths)
+#            mh = max(lineheights)
+#
+##        ch = popup.GetCharWidth()
+#        mh = mh * len(lines)
+##        print ml, mh
+#        popup.Freeze()
+#        popup.set_size(ml, mh)
+#        popup.SetText(t)
+#        popup.SetPosition((x + 55, y + 25))
+#        popup.Show(True)
+#        popup.Thaw()
+
+
+    def _add_tools(self, plot, scatter, line=None):
         if self.use_inspector_tool:
-            u = lambda **kw:self._update_info(scatter, **kw)
-            scatter.value.on_trait_change(u, 'metadata_changed')
+            #add a regression inspector tool to the line
+            if line:
+                tool = RegressionInspectorTool(component=line)
+                overlay = RegressionInspectorOverlay(component=line,
+                                                 tool=tool)
+                line.tools.append(tool)
+                line.overlays.append(overlay)
 
-    def _update_info(self, scatter):
-        hover = scatter.value.metadata.get('hover', None)
-        if hover:
-            hover = hover[0]
-            from src.canvas.popup_window import PopupWindow
-            if not self.popup:
-                self.popup = PopupWindow(None)
-
-            mouse_xy = scatter.index.metadata.get('mouse_xy')
-            if mouse_xy:
-                x = scatter.index.get_data()[hover]
-                y = scatter.value.get_data()[hover]
-                self._show_pop_up(self.popup, x, y, mouse_xy)
-        else:
-            if self.popup:
-                self.popup.Freeze()
-                self.popup.Show(False)
-                self.popup.Thaw()
-
-    def _convert_index(self, ind):
-        return '{:0.1f}'.format(ind)
-
-    def _show_pop_up(self, popup, index, value, mxmy):
-        x, y = mxmy
-        lines = [
-                 'x={}'.format(self._convert_index(index)),
-                 'y={:0.5f}'.format(value)
-               ]
-        t = '\n'.join(lines)
-        gc = font_metrics_provider()
-        with gc:
-            font = popup.GetFont()
-            from kiva.fonttools import Font
-            gc.set_font(Font(face_name=font.GetFaceName(),
-                             size=font.GetPointSize(),
-                             family=font.GetFamily(),
-#                             weight=font.GetWeight(),
-#                             style=font.GetStyle(),
-#                             underline=0, 
-#                             encoding=DEFAULT
-                             ))
-            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-#            print linewidths, lineheights
-            ml = max(linewidths)
-            mh = max(lineheights)
-
-#        ch = popup.GetCharWidth()
-        mh = mh * len(lines)
-#        print ml, mh
-        popup.Freeze()
-        popup.set_size(ml, mh)
-        popup.SetText(t)
-        popup.SetPosition((x + 55, y + 25))
-        popup.Show(True)
-        popup.Thaw()
+            broadcaster = BroadcasterTool()
+            scatter.tools.append(broadcaster)
 
 
-    def _add_tools(self, scatter, plotid):
-        if self.use_inspector_tool:
-            plot = self.plots[plotid]
+            point_inspector = PointInspector(scatter,
+                                             convert_index=self._convert_index)
+            pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                       tool=point_inspector
+                                                       )
+#
+            scatter.overlays.append(pinspector_overlay)
+            broadcaster.tools.append(point_inspector)
 
-    #        broadcaster = BroadcasterTool()
-    #        self.plots[plotid].container.tools.append(broadcaster)
+#            if line:
+#                #add a regression inspector tool to the line
+#                tool = RegressionInspectorTool(component=line)
+#                overlay = RegressionInspectorOverlay(component=line,
+#                                                 tool=tool)
+#                line.tools.append(tool)
+#                line.overlays.append(overlay)
 
-            rect_tool = RectSelectionTool(scatter,
-                                          plot=plot,
-                                          plotid=plotid,
-                                          container=self.plotcontainer,
-    #                                      update_mouse=False
-                                          )
-            rect_overlay = RectSelectionOverlay(
-                                                tool=rect_tool)
 
-            scatter.tools.append(rect_tool)
+            rect_tool = RectSelectionTool(scatter)
+            rect_overlay = RectSelectionOverlay(tool=rect_tool)
+
             scatter.overlays.append(rect_overlay)
+            broadcaster.tools.append(rect_tool)
+#
+
+#            print container
 
 #        print scatter.tools
         #add a broadcaster so scatterinspector and rect selection will received events
-#        broadcaster.tools.append(rect_tool)
 #        scatter.overlays.append(rect_overlay)
 #        data_tool = DataTool(
 #                             component=plot,
@@ -657,16 +675,12 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        self._update_graph()
 
 class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
-    def _convert_index(self, ind):
-        '''
-            ind is in secs since first epoch
-            convert to a timestamp
-            return a str
-        '''
-        return convert_timestamp(ind)
+    pass
 
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
+
+
     def _bind_index(self, scatter, bind_selection=True, **kw):
         super(StackedRegressionGraph, self)._bind_index(scatter)
 #        if bind_selection:

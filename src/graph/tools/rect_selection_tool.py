@@ -24,50 +24,45 @@ from numpy import vstack
 class RectSelectionOverlay(AbstractOverlay):
     tool = Any
     def overlay(self, component, gc, *args, **kw):
-
-        sp = self.tool._start_pos
-        ep = self.tool._end_pos
-        if sp and ep:
-            gc.save_state()
-            try:
+        with gc:
+            sp = self.tool._start_pos
+            ep = self.tool._end_pos
+            if sp and ep:
                 x, y = sp
                 x2, y2 = ep
-                rect = (x, y, x2 - x + 1, y2 - y + 1)
                 gc.set_fill_color([1, 0, 0, 0.25])
                 gc.set_stroke_color([1, 0, 0, 0.25])
-                gc.rect(*rect)
+                gc.rect(x, y, x2 - x + 1, y2 - y + 1)
                 gc.draw_path()
-            finally:
-                gc.restore_state()
 
 class RectSelectionTool(BaseTool):
     '''
     '''
     #update_flag = Bool
-    container = Any
-    parent = Any
-    plotid = Int
-    plot = Any
+#    container = Any
+#    parent = Any
+#    plotid = Int
+#    plot = Any
     threshold = 5
     hover_metadata_name = Str('hover')
     persistent_hover = False
     selection_metadata_name = Str('selections')
-    active = True
+#    active = True
     _start_pos = None
     _end_pos = None
     group_id = 0
-    update_mouse = True
-    def normal_mouse_leave(self, event):
-        plot = self.component
-        plot.index.metadata['mouse_xy'] = None
+#    update_mouse = True
+#    def normal_mouse_leave(self, event):
+#        plot = self.component
+#        plot.index.metadata['mouse_xy'] = None
 
     def normal_mouse_move(self, event):
         plot = self.component
-        yy = self.container.y2 - self.plot.y2 + self.plot.height - event.y
-        xx = self.container.x + event.x
-        mxy = event.window.control.ClientToScreenXY(xx, yy)
+#        yy = self.container.y2 - self.plot.y2 + self.plot.height - event.y
+#        xx = self.container.x + event.x
+#        mxy = event.window.control.ClientToScreenXY(xx, yy)
 #        if self.update_mouse:
-        plot.index.metadata['mouse_xy'] = mxy
+#        plot.index.metadata['mouse_xy'] = mxy
 #        control = event.window.control
 #        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
         index = plot.map_index((event.x, event.y), threshold=self.threshold)
@@ -242,7 +237,6 @@ class RectSelectionTool(BaseTool):
         index.metadata[self.selection_metadata_name] = list(set(ind) ^ set(selection))
         index.metadata_changed = True
 
-
     def _end_select(self, event):
         '''
  
@@ -266,6 +260,7 @@ class RectSelectionTool(BaseTool):
         '''
  
         '''
+
         self._start_pos = (event.x, event.y)
 #        self._end_pos = (event.x, event.y)
         self.event_state = 'select'
