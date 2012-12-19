@@ -18,7 +18,9 @@
 from traits.api import HasTraits, Int, Property, on_trait_change
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import polyval, polyfit, vander, asarray, column_stack, ones
+from numpy import polyval, polyfit, vander, asarray, column_stack, ones, \
+    matrix
+
 try:
     from statsmodels.api import OLS, add_constant
 except ImportError:
@@ -107,6 +109,62 @@ class OLSRegressor(BaseRegressor):
             return pred
 #                return self._result.predict(X)[0]
 
+    def predict_error(self, x, error_calc='sem'):
+        result = self._result
+        cov_varM = result.cov_params()
+        cov_varM = matrix(cov_varM)
+        def predict_yi_err(xi):
+            '''
+                
+                bx= x**0,x**1,x**n where n= degree of fit linear=2, parabolic=3 etc
+                
+            '''
+
+            bx = asarray([pow(xi, i) for i in range(self.degree + 1)])
+            bx_covar = bx * cov_varM
+            bx_covar = asarray(bx_covar)[0]
+            var = sum(bx * bx_covar)
+#            print var
+            s = var ** 0.5
+            if error_calc == 'sd':
+                s = (1 + s ** 2) ** 2
+
+            return s
+
+        if isinstance(x, (float, int)):
+            x = [x]
+        x = asarray(x)
+
+        return [predict_yi_err(xi) for xi in x]
+
+    def predict_error1(self, x, error_calc='sem'):
+        result = self._result
+        ssx = self.ssx
+        xm = self.xs.mean()
+        def predict_yi_err(xi):
+            '''
+                varYi=(1/n+(xi-xm)/ssx))*s variance of sample mean at xi
+                varYi=(1+1/n+(xi-xm)/ssx))*s variance of prediction at xi
+                
+                s is the estimate of sigma_squared. mean squared residuals good if correct model
+            '''
+
+            n = float(len(self.xs))
+            A = 1 / n + (xi - xm) ** 2 / ssx
+            if error_calc == 'sem':
+                var = A * result.mse_resid
+            else:
+                var = (1 + A) * result.mse_resid
+            return var ** 0.5
+
+        if isinstance(x, (float, int)):
+            x = [x]
+        x = asarray(x)
+
+        return [predict_yi_err(xi) for xi in x]
+
+
+
     def calculate_y(self, x):
         coeffs = self.coefficients
         return polyval(coeffs, x)
@@ -183,16 +241,18 @@ class OLSRegressor(BaseRegressor):
         self._set_degree(v)
 #        self._fit = v
 
-class PolynomialRegressor(OLSRegressor):
     def _get_X(self, xs=None):
         if xs is None:
             xs = asarray(self.xs)
 
-        c = vander(xs, self.degree + 1)
-        if self.constant:
-            c[:, self.degree] *= self.constant
-        return c
+        X = vander(xs, self.degree + 1)
+#        if self.constant:
+#            c[:, self.degree] *= self.constant
+#        X = add_constant(xs)
+        return X
 
+class PolynomialRegressor(OLSRegressor):
+    pass
 
 class MultipleLinearRegressor(OLSRegressor):
     '''

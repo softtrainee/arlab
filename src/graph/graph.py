@@ -175,6 +175,7 @@ class Graph(Loggable, ContextMenuMixin):
         '''
         s = self.series[plotid][series]
         p = self.plots[plotid]
+        print s
         return p.data.get_data(s[axis])
 
     def get_aux_data(self, plotid=0, series=1):
@@ -683,7 +684,9 @@ class Graph(Loggable, ContextMenuMixin):
         '''
         raise NotImplementedError
 
-    def new_series(self, x=None, y=None, yer=None, plotid=None, aux_plot=False,
+    def new_series(self, x=None, y=None, yer=None,
+                   plotid=None,
+#                   aux_plot=False,
                    colors=None,
                    color_map_name='hot',
                     **kw):
@@ -696,49 +699,50 @@ class Graph(Loggable, ContextMenuMixin):
         #print 'downsample', plotobj.use_downsample
 
 #        plotobj.use_downsample = True
-        if aux_plot:
-            if x is None:
-                x = np.array([])
-            if y is None:
-                y = np.array([])
+#        if aux_plot:
+#            if x is None:
+#                x = np.array([])
+#            if y is None:
+#                y = np.array([])
+#
+#            rd.pop('render_style')
+#            renderer = create_line_plot((x, y), **rd)
+#
+#            plotobj.add(renderer)
+#            n = 'aux{:03n}'.format(int(names[0][-1:][0]))
+#            plotobj.plots[n] = [renderer]
+#
+#            return renderer, plotobj
 
-            rd.pop('render_style')
-            renderer = create_line_plot((x, y), **rd)
+#        else:
+        if 'type' in rd:
+            if rd['type'] == 'line_scatter':
 
-            plotobj.add(renderer)
-            n = 'aux{:03n}'.format(int(names[0][-1:][0]))
-            plotobj.plots[n] = [renderer]
+                renderer = plotobj.plot(names,
+                                        type='scatter', marker_size=2,
+                                   marker='circle',
+                                   color=rd['color'],
+                                   outline_color=rd['color'])
+                rd['type'] = 'line'
 
-            return renderer, plotobj
+            elif rd['type'] == 'scatter':
+                rd['outline_color'] = rd['color']
+                rd['selection_color'] = 'white'
+                rd['selection_outline_color'] = (1, 0, 0.5)
 
-        else:
-            if 'type' in rd:
-                if rd['type'] == 'line_scatter':
-
-                    renderer = plotobj.plot(names,
-                                            type='scatter', marker_size=2,
-                                       marker='circle',
-                                       color=rd['color'],
-                                       outline_color=rd['color'])
-                    rd['type'] = 'line'
-
-                elif rd['type'] == 'scatter':
-                    rd['outline_color'] = rd['color']
-                    rd['selection_color'] = 'white'
-                    rd['selection_outline_color'] = (1, 0, 0.5)
-
-                if rd['type'] == 'cmap_scatter':
-                    from chaco.default_colormaps import color_map_name_dict
-                    rd['color_mapper'] = color_map_name_dict[color_map_name]
-                    rd['line_width'] = 0
+            if rd['type'] == 'cmap_scatter':
+                from chaco.default_colormaps import color_map_name_dict
+                rd['color_mapper'] = color_map_name_dict[color_map_name]
+                rd['line_width'] = 0
 
 #                    self.series[plotid][1] += (c,)
-                    c = self.series[plotid][-1][0].replace('x', 'c')
-                    self.plots[plotid].data.set_data(c, np.array(colors))
-                    names += (c,)
+                c = self.series[plotid][-1][0].replace('x', 'c')
+                self.plots[plotid].data.set_data(c, np.array(colors))
+                names += (c,)
 
-            renderer = plotobj.plot(names, **rd)
-            return renderer[0], plotobj
+        renderer = plotobj.plot(names, **rd)
+
+        return renderer[0], plotobj
 
     def show_graph_editor(self):
         '''

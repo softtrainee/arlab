@@ -22,36 +22,26 @@ from enable.base_tool import BaseTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class InfoInspector(BaseTool):
-#    metadata = Dict
     metadata_changed = Event
-#    has_info = False
     current_position = None
     current_screen = None
+
     def normal_mouse_move(self, event):
         xy = event.x, event.y
         pos = self.component.hittest(xy)
         if isinstance(pos, tuple):
             self.current_position = pos
             self.current_screen = xy
+            event.handled = True
         else:
             self.current_position = None
             self.current_screen = None
         self.metadata_changed = True
 
-#    def build_metadata(self, xy):
-#        dd = dict(xy=xy)
-#        md = self._build_metadata(xy)
-#        if md:
-#            dd.update(md)
-#        return dd
-
-#    def _build_metadata(self, xy):
-#        pass
     def assemble_lines(self):
         return []
 
     def normal_mouse_leave(self, event):
-#        self.metadata = dict()
         self.current_screen = None
         self.current_position = None
         self.metadata_changed = True
@@ -80,6 +70,7 @@ class InfoOverlay(AbstractOverlay):
             lines = self.tool.assemble_lines()
             if lines:
                 self._draw_info(gc, lines)
+        self.visible = False
 
     def _draw_info(self, gc, lines):
         x, y = self.tool.current_screen

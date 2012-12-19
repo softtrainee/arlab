@@ -29,50 +29,51 @@ class ErrorBarOverlay(AbstractOverlay):
     nsigma = Int(1)
     orientation = Enum('x', 'y')
 
+    draw_layer = 'underlay'
     def update_sigma(self, new):
         self.nsigma = new
         self.component.invalidate_and_redraw()
 
-    def overlay(self, component, gc, view_bounds=None, mode='normal'):
+    def overlay(self, comp, gc, view_bounds=None, mode='normal'):
         '''
             
         '''
-        gc.save_state()
-        gc.clip_to_rect(component.x, component.y, component.width, component.height)
+        component = self.component
+        with gc:
+            gc.clip_to_rect(comp.x, comp.y, comp.width, comp.height)
 
-        x = component.index.get_data()
-        y = component.value.get_data()
+            x = component.index.get_data()
+            y = component.value.get_data()
 
-        if self.orientation == 'x':
-            xer = component.xerror.get_data()
+            if self.orientation == 'x':
+                xer = component.xerror.get_data()
 
-            xer_sigma = xer * self.nsigma
+                xer_sigma = xer * self.nsigma
 
-            args1 = component.map_screen(zip(x - xer_sigma, y))
-            args2 = component.map_screen(zip(x + xer_sigma, y))
-        else:
-            yer = component.yerror.get_data()
-
-            yer_sigma = yer * self.nsigma
-            args1 = component.map_screen(zip(x, y - yer_sigma))
-            args2 = component.map_screen(zip(x, y + yer_sigma))
-
-        sel = component.index.metadata['selections']
-
-        color = component.color
-        if isinstance(color, str):
-            color = wx.Color()
-            color.SetFromName(component.color)
-
-        for i, ((x1, y1), (x2, y2)) in enumerate(zip(args1, args2)):
-            if i in sel:
-                gc.set_stroke_color((1, 0, 0.5))
+                args1 = component.map_screen(zip(x - xer_sigma, y))
+                args2 = component.map_screen(zip(x + xer_sigma, y))
             else:
-                gc.set_stroke_color(color)
+                yer = component.yerror.get_data()
 
-            gc.move_to(x1, y1)
-            gc.line_to(x2, y2)
-            gc.stroke_path()
+                yer_sigma = yer * self.nsigma
+                args1 = component.map_screen(zip(x, y - yer_sigma))
+                args2 = component.map_screen(zip(x, y + yer_sigma))
 
-        gc.restore_state()
+            sel = component.index.metadata['selections']
+
+            color = component.color
+            if isinstance(color, str):
+                color = wx.Color()
+                color.SetFromName(component.color)
+
+            for i, ((x1, y1), (x2, y2)) in enumerate(zip(args1, args2)):
+                if i in sel:
+                    gc.set_stroke_color((1, 0, 0.5))
+                else:
+                    gc.set_stroke_color(color)
+
+                gc.move_to(x1, y1)
+                gc.line_to(x2, y2)
+                gc.stroke_path()
+
 #============= EOF =====================================

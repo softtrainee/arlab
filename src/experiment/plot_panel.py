@@ -42,6 +42,7 @@ class PlotPanel(Viewable):
 
 #    detector = None
     detectors = List
+    fits = List
     isotopes = Property(depends_on='detectors')
 
     stack_order = 'bottom_to_top'
@@ -49,6 +50,7 @@ class PlotPanel(Viewable):
     ratio_display = Instance(RichTextDisplay)
     signal_display = Instance(RichTextDisplay)
     summary_display = Instance(RichTextDisplay)
+    fit_display = Instance(RichTextDisplay)
 
     signals = Dict
     baselines = Dict
@@ -106,6 +108,9 @@ class PlotPanel(Viewable):
             wrapper(self.summary_display,
                     self._print_summary
                     )
+            wrapper(self.fit_display,
+                    self._print_fits
+                    )
 
         do_later(func)
 
@@ -113,14 +118,14 @@ class PlotPanel(Viewable):
         kw['gui'] = False
         disp.add_text(*args, **kw)
 
-    def _print_parameter(self, display, name, uvalue):
+    def _print_parameter(self, display, name, uvalue, **kw):
         name = '{:<15s}'.format(name)
         msg = u'{}= {:0.3f} \u00b1{:0.4f}{}'.format(name,
                                                     uvalue.nominal_value,
                                                     uvalue.std_dev(),
                                                     self._get_pee(uvalue)
                                                     )
-        self.add_text(display, msg)
+        self.add_text(display, msg, **kw)
 
     def _print_summary(self, display):
         arar_age = self.automated_run.arar_age
@@ -139,6 +144,16 @@ class PlotPanel(Viewable):
             self._print_parameter(display, '% rad40', rad40)
             self._print_parameter(display, 'K/Ca', kca)
             self._print_parameter(display, 'K/Cl', kcl)
+
+    def _print_fits(self, display):
+        fits = self.fits
+        detectors = self.detectors
+        for det, fit in zip(fits, detectors):
+            self.add_text(display, '{} {}= {}'.format(det.name,
+                                                      det.isotope, fit))
+
+#        for det, (iso, fit) in self.fits:
+#            self.add_text(display, '{} {}= {}'.format(det, iso, fit))
 
     def _print_ratios(self, display):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
@@ -274,7 +289,7 @@ class PlotPanel(Viewable):
                                                 stack_order=self.stack_order
                                              ),
                                       use_data_tool=False,
-                                      use_inspector_tool=False
+                                      use_inspector_tool=True
                                       )
     def traits_view(self):
         v = View(
@@ -292,9 +307,11 @@ class PlotPanel(Viewable):
                            label='Results'
                            ),
                      Group(
+                           instance_item('fit_display'),
+                           label='Fit'),
+                     Group(
                            instance_item('summary_display'),
                            label='Summary'),
-
                      Group(
                            Item('ncounts'),
                            label='Controls',
@@ -315,6 +332,13 @@ class PlotPanel(Viewable):
 #===============================================================================
 # defaults
 #===============================================================================
+    def _fit_display_default(self):
+        return RichTextDisplay(height=220,
+                               default_color='black',
+                               default_size=12,
+                               scroll_to_bottom=False,
+                               bg_color='#FFFFCC'
+                               )
     def _summary_display_default(self):
         return RichTextDisplay(height=220,
                                default_color='black',

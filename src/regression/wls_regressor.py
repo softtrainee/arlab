@@ -15,39 +15,39 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Callable
+from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import where
-from src.graph.tools.point_inspector import PointInspector
+from numpy import asarray, vander
+from statsmodels.api import WLS, OLS
 #============= local library imports  ==========================
-class AnalysisPointInspector(PointInspector):
-    analyses = List
-    value_format = Callable
+#from src.regression.base_regressor import BaseRegressor
+from src.regression.ols_regressor import OLSRegressor
+class WeightedPolynominalRegressor(OLSRegressor):
+    def calculate(self):
+        if not len(self.xs) or \
+            not len(self.ys):
+            return
 
+        if len(self.xs) != len(self.ys):
+            return
 
-    def assemble_lines(self):
-        lines = []
-        if self.current_position:
-            ind = self.get_selected_index()
-            if ind:
-                analysis = self.analyses[ind]
-                rid = analysis.record_id
-                name = self.component.container.y_axis.title
+        xs = self.xs
+        xs = asarray(xs)
+        es = asarray(self.yserr)
+        ys = self.ys
 
-                y = self.component.value.get_data()[ind]
-                if self.value_format:
-                    y = self.value_format(y)
+        X = self._get_X()
+#        print ys.shape, X.shape
+        self._wls = WLS(ys, X,
+                        weights=1 / es ** 2
+                        )
+        self._result = self._wls.fit()
+#        print self._result.summary()
 
-                if analysis.temp_status != 0:
-                    status = 'Temp. Omitted'
-                else:
-                    status = analysis.status_text
-
-                lines = ['Analysis= {}'.format(rid),
-                         'Status= {}'.format(status),
-                         '{}= {}'.format(name, y)
-                         ]
-        return lines
-
+#    def predict(self, x):
+#        x = self._get_X(x)
+#        rx = self._result.predict(x)
+#        return rx
+#    def _calculate_coefficients(self):
 #============= EOF =============================================

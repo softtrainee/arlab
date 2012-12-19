@@ -128,7 +128,11 @@ def get_hardware_plugins():
     from src.hardware.plugins.hardware_plugin import HardwarePlugin
     from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
 
-    return [HardwarePlugin(), HardwareUIPlugin()] if 'hardware' in ip.get_categories() else []
+    ps = []
+    if 'hardware' in ip.get_categories():
+        if ip.get_plugins('hardware'):
+            ps = [HardwarePlugin(), HardwareUIPlugin()]
+    return ps
 
 
 def get_user_plugins():

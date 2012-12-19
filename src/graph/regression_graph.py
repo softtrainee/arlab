@@ -40,6 +40,7 @@ from src.graph.tools.regression_inspector import RegressionInspectorTool, \
     RegressionInspectorOverlay
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
+from src.regression.wls_regressor import WeightedPolynominalRegressor
 
 class StatsFilterParameters(object):
     '''
@@ -208,12 +209,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         y = scatter.value.get_data()
         index = scatter.index
 
-        fit = scatter.fit
         fod = scatter.filter_outliers_dict
 
         ox = x[:]
         oy = y[:]
-        fit = self._convert_fit(fit)
+        fit = self._convert_fit(scatter.fit)
         if fit is None:
             return
 
@@ -274,8 +274,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #            st = low
 #            xn = x - st
 #            ox = xn[:]
-            r = PolynomialRegressor(xs=x, ys=y,
-                                    degree=fit)
+            if hasattr(scatter, 'yerror'):
+                es = scatter.yerror.get_data()
+                if selection:
+                    es = delete(es, selection, 0)
+                r = WeightedPolynominalRegressor(xs=x, ys=y, yserr=es, degree=fit)
+            else:
+
+                r = PolynomialRegressor(xs=x,
+                                        ys=y,
+                                        degree=fit)
 #            fx = linspace(0, (high - low), 200)
             fx = linspace(low, high, 200)
 
@@ -297,6 +305,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
             if line:
                 line.regressor = r
+
             self.regressors.append(r)
 
         else:
@@ -474,7 +483,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #                   filter_outliers=False,
                    marker='circle',
                    marker_size=2,
-                   plotid=0, *args, **kw):
+                   add_tools=True,
+                   convert_index=None,
+                   plotid=0, *args,
+                    **kw):
 
         kw['marker'] = marker
         kw['marker_size'] = marker_size
@@ -484,7 +496,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             s, p = super(RegressionGraph, self).new_series(x, y,
                                                            plotid=plotid,
                                                            *args, **kw)
-            self._add_tools(p, s, None)
+            if add_tools and self.use_inspector_tool:
+                self.add_tools(p, s, None, convert_index)
             return s, p
 
         kw['type'] = 'scatter'
@@ -539,7 +552,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             pass
 
         self._bind_index(scatter, **kw)
-        self._add_tools(plot, scatter, line)
+        if add_tools and self.use_inspector_tool:
+            self.add_tools(plot, scatter, line, convert_index)
         return plot, scatter, line
 
     def _bind_index(self, scatter, **kw):
@@ -608,28 +622,28 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        popup.Thaw()
 
 
-    def _add_tools(self, plot, scatter, line=None):
-        if self.use_inspector_tool:
-            #add a regression inspector tool to the line
-            if line:
-                tool = RegressionInspectorTool(component=line)
-                overlay = RegressionInspectorOverlay(component=line,
-                                                 tool=tool)
-                line.tools.append(tool)
-                line.overlays.append(overlay)
+    def add_tools(self, plot, scatter, line=None, convert_index=None):
 
-            broadcaster = BroadcasterTool()
-            scatter.tools.append(broadcaster)
+        #add a regression inspector tool to the line
+        if line:
+            tool = RegressionInspectorTool(component=line)
+            overlay = RegressionInspectorOverlay(component=line,
+                                             tool=tool)
+            line.tools.append(tool)
+            line.overlays.append(overlay)
+
+        broadcaster = BroadcasterTool()
+        scatter.tools.append(broadcaster)
 
 
-            point_inspector = PointInspector(scatter,
-                                             convert_index=self._convert_index)
-            pinspector_overlay = PointInspectorOverlay(component=scatter,
-                                                       tool=point_inspector
-                                                       )
+        point_inspector = PointInspector(scatter,
+                                         convert_index=convert_index)
+        pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                   tool=point_inspector
+                                                   )
 #
-            scatter.overlays.append(pinspector_overlay)
-            broadcaster.tools.append(point_inspector)
+        scatter.overlays.append(pinspector_overlay)
+        broadcaster.tools.append(point_inspector)
 
 #            if line:
 #                #add a regression inspector tool to the line
@@ -640,11 +654,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #                line.overlays.append(overlay)
 
 
-            rect_tool = RectSelectionTool(scatter)
-            rect_overlay = RectSelectionOverlay(tool=rect_tool)
+        rect_tool = RectSelectionTool(scatter)
+        rect_overlay = RectSelectionOverlay(tool=rect_tool)
 
-            scatter.overlays.append(rect_overlay)
-            broadcaster.tools.append(rect_tool)
+        scatter.overlays.append(rect_overlay)
+        broadcaster.tools.append(rect_tool)
 #
 
 #            print container

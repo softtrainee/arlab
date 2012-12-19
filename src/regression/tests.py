@@ -22,6 +22,7 @@ from unittest import TestCase
 import numpy as np
 from src.regression.mean_regressor import WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
+from src.regression.wls_regressor import WeightedPolynominalRegressor
 #============= local library imports  ==========================
 
 class WeightedMeanRegressionTest(TestCase):
@@ -75,6 +76,28 @@ class CITest(TestCase):
         reg = PolynomialRegressor(xs=self.x, ys=self.y, degree=1)
         self.assertAlmostEqual(reg.ssx, 8301.389, delta=0.01)
 
+class WLSRegressionTest(TestCase):
+    def setUp(self):
+        self.xs = np.linspace(0, 10, 10)
+        self.ys = np.random.normal(self.xs, 1)
 
+    def testPredict(self):
+        xs = self.xs
+        ys = self.ys
+        es = np.random.normal(1, 0.5, len(xs))
+        wls = WeightedPolynominalRegressor(xs=xs, ys=ys, yserr=es, fit='linear')
 
+class OLSRegressionTest(TestCase):
+    def setUp(self):
+        self.xs = np.linspace(0, 10, 10)
+        self.ys = np.random.normal(self.xs, 1)
+
+    def testPredict(self):
+        xs = self.xs
+        ys = self.ys
+        ols = PolynomialRegressor(xs=xs, ys=ys, fit='linear')
+        y = ols.predict_error(5)[0]
+        y1 = ols.predict_error1(5, error_calc='sd')[0]
+        print y, y1
+        self.assertEqual(y, y1)
 #============= EOF =============================================
