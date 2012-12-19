@@ -41,34 +41,8 @@ from chaco.plot_containers import GridPlotContainer
 from src.processing.plotters.graph_panel_info import GraphPanelInfo
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
+from src.graph.tools.analysis_inspector import AnalysisPointInspector
 
-class AnalysisPointInspector(PointInspector):
-    analyses = List
-    value_format = Callable
-    def assemble_lines(self):
-        lines = []
-        if self.current_position:
-            xxyy = self.component.hittest(self.current_position)
-            if xxyy:
-                x, y = self.component.map_data((xxyy))
-                d = self.component.index.get_data()
-                ind = where(d == x)[0]
-                analysis = self.analyses[ind]
-                rid = analysis.record_id
-                name = self.component.container.y_axis.title
-                if self.value_format:
-                    y = self.value_format(y)
-
-                if analysis.temp_status != 0:
-                    status = 'Temp. Omitted'
-                else:
-                    status = 'OK' if analysis.status == 0 else 'Omitted'
-
-                lines = ['Analysis= {}'.format(rid),
-                         'Status= {}'.format(status),
-                         '{}= {}'.format(name, y)
-                         ]
-        return lines
 
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
@@ -476,7 +450,7 @@ class Plotter(Viewable):
         sel = obj.metadata.get('selections', [])
         #set the temp_status for all the analyses
         for i, a in enumerate(sorted_ans):
-            a.temp_status = -1 if i in sel else 0
+            a.temp_status = 1 if i in sel else 0
 
     def _cmp_analyses(self, x):
         return x.timestamp

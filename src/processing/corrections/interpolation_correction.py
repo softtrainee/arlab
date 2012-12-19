@@ -20,8 +20,9 @@ from traits.api import HasTraits, Str, List, Any, Instance, Property, cached_pro
 from traitsui.api import View, Item, TableEditor, EnumEditor, CheckListEditor
 import apptools.sweet_pickle as pickle
 
-import os
 #============= standard library imports ========================
+import os
+from numpy import array, asarray
 #============= local library imports  ==========================
 from src.paths import paths
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
@@ -30,7 +31,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
 from src.processing.analysis import Analysis
 from src.database.records.isotope_record import IsotopeRecord
 from src.graph.regression_graph import RegressionGraph, \
-    RegressionTimeSeriesGraph, StackedRegressionTimeSeriesGraph
+    RegressionTimeSeriesGraph, StackedRegressionTimeSeriesGraph, \
+    StackedRegressionGraph
 from src.progress_dialog import MProgressDialog
 
 from src.regression.interpolation_regressor import InterpolationRegressor
@@ -39,8 +41,13 @@ from src.processing.corrections.regression_correction import RegressionCorrectio
 import time
 import datetime
 from sqlalchemy.sql.expression import and_
+from src.graph.error_bar_overlay import ErrorBarOverlay
+from chaco.array_data_source import ArrayDataSource
+from chaco.errorbar_plot import ErrorBarPlot
+from chaco.multi_line_plot import MultiLinePlot
+from src.helpers.datetime_tools import convert_timestamp
 
-class InterpolationGraph(StackedRegressionTimeSeriesGraph):
+class InterpolationGraph(StackedRegressionGraph):
     pass
 
 class InterpolationCorrection(HasTraits):
@@ -72,15 +79,19 @@ class InterpolationCorrection(HasTraits):
                 except pickle.PickleError:
                     pass
 
+        fs = []
         for ki in isotope_names:
             if ki in cors:
                 fi = cors[ki]
             else:
                 fi = RegressionCorrection(name=ki)
 
+            fs.append(fi)
+
+        self.fits = fs
+        for fi in fs:
             fi.on_trait_change(self.refresh, 'use')
             fi.on_trait_change(self.refresh_fit, 'fit')
-            self.fits.append(fi)
 
     def refresh_fit(self, obj, name, old, new):
         new = new.lower()
@@ -92,20 +103,29 @@ class InterpolationCorrection(HasTraits):
                             if plot.y_axis.title == obj.name), None)
 
             if plotid is not None:
-                xs = g.get_data(plotid=plotid)
-                ys = g.get_data(axis=1, plotid=plotid)
-                es = g.get_data(axis=2, plotid=plotid)
+                predictor = g.plots[plotid].plots['data0'][0]
+                xs = predictor.index.get_data()
+                ys = predictor.value.get_data()
+                es = predictor.yerror.get_data()
+#                xs = g.get_data(plotid=plotid)
+#                ys = g.get_data(axis=1, plotid=plotid)
+#                es = g.get_data(axis=2, plotid=plotid)
                 ip = InterpolationRegressor(xs=xs, ys=ys, yserr=es, kind=new)
 
-                xs = g.get_data(series=4, plotid=plotid)
+                interpolated = g.plots[plotid].plots['plot4'][0]
+                xs = interpolated.index.get_data()
+#                xs = g.get_data(series=4, plotid=plotid)
                 ys = ip.predict(xs)
-                g.set_data(ys, axis=1, series=4, plotid=plotid)
+                es = ip.predict_error(xs)
+                interpolated.value.set_data(ys)
+                interpolated.yerror.set_data(es)
+#                g.set_data(ys, axis=1, series=4, plotid=plotid)
 
                 g.set_series_visiblity(False, series='fit0', plotid=plotid)
                 g.set_series_visiblity(False, series='upper CI0', plotid=plotid)
                 g.set_series_visiblity(False, series='lower CI0', plotid=plotid)
 
-                self.sync_analyses(ys, '{}{}'.format(obj.name, self.signal_key))
+                self.sync_analyses(ys, es, '{}{}'.format(obj.name, self.signal_key))
             g.redraw()
 
     def refresh(self):
@@ -134,29 +154,63 @@ class InterpolationCorrection(HasTraits):
         graph.on_trait_change(self._update_interpolation, 'regression_results')
         graph.refresh()
 
+    def normalize(self, xs, start):
+        xs = asarray(xs)
+        xs.sort()
+        xs -= start
+
+        #scale to hours
+        xs = xs / (60.*60.)
+        return xs
+
     def add_plot(self, key, fit, plotid):
         graph = self.graph
         k = '{}{}'.format(key, self.signal_key)
         ps = self.predictors
         axs = [ai.timestamp for ai in self.analyses]
+
         xs, ys, mn, mx, reg = None, None, None, None, None
 
         if ps:
             xs, ys = zip(*[(pi.timestamp, self._get_predictor_value(pi, key)) for pi in ps])
+
+            start = min(min(axs), min(xs))
+
+            #normalize to earliest
+            oxs = asarray(map(convert_timestamp, xs[:]))
+            xs = self.normalize(xs, start)
+            axs = self.normalize(axs, start)
+
             ys, es = zip(*[(yi.nominal_value, yi.std_dev()) for yi in ys])
             mn = min(xs)
             mx = max(xs)
 
             if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
                 reg = InterpolationRegressor(xs=xs, ys=ys, kind=fit)
-                graph.new_series(xs, ys, yer=es,
-                                    type='scatter',
-                                    fit=False, plotid=plotid)
+                s, p = graph.new_series(xs, ys,
+                                        display_index=ArrayDataSource(data=oxs),
+                                        yerror=ArrayDataSource(data=es),
+                                        type='scatter',
+                                        fit=False,
+                                        plotid=plotid)
                 ays = reg.predict(axs)
+                aes = reg.predict_error(axs)
+
             else:
-                graph.new_series(xs, ys, yer=es, fit=fit, plotid=plotid)
+                p, s, l = graph.new_series(xs, ys,
+                                           display_index=ArrayDataSource(data=oxs),
+                                           yerror=ArrayDataSource(data=es),
+                                           fit=fit,
+                                           plotid=plotid)
                 ays = [1, ] * len(axs)
+                aes = [0, ] * len(axs)
+
+            ebo = ErrorBarOverlay(component=s,
+                                  orientation='y')
+            s.overlays.insert(0, ebo)
+
         else:
+            axs = self.normalize(axs, min(axs))
             ays = []
             k = '{}{}'.format(key, self.signal_key)
             for ai in self.analyses:
@@ -166,29 +220,40 @@ class InterpolationCorrection(HasTraits):
                     ays.append(0)
 
         #sync the analysis' signals
-        self.sync_analyses(ays, k)
+        self.sync_analyses(ays, aes, k)
 
         #display the predicted values
-        graph.new_series(axs, ays, fit=False, type='scatter', plotid=plotid)
+        ss, _ = graph.new_series(axs,
+                                ays,
+                                yerror=ArrayDataSource(aes),
+                                fit=False,
+                                type='scatter',
+                                plotid=plotid,
+                                )
 
-        if mn:
+        ebo = ErrorBarOverlay(component=ss,
+                              orientation='y')
+        s.overlays.insert(0, ebo)
+
+        if mn is not None:
             mn = min(min(axs), mn)
         else:
             mn = min(axs)
-        if mx:
+        if mx is not None:
             mx = max(max(axs), mx)
         else:
             mx = max(axs)
 
         graph.set_x_limits(mn, mx, pad='0.1', plotid=plotid)
 
-    def sync_analyses(self, ays, k):
-        for yi, ai in zip(ays, self.analyses):
+    def sync_analyses(self, ays, aes, k):
+        for yi, ei, ai in zip(ays, aes, self.analyses):
             if k in ai.signals:
                 sig = ai.signals[k]
                 sig.value = yi
+                sig.error = ei
             else:
-                sig = self.signal_klass(value=yi)
+                sig = self.signal_klass(value=yi, error=ei)
                 ai.signals[k] = sig
 
     def _get_predictor_value(self, pi, key):
@@ -222,12 +287,21 @@ class InterpolationCorrection(HasTraits):
                 analysis doesnt belong to an experiment
                 get kind_analyses before and after analysis rundate and runtime
             '''
-            def filter_analyses(post, delta, at):
+            def filter_analyses(post, delta, lim, at):
+                '''
+                    post= timestamp
+                    delta= time in hours
+                    at=analysis type
+                    
+                    if delta is negative 
+                    get all before post and after post-delta
+
+                    if delta is post 
+                    get all before post+delta and after post
+                '''
                 q = sess.query(meas_AnalysisTable)
                 q = q.join(meas_MeasurementTable)
                 q = q.join(gen_AnalysisTypeTable)
-
-                q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
 
                 win = datetime.timedelta(hours=delta)
                 dt = post + win
@@ -242,6 +316,7 @@ class InterpolationCorrection(HasTraits):
                                   meas_AnalysisTable.analysis_timestamp >= a,
                                   meas_AnalysisTable.analysis_timestamp <= b,
                                   ))
+                q = q.limit(lim)
                 return q.all()
 
             def find_analyses(post, delta, atype, step=100, maxtries=10):
@@ -249,7 +324,7 @@ class InterpolationCorrection(HasTraits):
                     step = -step
 
                 for i in range(maxtries):
-                    rs = filter_analyses(post, delta + i * step, atype)
+                    rs = filter_analyses(post, delta + i * step, 3, atype)
                     if rs:
                         return rs
                 else:
@@ -258,8 +333,9 @@ class InterpolationCorrection(HasTraits):
             pi = analysis.timestamp
             pi = datetime.datetime.fromtimestamp(pi)
 
-            br = find_analyses(pi, -6, atype)
-            ar = find_analyses(pi, 6, atype, maxtries=1) #dont search forward was much as backward
+            br = find_analyses(pi, -60, atype)
+            ar = find_analyses(pi, 60, atype, maxtries=1) #dont search forward was much as backward
+#            print len(br), len(ar)
             return br + ar
 
         else:
@@ -315,15 +391,26 @@ class InterpolationCorrection(HasTraits):
 #===============================================================================
     def _update_interpolation(self, regressors):
         g = self.graph
-        for fi, reg in zip(self.fits, regressors):
-            if not fi.fit.lower() in ['preceeding', 'bracketing interpolate', 'bracketing average']:
-                xs = g.get_data(series=4)
-                ys = reg.predict(xs)
-                g.set_data(ys, axis=1, series=4)
+        if g.plots:
+#            si = g.plots[0].plots['plot8'][0]
+            si = g.plots[0].plots['plot4'][0]
+            i = 0
+            for fi in self.fits:
+                if not fi.use:
+                    continue
+                reg = regressors[i]
+#                print fi.name, fi.use, fi.fit.lower()
+                if not fi.fit.lower() in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+                    xs = si.index.get_data()
+                    ys = reg.predict(xs)
+                    es = reg.predict_error(xs)
+                    si.value.set_data(ys)
 
+                    if hasattr(si, 'yerror'):
+                        si.yerror.set_data(es)
+                i += 1
 
-
-        g.redraw()
+            g.redraw()
 
 #            if regressors:
 

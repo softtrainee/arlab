@@ -53,16 +53,11 @@ class BaseRegressor(Loggable):
 
         cs = self.coefficients
         ce = self.coefficient_errors
-#        pm = u'\u00b1'
-
-#        fmt = u'{{}}={{:0.{}f}}\u00b1{{:0.{}f}} ({{:0.2f}}%)'
-#        fmt = fmt.format(sig_figs, error_sig_figs)
-
-#        efmt = efmt.format(sig_figs, error_sig_figs)
 
         coeffs = []
         for a, ci, ei in zip(ALPHAS, cs, ce):
             pp = '({:0.2f}%)'.format(self.percent_error(ci, ei))
+#            print pp, ci, ei, self.percent_error(ci, ei)
             fmt = '{{:0.{}e}}' if abs(ci) < math.pow(10, -sig_figs) else '{{:0.{}f}}'
             ci = fmt.format(sig_figs).format(ci)
 
@@ -103,6 +98,10 @@ class BaseRegressor(Loggable):
 
     def predict(self, x):
         return x
+
+    def predict_error(self, x):
+        _model, cors = self._calculate_ci(x)
+        return cors
 
     @cached_property
     def _get_coefficients(self):
@@ -150,16 +149,19 @@ class BaseRegressor(Loggable):
         return (sum_sq_residuals / (n - q)) ** 0.5
 
     def calculate_ci(self, rx):
+        rmodel, cors = self._calculate_ci(rx)
+        lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+        return asarray(lci), asarray(uci)
+
+    def _calculate_ci(self, rx):
         if isinstance(rx, (float, int)):
             rx = [rx]
         X = self.xs
         Y = self.ys
         model = self.predict(X)
         rmodel = self.predict(rx)
-
         cors = self._calculate_confidence_interval(X, Y, model, rx, rmodel)
-        lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-        return asarray(lci), asarray(uci)
+        return rmodel, cors
 
     def _calculate_confidence_interval(self,
                                        x,

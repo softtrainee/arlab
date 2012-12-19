@@ -121,11 +121,24 @@ class Analysis(Loggable):
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
     temp_status = Int
-
+    temp_status_text = Property
+    status_text = Property
 #    @on_trait_change('signals:blank_signal')
 #    def _change(self):
 #        print 'fiafsd'
-#        self.age_dirty = True
+#        self.age_dirty =  True
+
+    def _get_temp_status_text(self):
+        if self.temp_status == 0:
+            return 'OK'
+        else:
+            return 'Omitted'
+
+    def _get_status_text(self):
+        if self.temp_status == 0:
+            return 'OK'
+        else:
+            return 'Omitted'
 
     def load_age(self):
         if self.age is not None:

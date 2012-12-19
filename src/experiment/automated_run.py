@@ -626,7 +626,7 @@ class AutomatedRun(Loggable):
 #        if self.peak_plot_panel:
 #            self.peak_plot_panel.fits = fits
 ##            self.peak_plot_panel.regress_id = series
-#
+        self.plot_panel.fits = fits
         self.fits = fits
 
     def _open_plot_panel(self, p=None, stack_order='bottom_to_top'):

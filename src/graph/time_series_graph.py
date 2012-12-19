@@ -58,13 +58,13 @@ class TimeSeriesGraph(Graph):
         self.set_data(downsample_1d(array(y), d), plotid, series, axis=1)
         self.redraw()
 
-    def _convert_index(self, ind):
-        '''
-            ind is in secs since first epoch
-            convert to a timestamp
-            return a str
-        '''
-        return convert_timestamp(ind)
+#    def _convert_index(self, ind):
+#        '''
+#            ind is in secs since first epoch
+#            convert to a timestamp
+#            return a str
+#        '''
+#        return convert_timestamp(ind)
 
     def set_x_title(self, t, plotid=0):
         '''

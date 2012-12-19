@@ -21,6 +21,7 @@ from chaco.abstract_overlay import AbstractOverlay
 from enable.base_tool import BaseTool
 from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
 #============= standard library imports ========================
+from numpy import where, abs
 #============= local library imports  ==========================
 class PointInspector(InfoInspector):
     convert_index = Callable
@@ -28,13 +29,51 @@ class PointInspector(InfoInspector):
 #        point = self.component.hittest(xy)
 #        md = dict(point=point)
 #        return md
+    def get_selected_index(self):
+        xxyy = self.component.hittest(self.current_position)
+        if xxyy:
+            x, _ = self.component.map_data((xxyy))
+            d = self.component.index.get_data()
+            tol = 0.1
+            ind = where(abs(d - x) < tol)[0]
+            return ind
+
+    def percent_error(self, s, e):
+        v = 'Inf'
+        try:
+            v = abs(e / s) * 100
+        except ZeroDivisionError:
+            pass
+        return  v
+
     def assemble_lines(self):
         pt = self.current_position
         if pt:
             x, y = self.component.map_data(pt)
             if self.convert_index:
                 x = self.convert_index(x)
-            return ['{},{}'.format(x, y)]
+
+            ind = self.get_selected_index()
+
+            if ind is not None and hasattr(self.component, 'yerror'):
+                ye = self.component.yerror.get_data()[ind][0]
+                pe = self.percent_error(y, ye)
+
+                fmt = '{:0.3e}' if abs(ye) < 10e-6 else '{:0.6f}'
+                ye = fmt.format(ye)
+
+                fmt = '{:0.3e}' if abs(y) < 10e-6 else '{:0.6f}'
+                y = fmt.format(y)
+                y = u'{} \u00b1{}({:0.2f}%)'.format(y, ye, pe)
+
+
+            lines = ['x= {:0.5f}'.format(x), 'y= {}'.format(y)]
+
+            if ind is not None and hasattr(self.component, 'display_index'):
+                x = self.component.display_index.get_data()[ind][0]
+                lines = ['{}'.format(x)] + lines
+
+            return lines
         else:
             return []
 

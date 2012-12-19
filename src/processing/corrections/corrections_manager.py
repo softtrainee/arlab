@@ -15,9 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Bool, Float, Str, Any, Instance, Button
+from traits.api import HasTraits, List, Bool, Float, Str, Any, Instance, Button, Property, \
+    cached_property
 from traitsui.api import View, Item, TableEditor, HGroup, Group, VGroup, Spring, spring, \
-    Label
+    Label, TabularEditor
 from traitsui.menu import Action
 
 #============= standard library imports ========================
@@ -32,7 +33,26 @@ from src.processing.corrections.interpolation_correction import InterpolationCor
     DetectorIntercalibrationInterpolationCorrection
 #from src.viewable import Viewable
 from src.saveable import Saveable
+from traitsui.tabular_adapter import TabularAdapter
 
+class GroupedAnalysisAdapter(TabularAdapter):
+    columns = [
+               ('Analysis ID', 'record_id'),
+               ('Status', 'status'),
+#               ('Temp. Status', 'temp_status'),
+               ]
+
+    def get_bg_color(self, obj, trait, row):
+        bgcolor = self.item.bgcolor
+        if bgcolor is None:
+            bgcolor = 'white'
+
+        if self.item.status == 1:
+            return 0xFF8080
+        elif self.item.temp_status == 1:
+            return 0xFFCC00
+
+        return bgcolor
 
 class CorrectionsManager(Saveable):
     '''
@@ -43,12 +63,15 @@ class CorrectionsManager(Saveable):
     db = Any
     processing_manager = Any
     analyses = List(Analysis)
+    all_analyses = Property(List(Analysis), depends_on='analyses')
+
     fixed_values = List(FixedValueCorrection)
     use_fixed_values = Bool(False)
     interpolation_correction = Instance(InterpolationCorrection)
     interpolation_correction_klass = InterpolationCorrection
     edit_predictors = Button('Edit')
-
+    dclicked = Any
+    selected = Any
     '''
         subclass needs to set the following values
     '''
@@ -83,15 +106,16 @@ class CorrectionsManager(Saveable):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _dclicked_changed(self):
+        selector = self.db.selector
+        selector.open_record(self.selected.isotope_record)
+
     def _edit_predictors_fired(self):
 
         #set the selector.selected_records to the predictors
         ps = self.interpolation_correction.predictors
         selector = self.processing_manager.selector_manager
         selector.selected_records = [ri.isotope_record for ri in ps]
-#        selector.selected_records = sorted([ri.isotope_record for ri in ps],
-#                                           key=lambda x:x.timestamp
-#                                           )
         ans = self.processing_manager.gather_data()
         if ans:
             self.interpolation_correction._predictors = ans
@@ -142,7 +166,6 @@ class CorrectionsManager(Saveable):
                                   user_error=ue
                                   )
                 else:
-
                     ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
                     item = func(history, isotope=si.name,
                                 user_value=ss.value,
@@ -152,8 +175,16 @@ class CorrectionsManager(Saveable):
                     if ps:
                         for pi in ps:
                             func2(item, pi.dbrecord)
+    @cached_property
+    def _get_all_analyses(self):
+        ans = self.analyses
+        prs = self.interpolation_correction.predictors
+        for pi in prs:
+            pi.bgcolor = 0x99CCFF
 
-
+        ts = ans + prs
+        ts = sorted(ts, key=lambda x: x.timestamp)
+        return ts
 
     def _get_isotope_names(self):
         keys = None
@@ -279,6 +310,15 @@ class CorrectionsManager(Saveable):
         series_grp = Group(
                            Item('interpolation_correction', show_label=False, style='custom'),
                            label='Series')
+        table_grp = Group(
+                        Item('all_analyses', show_label=False, style='custom',
+                             editor=TabularEditor(adapter=GroupedAnalysisAdapter(),
+                                                  editable=False,
+                                                  dclicked='dclicked',
+                                                  selected='selected'
+                                                  )
+                             ),
+                        label='Analyses')
         v = View(
                  VGroup(
                         HGroup(
@@ -288,6 +328,7 @@ class CorrectionsManager(Saveable):
                                ),
                         Group(
                             series_grp,
+                            table_grp,
                             fixed_value_grp,
                             layout='tabbed'
                             )

@@ -30,22 +30,25 @@ class InterpolationRegressor(BaseRegressor):
         pass
 
     def predict(self, xs):
+        return self._predict(xs, 'value')
+
+    def predict_error(self, xs):
+        return self._predict(xs, 'error')
+
+    def _predict(self, xs, attr):
         kind = self.kind.replace(' ', '_')
         func = getattr(self, '{}_predictors'.format(kind))
         if isinstance(xs, (float, int)):
             xs = [xs]
         xs = asarray(xs)
-
-#        return func(xs)
-        return [func(xi) for xi in xs]
-
+        return [func(xi, attr) for xi in xs]
 
     def preceeding_predictors(self, timestamp, attr='value'):
         xs = self.xs
         ys = self.ys
-        es = self.yserr
 
-        ti = where(xs < timestamp)[0][-1]
+        es = self.yserr
+        ti = where(xs <= timestamp)[0][-1]
         if attr == 'value':
             return ys[ti]
         else:
@@ -66,7 +69,19 @@ class InterpolationRegressor(BaseRegressor):
 
             x = [xs[ti], xs[ti + 1]]
             y = [pb, ab]
-            return polyval(polyfit(x, y, 1), tm)
+
+            if attr == 'error':
+                '''
+                    geometrically sum the errors and weight by the fractional difference
+                    
+                    0----10----------------100
+                    f=0.1
+                '''
+                f = (tm - x[0]) / (x[1] - x[0])
+                v = (((1 - f) * pb) ** 2 + (f * ab) ** 2) ** 0.5
+            else:
+                v = polyval(polyfit(x, y, 1), tm)
+            return v
         except TypeError:
             return 0
 
@@ -83,6 +98,9 @@ class InterpolationRegressor(BaseRegressor):
             else:
                 pb = es[ti]
                 ab = es[ti + 1]
+
+
+
 
             return pb, ab, ti
         except IndexError:
