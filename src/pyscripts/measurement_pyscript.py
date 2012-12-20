@@ -262,11 +262,11 @@ class MeasurementPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def position(self, pos, detector='AX', dac=False):
+    def position_magnet(self, pos, detector='AX', dac=False):
         '''
-            position(4.54312, dac=True) # detector is not relevant
-            position(39.962, detector='AX')
-            position('Ar40', detector='AX') #Ar40 will be converted to 39.962 use mole weight dict
+            position_magnet(4.54312, dac=True) # detector is not relevant
+            position_magnet(39.962, detector='AX')
+            position_magnet('Ar40', detector='AX') #Ar40 will be converted to 39.962 use mole weight dict
             
         '''
         self._automated_run_call('set_position', pos, detector, dac=dac)

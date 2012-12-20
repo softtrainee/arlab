@@ -174,7 +174,7 @@ tray: {}
             if lm:
                 for ai in self.automated_runs:
                     if ai.position:
-                        lm.set_hole_labnumber(ai.position, ai.labnumber)
+                        lm.set_hole_labnumber(ai)
 
             return True
 

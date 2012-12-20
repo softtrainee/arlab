@@ -234,7 +234,10 @@ class AutomatedRun(Loggable):
             return aii
 
         return [get_attr(ai) for ai in attr]
-
+    
+    def get_position_list(self):
+        return self._make_iterable(self.position)
+    
     def create_scripts(self):
         _a = self.extraction_script
         _b = self.measurement_script
@@ -1466,10 +1469,15 @@ class AutomatedRun(Loggable):
             # interpert as list of holenumbers
             ps = map(int, pos.split(','))
         else:
-            ps = [int(pos)]
+            if pos:
+                pos=int(pos)
+                
+            ps = [pos]
 
         return ps
-
+    
+    
+    
     def _extraction_script_factory(self, ec, key):
         source_dir = os.path.dirname(ec[key])
         file_name = os.path.basename(ec[key])
@@ -1490,7 +1498,7 @@ class AutomatedRun(Loggable):
                 setup_context to expose variables to the pyscript
             '''
             obj.setup_context(tray=self.tray,
-                              position=self._make_iterable(self.position),
+                              position=self.get_position_list(),
                               disable_between_positions=self.disable_between_positions,
                               duration=self.duration,
                               extract_value=self._extract_value,
