@@ -88,6 +88,7 @@ class OLSRegressor(BaseRegressor):
         if isinstance(pos, (float, int)):
             return_single = True
             pos = [pos]
+            
         pos = asarray(pos)
 
         X = self._get_X(xs=pos)
@@ -100,8 +101,13 @@ class OLSRegressor(BaseRegressor):
             return pred
 #                return self._result.predict(X)[0]
     def predict_error(self, x, error_calc='sem'):
-        e = self.predict_error_matrix(x, error_calc)
+        return_single=False
         if isinstance(x, (float, int)):
+            x = [x]
+            return_single=True
+            
+        e = self.predict_error_matrix(x, error_calc)
+        if return_single:
             e = e[0]
         return e
 
@@ -125,8 +131,7 @@ class OLSRegressor(BaseRegressor):
 
             return sqrt(var_Ypred)
 
-        if isinstance(x, (float, int)):
-            x = [x]
+        
 
         return [calc_error(xi) for xi in x]
 

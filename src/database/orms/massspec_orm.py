@@ -373,7 +373,6 @@ class SampleTable(Base):
     Project = Column(String(40))#, ForeignKey('projecttable.Project'))
 #    Project = relation('ProjectTable', backref = 'SampleTable')
     ProjectID = Column(Integer, ForeignKey('projecttable.ProjectID'))
-
     Note = Column(String(40) , default='NULL')
     AlternateUserID = Column(String(40), default='NULL')
     CollectionDateTime = Column(DateTime, default='')
