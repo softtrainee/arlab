@@ -1211,18 +1211,31 @@ class AutomatedRun(Loggable):
 
     def _save_extraction(self, analysis):
         db = self.db
+        
         ext = db.add_extraction(analysis,
                           self.extraction_script.name,
                           script_blob=self.measurement_script.toblob(),
                           extract_device=self.extract_device,
                           experiment_blob=self.experiment_manager.experiment_blob(),
                           extract_value=self.extract_value,
-                          position=self.position,
+#                          position=self.position,
                           extract_duration=self.duration,
                           cleanup_duration=self.cleanup,
                           weight=self.weight,
                           sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
+        
+        
+        for pi in self.get_position_list():
+            if isinstance(pi, tuple):
+                if len(pi)>1:
+                    db.add_analysis_position(ext, x=pi[0],y=pi[1])
+                    if len(pi)==3:
+                        db.add_analysis_position(ext, x=pi[0],y=pi[1], z=pi[2])
+                
+            else:
+                db.add_analysis_position(ext, pi)
+            
         return ext
 
     def _save_spectrometer_info(self, meas):

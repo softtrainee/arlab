@@ -78,9 +78,11 @@ class PlotPanel(Viewable):
                         if arar_age:
                             arar_age.signals[iso] = u
 
-                except TypeError:
+                except TypeError,e:
+                    print e
                     break
-                except AssertionError:
+                except AssertionError,e:
+                    print e
                     continue
             else:
                 if arar_age:
@@ -148,7 +150,7 @@ class PlotPanel(Viewable):
     def _print_fits(self, display):
         fits = self.fits
         detectors = self.detectors
-        for det, fit in zip(fits, detectors):
+        for fit,det in zip(fits, detectors):
             self.add_text(display, '{} {}= {}'.format(det.name,
                                                       det.isotope, fit))
 
@@ -196,6 +198,7 @@ class PlotPanel(Viewable):
                 us = self.signals[iso]
             except KeyError:
                 us = ufloat((0, 0))
+                
             ubs = ufloat((0, 0))
             ubl = ufloat((0, 0))
             if self.correct_for_baseline:

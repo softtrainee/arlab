@@ -93,8 +93,16 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             pass
         elif isinstance(label, str):
             label = label.capitalize()
-
-        return self._get_fittype(label)
+        
+        fit=self._get_fittype(label)
+        if fit is None:
+            fit=0
+        else:
+            fit=fit.Fit
+            
+        return fit
+        
+#        return self._get_fittype(label)
     @get_one
     def _get_fittype(self, label):
         return FittypeTable, 'Label'
@@ -107,8 +115,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if isinstance(ms, str):
             ms = ms.capitalize()
             system = self.get_system(ms)
-            ms = system.SpecSysN
-
+            if system:
+                ms = system.SpecSysN
+            else:
+                ms=0
+                
         sm = SampleLoadingTable(SampleHolder=tray,
                                 SpecSysN=ms
                                 )
@@ -121,7 +132,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         analysis = self.get_analysis(analysis)
         if analysis:
             for i, pi in enumerate(positions):
-                self._add_analysis_position(analysis, pi, i + 1)
+                try:
+                    pi=int(pi)
+                    self._add_analysis_position(analysis, pi, i + 1)
+                except (ValueError,TypeError):
+                    pass
 
     @add
     def _add_analysis_position(self, analysis, pi, po):
@@ -188,11 +203,6 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     @add
     def add_baseline_changeable_item(self, data_reduction_session, fit, infoblob):
         fit = self.get_fittype(fit)
-        if fit:
-            fit = fit.Fit
-        else:
-            fit = 0
-
         bs = BaselinesChangeableItemsTable(Fit=fit,
                                            DataReductionSessionID=data_reduction_session.DataReductionSessionID,
                                            InfoBlob=infoblob
@@ -274,7 +284,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         isotope_value = intercept - blank
 
         fit = self.get_fittype(fit)
-
+        
         iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session.DataReductionSessionID,
                                     Intercept=intercept.nominal_value,
                                     InterceptEr=intercept.std_dev(),
@@ -287,7 +297,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
                                     BkgdDetTypeID=1,
 
-                                    Fit=fit.Fit
+                                    Fit=fit
                                     )
         if isotope:
             isotope.results.append(iso_r)
@@ -308,7 +318,10 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if isinstance(ms, str):
             ms = ms.capitalize()
             system = self.get_system(ms)
-            ms = system.SpecSysN
+            if system:
+                ms = system.SpecSysN
+            else:
+                ms=0
 
         drs = LoginSessionTable(SpecSysN=ms)
         return drs, True

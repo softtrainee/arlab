@@ -265,12 +265,13 @@ class meas_AnalysisTable(Base, BaseMixin):
 
     figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
 
+
 class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')
 
 
 class meas_ExtractionTable(Base, ScriptTable):
-    position = Column(Integer)
+#    position = Column(Integer)
     extract_value = Column(Float)
     extract_duration = Column(Float)
     cleanup_duration = Column(Float)
@@ -283,7 +284,16 @@ class meas_ExtractionTable(Base, ScriptTable):
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
+    positions=relationship('meas_PositionTable',backref='extraction')
 
+
+class meas_PositionTable(Base, BaseMixin):
+    position=Column(Integer)
+    x=Column(Float)
+    y=Column(Float)
+    z=Column(Float)
+    
+    extraction_id=foreignkey('meas_ExtractionTable')
 
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):
