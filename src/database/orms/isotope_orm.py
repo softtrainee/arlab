@@ -236,7 +236,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     uuid = stringcolumn(40)
 #    runtime = Column(Time)
 #    rundate = Column(Date)
-    analysis_timestamp = Column(DateTime)
+    analysis_timestamp = Column(DateTime, default=func.now())
     endtime = Column(Time)
     status = Column(Integer, default=0)
     aliquot = Column(Integer)

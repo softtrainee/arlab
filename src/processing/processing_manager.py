@@ -126,6 +126,7 @@ class ProcessingManager(DatabaseManager):
             save figure as a pdf
         '''
         win = self._get_active_window()
+        print win
         if win:
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 #            p = self.save_file_dialog()
@@ -250,8 +251,9 @@ class ProcessingManager(DatabaseManager):
                 if ans:
                     self._load_analyses(ans)
                     func = getattr(self, '_display_{}'.format(name))
-                    if func(ans, po):
-                        self._display_tabular_data()
+                    plotter = func(ans, po)
+                    if plotter:
+                        self._display_tabular_data(plotter.make_title())
 
     def _open_figure(self, fig, obj=None):
         self._set_window_xy(fig)
@@ -280,9 +282,13 @@ class ProcessingManager(DatabaseManager):
         if info.result:
             return True
 
-    def _display_tabular_data(self):
+    def _display_tabular_data(self, title):
+
+
         tm = TabularAnalysisManager(analyses=self._get_analyses(),
-                                    db=self.db
+                                    db=self.db,
+                                    title='Table {}'.format(title)
+
                                     )
         ui = tm.edit_traits()
         self.add_window(ui)
@@ -290,18 +296,18 @@ class ProcessingManager(DatabaseManager):
     def _display_isochron(self, ans, po):
         rr = self._isochron(ans)
         if rr is not None:
-            g, _isochron = rr
-            self._open_figure(g)
+            g, isochron = rr
+            self._open_figure(g, isochron)
 #            self.open_view(g)
-            return True
+            return isochron
 
     def _display_spectrum(self, ans, po):
         rr = self._spectrum(ans, aux_plots=po.get_aux_plots())
         if rr is not None:
-            g, _spec = rr
-            self._open_figure(g)
+            g, spec = rr
+            self._open_figure(g, spec)
 #            self.open_view(g)
-            return True
+            return spec
 
     def _display_ideogram(self, ans, po):
 
@@ -323,7 +329,7 @@ class ProcessingManager(DatabaseManager):
 
             self._open_figure(g, ideo)
 #            self.open_view(g)
-            return True
+            return ideo
 
     def _display_series(self, ans, po):
         #open a series manager
@@ -333,21 +339,31 @@ class ProcessingManager(DatabaseManager):
             if sm.use_single_window:
                 pass
             else:
-                self._build_series(ans, sm.calculated_values)
-                self._build_series(ans, sm.measured_values)
-                self._build_series(ans, sm.baseline_values)
-                self._build_series(ans, sm.blank_values)
+                s = self._build_series(ans, sm.calculated_values)
+                sb = self._build_series(ans, sm.measured_values)
+                if s is None:
+                    s = sb
+                sb = self._build_series(ans, sm.baseline_values)
+                if s is None:
+                    s = sb
+                sb = self._build_series(ans, sm.blank_values)
+                if s is None:
+                    s = sb
 
-            return True
+                return s
+#            return sm
 
     def _build_series(self, ans, ss):
+        s = None
         for si in ss:
             if not si.show:
                 continue
             s = Series(analyses=ans)
             g = s.build(ans, si)
-            self._set_window_xy(g)
-            self.open_view(g)
+            self._open_figure(g, s)
+        return s
+#            self._set_window_xy(g)
+#            self.open_view(g)
 
     def _get_analyses(self):
         ps = self.selector_manager

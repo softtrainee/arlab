@@ -18,6 +18,7 @@
 from traits.api import HasTraits, List, Int, Property, Str, Event, Any
 from traitsui.api import View, Item, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
+from src.viewable import Viewable
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -50,26 +51,40 @@ class AnalysisAdapter(TabularAdapter):
             bgcolor = '#FF7373'
         return bgcolor
 
-class TabularAnalysisManager(HasTraits):
+class TabularAnalysisManager(Viewable):
     analyses = List
     update_selected_analysis = Event
     selected_analysis = Any
     db = Any
+    window_x = 50
+    window_y = 200
+    window_width = 500
+    window_height = 500
+
     def traits_view(self):
-        v = View(Item('analyses',
-                      show_label=False,
-                      editor=TabularEditor(adapter=AnalysisAdapter(),
+        return self.view_factory(Item('analyses',
+                                      show_label=False,
+                                      editor=TabularEditor(adapter=AnalysisAdapter(),
                                            dclicked='update_selected_analysis',
                                            selected='selected_analysis',
                                            editable=False
                                            )),
-                 x=50,
-                 y=30,
-                 width=500,
-                 height=600,
-                 resizable=True
-                 )
-        return v
+                                 resizable=True
+                                 )
+#        v = View(Item('analyses',
+#                      show_label=False,
+#                      editor=TabularEditor(adapter=AnalysisAdapter(),
+#                                           dclicked='update_selected_analysis',
+#                                           selected='selected_analysis',
+#                                           editable=False
+#                                           )),
+#                 x=self.window_x,
+#                 y=self.window_y,
+#                 width=500,
+#                 height=600,
+#                 resizable=True
+#                 )
+#        return v
 
     def _update_selected_analysis_fired(self):
         sa = self.selected_analysis

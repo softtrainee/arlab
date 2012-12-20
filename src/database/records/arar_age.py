@@ -306,23 +306,23 @@ class ArArAge(HasTraits):
         return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
     @cached_property
-    def get_Ar40(self):
+    def _get_Ar40(self):
         return self.arar_result['s40']
 
     @cached_property
-    def get_Ar39(self):
+    def _get_Ar39(self):
         return self.arar_result['s39']
 
     @cached_property
-    def get_Ar38(self):
+    def _get_Ar38(self):
         return self.arar_result['s38']
 
     @cached_property
-    def get_Ar37(self):
+    def _get_Ar37(self):
         return self.arar_result['s37']
 
     @cached_property
-    def get_Ar36(self):
+    def _get_Ar36(self):
         return self.arar_result['s36']
 #        rr = self.dbrecord.arar_result
 #        return rr['rad40'] / rr['tot40'] * 100

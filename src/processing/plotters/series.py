@@ -21,26 +21,42 @@ from traitsui.api import View, Item, TableEditor
 from numpy import array
 #============= local library imports  ==========================
 from src.processing.plotters.plotter import Plotter
-from src.graph.regression_graph import AnnotatedRegresssionTimeSeriesGraph
+from src.graph.regression_graph import AnnotatedRegresssionTimeSeriesGraph, \
+    AnnotatedRegressionGraph
+from chaco.array_data_source import ArrayDataSource
 
 class Series(Plotter):
     def build(self, analyses, options):
-        an = AnnotatedRegresssionTimeSeriesGraph(
-                                               graph_dict=dict(container_dict=dict(padding=5),
-                                                               use_inspector_tool=False
-                                                               ),
-                                               window_title=options.name,
-                                               )
+        an = AnnotatedRegressionGraph(
+                                       graph_dict=dict(container_dict=dict(padding=5),
+                                                       use_point_inspector=False
+#                                                               use_inspector_tool=False
+                                                       ),
+                                       window_title=options.name,
+                                       )
 
         g = an.graph
         p = g.new_plot(padding=[50, 5, 5, 35],
                        ytitle=options.name,
-                       xtitle='Time')
+                       xtitle='Time (hrs)')
         p.value_range.tight_bounds = False
 
         key = options.key
+
+        #sort analyses by timestamp first
+        analyses = sorted(analyses, key=lambda x: x.timestamp)
         x, ys = zip(*[(ai.timestamp, self.get_value(ai, key)) for ai in analyses])
         y, es = zip(*ys)
+
+
+        #normalize x to first analysis
+        x = array(x)
+        ox = x[:]
+        x -= x[0]
+
+        #scale timestamp to hours
+        x *= 1 / (60.*60)
+
         '''
             multiple by a constant. normally 1 but can use 1/295.5 if plotting ICFactor
         '''
@@ -48,11 +64,15 @@ class Series(Plotter):
         y *= (1 / options.scalar)
 
         plot, scatter, _l = g.new_series(x, y,
+                                         display_index=ArrayDataSource(data=ox),
                      type='scatter', marker_size=1.5,
-                     fit=options.fit
+                     fit=options.fit,
+                     normalize=True,
+                     add_point_inspector=False
                      )
 
-        self._add_scatter_inspector(g.plotcontainer, plot,
+        self._add_scatter_inspector(g.plotcontainer,
+                                    plot,
                                     scatter,
                                     0,
                                     )

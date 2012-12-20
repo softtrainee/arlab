@@ -67,8 +67,8 @@ class PlotPanel(Viewable):
             arar_age = self.automated_run.arar_age
             for iso, reg in zip(self.isotopes, new):
                 try:
-                    vv = reg.coefficients[-1]
-                    ee = abs(reg.coefficient_errors[-1])
+                    vv = reg.predict(0)
+                    ee = abs(reg.predict_error(0))
                     if self.isbaseline:
                         self.baselines[iso] = u = ufloat((vv, ee))
                         if arar_age:

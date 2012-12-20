@@ -1,6 +1,5 @@
-#!/usr/bin/python
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +14,15 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-# -*- coding: utf-8 -*-
-
-from traits.api import Any
+#============= enthought library imports =======================
+from traits.api import HasTraits, Either, Int, Float, Any, Str
+from traitsui.api import View, Item, TableEditor
 from traitsui.api import Handler
-from src.loggable import Loggable
 from pyface.timer.do_later import do_after
+#============= standard library imports ========================
+#============= local library imports  ==========================
+
+from src.loggable import Loggable
 
 
 class ViewableHandler(Handler):
@@ -43,6 +43,15 @@ class ViewableHandler(Handler):
 class Viewable(Loggable):
     ui = Any
     handler_klass = ViewableHandler
+
+    window_x = Either(Int, Float)
+    window_y = Either(Int, Float)
+
+    window_width = Either(Int, Float)
+    window_height = Either(Int, Float)
+
+    title = Str
+
 
     def opened(self):
         pass
@@ -68,5 +77,17 @@ class Viewable(Loggable):
 
         func()
 
+    def view_factory(self, *args, **kw):
+        return View(
+                    handler=self.handler_klass,
+                    x=self.window_x,
+                    y=self.window_y,
+                    width=self.window_width,
+                    height=self.window_height,
+                    title=self.title,
+                    resizable=True,
+                    *args,
+                    **kw
+                    )
 
-# ============= EOF ====================================
+#============= EOF =============================================

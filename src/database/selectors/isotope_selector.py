@@ -145,7 +145,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
                               irrad_PositionTable,
                               irrad_LevelTable,
                               irrad_IrradiationTable], irrad_PositionTable.position),
-              'Run Date':([], meas_AnalysisTable.rundate),
+              'Run Date':([], meas_AnalysisTable.analysis_timestamp),
               'Project':([ gen_LabTable, gen_SampleTable, gen_ProjectTable, ], gen_ProjectTable.name),
               'Mass Spectrometer':([meas_MeasurementTable, gen_MassSpectrometerTable], gen_MassSpectrometerTable.name),
               'Analysis Type':([meas_MeasurementTable, gen_AnalysisTypeTable], gen_AnalysisTypeTable.name)
@@ -162,8 +162,8 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 
                 q = qi.assemble_filter(q, attr)
 
-        q = q.order_by(meas_AnalysisTable.rundate.desc())
-        q = q.order_by(meas_AnalysisTable.runtime.desc())
+        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+#        q = q.order_by(meas_AnalysisTable.runtime.desc())
 
         if limit:
             q = q.limit(limit)

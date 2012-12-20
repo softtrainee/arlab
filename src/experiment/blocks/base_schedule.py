@@ -174,7 +174,9 @@ class BaseSchedule(Saveable):
                   'duration',
                   'cleanup',
                   'autocenter',
-                  'extraction', 'measurement', 'post_equilibration', 'post_measurement']
+                  'extraction', 'measurement', 'post_equilibration', 'post_measurement',
+                  'disable_between_positions'
+                  ]
         attrs = ['labnumber',
                   'pattern',
                   'position',
@@ -186,7 +188,8 @@ class BaseSchedule(Saveable):
                   'cleanup',
                   'autocenter',
                   'extraction_script', 'measurement_script',
-                  'post_equilibration_script', 'post_measurement_script']
+                  'post_equilibration_script', 'post_measurement_script',
+                  'disable_between_positions']
 
         return header, attrs
 
@@ -205,12 +208,13 @@ class BaseSchedule(Saveable):
         for attr in ['labnumber',
                      'measurement', 'extraction', 'post_measurement',
                      'post_equilibration',
-                     'pattern'
+                     'pattern',
+                     'position'
                      ]:
             params[attr] = args[header.index(attr)]
 
         #load booleans
-        for attr in ['autocenter']:
+        for attr in ['autocenter', 'disable_between_positions']:
             try:
                 param = args[header.index(attr)]
                 if param.strip():
@@ -223,8 +227,7 @@ class BaseSchedule(Saveable):
                 params[attr] = False
 
         #load numbers
-
-        for attr in ['duration', 'position', 'overlap', 'cleanup', 'extract_group']:
+        for attr in ['duration', 'overlap', 'cleanup', 'extract_group']:
             try:
                 param = args[header.index(attr)].strip()
                 if param:

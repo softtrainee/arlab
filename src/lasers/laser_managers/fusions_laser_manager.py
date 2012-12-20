@@ -362,17 +362,19 @@ class FusionsLaserManager(LaserManager):
 #===============================================================================
 # pyscript interface
 #===============================================================================
-    def move_to_position(self, position):
-        if self.stage_manager is not None:
-            self.stage_manager.move_to_hole(position)
-            return True
+    def _move_to_position(self, position):
 
-#            if not self.stage_manager.opened:
-#                #do_later opens the stage manager from the main thread
-#                do_later(self.show_stage_manager)
-#
-#                #give the stage manager some time to open
-#                time.sleep(1)
+        if self.stage_manager is not None:
+            if isinstance(position, tuple):
+                if len(position) > 1:
+                    x, y = position[:2]
+                    self.stage_manager.linear_move(x, y)
+                    if len(position) == 3:
+                        self.stage_manager.set_z(position[2])
+            else:
+
+                self.stage_manager.move_to_hole(position)
+            return True
 
     def set_stage_map(self, mapname):
         if self.stage_manager is not None:
