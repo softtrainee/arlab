@@ -227,7 +227,9 @@ class BaseSchedule(Saveable):
                 params[attr] = False
 
         #load numbers
-        for attr in ['duration', 'overlap', 'cleanup', 'extract_group']:
+        for attr in ['duration', 'overlap', 'cleanup', 
+#                     'extract_group'
+                     ]:
             try:
                 param = args[header.index(attr)].strip()
                 if param:

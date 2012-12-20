@@ -164,9 +164,13 @@ class MapView(Viewable):
         d[holenum] = state
         self.scatter.color_data.set_data(d)
 
-    def set_hole_labnumber(self, holenum, ln):
-        self.labnumbers[holenum - 1] = ln
-        self.set_hole_state(holenum - 1, -1.1)
+    def set_hole_labnumber(self,ai ):
+        ln=ai.labnumber
+        hs=ai.get_position_list()
+        for hi in hs:
+            if isinstance(hi, int):    
+                self.labnumbers[hi - 1] = ln
+                self.set_hole_state(hi - 1, -1.1)
 #        self.scatter.states[holenum - 1] = 1
 
 if __name__ == '__main__':

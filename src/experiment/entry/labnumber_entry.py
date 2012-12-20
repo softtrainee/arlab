@@ -154,6 +154,7 @@ class LabnumberEntry(DBEntry):
                     return
 
                 dbln.sample = db.get_sample(sam)
+                dbln.note=irs.note
 
             else:
                 dbln = db.add_labnumber(ln, sample=sam,)
@@ -375,6 +376,9 @@ class LabnumberEntry(DBEntry):
                 if material:
                     ir.material = material.name
 #                    material = material.name
+            note=ln.note
+            if note:
+                ir.note=note
 
 
 #        ir = IrradiatedSample(labnumber=str(labnumber),

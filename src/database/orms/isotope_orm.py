@@ -423,7 +423,7 @@ class gen_LabTable(Base, BaseMixin):
     analyses = relationship('meas_AnalysisTable', backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
     selected_flux_id = foreignkey('flux_HistoryTable')
-
+    note=stringcolumn(140)
 
 class gen_MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
