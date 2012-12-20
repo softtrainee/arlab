@@ -329,6 +329,11 @@ class Plotter(Viewable):
     def get_labnumber(self, analyses):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
+    def make_title(self, analyses=None):
+        if analyses is None:
+            analyses = self.analyses
+        return self._make_title(analyses)
+
     def _make_title(self, analyses):
         def make_bounds(gi, sep='-'):
             if len(gi) > 1:

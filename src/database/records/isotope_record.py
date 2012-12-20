@@ -1065,15 +1065,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             self._signals_table = signals
             regressors = self._load_regressors(signals)
             for iso, rs in regressors.iteritems():
-                self._signals[iso] = Signal(_value=rs.coefficients[-1],
-                                           _error=rs.coefficient_errors[-1])
+                self._signals[iso] = Signal(_value=rs.predict(0),
+                                           _error=rs.predict_error(0))
         baselines = self._get_table_data(dm, 'baselines')
         if baselines:
             self._baselines_table = baselines
             regressors = self._load_regressors(baselines)
             for iso, rs in regressors.iteritems():
-                self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
-                                           _error=rs.coefficient_errors[-1])
+                self._signals['{}bs'.format(iso)] = Signal(_value=rs.predict(0),
+                                           _error=rs.predict_error(0))
 
         return signals, baselines
 

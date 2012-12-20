@@ -99,9 +99,6 @@ class InterpolationRegressor(BaseRegressor):
                 pb = es[ti]
                 ab = es[ti + 1]
 
-
-
-
             return pb, ab, ti
         except IndexError:
             return 0

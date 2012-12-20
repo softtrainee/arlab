@@ -97,11 +97,16 @@ class BaseRegressor(Loggable):
         return s
 
     def predict(self, x):
-        return x
+        raise NotImplementedError
 
-    def predict_error(self, x):
-        _model, cors = self._calculate_ci(x)
-        return cors
+    def predict_error(self, x, error_calc=None):
+        raise NotImplementedError
+
+    def calculate_outliers(self, nsigma=2):
+        res = self.calculate_residuals()
+        cd = abs(res)
+        s = self.calculate_standard_error_fit()
+        return where(cd > (s * nsigma))[0]
 
     @cached_property
     def _get_coefficients(self):
@@ -117,41 +122,16 @@ class BaseRegressor(Loggable):
     def _calculate_coefficient_errors(self):
         raise NotImplementedError
 
-    def calculate_devs(self):
+    def calculate_residuals(self):
         X = self.xs
         Y = self.ys
         return self.predict(X) - Y
 
-    def calculate_outliers(self, n=2):
-        devs = self.calculate_devs()
-        dd = devs ** 2
-        cd = abs(devs)
-#        s = std(devs)
-#        s = (dd.sum() / (devs.shape[0])) ** 0.5
-
-        '''
-            mass spec calculates error in fit as 
-            see LeastSquares.CalcResidualsAndFitError
-            
-            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
-  
-            NP = number of points
-            q= number of fit params... parabolic =3
-        '''
-        s = self.calculate_fit_std(dd.sum(), dd.shape[0])
-#        q = self.fit
-#        s = (dd.sum() / (n - q)) ** 0.5
-
-        return where(cd > (s * n))[0]
-
-    def calculate_fit_std(self, sum_sq_residuals, n):
-        q = 0
-        return (sum_sq_residuals / (n - q)) ** 0.5
-
     def calculate_ci(self, rx):
         rmodel, cors = self._calculate_ci(rx)
-        lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-        return asarray(lci), asarray(uci)
+        if len(rmodel) and len(cors):
+            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+            return asarray(lci), asarray(uci)
 
     def _calculate_ci(self, rx):
         if isinstance(rx, (float, int)):

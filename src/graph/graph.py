@@ -175,7 +175,6 @@ class Graph(Loggable, ContextMenuMixin):
         '''
         s = self.series[plotid][series]
         p = self.plots[plotid]
-        print s
         return p.data.get_data(s[axis])
 
     def get_aux_data(self, plotid=0, series=1):

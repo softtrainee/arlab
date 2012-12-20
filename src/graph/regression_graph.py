@@ -40,7 +40,7 @@ from src.graph.tools.regression_inspector import RegressionInspectorTool, \
     RegressionInspectorOverlay
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
-from src.regression.wls_regressor import WeightedPolynominalRegressor
+from src.regression.wls_regressor import WeightedPolynomialRegressor
 
 class StatsFilterParameters(object):
     '''
@@ -57,6 +57,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     suppress_regression = False
     use_data_tool = True
     use_inspector_tool = True
+    use_point_inspector = True
     popup = None
 #    fits = List
 #    def clear(self):
@@ -278,13 +279,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 es = scatter.yerror.get_data()
                 if selection:
                     es = delete(es, selection, 0)
-                r = WeightedPolynominalRegressor(xs=x, ys=y, yserr=es, degree=fit)
+#                r = WeightedPolynomialRegressor(xs=x, ys=y, yserr=es, degree=fit)
+                r = PolynomialRegressor(xs=x, ys=y, degree=fit)
             else:
 
                 r = PolynomialRegressor(xs=x,
                                         ys=y,
                                         degree=fit)
-#            fx = linspace(0, (high - low), 200)
             fx = linspace(low, high, 200)
 
 #            print r.predict(0), 'pos0', id(self)
@@ -552,7 +553,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             pass
 
         self._bind_index(scatter, **kw)
-        if add_tools and self.use_inspector_tool:
+        if add_tools and (self.use_inspector_tool or self.use_point_inspector):
             self.add_tools(plot, scatter, line, convert_index)
         return plot, scatter, line
 
@@ -635,15 +636,15 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         broadcaster = BroadcasterTool()
         scatter.tools.append(broadcaster)
 
-
-        point_inspector = PointInspector(scatter,
-                                         convert_index=convert_index)
-        pinspector_overlay = PointInspectorOverlay(component=scatter,
-                                                   tool=point_inspector
-                                                   )
-#
-        scatter.overlays.append(pinspector_overlay)
-        broadcaster.tools.append(point_inspector)
+        if self.use_point_inspector:
+            point_inspector = PointInspector(scatter,
+                                             convert_index=convert_index)
+            pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                       tool=point_inspector
+                                                       )
+    #
+            scatter.overlays.append(pinspector_overlay)
+            broadcaster.tools.append(point_inspector)
 
 #            if line:
 #                #add a regression inspector tool to the line

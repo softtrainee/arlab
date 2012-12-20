@@ -22,7 +22,7 @@ from unittest import TestCase
 import numpy as np
 from src.regression.mean_regressor import WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
-from src.regression.wls_regressor import WeightedPolynominalRegressor
+from src.regression.wls_regressor import WeightedPolynomialRegressor
 #============= local library imports  ==========================
 
 class WeightedMeanRegressionTest(TestCase):
@@ -81,23 +81,126 @@ class WLSRegressionTest(TestCase):
         self.xs = np.linspace(0, 10, 10)
         self.ys = np.random.normal(self.xs, 1)
 
-    def testPredict(self):
+        '''
+            draper and smith p.8
+        '''
+        self.xs = [35.3, 29.7, 30.8, 58.8, 61.4, 71.3, 74.4, 76.7, 70.7, 57.5,
+                 46.4, 28.9, 28.1, 39.1, 46.8, 48.5, 59.3, 70, 70, 74.5, 72.1,
+                 58.1, 44.6, 33.4, 28.6
+                 ]
+        self.ys = [10.98, 11.13, 12.51, 8.4, 9.27, 8.73, 6.36, 8.50,
+                 7.82, 9.14, 8.24, 12.19, 11.88, 9.57, 10.94, 9.58,
+                 10.09, 8.11, 6.83, 8.88, 7.68, 8.47, 8.86, 10.36, 11.08
+                 ]
+        self.es = np.random.normal(1, 0.5, len(self.xs))
+
+        self.slope = -0.0798
+        self.intercept = 13.623
+        self.Xk = 28.6
+        self.ypred_k = 0.3091
         xs = self.xs
         ys = self.ys
-        es = np.random.normal(1, 0.5, len(xs))
-        wls = WeightedPolynominalRegressor(xs=xs, ys=ys, yserr=es, fit='linear')
+        es = self.es
+        self.wls = WeightedPolynomialRegressor(xs=xs, ys=ys,
+                                               yserr=es, fit='linear')
+
+    def testVarCovar(self):
+        wls = self.wls
+        cv = wls.calculate_var_covar()
+        print cv
+        print wls._result.normalized_cov_params
+#        print wls._result.cov_params()
+
 
 class OLSRegressionTest(TestCase):
     def setUp(self):
         self.xs = np.linspace(0, 10, 10)
-        self.ys = np.random.normal(self.xs, 1)
+#        self.ys = np.random.normal(self.xs, 1)
+#        print self.ys
+        self.ys = [ -1.8593967, 3.15506254, 1.82144207, 4.58729807, 4.95813564,
+                    5.71229382, 7.04611731, 8.14459843, 10.27429285, 10.10989719]
 
-    def testPredict(self):
+        '''
+            draper and smith p.8
+        '''
+        self.xs = [35.3, 29.7, 30.8, 58.8, 61.4, 71.3, 74.4, 76.7, 70.7, 57.5,
+                 46.4, 28.9, 28.1, 39.1, 46.8, 48.5, 59.3, 70, 70, 74.5, 72.1,
+                 58.1, 44.6, 33.4, 28.6
+                 ]
+        self.ys = [10.98, 11.13, 12.51, 8.4, 9.27, 8.73, 6.36, 8.50,
+                 7.82, 9.14, 8.24, 12.19, 11.88, 9.57, 10.94, 9.58,
+                 10.09, 8.11, 6.83, 8.88, 7.68, 8.47, 8.86, 10.36, 11.08
+                 ]
+
+        self.slope = -0.0798
+        self.intercept = 13.623
+        self.Xk = 28.6
+        self.ypred_k = 0.3091
         xs = self.xs
         ys = self.ys
         ols = PolynomialRegressor(xs=xs, ys=ys, fit='linear')
-        y = ols.predict_error(5)[0]
-        y1 = ols.predict_error1(5, error_calc='sd')[0]
-        print y, y1
-        self.assertEqual(y, y1)
+
+        self.ols = ols
+    def testSlope(self):
+        ols = self.ols
+        b, s = ols.coefficients
+        self.assertAlmostEqual(s, self.slope, 4)
+
+    def testIntercept(self):
+        ols = self.ols
+        b, s = ols.coefficients
+        self.assertAlmostEqual(b, self.intercept, 4)
+        self.assertAlmostEqual(ols.predict(0), self.intercept, 4)
+
+    def testPredictYerr(self):
+        ols = self.ols
+        ypred = ols.predict_error(self.Xk)[0]
+        self.assertAlmostEqual(ypred, self.ypred_k, 3)
+
+    def testPredictYerr_matrix(self):
+        ols = self.ols
+        ypred = ols.predict_error_matrix(self.Xk)[0]
+        self.assertAlmostEqual(ypred, self.ypred_k, 3)
+    def testPredictYerr_al(self):
+        ols = self.ols
+        ypred = ols.predict_error_al(self.Xk)[0]
+        self.assertAlmostEqual(ypred, self.ypred_k, 3)
+
+    def testPredictYerrSD(self):
+        ols = self.ols
+        ypred = ols.predict_error(self.Xk, error_calc='sd')[0]
+        ypredm = ols.predict_error_matrix(self.Xk, error_calc='sd')[0]
+        self.assertAlmostEqual(ypred, ypredm, 7)
+
+    def testPredictYerrSD_al(self):
+        ols = self.ols
+        ypred = ols.predict_error(self.Xk, error_calc='sd')[0]
+        ypredal = ols.predict_error_al(self.Xk, error_calc='sd')[0]
+        self.assertAlmostEqual(ypred, ypredal, 7)
+
+#    def testCovar(self):
+#        ols = self.ols
+#        cv = ols.calculate_var_covar()
+#        self.assertEqual(cv, cvm)
+
+#    def testCovar(self):
+#        ols = self.ols
+#        covar = ols.calculate_var_covar()
+#        print covar
+#        print 
+#        assert np.array_equal(covar,)
+
+#        print covar
+#        print ols._result.cov_params()
+#        print ols._result.normalized_cov_params
+#    def testPredictYerr2(self):
+#        xs = self.xs
+#        ys = self.ys
+#
+#        ols = PolynomialRegressor(xs=xs, ys=ys, fit='parabolic')
+#        y = ols.predict_error(5)[0]
+##        yal = ols.predict_error_al(5)[0]
+##        print y, yal
+#        self.assertEqual(y, self.Yprederr_5_parabolic)
+##        self.assertEqual(yal, self.Yprederr_5_parabolic)
 #============= EOF =============================================

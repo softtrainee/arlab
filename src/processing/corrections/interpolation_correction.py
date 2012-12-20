@@ -170,7 +170,7 @@ class InterpolationCorrection(HasTraits):
         axs = [ai.timestamp for ai in self.analyses]
 
         xs, ys, mn, mx, reg = None, None, None, None, None
-
+        scatter = None
         if ps:
             xs, ys = zip(*[(pi.timestamp, self._get_predictor_value(pi, key)) for pi in ps])
 
@@ -187,7 +187,7 @@ class InterpolationCorrection(HasTraits):
 
             if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
                 reg = InterpolationRegressor(xs=xs, ys=ys, kind=fit)
-                s, p = graph.new_series(xs, ys,
+                scatter, p = graph.new_series(xs, ys,
                                         display_index=ArrayDataSource(data=oxs),
                                         yerror=ArrayDataSource(data=es),
                                         type='scatter',
@@ -197,7 +197,7 @@ class InterpolationCorrection(HasTraits):
                 aes = reg.predict_error(axs)
 
             else:
-                p, s, l = graph.new_series(xs, ys,
+                p, scatter, l = graph.new_series(xs, ys,
                                            display_index=ArrayDataSource(data=oxs),
                                            yerror=ArrayDataSource(data=es),
                                            fit=fit,
@@ -205,19 +205,22 @@ class InterpolationCorrection(HasTraits):
                 ays = [1, ] * len(axs)
                 aes = [0, ] * len(axs)
 
-            ebo = ErrorBarOverlay(component=s,
+            ebo = ErrorBarOverlay(component=scatter,
                                   orientation='y')
-            s.overlays.insert(0, ebo)
+            scatter.overlays.insert(0, ebo)
 
         else:
             axs = self.normalize(axs, min(axs))
             ays = []
+            aes = []
             k = '{}{}'.format(key, self.signal_key)
             for ai in self.analyses:
                 if ai.signals.has_key(k):
                     ays.append(ai.signals[k].value)
+                    aes.append(ai.signals[k].error)
                 else:
                     ays.append(0)
+                    aes.append(0)
 
         #sync the analysis' signals
         self.sync_analyses(ays, aes, k)
@@ -233,7 +236,10 @@ class InterpolationCorrection(HasTraits):
 
         ebo = ErrorBarOverlay(component=ss,
                               orientation='y')
-        s.overlays.insert(0, ebo)
+        if scatter:
+            scatter.overlays.insert(0, ebo)
+        else:
+            ss.overlays.insert(0, ebo)
 
         if mn is not None:
             mn = min(min(axs), mn)
@@ -364,9 +370,10 @@ class InterpolationCorrection(HasTraits):
               for a in self.analyses
                   for predictor in self._find_predictors(a)]
 
+        pp = []
+
         if ps:
             #filter duplicates
-            pp = []
             uuids = []
             for pi in ps:
                 if pi.uuid in uuids:
@@ -385,7 +392,8 @@ class InterpolationCorrection(HasTraits):
                 progress.change_message(msg)
                 pi.load_age()
                 progress.increment()
-            return pp
+
+        return pp
 #===============================================================================
 # handlers
 #===============================================================================
@@ -403,9 +411,9 @@ class InterpolationCorrection(HasTraits):
                 if not fi.fit.lower() in ['preceeding', 'bracketing interpolate', 'bracketing average']:
                     xs = si.index.get_data()
                     ys = reg.predict(xs)
-                    es = reg.predict_error(xs)
-                    si.value.set_data(ys)
+                    es = reg.predict_error(xs, error_calc='sd')
 
+                    si.value.set_data(ys)
                     if hasattr(si, 'yerror'):
                         si.yerror.set_data(es)
                 i += 1
@@ -415,7 +423,7 @@ class InterpolationCorrection(HasTraits):
 #            if regressors:
 
 #    def _fit_changed(self):
-#        g = self.graph
+#        g = self.graph  
 #        fi = self.fit.lower()
 #        if fi in ['preceeding', 'bracketing interpolate', 'bracketing average']:
 #            xs = g.get_data()

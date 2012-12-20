@@ -190,7 +190,7 @@ class PDFWriter(BaseWriter):
 #    def __init__(self,*args,**kw):
     _flowables = List
 
-    def add_ideogram_table(self, analyses, title=False, header=False):
+    def add_ideogram_table(self, analyses, title=False, header=False, **kw):
         ta = IdeogramTable()
         fta = ta.create(analyses, title, header)
         self._flowables.append(fta)

@@ -73,6 +73,12 @@ class BaseLaserManager(Manager):
         pm = PatternExecutor(application=self.application)
         return pm
 
+    def move_to_position(self, pos, *args, **kw):
+        if not isinstance(pos, list):
+            pos = [pos]
+
+        for pi in pos:
+            self._move_to_position(pi)
 
 class LaserManager(BaseLaserManager):
     '''

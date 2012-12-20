@@ -43,6 +43,11 @@ class FigureManager(Manager):
     dclicked = Any
     selected = Any
 
+    window_width = 500
+    window_height = 600
+
+    title = 'Saved Figures'
+
     def save_figure(self, plotter):
         db = self.db
         project = db.get_project(self.project_name)
@@ -97,18 +102,18 @@ class FigureManager(Manager):
         return v
 
     def traits_view(self):
-        v = View(
-                 Item('project', show_label=False, editor=EnumEditor(name='projects')),
-                 Item('figures', show_label=False,
-                      editor=TabularEditor(editable=False,
+        v = self.view_factory(
+                              HGroup(Item('project',
+#                                   show_label=False, 
+                                    editor=EnumEditor(name='projects'))),
+                              Item('figures', show_label=False,
+                                   editor=TabularEditor(editable=False,
                                            selected='selected',
                                            dclicked='dclicked',
                                            adapter=FigureAdapter()
                                            ),
-                      ),
-                 width=500,
-                 height=600,
-                 resizable=True
-                 )
+                                   ),
+
+                              )
         return v
 #============= EOF =============================================

@@ -18,18 +18,19 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import asarray, vander
-from statsmodels.api import WLS, OLS
+from numpy import asarray, vander, matrix, diag
+from statsmodels.api import WLS
 #============= local library imports  ==========================
 #from src.regression.base_regressor import BaseRegressor
 from src.regression.ols_regressor import OLSRegressor
-class WeightedPolynominalRegressor(OLSRegressor):
+class WeightedPolynomialRegressor(OLSRegressor):
     def calculate(self):
         if not len(self.xs) or \
-            not len(self.ys):
+            not len(self.ys) or\
+            not len(self.yserr):
             return
 
-        if len(self.xs) != len(self.ys):
+        if len(self.xs) != len(self.ys) or len(self.xs) != len(self.yserr):
             return
 
         xs = self.xs
@@ -38,11 +39,25 @@ class WeightedPolynominalRegressor(OLSRegressor):
         ys = self.ys
 
         X = self._get_X()
-#        print ys.shape, X.shape
         self._wls = WLS(ys, X,
                         weights=1 / es ** 2
                         )
         self._result = self._wls.fit()
+
+
+#    def calculate_var_covar(self):
+#        '''
+#            V=[var1        0
+#                    var2
+#                        .
+#                  0         .
+#                                varN]
+#        '''
+#        X = self._get_X()
+#        X = matrix(X)
+#        V = matrix(diag(self.yserr ** 2))
+#        return (X.T * V.I * X).I
+
 #        print self._result.summary()
 
 #    def predict(self, x):

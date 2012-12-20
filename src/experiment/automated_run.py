@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
-     Event, Float, Instance, Bool, cached_property, Dict, on_trait_change, DelegatesTo
+     Event, Float, Instance, Bool, cached_property, Dict, on_trait_change, DelegatesTo, \
+    Either
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group, spring, Spring
 #from pyface.timer.do_later import do_later
 #============= standard library imports ========================
@@ -107,7 +108,7 @@ class AutomatedRun(Loggable):
     extract_device = Str
 
     tray = Str
-    position = CInt
+    position = Str
     endposition = Int
     multiposition = Bool
     autocenter = Bool
@@ -119,6 +120,7 @@ class AutomatedRun(Loggable):
     comment = Str
     pattern = Str
     patterns = Property
+    disable_between_positions = Bool(False)
 
     scripts = Dict
     signals = Dict
@@ -1092,9 +1094,6 @@ class AutomatedRun(Loggable):
             self.info('analysis finished at {}'.format(endtime))
             a = db.add_analysis(lab,
                                 uuid=self.uuid,
-                                timestamp=self._timestamp,
-#                                runtime=self._runtime,
-#                                rundate=self._rundate,
                                 endtime=endtime,
                                 aliquot=aliquot,
                                 step=self.step
@@ -1457,6 +1456,20 @@ class AutomatedRun(Loggable):
         key = 'post_equilibration_script'
         return self._extraction_script_factory(ec, key)
 
+    def _make_iterable(self, pos):
+        if '(' in pos and ')' in pos and ',' in pos:
+            # interpret as (x,y)
+            pos = pos.strip()[1:-1]
+            ps = [map(float, pos.split(','))]
+
+        elif ',' in pos:
+            # interpert as list of holenumbers
+            ps = map(int, pos.split(','))
+        else:
+            ps = [int(pos)]
+
+        return ps
+
     def _extraction_script_factory(self, ec, key):
         source_dir = os.path.dirname(ec[key])
         file_name = os.path.basename(ec[key])
@@ -1472,11 +1485,13 @@ class AutomatedRun(Loggable):
                     runner=self.runner
                     )
             an = self.analysis_type.split('_')[0]
+
             '''
                 setup_context to expose variables to the pyscript
             '''
             obj.setup_context(tray=self.tray,
-                              position=self.position,
+                              position=self._make_iterable(self.position),
+                              disable_between_positions=self.disable_between_positions,
                               duration=self.duration,
                               extract_value=self._extract_value,
                               extract_units=self._extract_units,
@@ -1727,6 +1742,7 @@ class AutomatedRun(Loggable):
                 patterns += [os.path.splitext(pi)[0] for pi in ps if pi.endswith(extension)]
 
         return patterns
+
 #===============================================================================
 # views
 #===============================================================================

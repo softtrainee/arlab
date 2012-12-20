@@ -140,8 +140,13 @@ class PychronLaserManager(BaseLaserManager):
 #===============================================================================
 # 
 #===============================================================================
-    def move_to_position(self, pos, *args, **kw):
+    def _move_to_position(self, pos):
         cmd = 'GoToHole {}'.format(pos)
+        if isinstance(pos, tuple):
+            cmd = 'SetXY {}'.format(pos[:2])
+            if len(pos) == 3:
+                cmd = 'SetZ {}'.format(pos[2])
+
         self.info('sending {}'.format(cmd))
         self._ask(cmd)
 

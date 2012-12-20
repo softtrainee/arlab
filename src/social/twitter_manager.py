@@ -59,7 +59,7 @@ except ImportError, e:
 
 class Crediential(HasTraits):
     user_name = Str('root')
-    password = Password('jir812')
+    password = Password()
     def traits_view(self):
         v = View('user_name',
                'password',
