@@ -127,8 +127,9 @@ class IsotopeAdapter(DatabaseAdapter):
     @add
     def add_analysis_position(self, extraction, pos,**kw):
         pos=meas_PositionTable(position=pos, **kw)
-        extraction.positions.append(pos)
-        return pos, True
+        if extraction:
+            extraction.positions.append(pos)
+            return pos, True
     
     def add_blanks_history(self, analysis, **kw):
         return self._add_history('Blanks', analysis, **kw)
