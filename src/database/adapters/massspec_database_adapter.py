@@ -47,7 +47,15 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #===============================================================================
 # getters
 #===============================================================================
-
+    @get_one
+    def get_sample_loading(self,sid):
+        return SampleLoadingTable, 'SampleLoadingID'
+    
+    @get_one
+    def get_login_session(self, lid):
+        return LoginSessionTable, 'LoginSessionID'
+    
+    
     @get_one
     def get_analysis(self, rid):
         return AnalysesTable, 'RID'
@@ -201,10 +209,13 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return bs, False
 
     @add
-    def add_baseline_changeable_item(self, data_reduction_session, fit, infoblob):
+    def add_baseline_changeable_item(self, data_reduction_session_id, fit, infoblob):
         fit = self.get_fittype(fit)
+#        print data_reduction_session,'dd'
+#        dr=self.get_data_reduction_session(data_reduction_session)
+#        print dr, 'db dr'
         bs = BaselinesChangeableItemsTable(Fit=fit,
-                                           DataReductionSessionID=data_reduction_session.DataReductionSessionID,
+                                           DataReductionSessionID=data_reduction_session_id,
                                            InfoBlob=infoblob
                                            )
 
@@ -257,7 +268,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return iso, True
 
     @add
-    def add_isotope_result(self, isotope, data_reduction_session,
+    def add_isotope_result(self, isotope, data_reduction_session_id,
                            intercept, baseline, blank,
                            fit
 #                           intercept, intercept_err,
@@ -271,7 +282,6 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         '''
 
         isotope = self.get_isotope(isotope)
-        data_reduction_session = self.get_data_reduction_session(data_reduction_session)
 
         #in mass spec intercept is baseline corrected
         #mass spec does not propogate baseline error
@@ -285,7 +295,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         fit = self.get_fittype(fit)
         
-        iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session.DataReductionSessionID,
+        iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session_id,
                                     Intercept=intercept.nominal_value,
                                     InterceptEr=intercept.std_dev(),
 
@@ -327,11 +337,10 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return drs, True
 
     @add
-    def add_changeable_items(self, rid, drs):
+    def add_changeable_items(self, rid, drs_id):
         item = AnalysesChangeableItemsTable()
         analysis = self.get_analysis(rid)
-        drs = self.get_data_reduction_session(drs)
-        if analysis is not None and drs is not None:
+        if analysis is not None:
             #get the lastest preferencesetid
 #            sess = self.get_session()
 #            q = sess.query(PreferencesTable)
@@ -346,7 +355,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                 item.PreferencesSetID = 0
 #            item.AnalysisID = analysis.AnalysisID
             analysis.changeable.append(item)
-            drs.changeable_items.append(item)
+            item.DataReductionSessionID=drs_id
+#            drs.changeable_items.append(item)
             return item, True
 
         return item, False

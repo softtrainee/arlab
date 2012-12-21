@@ -414,10 +414,12 @@ class AutomatedRun(Loggable):
 
         self.info('====== Equilibration Started ======')
 
-        t = Thread(name='equilibration', target=self._equilibrate, args=(evt,
-                                                                         eqtime, inlet, outlet,
-                                                                         do_post_equilibration
-                                                                         ))
+        t = Thread(name='equilibration', target=self._equilibrate, args=(evt,),
+                                                                   kwargs=dict(eqtime=eqtime,
+                                                                                inlet=inlet,
+                                                                                outlet=outlet,
+                                                                                do_post_equilibration=do_post_equilibration)
+                 )
         t.start()
         return evt
 
@@ -644,7 +646,8 @@ class AutomatedRun(Loggable):
                          window_x=0.6 + 0.01 * self.index,
                          window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
                          stack_order=stack_order,
-                         automated_run=self
+                         automated_run=self,
+                         signals=dict()
                          )
         p.graph.clear()
 
@@ -848,7 +851,8 @@ class AutomatedRun(Loggable):
 
         return True
 
-    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None, delay=3,
+    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None, 
+                     delay=3,
                      do_post_equilibration=True
                      ):
 #        eqtime = self.get_measurement_parameter('equilibration_time', default=15)

@@ -53,12 +53,13 @@ DEBUG = True
 class MassSpecDatabaseImporter(Loggable):
     db = Instance(MassSpecDatabaseAdapter)
     test = Button
-    sample_loading = None
-    data_reduction_session = None
-    login_session = None
+    sample_loading_id = None
+    data_reduction_session_id = None
+    login_session_id = None
+
     def _test_fired(self):
         import numpy as np
-
+        self.db.connect()
         xbase = np.linspace(430, 580, 150)
         ybase = np.zeros(150)
         cddybase = np.zeros(150)
@@ -105,18 +106,25 @@ class MassSpecDatabaseImporter(Loggable):
 
                 ]
 
-        regresults = dict(
-                          H1=reg,
-                          H1bs=regbs,
-                          AX=reg1,
-                          AXbs=regbs,
-                          L1=reg2,
-                          L1bs=regbs,
-                          L2=reg3,
-                          L2bs=regbs,
-                          CDD=reg4,
-                          CDDbs=cddregbs
-                          )
+        regresults = (dict(
+                          Ar40=ufloat((reg.predict(0), reg.predict_error(0))),
+                          
+                          Ar39=ufloat((reg1.predict(0), reg1.predict_error(0))),
+                          
+                          Ar38=ufloat((reg2.predict(0), reg2.predict_error(0))),
+                          
+                          Ar37=ufloat((reg3.predict(0), reg3.predict_error(0))),
+                          
+                          Ar36=ufloat((reg4.predict(0), reg4.predict_error(0))),
+                          
+                          ),
+                      dict(
+                          Ar40=ufloat((regbs.predict(0), regbs.predict_error(0))),
+                          Ar39=ufloat((regbs.predict(0), regbs.predict_error(0))),
+                          Ar38=ufloat((regbs.predict(0), regbs.predict_error(0))),
+                          Ar37=ufloat((regbs.predict(0), regbs.predict_error(0))),
+                          Ar36=ufloat((cddregbs.predict(0), cddregbs.predict_error(0)))
+                          ))
         blanks = [ufloat((1, 0.1)),
                   ufloat((0.1, 0.001)),
                   ufloat((0.01, 0.001)),
@@ -124,7 +132,11 @@ class MassSpecDatabaseImporter(Loggable):
                   ufloat((0.00001, 0.0001)),
 
                   ]
-
+        fits=(
+              dict(zip(['Ar40','Ar39','Ar38','Ar37','Ar36'],
+                       ['Linear','Linear','Linear','Linear','Linear'])),
+              dict(zip(['Ar40','Ar39','Ar38','Ar37','Ar36'],
+                       ['Average Y','Average Y','Average Y','Average Y','Average Y'])))
         mass_spectrometer = 'obama'
         extract_device = 'Laser Furnace'
         extract_value = 10
@@ -142,6 +154,7 @@ class MassSpecDatabaseImporter(Loggable):
                           base, sig, blanks,
                           keys,
                           regresults,
+                          fits,
 
                           mass_spectrometer,
                           extract_device,
@@ -153,7 +166,7 @@ class MassSpecDatabaseImporter(Loggable):
                           duration, #time at extract_value
 
                           first_stage_delay,
-                          second_stage_delay
+                          second_stage_delay,
                           )
 
     def traits_view(self):
@@ -162,33 +175,41 @@ class MassSpecDatabaseImporter(Loggable):
 
     def _db_default(self):
         db = MassSpecDatabaseAdapter(kind='mysql',
-                                     host='localhost',
-                                     username='root',
-                                     password='Argon',
-                                     name='massspecdata_import'
+#                                     host='localhost',
+#                                     username='root',
+#                                     password='Argon',
+#                                     name='massspecdata_import'
+                                     host='129.138.12.131',
+                                     username='massspec',
+                                     password='DBArgon',
+                                     name='massspecdata_isotopedb'
                                      )
 #        db.connect()
 
         return db
 
     def add_sample_loading(self, ms, tray):
-        if self.sample_loading is None:
+        if self.sample_loading_id is None:
             db = self.db
-            self.sample_loading = db.add_sample_loading(ms, tray)
+            sl = db.add_sample_loading(ms, tray)
             db.flush()
+            self.sample_loading_id=sl.SampleLoadingID
 
     def add_login_session(self, ms):
-        if self.login_session is None:
+        if self.login_session_id is None:
             db = self.db
-            self.login_session = db.add_login_session(ms)
+            ls = db.add_login_session(ms)
             db.flush()
+            self.login_session_id=ls.LoginSessionID
 
     def add_data_reduction_session(self):
-        if self.data_reduction_session is None:
+        if self.data_reduction_session_id is None:
             db = self.db
-            self.data_reduction_session = db.add_data_reduction_session()
+            dr = db.add_data_reduction_session()
             db.flush()
-
+            self.data_reduction_session_id=dr.DataReductionSessionID
+            
+            
     def add_analysis(self, rid, aliquot, step, irradpos,
                      baselines, signals, blanks, keys,
 #                     regression_results,
@@ -237,12 +258,17 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=first_stage_delay,
                                    SecondStageDly=second_stage_delay
                                    )
-        if self.sample_loading:
-            analysis.SampleLoadingID = self.sample_loading.SampleLoadingID
+        
+        if self.sample_loading_id:
+            analysis.SampleLoadingID=self.sample_loading_id
+                
 #            self.sample_loading.analyses.append(analysis)
 
-        if self.login_session:
-            self.login_session.analyses.append(analysis)
+        if self.login_session_id:
+            analysis.LoginSessionID=self.login_session_id
+#            ls=self.db.get_login_session(self.login_session_id)
+#            if ls:
+#                ls.analyses.append(analysis)
 
         db.add_analysis_positions(analysis, position)
 #        drs = db.add_data_reduction_session()
@@ -250,8 +276,9 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         # add changeable items
         #=======================================================================
-
-        item = db.add_changeable_items(analysis, self.data_reduction_session, commit=True)
+        print self.data_reduction_session_id
+        item = db.add_changeable_items(analysis, self.data_reduction_session_id)
+        db.flush()
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
         add_results = True
@@ -279,7 +306,7 @@ class MassSpecDatabaseImporter(Loggable):
             baseline = baseline_dict[isok]
 
             infoblob = self._make_infoblob(baseline.nominal_value, baseline.std_dev())
-            db.add_baseline_changeable_item(self.data_reduction_session, baseline_fits[isok], infoblob)
+            db.add_baseline_changeable_item(self.data_reduction_session_id, baseline_fits[isok], infoblob)
             #===================================================================
             # peak time
             #===================================================================
@@ -308,7 +335,7 @@ class MassSpecDatabaseImporter(Loggable):
                 #in mass spec the intercept is alreay baseline corrected
                 #mass spec also doesnt propograte baseline errors
 
-                db.add_isotope_result(iso, self.data_reduction_session,
+                db.add_isotope_result(iso, self.data_reduction_session_id,
 #                                      ufloat((i, ierr)),
                                       intercept,
                                       baseline,
@@ -339,7 +366,7 @@ class MassSpecDatabaseImporter(Loggable):
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
-
+    
     logging_setup('db_import')
     d = MassSpecDatabaseImporter()
 
