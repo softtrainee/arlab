@@ -150,7 +150,7 @@ class DataReductionSessionTable(Base):
     __tablename__ = 'datareductionsessiontable'
     DataReductionSessionID = Column(Integer, primary_key=True)
     SessionDate = Column(DateTime)
-    changeable_items = relationship('AnalysesChangeableItemsTable')
+    #changeable_items = relationship('AnalysesChangeableItemsTable')
 
 
 class DetectorTable(Base):
