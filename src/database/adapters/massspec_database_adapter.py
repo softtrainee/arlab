@@ -28,8 +28,10 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
     BaselinesChangeableItemsTable, SampleLoadingTable, MachineTable, \
     AnalysisPositionTable, LoginSessionTable, RunScriptTable
 from src.database.core.database_adapter import DatabaseAdapter
-from src.database.core.functions import add, get_one, delete_one, get_first
+
+from src.database.core.functions import add, delete_one, get_first
 from sqlalchemy.sql.expression import func
+
 from src.database.selectors.massspec_selector import MassSpecSelector
 import binascii
 
@@ -48,51 +50,41 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #===============================================================================
 # getters
 #===============================================================================
-    @get_one
-    def get_sample_loading(self, sid):
-        return SampleLoadingTable, 'SampleLoadingID'
+    def get_sample_loading(self, value):
+        return self._retrieve_item(SampleLoadingTable, value, key='SampleLoadingID')
 
-    @get_one
-    def get_login_session(self, lid):
-        return LoginSessionTable, 'LoginSessionID'
+    def get_login_session(self, value):
+        return self._retrieve_item(LoginSessionTable, value, key='LoginSessionID')
 
+    def get_analysis(self, value):
+        return self._retrieve_item(AnalysesTable, value, key='RID')
 
-    @get_one
-    def get_analysis(self, rid):
-        return AnalysesTable, 'RID'
+    def get_irradiation_position(self, value):
+        return self._retrieve_item(IrradiationPositionTable, value, key='IrradPosition')
 
-    @get_one
-    def get_irradiation_position(self, rid):
-        return IrradiationPositionTable, 'IrradPosition'
+    def get_sample(self, value):
+        return self._retrieve_item(SampleTable, value, key='Sample')
 
-    @get_one
-    def get_sample(self, name):
-        return SampleTable, 'Sample'
-
-    @get_one
-    def get_detector_type(self, name):
-        return DetectorTypeTable, 'Label'
+    def get_detector_type(self, value):
+        return self._retrieve_item(DetectorTypeTable, value, key='Label')
 
     @get_first
     def get_detector(self, dtype):
         return DetectorTable, 'DetectorTypeID', \
                 DetectorTable.DetectorID.desc() # gets the most recent value
 
-    @get_one
-    def get_isotope(self, iso):
-        return IsotopeTable, 'AnalysisID'
+    def get_isotope(self, value):
+        return self._retrieve_item(IsotopeTable, value, key='AnalysisID')
 
-    @get_one
-    def get_data_reduction_session(self, sid):
-        return DataReductionSessionTable, 'DataReductionSessionID'
+    def get_data_reduction_session(self, value):
+        return self._retrieve_item(DataReductionSessionTable, value,
+                                   key='DataReductionSessionID')
 
-    @get_one
-    def get_preferences_set(self, pid):
-        return PreferencesTable, 'PreferenceSetID'
+    def get_preferences_set(self, value):
+        return self._retrieve_item(PreferencesTable, value, key='PreferenceSetID')
 
-    @get_one
-    def get_system(self, name):
-        return MachineTable, 'Label'
+    def get_system(self, value):
+        return self._retrieve_item(MachineTable, value, key='Label')
 
     def get_fittype(self, label):
         '''
@@ -111,17 +103,14 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         return fit
 
-    @get_one
-    def _get_fittype(self, label):
-        return FittypeTable, 'Label'
+    def _get_fittype(self, value):
+        return self._retrieve_item(FittypeTable, value, key='Label')
 
-    @get_one
-    def get_runscript(self, runscript_id):
-        return RunScriptTable, 'RunScriptID'
+    def get_runscript(self, value):
+        return self._retrieve_item(RunScriptTable, value, key='RunScriptID')
 #===============================================================================
 # adders
 #===============================================================================
-    @add
     def add_sample_loading(self, ms, tray):
 
         if isinstance(ms, str):
@@ -135,7 +124,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         sm = SampleLoadingTable(SampleHolder=tray,
                                 SpecSysN=ms
                                 )
-        return sm, True
+        self._add_item(sm)
+        return sm
 
     def add_analysis_positions(self, analysis, positions):
         if not isinstance(positions, list):
@@ -150,13 +140,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                 except (ValueError, TypeError):
                     pass
 
-    @add
     def _add_analysis_position(self, analysis, pi, po):
         a = AnalysisPositionTable(Hole=pi, PositionOrder=po)
         analysis.positions.append(a)
-        return a, True
 
-    @add
+
+#    @add
     def add_analysis(self, rid, aliquot, step, irradpos, runtype, **kw):
         '''
         '''
@@ -192,27 +181,21 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             params.update(kw)
             analysis = AnalysesTable(**params)
 
-#            sample = self.get_sample(sample)
-#            if sample is not None and \
-#                irradpos is not None:
-#                analysis.RedundantSampleID = sample.SampleID
-#                irradpos.analyses.append(analysis)
-#                sample.analyses.append(analysis)
-            return analysis, True
-        return analysis, False
+            self._add_item(analysis)
 
-    @add
+        return analysis
+
     def add_baseline(self, blob, label, cnts, iso, **kw):
         bs = BaselinesTable(PeakTimeBlob=blob,
                             Label=label,
                             NumCnts=cnts)
         if iso is not None:
             iso.baseline = bs
-            return bs, True
+#            return bs, True
 
-        return bs, False
+        return bs
 
-    @add
+#    @add
     def add_baseline_changeable_item(self, data_reduction_session_id, fit, infoblob):
         fit = self.get_fittype(fit)
 #        print data_reduction_session,'dd'
@@ -222,10 +205,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                                            DataReductionSessionID=data_reduction_session_id,
                                            InfoBlob=infoblob
                                            )
+        self._add_item(bs)
+        return bs
+#        return bs, True
 
-        return bs, True
-
-    @add
+#    @add
     def add_peaktimeblob(self, blob1, blob2, iso, **kw):
         iso = self.get_isotope(iso)
         pk = PeakTimeTable(PeakTimeBlob=blob1,
@@ -234,20 +218,17 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if iso is not None:
 #            iso.peak_time_series= pk
             iso.peak_time_series.append(pk)
-            return pk, True
+        return pk
 
-        return pk, False
-
-    @add
     def add_detector(self, det_type, **kw):
         dtype = self.get_detector_type(det_type)
         d = DetectorTable()
         if dtype is not None:
             dtype.detectors.append(d)
 
-        return d, True
+        self._add_item(d)
+        return d
 
-    @add
     def add_isotope(self, rid, det, label, **kw):
         detector = None
         analysis = self.get_analysis(rid)
@@ -269,9 +250,9 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             detector.isotopes.append(iso)
             iso.BkgdDetectorID = detector.DetectorID
 
-        return iso, True
+        self._add_item(iso)
+        return iso
 
-    @add
     def add_isotope_result(self, isotope, data_reduction_session_id,
                            intercept, baseline, blank,
                            fit
@@ -315,18 +296,16 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                                     )
         if isotope:
             isotope.results.append(iso_r)
-            return iso_r, True
 
-        return iso_r, False
+        return isotope
 
-    @add
     def add_data_reduction_session(self, **kw):
         drs = DataReductionSessionTable(
                                    SessionDate=func.current_timestamp()
                                    )
-        return drs, True
+        self._add_item(drs)
+        return drs
 
-    @add
     def add_login_session(self, ms, **kw):
 
         if isinstance(ms, str):
@@ -338,9 +317,9 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                 ms = 0
 
         drs = LoginSessionTable(SpecSysN=ms)
-        return drs, True
+        self._add_item(drs)
+        return drs
 
-    @add
     def add_changeable_items(self, rid, drs_id):
         item = AnalysesChangeableItemsTable()
         analysis = self.get_analysis(rid)
@@ -362,11 +341,10 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
             item.DataReductionSessionID = drs_id
 #            drs.changeable_items.append(item)
-            return item, True
+            self._add_item(item)
 
-        return item, False
+        return item
 
-    @add
     def add_runscript(self, label, text, **kw):
         '''
             runscripttable does not autoincrement primary key
@@ -377,9 +355,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         rs = self.get_runscript(crc)
         if rs is None:
             rs = RunScriptTable(RunScriptID=crc, Label=label, TheText=text)
-            return rs, True
-        else:
-            return rs, False
+            self._add_item(rs)
+        return rs
 
 #===============================================================================
 # deleters

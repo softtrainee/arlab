@@ -14,12 +14,14 @@
 # limitations under the License.
 #===============================================================================
 import sqlalchemy
+from src.deprecate import deprecated, deprecated_message
 
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+@deprecated_message('use DatabaseAdapter._add_item instead')
 def add(func):
     def _add(obj, *args, **kw):
 
@@ -50,6 +52,7 @@ def get_first(func):
         return _getter('first', func, obj, name, *args, **kw)
     return _get_first
 
+@deprecated_message('use DatabaseAdapter._retrieve_item instead')
 def get_one(func):
     def __get_one(obj, name, *args, **kw):
         return _get_one(func, obj, name, *args, **kw)

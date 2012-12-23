@@ -1090,7 +1090,8 @@ class AutomatedRun(Loggable):
                          aliquot=aliquot,
                          collection_path=cp,
 #                         repository_path=np,
-                         commit=True)
+                         )
+        ldb.commit()
 
         #save to a database
         db = self.db
@@ -1217,7 +1218,6 @@ class AutomatedRun(Loggable):
 
     def _save_extraction(self, analysis):
         db = self.db
-
         ext = db.add_extraction(analysis,
                           self.extraction_script.name,
                           script_blob=self._assemble_extraction_blob(),

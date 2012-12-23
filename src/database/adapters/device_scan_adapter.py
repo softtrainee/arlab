@@ -23,7 +23,7 @@ from src.database.core.database_adapter import PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
 from src.database.orms.device_scan_orm import ScanTable, DeviceTable, \
     ScanPathTable
-from src.database.core.functions import get_one, delete_one
+from src.database.core.functions import delete_one
 
 class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None
@@ -33,37 +33,32 @@ class DeviceScanAdapter(PathDatabaseAdapter):
 #    getters
 #==============================================================================
 
+    def get_device(self, value):
+        return self._retrieve_item(DeviceTable, value)
 
-    @get_one
-    def get_device(self, name):
-        return DeviceTable
-
-    @get_one
-    def get_scan(self, sid):
-        return (DeviceTable, 'id')
+    def get_scan(self, value):
+        return self._retrieve_item(DeviceTable, value, key='id')
 
     def get_devices(self, **kw):
-        return self._get_items(DeviceTable, globals(), **kw)
+        return self._retrieve_items(DeviceTable, **kw)
 
     def get_scans(self, **kw):
-        return self._get_items(ScanTable, globals(), **kw)
+        return self._retrieve_items(ScanTable, **kw)
 #=============================================================================
 #   adder
 #=============================================================================
-    def add_scan(self, device, commit=False, **kw):
+    def add_scan(self, device, **kw):
 #        b = PowerMapTable(**kw)
-        b = self._add_timestamped_item(ScanTable, commit, **kw)
+        b = self._add_timestamped_item(ScanTable, **kw)
 
         if isinstance(device, str):
             device = self.get_device(device)
 
         device.scans.append(b)
-        if commit:
-            self.commit()
 
         return b
 #
-    def add_device(self, name, unique=True, commit=False, **kw):
+    def add_device(self, name, unique=True, **kw):
 
         kw['name'] = name
         c = DeviceTable(**kw)
@@ -77,7 +72,7 @@ class DeviceScanAdapter(PathDatabaseAdapter):
             add_item = True
 
         if add_item:
-            self._add_item(c, commit)
+            self._add_item(c)
 
         return c
 

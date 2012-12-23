@@ -39,8 +39,8 @@ class PowerMapAdapter(DatabaseAdapter):
 #=============================================================================
 #   adder
 #=============================================================================
-    def add_powermap(self, commit=False, **kw):
-        b = self._add_timestamped_item(PowerMapTable, commit, **kw)
+    def add_powermap(self, **kw):
+        b = self._add_timestamped_item(PowerMapTable, **kw)
         return b
 
 if __name__ == '__main__':

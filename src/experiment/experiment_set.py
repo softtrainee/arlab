@@ -353,8 +353,6 @@ tray: {}
                 #recall the analysis and display
 
                 db = self.db
-                print selected.uuid
-#                dbrecord = db.get_analysis_uuid(selected.uuid)
                 db.selector.open_record(selected.uuid)
 
     def _batch_edit(self, selected):
