@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Password, Enum, List, Dict, \
-     Int, Any, Button, Property
+     Int, Any, Button, Property, on_trait_change
 from traitsui.api import View, Item, TableEditor, Group, VGroup, HGroup, spring, \
     ListStrEditor, EnumEditor
 from apptools.preferences.ui.preferences_page import PreferencesPage
@@ -65,11 +65,30 @@ class ExperimentPreferencesPage(PreferencesPage):
     add_favorite = Button('+')
     delete_favorite = Button('-')
     selected = Any
+#    selected_live = Any
     selected_index = Int
 
+    @on_trait_change('db+')
+    def db_attribute_changed(self, obj, name, old, new):
+        if name == 'db_fav_name':
+            return
+
+        if self.favorites:
+            for i, fastr in enumerate(self.favorites):
+                vs = fastr.split(',')
+                if vs[0] == self.db_fav_name:
+                    aind = ['', 'db_kind', 'db_username', 'db_host', 'db_name', 'db_password'].index(name)
+                    fa = fastr.split(',')
+                    fa[aind] = new
+                    fastr = ','.join(fa)
+                    self.favorites[i] = fastr
+                    self.selected = fastr
+                    break
+
     def _selected_changed(self):
-        if isinstance(self.selected, (str, unicode)):
-            vs = self.selected.split(',')
+        sel = self.selected
+        if isinstance(sel, (str, unicode)):
+            vs = sel.split(',')
             for v, attr in zip(vs, ['fav_name', 'kind', 'username',
                                     'host', 'name', 'password']):
                 setattr(self, 'db_{}'.format(attr), str(v))

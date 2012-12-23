@@ -45,6 +45,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTa
     meas_MeasurementTable
 from src.constants import NULL_STR
 
+#@todo: display total time in iso format 
+
 
 class ExperimentExecutor(ExperimentManager):
     spectrometer_manager = Instance(Manager)
@@ -71,7 +73,6 @@ class ExperimentExecutor(ExperimentManager):
         quick     1= the current measure_iteration is truncated and a quick baseline is collected, peak center?
         next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
     '''
-
     right_clicked = Any
     selected_row = Any
     selected = Any

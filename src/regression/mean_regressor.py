@@ -82,7 +82,6 @@ sem={}
             e = self.sem
         else:
             e = self.std
-
         return ones(asarray(x).shape) * e
 
     def calculate_standard_error_fit(self):

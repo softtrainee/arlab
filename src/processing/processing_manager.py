@@ -72,10 +72,12 @@ class ProcessingManager(DatabaseManager):
 # find/display analysis
 #===============================================================================
     def open_search(self):
-        ps = self.search_manager
-#        ps.selector.load_recent()
-        ps.selector.load_last()
-        ps.edit_traits()
+        if self.db.connect():
+            ps = self.search_manager
+    #        ps.selector.load_recent()
+            ps.selector.load_last(n=10)
+            ps.edit_traits()
+
 
 #===============================================================================
 # figures

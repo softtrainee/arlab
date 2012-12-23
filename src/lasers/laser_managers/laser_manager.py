@@ -132,6 +132,10 @@ class LaserManager(BaseLaserManager):
         bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
 
         self.stage_manager.bind_preferences(pref_id)
+
+    def set_xy(self, xy, velocity=None):
+        self.stage_manager.set_xy(*xy)
+
 #===============================================================================
 # patterning
 #===============================================================================

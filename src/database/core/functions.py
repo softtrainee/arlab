@@ -24,11 +24,10 @@ def add(func):
     def _add(obj, *args, **kw):
 
         kwargs = kw.copy()
-        for key in ['unique', 'commit']:
-            try:
+        for key in ('unique', 'commit', 'flush'):
+            if kwargs.has_key(key):
                 kwargs.pop(key)
-            except KeyError:
-                pass
+
 
         sess = obj.get_session()
         dbr = None
@@ -37,11 +36,10 @@ def add(func):
             if dbr and add:
                 sess.add(dbr)
 
-                try:
-                    if kw['commit']:
-                        sess.commit()
-                except KeyError:
-                    pass
+                if kw.has_key('flush'):
+                    sess.flush()
+                elif kw.has_key('commit'):
+                    sess.commit()
 
         return dbr
 

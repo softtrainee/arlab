@@ -79,6 +79,9 @@ class AutomatedRunAdapter(TabularAdapter):
 #        if self.item:
 #            if self.item.state == 'not run':
 #                return True
+    def get_can_edit(self, obj, trait, row):
+        return self.item.state == 'not run'
+
     def get_font(self, obj, trait, row):
         import wx
         s = 12

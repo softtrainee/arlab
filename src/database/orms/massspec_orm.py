@@ -60,6 +60,7 @@ class AnalysesTable(Base):
     Aliquot = Column(Integer)
     Increment = Column(String(20))
     SpecParametersID = Column(Integer, default=0)
+    RunScriptID = Column(Integer, default=0)
 
     HeatingItemName = Column(String(80))
     FinalSetPwr = Column(Float, default=0)
@@ -362,6 +363,12 @@ class ProjectTable(Base):
     Project = Column(String(40))
     samples = relationship('SampleTable', backref='project')
 
+class RunScriptTable(Base):
+    __tablename__ = 'RunScriptTable'
+    RunScriptID = Column(Integer, primary_key=True)
+    Label = Column(String(40))
+    TheText = Column(BLOB)
+    Note = Column(BLOB, default='')
 
 class SampleTable(Base):
     '''
