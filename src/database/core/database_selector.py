@@ -95,8 +95,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     tabular_adapter = BaseResultsAdapter
 
-    query_table = None
+#    query_table = None
     record_klass = None
+    query_klass = None
 
     omit_bogus = Bool(True)
 
@@ -180,6 +181,18 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #    def _generate_filter_str(self):
 #        qs = 'and '.join([q.get_filter_str() for q in self.queries])
 #        return qs
+    def _assemble_query(self, q, queries, lookup):
+        joined = []
+        for qi in queries:
+            if lookup.has_key(qi.parameter):
+                tabs, attr = lookup[qi.parameter]
+                for tab in tabs:
+                    if not tab in joined:
+                        joined.append(tab)
+                        q = q.join(tab)
+
+                q = qi.assemble_filter(q, attr)
+        return q
 
     def _execute_query(self, queries=None):
 #        db = self.db
@@ -361,7 +374,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 # factories
 #===============================================================================
     def _query_factory(self, removable=True, **kw):
-        q = Query(selector=self,
+        q = self.query_klass(selector=self,
                   removable=removable,
                   date_str=self.date_str,
                   )

@@ -19,7 +19,7 @@
 #=============standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey
+     ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
@@ -37,7 +37,7 @@ class ScanPathTable(Base, PathMixin):
 
 class ScanTable(Base, ResultsMixin):
     device_id = Column(Integer, ForeignKey('DeviceTable.id'))
-
+    scan_timestamp = Column(DateTime, default=func.now())
 
 #============= EOF =============================================
 

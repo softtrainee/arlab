@@ -121,25 +121,29 @@ class DatabaseRecord(Saveable):
 #        return timefunc(ts)
     @cached_property
     def _get_timestamp(self):
-        analysis = self.dbrecord
-        analts = analysis.analysis_timestamp
-#        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
-#        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-        return time.mktime(analts.timetuple())
+        return ''
+#        analysis = self.dbrecord
+#        analts = analysis.analysis_timestamp
+##        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+##        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+#        return time.mktime(analts.timetuple())
 
     @cached_property
     def _get_rundate(self):
         dbr = self.dbrecord
-        if dbr and dbr.analysis_timestamp:
-            date = dbr.analysis_timestamp.date()
+        if dbr and dbr.rundate:
+            date = dbr.rundate
             return date.strftime('%Y-%m-%d')
 
     @cached_property
     def _get_runtime(self):
         dbr = self.dbrecord
-        if dbr and dbr.analysis_timestamp:
-            ti = dbr.analysis_timestamp.time()
+        if dbr and dbr.runtime:
+            ti = dbr.runtime
             return ti.strftime('%H:%M:%S')
+#        if dbr and dbr.analysis_timestamp:
+#            ti = dbr.analysis_timestamp.time()
+#            return ti.strftime('%H:%M:%S')
 
     def _get_title(self):
         return '{} {}'.format(self.title_str, self.record_id)
@@ -240,4 +244,6 @@ class DatabaseRecord(Saveable):
         if self.window_height:
             v.height = self.window_height
         return v
+
+
 #============= EOF =============================================

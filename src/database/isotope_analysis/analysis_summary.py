@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance
-from traitsui.api import View, Item
+from traits.api import Instance, Property, Any, Str
+from traitsui.api import View, Item, HGroup, EnumEditor
 #============= standard library imports ========================
 #import re
 #from uncertainties import ufloat
@@ -34,6 +34,8 @@ except UnicodeEncodeError:
 
 class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
+    selected_history = Str
+    histories = Property
 
     def _build_summary(self):
         record = self.record
@@ -223,6 +225,14 @@ class AnalysisSummary(Summary):
         base = self.record.signals['{}bs'.format(iso)]
         return sig.uvalue, base.uvalue
 
+    def _get_histories(self):
+        histories = []
+        if self.record.dbrecord.arar_histories:
+            histories = [hi.create_date for hi in self.record.dbrecord.arar_histories]
+
+        return ['Collection'] + histories
+
+
     def _make_signals(self, n, i, iso, widths):
 
         sg = self.record.signal_graph
@@ -288,9 +298,13 @@ class AnalysisSummary(Summary):
 #                               )
 
     def traits_view(self):
-        v = View(Item('display', height=0.75, show_label=False, style='custom'),
+        v = View(HGroup(Item('selected_history', show_label=False,
+                             editor=EnumEditor(name='histories'))),
+                 Item('display', height=0.75, show_label=False, style='custom'),
                  Item('fit_selector', height=0.25, show_label=False, style='custom'))
         return v
+
+
 
 
 #============= EOF =============================================
