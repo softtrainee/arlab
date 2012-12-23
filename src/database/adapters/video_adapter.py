@@ -37,8 +37,8 @@ class VideoAdapter(PathDatabaseAdapter):
 #=============================================================================
 #   adder
 #=============================================================================
-    def add_video_record(self, commit=False, **kw):
-        b = self._add_timestamped_item(VideoTable, commit, **kw)
+    def add_video_record(self, **kw):
+        b = self._add_timestamped_item(VideoTable, **kw)
         return b
 
 

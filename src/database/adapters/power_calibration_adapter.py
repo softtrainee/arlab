@@ -36,8 +36,8 @@ class PowerCalibrationAdapter(PathDatabaseAdapter):
 #=============================================================================
 #   adder
 #=============================================================================
-    def add_calibration_record(self, commit=False, **kw):
-        b = self._add_timestamped_item(PowerCalibrationTable, commit, **kw)
+    def add_calibration_record(self, **kw):
+        b = self._add_timestamped_item(PowerCalibrationTable, **kw)
         return b
 
 

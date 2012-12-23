@@ -43,10 +43,10 @@ class LocalLabAdapter(DatabaseAdapter):
                         Column('create_date', DateTime))
             bt.create(sess.bind)
 
-    @add
     def add_analysis(self, **kw):
         l = LabTable(**kw)
-        return l, True
+        self._add_item(l)
+        return l
 
 if __name__ == '__main__':
     lb = LocalLabAdapter(name='/Users/ross/Sandbox/foo.db')

@@ -28,6 +28,7 @@ import os
 from sqlalchemy.sql.expression import asc, desc
 from src.database.core.base_orm import MigrateVersionTable
 from src.deprecate import deprecated
+from sqlalchemy.exc import SQLAlchemyError
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
@@ -303,21 +304,18 @@ host={}'.format(self.name, self.username, self.host))
             q = q.filter_by(**clause)
         return q
 
-    def _add_item(self, obj, commit):
+    def _add_item(self, obj):
         sess = self.get_session()
         sess.add(obj)
-        if commit:
-            sess.commit()
 
     def _add_unique(self, item, attr, name):
         #test if already exists 
         nitem = getattr(self, 'get_{}'.format(attr))(name)
         if nitem is None or isinstance(nitem, (str, unicode)):
             self.info('adding {}= {}'.format(attr, name))
-            return item, True
-        else:
+            self._add_item(nitem)
 #            self.info('{}= {} already exists'.format(attr, name))
-            return nitem, False
+        return nitem
 
     def _get_datetime_keywords(self, kw):
         d = get_datetime()
@@ -325,7 +323,7 @@ host={}'.format(self.name, self.username, self.host))
         kw['runtime'] = d.time()
         return kw
 
-    def _add_timestamped_item(self, klass, commit=False, **kw):
+    def _add_timestamped_item(self, klass, **kw):
 
 #        args = dict(rundate=str(d.date()),
 #                    runtime=str(d.time()))
@@ -333,7 +331,7 @@ host={}'.format(self.name, self.username, self.host))
 #                    runtime=d.time())
         kw = self._get_datetime_keywords(kw)
         obj = klass(**kw)
-        self._add_item(obj, commit)
+        self._add_item(obj)
         return obj
 
     def _get_path_keywords(self, path, args):
@@ -348,6 +346,27 @@ host={}'.format(self.name, self.username, self.host))
         if sess is not None:
             q = sess.query(table)
             return q.all()
+
+    def _retrieve_item(self, table, value, key='name'):
+        if not isinstance(value, (str, int, unicode, long, float)):
+            return value
+
+        sess = self.get_session()
+        q = sess.query(table)
+        q = q.filter(getattr(table, key) == value)
+
+        try:
+            return q.one()
+        except SQLAlchemyError, e:
+#            print 'get_one, e1', e
+            try:
+                q = q.order_by(table.id.desc())
+                return q.limit(1).all()[-1]
+            except (SQLAlchemyError, IndexError, AttributeError), e:
+                pass
+    #            print 'get_one, e2', e
+
+
 
     @deprecated
     def _get_items(self, table, gtables,
@@ -427,14 +446,12 @@ host={}'.format(self.name, self.username, self.host))
 
 class PathDatabaseAdapter(DatabaseAdapter):
     path_table = None
-    def add_path(self, rec, path, commit=False, **kw):
+    def add_path(self, rec, path, **kw):
         if self.path_table is None:
             raise NotImplementedError
         kw = self._get_path_keywords(path, kw)
         p = self.path_table(**kw)
         rec.path = p
-        if commit:
-            self.commit()
         return p
 
 #============= EOF =============================================

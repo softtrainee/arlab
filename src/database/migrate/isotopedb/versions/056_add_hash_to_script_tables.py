@@ -9,7 +9,7 @@ def upgrade(migrate_engine):
 
     for n in ['Measurement', 'Extraction']:
         t = Table('meas_{}Table'.format(n), meta, autoload=True)
-        c = Column('crc', Integer)
+        c = Column('hash', String(40))
         c.create(t)
 
 
@@ -19,4 +19,4 @@ def downgrade(migrate_engine):
 
     for n in ['Measurement', 'Extraction']:
         t = Table('meas_{}Table'.format(n), meta, autoload=True)
-        t.c.crc.drop()
+        t.c.hash.drop()

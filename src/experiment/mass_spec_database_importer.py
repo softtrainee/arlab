@@ -193,19 +193,22 @@ class MassSpecDatabaseImporter(Loggable):
     def add_sample_loading(self, ms, tray):
         if self.sample_loading_id is None:
             db = self.db
-            sl = db.add_sample_loading(ms, tray, flush=True)
+            sl = db.add_sample_loading(ms, tray)
+            db.flush()
             self.sample_loading_id = sl.SampleLoadingID
 
     def add_login_session(self, ms):
         if self.login_session_id is None:
             db = self.db
-            ls = db.add_login_session(ms, flush=True)
+            ls = db.add_login_session(ms)
+            db.flush()
             self.login_session_id = ls.LoginSessionID
 
     def add_data_reduction_session(self):
         if self.data_reduction_session_id is None:
             db = self.db
-            dr = db.add_data_reduction_session(flush=True)
+            dr = db.add_data_reduction_session()
+            db.flush()
             self.data_reduction_session_id = dr.DataReductionSessionID
 
     def create_import_session(self, spectrometer, tray):
@@ -265,7 +268,8 @@ class MassSpecDatabaseImporter(Loggable):
             sample_id = db_irradpos.SampleID
 
         #add runscript
-        rs = db.add_runscript(runscript_name, runscript_text, flush=True)
+        rs = db.add_runscript(runscript_name, runscript_text)
+        db.flush()
 
         analysis = db.add_analysis(rid, aliquot, step,
                                    irradpos,
@@ -292,7 +296,8 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         # add changeable items
         #=======================================================================
-        item = db.add_changeable_items(analysis, self.data_reduction_session_id, flush=True)
+        item = db.add_changeable_items(analysis, self.data_reduction_session_id)
+        db.flush()
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
