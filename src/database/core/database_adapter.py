@@ -142,7 +142,7 @@ class DatabaseAdapter(Loggable):
 #                args.append(getattr(self, a))
 #            print args
 #            self._new_engine(*tuple(args))
-            self.connected = False
+            self.connected = True if self.kind == 'sqlite' else False
             if self.enabled:
 #                self._new_engine(self.kind, self.username, self.host, self.name, self.password)
 
@@ -317,22 +317,22 @@ host={}'.format(self.name, self.username, self.host))
 #            self.info('{}= {} already exists'.format(attr, name))
         return nitem
 
-    def _get_datetime_keywords(self, kw):
-        d = get_datetime()
-        kw['rundate'] = d.date()
-        kw['runtime'] = d.time()
-        return kw
-
-    def _add_timestamped_item(self, klass, **kw):
-
-#        args = dict(rundate=str(d.date()),
-#                    runtime=str(d.time()))
-#        args = dict(rundate=d.date(),
-#                    runtime=d.time())
-        kw = self._get_datetime_keywords(kw)
-        obj = klass(**kw)
-        self._add_item(obj)
-        return obj
+#    def _get_datetime_keywords(self, kw):
+#        d = get_datetime()
+#        kw['rundate'] = d.date()
+#        kw['runtime'] = d.time()
+#        return kw
+#
+#    def _add_timestamped_item(self, klass, **kw):
+#
+##        args = dict(rundate=str(d.date()),
+##                    runtime=str(d.time()))
+##        args = dict(rundate=d.date(),
+##                    runtime=d.time())
+#        kw = self._get_datetime_keywords(kw)
+#        obj = klass(**kw)
+#        self._add_item(obj)
+#        return obj
 
     def _get_path_keywords(self, path, args):
         n = os.path.basename(path)
@@ -341,10 +341,15 @@ host={}'.format(self.name, self.username, self.host))
         args['filename'] = n
         return args
 
-    def _retrieve_items(self, table):
+    def _retrieve_items(self, table, limit=None, order=None):
         sess = self.get_session()
         if sess is not None:
             q = sess.query(table)
+            if order:
+                q = q.order_by(order)
+
+            if limit:
+                q = q.limit(limit)
             return q.all()
 
     def _retrieve_item(self, table, value, key='name'):

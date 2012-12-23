@@ -3,8 +3,7 @@ from migrate import *
 meta = MetaData()
 t1 = Table('ScanTable', meta,
 			Column('id', Integer, primary_key=True),
-              Column('rundate', Date),
-              Column('runtime', Time),
+              Column('scan_timestamp', DateTime),
               Column('device_id', Integer)
 )
 t2 = Table('DeviceTable', meta,

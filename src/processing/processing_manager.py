@@ -75,7 +75,7 @@ class ProcessingManager(DatabaseManager):
         if self.db.connect():
             ps = self.search_manager
     #        ps.selector.load_recent()
-            ps.selector.load_last(n=10)
+            ps.selector.load_last(n=20)
             ps.edit_traits()
 
 

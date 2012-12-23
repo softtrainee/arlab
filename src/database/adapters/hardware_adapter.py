@@ -21,11 +21,11 @@
 #============= local library imports  ==========================
 from src.database.core.database_adapter import PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
-from src.database.orms.device_scan_orm import ScanTable, DeviceTable, \
+from src.database.orms.hardware_orm import ScanTable, DeviceTable, \
     ScanPathTable
-from src.database.core.functions import delete_one
+#from src.database.core.functions import delete_one
 
-class DeviceScanAdapter(PathDatabaseAdapter):
+class HardwareAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = DeviceScanSelector
     path_table = ScanPathTable
@@ -48,37 +48,35 @@ class DeviceScanAdapter(PathDatabaseAdapter):
 #   adder
 #=============================================================================
     def add_scan(self, device, **kw):
-#        b = PowerMapTable(**kw)
-        b = self._add_timestamped_item(ScanTable, **kw)
-
-        if isinstance(device, str):
-            device = self.get_device(device)
-
-        device.scans.append(b)
+        b = ScanTable(**kw)
+        device = self.get_device(device)
+        if device:
+            device.scans.append(b)
 
         return b
 #
     def add_device(self, name, unique=True, **kw):
 
-        kw['name'] = name
-        c = DeviceTable(**kw)
-        if unique:
-            sess = self.get_session()
-            q = sess.query(DeviceTable).filter(DeviceTable.name == name)
-            add_item = not bool(q.count())
-            if not add_item:
-                c = q.one()
-        else:
-            add_item = True
+#        kw['name'] = name
+        c = DeviceTable(name=name, **kw)
+        return self._add_unique(c, 'name', name)
+#        if unique:
+#            sess = self.get_session()
+#            q = sess.query(DeviceTable).filter(DeviceTable.name == name)
+#            add_item = not bool(q.count())
+#            if not add_item:
+#                c = q.one()
+#        else:
+#            add_item = True
+#
+#        if add_item:
+#            self._add_item(c)
 
-        if add_item:
-            self._add_item(c)
-
-        return c
+#        return c
 
 
-    @delete_one
-    def delete_device(self, name):
+#    @delete_one
+#    def delete_device(self, name):
 #        sess = self.get_session()
 #        q = sess.query(DeviceTable).filter(DeviceTable.name == name)
 #        try:
@@ -90,11 +88,11 @@ class DeviceScanAdapter(PathDatabaseAdapter):
 #
 #        except Exception, e:
 #            print e
-        return DeviceTable
+#        return DeviceTable
 
-    @delete_one
-    def delete_scan(self, sid):
-        return ScanTable, 'id'
+#    @delete_one
+#    def delete_scan(self, sid):
+#        return ScanTable, 'id'
 
 
 if __name__ == '__main__':
@@ -103,7 +101,7 @@ if __name__ == '__main__':
     logging_setup('dvs')
 
     from src.paths import paths
-    db = DeviceScanAdapter(name=paths.device_scan_db,
+    db = HardwareAdapter(name=paths.device_scan_db,
                             kind='sqlite')
     db.connect()
 

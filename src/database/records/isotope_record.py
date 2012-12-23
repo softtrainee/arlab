@@ -843,14 +843,17 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_analysis_type(self):
-        if self._dbrecord:
-            if self._dbrecord.measurement:
-                return self._dbrecord.measurement.analysis_type.name
+        try:
+            return self._dbrecord.measurement.analysis_type.name
+        except AttributeError, e:
+            print 'get_analysis_type', e
 
     @cached_property
     def _get_mass_spectrometer(self):
-        if self._dbrecord:
+        try:
             return self._dbrecord.measurement.mass_spectrometer.name.lower()
+        except AttributeError, e:
+            print 'get_mass_spectrometer', e
 
 #    @cached_property
 #    def _get_age(self):
@@ -900,6 +903,27 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # dbrecord values
 #===============================================================================
+    @cached_property
+    def _get_timestamp(self):
+        analysis = self.dbrecord
+        analts = analysis.analysis_timestamp
+#        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+#        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+        return time.mktime(analts.timetuple())
+
+    @cached_property
+    def _get_rundate(self):
+        dbr = self.dbrecord
+        if dbr and dbr.analysis_timestamp:
+            date = dbr.analysis_timestamp.date()
+            return date.strftime('%Y-%m-%d')
+
+    @cached_property
+    def _get_runtime(self):
+        dbr = self.dbrecord
+        if dbr and dbr.analysis_timestamp:
+            ti = dbr.analysis_timestamp.time()
+            return ti.strftime('%H:%M:%S')
 
     @cached_property
     def _get_project(self):

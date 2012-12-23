@@ -69,7 +69,6 @@ class TabularAnalysisManager(Viewable):
                                            selected='selected_analysis',
                                            editable=False
                                            )),
-                                 resizable=True
                                  )
 #        v = View(Item('analyses',
 #                      show_label=False,

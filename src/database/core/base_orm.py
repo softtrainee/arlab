@@ -40,8 +40,8 @@ class NameMixin(BaseMixin):
 
 
 class ResultsMixin(BaseMixin):
-    runtime = Column(Time)
-    rundate = Column(Date)
+#    runtime = Column(Time)
+#    rundate = Column(Date)
 
     @declared_attr
     def path(self):

@@ -72,6 +72,18 @@ class HistoryMixin(BaseMixin):
     create_date = Column(DateTime, default=func.now())
     user = stringcolumn()
 
+class proc_ArArHistoryTable(Base, HistoryMixin):
+    arar_results = relationship('proc_ArArTable', backref='history')
+    selected = relationship('proc_SelectedHistoriesTable',
+                            backref='selected_arar',
+                            uselist=False
+                            )
+
+class proc_ArArTable(Base, BaseMixin):
+    history_id = foreignkey('proc_ArArHistoryTable')
+    age = Column(Float)
+    age_err = Column(Float)
+
 class proc_BlanksSetTable(Base, BaseMixin):
     blanks_id = foreignkey('proc_BlanksTable')
     blank_analysis_id = foreignkey('meas_AnalysisTable')
@@ -188,6 +200,7 @@ class proc_SelectedHistoriesTable(Base, BaseMixin):
     selected_backgrounds_id = foreignkey('proc_BackgroundsHistoryTable')
     selected_det_intercal_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
     selected_fits_id = foreignkey('proc_FitHistoryTable')
+    selected_arar_id = foreignkey('proc_ArArHistoryTable')
 
 class proc_IsotopeResultsTable(Base, BaseMixin):
     signal_ = Column(Float(32))
@@ -262,7 +275,7 @@ class meas_AnalysisTable(Base, BaseMixin):
 
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)
-
+    arar_histories = relationship('proc_ArArHistoryTable', backref='analysis')
     figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
 
 
