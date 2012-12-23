@@ -102,7 +102,8 @@ class Signal(HasTraits):
 #            if len(self.xs) > 2 and len(self.ys) > 2:
 #            print self.xs
 #            print self._get_regression_param('coefficients')
-            return self._get_regression_param('coefficients')
+#            return self._get_regression_param('coefficients')
+            return self.regressor.predict(0)
         else:
             return self._value
 
@@ -110,12 +111,13 @@ class Signal(HasTraits):
     def _get_error(self):
         if self.xs is not None and len(self.xs) > 1:
 #            if len(self.xs) > 2 and len(self.ys) > 2:
-            return self._get_regression_param('coefficient_errors')
+            return self.regressor.predict_error(0)
+#            return self._get_regression_param('coefficient_errors')
         else:
             return self._error
 
-    def _get_regression_param(self, name, ind= -1):
-        return getattr(self.regressor, name)[ind]
+#    def _get_regression_param(self, name, ind= -1):
+#        return getattr(self.regressor, name)[ind]
 
 #===============================================================================
 # arthmetic

@@ -190,8 +190,8 @@ class proc_SelectedHistoriesTable(Base, BaseMixin):
     selected_fits_id = foreignkey('proc_FitHistoryTable')
 
 class proc_IsotopeResultsTable(Base, BaseMixin):
-    signal_ = Column(Float)
-    signal_err = Column(Float)
+    signal_ = Column(Float(32))
+    signal_err = Column(Float(32))
     isotope_id = foreignkey('meas_IsotopeTable')
     history_id = foreignkey('proc_FitHistoryTable')
 #class proc_WorkspaceHistoryTable(Base, HistoryMixin):
@@ -284,16 +284,16 @@ class meas_ExtractionTable(Base, ScriptTable):
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
-    positions=relationship('meas_PositionTable',backref='extraction')
+    positions = relationship('meas_PositionTable', backref='extraction')
 
 
 class meas_PositionTable(Base, BaseMixin):
-    position=Column(Integer)
-    x=Column(Float)
-    y=Column(Float)
-    z=Column(Float)
-    
-    extraction_id=foreignkey('meas_ExtractionTable')
+    position = Column(Integer)
+    x = Column(Float)
+    y = Column(Float)
+    z = Column(Float)
+
+    extraction_id = foreignkey('meas_ExtractionTable')
 
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):
@@ -433,7 +433,7 @@ class gen_LabTable(Base, BaseMixin):
     analyses = relationship('meas_AnalysisTable', backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
     selected_flux_id = foreignkey('flux_HistoryTable')
-    note=stringcolumn(140)
+    note = stringcolumn(140)
 
 class gen_MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')

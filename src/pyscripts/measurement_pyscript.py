@@ -29,14 +29,7 @@ from src.pyscripts.valve_pyscript import ValvePyScript
 #============= local library imports  ==========================
 estimated_duration_ff = 1.35
 
-class Detector(object):
-    name = None
-    mass = None
-    signal = None
-    def __init__(self, name, mass, signal):
-        self.name = name
-        self.mass = mass
-        self.signal = signal
+
 
 from traits.api import HasTraits, Button, Dict
 from traitsui.api import View
@@ -484,3 +477,11 @@ if __name__ == '__main__':
     d.configure_traits()
 
 #============= EOF =============================================
+#class Detector(object):
+#    name = None
+#    mass = None
+#    signal = None
+#    def __init__(self, name, mass, signal):
+#        self.name = name
+#        self.mass = mass
+#        self.signal = signal

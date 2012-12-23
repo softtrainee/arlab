@@ -54,6 +54,7 @@ from uncertainties import ufloat
 from src.database.records.arar_age import ArArAge
 from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
+import binascii
 
 
 class AutomatedRun(Loggable):
@@ -234,10 +235,10 @@ class AutomatedRun(Loggable):
             return aii
 
         return [get_attr(ai) for ai in attr]
-    
+
     def get_position_list(self):
         return self._make_iterable(self.position)
-    
+
     def create_scripts(self):
         _a = self.extraction_script
         _b = self.measurement_script
@@ -851,7 +852,7 @@ class AutomatedRun(Loggable):
 
         return True
 
-    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None, 
+    def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None,
                      delay=3,
                      do_post_equilibration=True
                      ):
@@ -1211,14 +1212,15 @@ class AutomatedRun(Loggable):
                               self.measurement_script.name,
                               script_blob=self.measurement_script.toblob()
                               )
+
         return meas
 
     def _save_extraction(self, analysis):
         db = self.db
-        
+
         ext = db.add_extraction(analysis,
                           self.extraction_script.name,
-                          script_blob=self.measurement_script.toblob(),
+                          script_blob=self._assemble_extraction_blob(),
                           extract_device=self.extract_device,
                           experiment_blob=self.experiment_manager.experiment_blob(),
                           extract_value=self.extract_value,
@@ -1228,18 +1230,18 @@ class AutomatedRun(Loggable):
                           weight=self.weight,
                           sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
-        
-        
+
+
         for pi in self.get_position_list():
             if isinstance(pi, tuple):
-                if len(pi)>1:
-                    db.add_analysis_position(ext, x=pi[0],y=pi[1])
-                    if len(pi)==3:
-                        db.add_analysis_position(ext, x=pi[0],y=pi[1], z=pi[2])
-                
+                if len(pi) > 1:
+                    db.add_analysis_position(ext, x=pi[0], y=pi[1])
+                    if len(pi) == 3:
+                        db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
+
             else:
                 db.add_analysis_position(ext, pi)
-            
+
         return ext
 
     def _save_spectrometer_info(self, meas):
@@ -1347,14 +1349,12 @@ class AutomatedRun(Loggable):
             else:
                 blanks.append(ufloat((0, 0)))
 
-        #only add sample loading on the first analysis
-        self.massspec_importer.add_sample_loading(self.mass_spectrometer, self.tray)
-        self.massspec_importer.add_login_session(self.mass_spectrometer)
-        self.massspec_importer.add_data_reduction_session()
-
         intercepts = [self.plot_panel.signals, self.plot_panel.baselines]
         fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
                 dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
+
+        rs_name, rs_text = self._assemble_script_blob()
+
         self.massspec_importer.add_analysis(self.labnumber,
                                             self.aliquot,
                                             self.step,
@@ -1370,6 +1370,7 @@ class AutomatedRun(Loggable):
 
                                             self.mass_spectrometer,
                                             self.extract_device,
+                                            self.tray,
                                             self.position,
                                             self.extract_value, #power requested
                                             self.extract_value, #power achieved,
@@ -1379,8 +1380,41 @@ class AutomatedRun(Loggable):
 
                                             self.cleanup, # first stage delay
                                             0, #second stage delay
+
+                                            rs_name, #runscript
+                                            rs_text
                                             )
 
+    def _assemble_extraction_blob(self):
+        _names, txt = self._assemble_script_blob(kinds=['extraction', 'post_equilibration', 'post_measurement'])
+        return txt
+
+    def _assemble_script_blob(self, kinds=None):
+        '''
+            make one blob of all the script text
+            
+            return csv-list of names, blob
+        '''
+        if kinds is None:
+            kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
+
+        ts = []
+#        names = []
+        for kind in kinds:
+            script = getattr(self, '{}_script'.format(kind))
+
+            blob, name = None, None
+            if script is not None:
+                name = script.name
+                blob = script.toblob()
+
+            ts.append('#' + '=' * 79)
+            ts.append('# {} SCRIPT {}'.format(kind.replace('_', ' ').upper(), name))
+            ts.append('#' + '=' * 79)
+            if blob:
+                ts.append(blob)
+
+        return 'Pychron Script', '\n'.join(ts)
 #===============================================================================
 # handlers
 #===============================================================================
@@ -1487,14 +1521,14 @@ class AutomatedRun(Loggable):
             ps = map(int, pos.split(','))
         else:
             if pos:
-                pos=int(pos)
-                
+                pos = int(pos)
+
             ps = [pos]
 
         return ps
-    
-    
-    
+
+
+
     def _extraction_script_factory(self, ec, key):
         source_dir = os.path.dirname(ec[key])
         file_name = os.path.basename(ec[key])

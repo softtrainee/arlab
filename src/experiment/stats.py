@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Str, Float, Any, Int, List
+from traits.api import Property, Str, Float, Any, Int, List
 from traitsui.api import View, Item, VGroup
 from pyface.timer.api import Timer
 #============= standard library imports ========================
@@ -39,22 +39,6 @@ class ExperimentStats(Loggable):
     _start_time = None
     experiment_set = Any
 
-#    def calculate_time_at(self, identifier, i, runs):
-#        self.time_at = '{} {}'.format(identifier, self._calculate_duration(runs[:i + 1]))
-
-#    def calculate_etf(self):
-##        runs=self.
-#        self.nruns = len(runs)
-
-#        dur = sum([a.get_estimated_duration() for a in runs])
-#        dur += (self.delay_between_analyses * self.nruns)
-#        self._total_time = dur
-#
-#        dt = (datetime.datetime.now() + \
-#                       datetime.timedelta(seconds=int(dur)))
-#        self.etf = dt.strftime('%I:%M:%S %p %a %m/%d')
-#        self.etf = self._calculate_duration(runs)
-
     def calculate_duration(self, runs=None):
         if runs is None:
             runs = self.experiment_set.automated_runs
@@ -73,8 +57,6 @@ class ExperimentStats(Loggable):
                        datetime.timedelta(seconds=int(dur)))
         return dt.strftime('%I:%M:%S %p %a %m/%d')
 
-#    def format_duration(self, dur):
-
     def _calculate_duration(self, runs):
         ni = len(runs)
         dur = sum([a.get_estimated_duration() for a in runs])
@@ -82,8 +64,8 @@ class ExperimentStats(Loggable):
         return dur
 
     def _get_total_time(self):
-        dur = self._total_time
-        return '{:0.3f} hrs ({} secs)'.format(dur / 3600., dur)
+        dur = datetime.timedelta(seconds=round(self._total_time))
+        return str(dur)
 
     def _get_elapsed(self):
         return str(datetime.timedelta(seconds=self._elapsed))
@@ -131,6 +113,11 @@ class ExperimentStats(Loggable):
 class StatsGroup(ExperimentStats):
     experiment_sets = List
     def calculate(self):
+        ''' 
+            calculate the total duration
+            calculate the estimated time of finish
+        '''
+
         runs = [ai
                 for ei in self.experiment_sets
                     for ai in ei.automated_runs]
@@ -143,10 +130,12 @@ class StatsGroup(ExperimentStats):
         if self._start_time:
             offset = time.time() - self._start_time
 
-
         self.etf = self.format_duration(tt - offset)
 
     def calculate_at(self, sel):
+        '''
+            calculate the time at which a selected run will execute
+        '''
         tt = 0
         for ei in self.experiment_sets:
             if sel in ei.automated_runs:

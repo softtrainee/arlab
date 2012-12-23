@@ -44,6 +44,8 @@ from src.constants import NULL_STR
 from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
 from src.database.records.arar_age import ArArAge
 import time
+from src.database.isotope_analysis.script_summary import MeasurementSummary, \
+    ExtractionSummary
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -85,8 +87,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     analysis_summary = Property
     irradiation_summary = Property
     supplemental_summary = Property
+    measurement_summary = Property
+    extraction_summary = Property
 
-    categories = List(['summary', 'irradiation', 'supplemental'])#'signal', 'sniff', 'baseline', 'peak center' ])
+    categories = List(['summary', 'irradiation',
+                       'supplemental', 'measurement', 'extraction'])#'signal', 'sniff', 'baseline', 'peak center' ])
     selected = Any('signal')
     display_item = Instance(HasTraits)
 
@@ -367,6 +372,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 item = self.irradiation_summary
             elif selected == 'supplemental':
                 item = self.supplemental_summary
+            elif selected == 'measurement':
+                item = self.measurement_summary
+            elif selected == 'extraction':
+                item = self.extraction_summary
             else:
                 item = getattr(self, '{}_graph'.format(selected))
 
@@ -795,6 +804,16 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return si
 
     @cached_property
+    def _get_measurement_summary(self):
+        si = MeasurementSummary(record=self)
+        return si
+
+    @cached_property
+    def _get_extraction_summary(self):
+        si = ExtractionSummary(record=self)
+        return si
+
+    @cached_property
     def _get_record_id(self):
         return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
@@ -951,7 +970,29 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return r
 
     def _get_position(self):
-        return self._get_extraction_value('position')
+        r = NULL_STR
+        pos = self._get_extraction_value('positions')
+        pp = []
+        for pi in pos:
+            pii = pi.position
+            if pii:
+                pp.append(pii)
+            else:
+                ppp = []
+                x, y, z = pi.x, pi.y, pi.z
+                if x is not None and y is not None:
+                    ppp.append(x)
+                    ppp.append(y)
+                if z is not None:
+                    ppp.append(z)
+
+                if ppp:
+                    pp.append('({})'.format(','.join(ppp)))
+
+        if pp:
+            r = ','.join(pp)
+
+        return r
 
     def _get_extract_device(self):
 #        dbr = self._dbrecord

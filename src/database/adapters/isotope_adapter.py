@@ -54,6 +54,7 @@ from src.database.core.functions import add, sql_retrieve, get_one, \
 from src.experiment.identifier import convert_identifier
 from src.repo.repository import Repository, ZIPRepository
 from src.paths import paths
+import binascii
 
 #@todo: change rundate and runtime to DateTime columns
 
@@ -125,17 +126,17 @@ class IsotopeAdapter(DatabaseAdapter):
         return item, False
 
     @add
-    def add_analysis_position(self, extraction, pos,**kw):
+    def add_analysis_position(self, extraction, pos, **kw):
         try:
-            pos=int(pos)
-        except (ValueError,TypeError):
-            pos=0
-            
-        dbpos=meas_PositionTable(position=pos, **kw)
+            pos = int(pos)
+        except (ValueError, TypeError):
+            pos = 0
+
+        dbpos = meas_PositionTable(position=pos, **kw)
         if extraction:
             extraction.positions.append(dbpos)
             return dbpos, True
-    
+
     def add_blanks_history(self, analysis, **kw):
         return self._add_history('Blanks', analysis, **kw)
 
@@ -195,17 +196,21 @@ class IsotopeAdapter(DatabaseAdapter):
         return exp, True
 
     @add
-    def add_extraction(self, analysis, name, extract_device=None, **kw):
-        ex = meas_ExtractionTable(script_name=name, **kw)
-        analysis = self.get_analysis(analysis)
-        if analysis:
-            analysis.extraction = ex
+    def add_extraction(self, analysis, name, script_blob, extract_device=None, **kw):
+        ex = self._get_script('extraction', script_blob)
+        if ex is None:
+            ex = meas_ExtractionTable(script_name=name, script_blob=script_blob, **kw)
+            an = self.get_analysis(analysis)
+            if an:
+                an.extraction = ex
 
-        extract_device = self.get_extraction_device(extract_device)
-        if extract_device:
-            extract_device.extractions.append(ex)
+            ed = self.get_extraction_device(extract_device)
+            if ed:
+                ed.extractions.append(ex)
 
-        return ex, True
+            return ex, True
+        else:
+            return ex, False
 
     @add
     def add_extraction_device(self, name, **kw):
@@ -370,22 +375,34 @@ class IsotopeAdapter(DatabaseAdapter):
         return r, False
 
     @add
-    def add_measurement(self, analysis, analysis_type, mass_spec, name, **kw):
-        ms = meas_MeasurementTable(script_name=name, **kw)
-#        if isinstance(analysis, str):
-        analysis = self.get_analysis(analysis)
-        analysis_type = self.get_analysis_type(analysis_type)
-        mass_spec = self.get_mass_spectrometer(mass_spec)
-        if analysis:
-            analysis.measurement = ms
+    def add_measurement(self, analysis, analysis_type, mass_spec, name, script_blob, **kw):
+        meas = self._get_script('measurement', script_blob)
+        if meas is None:
+            meas = meas_MeasurementTable(script_name=name, script_blob=script_blob, **kw)
+    #        if isinstance(analysis, str):
+            an = self.get_analysis(analysis)
+            at = self.get_analysis_type(analysis_type)
+            ms = self.get_mass_spectrometer(mass_spec)
 
-        if analysis_type:
-            analysis_type.measurements.append(ms)
+            if an:
+                an.measurement = meas
 
-        if mass_spec:
-            mass_spec.measurements.append(ms)
+            if at:
+                at.measurements.append(meas)
 
-        return ms, True
+            if ms:
+                ms.measurements.append(meas)
+
+            return meas, True
+        else:
+            return meas, False
+
+    def _get_script(self, name, txt):
+        getter = getattr(self, 'get_{}'.format(name))
+        crc = binascii.crc32(txt)
+        ss = getter(crc)
+        return ss
+
 
     @add
     def add_mass_spectrometer(self, name):
@@ -675,6 +692,10 @@ class IsotopeAdapter(DatabaseAdapter):
         return meas_ExperimentTable
 
     @get_one
+    def get_extraction(self, crc):
+        return meas_ExtractionTable, 'crc'
+
+    @get_one
     def get_extraction_device(self, name):
         return gen_ExtractionDeviceTable
 
@@ -750,6 +771,10 @@ class IsotopeAdapter(DatabaseAdapter):
     @get_one
     def get_material(self, name):
         return gen_MaterialTable
+
+    @get_one
+    def get_measurement(self, crc):
+        return meas_MeasurementTable, 'crc'
 
     @get_one
     def get_molecular_weight(self, name):

@@ -36,6 +36,7 @@ class OpenSelectorAction(Action):
     def perform(self, event):
         man = get_manager(event)
         man.open_search()
+
 class OpenFiguresAction(Action):
     accelerator = 'Ctrl+Shift+f'
     def perform(self, event):

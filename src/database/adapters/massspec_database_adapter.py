@@ -26,11 +26,12 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
     PreferencesTable, DatabaseVersionTable, FittypeTable, \
     BaselinesChangeableItemsTable, SampleLoadingTable, MachineTable, \
-    AnalysisPositionTable, LoginSessionTable
+    AnalysisPositionTable, LoginSessionTable, RunScriptTable
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.functions import add, get_one, delete_one, get_first
 from sqlalchemy.sql.expression import func
 from src.database.selectors.massspec_selector import MassSpecSelector
+import binascii
 
 
 class MassSpecDatabaseAdapter(DatabaseAdapter):
@@ -48,14 +49,14 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 # getters
 #===============================================================================
     @get_one
-    def get_sample_loading(self,sid):
+    def get_sample_loading(self, sid):
         return SampleLoadingTable, 'SampleLoadingID'
-    
+
     @get_one
     def get_login_session(self, lid):
         return LoginSessionTable, 'LoginSessionID'
-    
-    
+
+
     @get_one
     def get_analysis(self, rid):
         return AnalysesTable, 'RID'
@@ -101,19 +102,22 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             pass
         elif isinstance(label, str):
             label = label.capitalize()
-        
-        fit=self._get_fittype(label)
+
+        fit = self._get_fittype(label)
         if fit is None:
-            fit=0
+            fit = 0
         else:
-            fit=fit.Fit
-            
+            fit = fit.Fit
+
         return fit
-        
-#        return self._get_fittype(label)
+
     @get_one
     def _get_fittype(self, label):
         return FittypeTable, 'Label'
+
+    @get_one
+    def get_runscript(self, runscript_id):
+        return RunScriptTable, 'RunScriptID'
 #===============================================================================
 # adders
 #===============================================================================
@@ -126,8 +130,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             if system:
                 ms = system.SpecSysN
             else:
-                ms=0
-                
+                ms = 0
+
         sm = SampleLoadingTable(SampleHolder=tray,
                                 SpecSysN=ms
                                 )
@@ -141,9 +145,9 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if analysis:
             for i, pi in enumerate(positions):
                 try:
-                    pi=int(pi)
+                    pi = int(pi)
                     self._add_analysis_position(analysis, pi, i + 1)
-                except (ValueError,TypeError):
+                except (ValueError, TypeError):
                     pass
 
     @add
@@ -294,7 +298,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         isotope_value = intercept - blank
 
         fit = self.get_fittype(fit)
-        
+
         iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session_id,
                                     Intercept=intercept.nominal_value,
                                     InterceptEr=intercept.std_dev(),
@@ -316,14 +320,14 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return iso_r, False
 
     @add
-    def add_data_reduction_session(self):
+    def add_data_reduction_session(self, **kw):
         drs = DataReductionSessionTable(
                                    SessionDate=func.current_timestamp()
                                    )
         return drs, True
 
     @add
-    def add_login_session(self, ms):
+    def add_login_session(self, ms, **kw):
 
         if isinstance(ms, str):
             ms = ms.capitalize()
@@ -331,7 +335,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             if system:
                 ms = system.SpecSysN
             else:
-                ms=0
+                ms = 0
 
         drs = LoginSessionTable(SpecSysN=ms)
         return drs, True
@@ -353,13 +357,30 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                 pref.changeable_items.append(item)
             else:
                 item.PreferencesSetID = 0
-#            item.AnalysisID = analysis.AnalysisID
-            analysis.changeable.append(item)
-            item.DataReductionSessionID=drs_id
+            item.AnalysisID = analysis.AnalysisID
+#            analysis.changeable.append(item)
+
+            item.DataReductionSessionID = drs_id
 #            drs.changeable_items.append(item)
             return item, True
 
         return item, False
+
+    @add
+    def add_runscript(self, label, text, **kw):
+        '''
+            runscripttable does not autoincrement primary key
+            
+            uses a crc-32 of text as the RunScriptID
+        '''
+        crc = binascii.crc32(text)
+        rs = self.get_runscript(crc)
+        if rs is None:
+            rs = RunScriptTable(RunScriptID=crc, Label=label, TheText=text)
+            return rs, True
+        else:
+            return rs, False
+
 #===============================================================================
 # deleters
 #===============================================================================

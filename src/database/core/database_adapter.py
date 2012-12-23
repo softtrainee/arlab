@@ -70,7 +70,7 @@ class DatabaseAdapter(Loggable):
 
     #name used when writing to database
     save_username = Str
-
+    connection_parameters_changed = Bool
 #    url = None
 
     @property
@@ -97,8 +97,11 @@ class DatabaseAdapter(Loggable):
 
 #    window = Any
 
-#    @on_trait_change('username,host,password,name')
-#    def _connect_attributes_changed(self, obj, name, old, new):
+    @on_trait_change('username,host,password,name')
+    def _connect_attributes_changed(self, obj, name, old, new):
+        self.connection_parameters_changed = True
+#        print old, new
+#        if new:
 #        if name == 'use_db':
 #            if new:
 #                self.connect()
@@ -129,6 +132,9 @@ class DatabaseAdapter(Loggable):
     def connect(self, test=True, force=False):
         '''
         '''
+        if self.connection_parameters_changed:
+            force = True
+#        print not self.isConnected() or force, self.connection_parameters_changed
         if not self.isConnected() or force:
 #            args = []
 #            for a in ATTR_KEYS:
@@ -150,7 +156,11 @@ class DatabaseAdapter(Loggable):
                 if self.connected:
                     self.info('connected to db')
                     self.initialize_database()
+                else:
+                    self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user={} \
+host={}'.format(self.name, self.username, self.host))
 
+        self.connection_parameters_changed = False
         return self.connected
 
     def new_session(self):
@@ -167,31 +177,26 @@ class DatabaseAdapter(Loggable):
         pass
 
     def _test_db_connection(self):
-        sess = None
         try:
             connected = False
             if self.test_func is not None:
-                sess = self.session_factory()
+                self.sess = None
+                self.get_session()
+#                sess = self.session_factory()
                 self.info('testing database connection')
                 getattr(self, self.test_func)()
                 connected = True
-#                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except Exception, e:
             print e
-#            print e
-#            if self.kind == 'mysql':
-#                url = '{}@{}/{}' .format(self.user, self.host,
-#                                                        self.name)
-#            else:
-#                url = self.name
+
             self.warning('connection failed to {}'.format(self.url))
             connected = False
 
         finally:
-            if sess is not None:
+            if self.sess is not None:
                 self.info('closing test session')
-                sess.close()
+                self.sess.close()
 
         return connected
 

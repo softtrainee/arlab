@@ -24,6 +24,13 @@ from src.lasers.laser_managers.laser_manager import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
+
+'''
+    make a registry to hold all the commands exposed by ExtractionLinePyScript
+    used when building the context
+    see PyScript.get_context and get_command_register
+    
+'''
 command_register = makeRegistry()
 
 class ExtractionLinePyScript(ValvePyScript):
@@ -75,6 +82,41 @@ class ExtractionLinePyScript(ValvePyScript):
 #===============================================================================
 # commands
 #===============================================================================
+
+    @verbose_skip
+    @command_register
+    def set_x(self, value, velocity=''):
+        self._set_axis('x', value, velocity)
+
+    @verbose_skip
+    @command_register
+    def set_y(self, value, velocity=''):
+        self._set_axis('y', value, velocity)
+
+    @verbose_skip
+    @command_register
+    def set_z(self, value, velocity=''):
+        self._set_axis('z', value, velocity)
+
+    @verbose_skip
+    @command_register
+    def set_xy(self, value, velocity=''):
+        self._set_axis('xy', value, velocity)
+
+    def _set_axis(self, name, value, velocity):
+        kw = dict(block=True)
+        if velocity:
+            kw['velocity'] = value
+
+        success = self._manager_action([('set_{}'.format(name), (value,), kw)],
+                                       protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
+                                       name=self.extract_device)
+        if not success:
+            self.info('{} move to position failed'.format(self.extract_device))
+        else:
+            self.info('move to position suceeded')
+        return True
+
     @verbose_skip
     @command_register
     def move_to_position(self, position=''):
@@ -90,7 +132,7 @@ class ExtractionLinePyScript(ValvePyScript):
                                           name=self.extract_device
                                           )
             if not success:
-                self.info('{} move to position failed')
+                self.info('{} move to position failed'.format(self.extract_device))
             else:
                 self.info('move to position suceeded')
                 return True

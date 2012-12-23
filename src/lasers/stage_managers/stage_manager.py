@@ -232,12 +232,21 @@ class StageManager(Manager):
     def move_to_hole(self, hole, **kw):
         self._move_to_hole(hole, **kw)
 
-    def set_xy(self, x, y):
+    def set_x(self, value, **kw):
+        return self.stage_controller.single_axis_move('x', value, **kw)
+
+    def set_y(self, value, **kw):
+        return self.stage_controller.single_axis_move('y', value, **kw)
+
+    def set_z(self, value, **kw):
+        return self.stage_controller.single_axis_move('z', value, **kw)
+
+    def set_xy(self, x, y, **kw):
         hole = self._get_hole_by_position(x, y)
         if hole:
             self.hole = int(hole.id)
         else:
-            self.linear_move(x, y)
+            return self.linear_move(x, y, **kw)
 
     def get_hole(self, name):
         if self._stage_map:
