@@ -15,26 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
+from src.progress_dialog import MProgressDialog
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.core.core_plugin import CorePlugin
-from src.processing.processing_manager import ProcessingManager
 
-class ProcessingPlugin(CorePlugin):
-    def _service_offers_default(self):
-        '''
-        '''
-        so = self.service_offer_factory(
-                          protocol=ProcessingManager,
-                          factory=self._factory
-                          )
+class BaseAnalysisManager(HasTraits):
+    def _load_analyses(self, ans):
+        progress = self._open_progress(len(ans))
+        for ai in ans:
+            msg = 'loading {}'.format(ai.record_id)
+            progress.change_message(msg)
+            ai.load_age()
+            progress.increment()
 
-        return [so]
-
-    def _factory(self, *args, **kw):
-        '''
-        '''
-        return ProcessingManager(application=self.application)
-
-
+    def _open_progress(self, n):
+        pd = MProgressDialog(max=n, size=(550, 15))
+        pd.open()
+        pd.center()
+        return pd
 #============= EOF =============================================

@@ -31,12 +31,14 @@ import os
 #from src.loggable import Loggable
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
-from src.experiment.entry.irradiated_position import IrradiatedPosition, \
-    IrradiatedPositionAdapter
+#from src.experiment.entry.irradiated_position import IrradiatedPosition, \
+#    IrradiatedPositionAdapter
 from src.experiment.entry.level import Level
 from src.experiment.entry.flux_monitor import FluxMonitor
 from src.helpers.alphas import ALPHAS
 from src.experiment.entry.db_entry import DBEntry
+from src.irradiation.irradiated_position import IrradiatedPosition, \
+    IrradiatedPositionAdapter
 
 
 class LabnumberEntry(DBEntry):
@@ -154,7 +156,7 @@ class LabnumberEntry(DBEntry):
                     return
 
                 dbln.sample = db.get_sample(sam)
-                dbln.note=irs.note
+                dbln.note = irs.note
 
             else:
                 dbln = db.add_labnumber(ln, sample=sam,)
@@ -217,28 +219,28 @@ class LabnumberEntry(DBEntry):
             if fx:
                 self.flux_monitor_age = fx.age
 
-    def _edit_monitor_button_fired(self):
-
-        names = self.flux_monitors
-        monitor = FluxMonitor(names=names)
-        info = monitor.edit_traits(kind='livemodal')
-        if info.result:
-            db = self.db
-            kw = dict(age=monitor.age,
-                       age_err=monitor.age_err,
-                       decay_constant=monitor.decay_constant,
-                       decay_constant_err=monitor.decay_constant_err)
-
-            dbmonitor = db.get_flux_monitor(monitor.name)
-            if dbmonitor:
-                for k, v in kw.iteritems():
-                    setattr(dbmonitor, k, v)
-            else:
-                db.add_flux_monitor(monitor.name, **kw)
-                self.flux_monitor = monitor.name
-
-            db.commit()
-            self.saved = True
+#    def _edit_monitor_button_fired(self):
+#
+#        names = self.flux_monitors
+#        monitor = FluxMonitor(names=names)
+#        info = monitor.edit_traits(kind='livemodal')
+#        if info.result:
+#            db = self.db
+#            kw = dict(age=monitor.age,
+#                       age_err=monitor.age_err,
+#                       decay_constant=monitor.decay_constant,
+#                       decay_constant_err=monitor.decay_constant_err)
+#
+#            dbmonitor = db.get_flux_monitor(monitor.name)
+#            if dbmonitor:
+#                for k, v in kw.iteritems():
+#                    setattr(dbmonitor, k, v)
+#            else:
+#                db.add_flux_monitor(monitor.name, **kw)
+#                self.flux_monitor = monitor.name
+#
+#            db.commit()
+#            self.saved = True
 
     def _add_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,
@@ -376,9 +378,9 @@ class LabnumberEntry(DBEntry):
                 if material:
                     ir.material = material.name
 #                    material = material.name
-            note=ln.note
+            note = ln.note
             if note:
-                ir.note=note
+                ir.note = note
 
 
 #        ir = IrradiatedSample(labnumber=str(labnumber),
@@ -530,20 +532,22 @@ class LabnumberEntry(DBEntry):
                         label='Lab Numbers',
                         show_border=True
                         )
-        flux = Group(
-                     HGroup(
-                            Item('flux_monitor', show_label=False, editor=EnumEditor(name='flux_monitors')),
-                            Item('edit_monitor_button', show_label=False)),
-                     Item('flux_monitor_age', format_str='%0.3f', style='readonly', label='Monitor Age (Ma)'),
-                     Spring(height=50, springy=False),
-                     Item('calculate_flux_button',
-                          enabled_when='calculate_flux_enabled',
-                          show_label=False),
-                     label='Flux',
-                     show_border=True
-                     )
+#        flux = Group(
+#                     HGroup(
+#                            Item('flux_monitor', show_label=False, editor=EnumEditor(name='flux_monitors')),
+#                            Item('edit_monitor_button', show_label=False)),
+#                     Item('flux_monitor_age', format_str='%0.3f', style='readonly', label='Monitor Age (Ma)'),
+#                     Spring(height=50, springy=False),
+#                     Item('calculate_flux_button',
+#                          enabled_when='calculate_flux_enabled',
+#                          show_label=False),
+#                     label='Flux',
+#                     show_border=True
+#                     )
         v = View(VGroup(
-                        HGroup(auto, irradiation, flux),
+                        HGroup(auto, irradiation,
+#                               flux
+                               ),
                         samples,
                         HGroup(spring, Item('save_button', show_label=False))
                         ),

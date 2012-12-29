@@ -41,6 +41,7 @@ from src.graph.tools.regression_inspector import RegressionInspectorTool, \
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
 from src.regression.wls_regressor import WeightedPolynomialRegressor
+from src.regression.least_squares_regressor import LeastSquaresRegressor
 
 class StatsFilterParameters(object):
     '''
@@ -235,16 +236,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     fpts = set(meta['filtered'])
                     sel = list(csel - fpts)
 
-
             nmeta = dict(selections=sel,
-                          mouse_xy=meta.get('mouse_xy', None),
                           filtered=None
                        )
-#            index.trait_set(metadata=nmeta, trait_change_notify=False)
             index.trait_set(metadata=nmeta)
-#            nmeta = meta['mouse_xy']
-#            meta['selections'] = sel
-#            meta['filtered'] = None
 
         else:
             if 'filtered' in meta:
@@ -253,95 +248,99 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 apply_filter = True
 
         selection = meta.get('selections', [])
-#        filtered = index.metadata.get('filtered', [])
 
-#        print selection
         if selection:
-#            #dont delete the selections that are also in filtered
-#            selection = list(set(selection))# - set(filtered))
-#
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
-#            apply_filter = False
-#        else:
-#            filtered = False
 
         low = plot.index_range.low
         high = plot.index_range.high
+        fx = linspace(low, high, 200)
         if fit in [1, 2, 3]:
             if len(y) < fit + 1:
                 return
-
-#            st = low
-#            xn = x - st
-#            ox = xn[:]
-            if hasattr(scatter, 'yerror'):
-                es = scatter.yerror.get_data()
-                if selection:
-                    es = delete(es, selection, 0)
-#                r = WeightedPolynomialRegressor(xs=x, ys=y, yserr=es, degree=fit)
-                r = PolynomialRegressor(xs=x, ys=y, degree=fit)
-            else:
-
-                r = PolynomialRegressor(xs=x,
-                                        ys=y,
-                                        degree=fit)
-            fx = linspace(low, high, 200)
-
-#            print r.predict(0), 'pos0', id(self)
-            fy = r.predict(fx)
-
-            if fy is None:
-                return
-
-            ci = r.calculate_ci(fx)
-            if ci is not None:
-                ly, uy = ci
-            else:
-                ly, uy = fy, fy
-
-#            fx += low
-            if apply_filter:
-                r = self._apply_outlier_filter(r, ox, oy, index, fod)
-
-            if line:
-                line.regressor = r
-
-            self.regressors.append(r)
+            r = self._poly_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter,
+                                               scatter, selection)
+        elif isinstance(fit, tuple):
+            r = self._least_square_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
 
         else:
-            r = MeanRegressor(xs=x, ys=y)
-            if apply_filter:
-                r = self._apply_outlier_filter(r, ox, oy, index, fod)
-            if line:
-                line.regressor = r
-            self.regressors.append(r)
+            r = self._mean_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
 
-            n = 10
-            fx = linspace(low, high, n)
-            m = r.coefficients[0]
-#            print fit, fit.endswith("SEM")
-            fit = fit.lower()
-            if fit.endswith('sem'):
-                s = r.coefficient_errors[1]
-                r.error_calc = 'sem'
-            else:
-                r.error_calc = 'sd'
-                s = r.coefficient_errors[0]
+        fy = r.predict(fx)
+        ci = r.calculate_ci(fx)
+        if ci is not None:
+            ly, uy = ci
+        else:
+            ly, uy = fy, fy
 
-            fy = ones(n) * m
-            uy = fy + s
-            ly = fy - s
+        if line:
+            line.regressor = r
+
+        self.regressors.append(r)
 
         return fx, fy, ly, uy
+
+    def _least_square_regress(self, x, y, ox, oy, fx, index,
+                      fit, fod, apply_filter):
+        fitfunc, errfunc = fit
+
+        r = LeastSquaresRegressor(xs=x, ys=y,
+                                  fitfunc=fitfunc,
+                                  errfunc=errfunc)
+
+        if apply_filter:
+            r = self._apply_outlier_filter(r, ox, oy, index, fod)
+
+        return r
+
+    def _mean_regress(self, x, y, ox, oy, fx, index,
+                      fit, fod, apply_filter):
+        r = MeanRegressor(xs=x, ys=y, fit=fit)
+        if apply_filter:
+            r = self._apply_outlier_filter(r, ox, oy, index, fod)
+        return r
+#        self.regressors.append(r)
+
+#        n = 10
+#        m = r.coefficients[0]
+##            print fit, fit.endswith("SEM")
+#        fit = fit.lower()
+#        if fit.endswith('sem'):
+#            s = r.coefficient_errors[1]
+#            r.error_calc = 'sem'
+#        else:
+#            r.error_calc = 'sd'
+#            s = r.coefficient_errors[0]
+#
+#        fy = ones(n) * m
+#        uy = fy + s
+#        ly = fy - s
+#
+#        return r, fy, ly, uy
+
+    def _poly_regress(self, x, y, ox, oy, fx, index, fit, fod, apply_filter, scatter, selection):
+        if hasattr(scatter, 'yerror'):
+            es = scatter.yerror.get_data()
+            if selection:
+                es = delete(es, selection, 0)
+
+            r = WeightedPolynomialRegressor(xs=x, ys=y, yserr=es, degree=fit)
+        else:
+
+            r = PolynomialRegressor(xs=x,
+                                    ys=y,
+                                    degree=fit)
+        if apply_filter:
+            r = self._apply_outlier_filter(r, ox, oy, index, fod)
+
+
+        return r
 
     def _apply_outlier_filter(self, reg, ox, oy, index, fod):
 
         try:
             if fod['filter_outliers']:
-#                print 'fff'
-#                if not filtered:
-#                r = self._apply_outlier_filter(r, ox, oy, index, fod)
                 t_fx, t_fy = ox[:], oy[:]
                 niterations = fod['filter_outlier_iterations']
                 n = fod['filter_outlier_std_devs']
@@ -351,9 +350,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     oxcl = excludes[:]
                     sels = index.metadata['selections']
 
-        #            if not include:
                     excludes = sorted(list(set(sels + excludes)))
-#                    meta = dict(selections=excludes, filtered=oxcl)
                     index.metadata['filtered'] = oxcl
                     index.metadata['selections'] = excludes
 
@@ -385,6 +382,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #                f = f
             else:
                 f = None
+#        elif isinstance(f, tuple):
+#            #f == fitfunc, errfunc
+#            return f
 
         return f
 

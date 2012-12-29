@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager
-from globals import globalv
+#from src.envisage.core.action_helper import open_manager
+#from globals import globalv
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -88,6 +88,14 @@ class NewInverseIsochronAction(Action):
         man = get_manager(event)
         man.new_isochron()
 
+#===============================================================================
+# calculations
+#===============================================================================
+class CalculateFluxAction(Action):
+    accelerator = 'Ctrl+g'
+    def perform(self, event):
+        man = get_manager(event)
+        man.calculate_flux()
 #===============================================================================
 # corrections
 #===============================================================================

@@ -47,13 +47,6 @@ class OLSRegressor(BaseRegressor):
     def __degree_changed(self):
         self.calculate()
 
-    def _xs_changed(self):
-#        if len(self.xs) and len(self.ys):
-        self.calculate()
-
-    def _ys_changed(self):
-        self.calculate()
-
     def calculate(self):
         '''
             vander is equivalent to sm.add_constant(np.column_stack((x**n,..x**2,x**1)))
@@ -88,7 +81,7 @@ class OLSRegressor(BaseRegressor):
         if isinstance(pos, (float, int)):
             return_single = True
             pos = [pos]
-            
+
         pos = asarray(pos)
 
         X = self._get_X(xs=pos)
@@ -101,11 +94,11 @@ class OLSRegressor(BaseRegressor):
             return pred
 #                return self._result.predict(X)[0]
     def predict_error(self, x, error_calc='sem'):
-        return_single=False
+        return_single = False
         if isinstance(x, (float, int)):
             x = [x]
-            return_single=True
-            
+            return_single = True
+
         e = self.predict_error_matrix(x, error_calc)
         if return_single:
             e = e[0]
@@ -131,8 +124,6 @@ class OLSRegressor(BaseRegressor):
 
             return sqrt(var_Ypred)
 
-        
-
         return [calc_error(xi) for xi in x]
 
     def predict_error_matrix(self, x, error_calc='sem'):
@@ -148,13 +139,13 @@ class OLSRegressor(BaseRegressor):
 #            x = [x]
 
         x = asarray(x)
+        se = self.calculate_standard_error_fit()
         def calc_error(xi):
             Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
 
             covarM = matrix(self.var_covar)
             varY_hat = (Xk.T * covarM * Xk)
             varY_hat = varY_hat[0, 0]
-            se = self.calculate_standard_error_fit()
 
             if error_calc == 'sem':
                 se = se * sqrt(varY_hat)

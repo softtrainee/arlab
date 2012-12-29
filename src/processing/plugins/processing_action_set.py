@@ -92,6 +92,11 @@ class ProcessingActionSet(WorkbenchActionSet):
                       path=PATH,
                       class_name='{}:ExportPDFFigureAction'.format(BASE)
                     ),
+               Action(name='Calculate Flux',
+                      path=PATH,
+                      class_name='{}:CalculateFluxAction'.format(BASE)
+                      )
+
 
 
 

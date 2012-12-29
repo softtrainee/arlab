@@ -45,9 +45,11 @@ import csv
 from src.processing.publisher.publisher import  CSVWriter, \
     PDFWriter, MassSpecCSVWriter
 from src.processing.series_manager import SeriesManager
+from src.irradiation.flux_manager import FluxManager
+from src.processing.base_analysis_manager import BaseAnalysisManager
 
 
-class ProcessingManager(DatabaseManager):
+class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     selector_manager = Instance(SelectorManager)
     search_manager = Instance(SearchManager)
 
@@ -67,6 +69,23 @@ class ProcessingManager(DatabaseManager):
     display_omitted = Bool(True)
 
     _window_count = 0
+
+
+#===============================================================================
+# flux
+#===============================================================================
+    def calculate_flux(self):
+        '''
+            1. select tray to calculate flux
+                decide which monitor age to use
+            2. find flux monitors 
+            3. fit plane to flux monitors
+            4. apply to unknowns
+        '''
+        if self.db.connect():
+            fm = FluxManager(db=self.db)
+            fm.edit_traits()
+
 
 #===============================================================================
 # find/display analysis
@@ -262,13 +281,7 @@ class ProcessingManager(DatabaseManager):
         self.figures.append((fig, obj))
         self.open_view(fig)
 
-    def _load_analyses(self, ans):
-        progress = self._open_progress(len(ans))
-        for ai in ans:
-            msg = 'loading {}'.format(ai.record_id)
-            progress.change_message(msg)
-            ai.load_age()
-            progress.increment()
+
 #===============================================================================
 # 
 #===============================================================================
@@ -381,12 +394,6 @@ class ProcessingManager(DatabaseManager):
         obj.window_y = y + yoff * self._window_count
         self._window_count += 1
 #        do_later(g.edit_traits)
-
-    def _open_progress(self, n):
-        pd = MProgressDialog(max=n, size=(550, 15))
-        pd.open()
-        pd.center()
-        return pd
 
     def _sort_analyses(self):
         self.analyses.sort(key=lambda x:x.age)
