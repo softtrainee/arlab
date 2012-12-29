@@ -42,6 +42,15 @@ class BaseRegressor(Loggable):
     _result = None
     fit = Property
     _fit = None
+    def _xs_changed(self):
+#        if len(self.xs) and len(self.ys):
+        self.calculate()
+
+    def _ys_changed(self):
+        self.calculate()
+
+    def calculate(self):
+        pass
 
     def percent_error(self, s, e):
         try:

@@ -15,23 +15,47 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Bool, Int, on_trait_change
+from traits.api import HasTraits, Str, Float, Bool, Int, on_trait_change, Property
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-
-class IrradiatedPosition(HasTraits):
+class BaseIrradiatedPosition(HasTraits):
     labnumber = Str
     material = Str
     sample = Str
     hole = Int
     project = Str
+    j = Float(0)
+    j_err = Float(0)
+    pred_j = Float
+    pred_j_err = Float
+    x = Float
+    y = Float
+    residual = Property(depends_on='j,pred_j')
+
+    use = Bool
+    save = Bool
+    def _get_residual(self):
+        pe = 0
+        if self.pred_j:
+            try:
+                pe = abs(self.j - self.pred_j) / self.j * 100
+            except ZeroDivisionError:
+                pe = 0
+        return pe
+
+
+class IrradiatedPosition(BaseIrradiatedPosition):
+#    labnumber = Str
+#    material = Str
+#    sample = Str
+#    hole = Int
+#    project = Str
     size = Str
     weight = Str
     note = Str
-    j = Float
-    j_err = Float
+#    j = Float
+#    j_err = Float
 
     auto_assigned = Bool(False)
 #
@@ -40,6 +64,19 @@ class IrradiatedPosition(HasTraits):
 #        print 'ol', name, old, new
         if old:
             self.auto_assigned = False
+
+class BaseIrradiatedPositionAdapter(TabularAdapter):
+    columns = [
+               ('Hole', 'hole'),
+               ('Labnumber', 'labnumber'),
+               ('Sample', 'sample'),
+               ('Project', 'project'),
+               ('J', 'j'),
+               (u'\u00b1J', 'j_err'),
+               ('Note', 'note')
+             ]
+
+    hole_width = Int(45)
 
 class IrradiatedPositionAdapter(TabularAdapter):
     columns = [
