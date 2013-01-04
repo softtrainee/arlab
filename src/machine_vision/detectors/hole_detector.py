@@ -59,7 +59,7 @@ class HoleDetector(Detector):
 
     radius_mm = Float(1.5)
 
-    _hole_radius = None
+#    _hole_radius = None
 
     cropwidth = Float(5)
     cropheight = Float(5)
@@ -132,7 +132,9 @@ class HoleDetector(Detector):
         src = smooth_src(src)
         return src
 
-    def contrast_equalization(self, src):
+    def contrast_equalization(self, src, verbose=True):
+        if verbose:
+            self.info('maximizing contrast')
 
         if hasattr(src, 'ndarray'):
             src = src.ndarray
@@ -143,22 +145,6 @@ class HoleDetector(Detector):
 
         src = asMat(img_rescale)
         return src
-
-    def _get_mask_radius(self):
-        r = self._hole_radius
-        if not r:
-            r = self.pxpermm * self.radius_mm * 0.85
-        return r
-
-    def _apply_circular_mask(self, src, radius=None):
-        if radius is None:
-            radius = self._get_mask_radius()
-
-        x, y = src.shape
-        X, Y = ogrid[0:x, 0:y]
-        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > radius * radius
-        src[mask] = 0
-        return mask
 
     def _locate_helper(self, src, *args, **kw):
         try:
@@ -459,6 +445,7 @@ class HoleDetector(Detector):
     def _segment_source(self, src, style, verbose=True, **kw):
         if verbose:
             self.info('using {} segmentation'.format(style))
+
         kw['verbose'] = verbose
 
         npos = None

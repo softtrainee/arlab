@@ -30,6 +30,7 @@ from src.processing.publisher.templates.tables.spectrum import SpectrumTable
 from src.processing.publisher.templates.tables.ideogram_table import IdeogramTable
 import csv
 import os
+from reportlab.lib.units import inch
 #from reportlab.lib import colors
 
 
@@ -190,15 +191,18 @@ class PDFWriter(BaseWriter):
 #    def __init__(self,*args,**kw):
     _flowables = List
 
-    def add_ideogram_table(self, analyses, title=False, header=False, **kw):
+    def add_ideogram_table(self, analyses, add_title=False, add_header=False, tablenum=1, **kw):
         ta = IdeogramTable()
-        fta = ta.create(analyses, title, header)
+        ta.add_header = add_header
+        ta.add_title = add_title
+        ta.number = tablenum
+        fta = ta.make(analyses)
         self._flowables.append(fta)
 
     def add_spectrum_table(self, samples):
 
         ta = SpectrumTable()
-        fta = ta.create(samples)
+        fta = ta.make(samples)
         self._flowables.append(fta)
 
 
@@ -206,7 +210,10 @@ class PDFWriter(BaseWriter):
         pass
 
     def publish(self):
-        doc = SimpleDocTemplate(self.filename)
+        doc = SimpleDocTemplate(self.filename,
+                                leftMargin=0.5 * inch,
+                                rightMargin=0.5 * inch
+                                )
         doc.build(self._flowables)
 
 

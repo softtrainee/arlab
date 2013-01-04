@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
 # 
@@ -14,23 +15,25 @@
 # limitations under the License.
 #===============================================================================
 
-from sqlalchemy import *
-from migrate import *
-meta = MetaData()
-t = Table('BakeoutTable', meta,
-              Column('id', Integer, primary_key=True),
-              Column('timestamp', TIMESTAMP)
-#              Column('rundate', Date),
-#              Column('runtime', Time),
-              )
 
-def upgrade(migrate_engine):
-    # Upgrade operations go here. Don't create your own engine; bind
-    # migrate_engine to your metadata
-    meta.bind = migrate_engine
-    t.create()
+if __name__ == '__main__':
+    from helpers import build_version
+    build_version('_bakeout', set_path=True)
 
-def downgrade(migrate_engine):
-    # Operations to reverse the above upgrade go here.
-    meta.bind = migrate_engine
-    t.drop()
+#    from globals import globalv
+#    globalv.show_infos = False
+#    globalv.show_warnings = False
+
+#    from src.helpers.logger_setup import logging_setup
+    from src.helpers.logger_setup import logging_setup
+    from src.bakeout.bakeout_manager import BakeoutManager
+
+    logging_setup('bakeout', level='DEBUG')
+
+    bm = BakeoutManager()
+    bm.load()
+    bm.configure_traits()
+    import os
+    os._exit(0)
+
+# ============= EOF ====================================

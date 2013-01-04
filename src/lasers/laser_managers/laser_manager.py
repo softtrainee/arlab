@@ -158,8 +158,11 @@ class LaserManager(BaseLaserManager):
 
             self.enabled = True
             self.monitor = self.monitor_factory()
-            self.monitor.monitor()
-            self.enabled_led.state = 'green'
+            if self.monitor.monitor():
+                self.enabled_led.state = 'green'
+            else:
+                self.disable_laser()
+                self.warning_dialog('Monitor could not be started. Laser disabled')
         else:
             self.warning('Could not enable laser')
 

@@ -17,7 +17,7 @@
 
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
-    Float, Str, String, Property, List, on_trait_change, Dict, Any, Enum
+    Float, Str, String, Property, List, on_trait_change, Dict, Any, Enum, cached_property
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
     ButtonEditor, EnumEditor
 from pyface.timer.api import do_after as do_after_timer
@@ -87,10 +87,9 @@ class BakeoutManager(Manager):
     execute_label = Property(depends_on='alive')
     alive = Bool(False)
 
-    configurations = Property(depends_on='_configurations')
-    _configurations = List
-    configuration = Property(depends_on='_configuration')
-    _configuration = String
+    configuration = Str
+    configurations = Property(depends_on='_configurations_dirty')
+    _configurations_dirty = Event
 
     data_buffer = List
     data_buffer_x = List
@@ -349,18 +348,18 @@ class BakeoutManager(Manager):
 #                        bc.set_baudrate(BAUDRATE)
 #                bc.start_timer()
 
-        self._load_configurations()
+#        self._load_configurations()
         return True
 
-    def _load_configurations(self):
-        '''
-        '''
-
-        self._configurations = ['---']
-        for p in os.listdir(paths.bakeout_config_dir):
-            if os.path.splitext(p)[1] == '.cfg':
-                self._configurations.append(os.path.join(paths.bakeout_config_dir,
-                        p))
+#    def _load_configurations(self):
+#        '''
+#        '''
+#
+#        self._configurations = ['---']
+#        for p in os.listdir(paths.bakeout_config_dir):
+#            if os.path.splitext(p)[1] == '.cfg':
+#                self._configurations.append(os.path.join(paths.bakeout_config_dir,
+#                        p))
 
     def _parse_config_file(self, p):
         config = self.get_configuration(p, warn=False)
@@ -525,7 +524,7 @@ class BakeoutManager(Manager):
 
         self.graph.set_scan_delay(self.update_interval)
 
-    def __configuration_changed(self):
+    def _configuration_changed(self):
         for tr in self._get_controller_names():
             kw = dict()
             tr_obj = getattr(self, tr)
@@ -538,7 +537,7 @@ class BakeoutManager(Manager):
             tr_obj.trait_set(**kw)
 
         if self.configuration is not '---':
-            self._parse_config_file(self._configuration)
+            self._parse_config_file(os.path.join(paths.bakeout_config_dir, self.configuration))
 #        self.reset_general_scan()
 
     def _alive_changed(self, name, old, new):
@@ -651,8 +650,8 @@ class BakeoutManager(Manager):
             with open(path, 'w') as f:
                 config.write(f)
 
-            self._set_configuration(path)
-            self._load_configurations()
+            self._configurations_dirty = True
+            self.configuration = os.path.basename(path)
 
     def _execute_fired(self):
         if self.alive:
@@ -681,14 +680,13 @@ class BakeoutManager(Manager):
 #===============================================================================
 # property get/set
 #===============================================================================
+    @cached_property
     def _get_configurations(self):
-        return [os.path.basename(p) for p in self._configurations]
-
-    def _get_configuration(self):
-        return os.path.splitext(os.path.basename(self._configuration))[0]
-
-    def _set_configuration(self, c):
-        self._configuration = os.path.join(paths.bakeout_config_dir, c)
+        cs = ['---']
+        for p in os.listdir(paths.bakeout_config_dir):
+            if os.path.splitext(p)[1] == '.cfg':
+                cs.append(p)
+        return cs
 
     def _get_execute_label(self):
         return 'Stop' if self.alive else 'Execute'
@@ -863,7 +861,7 @@ class BakeoutManager(Manager):
 #                            password='Argon',
                             kind='sqlite'
                             )
-        db.connect()
+        db.connect(test=False)
         return db
 
 #==============================================================================
@@ -928,9 +926,10 @@ class BakeoutManager(Manager):
                                  ),
                                     ),
                              HGroup(Item('configuration',
-                             editor=EnumEditor(name='configurations'),
-                             show_label=False), Item('save',
-                             show_label=False)),
+                                         editor=EnumEditor(name='configurations'),
+                                         show_label=False),
+                                    Item('save',
+                                         show_label=False)),
                              VGroup('include_pressure', 'include_heat',
                              'include_temp', enabled_when='not alive'),
                              label='Control', show_border=True),

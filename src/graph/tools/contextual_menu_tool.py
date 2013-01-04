@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 from traits.api import Any
 from enable.api import Interactor
-from chaco.base_plot_container import BasePlotContainer
+#from chaco.base_plot_container import BasePlotContainer
 from chaco.plot import Plot
 
 #============= standard library imports ========================

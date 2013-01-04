@@ -21,6 +21,7 @@ from traits.api import Any
 #============= standard library imports ========================
 #from wx import EVT_IDLE, EVT_PAINT
 import wx
+import time
 #============= local library imports  ==========================
 from src.lasers.stage_managers.stage_component_editor import LaserComponentEditor, \
     _LaserComponentEditor
@@ -40,9 +41,19 @@ class _VideoComponentEditor(_LaserComponentEditor):
 #        self.control.Bind(wx.EVT_IDLE, self.onIdle)
 #        self.control.Bind(EVT_PAINT, self.onPaint)
 
-        self.playTimer = wx.Timer(self.control, 5)
+        self.playTimer = wx.Timer(self.control)
         self.control.Bind(wx.EVT_TIMER, self.onNextFrame, self.playTimer)
+#
         self.playTimer.Start(1000 / self.value.fps)
+        self.value.on_trait_change(self.onClose, 'closed_event')
+
+    def onClose(self):
+        self.playTimer.Stop()
+
+    def onNextFrame(self, evt):
+        if self.control:
+            self.control.Refresh()
+            evt.Skip()
 
 #    def onIdle(self, event):
 ##        '''
@@ -50,15 +61,9 @@ class _VideoComponentEditor(_LaserComponentEditor):
 ##        '''
 #        if self.control is not None:
 #            self.control.Refresh()
-##
-###        if not self.value.pause:
-###            #force  the control to refresh perodically rendering a smooth video stream
-#        event.RequestMore()
-#        
-    def onNextFrame(self, evt):
-        if self.control:
-            self.control.Refresh()
-        evt.Skip()
+#            time.sleep(1 / float(self.value.fps))
+#            event.Skip()
+#            event.RequestMore()
 
 class VideoComponentEditor(LaserComponentEditor):
     '''

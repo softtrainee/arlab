@@ -17,12 +17,158 @@
 #============= enthought library imports =======================
 from traits.api import Int, Str, Bool, List, Event, Property, Enum, Float
 from traitsui.api import Item, CheckListEditor, VGroup, HGroup, ButtonEditor, EnumEditor
-from src.pyscripts.commands.core import Command
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.pyscripts.commands.core import Command
 
+from src.paths import paths
+import os
+from src.pyscripts.commands.valve import ValveCommand
+from src.constants import NULL_STR
 
 DETS = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+
+#===============================================================================
+# super commands
+#===============================================================================
+class ValueCommand(Command):
+    value = Float
+    def _get_view(self):
+        v = VGroup('value')
+        return v
+
+    def _to_string(self):
+        return self.value
+
+class ConditionCommand(Command):
+    attribute = Str
+    comparison = Enum('<', '>', '=', '<=', '>=')
+    value = Float
+    start_count = Int(0)
+    frequency = Int(10)
+    def _get_condition_group(self):
+        g = HGroup('attribute',
+                      'comparison',
+                      'value'
+                      )
+        o = HGroup('start_count', 'frequency')
+        return VGroup(g, o)
+
+    def _to_string(self):
+        return '"{}","{}","{}", start_count={}, frequency={}'.format(self.attribute,
+                                                               self.comparison,
+                                                               self.value,
+                                                               self.start_count,
+                                                               self.frequency)
+#===============================================================================
+# condition commands
+#===============================================================================
+class AddTermination(ConditionCommand):
+    description = 'Add termination condition'
+    example = ''' '''
+    def _get_view(self):
+        return self._get_condition_group()
+
+class AddAction(ConditionCommand):
+    action = Str
+    resume = Bool(False)
+    description = 'Add action condition'
+    example = ''' '''
+    def _get_view(self):
+        g = self._get_condition_group()
+        return VGroup(g, 'action', 'resume')
+
+    def _to_string(self):
+        s = super(AddAction, self)._to_string()
+        return '{}, action="{}", resume={}'.format(s, self.action, self.resume)
+
+class AddTruncation(ConditionCommand):
+    description = 'Add truncation condition'
+    example = ''' '''
+
+class ClearConditions(Command):
+    description = 'Clear all conditions'
+    example = ''' '''
+
+class ClearActions(Command):
+    description = 'Clear actions'
+    example = ''' '''
+
+class ClearTruncation(Command):
+    description = 'Clear truncations'
+    example = ''' '''
+
+class ClearTermination(Command):
+    description = 'Clear terminations'
+    example = ''' '''
+#===============================================================================
+# 
+#===============================================================================
+
+class Equilibrate(ValveCommand):
+    description = 'Equilibrate'
+    example = ''' '''
+    eqtime = Float(20)
+    inlet = Str
+    outlet = Str
+    do_post_equilibration = Bool
+
+    def _get_valve_names(self):
+        vs = super(Equilibrate, self)._get_valve_names()
+        return [(NULL_STR, NULL_STR)] + vs
+
+    def _get_view(self):
+        v = VGroup(Item('eqtime', label='Equilibration Time (s)'),
+                 Item('inlet', editor=EnumEditor(name='valve_name_dict')),
+                 Item('outlet', editor=EnumEditor(name='valve_name_dict')),
+                 'do_post_equilibration'
+                 )
+
+        return v
+
+    def _to_string(self):
+        words = [('eqtime', self.eqtime, True)]
+
+        if self.inlet and self.inlet != NULL_STR:
+            words.append(('inlet', self.inlet))
+
+        if self.outlet and self.outlet != NULL_STR:
+            words.append(('outlet', self.outlet))
+
+        if self.do_post_equilibration is not None:
+            words.append(('do_post_equilibration',
+                          self.do_post_equilibration, True))
+
+        return self._keywords(words)
+
+class ExtractionGosub(Command):
+    description = 'Execute an extraction gosub'
+    example = ''' '''
+    gosub = Str
+    names = Property
+    def _get_names(self):
+        p = os.path.join(paths.extraction_dir)
+        names = [pi for pi in os.listdir(p) if pi.endswith('.py')]
+        return names
+
+    def _get_view(self):
+        v = VGroup(Item('gosub', editor=EnumEditor(name='names')))
+        return v
+
+    def _to_string(self):
+        return self.gosub
+
+class GetIntensity(Command):
+    description = 'Get detector intensity'
+    example = ''' '''
+    detector = Str(DETS[0])
+
+    def _get_view(self):
+        return VGroup(Item('detector', editor=EnumEditor(values=DETS)))
+
+    def _to_string(self):
+        return self._quote(self.detector)
+
 
 class Baselines(Command):
     ncounts = Int(1)
@@ -59,7 +205,7 @@ Example 2. peak hops activated isotopes on the CDD. In this case <mass> is relat
         return self._keywords(words)
 
 
-class Position(Command):
+class PositionMagnet(Command):
     description = 'Alter magnetic field to position beams'
     example = '''1. position(39.962)
 2. position('Ar40', detector="H1")
@@ -231,53 +377,65 @@ however all peak centers for all activated detectors are determined'''
     def _to_string(self):
         pass
 
-class SetYsymmetry(Command):
-    description = 'Set y-symmetry'
-    example = 'set_y_symmetry(10.1)'
-    def _get_view(self):
-        pass
 
-    def _to_string(self):
-        pass
-
-
-class SetZsymmetry(Command):
-    description = 'Set z-symmetry'
-    example = 'set_z_symmetry(10.1)'
-    def _get_view(self):
-        pass
-
-    def _to_string(self):
-        pass
-
-
-class SetZFocus(Command):
-    description = 'Set z-focus'
-    example = 'set_z_focus(10.1)'
-    def _get_view(self):
-        pass
-
-    def _to_string(self):
-        pass
-
-
-class SetExtactionLens(Command):
-    description = 'Set extraction lens'
-    example = 'set_extraction_lens(10.1)'
-    def _get_view(self):
-        pass
-
-    def _to_string(self):
-        pass
-
-
-class SetDeflection(Command):
+#===============================================================================
+# set commands
+#===============================================================================
+class SetDeflection(ValueCommand):
     description = 'Set deflection of a detector'
     example = 'set_deflection("AX", 100)'
+    detector = Str(DETS[0])
+
     def _get_view(self):
-        pass
+        v = VGroup(Item('detector', editor=EnumEditor(values=DETS)),
+                   'value'
+                   )
+        return v
 
     def _to_string(self):
-        pass
+        return '"{}", {}'.format(self.detector, self.value)
+
+class SetNcounts(Command):
+    description = 'Set number of counts'
+    example = ''' '''
+    counts = Int
+    def _get_view(self):
+        v = VGroup('counts')
+        return v
+
+    def _to_string(self):
+        return self.counts
+
+class SetDeflections(Command):
+    description = 'Set detector deflections'
+    example = ''' '''
+
+class SetSourceOptics(Command):
+    description = 'Set Source Optics'
+    example = ''' '''
+
+class SetSourceParameters(Command):
+    description = 'Set source parameters'
+    example = ''' '''
+
+class SetCddOperatingVoltage(ValueCommand):
+    description = 'Set CDD operating voltage'
+    example = ''' '''
+
+class SetYsymmetry(ValueCommand):
+    description = 'Set y-symmetry'
+    example = 'set_y_symmetry(10.1)'
+
+class SetZsymmetry(ValueCommand):
+    description = 'Set z-symmetry'
+    example = 'set_z_symmetry(10.1)'
+
+class SetZfocus(ValueCommand):
+    description = 'Set z-focus'
+    example = 'set_z_focus(10.1)'
+
+class SetExtractionLens(ValueCommand):
+    description = 'Set extraction lens'
+    example = 'set_extraction_lens(10.1)'
 
 #============= EOF =============================================

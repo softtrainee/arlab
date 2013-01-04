@@ -52,7 +52,9 @@ class ExportCSVFigureTableAction(Action):
     def perform(self, event):
         man = get_manager(event)
         man.export_figure_table(kind='csv')
+
 class ExportPDFFigureTableAction(Action):
+    accelerator = 'Ctrl+e'
     def perform(self, event):
         man = get_manager(event)
         man.export_figure_table(kind='pdf')
@@ -61,6 +63,12 @@ class ExportPDFFigureAction(Action):
     def perform(self, event):
         man = get_manager(event)
         man.export_figure()
+
+class ViewAnalysisTableAction(Action):
+    accelerator = 'Ctrl+t'
+    def perform(self, event):
+        man = get_manager(event)
+        man.open_table()
 #===============================================================================
 # display
 #===============================================================================
@@ -118,6 +126,14 @@ class ApplyDetectorIntercalibrationAction(Action):
         man = get_manager(event)
         man.apply_detector_intercalibration_correction()
 
+#===============================================================================
+# 
+#===============================================================================
+class ProjectViewAction(Action):
+    accelerator = 'Ctrl+p'
+    def perform(self, event):
+        man = get_manager(event)
+        man.open_project_view()
 #class NewFigureAction(Action):
 #    accelerator = 'Ctrl+k'
 #    def perform(self, event):

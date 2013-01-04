@@ -42,8 +42,17 @@ class PlotterOptionsManager(Viewable):
                 pickle.dump(obj, fp)
 
             self.plotter_options.dump()
+            self._plotter_options_list_dirty = True
+
+#            self.plotter_options = next((pi for pi in self.plotter_options_list
+#                                         if pi.name == self.plotter_options.name), None)
 
         return True
+
+    def set_plotter_options(self, name):
+        self.plotter_options = next((pi for pi in self.plotter_options_list
+                                         if pi.name == name), None)
+
 #===============================================================================
 # handlers
 #===============================================================================

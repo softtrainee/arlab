@@ -39,11 +39,13 @@ class Monitor(ConfigLoadable):
 
     def load(self):
         config = self.get_configuration()
-        self.set_attribute(config, 'sample_delay',
-                           'General', 'sample_delay', cast='float', optional=False)
+        if config:
+            self.set_attribute(config, 'sample_delay',
+                               'General', 'sample_delay', cast='float', optional=False)
 
-        self._load_hook(config)
-        self._invalid_checks = []
+            self._load_hook(config)
+            self._invalid_checks = []
+            return True
 
     def _load_hook(self, *args):
         pass
@@ -70,9 +72,10 @@ class Monitor(ConfigLoadable):
             self._monitoring = True
             self.info('Starting monitor')
             self._stop_signal = Event()
-            t = Thread(target=self._monitor_, args=(self._stop_signal,))
-    #        self.kill = False
-            t.start()
+
+            if self.load():
+                t = Thread(target=self._monitor_, args=(self._stop_signal,))
+                t.start()
 
     def reset_start_time(self):
         '''
@@ -84,7 +87,6 @@ class Monitor(ConfigLoadable):
         '''
         #load before every monitor call so that changes to the config file
         #are incorpoated
-        self.load()
 
         if self.manager is not None:
             #clear error

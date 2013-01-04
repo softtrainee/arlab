@@ -47,7 +47,7 @@ class Command(HasTraits):
 #        return self.__class__.__name__.lower()
 
     def _to_string(self):
-        pass
+        return ''
 
     @classmethod
     def _keywords(cls, words):
@@ -70,8 +70,12 @@ class Command(HasTraits):
 
 
     def get_text(self):
-        info = self.edit_traits(kind='livemodal')
-        if info.result:
+        ok = True
+        if hasattr(self, '_get_view'):
+            info = self.edit_traits(kind='livemodal')
+            ok = info.result
+
+        if ok:
             return self.to_string()
 
     def traits_view(self):
@@ -85,8 +89,8 @@ class Command(HasTraits):
         v = View(self._get_help_view())
         return v
 
-    def _get_view(self):
-        raise NotImplementedError
+#    def _get_view(self):
+#        raise NotImplementedError
 
     def _get_help_view(self):
         return VGroup(

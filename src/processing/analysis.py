@@ -28,69 +28,69 @@ from src.helpers import alphas
 from src.constants import NULL_STR
 
 
-class AnalysisTabularAdapter(TabularAdapter):
-#    iso_keys = List
-#    columns = Property(depends_on='iso_keys')
-    age_text = Property
-    age_error_format = Str('%0.2f')
-    age_width = Int(60)
-    age_error_width = Int(40)
-
-#    rid_width = Int(60)
-#    def get_column_keys(self):
-#        '''
-#            simple wrapper to add er columns
-#        '''
-#        isos = self.iso_keys
-#        es = map(lambda xi:'{}_er'.format(xi), isos)
-#        return [ci
-#                for pi in zip(isos, es)
-#                    for ci in pi]
-
-    def get_font(self, obj, trait, row):
-        import wx
-        s = 9
-        f = wx.FONTFAMILY_DEFAULT
-        st = wx.FONTSTYLE_NORMAL
-        w = wx.FONTWEIGHT_NORMAL
-        return wx.Font(s, f, st, w)
-
-#    def _get_columns(self):
-#        return self._columns_factory()
+#class AnalysisTabularAdapter(TabularAdapter):
+##    iso_keys = List
+##    columns = Property(depends_on='iso_keys')
+#    age_text = Property
+#    age_error_format = Str('%0.2f')
+#    age_width = Int(60)
+#    age_error_width = Int(40)
 #
-#    def _columns_default(self):
-#        return self._columns_factory()
+##    rid_width = Int(60)
+##    def get_column_keys(self):
+##        '''
+##            simple wrapper to add er columns
+##        '''
+##        isos = self.iso_keys
+##        es = map(lambda xi:'{}_er'.format(xi), isos)
+##        return [ci
+##                for pi in zip(isos, es)
+##                    for ci in pi]
 #
-#    def _columns_factory(self):
-#        cols = [('Lab ID', 'rid'),
-#               ('Age', 'age'),
-#               ('Error', 'age_error'),
-#               ]
-#        colskeys = self.get_column_keys()
-#        def get_name(n):
-#            if n.endswith('_er'):
-#                return u'\u00b11s'
-#            else:
-#                return n.capitalize()
+#    def get_font(self, obj, trait, row):
+#        import wx
+#        s = 9
+#        f = wx.FONTFAMILY_DEFAULT
+#        st = wx.FONTSTYLE_NORMAL
+#        w = wx.FONTWEIGHT_NORMAL
+#        return wx.Font(s, f, st, w)
 #
-#        cols += [(get_name(i), i) for i in colskeys]
-#        for iso in colskeys:
-#            self.add_trait('{}_format'.format(iso),
-#                           '%0.4f')
-#            self.add_trait('{}_width'.format(iso),
-#                           60)
-#        return cols
-
-    def _get_age_text(self, trait, item):
-        return '{:0.3f}'.format(self.item.age_value)
-
-    def get_text_color(self, obj, trait, row):
-        o = getattr(obj, trait)[row]
-        return o.color
-
-    def get_bg_color(self, obj, trait, row):
-        o = getattr(obj, trait)[row]
-        return o.bgcolor
+##    def _get_columns(self):
+##        return self._columns_factory()
+##
+##    def _columns_default(self):
+##        return self._columns_factory()
+##
+##    def _columns_factory(self):
+##        cols = [('Lab ID', 'rid'),
+##               ('Age', 'age'),
+##               ('Error', 'age_error'),
+##               ]
+##        colskeys = self.get_column_keys()
+##        def get_name(n):
+##            if n.endswith('_er'):
+##                return u'\u00b11s'
+##            else:
+##                return n.capitalize()
+##
+##        cols += [(get_name(i), i) for i in colskeys]
+##        for iso in colskeys:
+##            self.add_trait('{}_format'.format(iso),
+##                           '%0.4f')
+##            self.add_trait('{}_width'.format(iso),
+##                           60)
+##        return cols
+#
+#    def _get_age_text(self, trait, item):
+#        return '{:0.3f}'.format(self.item.age_value)
+#
+#    def get_text_color(self, obj, trait, row):
+#        o = getattr(obj, trait)[row]
+#        return o.color
+#
+#    def get_bg_color(self, obj, trait, row):
+#        o = getattr(obj, trait)[row]
+#        return o.bgcolor
 
 
 class Analysis(Loggable):
@@ -100,7 +100,7 @@ class Analysis(Loggable):
 
 #    workspace = Any
 #    repo = Any
-    sample = Str
+#    sample = Str
     irradiation = Str
 
     isotope_record = Any
@@ -108,11 +108,11 @@ class Analysis(Loggable):
     group_id = Property#(depends_on='isotope_record')
     graph_id = Property#(depends_on='isotope_record')
     analysis_type = Property#(depends_on='labnumber')
-    rad40 = Property
+#    rad40 = Property
     status_string = Property(depends_on='status')
 
-    age_error = Property
-    age_value = Property
+#    age_error = Property
+#    age_value = Property
 #    age_dirty = Event
 
     color = Color('black')
@@ -169,25 +169,27 @@ class Analysis(Loggable):
 #        c.load_from_file(dbr.analysis.path.filename)
         return c
 
-    def _ratio_factory(self, dbr, num_key, dem_key):
-        a = self._analysis_factory(dbr)
-        num = a.signals[num_key]
-        dem = a.signals[dem_key]
-        to_unc = lambda x: ufloat((x.nominal_value, x.std_dev()))
-        r = to_unc(num) / to_unc(dem)
-        return a.timestamp, r.nominal_value, r.std_dev()
-
-    def _intercalibration_factory(self, dbr, num_key, dem_key, scalar):
-        if not isinstance(scalar, tuple):
-            scalar = (scalar, 0)
-        scalar = ufloat(scalar)
-        ti, ri, ei = self._ratio_factory(dbr, num_key, dem_key)
-        ic = ufloat((ri, ei)) / scalar
-        return ti, ic.nominal_value, ic.std_dev()
+#    def _ratio_factory(self, dbr, num_key, dem_key):
+#        a = self._analysis_factory(dbr)
+#        num = a.signals[num_key]
+#        dem = a.signals[dem_key]
+#        to_unc = lambda x: ufloat((x.nominal_value, x.std_dev()))
+#        r = to_unc(num) / to_unc(dem)
+#        return a.timestamp, r.nominal_value, r.std_dev()
+#
+#    def _intercalibration_factory(self, dbr, num_key, dem_key, scalar):
+#        if not isinstance(scalar, tuple):
+#            scalar = (scalar, 0)
+#        scalar = ufloat(scalar)
+#        ti, ri, ei = self._ratio_factory(dbr, num_key, dem_key)
+#        ic = ufloat((ri, ei)) / scalar
+#        return ti, ic.nominal_value, ic.std_dev()
 
     @property
     def age_string(self):
-        a, e = self.age_value, self.age_error
+        a = self.age.nominal_value
+        e = self.age.std_dev()
+#        a, e = self.age_value, self.age_error
         try:
             pe = abs(e / a * 100)
         except ZeroDivisionError:
@@ -198,35 +200,27 @@ class Analysis(Loggable):
 #    def timestamp(self):
 #        return self.isotope_record.timestamp
 
-    def _get_rad40(self):
-        rr = self.isotope_record.arar_result
-        return rr['rad40']
+#    def _get_rad40(self):
+#        rr = self.isotope_record.arar_result
+#        return rr['rad40']
 
     def __getattr__(self, attr):
 #        if self.isotope_record:
-        if hasattr(self.isotope_record, attr):
-            return getattr(self.isotope_record, attr)
+
+#        if hasattr(self.isotope_record, attr):
+        return getattr(self.isotope_record, attr)
 #            else:
 #                raise AttributeError('Analysis has not attribute= {}'.format(attr))
 
-    def _get_age_value(self):
-        return self.age.nominal_value
-
-    def _get_age_error(self):
-        return self.age.std_dev()
+#    def _get_age_value(self):
+#        return self.age.nominal_value
+#
+#    def _get_age_error(self):
+#        return self.age.std_dev()
 
     def _get_analysis_type(self):
         dbr = self.isotope_record
         return dbr.measurement.analysis_type.name
-
-
-#    @cached_property
-    def _get_sample(self):
-        dbr = self.isotope_record
-        if hasattr(dbr, 'sample'):
-            return dbr.sample.name
-        else:
-            return NULL_STR
 
     def _get_irradiation(self):
         dbr = self.isotope_record

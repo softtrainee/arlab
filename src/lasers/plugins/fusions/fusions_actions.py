@@ -148,6 +148,22 @@ class FMotorConfigureAction(LaserAction):
         if manager is not None:
             manager.open_motor_configure()
 
+class FConfigureBrightnessMeterAction(LaserAction):
+    def __init__(self, *args, **kw):
+        super(FConfigureBrightnessMeterAction, self).__init__(*args, **kw)
+        man = self.get_manager(None, app=self.window.application)
+        man.on_trait_change(self._update_enable, 'use_video')
+        if man.use_video:
+            self.enabled = False
+
+    def _update_enable(self, new):
+        self.enabled = new
+
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            open_manager(app, manager.brightness_meter)
 #===============================================================================
 # initializations
 #===============================================================================

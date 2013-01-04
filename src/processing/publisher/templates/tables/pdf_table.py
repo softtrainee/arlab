@@ -24,7 +24,11 @@ from reportlab.lib.units import inch
 STYLES = getSampleStyleSheet()
 
 class PDFTable(object):
-    _table = None
+
+    add_title = True
+    add_header = True
+    number = 1
+
     def _new_paragraph(self, t, s='Normal'):
         style = STYLES[s]
         p = Paragraph(t, style)
@@ -43,21 +47,17 @@ class PDFTable(object):
                 self.sample_rowids[-1] += 1
                 trows.insert(-1, [])
 
-    def floatfmt(self, v, n=5):
+    def floatfmt(self, v, n=5, scale=1):
         fmt = '{{:0.{}f}}'.format(n)
-        return fmt.format(v)
+        return fmt.format(v / scale)
 
-    def create_header(self, use_title, use_header, tablenum=1):
-        rows = []
-        header = self._create_header(tablenum, use_title, use_header)
-        rows += header
-        return rows
 
-    def _create(self, rows, use_title, use_header):
+    def _make(self, rows):
         ts = Table(rows)
+        ts.hAlign = 'LEFT'
         self._set_column_widths(ts)
         self._set_row_heights(ts)
-        s = self._get_style(use_title, use_header)
+        s = self._get_style()
         ts.setStyle(s)
         return ts
 

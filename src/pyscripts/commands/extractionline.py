@@ -15,41 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Dict, Int, Float
-from traitsui.api import Item, EnumEditor
+from traits.api import Str, Int, Float
+from traitsui.api import Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.pyscripts.commands.core import Command
-from src.helpers.parsers.valve_parser import ValveParser
-import os
-from src.paths import paths
+from src.pyscripts.commands.valve import ValveCommand
 
-class ValveCommand(Command):
-    items = Dict
-    item = Str
-
-    def __init__(self):
-        path = os.path.join(paths.extraction_line_dir, 'valves.xml')
-        parser = ValveParser(path)
-
-        valves = []
-        for vg in parser.get_groups() + [None]:
-            valves += [(ve.text.strip(),
-                 ve.find('description').text.strip()
-                 ) for ve in parser.get_valves(group=vg)]
-        self.items = dict(valves)
-        self.item = self.items.keys()[0]
-
-    def _get_view(self):
-        return Item('item', editor=EnumEditor(name='items'))
-
-    def _to_string(self):
-        return self._keywords([('name', self.item),
-                               ('description', self.items[self.item])
-                               ])
-
-#        return 'name{}, description={}'.format(self._quote(self.item),
-#                                           self._quote(self.items[self.item]))
 
 class Open(ValveCommand):
     description = 'Open a valve'

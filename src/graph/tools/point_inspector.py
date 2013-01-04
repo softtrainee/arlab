@@ -34,7 +34,7 @@ class PointInspector(InfoInspector):
         if xxyy:
             x, _ = self.component.map_data((xxyy))
             d = self.component.index.get_data()
-            tol = 0.1
+            tol = 0.0001
             ind = where(abs(d - x) < tol)[0]
             return ind
 

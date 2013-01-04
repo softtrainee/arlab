@@ -29,7 +29,7 @@ from wx import stc
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from traitsui.menu import Action
-from src.scripts.core.script_validator import ScriptValidator
+#from src.scripts.core.script_validator import ScriptValidator
 from src.paths import paths
 #from traitsui.wx.code_editor import SourceEditor
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
@@ -82,7 +82,7 @@ class ScriptManager(Manager):
     _original_body = Str
     _parser = None
 
-    script_validator = Instance(ScriptValidator, ())
+#    script_validator = Instance(ScriptValidator, ())
     title = 'Script Editor - '
 
     default_directory_name = Str

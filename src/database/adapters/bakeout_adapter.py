@@ -36,15 +36,15 @@ class BakeoutAdapter(PathDatabaseAdapter):
 #=============================================================================
 #   adder
 #=============================================================================
-    def add_bakeout(self, commit=False, **kw):
-        b = self._add_timestamped_item(BakeoutTable, commit, **kw)
+    def add_bakeout(self, **kw):
+        b = BakeoutTable(**kw)
+        self._add_item(b)
+#        b = self._add_timestamped_item(BakeoutTable, commit, **kw)
         return b
 
-    def add_controller(self, bakeout, commit=False, **kw):
+    def add_controller(self, bakeout, **kw):
         c = ControllerTable(**kw)
         bakeout.controllers.append(c)
-        if commit:
-            self.commit()
         return c
 
 

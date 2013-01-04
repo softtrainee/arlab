@@ -22,7 +22,7 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenVideoAction, FOpenPo
     FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction, \
     FOpenMotionControllerManagerAction, FOpenLaserManagerAction, \
     FOpenPatternAction, FNewPatternAction, FMotorConfigureAction, \
-    FExecutePatternAction
+    FExecutePatternAction, FConfigureBrightnessMeterAction
 from src.lasers.laser_managers.laser_manager import ILaserManager
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
@@ -42,12 +42,10 @@ def get_manager(_, event, app=None):
     return manager
 
 
-class ConfigureBrightnessMeterAction(Action):
-    def perform(self, event):
-        manager = get_manager(None, event)
-        if manager is not None:
-            app = self.window.application
-            open_manager(app, manager.brightness_meter)
+class ConfigureBrightnessMeterAction(FConfigureBrightnessMeterAction):
+    get_manager = get_manager
+
+
 class MotorConfigureAction(FMotorConfigureAction):
     get_manager = get_manager
 #===============================================================================

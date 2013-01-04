@@ -22,7 +22,6 @@ from chaco.api import AbstractOverlay
 #============= local library imports  ==========================
 from src.image.video import Video
 
-
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
@@ -38,19 +37,9 @@ class VideoUnderlay(AbstractOverlay):
 
         '''
         with gc:
-#            gc.save_state()
-#                                       flip=not self.flip,
-#                                     swap_rb=self.swap_rb,
-#                                         mirror=self.mirror,
-#                                     size=map(int, (component.width, component.height))
-#                                     )
             gc.clip_to_rect(component.x, component.y,
                         component.width, component.height)
             gc.draw_image(self.video.get_image_data())
-#            gc.restore_state()
-
-
-
 
 
 #============= EOF ====================================

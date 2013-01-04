@@ -57,6 +57,9 @@ class BakeoutPyScript(PyScript):
         self.test()
         return self._xs, self._ys
 
+    def get_command_register(self):
+        return command_register.commands.items()
+
     @command_register
     def ramp(self, temperature=0, rate=0, start=None, period=60):
         temperature = float(temperature)

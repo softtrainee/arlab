@@ -34,14 +34,6 @@ class ValvePyScript(PyScript):
     def get_command_register(self):
         return command_register.commands.items()
 
-#    def get_script_commands(self):
-#        cmds = [
-#                #('open', '_m_open'),
-#                 'close',
-##               'is_open', 'is_closed'
-#                ]
-#        return cmds
-
     def gosub(self, *args, **kw):
         kw['runner'] = self.runner
         super(ValvePyScript, self).gosub(*args, **kw)

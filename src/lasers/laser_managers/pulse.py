@@ -68,7 +68,7 @@ class Pulse(HasTraits):
         return WaitDialog(low_name=0,
                           auto_start=False,
                           wtime=self.duration,
-                          title=None
+                          title=''
                           )
     def start(self):
         self._duration_changed()
@@ -115,7 +115,7 @@ class Pulse(HasTraits):
 
                  Item('duration'),
                Item('wait_control', show_label=False, style='custom'),
-               kind='live',
+#               kind='live',
                handler=PulseHandler()
                )
         return v

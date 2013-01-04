@@ -99,13 +99,13 @@ class VideoStageManager(StageManager):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
         bind_preference(self, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
-        bind_preference(self.pattern_manager,
-                        'record_patterning',
-                         '{}.record_patterning'.format(pref_id))
-
-        bind_preference(self.pattern_manager,
-                         'show_patterning',
-                         '{}.show_patterning'.format(pref_id))
+#        bind_preference(self.pattern_manager,
+#                        'record_patterning',
+#                         '{}.record_patterning'.format(pref_id))
+#
+#        bind_preference(self.pattern_manager,
+#                         'show_patterning',
+#                         '{}.show_patterning'.format(pref_id))
 
         bind_preference(self, 'use_video_archiver',
                         '{}.use_video_archiver'.format(pref_id)
@@ -216,11 +216,15 @@ class VideoStageManager(StageManager):
     def kill(self):
         '''
         '''
+
+
         super(VideoStageManager, self).kill()
         if self.camera:
             self.camera.save_calibration()
+
+        self.canvas.close_video()
         if self.video:
-            self.video.close()#user='underlay')
+            self.video.close(force=True)
 
 #        if self.use_video_server:
 #            self.video_server.stop()
