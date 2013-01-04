@@ -171,7 +171,7 @@ class SerialCommunicator(Communicator):
 
         with self._lock:
             #self.handle.flushInput()
-            #self.handle.flushOutput()
+            self.handle.flushOutput()
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
             re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes)
