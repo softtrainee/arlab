@@ -81,11 +81,11 @@ class MapView(Viewable):
     holenumber = Str
 
     labnumbers = List
-    name=Property(depends_on='stage_map')
-    
+    name = Property(depends_on='stage_map')
+
     def _get_name(self):
         return self.stage_map.name
-    
+
     @on_trait_change('stage_map')
     def _build_map(self):
 #        xs = [1, 2, 3, 4]
@@ -164,11 +164,11 @@ class MapView(Viewable):
         d[holenum] = state
         self.scatter.color_data.set_data(d)
 
-    def set_hole_labnumber(self,ai ):
-        ln=ai.labnumber
-        hs=ai.get_position_list()
+    def set_hole_labnumber(self, ai):
+        ln = ai.labnumber
+        hs = ai.get_position_list()
         for hi in hs:
-            if isinstance(hi, int):    
+            if isinstance(hi, int):
                 self.labnumbers[hi - 1] = ln
                 self.set_hole_state(hi - 1, -1.1)
 #        self.scatter.states[holenum - 1] = 1
