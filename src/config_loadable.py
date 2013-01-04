@@ -179,7 +179,9 @@ class ConfigLoadable(Loggable):
             self.config_path = path
             return config
         elif warn:
-            self.debug('{} not a valid initialization file'.format(path))
+            msg = '{} not a valid initialization file'.format(path)
+            self.debug(msg)
+            self.warning_dialog(msg)
 
     def get_configuration_writer(self):
         config = ConfigParser.RawConfigParser()

@@ -17,12 +17,12 @@
 from traits.api import Any, Bool, Float
 from traitsui.api import View, Item
 #============= standard library imports ========================
-from numpy import pi, invert, asarray, ones_like, hsplit
+from numpy import pi, invert, asarray, ones_like, hsplit, ogrid
 import time
 from matplotlib.cm import get_cmap
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, colorspace, grayspace, draw_polygons
-from src.image.image import StandAloneImage
+#from src.image.image import StandAloneImage
 from co2_detector import CO2HoleDetector
 
 
@@ -38,24 +38,28 @@ class BrightnessDetector(CO2HoleDetector):
     running_avg = None
 
     use_colormap = Bool(True)
+
     colormapper = None
     _hole_radius = Float
+    baseline = 0
 
     def traits_view(self):
         return View('_hole_radius')
 
     def get_value(self, verbose=True):
-#        self.target_image.frames = [None]
 
-        p = self.parent.get_new_frame()
-        self.target_image.load(p)
+#        p = self.parent.get_new_frame()
+#        self.target_image.load(p)
+#
+#        s = self._crop_image(p,
+#                             self.cropwidth,
+#                             self.cropheight,
+#                             image=self.target_image
+#                             )
+#
+#        s = grayspace(s)
 
-#        self.target_image.set_frames([None])
-
-        s = self._crop_image(grayspace(self.target_image.source_frame),
-                             self.cropwidth,
-                             self.cropheight
-                             )
+        s = self._get_new_frame(verbose=verbose)
 
         iar = s.ndarray[:]
         niar = iar - self.baseline
@@ -77,20 +81,24 @@ class BrightnessDetector(CO2HoleDetector):
 
         csrc = colorspace(asMat(cm_src))
 
+        gsrc = asMat(src)
+
+#        self.target_image.set_frame(0, gsrc)
+
         #calculate the masked area intensity
         spx_mask = sum(src[invert(mask)])
         area_mask = pi * mask_radius ** 2
-        #normalize to area
+#        #normalize to area
         bm_m = nspx = spx_mask / area_mask
 
         #find and draw a target
-        area_target, target = self._get_intensity_area(asMat(invert(src)), verbose)
+        area_target, target = self._get_intensity_area(gsrc, verbose)
         if target:
             self._draw_result(csrc, target)
 
             #make a blank image
             #make the mask
-            target_mask = colorspace(asMat(ones_like(src) * 255))
+            target_mask = colorspace(asMat(ones_like(gsrc.ndarray) * 255))
 
             #draw filled polygon representing target
             draw_polygons(target_mask, [target.poly_points], thickness= -1, color=(0, 0, 0))
@@ -111,6 +119,7 @@ class BrightnessDetector(CO2HoleDetector):
         x, y = src.shape
         self._draw_indicator(csrc, (x / 2, y / 2),
                              size=int(mask_radius) + 1, thickness=1)
+
         self.target_image.set_frame(0, csrc)
 
         if verbose:
@@ -124,24 +133,25 @@ class BrightnessDetector(CO2HoleDetector):
         if self.target_image is not None:
             self.target_image.close()
 
-        self.open_image()
+        self.open_image(auto_close=False)
         self.running_avg = None
-        im = self.target_image
+#        im = self.target_image
         sr = 0
         ss = None
         n = 0
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
 
-            p = self.parent.get_new_frame()
-            im.load(p)
-#            cs = im.source_frame.clone()
-            gs = grayspace(p)
-            cs = self._crop_image(gs,
-                                  self.cropwidth,
-                                  self.cropheight,
-                                  image=im
-                                  )
+#            p = self.parent.get_new_frame()
+#            im.load(p)
+##            cs = im.source_frame.clone()
+#            gs = grayspace(p)
+#            cs = self._crop_image(gs,
+#                                  self.cropwidth,
+#                                  self.cropheight,
+#                                  image=im
+#                                  )
+            cs = self._get_new_frame()
             mask_radius = self._get_mask_radius()
             nd = cs.ndarray
             self._apply_circular_mask(nd, radius=mask_radius)
@@ -172,43 +182,64 @@ class BrightnessDetector(CO2HoleDetector):
 
         self.baseline = ss / float(ncounts)
 
-    def _get_intensity_area(self, src, verbose):
+    def _get_intensity_area(self, osrc, verbose):
+        tests = [
+                     (False, False),
+#                     (True, True),
+#                     (False, True),
+#                     (True, False)
+                     ]
 
-#        seg_src = self._apply_filters(src,
-##                                      contrast=True,
-#                                       verbose=verbose)
-        seg_src = src
-        targets = self._segment_source(seg_src, self.segmentation_style,
-                                       verbose=verbose
-                                       )
-
-        target = None
-        tarea = 0
-
-        if targets:
-
-            #sort targets by distance from center
-            cx, cy = self._get_center()
-            cmpfunc = lambda t:((t.centroid_value[0] - cx) ** 2 + (t.centroid_value[1] - cy) ** 2) ** 0.5
-            targets = sorted(targets, key=cmpfunc)
+        self.target_image.set_frame(0, osrc)
+        for sh, cr in tests:
+            src = self._apply_filters(osrc, sh, cr)
+            targets = self._segment_source(src, self.segmentation_style, verbose=verbose)
 
             if targets:
-                target = targets[0]
-                ta = target.area
-                if self.running_avg is None:
-                    self.running_avg = [ta]
-                else:
-                    self.running_avg.append(ta)
+                #sort targets by distance from center
+                cx, cy = self._get_center()
+                cmpfunc = lambda t:((t.centroid_value[0] - cx) ** 2 + (t.centroid_value[1] - cy) ** 2) ** 0.5
+                targets = sorted(targets, key=cmpfunc)
 
-                n = len(self.running_avg)
-                if n > 5:
-                    self.running_avg.pop(0)
+                if targets:
+                    target = targets[0]
+                    ta = target.area
+                    if self.running_avg is None:
+                        self.running_avg = [ta]
+                    else:
+                        self.running_avg.append(ta)
 
-                tarea = sum(self.running_avg) / max(1, float(n - 1))
-        return tarea, target
+                    n = len(self.running_avg)
+                    if n > 5:
+                        self.running_avg.pop(0)
+
+                    tarea = sum(self.running_avg) / max(1, float(n - 1))
+
+                    return tarea, target
+        else:
+            return 0, None
 
     def _get_filter_target_area(self):
         return 100, 6000
+
+    def _get_mask_radius(self):
+        r = self._hole_radius
+        if not r:
+            r = self.pxpermm * self.radius_mm * 0.95
+        return r
+
+    def _apply_circular_mask(self, src, radius=None):
+        '''
+            src should be a grapscale ndarray
+        '''
+        if radius is None:
+            radius = self._get_mask_radius()
+
+        x, y = src.shape
+        X, Y = ogrid[0:x, 0:y]
+        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > radius * radius
+        src[mask] = 0
+        return mask
 #============= EOF =============================================
 
 #if __name__ == '__main__':

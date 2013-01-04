@@ -78,7 +78,7 @@ class RegionSegmenter(BaseSegmenter):
         else:
             out = wsrc
 
-        time.sleep(1)
+#        time.sleep(1)
 #        do_later(lambda:self.show_image(image, -elmap, out))
         return out
 

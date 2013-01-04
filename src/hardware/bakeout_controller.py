@@ -25,7 +25,7 @@ import time
 import os
 #============= local library imports  ==========================
 from src.helpers.timer import Timer
-from src.scripts.bakeout_script import BakeoutScript
+#from src.scripts.bakeout_script import BakeoutScript
 from src.led.led import LED, ButtonLED
 from src.led.led_editor import LEDEditor
 from src.paths import paths
@@ -179,21 +179,21 @@ Add {}'.format(sd)):
 
         else:
             self._duration_timeout = False
-            if self.script.endswith('.bo'):
-                t = BakeoutScript(name='{}_script'.format(self.name),
-                                  source_dir=os.path.join(paths.scripts_dir,
-                                                          'bakeout'),
-                                     file_name=self.script,
-                                     controller=self)
-                t.bootstrap()
-            else:
-                from src.pyscripts.bakeout_pyscript import BakeoutPyScript
-                t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
-                                                          'bakeout'),
-                                    name=self.script,
-                                    controller=self)
-                t.bootstrap()
-                t.execute(new_thread=True, finished_callback=self.end)
+#            if self.script.endswith('.bo'):
+#                t = BakeoutScript(name='{}_script'.format(self.name),
+#                                  source_dir=os.path.join(paths.scripts_dir,
+#                                                          'bakeout'),
+#                                     file_name=self.script,
+#                                     controller=self)
+#                t.bootstrap()
+#            else:
+            from src.pyscripts.bakeout_pyscript import BakeoutPyScript
+            t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
+                                                      'bakeout'),
+                                name=self.script,
+                                controller=self)
+            t.bootstrap()
+            t.execute(new_thread=True, finished_callback=self.end)
 
             self._active_script = t
 

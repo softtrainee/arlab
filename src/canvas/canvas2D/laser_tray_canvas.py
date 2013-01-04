@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import  Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
     Enum, Int
-from traitsui.api import View, Item
+from traitsui.api import View, Item, VGroup
 from chaco.api import AbstractOverlay
 
 #=============standard library imports ========================
@@ -67,7 +67,8 @@ class LaserTrayCanvas(MapCanvas):
 
     show_desired_position = Bool(True)
 
-    desired_position_color = Color(0x008000)
+#    desired_position_color = Color(0x008000)
+    desired_position_color = Color('green')
     show_laser_position = Bool(True)
 
     use_zoom = False
@@ -156,21 +157,27 @@ class LaserTrayCanvas(MapCanvas):
         with open(p, 'w') as f:
             f.write('\n'.join(lines))
 
-    def config_view(self):
-        v = View(
-               Item('show_bounds_rect'),
-               Item('render_map'),
-               Item('show_grids'),
-               Item('show_desired_position'),
-               Item('desired_position_color', show_label=False, enabled_when='show_desired_position'),
-               Item('show_laser_position'),
-               Item('crosshairs_kind', enabled_when='show_laser_position'),
-               Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
-               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind=="UserRadius"'),
-               Item('crosshairs_offset'),
-               Item('crosshairs_offset_color', show_label=False, enabled_when='object.crosshairs_offset!=(0,0)'),
-               )
-        return v
+#    def config_view(self):
+#        v = View(
+#                VGroup(
+#               Item('show_bounds_rect'),
+#               Item('render_map'),
+#               Item('show_grids'),
+#               Item('show_desired_position'),
+#               Item('desired_position_color', show_label=False,
+#                    enabled_when='1'
+##                    enabled_when='object.show_desired_position'
+#                    ),
+#               Item('show_laser_position'),
+#               Item('crosshairs_kind',
+##                    enabled_when='object.show_laser_position'
+#                    ),
+##               Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
+##               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind=="UserRadius"'),
+#               Item('crosshairs_offset'),
+##               Item('crosshairs_offset_color', show_label=False, enabled_when='object.crosshairs_offset!=(0,0)'),
+#               ))
+#        return v
 
     def end_key(self, event):
         pass
@@ -369,7 +376,7 @@ class LaserTrayCanvas(MapCanvas):
         '''
         '''
 
-#        gc.save_state()
+        gc.save_state()
         gc.set_stroke_color(color)
         mx, my = xy
         mx += 1
@@ -423,7 +430,7 @@ class LaserTrayCanvas(MapCanvas):
         gc.line_to(mx, my + b)
         gc.stroke_path()
 
-#        gc.restore_state()
+        gc.restore_state()
 #===============================================================================
 #             
 #           1 |

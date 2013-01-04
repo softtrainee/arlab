@@ -30,6 +30,7 @@ class ArArAge(HasTraits):
     age_units = 'Ma'
     age_scalar = Property(depends_on='age_units')
 
+    rad40 = Property
     k39 = Property
     rad40_percent = Property
 
@@ -62,17 +63,18 @@ class ArArAge(HasTraits):
     Ar37 = Property(depends_on='age_dirty')
     Ar36 = Property(depends_on='age_dirty')
 
+    moles_Ar40 = Property
+
     def _calculate_kca(self):
         result = self.arar_result
         if result:
             k = result['k39']
             ca = result['ca37']
-
             prs = self.production_ratios
             k_ca_pr = 1
             if prs:
-                k_ca_pr = 1
-#                k_ca_pr = 1 / prs.CA_K
+#                k_ca_pr = 1
+                k_ca_pr = 1 / prs.Ca_K
 
             return k / ca * k_ca_pr
 
@@ -85,8 +87,8 @@ class ArArAge(HasTraits):
             prs = self.production_ratios
             k_cl_pr = 1
             if prs:
-                k_cl_pr = 1
-#                k_cl_pr = 1 / prs.Cl_K
+#                k_cl_pr = 1
+                k_cl_pr = 1 / prs.Cl_K
 
             return k / cl * k_cl_pr
 
@@ -298,6 +300,10 @@ class ArArAge(HasTraits):
         return (s, e)
 
     @cached_property
+    def _get_rad40(self):
+        return self.arar_result['rad40']
+
+    @cached_property
     def _get_k39(self):
         return self.arar_result['k39']
 
@@ -327,4 +333,6 @@ class ArArAge(HasTraits):
 #        rr = self.dbrecord.arar_result
 #        return rr['rad40'] / rr['tot40'] * 100
 
+    def _get_moles_Ar40(self):
+        return 0.001
 #============= EOF =============================================

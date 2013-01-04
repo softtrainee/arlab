@@ -39,6 +39,8 @@ class CO2HoleDetector(HoleDetector):
 #        if self.target_image is not None:
 #            self.target_image.close()
     display_results = Bool(True)
+    holedim = None
+
     @property
     def crop_dimensions(self):
 
@@ -49,11 +51,11 @@ class CO2HoleDetector(HoleDetector):
             ff = 2.5 #empirical fugde factor, 2<=ff<=2.6
             cw = ch = hd * ff
         else:
-            cw = self.crop_width
-            ch = self.crop_height
+            cw = self.cropwidth
+            ch = self.cropheight
         return cw, ch
 
-    def open_image(self):
+    def open_image(self, auto_close=True):
         if self.target_image is not None:
             self.target_image.close()
 
@@ -65,15 +67,16 @@ class CO2HoleDetector(HoleDetector):
         if self.parent is not None:
             #use a manager to open so will auto close on quit
             self.parent.open_view(im)
-            minutes = 1
-            t = Timer(60 * minutes, self.target_image.close)
-            t.start()
+            if auto_close:
+                minutes = 1
+                t = Timer(60 * minutes, self.target_image.close)
+                t.start()
 
         else:
             from pyface.timer.do_later import do_later
             do_later(im.edit_traits)
 
-    def _get_new_frame(self):
+    def _get_new_frame(self, verbose=True):
         im = self.target_image
         im.load(self.parent.get_new_frame())
 
@@ -85,7 +88,8 @@ class CO2HoleDetector(HoleDetector):
 #            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
 #            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
             cw , ch = self.crop_dimensions
-            self.info('cropping image to {:0.3f}mm x {:0.3f}mm'.format(cw, ch))
+            if verbose:
+                self.info('cropping image to {:0.3f}mm x {:0.3f}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch, image=im)
 
         return src.clone()

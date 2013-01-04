@@ -23,7 +23,7 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
     FOpenPatternAction, FNewPatternAction, LaserAction, FMotorConfigureAction, \
-    FExecutePatternAction
+    FExecutePatternAction, FConfigureBrightnessMeterAction
     #FInitializeZoomAction, FInitializeBeamAction, \
 from src.lasers.laser_managers.laser_manager import ILaserManager
 #from traits.api import on_trait_change
@@ -109,6 +109,9 @@ class OpenVideoAction(FOpenVideoAction):
     get_manager = get_manager
 
 class MotorConfigureAction(FMotorConfigureAction):
+    get_manager = get_manager
+
+class ConfigureBrightnessMeterAction(FConfigureBrightnessMeterAction):
     get_manager = get_manager
 #===============================================================================
 # initializations

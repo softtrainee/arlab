@@ -194,9 +194,10 @@ class PyScriptManager(Manager):
         ps = self._pyscript_factory(self.kind)
         prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
 
-        self.core_commands = prepcommands(ps.get_core_commands())
-        self.script_commands = prepcommands(ps.get_script_commands())
-
+#        self.core_commands = prepcommands(ps.get_core_commands())
+#        self.script_commands = prepcommands(ps.get_script_commands())
+        self.script_commands = prepcommands(ps.get_commands())
+        self.script_commands.sort()
 
     def open_script(self, path=None):
         if path is None:
@@ -368,7 +369,7 @@ class PyScriptManager(Manager):
                                         selected='selected_command'
                                         ),
                          width=200,
-                         height=200,
+                         height=400,
                          resizable=False
                            ),
                      label=label,
@@ -393,7 +394,8 @@ class PyScriptManager(Manager):
                         help_grp
                         )
 
-        command_grp = VGroup(self._get_commands_group('core_commands', 'Core'),
+        command_grp = VGroup(
+#                             self._get_commands_group('core_commands', 'Core'),
                              self._get_commands_group('script_commands', self.kind),
 
                         )

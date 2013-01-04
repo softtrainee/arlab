@@ -21,14 +21,14 @@ from traits.api import HasTraits, Instance, cached_property, Property, List, Eve
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #import os
-from numpy import array
+#from numpy import array
 #============= local library imports  ==========================
 from src.processing.database_manager import DatabaseManager
 #from src.processing.processing_selector import ProcessingSelector
 from src.processing.analysis import Analysis
 #from src.processing.script import ProcessScript
 #from src.constants import NULL_STR
-from src.progress_dialog import MProgressDialog
+#from src.progress_dialog import MProgressDialog
 from src.processing.plotter_options_manager import PlotterOptionsManager, \
     IdeogramOptionsManager
 from src.processing.window import Window
@@ -41,17 +41,19 @@ from src.processing.search.selector_manager import SelectorManager
 from src.processing.search.selected_view import Marker
 from src.processing.search.figure_manager import FigureManager
 from src.database.records.isotope_record import IsotopeRecord
-import csv
+#import csv
 from src.processing.publisher.publisher import  CSVWriter, \
     PDFWriter, MassSpecCSVWriter
-from src.processing.series_manager import SeriesManager
 from src.irradiation.flux_manager import FluxManager
 from src.processing.base_analysis_manager import BaseAnalysisManager
+from src.processing.series_manager import SeriesManager
+from src.processing.project_view import ProjectView
 
 
 class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     selector_manager = Instance(SelectorManager)
     search_manager = Instance(SearchManager)
+    project_view = Instance(ProjectView)
 
     blank_corrections_manager = Instance(BlankCorrectionsManager)
     background_corrections_manager = Instance(BackgroundCorrectionsManager)
@@ -64,13 +66,23 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     figure_manager = Instance(FigureManager)
     figures = List
 
-    only_fusions = Bool(True)
-    include_omitted = Bool(True)
-    display_omitted = Bool(True)
-
     _window_count = 0
 
+    def open_project_view(self):
+        if self.db.connect():
+            pv = self.project_view
+            self.open_view(pv)
+            pv.on_trait_change(self._open_sample_ideogram, 'update_selected_sample')
 
+    def _open_sample_ideogram(self, new):
+        pv = self.project_view
+        ans = pv.get_filtered_analyses()
+        if ans:
+            po = pv.plotter_options
+
+            self._load_analyses(ans)
+            ideo = self._display_ideogram(ans, po, pv.highlight_omitted)
+            self._display_tabular_data(ans, ideo.make_title())
 #===============================================================================
 # flux
 #===============================================================================
@@ -96,7 +108,6 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     #        ps.selector.load_recent()
             ps.selector.load_last(n=20)
             ps.edit_traits()
-
 
 #===============================================================================
 # figures
@@ -172,6 +183,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         else:
             if self._gather_data():
                 ans = self._get_analyses()
+                self._load_analyses(ans)
                 group_ids = list(set([a.group_id for a in ans]))
 
                 grouped_analyses = [[ai for ai in ans if ai.group_id == gid]
@@ -198,11 +210,23 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         n = len(grouped_analyses)
         for i, ans in enumerate(grouped_analyses):
             pub.add_ideogram_table(ans,
-                                   title=i == 0,
-                                   header=i == 0,
+                                   add_title=i == 0,
+                                   add_header=i == 0,
                                    add_group_marker=i < n - 1)
 
         pub.publish()
+
+#===============================================================================
+# tables
+#===============================================================================
+    def open_table(self):
+        if self._gather_data():
+            ans = self._get_analyses()
+            self._load_analyses(ans)
+
+            tm = TabularAnalysisManager(analyses=ans,
+                                        db=self.db)
+            self.open_view(tm)
 
 #===============================================================================
 # apply corrections
@@ -274,7 +298,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                     func = getattr(self, '_display_{}'.format(name))
                     plotter = func(ans, po)
                     if plotter:
-                        self._display_tabular_data(plotter.make_title())
+                        self._display_tabular_data(ans, plotter.make_title())
 
     def _open_figure(self, fig, obj=None):
         self._set_window_xy(fig)
@@ -297,23 +321,23 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if info.result:
             return True
 
-    def _display_tabular_data(self, title):
+    def _display_tabular_data(self, ans, title):
 
 
-        tm = TabularAnalysisManager(analyses=self._get_analyses(),
+        tm = TabularAnalysisManager(analyses=ans,
                                     db=self.db,
                                     title='Table {}'.format(title)
 
                                     )
-        ui = tm.edit_traits()
-        self.add_window(ui)
+        self.open_view(tm)
+#        ui = tm.edit_traits()
+#        self.add_window(ui)
 
     def _display_isochron(self, ans, po):
         rr = self._isochron(ans)
         if rr is not None:
             g, isochron = rr
             self._open_figure(g, isochron)
-#            self.open_view(g)
             return isochron
 
     def _display_spectrum(self, ans, po):
@@ -321,29 +345,18 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if rr is not None:
             g, spec = rr
             self._open_figure(g, spec)
-#            self.open_view(g)
             return spec
 
-    def _display_ideogram(self, ans, po):
-
+    def _display_ideogram(self, ans, po, highlight_omitted=False):
         rr = self._ideogram(ans,
+                            highlight_omitted=highlight_omitted,
                             aux_plots=po.get_aux_plots(),
                             probability_curve_kind=po.probability_curve_kind,
                             mean_calculation_kind=po.mean_calculation_kind
                             )
-#        rr = ps._ideogram(ans, aux_plots=['analysis_number'], show=False)
         if rr is not None:
             g, ideo = rr
-            if self.display_omitted:
-                #sort ans by age
-                ta = sorted(ans, key=lambda x:x.age.nominal_value)
-                #find omitted ans
-                sel = [i for i, ai in enumerate(ta) if ai.status != 0]
-                ideo.set_excluded_points(sel, 0)
-
-
             self._open_figure(g, ideo)
-#            self.open_view(g)
             return ideo
 
     def _display_series(self, ans, po):
@@ -415,9 +428,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         self.window = g
         return g
 
-    def _ideogram(self, analyses, show=True,
-                  probability_curve_kind=None,
-                  mean_calculation_kind=None,
+    def _ideogram(self, analyses,
+                  probability_curve_kind='cumulative',
+                  mean_calculation_kind='weighted_mean',
                   aux_plots=None,
                   title=None,
                   xtick_font=None,
@@ -427,7 +440,6 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                   data_label_font=None,
                   metadata_label_font=None,
                   highlight_omitted=False,
-                  display_omitted=False,
                   display_mean_indicator=True,
                   display_mean_text=True
                   ):
@@ -454,14 +466,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                        display_mean_indicator=display_mean_indicator,
                        )
 
-        #filter out omitted results
-        if not (display_omitted or highlight_omitted):
-            analyses = filter(lambda x: x.status == 0, analyses)
-
         gideo = p.build(analyses, options=options)
         if gideo:
             gideo, _plots = gideo
-#            self._figure = gideo
             g.container.add(gideo)
 
             if highlight_omitted:
@@ -469,9 +476,6 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 #find omitted ans
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
                 p.set_excluded_points(sel, 0)
-
-#            if show:
-#                g.edit_traits()
 
             return g, p
 
@@ -582,5 +586,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                                                         processing_manager=self
                                                         )
         return bm
+
+    def _project_view_default(self):
+        pv = ProjectView(db=self.db)
+        return pv
 
 #============= EOF =============================================

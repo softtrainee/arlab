@@ -82,7 +82,8 @@ class MeasurementPyScript(ValvePyScript):
 #                                  [40, 39, 38, 37, 36, 35])
 #                              ])
     def get_command_register(self):
-        return command_register.commands.items()
+        cs = super(MeasurementPyScript, self).get_command_register()
+        return cs + command_register.commands.items()
 
     def truncate(self, style=None):
         if style == 'quick':
@@ -321,6 +322,7 @@ class MeasurementPyScript(ValvePyScript):
                                  start_count=start_count,
                                  frequency=frequency
                                  )
+    @verbose_skip
     @command_register
     def add_action(self, attr, comp, value, start_count=0, frequency=10,
                    action=None,
@@ -329,10 +331,7 @@ class MeasurementPyScript(ValvePyScript):
         if self._syntax_checking:
             if isinstance(action, str):
                 self.execute_snippet(action)
-        self._add_action(attr, comp, value, start_count, frequency, action, resume)
 
-    @verbose_skip
-    def _add_action(self, attr, comp, value, start_count, frequency, action, resume):
         self._automated_run_call('add_action', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency,

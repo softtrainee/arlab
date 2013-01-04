@@ -348,7 +348,7 @@ class StandAloneImage(HasTraits):
         self._image.frames = fs
 
     def set_frame(self, i, src):
-        self._image.frames[i] = src
+        self._image.frames[i] = colorspace(src)
 
     def get_frame(self, i):
         return self._image.frames[i]

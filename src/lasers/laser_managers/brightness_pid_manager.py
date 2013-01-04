@@ -33,6 +33,7 @@ from src.machine_vision.brigthness_manager import BrightnessManager
 
 
 from traits.api import HasTraits, Button, Str
+from threading import Thread
 class DummySM(HasTraits):
     video = Any
     _camera_xcoefficients = '1, 231'
@@ -54,9 +55,25 @@ class DummyParent(HasTraits):
     zoom = 0
     def _enable_fired(self):
         self.enabled = not self.enabled
-    def set_laser_power(self, p, **kw):
-        pass
 
+    def set_laser_power(self, p, **kw):
+        self.request_power = p
+
+
+class PID:
+    _integral_err = 0
+    _prev_err = 0
+    Kp = 0.25
+    Ki = 0.0001
+    Kd = 0
+    def get_value(self, error, dt):
+        self._integral_err += (error * dt)
+        derivative = (error - self._prev_err) / dt
+        output = (self.Kp * error) + (self.Ki * self._integral_err) + (self.Kd * derivative)
+        self._prev_err = error
+        return output
+
+PDD = PID()
 
 class BrightnessPIDManager(Manager):
     pid_object = Instance(PIDObject)
@@ -68,6 +85,7 @@ class BrightnessPIDManager(Manager):
     graph = Instance(StreamGraph)
     brightness_manager = Instance(BrightnessManager)
     _collect_baseline = Bool(True)
+    _collect_baseline = Bool(False)
 
     request_power = DelegatesTo('parent')
 
@@ -77,8 +95,10 @@ class BrightnessPIDManager(Manager):
 
     application = DelegatesTo('parent')
 
-    cnt = 0
-    slope = 1
+#    cnt = 0
+#    slope = 1
+#    _prev_v = 0
+#    _reset_cnt = True
     def set_brightness_setpoint(self, b):
         #start a timer for the pid loop
         self.info('setting brightness {}'.format(b))
@@ -89,32 +109,38 @@ class BrightnessPIDManager(Manager):
         if b:
             self.brightness_timer = Timer(self.pid_loop_period, self.set_output, b)
 
-    def get_value(self):
-        if self.brightness_manager:
-            v = self.brightness_manager.get_value(verbose=False)
-        else:
-            v = random.random()
+#    def get_value(self):
+#        if self.output > 0:
+#            m = 0.25 * self.output
+#            v = m * self.cnt + self._prev_v
+#            self._prev_v = v
+#            self._reset_cnt = True
+#        else:
+#            if self._reset_cnt:
+#                self._reset_cnt = False
+#                self.cnt = 0
+#            v = -0.05 * self.cnt + self._prev_v
+#        print self.output, v
+#        self.cnt += 1
 
-        if self.cnt < 30:
-            v = self.cnt * (self.slope + random.random())
-        else:
-            import math
-            v = self.setpoint + math.sin(self.cnt)
-        self.cnt += 1
+#        if self.brightness_manager:
+#            v = self.brightness_manager.get_value(verbose=False)
+#            
 
-        return v
+#        return v
 
     def set_output(self, sp):
         #get the current brightness error
-        brightness = self.get_value()
+        brightness = self.brightness_manager.get_value(verbose=False)
         err = sp - brightness
 
         #get the pid output
-        out = self.pid_object.iterate(err, self.pid_loop_period)
+        out = self.pid_object.get_value(err)
 
         if self.parent:
-            self.parent.set_laser_power(out, verbose=False,
-                                        memoize_calibration=True
+            self.parent.set_laser_power(out,
+                                        verbose=False,
+#                                        memoize_calibration=True
                                         )
 
         self.output = out
@@ -158,6 +184,10 @@ class BrightnessPIDManager(Manager):
         return v
 
     def _setpoint_changed(self):
+        t = Thread(target=self._start)
+        t.start()
+
+    def _start(self):
         if self._collect_baseline:
             self._collect_baseline = False
             if self.brightness_manager:
@@ -174,7 +204,9 @@ class BrightnessPIDManager(Manager):
 
     def _graph_default(self):
         g = StreamGraph(container_dict=dict(padding=5),)
-        g.new_plot(data_limit=60)
+        g.new_plot(data_limit=60 * 1000 / float(self.pid_loop_period))
+        g.set_x_tracking(60)
+
         g.new_series()
         g.new_series()
         g.new_series()
@@ -215,10 +247,12 @@ class BrightnessPIDManager(Manager):
                 pickle.dump(self.pid_object, f)
         except pickle.PickleError:
             pass
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('bm')
     b = BrightnessPIDManager(parent=DummyParent())
+    b.brightness_manager.detector.radius_mm = 2.25
     b.configure_traits()
 
 #============= EOF =============================================

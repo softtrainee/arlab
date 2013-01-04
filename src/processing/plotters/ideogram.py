@@ -116,8 +116,8 @@ class Ideogram(Plotter):
         try:
             plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
             plot.index.metadata['selections'] = exclude
-        except IndexError:
-            pass
+        except IndexError, e:
+            print e
 
     def _build_xtitle(self, g, xtitle_font, xtick_font):
         f, s = xtitle_font.split(' ')
@@ -525,7 +525,6 @@ class Ideogram(Plotter):
 
         sels = dict()
         for pp in g.plots[1:]:
-#            si = []
             for i, p in enumerate(pp.plots.itervalues()):
                 ss = p[0].index.metadata['selections']
 

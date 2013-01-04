@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Event
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
@@ -25,7 +26,10 @@ class VideoCanvas(BaseDataCanvas):
     video = None
     camera = None
     padding = 0
+    closed_event = Event
 #    fps = 5
+    def close_video(self):
+        self.closed_event = True
 
     def __init__(self, *args, **kw):
         '''

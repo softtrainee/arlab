@@ -87,11 +87,16 @@ class Video(Image):
         '''
   
         '''
+        if force:
+            del(self.cap)
+            return
+
         if user in self.users:
             i = self.users.index(user)
             self.users.pop(i)
             if not self.users:
                 del(self.cap)
+
 
     def set_frame_index(self, ind):
         cap = self.cap

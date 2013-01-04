@@ -16,23 +16,19 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, cached_property, Property, Any, Str, \
-    List, Bool, Int, Event, Button
-from traitsui.api import View, Item, TableEditor, HGroup, spring, VGroup, \
+from traits.api import HasTraits, Instance, cached_property, Property, Any, \
+    List, Bool, Event, Button, DelegatesTo
+from traitsui.api import View, Item, HGroup, spring, VGroup, \
     EnumEditor, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
-import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
+
 #============= local library imports  ==========================
-from src.processing.database_manager import DatabaseManager
-from src.processing.script import ProcessScript
-from src.progress_dialog import MProgressDialog
 from src.processing.analysis import Analysis
 from src.database.records.isotope_record import IsotopeRecord
-from src.processing.plotters.plotter_options import PlotterOptions
-from src.constants import NULL_STR
-from src.processing.processing_manager import ProcessingManager
 from src.processing.tabular_analysis_manager import AnalysisAdapter
+from src.viewable import Viewable
+from src.processing.plotter_options_manager import IdeogramOptionsManager
 
 #class Panel(HasTraits):
 #    pass
@@ -43,18 +39,25 @@ class SamplesAdapter(TabularAdapter):
 class Sample(HasTraits):
     name = Property
     dbrecord = Any
+    analyses = Property
     def _get_name(self):
         return self.dbrecord.name
 
+    @cached_property
+    def _get_analyses(self):
+        ans = [Analysis(isotope_record=IsotopeRecord(_dbrecord=ri))
+                    for ln in self.dbrecord.labnumbers
+                        for ri in ln.analyses]
 
+        return ans
 
-#class ProjectView(DatabaseManager):
-class ProjectView(ProcessingManager):
+class ProjectView(Viewable):
 #    lpanel = Instance(Panel)
 #    rpanel = Instance(Panel)
-#    plotter_options = Instance(PlotterOptions)
-#    plotter_options_list = Property(List(PlotterOptions), depends_on='_plotter_options_list_dirty')
-#    _plotter_options_list_dirty = Event
+    plotter_options_manager = Instance(IdeogramOptionsManager, ())
+    plotter_options = DelegatesTo('plotter_options_manager')
+    plotter_options_list = DelegatesTo('plotter_options_manager')
+
     project = Any
     projects = Property
 
@@ -66,140 +69,41 @@ class ProjectView(ProcessingManager):
     selected_analysis = Any
     update_selected_analysis = Event
 
-#    only_fusions = Bool(True)
-#    include_omitted = Bool(True)
-#    display_omitted = Bool(True)
+    only_fusions = Bool(True)
+    include_omitted = Bool(True)
+    highlight_omitted = Bool(True)
 
     edit_plotter_options = Button('Edit')
-#    _window_count = 0
-#    def _lpanel_default(self):
-#        p = Panel()
-#        return p
-#
-#    def _rpanel_default(self):
-#        p = Panel()
-#        return p
-#    def close(self, ok):
-#        #dump the default plotter options
-#        p = os.path.join(paths.plotter_options_dir, 'project_view.default')
-#        with open(p, 'w') as fp:
-#            obj = self.plotter_options.name
-#            pickle.dump(obj, fp)
-#
-#        return True
-
-    def load_sample_ideogram(self):
-        '''
-            input a dbsample and plot an ideogram of all analyses
-        '''
-        ans = self.analyses
-
-#        if self.only_fusions:
-#            ans = filter(lambda x: x.step == '', ans)
-
-        if not self.include_omitted:
-            ans = filter(lambda x: x.status == 0, ans)
-
-        self._load(ans)
-#        t = Thread(target=self._load, args=(ans,))
-#        t.start()
-
-    def _load(self, ans):
-        ps = ProcessScript()
-#        ans = ps._convert_records(recs)
-        ps._group_by_labnumber(ans)
-
-        progress = self._open_progress(len(ans))
-        for ai in ans:
-            msg = 'loading {}'.format(ai.record_id)
-            progress.change_message(msg)
-            ai.load_age()
-            progress.increment()
-
-        po = self.plotter_options
-        rr = ps._ideogram(ans, aux_plots=po.get_aux_plots(), show=False)
-#        rr = ps._ideogram(ans, aux_plots=['analysis_number'], show=False)
-        if rr is not None:
-            g, ideo = rr
-            if self.display_omitted:
-                #sort ans by age
-                ta = sorted(ans, key=lambda x:x.age)
-                #find omitted ans
-                sel = [i for i, ai in enumerate(ta) if ai.status != 0]
-                ideo.set_excluded_points(sel, 0)
-
-            self._set_window_xy(g)
-            g.edit_traits()
-            self._window_count += 1
-
-#    def _set_window_xy(self, obj):
-#        x = 50
-#        y = 25
-#        xoff = 25
-#        yoff = 25
-#        obj.window_x = x + xoff * self._window_count
-#        obj.window_y = y + yoff * self._window_count
-##        do_later(g.edit_traits)
-#    def _open_progress(self, n):
-#        import wx
-#        pd = MProgressDialog(max=n, size=(550, 15))
-#        pd.open()
-#
-#        (w, h) = wx.DisplaySize()
-#        (ww, _hh) = pd.control.GetSize()
-#        pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
-#        return pd
-#
-#    def _sort_analyses(self):
-#        self.analyses.sort(key=lambda x:x.age)
+    def get_filtered_analyses(self):
+        sam = self.selected_sample
+        if sam:
+            ans = sam.analyses
+            if self.only_fusions:
+                ans = filter(lambda x: x.step == '', ans)
+            if not self.include_omitted:
+                ans = filter(lambda x: x.status == 0, ans)
+            return ans
 
 #===============================================================================
 # persistence
 #===============================================================================
-#    def _load_plotter_options(self, p):
-#        try:
-##            p = os.path.join(paths.hidden_dir, 'project_view.plotter_options')
-#            if os.path.isfile(p):
-#                with open(p, 'rb') as fp:
-#                    po = pickle.load(fp)
-#            else:
-#                po = PlotterOptions()
-#        except pickle.PickleError:
-#            po = PlotterOptions()
-#
-#        return po
-#
-#    def _dump_plotter_options(self, po, p):
-##        p = os.path.join(paths.hidden_dir, 'project_view.plotter_options')
-#        with open(p, 'wb') as fp:
-#            pickle.dump(po, fp)
 
 #===============================================================================
 # handlers
 #===============================================================================
-    def _update_selected_sample_fired(self):
-        ss = self.selected_sample
-        if ss is not None:
-            self.load_sample_ideogram()
-            self._sort_analyses()
 
     def _update_selected_analysis_fired(self):
         sa = self.selected_analysis
         if sa is not None:
-            dbr = sa.dbrecord
+            dbr = sa.isotope_record
             dbr.load_graph()
             dbr.edit_traits()
 
     def _edit_plotter_options_fired(self):
-        if self.plotter_options:
-            po = self.plotter_options
-        else:
-            po = PlotterOptions()
-
+        po = self.plotter_options_manager
         info = po.edit_traits(kind='livemodal')
         if info.result:
-            self._plotter_options_list_dirty = True
-            self.plotter_options = next((pi for pi in self.plotter_options_list if pi.name == po.name), None)
+            po.set_plotter_options(self.plotter_options.name)
 
 #===============================================================================
 # property get/set
@@ -213,35 +117,31 @@ class ProjectView(ProcessingManager):
 
     @cached_property
     def _get_samples(self):
+        ss = []
         pr = self.project
         if pr:
-            return [Sample(dbrecord=si
+            ss = [Sample(dbrecord=si
                            ) for si in pr.samples]
-        return []
+        return ss
 
     @cached_property
     def _get_analyses(self):
-        sample = self.selected_sample
-        if sample:
-            ans = [Analysis(isotope_record=IsotopeRecord(_dbrecord=ri))
-                        for ln in sample.dbrecord.labnumbers
-                            for ri in ln.analyses]
-            if self.only_fusions:
-                ans = filter(lambda x: x.step == '', ans)
-
-            return ans
-#            return sorted(ans, key=lambda x: x.age)
-        return []
+        ans = []
+        if self.selected_sample:
+            ans = self.selected_sample.analyses
+        return ans
 
 #    @cached_property
 #    def _get_plotter_options_list(self):
 #        r = paths.plotter_options_dir
-#        ps = [PlotterOptions(name=NULL_STR)]
+#        ps = [IdeogramOptions(name=NULL_STR)]
 #        for n in os.listdir(r):
-#            if n.startswith('.') or n == 'project_view.default':
+#            if n.startswith('.'):
+#                continue
+#            if n.endswith('.default'):
 #                continue
 #
-#            po = PlotterOptions(name=n)
+#            po = IdeogramOptions(name=n)
 #            ps.append(po)
 #
 #        return ps
@@ -284,14 +184,16 @@ class ProjectView(ProcessingManager):
         options_grp = VGroup(
                            Item('only_fusions', label='Display Only Fusion Analyses'),
                            Item('include_omitted', label='Include Omitted Analyses'),
-                           Item('display_omitted', label='Highlight Omitted Analyses',
+                           Item('highlight_omitted', label='Highlight Omitted Analyses',
                                 enabled_when='include_omitted')
                            )
+
         graph_options = HGroup(Item('plotter_options', show_label=False,
                                    editor=EnumEditor(name='plotter_options_list')
                                 ),
                                Item('edit_plotter_options', show_label=False)
                               )
+
         grp = VGroup(HGroup(prj, spring, options_grp),
                      graph_options,
                      samples,

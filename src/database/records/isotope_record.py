@@ -72,7 +72,7 @@ class EditableGraph(HasTraits):
 
 class IsotopeRecord(DatabaseRecord, ArArAge):
     title_str = 'Analysis'
-    window_height = 780
+    window_height = 800
     window_width = 875
     color = 'black'
 
@@ -102,7 +102,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #    baselines = None
 #    backgrounds = None
 #    blanks = None
-
+    sample = Property
+    material = Property
     labnumber = Property
     project = Property
     shortname = Property
@@ -273,84 +274,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         return d
 
-#===============================================================================
-# private
-#===============================================================================
-#    def __getattr__(self, attr):
-#        try:
-#            return getattr(self._dbrecord, attr)
-#        except AttributeError, e:
-#            print 'gettatrr', attr
-#    def _calculate_kca(self):
-#        result = self.arar_result
-#        if result:
-#            k = result['k39']
-#            ca = result['ca37']
-#
-#            prs = self.production_ratios
-#            k_ca_pr = 1
-#            if prs:
-#                k_ca_pr = 1
-##                k_ca_pr = 1 / prs.CA_K
-#
-#            return k / ca * k_ca_pr
-#
-#    def _calculate_kcl(self):
-#        result = self.arar_result
-#        if result:
-#            k = result['k39']
-#            cl = result['cl36']
-#
-#            prs = self.production_ratios
-#            k_cl_pr = 1
-#            if prs:
-#                k_cl_pr = 1
-##                k_cl_pr = 1 / prs.Cl_K
-#
-#
-#            return k / cl * k_cl_pr
-
-#    def _calculate_age(self):
-#
-##        self._load_signals()
-##        signals = self._signals
-#        signals = self.signals
-#        nsignals = dict()
-#        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-#        for iso in keys:
-#            for k in ['', 'bs', 'bl', 'bg']:
-#                isok = iso + k
-#                if not signals.has_key(isok):
-#                    nsignals[isok] = self._signal_factory(isok, None)
-#                else:
-#                    nsignals[isok] = signals[isok]
-#
-#        sigs = lambda name: [(nsignals[iso].value, nsignals[iso].error)
-#                                for iso in map('{{}}{}'.format(name).format, keys)]
-#
-#        fsignals = sigs('')
-##        print fsignals[0]
-#        bssignals = sigs('bs')
-#        blsignals = sigs('bl')
-#        bksignals = sigs('bg')
-#
-#        ic = self.ic_factor
-#        j = self.j
-#        irrad = self.irradiation_info
-#        ab = self.abundant_sensitivity
-#
-#        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-#                                    j, irrad, ic=ic, abundant_sensitivity=ab)
-#
-#        if result:
-#            self.arar_result = result
-#            self.k39 = result['k39']
-#            ai = result['age']
-#
-#            ai = ai / self.age_scalar
-#            age = ai.nominal_value
-#            err = ai.std_dev()
-#            return age, err
 
 #===============================================================================
 # handlers
@@ -855,34 +778,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         except AttributeError, e:
             print 'get_mass_spectrometer', e
 
-#    @cached_property
-#    def _get_age(self):
-#        r = self._calculate_age()
-#        return r
-
-#    @cached_property
-#    def _get_kca(self):
-#        return self._calculate_kca()
-#
-#    @cached_property
-#    def _get_cak(self):
-#        return 1 / self.kca
-#
-#    @cached_property
-#    def _get_kcl(self):
-#        return self._calculate_kcl()
-#
-#    @cached_property
-#    def _get_clk(self):
-#        return 1 / self.kcl
-
-#    @cached_property
-#    def _get_signals(self):
-##        if not self._signals:
-#        self._load_signals(caller='get_signals')
-#
-#        return self._signals
-
     @cached_property
     def _get_isotope_keys(self):
         if not self._signals:
@@ -926,11 +821,26 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             return ti.strftime('%H:%M:%S')
 
     @cached_property
+    def _get_sample(self):
+        dbr = self.dbrecord
+        if hasattr(dbr, 'sample'):
+            return dbr.sample.name
+        else:
+            return NULL_STR
+
+    @cached_property
+    def _get_material(self):
+        dbr = self.dbrecord
+        if hasattr(dbr, 'sample'):
+            return dbr.sample.material.name
+        else:
+            return NULL_STR
+
+    @cached_property
     def _get_project(self):
-        if self.dbrecord:
-            ln = self.dbrecord.labnumber
-            sample = ln.sample
-            return sample.project.name
+        ln = self.dbrecord.labnumber
+        sample = ln.sample
+        return sample.project.name
 
     @cached_property
     def _get_status(self):
@@ -996,9 +906,13 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_position(self):
         r = NULL_STR
         pos = self._get_extraction_value('positions')
+        if pos == NULL_STR:
+            return NULL_STR
+
         pp = []
         for pi in pos:
             pii = pi.position
+
             if pii:
                 pp.append(pii)
             else:

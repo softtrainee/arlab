@@ -538,12 +538,12 @@ class StageManager(Manager):
 #                           show_label=False, style='custom'
 #                          ),
 
-                     Group(
-
-                           Item('canvas', show_label=False,
-                                editor=InstanceEditor(view='config_view'),
-                                 style='custom'),
-                           label='Canvas'),
+#                     Group(
+#                           Item('canvas', show_label=False,
+#                                editor=InstanceEditor(view='config_view'),
+#                                 style='custom'
+#                                 ),
+#                           label='Canvas'),
 
                      Group(Item('motion_controller_manager', editor=InstanceEditor(view='configure_view'),
                                  style='custom', show_label=False),

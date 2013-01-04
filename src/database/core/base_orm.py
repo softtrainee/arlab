@@ -19,7 +19,8 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Time, Date, BLOB
+from sqlalchemy import Column, Integer, String, Time, Date, BLOB, TIMESTAMP
+from sqlalchemy.sql.expression import func
 #============= local library imports  ==========================
 Base = declarative_base()
 class MigrateVersionTable(Base):
@@ -42,6 +43,7 @@ class NameMixin(BaseMixin):
 class ResultsMixin(BaseMixin):
 #    runtime = Column(Time)
 #    rundate = Column(Date)
+    timestamp = Column(TIMESTAMP, default=func.now())
 
     @declared_attr
     def path(self):

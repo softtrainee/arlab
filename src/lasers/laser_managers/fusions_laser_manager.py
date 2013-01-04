@@ -588,12 +588,12 @@ class FusionsLaserManager(LaserManager):
                                        db=self.get_power_calibration_database()
                                        )
 
-#    def _brightness_meter_default(self):
-#        if self.use_video:
-#            b = BrightnessPIDManager(parent=self)
-##            b.brightness_manager.video = self.stage_manager.video
-#
-#            return b
+    def _brightness_meter_default(self):
+        if self.use_video:
+            b = BrightnessPIDManager(parent=self)
+#            b.brightness_manager.video = self.stage_manager.video
+
+            return b
 
     def _fiber_light_default(self):
         '''
