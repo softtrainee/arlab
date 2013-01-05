@@ -234,7 +234,7 @@ def launch():
 #        warning(app.workbench.active_window, tb)
         app.exit()
 
-    logger.info('Quiting Pychron')
+    logger.info('Quitting Pychron')
     app.exit()
 
     for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:

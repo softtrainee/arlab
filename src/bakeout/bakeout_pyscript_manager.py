@@ -1,6 +1,5 @@
-#!/usr/bin/python
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +14,14 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
+from src.pyscripts.pyscript_editor import PyScriptManager
+#============= standard library imports ========================
+#============= local library imports  ==========================
 
-if __name__ == '__main__':
-    from helpers import build_version
-    build_version('_bakeout', set_path=True)
-    from src.envisage.bakedpy_run import launch
-    from src.helpers.logger_setup import logging_setup
-
-    logging_setup('bakeout', level='DEBUG')
-    launch()
-
-# ============= EOF ====================================
+class BakeoutPyScriptManager(PyScriptManager):
+    kind = 'Bakeout'
+    default_directory_name = 'bakeout'
+#============= EOF =============================================

@@ -43,7 +43,7 @@ from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
-from src.managers.script_manager import ScriptManager
+#from src.managers.script_manager import ScriptManager
 from src.managers.data_managers.data_manager import DataManager
 from src.helpers.archiver import Archiver
 #from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
@@ -132,7 +132,7 @@ class BakeoutManager(Manager):
     database = Any
     _suppress_commit = False
 
-    force_program = False
+    force_program = True
 #    def _convert_to_h5(self, path):
 #        args = self._bakeout_csv_parser(path)
 #        (names, nseries, ib, data, path, attrs) = args
@@ -208,23 +208,35 @@ class BakeoutManager(Manager):
         else:
             self.alive = bool(len(self._get_active_controllers()))
 
-    def kill(self, close=True, **kw):
-        '''
-        '''
+#    def kill(self, close=True, **kw):
+#        '''
+#        '''
+#
+#        if self.data_manager is not None and close:
+#            self.data_manager.close()
+#
+##        self._clean_archive()
+#
+#        if 'user_kill' in kw:
+#            if not kw['user_kill']:
+#                super(BakeoutManager, self).kill()
+#        else:
+#            super(BakeoutManager, self).kill()
+#
+#        for c in self._get_controllers():
+#            c.end(**kw)
+#            c.stop_timer()
+    def kill(self):
+        super(BakeoutManager, self).kill()
 
-        if self.data_manager is not None and close:
+        if self.data_manager:
             self.data_manager.close()
 
-#        self._clean_archive()
-
-        if 'user_kill' in kw:
-            if not kw['user_kill']:
-                super(BakeoutManager, self).kill()
-        else:
-            super(BakeoutManager, self).kill()
-
         for c in self._get_controllers():
-            c.end(**kw)
+            c.end()
+            c.stop_timer()
+
+        self._clean_archive()
 
     def _setup_graph(self, name, pid):
         self.graph.new_series()
@@ -456,7 +468,7 @@ class BakeoutManager(Manager):
         root = os.path.join(paths.data_dir, 'bakeouts')
         self.info('cleaning bakeout data directory {}'.format(root))
         a = Archiver(root=root, archive_days=14)
-        a.clean()
+        a.clean(spawn_process=False)
 
     def _write_data(self):
 
@@ -844,17 +856,21 @@ class BakeoutManager(Manager):
         g = self._graph_factory()
         return g
 
-    def _script_editor_default(self):
-        kw = dict(kind='Bakeout',
-                  default_directory_name='bakeoutscripts')
-        if self.script_style == 'pyscript':
-            klass = PyScriptManager
-            kw['execute_visible'] = False
-        else:
-            klass = ScriptManager
+#    def _script_editor_default(self):
+#        return PyScriptManager(kind='Bakeout',
+#                               default_directory_name='bakeout'
+#                               )
 
-        m = klass(**kw)
-        return m
+#        kw = dict(kind='Bakeout',
+#                  default_directory_name='bakeoutscripts')
+#        if self.script_style == 'pyscript':
+#            klass = PyScriptManager
+#            kw['execute_visible'] = False
+#        else:
+#            klass = ScriptManager
+#
+#        m = klass(**kw)
+#        return m
 
     def _database_default(self):
         db = BakeoutAdapter(name=paths.bakeout_db,
@@ -918,12 +934,13 @@ class BakeoutManager(Manager):
                              editor=ButtonEditor(label_value='execute_label'
                              ), show_label=False,
                              enabled_when='execute_ok'),
-                             Item('open_button',
-                             editor=ButtonEditor(label_value='open_label'
-                             ), show_label=False),
-                            Item('edit_scripts_button', show_label=False,
-#                                 enabled_when='not alive'
-                                 ),
+
+#                             Item('open_button',
+#                             editor=ButtonEditor(label_value='open_label'
+#                             ), show_label=False),
+#                            Item('edit_scripts_button', show_label=False,
+##                                 enabled_when='not alive'
+#                                 ),
                                     ),
                              HGroup(Item('configuration',
                                          editor=EnumEditor(name='configurations'),

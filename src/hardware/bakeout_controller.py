@@ -200,6 +200,7 @@ Add {}'.format(sd)):
     def stop_timer(self):
         if self._timer is not None:
             self._timer.Stop()
+            self.info('stop timer')
 
     def start_timer(self):
         if self._timer is not None:
