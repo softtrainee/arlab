@@ -26,7 +26,7 @@ from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.graph.time_series_graph import TimeSeriesGraph
 
 import os
-from src.database.core.query import Query
+from src.database.core.query import Query, compile_query
 from src.viewable import Viewable
 
 from traits.api import HasTraits
@@ -93,9 +93,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     opened_windows = Dict
     title = ''
 
-    tabular_adapter = BaseResultsAdapter
-
-#    query_table = None
+    tabular_adapter = None
+    query_table = None
     record_klass = None
     query_klass = None
 
@@ -111,7 +110,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     style = Enum('normal', 'panel', 'simple', 'single')
 
-    data_manager = None
     verbose = False
     def onKeyDown(self, evt):
         import wx
@@ -119,6 +117,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if evt.GetKeyCode() == wx.WXK_RETURN:
             print 'ffoasdf'
         evt.Skip()
+
     def _selected_changed(self):
         if self.selected:
             sel = self.selected
@@ -192,22 +191,16 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                         q = q.join(tab)
 
                 q = qi.assemble_filter(q, attr)
+
         return q
 
     def _execute_query(self, queries=None):
-#        db = self.db
-#        if filter_str is None:
-#            filter_str = self._generate_filter_str()
         if queries is None:
             queries = self.queries
-        query_dict = dict(
-#                          filter_str=filter_str,
-                      limit=self.limit,
-                      order=self._get_order(),
-                      queries=queries
-                      )
 
-        dbs, query_str = self._get_selector_records(**query_dict)
+        dbs, query_str = self._get_selector_records(limit=self.limit,
+                                                    queries=queries
+                                                    )
 
         if not self.verbose:
             query_str = str(query_str)
@@ -340,16 +333,23 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.wx = 0.4
             self.wy = 0.1
 
-    def _get_order(self):
-        from sqlalchemy.sql.expression import desc
-        try:
-#            return [desc(getattr(self.query_table, attr)) for attr in ['rundate', 'runtime']]
-            return [desc(getattr(self.query_table, attr)) for attr in ['timestamp']]
-        except AttributeError:
-            pass
-
     def _get_selector_records(self):
         pass
+
+    def _get_records(self, q, queries, limit, timestamp='timestamp'):
+        if queries:
+            q = self._assemble_query(q, queries, self.lookup)
+
+        tattr = getattr(self.query_table, timestamp)
+        q = q.order_by(tattr.desc())
+        if limit:
+            q = q.limit(limit)
+
+        q = q.from_self()
+        q = q.order_by(tattr.asc())
+        records = q.all()
+
+        return records, compile_query(q)
 
     def _load_hook(self):
         pass

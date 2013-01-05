@@ -45,4 +45,10 @@ class OpenScriptAction(BakeoutAction):
         man = self._get_script_manager(event)
         if man.open_script():
             self._open_view(event.window.application, man)
+
+class FindAction(BakeoutAction):
+    accelerator = 'Ctrl+f'
+    def perform(self, event):
+        man = self._get_manager(event)
+        man.find_bakeout()
 #============= EOF =============================================

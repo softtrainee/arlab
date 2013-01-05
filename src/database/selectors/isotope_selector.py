@@ -88,9 +88,9 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
 
 class IsotopeAnalysisSelector(DatabaseSelector):
     title = 'Recall Analyses'
-    orm_path = 'src.database.orms.isotope_orm'
+#    orm_path = 'src.database.orms.isotope_orm'
 
-#    query_table = meas_AnalysisTable
+    query_table = meas_AnalysisTable
     record_klass = IsotopeRecord
     query_klass = IsotopeQuery
     tabular_adapter = IsotopeResultsAdapter
@@ -109,13 +109,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #            dm = H5DataManager(**kw)
 #
 #        self.data_manager = dm
-
-    def _get_selector_records(self, queries=None, limit=None, **kw):
-        sess = self.db.get_session()
-        q = sess.query(meas_AnalysisTable)
-        q = q.filter(meas_AnalysisTable.status != -1)
-
-        mm = {'Labnumber':([gen_LabTable], gen_LabTable.labnumber),
+    lookup = {'Labnumber':([gen_LabTable], gen_LabTable.labnumber),
               'Sample':([gen_LabTable, gen_SampleTable], gen_SampleTable.name),
               'Irradiation':([gen_LabTable,
                               irrad_PositionTable,
@@ -135,25 +129,14 @@ class IsotopeAnalysisSelector(DatabaseSelector):
               'Analysis Type':([meas_MeasurementTable, gen_AnalysisTypeTable], gen_AnalysisTypeTable.name)
 
               }
-        if queries:
-            q = self._assemble_query(q, queries, mm)
+    def _get_selector_records(self, queries=None, limit=None, **kw):
+        sess = self.db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.filter(meas_AnalysisTable.status != -1)
 
-        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
-#        q = q.order_by(meas_AnalysisTable.runtime.desc())
+        return self._get_records(q, queries, limit, timestamp='analysis_timestamp')
 
-        if limit:
-            q = q.limit(limit)
-        q = q.from_self()
-        q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
 
-        records = q.all()
-#        records.reverse()
-
-#        arguments = ['-1']
-#        if queries:
-#            arguments.extend((qi.criterion for qi in queries))
-
-        return records, compile_query(q)
 #        return records, q.statement, ', '.join(arguments)
 #        return q.all()
 

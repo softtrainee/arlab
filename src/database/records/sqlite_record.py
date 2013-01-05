@@ -15,31 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from envisage.ui.workbench.api import WorkbenchActionSet
-from envisage.ui.action.api import Action
+from traits.api import HasTraits, Property, cached_property
+#from traitsui.api import View, Item, TableEditor
+from src.database.records.database_record import DatabaseRecord
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
-BASE = 'src.bakeout.plugins.bakedpy_actions'
-class BakedpyActionSet(WorkbenchActionSet):
-    def _actions_default(self):
-        actions = [
-                   Action(name='New Script...',
-                          path='MenuBar/File',
-                          class_name='{}:NewScriptAction'.format(BASE)
-                          ),
-                   Action(name='Open Script...',
-                          path='MenuBar/File',
-                          class_name='{}:OpenScriptAction'.format(BASE)
-                          ),
-                   Action(name='Find Bakeout...',
-                          path='MenuBar/File',
-                          class_name='{}:FindAction'.format(BASE)
 
-                          )
+class SQLiteRecord(DatabaseRecord):
+    path = Property
 
-                   ]
-        return actions
-
+    @cached_property
+    def _get_path(self):
+        if self.dbrecord.path:
+            root = self.dbrecord.path.root
+            name = self.dbrecord.path.filename
+            return os.path.join(root, name)
 #============= EOF =============================================

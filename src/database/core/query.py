@@ -31,7 +31,6 @@ def compile_query(query):
     dialect = query.session.bind.dialect
     statement = query.statement
     comp = compiler.SQLCompiler(dialect, statement)
-    comp.compile()
     enc = dialect.encoding
     params = []
     for k in comp.positiontup:
@@ -39,7 +38,11 @@ def compile_query(query):
         if isinstance(v, unicode):
             v = v.encode(enc)
         params.append(escape(v, conversions))
-    return (comp.string.encode(enc) % tuple(params)).decode(enc)
+
+    comp = comp.string.encode(enc)
+    comp = comp.replace('?', '%s')
+
+    return (comp % tuple(params)).decode(enc)
 
 class TableSelector(HasTraits):
     parameter = String
@@ -284,4 +287,8 @@ class IsotopeQuery(Query):
 
 class DeviceScanQuery(Query):
     __params__ = ['Run Date/Time', ]
+class BakeoutQuery(Query):
+    __params__ = ['Run Date/Time',
+                  'Controller'
+                  ]
 #============= EOF =============================================

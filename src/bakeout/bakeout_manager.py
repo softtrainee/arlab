@@ -144,6 +144,12 @@ class BakeoutManager(Manager):
 #            dm.new_array('/{}'.format(n), 'data', d.transpose())
 #
 #        dm.close()
+    def find_bakeout(self):
+        db = self.database
+        if db.connect():
+            db.selector.load_recent()
+            self.open_view(db.selector)
+
 
     def reset_data_recording(self):
         controllers = self._get_controllers()
@@ -195,18 +201,7 @@ class BakeoutManager(Manager):
 
         self._load_controllers()
 
-    def update_alive(
-        self,
-        obj,
-        name,
-        old,
-        new,
-        ):
 
-        if new:
-            self.alive = new
-        else:
-            self.alive = bool(len(self._get_active_controllers()))
 
 #    def kill(self, close=True, **kw):
 #        '''
@@ -238,130 +233,9 @@ class BakeoutManager(Manager):
 
         self._clean_archive()
 
-    def _setup_graph(self, name, pid):
-        self.graph.new_series()
-        self.graph_info[name] = dict(id=pid)
 
-        self.graph.set_series_label(name, series=pid)
-        if self.include_heat:
-            self.graph.new_series(plotid=self.plotids[1])
 
-    def _db_save(self):
-        if not self.db_save_dialog():
-                self.info('rolling back')
-                self.database.rollback()
-                self.database.close()
-                if self.data_manager:
-                    self.data_manager.delete_frame()
-        else:
-            self.database.commit()
 
-        if self.data_manager is not None:
-            self.data_manager.close()
-
-    def _add_bakeout_to_db(self, controllers, path):
-        db = self.database
-
-        #add to BakeoutTable
-        b = db.add_bakeout()
-
-        #add to PathTable
-        db.add_path(b, path)
-
-        args = dict()
-
-        #add to ControllerTable
-        for c in controllers:
-            args['name'] = c.name
-            args['script'] = c.script
-            args['setpoint'] = c.setpoint
-            args['duration'] = c.duration
-            _ci = db.add_controller(b, **args)
-
-    def _do_graph(self):
-        for ci, (_name, i, pi, hi) in enumerate(self.data_buffer):
-            track_x = ci == len(self.data_buffer) - 1
-            kwargs = dict(series=i,
-                        track_x=track_x,
-                        track_y=False,
-#                        do_later=10
-                        )
-            if self.include_temp:
-                kwargs['plotid'] = self.plotids[0]
-                nx = self.graph.record(pi, **kwargs)
-
-            if self.include_heat:
-                kwargs['plotid'] = self.plotids[1]
-                kwargs['x'] = nx
-                kwargs['track_x'] = False if self.include_temp else track_x
-                self.graph.record(hi, **kwargs)
-
-            self.data_buffer_x.append(nx)
-
-        try:
-            self.graph.update_y_limits(plotid=self.plotids[0]
-                                       #, force=False
-                                       )
-        except IndexError:
-            pass
-        try:
-            self.graph.update_y_limits(plotid=self.plotids[1]
-                                       #, force=False
-                                       )
-        except IndexError:
-            pass
-
-        if self.include_pressure:
-            self._get_pressure(nx)
-
-        if self.alive:
-            self._write_data()
-
-        self.data_buffer = []
-        self.data_buffer_x = []
-        self.data_count_flag = 0
-
-    def _load_controllers(self):
-        '''
-        '''
-
-        scheduler = RS485Scheduler()
-        program = False
-        cnt = 0
-        for bc in self._get_controllers():
-            # set the communicators scheduler
-            # used to synchronize access to port
-            if bc.load():
-                bc.set_scheduler(scheduler)
-
-                if bc.open():
-                    '''
-                        on first controller check to see if
-                        memory block programming is required
-
-                        if it is apply to all subsequent controllers
-                    '''
-                    if not self.force_program:
-                        if cnt == 0:
-                            if not bc.is_programmed():
-                                program = True
-                            m1 = 'Watlow controllers require programming. Programming automatically'
-                            m2 = 'Watlow controllers are properly programmed'
-                            self.info(m1 if program else m2)
-                    else:
-                        program = True
-
-                    bc.program_memory_blocks = program
-
-                    bc.initialize()
-                    cnt += 1
-
-#                    if BATCH_SET_BAUDRATE:
-#                        bc.set_baudrate(BAUDRATE)
-#                bc.start_timer()
-
-#        self._load_configurations()
-        return True
 
 #    def _load_configurations(self):
 #        '''
@@ -373,46 +247,7 @@ class BakeoutManager(Manager):
 #                self._configurations.append(os.path.join(paths.bakeout_config_dir,
 #                        p))
 
-    def _parse_config_file(self, p):
-        config = self.get_configuration(p, warn=False)
-        if config is None:
-            return
-        try:
-            self.include_temp = config.getboolean('Include', 'temp')
-            self.include_heat = config.getboolean('Include', 'heat')
-            self.include_pressure = config.getboolean('Include',
-                    'pressure')
-        except NoSectionError:
-            pass
 
-        try:
-            self.update_interval = config.getfloat('Scan', 'interval')
-            self.scan_window = config.getfloat('Scan', 'window')
-        except NoSectionError:
-            pass
-
-        for section in config.sections():
-            if section.startswith('bakeout'):
-                kw = dict()
-                script = self.config_get(config, section, 'script',
-                        optional=True)
-                if script:
-                    kw['script'] = script
-                else:
-                    kw['script'] = '---'
-                    for opt in ['duration', 'setpoint']:
-                        value = self.config_get(config, section, opt,
-                                cast='float')
-                        if value is not None:
-                            kw[opt] = value
-
-                    kw['record_process'] = self.config_get(config, section,
-                                                           'record_process',
-                                                           default=False,
-                                                           optional=True,
-                                                           cast='boolean'
-                                                           )
-                getattr(self, section).trait_set(**kw)
 
 #    def _open_graph(self, path):
 #
@@ -457,18 +292,173 @@ class BakeoutManager(Manager):
 #            graph.edit_traits()
 
 #==============================================================================
-#     trait change handlers
+# private
 #==============================================================================
-#    def _get_process_value(self):
-#        while 1:
+    def _load_controllers(self):
+        '''
+        '''
+        scheduler = RS485Scheduler()
+        program = False
+        cnt = 0
+        for bc in self._get_controllers():
+            # set the communicators scheduler
+            # used to synchronize access to port
+            if bc.load():
+                bc.set_scheduler(scheduler)
 
+                if bc.open():
+                    '''
+                        on first controller check to see if
+                        memory block programming is required
 
+                        if it is apply to all subsequent controllers
+                    '''
+                    if not self.force_program:
+                        if cnt == 0:
+                            if not bc.is_programmed():
+                                program = True
+                            m1 = 'Watlow controllers require programming. Programming automatically'
+                            m2 = 'Watlow controllers are properly programmed'
+                            self.info(m1 if program else m2)
+                    else:
+                        program = True
+
+                    bc.program_memory_blocks = program
+
+                    bc.initialize()
+                    cnt += 1
+
+        return True
+
+    def _parse_config_file(self, p):
+        config = self.get_configuration(p, warn=False)
+        if config is None:
+            return
+        try:
+            self.include_temp = config.getboolean('Include', 'temp')
+            self.include_heat = config.getboolean('Include', 'heat')
+            self.include_pressure = config.getboolean('Include',
+                    'pressure')
+        except NoSectionError:
+            pass
+
+        try:
+            self.update_interval = config.getfloat('Scan', 'interval')
+            self.scan_window = config.getfloat('Scan', 'window')
+        except NoSectionError:
+            pass
+
+        for section in config.sections():
+            if section.startswith('bakeout'):
+                kw = dict()
+                script = self.config_get(config, section, 'script',
+                        optional=True)
+                if script:
+                    kw['script'] = script
+                else:
+                    kw['script'] = '---'
+                    for opt in ['duration', 'setpoint']:
+                        value = self.config_get(config, section, opt,
+                                cast='float')
+                        if value is not None:
+                            kw[opt] = value
+
+                    kw['record_process'] = self.config_get(config, section,
+                                                           'record_process',
+                                                           default=False,
+                                                           optional=True,
+                                                           cast='boolean'
+                                                           )
+                getattr(self, section).trait_set(**kw)
 
     def _clean_archive(self):
         root = os.path.join(paths.data_dir, 'bakeouts')
         self.info('cleaning bakeout data directory {}'.format(root))
         a = Archiver(root=root, archive_days=14)
         a.clean(spawn_process=False)
+
+    def _db_save(self):
+        if not self.db_save_dialog():
+                self.info('rolling back')
+                self.database.rollback()
+                self.database.close()
+                if self.data_manager:
+                    self.data_manager.delete_frame()
+        else:
+            self.database.commit()
+
+        if self.data_manager is not None:
+            self.data_manager.close()
+
+    def _add_bakeout_to_db(self, controllers, path):
+        db = self.database
+
+        #add to BakeoutTable
+        b = db.add_bakeout()
+
+        #add to PathTable
+        db.add_path(b, path)
+
+        args = dict()
+
+        #add to ControllerTable
+        for c in controllers:
+            args['name'] = c.name
+            args['script'] = c.script
+            args['setpoint'] = c.setpoint
+            args['duration'] = c.duration
+            _ci = db.add_controller(b, **args)
+
+    def _setup_graph(self, name, pid):
+        self.graph.new_series()
+        self.graph_info[name] = dict(id=pid)
+
+        self.graph.set_series_label(name, series=pid)
+        if self.include_heat:
+            self.graph.new_series(plotid=self.plotids[1])
+
+    def _do_graph(self):
+        for ci, (_name, i, pi, hi) in enumerate(self.data_buffer):
+            track_x = ci == len(self.data_buffer) - 1
+            kwargs = dict(series=i,
+                        track_x=track_x,
+                        track_y=False,
+#                        do_later=10
+                        )
+            if self.include_temp:
+                kwargs['plotid'] = self.plotids[0]
+                nx = self.graph.record(pi, **kwargs)
+
+            if self.include_heat:
+                kwargs['plotid'] = self.plotids[1]
+                kwargs['x'] = nx
+                kwargs['track_x'] = False if self.include_temp else track_x
+                self.graph.record(hi, **kwargs)
+
+            self.data_buffer_x.append(nx)
+
+        try:
+            self.graph.update_y_limits(plotid=self.plotids[0]
+                                       #, force=False
+                                       )
+        except IndexError:
+            pass
+        try:
+            self.graph.update_y_limits(plotid=self.plotids[1]
+                                       #, force=False
+                                       )
+        except IndexError:
+            pass
+
+        if self.include_pressure:
+            self._get_pressure(nx)
+
+        if self.alive:
+            self._write_data()
+
+        self.data_buffer = []
+        self.data_buffer_x = []
+        self.data_count_flag = 0
 
     def _write_data(self):
 
@@ -529,6 +519,12 @@ class BakeoutManager(Manager):
 #===============================================================================
 # handlers 
 #===============================================================================
+    def update_alive(self, new):
+        if new:
+            self.alive = new
+        else:
+            self.alive = bool(len(self._get_active_controllers()))
+
     def _update_interval_changed(self):
         for tr in self._get_controller_names():
             bc = self.trait_get(tr)[tr]
@@ -600,6 +596,7 @@ class BakeoutManager(Manager):
 
             if self.data_count_flag >= n:
                 do_after_timer(1, self._do_graph)
+
 #==============================================================================
 # Button handlers
 #==============================================================================
@@ -612,22 +609,6 @@ class BakeoutManager(Manager):
 
         for ci in self._get_controllers():
             ci.load_scripts()
-
-    def _open_button_fired(self):
-        use_db = True
-        if use_db:
-            db = self.database
-            db.connect()
-            db.open_selector()
-
-        else:
-            path = self._file_dialog_('open',
-                                      default_directory=os.path.join(paths.data_dir,
-                                      '.bakeouts'),
-                                      wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
-                                      )
-            if path is not None:
-                self._open_graph(path)
 
     def _save_fired(self):
 
@@ -684,7 +665,7 @@ class BakeoutManager(Manager):
             states = []
             for c in self._get_controllers():
                 if c.ok_to_run:
-                    c.on_trait_change(self.update_alive, 'alive')
+                    c.on_trait_change(self._update_alive, 'alive')
                     c.run()
                     states.append(True)
 

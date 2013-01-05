@@ -409,10 +409,11 @@ host={}'.format(self.name, self.username, self.host))
     def _selector_default(self):
         return self._selector_factory()
 
-    def open_selector(self):
-        s = self._selector_factory()
-        if s:
-            s.edit_traits()
+#    def open_selector(self):
+#        s = self._selector_factory()
+#        if s:
+#            s.edit_traits()
+#            self.
 
     def selector_factory(self, **kw):
         self.selector = self._selector_factory(**kw)

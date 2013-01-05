@@ -40,7 +40,7 @@ class DatabaseRecord(Saveable):
 
     rundate = Property
     runtime = Property
-    path = Property
+
     timestamp = Property
 
     window_x = 0.1
@@ -104,63 +104,76 @@ class DatabaseRecord(Saveable):
     def _get_loadable(self):
         return self._loadable
 
-
     def _get_record_id(self):
-        if self._dbrecord:
-            return self._dbrecord.id
+        if self.dbrecord:
+            return self.dbrecord.id
 
     def _get_dbrecord(self):
         return self._dbrecord
 
-#    @cached_property
-#    def _get_timestamp(self):
-#        return self.dbrecord
-#        return self.make_timestamp(self.rundate, self.runtime)
-#        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
-#        ts = ' '.join((self.rundate, self.runtime))
-#        return timefunc(ts)
     @cached_property
     def _get_timestamp(self):
-        return ''
-#        analysis = self.dbrecord
-#        analts = analysis.analysis_timestamp
-##        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
-##        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-#        return time.mktime(analts.timetuple())
+        return self.dbrecord.timestamp
 
     @cached_property
     def _get_rundate(self):
         dbr = self.dbrecord
-        if dbr and dbr.rundate:
-            date = dbr.rundate
+        if dbr and dbr.timestamp:
+            date = dbr.timestamp.date()
             return date.strftime('%Y-%m-%d')
 
     @cached_property
     def _get_runtime(self):
         dbr = self.dbrecord
-        if dbr and dbr.runtime:
-            ti = dbr.runtime
+        if dbr and dbr.timestamp:
+            ti = dbr.timestamp.time()
             return ti.strftime('%H:%M:%S')
-#        if dbr and dbr.analysis_timestamp:
-#            ti = dbr.analysis_timestamp.time()
+#        return self.dbrecord
+#        return self.make_timestamp(self.rundate, self.runtime)
+#        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
+#        ts = ' '.join((self.rundate, self.runtime))
+#        return timefunc(ts)
+#    @cached_property
+#    def _get_timestamp(self):
+#        return ''
+#        analysis = self.dbrecord
+#        analts = analysis.timestamp
+##        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+##        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+#        return time.mktime(analts.timetuple())
+
+#    @cached_property
+#    def _get_rundate(self):
+#        dbr = self.dbrecord
+#        if dbr and dbr.rundate:
+#            date = dbr.rundate
+#            return date.strftime('%Y-%m-%d')
+#
+#    @cached_property
+#    def _get_runtime(self):
+#        dbr = self.dbrecord
+#        if dbr and dbr.runtime:
+#            ti = dbr.runtime
+#            return ti.strftime('%H:%M:%S')
+#        if dbr and dbr.timestamp:
+#            ti = dbr.timestamp.time()
 #            return ti.strftime('%H:%M:%S')
 
     def _get_title(self):
         return '{} {}'.format(self.title_str, self.record_id)
 
-    @deprecated
-    @cached_property
-    def _get_path(self):
-        if self._dbrecord:
-            if self._dbrecord.path:
-                root = self._dbrecord.path.root
-                name = self._dbrecord.path.filename
-                return os.path.join(root, name)
+#    @cached_property
+#    def _get_path(self):
+#        if self._dbrecord:
+#            if self._dbrecord.path:
+#                root = self._dbrecord.path.root
+#                name = self._dbrecord.path.filename
+#                return os.path.join(root, name)
 
 #    @property
-    @deprecated
-    def filename(self):
-        return os.path.basename(self.path)
+#    @deprecated
+#    def filename(self):
+#        return os.path.basename(self.path)
 
 #    def _export_button_fired(self):
 #        self._export_csv()

@@ -29,38 +29,37 @@ import os
 
 
 
-def get_manager(event):
-    app = event.window.application
-    manager = app.get_service('src.experiment.experiment_manager.ExperimentManager')
-    return manager
+class ExperimentAction(Action):
+    def _get_manager(self, event):
+        return self._get_service(event, 'src.experiment.experiment_manager.ExperimentManager')
 
-def get_executor(event):
-    app = event.window.application
-    manager = app.get_service('src.experiment.experiment_executor.ExperimentExecutor')
-    return manager
+    def _get_executor(self, event):
+        return self._get_service(event, 'src.experiment.experiment_executor.ExperimentExecutor')
 
-def get_editor(event):
-    app = event.window.application
-    manager = app.get_service('src.experiment.experiment_editor.ExperimentEditor')
-    return manager
+    def _get_editor(self, event):
+        return self._get_service(event, 'src.experiment.experiment_editor.ExperimentEditor')
 
-class ExecuteProcedureAction(Action):
+    def _get_service(self, event, name):
+        app = event.window.application
+        return app.get_service(name)
+
+
+class ExecuteProcedureAction(ExperimentAction):
     def perform(self, event):
-        man = get_executor(event)
+        man = self._get_executor(event)
         man.execute_procedure()
 
-class ExecuteExperimentSetAction(Action):
+class ExecuteExperimentSetAction(ExperimentAction):
     name = 'Execute'
     accelerator = 'Ctrl+W'
     def perform(self, event):
-        man = get_executor(event)
+        man = self._get_executor(event)
 #        man.experiment_set_path = p
         if man.load_experiment_set(path=globalv.test_experiment_set, edit=False):
             open_manager(event.window.application, man)
 
 
-
-class NewExperimentSetAction(Action):
+class NewExperimentSetAction(ExperimentAction):
     '''
     '''
     description = 'Create a new experiment set'
@@ -69,12 +68,12 @@ class NewExperimentSetAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_editor(event)
+        manager = self._get_editor(event)
         manager.new_experiment_set()
         open_manager(event.window.application, manager)
 
 
-class OpenExperimentSetAction(Action):
+class OpenExperimentSetAction(ExperimentAction):
     '''
     '''
     description = 'Open experiment set'
@@ -83,7 +82,7 @@ class OpenExperimentSetAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_editor(event)
+        manager = self._get_editor(event)
 #        if manager.load_experiment_set(set_names=True):
         if manager.load_experiment_set():
             open_manager(event.window.application, manager)
@@ -112,7 +111,7 @@ class OpenExperimentSetAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 #        manager.save_experiment_set()
 #
 #class SaveAsExperimentSetAction(Action):
@@ -125,25 +124,25 @@ class OpenExperimentSetAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 #        manager.save_as_experiment_set()
 
 
-class OpenRecentTableAction(Action):
+class OpenRecentTableAction(ExperimentAction):
     description = 'Open the Recent Analysis Table'
     name = 'Lab Table'
     accelerator = 'Ctrl+R'
 
     def perform(self, event):
-        manager = get_manager(event)
+        manager = self._get_manager(event)
         manager.open_recent()
 
-class MakePlotSeriesAction(Action):
+class MakePlotSeriesAction(ExperimentAction):
     description = 'Plot series of analysis'
     name = 'Plot Series'
     accelerator = 'Ctrl+P'
     def perform(self, event):
-        manager = get_manager(event)
+        manager = self._get_manager(event)
         manager.plot_series()
 #class RecallAnalysisAction(Action):
 #    '''
@@ -155,7 +154,7 @@ class MakePlotSeriesAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 ##        app = event.window.application
 ##        man = app.get_service('src.experiment.recall_manager.RecallManager')
 #        manager.open_recent()
@@ -164,9 +163,9 @@ class MakePlotSeriesAction(Action):
 #===============================================================================
 # database actions
 #===============================================================================
-class LabnumberEntryAction(Action):
+class LabnumberEntryAction(ExperimentAction):
     def perform(self, event):
-        manager = get_manager(event)
+        manager = self._get_manager(event)
         lne = manager._labnumber_entry_factory()
         open_manager(event.window.application, lne)
 
@@ -174,35 +173,35 @@ class LabnumberEntryAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 #
 #
 #class AddSampleProjectAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 #
 #
 #class AddMaterialAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 #
 #
 #class IrradiationChronologyAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 #
 #
 #class IrradiationProductAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = _get_manager(event)
 
 
 #============= EOF ====================================

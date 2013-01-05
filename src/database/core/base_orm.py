@@ -41,8 +41,6 @@ class NameMixin(BaseMixin):
 
 
 class ResultsMixin(BaseMixin):
-#    runtime = Column(Time)
-#    rundate = Column(Date)
     timestamp = Column(TIMESTAMP, default=func.now())
 
     @declared_attr

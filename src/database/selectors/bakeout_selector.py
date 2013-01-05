@@ -22,38 +22,41 @@ import os
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
 from src.database.core.database_selector import DatabaseSelector
-from src.database.core.base_db_result import DBResult
+#from src.database.core.base_db_result import DBResult
+from src.database.core.query import BakeoutQuery
+from src.database.records.bakeout_record import BakeoutRecord
+from traitsui.tabular_adapter import TabularAdapter
 
-
-class BakeoutDBResult(DBResult):
-    title_str = 'Bakeout'
-
-    viewer = Instance(BakeoutGraphViewer)
-    graph = DelegatesTo('viewer')
-    summary = DelegatesTo('viewer')
-    export_button = DelegatesTo('viewer')
-
-    def load_graph(self, *args, **kw):
-        self.viewer = BakeoutGraphViewer(title=self.title)
-        p = os.path.join(self.directory,
-                                      self.filename
-                                      )
-        self.viewer.load(p, dm=self.data_manager)
-
-    def load(self):
-        dbr = self._db_result
-        if dbr is not None:
-            self.rid = dbr.id
-            self.rundate = dbr.rundate
-            self.runtime = dbr.runtime.strftime('%H:%M:%S')
-            p = dbr.path
-            if p is not None:
-                self.directory = p.root
-                self.filename = p.filename
-
-            self.title = 'Bakeout {}'.format(self.rid)
-
-            self.data_manager = self._data_manager_factory()
+#
+#class BakeoutDBResult(DBResult):
+#    title_str = 'Bakeout'
+#
+#    viewer = Instance(BakeoutGraphViewer)
+#    graph = DelegatesTo('viewer')
+#    summary = DelegatesTo('viewer')
+#    export_button = DelegatesTo('viewer')
+#
+#    def load_graph(self, *args, **kw):
+#        self.viewer = BakeoutGraphViewer(title=self.title)
+#        p = os.path.join(self.directory,
+#                                      self.filename
+#                                      )
+#        self.viewer.load(p, dm=self.data_manager)
+#
+#    def load(self):
+#        dbr = self._db_result
+#        if dbr is not None:
+#            self.rid = dbr.id
+#            self.rundate = dbr.rundate
+#            self.runtime = dbr.runtime.strftime('%H:%M:%S')
+#            p = dbr.path
+#            if p is not None:
+#                self.directory = p.root
+#                self.filename = p.filename
+#
+#            self.title = 'Bakeout {}'.format(self.rid)
+#
+#            self.data_manager = self._data_manager_factory()
 
 #    def traits_view(self):
 #        interface_grp = VGroup(
@@ -86,26 +89,33 @@ class BakeoutDBResult(DBResult):
 #                    title=self.title
 #                    )
 
+class BakeoutTabularAdapter(TabularAdapter):
+    columns = [('ID', 'record_id'),
+               ('Timestamp', 'timestamp')
+               ]
 
 class BakeoutDBSelector(DatabaseSelector):
-    parameter = String('BakeoutTable.rundate')
-    date_str = 'rundate'
+
     query_table = BakeoutTable
-    record_klass = BakeoutDBResult
+    record_klass = BakeoutRecord
+    query_klass = BakeoutQuery
+    tabular_adapter = BakeoutTabularAdapter
+    lookup = {'Run Date':([], BakeoutTable.timestamp), }
 
-    def _get__parameters(self):
+    def _get_selector_records(self, queries=None, limit=None, **kw):
+        sess = self.db.get_session()
+        q = sess.query(self.query_table)
 
-        b = BakeoutTable
+        queries = [
+                   self._query_factory(parameter='Run Date',
+                                       comparator='=',
+                                       criterion='this month')
+                   ]
+        limit = None
+        return self._get_records(q, queries, limit)
 
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = f(b)
-        c = ControllerTable
-        params += f(c)
-        return list(params)
 
-    def _get_selector_records(self, **kw):
-        return self._db.get_bakeouts(**kw)
+#        return self.db.get_bakeouts(**kw)
 #    def _dclicked_fired(self):
 #        s = self.selected
 #
