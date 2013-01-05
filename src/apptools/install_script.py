@@ -124,12 +124,12 @@ def install_pychron_suite():
             temp = PychronTemplate()
         elif ai == 'remote_hardware_server':
             temp = RemoteHardwareServerTemplate()
-        elif ai == '':
-            temp = ProcessManagerTemplate()
-        else:
+#        elif ai == '':
+#            temp = ProcessManagerTemplate()
+        elif ai == 'bakedpy':
             temp = BakeoutTemplate()
-
-        temp.install(version, src_dir)
+        if temp:
+            temp.install(version, src_dir)
 #    #build pychron
 #    i = Installer('pychron', 'pychron', icon_name='pyvalve')
 #    i.version = version
@@ -201,8 +201,11 @@ class InstallTemplate():
     prefix = None
     icon_name = None
     default_mods = ['paths', 'loggable', 'config_loadable',
-                    'viewable', 'displays/rich_text_display',
+                    'viewable',
+                    'saveable',
+                    'displays/rich_text_display',
                     'managers/manager',
+                    'deprecate'
                     ]
     default_pkgs = ['rpc', 'helpers', 'led']
 
@@ -239,6 +242,7 @@ class BakeoutTemplate(InstallTemplate):
     name = 'bakeout'
     prefix = 'bakeout'
     icon_name = 'bakedpy_icon'
+    bundle_name = 'bakedpy'
     def _install(self, ins, src_dir):
         ins.include_mods = ['hardware/bakeout_controller',
                       'hardware/watlow_ezzone',
@@ -246,17 +250,20 @@ class BakeoutTemplate(InstallTemplate):
                       'database/adapters/bakeout_adapter',
                       'database/selectors/bakeout_selector',
                       'database/data_warehouse',
-                      'managers/script_manager',
-                      'has_communicator'
+                      'has_communicator',
+                      'envisage/bakedpy_run',
+                      'envisage/bakedpy_application'
                       ] + self.default_mods
         ins.include_pkgs = ['bakeout',
                       'hardware/core',
                       'hardware/gauges',
-                      'scripts',
+                      'pyscripts',
                       'managers/data_managers',
                       'graph',
-                      'data_processing/time_series',
-                      'database/core'
+                      'database/core',
+                      'envisage/core',
+                      'time_series',
+                      'traits_editors'
                       ] + self.default_pkgs
         ins.install(src_dir)
 

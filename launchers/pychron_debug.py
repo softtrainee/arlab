@@ -36,7 +36,7 @@ def main():
     '''
         entry point
     '''
-    from src.envisage.run import launch
+    from src.envisage.pychron_run import launch
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
 

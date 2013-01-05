@@ -63,8 +63,8 @@ class ScriptHandler(SaveableHandler):
             info.object.load_context()
             info.object.load_commands()
 
-    def open_script(self, info):
-        info.object.open_script()
+#    def open_script(self, info):
+#        info.object.open_script()
 
     def test_script(self, info):
         info.object.test_script()
@@ -73,8 +73,10 @@ class ScriptHandler(SaveableHandler):
 #        info.object.execute_script()
 
     def object_save_path_changed(self, info):
-        if info.initialized:
-            info.ui.title = 'Script Editor - {}'.format(info.object.save_path)
+#        print info
+#        if info.initialized:
+#            print info.object.save_path
+        info.ui.title = 'Script Editor - {}'.format(info.object.save_path)
 
 
 class PyScriptManager(Manager):
@@ -100,8 +102,8 @@ class PyScriptManager(Manager):
     default_directory_name = Str
     context = Dict
 
-    execute_button = Event
-    execute_label = Property(depends_on='_executing')
+#    execute_button = Event
+#    execute_label = Property(depends_on='_executing')
 
     calc_graph_button = Button('Graph Profile')
 #    help_button = Button('Help')
@@ -117,16 +119,16 @@ class PyScriptManager(Manager):
     selected_index = Int
     selected_command_object = Property(depends_on='selected_command')
 
-    def _get_execute_label(self):
-        return 'Stop' if self._executing else 'Execute'
-
-    def _execute_button_fired(self):
-        if self._executing:
-            self._executing = False
-            self.stop_script()
-        else:
-            self._executing = True
-            self.execute_script()
+#    def _get_execute_label(self):
+#        return 'Stop' if self._executing else 'Execute'
+#
+#    def _execute_button_fired(self):
+#        if self._executing:
+#            self._executing = False
+#            self.stop_script()
+#        else:
+#            self._executing = True
+#            self.execute_script()
 
     def _calc_graph_button_fired(self):
         ps = self._pyscript_factory(self.kind, runner=self.runner)
@@ -206,6 +208,8 @@ class PyScriptManager(Manager):
         if path is not None:
             self._load_script(path)
             self.save_path = path
+            self.save_enabled = True
+            return True
 
     def test_script(self, report_success=True):
         self.execute_enabled = False
@@ -214,11 +218,11 @@ class PyScriptManager(Manager):
 #            ps = PyScript(root=root,
 #                        name=name)
         ps = self._pyscript_factory(self.kind)
-        ps.set_text(self.body)
+        ps.text = self.body
 
         ps.bootstrap(load=False)
         try:
-            err = ps._test()
+            err = ps.test()
         except Exception, err:
             pass
 
@@ -230,45 +234,44 @@ class PyScriptManager(Manager):
                 msg = 'No syntax errors found in {}'.format(n)
                 information(None, msg)
                 self.info(msg)
-            self.execute_enabled = True
             return True
 
-    def stop_script(self):
-        self.script.cancel()
-
-    def execute_script(self, path=None):
-#        open_manager(self.application,
-#                     self.runner)
-
-        ps = self._pyscript_factory(self.kind, runner=self.runner)
-        load = False
-        if path is None:
-            ps.set_text(self.body)
-        else:
-            load = True
-            r, n = os.path.split(path)
-            ps.root = r
-            ps.name = n
-            ps.logger_name = self._generate_unique_name(n)
-
-        ps.bootstrap(load=load)
-        ps.execute(new_thread=True)
-        self.script = ps
-
-        key = self._generate_unique_key(ps)
-        ps.hash_key = key
-        self.scripts[key] = ps
-        return key
-
-    def get_script_state(self, key):
-        try:
-            ps = self.scripts[key]
-            return ps.state
-        except KeyError:
-            #assume the script has completed
-            # if it isnt in the scripts dictionary
-            # the script is remove by the runner when it completes
-            return '2k'
+#    def stop_script(self):
+#        self.script.cancel()
+#
+#    def execute_script(self, path=None):
+##        open_manager(self.application,
+##                     self.runner)
+#
+#        ps = self._pyscript_factory(self.kind, runner=self.runner)
+#        load = False
+#        if path is None:
+#            ps.set_text(self.body)
+#        else:
+#            load = True
+#            r, n = os.path.split(path)
+#            ps.root = r
+#            ps.name = n
+#            ps.logger_name = self._generate_unique_name(n)
+#
+#        ps.bootstrap(load=load)
+#        ps.execute(new_thread=True)
+#        self.script = ps
+#
+#        key = self._generate_unique_key(ps)
+#        ps.hash_key = key
+#        self.scripts[key] = ps
+#        return key
+#
+#    def get_script_state(self, key):
+#        try:
+#            ps = self.scripts[key]
+#            return ps.state
+#        except KeyError:
+#            #assume the script has completed
+#            # if it isnt in the scripts dictionary
+#            # the script is remove by the runner when it completes
+#            return '2k'
 
     def _generate_unique_key(self, ps):
         from hashlib import md5
@@ -317,6 +320,7 @@ class PyScriptManager(Manager):
         return a
 
     def _command_object(self, scmd):
+
         cmd = None
         words = scmd.split('_')
         klass = ''.join(map(str.capitalize, words))
@@ -327,12 +331,14 @@ class PyScriptManager(Manager):
         try:
             cmd = getattr(self, cmd_name)
         except AttributeError:
+
             m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
             try:
                 cmd = getattr(m, klass)()
                 setattr(self, cmd_name, cmd)
             except AttributeError, e :
-                print e
+                if scmd:
+                    print e
 
         return cmd
 #    def _selected_command_changed(self):
@@ -405,18 +411,17 @@ class PyScriptManager(Manager):
                             command_grp,
                             editor,
                             ),
-                    HGroup(
-                           self._button_factory('execute_button', 'execute_label',
-                                  enabled_when='object.execute_enabled',
-                                  visible_when='object.execute_visible',
-                                  align='left'),
-#                               Item('calc_graph_button', show_label=False)
-                       ),
+#                    HGroup(
+#                           self._button_factory('execute_button', 'execute_label',
+#                                  enabled_when='object.execute_enabled',
+#                                  visible_when='object.execute_visible',
+#                                  align='left'),
+##                               Item('calc_graph_button', show_label=False)
+#                       ),
                  ),
                  resizable=True,
                  buttons=[
                           Action(name='Test', action='test_script'),
-                          Action(name='Open', action='open_script'),
                           Action(name='Save', action='save',
                                 enabled_when='object.save_enabled'),
                           Action(name='Save As', action='save_as')
