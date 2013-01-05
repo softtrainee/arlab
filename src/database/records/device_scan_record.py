@@ -18,6 +18,7 @@
 from traits.api import HasTraits, Property, cached_property
 from traitsui.api import View, Item, TableEditor
 from src.database.records.database_record import DatabaseRecord
+from src.database.records.sqlite_record import SQLiteRecord
 #============= standard library imports ========================
 #============= local library imports  ==========================
 #    def load_graph(self, graph=None, xoffset=0):
@@ -54,13 +55,7 @@ from src.database.records.database_record import DatabaseRecord
 #                xi, yi = da
 #        return xi, yi
 
-class DeviceScanRecord(DatabaseRecord):
-    rid = Property
-    @cached_property
-    def _get_rid(self):
-        dbr = self.dbrecord
-        if dbr is not None:
-            return dbr.id
+class DeviceScanRecord(SQLiteRecord):
 
     def load_graph(self):
         pass

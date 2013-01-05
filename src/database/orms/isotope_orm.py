@@ -247,8 +247,6 @@ class meas_AnalysisTable(Base, BaseMixin):
     experiment_id = foreignkey('meas_ExperimentTable')
     import_id = foreignkey('gen_ImportTable')
     uuid = stringcolumn(40)
-#    runtime = Column(Time)
-#    rundate = Column(Date)
     analysis_timestamp = Column(DateTime, default=func.now())
     endtime = Column(Time)
     status = Column(Integer, default=0)

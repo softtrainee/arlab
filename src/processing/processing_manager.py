@@ -107,7 +107,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             ps = self.search_manager
     #        ps.selector.load_recent()
             ps.selector.load_last(n=20)
-            ps.edit_traits()
+            self.open_view(ps)
 
 #===============================================================================
 # figures

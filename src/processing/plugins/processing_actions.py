@@ -23,137 +23,139 @@ from pyface.action.api import Action
 #============= local library imports  ==========================
 #EXPERIMENT_MANAGER_PROTOCOL = 
 
-def get_manager(event):
-    app = event.window.application
-    manager = app.get_service('src.processing.processing_manager.ProcessingManager')
-    return manager
+
+class ProcessingAction(Action):
+    def __get_manager(self, event):
+        app = event.window.application
+        manager = app.get_service('src.processing.processing_manager.ProcessingManager')
+        return manager
 
 #===============================================================================
 # find 
 #===============================================================================
-class OpenSelectorAction(Action):
+class OpenSelectorAction(ProcessingAction):
     accelerator = 'Ctrl+f'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.open_search()
 
-class OpenFiguresAction(Action):
+class OpenFiguresAction(ProcessingAction):
     accelerator = 'Ctrl+Shift+f'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.open_figures()
 
-class SaveFigureAction(Action):
+class SaveFigureAction(ProcessingAction):
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.save_figure()
 
-class ExportCSVFigureTableAction(Action):
+class ExportCSVFigureTableAction(ProcessingAction):
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.export_figure_table(kind='csv')
 
-class ExportPDFFigureTableAction(Action):
+class ExportPDFFigureTableAction(ProcessingAction):
     accelerator = 'Ctrl+e'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.export_figure_table(kind='pdf')
 
-class ExportPDFFigureAction(Action):
+class ExportPDFFigureAction(ProcessingAction):
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.export_figure()
 
-class ViewAnalysisTableAction(Action):
+class ViewAnalysisTableAction(ProcessingAction):
     accelerator = 'Ctrl+t'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.open_table()
 #===============================================================================
 # display
 #===============================================================================
-class NewSeriesAction(Action):
+class NewSeriesAction(ProcessingAction):
     accelerator = 'Ctrl+k'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.new_series()
 
-class NewIdeogramAction(Action):
+class NewIdeogramAction(ProcessingAction):
     accelerator = 'Ctrl+j'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.new_ideogram()
 
-class NewSpectrumAction(Action):
+class NewSpectrumAction(ProcessingAction):
     accelerator = 'Ctrl+u'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.new_spectrum()
 
-class NewInverseIsochronAction(Action):
+class NewInverseIsochronAction(ProcessingAction):
     accelerator = 'Ctrl+i'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.new_isochron()
 
 #===============================================================================
 # calculations
 #===============================================================================
-class CalculateFluxAction(Action):
+class CalculateFluxAction(ProcessingAction):
     accelerator = 'Ctrl+g'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.calculate_flux()
 #===============================================================================
 # corrections
 #===============================================================================
 
-class ApplyBlankAction(Action):
+class ApplyBlankAction(ProcessingAction):
     accelerator = 'Ctrl+Shift+b'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.apply_blank_correction()
 
-class ApplyBackgroundAction(Action):
+class ApplyBackgroundAction(ProcessingAction):
     accelerator = 'Ctrl+Shift+n'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.apply_background_correction()
 
-class ApplyDetectorIntercalibrationAction(Action):
+class ApplyDetectorIntercalibrationAction(ProcessingAction):
     accelerator = 'Ctrl+Shift+d'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.apply_detector_intercalibration_correction()
 
 #===============================================================================
 # 
 #===============================================================================
-class ProjectViewAction(Action):
+class ProjectViewAction(ProcessingAction):
     accelerator = 'Ctrl+p'
     def perform(self, event):
-        man = get_manager(event)
+        man = self._get_manager(event)
         man.open_project_view()
-#class NewFigureAction(Action):
+#class NewFigureAction(ProcessingAction):
 #    accelerator = 'Ctrl+k'
 #    def perform(self, event):
-#        man = get_manager(event)
+#        man = self._get_manager(event)
 #
 #
 #        nf = man.new_figure()
 #        if nf:
 #            open_manager(event.window.application, nf)
 #
-#class NewWorkspaceAction(Action):
+#class NewWorkspaceAction(ProcessingAction):
 #    def perform(self, event):
-#        man = get_manager(event)
+#        man = self._get_manager(event)
 #
 #        man.new_workspace()
 ##        open_manager(event.window.application, nf)
 #
-#class OpenWorkspaceAction(Action):
+#class OpenWorkspaceAction(ProcessingAction):
 #    def perform(self, event):
-#        man = get_manager(event)
+#        man = self._get_manager(event)
 #
 #        man.open_workspace()
 ##        open_manager(event.window.application, nf)
@@ -183,10 +185,10 @@ class ProjectViewAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #        manager.save_experiment_set()
 #
-#class SaveAsExperimentSetAction(Action):
+#class SaveAsExperimentSetAction(ProcessingAction):
 ##class SaveAsExperimentSetAction(EnableableAction):
 #    '''
 #    '''
@@ -196,20 +198,20 @@ class ProjectViewAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #        manager.save_as_experiment_set()
 
 
-class OpenRecentTableAction(Action):
+class OpenRecentTableAction(ProcessingAction):
     description = 'Open the Recent Analysis Table'
     name = 'Lab Table'
     accelerator = 'Ctrl+R'
 
     def perform(self, event):
-        manager = get_manager(event)
+        manager = self._get_manager(event)
         manager.open_recent()
 
-#class RecallAnalysisAction(Action):
+#class RecallAnalysisAction(ProcessingAction):
 #    '''
 #    '''
 #    description = 'Recall an Analysis'
@@ -219,7 +221,7 @@ class OpenRecentTableAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 ##        app = event.window.application
 ##        man = app.get_service('src.experiment.recall_manager.RecallManager')
 #        manager.open_recent()
@@ -228,45 +230,45 @@ class OpenRecentTableAction(Action):
 #===============================================================================
 # database actions
 #===============================================================================
-#class LabnumberEntryAction(Action):
+#class LabnumberEntryAction(ProcessingAction):
 #    def perform(self, event):
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #        lne = manager._labnumber_entry_factory()
 #        open_manager(event.window.application, lne)
 
-#class AddProjectAction(Action):
+#class AddProjectAction(ProcessingAction):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #
 #
-#class AddSampleProjectAction(Action):
+#class AddSampleProjectAction(ProcessingAction):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #
 #
-#class AddMaterialAction(Action):
+#class AddMaterialAction(ProcessingAction):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #
 #
-#class IrradiationChronologyAction(Action):
+#class IrradiationChronologyAction(ProcessingAction):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 #
 #
-#class IrradiationProductAction(Action):
+#class IrradiationProductAction(ProcessingAction):
 #    def perform(self, event):
 #        '''
 #        '''
-#        manager = get_manager(event)
+#        manager = self._get_manager(event)
 
 
 
