@@ -17,24 +17,21 @@
 
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
-    Float, Str, String, Property, List, on_trait_change, Dict, Any, Enum, cached_property
-from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
-    ButtonEditor, EnumEditor
-from pyface.timer.api import do_after as do_after_timer
+    Float, Str, Property, List, on_trait_change, Dict, Any, Enum, cached_property
+from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor
+from pyface.timer.api import do_later, do_after as do_after_timer
+
 #============= standard library imports  ==========================
 import numpy as np
 import os
 import time
-from threading import Thread, Lock
 from ConfigParser import NoSectionError
+from threading import Lock
 #============= local library imports  ==========================
 from src.managers.manager import Manager, AppHandler
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 from src.paths import paths
-#bakeout_config_dir, data_dir, scripts_dir, \
-#    bakeout_db_root, bakeout_db
-
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp
@@ -43,17 +40,11 @@ from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
-#from src.managers.script_manager import ScriptManager
 from src.managers.data_managers.data_manager import DataManager
 from src.helpers.archiver import Archiver
-#from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
-#from src.scripts.core.process_view import ProcessView
-from pyface.timer.do_later import do_later, do_after
-#from pyface.wx.dialog import confirmation
-#from pyface.constant import NO, YES
-from src.pyscripts.pyscript_editor import PyScriptManager
+
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -81,11 +72,12 @@ class BakeoutManager(Manager):
     # scan_window = Float(0.25)
 
     execute = Event
-    save = Button
-    edit_scripts_button = Button('Edit Scripts')
-
+    execute_ok = Property
     execute_label = Property(depends_on='alive')
     alive = Bool(False)
+
+    save = Button
+#    edit_scripts_button = Button('Edit Scripts')
 
     configuration = Str
     configurations = Property(depends_on='_configurations_dirty')
@@ -96,8 +88,6 @@ class BakeoutManager(Manager):
 
     data_name = Str
     data_count_flag = 0
-
-#    n_active_controllers = 0
 
     active_controllers = Property(List)
 
@@ -120,11 +110,6 @@ class BakeoutManager(Manager):
 
     plotids = List([0, 1, 2])
 
-    execute_ok = Property
-
-    script_editor = Any
-    script_style = Enum('pyscript', 'textscript')
-
     _nactivated_controllers = 0
     data_manager = Instance(DataManager)
     graph_info = Dict
@@ -144,12 +129,16 @@ class BakeoutManager(Manager):
 #            dm.new_array('/{}'.format(n), 'data', d.transpose())
 #
 #        dm.close()
+
     def find_bakeout(self):
         db = self.database
         if db.connect():
             db.selector.load_recent()
             self.open_view(db.selector)
 
+    def refresh_scripts(self):
+        for c in self._get_controllers():
+            c.load_scripts()
 
     def reset_data_recording(self):
         controllers = self._get_controllers()
@@ -178,7 +167,7 @@ class BakeoutManager(Manager):
     def opened(self):
         self.info('opened')
         #delay 1s before starting scan
-        do_after(1000, self.reset_general_scan)
+        do_after_timer(1000, self.reset_general_scan)
 
     def load(self, *args, **kw):
         app = self.application
@@ -201,26 +190,6 @@ class BakeoutManager(Manager):
 
         self._load_controllers()
 
-
-
-#    def kill(self, close=True, **kw):
-#        '''
-#        '''
-#
-#        if self.data_manager is not None and close:
-#            self.data_manager.close()
-#
-##        self._clean_archive()
-#
-#        if 'user_kill' in kw:
-#            if not kw['user_kill']:
-#                super(BakeoutManager, self).kill()
-#        else:
-#            super(BakeoutManager, self).kill()
-#
-#        for c in self._get_controllers():
-#            c.end(**kw)
-#            c.stop_timer()
     def kill(self):
         super(BakeoutManager, self).kill()
 
@@ -232,64 +201,6 @@ class BakeoutManager(Manager):
             c.stop_timer()
 
         self._clean_archive()
-
-
-
-
-
-#    def _load_configurations(self):
-#        '''
-#        '''
-#
-#        self._configurations = ['---']
-#        for p in os.listdir(paths.bakeout_config_dir):
-#            if os.path.splitext(p)[1] == '.cfg':
-#                self._configurations.append(os.path.join(paths.bakeout_config_dir,
-#                        p))
-
-
-
-#    def _open_graph(self, path):
-#
-#        ish5 = True if path.endswith('.h5') else False
-#
-#        args = self._bakeout_parser(path, ish5)
-#        if args is None:
-#            return
-#        names = args[0]
-#        attrs = args[-1]
-#        graph = self._bakeout_factory(ph=0.65,
-#                *args,
-#                container_dict=dict(
-#                                    #bgcolor='red',
-#                                    #fill_bg=True,
-#                                    padding_top=60
-#                                    ),
-#                transpose_data=not ish5
-#                )
-#
-#        if ish5:
-#            b = BakeoutGraphViewer(graph=graph,
-#                                   title=path,
-#                                   window_x=30,
-#                                   window_y=30,
-#                                   window_width=0.66,
-#                                   window_height=0.85
-#                                   )
-#            for name, ais in zip(names, attrs):
-#                bc = b.new_controller(name)
-#                for key, value in ais.iteritems():
-#                    setattr(bc, key, value)
-#
-#            b.edit_traits()
-#
-#        else:
-#            graph.window_title = name = os.path.basename(path)
-#            graph.window_width = 0.66
-#            graph.window_height = 0.85
-#            graph.window_x = 30
-#            graph.window_y = 30
-#            graph.edit_traits()
 
 #==============================================================================
 # private
@@ -374,7 +285,7 @@ class BakeoutManager(Manager):
     def _clean_archive(self):
         root = os.path.join(paths.data_dir, 'bakeouts')
         self.info('cleaning bakeout data directory {}'.format(root))
-        a = Archiver(root=root, archive_days=14)
+        a = Archiver(root=root, archive_days=14, archive_months=8)
         a.clean(spawn_process=False)
 
     def _db_save(self):
@@ -600,15 +511,15 @@ class BakeoutManager(Manager):
 #==============================================================================
 # Button handlers
 #==============================================================================
-    def _edit_scripts_button_fired(self):
-        se = self.script_editor
-        if se.save_path:
-            se.title = 'Script Editor {}'.format(se.save_path)
-
-        se.edit_traits(kind='livemodal')
-
-        for ci in self._get_controllers():
-            ci.load_scripts()
+#    def _edit_scripts_button_fired(self):
+#        se = self.script_editor
+#        if se.save_path:
+#            se.title = 'Script Editor {}'.format(se.save_path)
+#
+#        se.edit_traits(kind='livemodal')
+#
+#        for ci in self._get_controllers():
+#            ci.load_scripts()
 
     def _save_fired(self):
 

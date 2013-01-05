@@ -15,27 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Event, Float, Str, Instance, Bool, Property, \
-    Color
+from traits.api import List, Event, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, spring, HGroup, Label, VGroup, Spring, \
     ButtonEditor, EnumEditor
-#from pyface.timer.api import Timer
 #============= standard library imports ========================
 import time
 import os
 #============= local library imports  ==========================
 from src.helpers.timer import Timer
-#from src.scripts.bakeout_script import BakeoutScript
-from src.led.led import LED, ButtonLED
+from src.led.led import ButtonLED
 from src.led.led_editor import LEDEditor
 from src.paths import paths
 from watlow_ezzone import WatlowEZZone
-
+from src.constants import NULL_STR
 
 class BakeoutMonitor():
     pass
 
-BLANK_SCRIPT = '---'
+BLANK_SCRIPT = NULL_STR
 class BakeoutController(WatlowEZZone):
     '''
         
@@ -133,13 +130,13 @@ class BakeoutController(WatlowEZZone):
 #                        if not os.path.basename(f).startswith('.') and
 #                             os.path.splitext(f)[1] in ['.py', '.bo']]
 #            print s
-            s = ['---'] + [f for f in files if not f.startswith('.') and
+            s = [NULL_STR] + [f for f in files if not f.startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and
                         os.path.splitext(f)[1] in ['.py', '.bo']]
             self.scripts = s
 
         else:
-            self.scripts = ['---']
+            self.scripts = [NULL_STR]
             if self.confirmation_dialog('Default Bakeout script directory does not exist. \
 Add {}'.format(sd)):
                 os.mkdir(sd)
@@ -147,7 +144,7 @@ Add {}'.format(sd)):
     def _get_ok_to_run(self):
         ok = True
         if not self.record_process:
-            if self.script == '---':
+            if self.script == NULL_STR:
                 ok = not (self.setpoint == 0 or self.duration == 0)
         else:
             ok = not self.duration == 0
@@ -171,7 +168,7 @@ Add {}'.format(sd)):
         #set led to green
         self.led.state = 'green'
         time.sleep(0.005)
-        if self.script == '---':
+        if self.script == NULL_STR:
             self._duration_timeout = True
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)
