@@ -15,206 +15,76 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-#from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager
 from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerManagerAction, \
     FPowerMapAction, FPowerCalibrationAction, FOpenLaserManagerAction, \
     FOpenStageVisualizerAction, FOpenPowerCalibrationAction, \
     FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
-    FOpenPatternAction, FNewPatternAction, LaserAction, FMotorConfigureAction, \
+    FOpenPatternAction, FNewPatternAction, FMotorConfigureAction, \
     FExecutePatternAction
     #FInitializeZoomAction, FInitializeBeamAction, \
-from src.lasers.laser_managers.laser_manager import ILaserManager
-#from traits.api import on_trait_change
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-
-def get_manager(_, event, app=None, window=None):
-    if window is not None:
-        app = window.application
-    elif app is None:
-        app = event.window.application
-
-    manager = app.get_service(ILaserManager,
-                              'name=="fusions_uv"',
-                              )
-    return manager
-
-
-#class DegasAction(LaserAction):
-#    def perform(self, event):
-#        manager = get_manager(None, event)
-#        if manager is not None:
-#            man = manager.get_degas_manager()
-#            app = self.window.application
-#            open_manager(app, man)
-#
-#
-#class ConfigureWatlowAction(LaserAction):
-#    def perform(self, event):
-#        manager = get_manager(None, event)
-#        if manager is not None:
-#            t = manager.temperature_controller
-#            t.initialization_hook()
-#            app = self.window.application
-#            open_manager(app,
-#                         t, view='configure_view')
+class UVMixin(object):
+    manager_name = 'fusions_uv'
 
 #===============================================================================
-# ##fusions action
+# fusions action
 #===============================================================================
 
-#from ..fusions_actions import FOpenLaserManagerAction
-class OpenLaserManagerAction(FOpenLaserManagerAction):
-    get_manager = get_manager
+class OpenLaserManagerAction(UVMixin, FOpenLaserManagerAction):
+    pass
 
+class OpenMotionControllerManagerAction(UVMixin, FOpenMotionControllerManagerAction):
+    pass
 
-#from ..fusions_actions import FOpenMotionControllerManagerAction
-class OpenMotionControllerManagerAction(FOpenMotionControllerManagerAction):
-    get_manager = get_manager
+class PowerMapAction(UVMixin, FPowerMapAction):
+    pass
 
+class PowerCalibrationAction(UVMixin, FPowerCalibrationAction):
+    pass
 
-#from ..fusions_actions import FPowerMapAction
-class PowerMapAction(FPowerMapAction):
-    get_manager = get_manager
+class OpenStageVisualizerAction(UVMixin, FOpenStageVisualizerAction):
+    pass
 
-
-#from ..fusions_actions import FPowerCalibrationAction
-class PowerCalibrationAction(FPowerCalibrationAction):
-    get_manager = get_manager
-
-#from ..fusions_actions import FStageVisualizerAction
-class OpenStageVisualizerAction(FOpenStageVisualizerAction):
-    get_manager = get_manager
-
-class LoadStageVisualizerAction(FLoadStageVisualizerAction):
-    get_manager = get_manager
+class LoadStageVisualizerAction(UVMixin, FLoadStageVisualizerAction):
+    pass
 
 #===============================================================================
 # database selectors
 #===============================================================================
-class OpenPowerCalibrationAction(FOpenPowerCalibrationAction):
-    get_manager = get_manager
+class OpenPowerCalibrationAction(UVMixin, FOpenPowerCalibrationAction):
+    pass
 
-class OpenPowerMapAction(FOpenPowerMapAction):
-    get_manager = get_manager
+class OpenPowerMapAction(UVMixin, FOpenPowerMapAction):
+    pass
 
-class OpenPowerRecordGraphAction(FOpenPowerRecordGraphAction):
-    get_manager = get_manager
+class OpenPowerRecordGraphAction(UVMixin, FOpenPowerRecordGraphAction):
+    pass
 
-class OpenVideoAction(FOpenVideoAction):
-    get_manager = get_manager
+class OpenVideoAction(UVMixin, FOpenVideoAction):
+    pass
 
 #===============================================================================
 # initializations
 #===============================================================================
-#class InitializeBeamAction(FInitializeBeamAction):
-#    get_manager = get_manager
+#class InitializeBeamAction(UVMixin, FInitializeBeamAction):
+#    pass
 #
-#class InitializeZoomAction(FInitializeZoomAction):
-#    get_manager = get_manager
-class MotorConfigureAction(FMotorConfigureAction):
-    get_manager = get_manager
+#class InitializeZoomAction(UVMixin, FInitializeZoomAction):
+#    pass
+class MotorConfigureAction(UVMixin, FMotorConfigureAction):
+    pass
 #===============================================================================
 # patterning
 #===============================================================================
-class OpenPatternAction(FOpenPatternAction):
-    get_manager = get_manager
-class NewPatternAction(FNewPatternAction):
-    get_manager = get_manager
-class ExecutePatternAction(FExecutePatternAction):
-    get_manager = get_manager
-#===============================================================================
-# unused
-#===============================================================================
-#class MoveLoadPositionAction(Action):
-#    name = 'Loading Position'
-#    description = 'Move to loading position'
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            manager.move_to_load_position()
-#
-#class PowerScanAction(Action):
-#    name = 'Open Power Scan'
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            manager.show_power_scan()
-#
-#class StepHeatAction(Action):
-#    name = 'Open Step Heater'
-#    enabled = False
-#    def __init__(self, *args, **kw):
-#        super(StepHeatAction, self).__init__(*args, **kw)
-#
-#        man = get_manager(None, self.window.application)
-#        if 'Diode' in man.__class__.__name__:
-#            self.enabled = True
-#
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            manager.show_step_heater()
-#class PulseAction(Action):
-#    name = 'Power Map'
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            man = manager.get_pulse_manager()
-#            app = self.window.application
-#            open_manager(app, man, view='standalone_view')
-#
-#class PowerMapAction(Action):
-#    name = 'Power Map'
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            man = manager.get_power_map_manager()
-#            app = self.window.application
-#            open_manager(app, man)#, view = 'canvas_view')
-#
-#class OpenPowerScanGraphAction(Action):
-#    name = 'Open Power Scan Result'
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            manager.graph_manager.open_graph('powerscan')
-#
-#class OpenPowerMapAction(Action):
-#    name = 'Open Map Result'
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-##            manager.graph_manager.open_power_map()
-#            manager.graph_manager.open_graph('powermap')
-#class OpenCalibrationManagerAction(Action):
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            man = manager.stage_manager.calibration_manager
-#            app = self.window.application
-#            open_manager(app, man)
-#class ExecutePatternAction(Action):
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            manager.stage_manager.pattern_manager.execute_pattern()
-#
-#class OpenPatternManagerAction(Action):
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            app = self.window.application
-#            open_manager(app,
-#                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
-#
-#class OpenCalibrationManagerAction(Action):
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            man = manager.stage_manager.calibration_manager
-#            open_manager(man)
+class OpenPatternAction(UVMixin, FOpenPatternAction):
+    pass
+
+class NewPatternAction(UVMixin, FNewPatternAction):
+    pass
+
+class ExecutePatternAction(UVMixin, FExecutePatternAction):
+    pass
