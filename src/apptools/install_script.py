@@ -205,7 +205,8 @@ class InstallTemplate():
                     'saveable',
                     'displays/rich_text_display',
                     'managers/manager',
-                    'deprecate'
+                    'deprecate',
+                    'constants'
                     ]
     default_pkgs = ['rpc', 'helpers', 'led']
 
@@ -249,6 +250,9 @@ class BakeoutTemplate(InstallTemplate):
                       'database/orms/bakeout_orm',
                       'database/adapters/bakeout_adapter',
                       'database/selectors/bakeout_selector',
+                      'database/records/bakeout_record',
+                      'database/records/database_record',
+                      'database/records/sqlite_record',
                       'database/data_warehouse',
                       'has_communicator',
                       'envisage/bakedpy_run',

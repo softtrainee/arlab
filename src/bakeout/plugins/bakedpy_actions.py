@@ -29,6 +29,7 @@ class BakeoutAction(Action):
     def _get_script_manager(self, event):
         man = event.window.application.get_service('src.bakeout.bakeout_pyscript_manager.BakeoutPyScriptManager')
         return man
+
     def _open_view(self, app, obj, **kw):
         ui = obj.edit_traits(**kw)
         app.uis.append(ui)
@@ -36,15 +37,19 @@ class BakeoutAction(Action):
 class NewScriptAction(BakeoutAction):
     accelerator = 'Ctrl+n'
     def perform(self, event):
-        man = self._get_script_manager(event)
-        self._open_view(event.window.application, man)
+        editor = self._get_script_manager(event)
+        self._open_view(event.window.application, editor)
+        man = self._get_manager(event)
+        editor.on_trait_change(man.refresh_scripts, 'refresh_scripts_event')
 
 class OpenScriptAction(BakeoutAction):
     accelerator = 'Ctrl+o'
     def perform(self, event):
-        man = self._get_script_manager(event)
-        if man.open_script():
-            self._open_view(event.window.application, man)
+        editor = self._get_script_manager(event)
+        if editor.open_script():
+            self._open_view(event.window.application, editor)
+            man = self._get_manager(event)
+            editor.on_trait_change(man.refresh_scripts, 'refresh_scripts_event')
 
 class FindAction(BakeoutAction):
     accelerator = 'Ctrl+f'
