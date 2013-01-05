@@ -20,62 +20,70 @@ from src.envisage.core.action_helper import open_manager, open_selector
 from src.lasers.laser_managers.laser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 
-#from guppy import hpy
-#hp = hpy()
-
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class LaserAction(Action):
+class BaseLaserAction(Action):
+    manager_name = None
+    def _get_manager(self, event, app=None):
+        if app is None:
+            app = event.window.application
+
+        manager = app.get_service(ILaserManager,
+                                  'name=="{}"'.format(self.manager_name),
+                                  )
+        return manager
+
+class LocalLaserAction(BaseLaserAction):
     client_action = False
     def __init__(self, window=None, *args, **kw):
-        super(LaserAction, self).__init__(window=window, *args, **kw)
-        man = window.workbench.application.get_service(ILaserManager)
+        super(LocalLaserAction, self).__init__(window=window, *args, **kw)
+        man = self._get_manager(None, app=self.window.application)
         if isinstance(man, PychronLaserManager) and not self.client_action:
             self.enabled = False
 
-class FOpenLaserManagerAction(LaserAction):
+class FOpenLaserManagerAction(LocalLaserAction):
     accelerator = 'Ctrl+L'
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             app = self.window.application
             open_manager(app, manager)
 
 
-class FOpenMotionControllerManagerAction(LaserAction):
+class FOpenMotionControllerManagerAction(LocalLaserAction):
 
     def perform(self, event):
-        man = self.get_manager(event)
+        man = self._get_manager(event)
         if man is not None:
             m = man.stage_manager.motion_configure_factory(view_style='full_view')
             app = self.window.application
             open_manager(app, m)
 
 
-class FPowerMapAction(LaserAction):
+class FPowerMapAction(LocalLaserAction):
     name = 'Power Map'
 
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             man = manager.get_power_map_manager()
             app = self.window.application
             open_manager(app, man)
 
-class FPowerCalibrationAction(LaserAction):
+class FPowerCalibrationAction(LocalLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             app = self.window.application
             open_manager(app, manager.power_calibration_manager)
 
 
-class FOpenStageVisualizerAction(LaserAction):
+class FOpenStageVisualizerAction(LocalLaserAction):
 #    def __init__(self, *args, **kw):
 #        print 'sffsadf', args, kw
 #        super(FStageVisualizerAction, self).__init__(*args, **kw)
 #
-#        man = self.get_manager(None, window=kw['window'])
+#        man = self._get_manager(None, window=kw['window'])
 ##        print man.use_video?
 #        self.enabled_when = 'enabled'
 #        self.enabled = man.use_video
@@ -87,14 +95,14 @@ class FOpenStageVisualizerAction(LaserAction):
 #        print self.enabled
 
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             app = self.window.application
             open_manager(app, manager.stage_manager.visualizer)
 
-class FLoadStageVisualizerAction(LaserAction):
+class FLoadStageVisualizerAction(LocalLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             app = self.window.application
             visualizer = manager.stage_manager.visualizer
@@ -105,53 +113,55 @@ class FLoadStageVisualizerAction(LaserAction):
 #===============================================================================
 # database selectors
 #===============================================================================
-class FOpenPowerCalibrationAction(LaserAction):
+class FOpenPowerCalibrationAction(LocalLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             db = manager.get_power_calibration_database()
             open_selector(db, self.window.application)
 
-class FOpenPowerMapAction(LaserAction):
+class FOpenPowerMapAction(LocalLaserAction):
     name = 'Open Map Result'
 
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             db = manager.get_power_map_manager().database
             open_selector(db, self.window.application)
 
 
-class FOpenPowerRecordGraphAction(LaserAction):
+class FOpenPowerRecordGraphAction(LocalLaserAction):
     name = 'Open Power Scan Result'
 
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             db = manager.get_power_database()
             open_selector(db, self.window.application)
 
 
-class FOpenVideoAction(LaserAction):
+class FOpenVideoAction(LocalLaserAction):
     name = 'Open Video Result'
 
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             db = manager.stage_manager.get_video_database()
             open_selector(db, self.window.application)
 
 
-class FMotorConfigureAction(LaserAction):
+class FMotorConfigureAction(LocalLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             manager.open_motor_configure()
 
-class FConfigureBrightnessMeterAction(LaserAction):
+class FConfigureBrightnessMeterAction(LocalLaserAction):
     def __init__(self, *args, **kw):
         super(FConfigureBrightnessMeterAction, self).__init__(*args, **kw)
-        man = self.get_manager(None, app=self.window.application)
+
+        man = self._get_manager(None, app=self.window.application)
+
         man.on_trait_change(self._update_enable, 'use_video')
         if man.use_video:
             self.enabled = False
@@ -160,44 +170,44 @@ class FConfigureBrightnessMeterAction(LaserAction):
         self.enabled = new
 
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             app = self.window.application
             open_manager(app, manager.brightness_meter)
 #===============================================================================
 # initializations
 #===============================================================================
-#class FInitializeBeamAction(LaserAction):
+#class FInitializeBeamAction(LocalLaserAction):
 #    def perform(self, event):
-#        manager = self.get_manager(event)
+#        manager = self._get_manager(event)
 #        if manager is not None:
 #            manager.do_motor_initialization('beam')
 #
 #
-#class FInitializeZoomAction(LaserAction):
+#class FInitializeZoomAction(LocalLaserAction):
 #    def perform(self, event):
-#        manager = self.get_manager(event)
+#        manager = self._get_manager(event)
 #        if manager is not None:
 #            manager.do_motor_initialization('zoom')
 
 #===============================================================================
 # patterning
 #===============================================================================
-class FOpenPatternAction(Action):
+class FOpenPatternAction(BaseLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             manager.open_pattern_maker()
 
-class FNewPatternAction(Action):
+class FNewPatternAction(BaseLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             manager.new_pattern_maker()
 
-class FExecutePatternAction(Action):
+class FExecutePatternAction(BaseLaserAction):
     def perform(self, event):
-        manager = self.get_manager(event)
+        manager = self._get_manager(event)
         if manager is not None:
             manager.execute_pattern()
 
