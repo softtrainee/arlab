@@ -106,7 +106,7 @@ class Analysis(Loggable):
     graph_id = Property#(depends_on='isotope_record')
     analysis_type = Property#(depends_on='labnumber')
 #    rad40 = Property
-    status_string = Property(depends_on='status')
+#    status_string = Property(depends_on='status, temp_status')
 
 #    age_error = Property
 #    age_value = Property
@@ -120,6 +120,7 @@ class Analysis(Loggable):
     temp_status = Int
     temp_status_text = Property
     status_text = Property
+
 #    @on_trait_change('signals:blank_signal')
 #    def _change(self):
 #        print 'fiafsd'
@@ -223,8 +224,11 @@ class Analysis(Loggable):
         dbr = self.isotope_record
         return dbr.irradiation.name
 
-    def _get_status_string(self):
-        return '' if self.status == 0 else 'X'
+#    def _get_status_string(self):
+#        status = '' if self.status == 0 else 'X'
+#        if self.status == 0:
+#            status = '' if self.temp_status == 0 else 'Xt'
+#        return status
 
     def _get_group_id(self):
         return self.isotope_record.group_id

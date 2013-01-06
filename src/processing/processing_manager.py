@@ -303,10 +303,11 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 ans = self._get_analyses()
                 if ans:
                     self._load_analyses(ans)
+                    title = self._make_title(ans)
+
                     func = getattr(self, '_display_{}'.format(name))
-                    plotter = func(ans, po)
-                    if plotter:
-                        self._display_tabular_data(ans, plotter.make_title())
+                    func(ans, po, title)
+
 
     def _open_figure(self, fig, obj=None):
         self._set_window_xy(fig)
@@ -330,33 +331,34 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             return True
 
     def _display_tabular_data(self, ans, title):
-
-
         tm = TabularAnalysisManager(analyses=ans,
                                     db=self.db,
                                     title='Table {}'.format(title)
 
                                     )
         self.open_view(tm)
-#        ui = tm.edit_traits()
-#        self.add_window(ui)
 
-    def _display_isochron(self, ans, po):
+    def _display_isochron(self, ans, po, title):
         rr = self._isochron(ans)
         if rr is not None:
             g, isochron = rr
+
+            self._display_tabular_data(ans, title)
             self._open_figure(g, isochron)
             return isochron
 
-    def _display_spectrum(self, ans, po):
+    def _display_spectrum(self, ans, po, title):
         rr = self._spectrum(ans, aux_plots=po.get_aux_plots())
         if rr is not None:
             g, spec = rr
+
+            self._display_tabular_data(ans, title)
             self._open_figure(g, spec)
             return spec
 
-    def _display_ideogram(self, ans, po, highlight_omitted=False):
+    def _display_ideogram(self, ans, po, title, highlight_omitted=True):
         rr = self._ideogram(ans,
+                            title=title,
                             highlight_omitted=highlight_omitted,
                             aux_plots=po.get_aux_plots(),
                             probability_curve_kind=po.probability_curve_kind,
@@ -364,10 +366,12 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                             )
         if rr is not None:
             g, ideo = rr
+
+            self._display_tabular_data(ans, title)
             self._open_figure(g, ideo)
             return ideo
 
-    def _display_series(self, ans, po):
+    def _display_series(self, ans, po, title):
         #open a series manager
         sm = SeriesManager(analyses=ans)
         info = sm.edit_traits(kind='livemodal')
@@ -375,6 +379,8 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             if sm.use_single_window:
                 pass
             else:
+                self._display_tabular_data(ans, title)
+
                 s = self._build_series(ans, sm.calculated_values)
                 sb = self._build_series(ans, sm.measured_values)
                 if s is None:
@@ -386,7 +392,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 if s is None:
                     s = sb
 
-                return s
+#                return s
 #            return sm
 
     def _build_series(self, ans, ss):
@@ -447,7 +453,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                   ytitle_font=None,
                   data_label_font=None,
                   metadata_label_font=None,
-                  highlight_omitted=False,
+                  highlight_omitted=True,
                   display_mean_indicator=True,
                   display_mean_text=True
                   ):
@@ -548,7 +554,118 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             d['scale'] = scale
             ps.append(d)
         return ps
+#    def make_title(self, analyses=None):
+#        if analyses is None:
+#            analyses = self.analyses
+#        return self._make_title(analyses)
 
+    def _make_title(self, analyses):
+        def make_bounds(gi, sep='-'):
+            if len(gi) > 1:
+                m = '{}{}{}'.format(gi[0], sep, gi[-1])
+            else:
+                m = '{}'.format(gi[0])
+
+            return m
+
+        def make_step_bounds(si):
+            if not si:
+                return
+            grps = []
+            a = si[0]
+            pa = si[1]
+            cgrp = [pa]
+            for xi in si[2:]:
+                if ord(pa) + 1 == ord(xi):
+                    cgrp.append(xi)
+                else:
+                    grps.append(cgrp)
+                    cgrp = [xi]
+                pa = xi
+
+            grps.append(cgrp)
+            return ','.join(['{}{}'.format(a, make_bounds(gi, sep='...')) for gi in grps])
+
+        def _make_group_title(ans):
+            lns = dict()
+            for ai in ans:
+    #            v = '{}{}'.format(ai.aliquot, ai.step)
+                v = (ai.aliquot, ai.step)
+                if ai.labnumber in lns:
+                    lns[ai.labnumber].append(v)
+                else:
+                    lns[ai.labnumber] = [v]
+
+            skeys = sorted(lns.keys())
+            grps = []
+            for si in skeys:
+                als = lns[si]
+                sals = sorted(als, key=lambda x: x[0])
+                aliquots, steps = zip(*sals)
+
+                pa = aliquots[0]
+                ggrps = []
+                cgrp = [pa]
+                sgrp = []
+                sgrps = []
+
+                for xi, sti in zip(aliquots[1:], steps[1:]):
+                    #handle analyses with steps
+                    if sti != '':
+                        if not sgrp:
+                            sgrp.append(xi)
+                        elif sgrp[0] != xi:
+                            sgrps.append(sgrp)
+                            sgrp = [xi]
+                        sgrp.append(sti)
+                    else:
+                        if sgrp:
+                            sgrps.append(sgrp)
+                            sgrp = []
+
+                        if pa + 1 == xi:
+                            cgrp.append(xi)
+                        else:
+                            ggrps.append(cgrp)
+                            cgrp = [xi]
+
+                    pa = xi
+
+                sgrps.append(sgrp)
+                ggrps.append(cgrp)
+                fs = [make_bounds(gi) for gi in ggrps]
+
+                if sgrps[0]:
+                    #handle steps
+                    pa = sgrps[0][0]
+                    ggrps = []
+                    cgrp = [sgrps[0]]
+                    for sgi in sgrps[1:]:
+                    #    print si
+                        if pa + 1 == sgi[0]:
+                            cgrp.append(sgi)
+                        else:
+                            grps.append(cgrp)
+                            cgrp = [sgi]
+                        pa = sgi[0]
+                    ggrps.append(cgrp)
+                    ss = ['{}-{}'.format(make_step_bounds(gi[0]),
+                            make_step_bounds(gi[-1])) for gi in ggrps]
+                    fs.extend(ss)
+
+                als = ','.join(fs)
+
+                grps.append('{}-({})'.format(si, als))
+
+            return ', '.join(grps)
+
+        group_ids = list(set([a.group_id for a in analyses]))
+        gtitles = []
+        for gid in group_ids:
+            anss = [ai for ai in analyses if ai.group_id == gid]
+            gtitles.append(_make_group_title(anss))
+
+        return ', '.join(gtitles)
 #===============================================================================
 # defaults
 #===============================================================================

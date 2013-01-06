@@ -51,7 +51,6 @@ class ExperimentEditor(ExperimentManager, Saveable):
     def save_as_experiment_sets(self):
         p = self.save_file_dialog(default_directory=paths.experiment_dir)
         p = self._dump_experiment_sets(p)
-        self.path = p
         self.save_enabled = True
 
     def save_experiment_sets(self):

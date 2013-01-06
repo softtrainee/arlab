@@ -106,17 +106,7 @@ class Ideogram(Plotter):
 ##        self.build()
 ##        self.graph.redraw()
 #        self.figure.refresh()
-    def set_excluded_points(self, exclude, group_id, graph_id=0):
-        if not exclude:
-            return
 
-        graph = self.graphs[graph_id]
-
-        try:
-            plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
-            plot.index.metadata['selections'] = exclude
-        except IndexError, e:
-            print e
 
     def _build_xtitle(self, g, xtitle_font, xtick_font):
         f, s = xtitle_font.split(' ')
@@ -518,12 +508,12 @@ class Ideogram(Plotter):
     def _cmp_analyses(self, x):
         return x.age.nominal_value
 
-    def _update_graph(self, g):
-        xmi, xma = g.get_x_limits()
-        ideo = g.plots[0]
+    def _update_graph(self, graph):
+        xmi, xma = graph.get_x_limits()
+        ideo = graph.plots[0]
 
         sels = dict()
-        for pp in g.plots[1:]:
+        for pp in graph.plots[1:]:
             for i, p in enumerate(pp.plots.itervalues()):
                 ss = p[0].index.metadata['selections']
 
@@ -532,7 +522,7 @@ class Ideogram(Plotter):
                 else:
                     sels[i] = ss
 
-        ideoplots = filter(lambda a:a[0] % 3 == 0, enumerate(g.plots[0].plots.iteritems()))
+        ideoplots = filter(lambda a:a[0] % 3 == 0, enumerate(graph.plots[0].plots.iteritems()))
         for i, p in enumerate(ideoplots):
 #            if not i in sels:
 #                continue
@@ -548,7 +538,7 @@ class Ideogram(Plotter):
             sp = ideo.plots['plot{}'.format(i * 3 + 2)][0]
 
             try:
-                ages_errors = sorted([a.age for a in g.analyses if a.group_id == i],
+                ages_errors = sorted([a.age for a in graph.analyses if a.group_id == i],
                                      key=lambda x: x.nominal_value)
                 ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors) if not j in sel])
 
@@ -589,7 +579,7 @@ class Ideogram(Plotter):
                 result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False
 
-        g.redraw()
+        graph.redraw()
 
 #===============================================================================
 # handlers

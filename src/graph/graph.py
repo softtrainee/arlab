@@ -30,7 +30,6 @@ from pyface.api import FileDialog, OK
 from pyface.timer.api import do_after as do_after_timer
 #=============standard library imports ========================
 import numpy as np
-from numpy.core.numeric import Inf
 import csv
 import math
 #=============local library imports  ==========================
@@ -1352,7 +1351,7 @@ class Graph(Loggable, ContextMenuMixin):
             try:
                 if mi <= 0:
 
-                    mi = Inf
+                    mi = np.Inf
                     for di in plot.data.list_data():
                         if 'y' in di:
                             ya = np.copy(plot.data.get_data(di))

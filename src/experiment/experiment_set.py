@@ -471,7 +471,7 @@ tray: {}
         self.automated_run = ar.clone_traits()
         #if analysis type is bg, b- or a overwrite a few defaults
         if not ar.analysis_type == 'unknown':
-            kw['position'] = 0
+            kw['position'] = '0'
             kw['extract_value'] = 0
 
         self.automated_run.trait_set(**kw)
