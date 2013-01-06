@@ -117,26 +117,24 @@ class IsotopeContextMenuMixin(ContextMenuMixin):
     def contextual_menu_contents(self):
 
         contents = super(IsotopeContextMenuMixin, self).contextual_menu_contents()
-
+        contents.append(self.action_factory('Edit Analyses', 'edit_analyses'))
+        actions = []
         if hasattr(self, 'selected_analysis'):
-            enabled = self.selected_analysis is not None
+            if self.selected_analysis:
+                actions.append(self.action_factory('Recall', 'recall_analysis'))
+                if self.selected_analysis.status == 0:
+                    actions.append(self.action_factory('Omit', 'set_status_omit'))
+                else:
+                    actions.append(self.action_factory('Include', 'set_status_include'))
+                actions.append(self.action_factory('Void', 'set_status_void'))
 
+        contents.append(MenuManager(name='Analysis', *actions))
 
-#        actions = [Action(name='Recall',
-#                          enabled=enabled,
-#                          on_perfom=getattr(self, 'recall_analysis'))]
-#
-#        for item in actions:
-#            analysis_group.append(item)
-#
-#        contents.append(analysis_group)
-#        return contents
-##        contents = []
-        contents.append(MenuManager(
-                             self.action_factory('Recall', 'recall_analysis', enabled=enabled),
-                             self.action_factory('Omit', 'set_status_omit', enabled=enabled),
-                             self.action_factory('Include', 'set_status_include', enabled=enabled),
-                             name='Analysis'))
+#        contents.append(MenuManager(
+#                             self.action_factory('Recall', 'recall_analysis', enabled=enabled),
+#                             self.action_factory('Omit', 'set_status_omit', enabled=enabled),
+#                             self.action_factory('Include', 'set_status_include', enabled=enabled),
+#                             name='Analysis'))
         return contents
 
 class RegressionContextMenuMixin(ContextMenuMixin):

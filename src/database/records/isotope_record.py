@@ -839,7 +839,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         sample = ln.sample
         return sample.project.name
 
-    @cached_property
     def _get_status(self):
         return self._get_dbrecord_value('status')
 

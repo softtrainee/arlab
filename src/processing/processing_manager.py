@@ -109,7 +109,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     def save_figure(self):
         fm = self.figure_manager
-        figure = self._get_active_figure()
+        figure = self._get_active_plotter()
         if figure:
             fm.project_name = figure.analyses[0].project
             info = fm.edit_traits(view='save_view')
@@ -160,7 +160,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             save a figures analyses as a table
         '''
         grouped_analyses = None
-        figure = self._get_active_figure()
+        figure = self._get_active_plotter()
         if figure is not None:
             grouped_analyses = figure._get_grouped_analyses()
         else:
@@ -202,13 +202,30 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                                         db=self.db)
             self.open_view(tm)
 
-#===============================================================================
-# apply corrections
-#===============================================================================
     def gather_data(self):
         if self._gather_data():
             return self._get_analyses()
 
+    def edit_analyses(self):
+        sm = self.selector_manager
+        info = sm.edit_traits(kind='livemodal')
+        if info.result:
+            analyses = self._get_analyses()
+            title = self._make_title(analyses)
+
+            plotter = self._get_active_plotter()
+            if plotter:
+                plotter.options['title'] = title
+                plotter.build(analyses, new_container=False)
+
+            table = self._get_active_table()
+            if table:
+                table.set_title(title)
+                table.analyses = analyses
+
+#===============================================================================
+# apply corrections
+#===============================================================================
     def apply_blank_correction(self):
         bm = self.blank_corrections_manager
         self._apply_correction(bm)
@@ -262,13 +279,20 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             ideo = self._display_ideogram(ans, po, pv.highlight_omitted)
             self._display_tabular_data(ans, ideo.make_title())
 
-    def _get_active_figure(self):
-        figure = next((obj for win, obj in self.figures if win.ui.control.IsActive()), None)
-        return figure
-
     def _get_active_window(self):
-        window = next((win for win, obj in self.figures if win.ui.control.IsActive()), None)
-        return window
+        return self._get_active_item(0)
+
+    def _get_active_plotter(self):
+        return self._get_active_item(1)
+
+    def _get_active_table(self):
+        return self._get_active_item(2)
+
+    def _get_active_item(self, ind):
+        args = next(((win, plotter, table) for win, plotter, table in self.figures
+                       if win.ui.control.IsActive()), None)
+        if args:
+            return args[ind]
 
     def _export(self, klass, p, grouped_analyses):
         pub = klass(filename=p)
@@ -309,9 +333,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                     func(ans, po, title)
 
 
-    def _open_figure(self, fig, obj=None):
+    def _open_figure(self, fig, obj=None, table=None):
         self._set_window_xy(fig)
-        self.figures.append((fig, obj))
+        self.figures.append((fig, obj, table))
         self.open_view(fig)
 
 
@@ -333,10 +357,10 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     def _display_tabular_data(self, ans, title):
         tm = TabularAnalysisManager(analyses=ans,
                                     db=self.db,
-                                    title='Table {}'.format(title)
-
                                     )
+        tm.set_title(title)
         self.open_view(tm)
+        return tm
 
     def _display_isochron(self, ans, po, title):
         rr = self._isochron(ans)
@@ -367,8 +391,8 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if rr is not None:
             g, ideo = rr
 
-            self._display_tabular_data(ans, title)
-            self._open_figure(g, ideo)
+            table = self._display_tabular_data(ans, title)
+            self._open_figure(g, ideo, table)
             return ideo
 
     def _display_series(self, ans, po, title):
@@ -426,7 +450,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         self.analyses.sort(key=lambda x:x.age)
 
 #===============================================================================
-# plotters
+# figures
 #===============================================================================
     def _window_factory(self):
 #        w = self.get_parameter('window', 'width', default=500)
@@ -463,6 +487,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
         g = self._window_factory()
         p = Ideogram(db=self.db,
+                     processing_manager=self,
                      probability_curve_kind=probability_curve_kind,
                      mean_calculation_kind=mean_calculation_kind
                      )

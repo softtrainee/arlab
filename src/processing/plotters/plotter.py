@@ -56,14 +56,21 @@ class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     def set_status_include(self):
         self.plotter.set_status(0)
 
+    def set_status_void(self):
+        self.plotter.set_status(-1)
+
     def recall_analysis(self):
         self.plotter.recall_analysis()
+
+    def edit_analyses(self):
+        self.plotter.edit_analyses()
 
 class Plotter(Viewable):
     adapter = Property
     results = List(BaseResults)
     graph = Any
     db = Any
+    processing_manager = Any
     selected_analysis = Any
     analyses = Any
     sorted_analyses = Property(depends_on='analyses')
@@ -71,6 +78,9 @@ class Plotter(Viewable):
     figure = Any
 
     graph_panel_info = Instance(GraphPanelInfo, ())
+
+    def edit_analyses(self):
+        self.processing_manager.edit_analyses()
 
     def recall_analysis(self):
         iso_record = self.selected_analysis.isotope_record
@@ -83,11 +93,19 @@ class Plotter(Viewable):
 
     def set_status(self, status):
         sa = self.selected_analysis
-        status_str = 'including' if status == 0 else 'omitting'
+        if status == -1:
+            status_str = 'void'
+        elif status == 0:
+            status_str = 'including'
+        else:
+            status_str = 'omitting'
+
         self.info('{} analysis {}'.format(status_str, sa.record_id))
         dbrecord = sa.dbrecord
         sess = object_session(dbrecord)
         dbrecord.status = status
+        sa.temp_status = status
+
         sess.commit()
 
         group_id = sa.group_id
@@ -112,7 +130,8 @@ class Plotter(Viewable):
             print e
 
     def build(self, analyses=None, padding=None,
-              options=None
+              options=None,
+              new_container=True
               ):
 
         if analyses is None:
@@ -132,7 +151,12 @@ class Plotter(Viewable):
         self._ngroups = n = len(graph_groups)
 
         op, r, c = self._create_grid_container(n)
-        self._plotcontainer = op
+        if new_container:
+            self._plotcontainer = op
+        else:
+            op = self._plotcontainer
+            op.remove(*op.components)
+
         self.graphs = []
         self.results = []
         plots = []
@@ -169,6 +193,7 @@ class Plotter(Viewable):
                 for pi in g.plots:
                     plots.append(pi)
 
+        op.invalidate_and_redraw()
         self._plots = plots
         return op, plots
 
@@ -369,6 +394,8 @@ class Plotter(Viewable):
                 self.selected_analysis = sorted_ans[hoverid]
             except IndexError:
                 return
+        else:
+            self.selected_analysis = None
 
         sel = obj.metadata.get('selections', [])
         #set the temp_status for all the analyses
