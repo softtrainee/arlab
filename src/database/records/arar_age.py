@@ -38,6 +38,12 @@ class ArArAge(HasTraits):
     kcl = Property(depends_on='age_dirty')
     clk = Property(depends_on='age_dirty')
 
+    #ratios
+    Ar40_39 = Property
+    Ar37_39 = Property
+    Ar36_39 = Property
+
+
     j = Property
     abundant_sensitivity = Property
 
@@ -334,4 +340,19 @@ class ArArAge(HasTraits):
 
     def _get_moles_Ar40(self):
         return 0.001
+
+    @cached_property
+    def _get_Ar40_39(self):
+        return self.rad40 / self.k39
+
+    @cached_property
+    def _get_Ar37_39(self):
+        return self.Ar37 / self.Ar39
+
+    @cached_property
+    def _get_Ar36_39(self):
+        return self.Ar36 / self.Ar39
+
+
+
 #============= EOF =============================================

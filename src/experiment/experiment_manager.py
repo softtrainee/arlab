@@ -60,7 +60,7 @@ class ExperimentManager(Manager):
 
     title = Property(depends_on='experiment_set')#DelegatesTo('experiment_set', prefix='name')
 #    path = DelegatesTo('experiment_set')
-    path = Property(depends_on='experiment_set')
+#    path = Property(depends_on='experiment_set')
 #    editing_signal = None
     filelistener = None
     username = Str
@@ -147,10 +147,10 @@ class ExperimentManager(Manager):
         self._update_aliquots()
 
     def check_for_mods(self):
-
+        path = self.experiment_set.path
         currenthash = hashlib.sha1(self._text).hexdigest()
-        if self.path:
-            with open(self.path, 'r') as f:
+        if path:
+            with open(path, 'r') as f:
                 diskhash = hashlib.sha1(f.read()).hexdigest()
             return currenthash != diskhash
 
@@ -236,19 +236,11 @@ class ExperimentManager(Manager):
         if db.connect():
             db.reset()
             selector = self.selector_factory('simple')
-#            selector = db.selector_factory(style='simple')
-#
-#            selector.set_data_manager(kind=self.repo_kind,
-#                                      repository=self.repository,
-#                                      workspace_root=paths.default_workspace_dir
-#                                      )
 
-#            self.open_view(selector)
             selector.load_recent()
             v = SelectionView(table=selector)
             v.build_graph()
 
-#            dm = selector.data_manager
             self.open_view(v)
 
     def _extract_experiment_text(self, path, i):
@@ -438,9 +430,10 @@ class ExperimentManager(Manager):
         if self.experiment_set:
             return 'Experiment {}'.format(self.experiment_set.name)
 
-    def _get_path(self):
-        if self.experiment_set:
-            return self.experiment_set.path
+#    def _get_path(self):
+#        if self.experiment_set:
+#            return self.experiment_set.path
+#    
 #===============================================================================
 # handlers
 #===============================================================================

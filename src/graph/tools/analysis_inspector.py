@@ -40,7 +40,7 @@ class AnalysisPointInspector(PointInspector):
                 if self.value_format:
                     y = self.value_format(y)
 
-                if analysis.temp_status != 0:
+                if analysis.status == 0 and analysis.temp_status != 0:
                     status = 'Temp. Omitted'
                 else:
                     status = analysis.status_text

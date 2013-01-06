@@ -169,6 +169,11 @@ class AutomatedRunAdapter(TabularAdapter):
             dont display 0.0's
         '''
         v = getattr(self.item, attr)
+        if isinstance(v, str):
+            try:
+                v = int(v)
+            except ValueError:
+                v = ''
         if v:
             return v
         else:

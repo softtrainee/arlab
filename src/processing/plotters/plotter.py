@@ -23,6 +23,7 @@ from chaco.plot_containers import GridPlotContainer
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
+from chaco.scatterplot import ScatterPlot
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.viewable import Viewable
@@ -68,13 +69,47 @@ class Plotter(Viewable):
     sorted_analyses = Property(depends_on='analyses')
     error_bar_overlay = Any
     figure = Any
-    popup = None
-    _dehover_count = 0
-    _hover_cache = Dict
 
     graph_panel_info = Instance(GraphPanelInfo, ())
 
-#    hoverid = None
+    def recall_analysis(self):
+        iso_record = self.selected_analysis.isotope_record
+        if not iso_record:
+            return
+
+        if iso_record.initialize():
+            iso_record.load_graph()
+            iso_record.edit_traits()
+
+    def set_status(self, status):
+        sa = self.selected_analysis
+        status_str = 'including' if status == 0 else 'omitting'
+        self.info('{} analysis {}'.format(status_str, sa.record_id))
+        dbrecord = sa.dbrecord
+        sess = object_session(dbrecord)
+        dbrecord.status = status
+        sess.commit()
+
+        group_id = sa.group_id
+        graph_id = sa.graph_id
+        ans = self._get_sorted_analyses()
+        pt = ans.index(sa)
+        if status == 0:
+            self._modify_excluded_point('remove', pt, group_id, graph_id)
+        else:
+            self._modify_excluded_point('append', pt, group_id, graph_id)
+
+    def set_excluded_points(self, exclude, group_id, graph_id=0):
+        if not exclude:
+            return
+
+        graph = self.graphs[graph_id]
+
+        try:
+            plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
+            plot.index.metadata['selections'] = exclude
+        except IndexError, e:
+            print e
 
     def build(self, analyses=None, padding=None,
               options=None
@@ -118,7 +153,7 @@ class Plotter(Viewable):
 
                 g = self._build(ans, padding=padding,
                                 aux_plots=aux_plots,
-                                title=self._make_title(ans) if title is None else title
+                                title=title
                                 )
                 if i == r - 1:
                     self._build_xtitle(g, xtitle_font, xtick_font)
@@ -180,21 +215,21 @@ class Plotter(Viewable):
         self._build_hook(g, analyses, padding, aux_plots=aux_plots)
         return g
 
-    def recall_analysis(self):
-        iso_record = self.selected_analysis.isotope_record
-        if not iso_record:
-            return
+    def _modify_excluded_point(self, func, point, group_id, graph_id=0):
+        graph = self.graphs[graph_id]
+        try:
+            plot = graph.plots[1].plots['plot{}'.format(group_id)][0]
+            selection = plot.index.metadata['selections']
+            ffunc = getattr(selection, func)
+            ffunc(point)
 
-        if iso_record.initialize():
-            iso_record.load_graph()
-            iso_record.edit_traits()
+            #force scatterplot to compute selection cache
+            plot._selection_cache_valid = False
 
-    def set_status(self, status):
-        dbrecord = self.selected_analysis.dbrecord
-        sess = object_session(dbrecord)
-        dbrecord.status = status
-        sess.commit()
+        except IndexError, e:
+            print e
 
+        self._update_graph(graph)
     def _get_adapter(self):
         return ResultsTabularAdapter
 
@@ -324,122 +359,10 @@ class Plotter(Viewable):
     def get_labnumber(self, analyses):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
-    def make_title(self, analyses=None):
-        if analyses is None:
-            analyses = self.analyses
-        return self._make_title(analyses)
-
-    def _make_title(self, analyses):
-        def make_bounds(gi, sep='-'):
-            if len(gi) > 1:
-                m = '{}{}{}'.format(gi[0], sep, gi[-1])
-            else:
-                m = '{}'.format(gi[0])
-
-            return m
-
-        def make_step_bounds(si):
-            if not si:
-                return
-            grps = []
-            a = si[0]
-            pa = si[1]
-            cgrp = [pa]
-            for xi in si[2:]:
-                if ord(pa) + 1 == ord(xi):
-                    cgrp.append(xi)
-                else:
-                    grps.append(cgrp)
-                    cgrp = [xi]
-                pa = xi
-
-            grps.append(cgrp)
-            return ','.join(['{}{}'.format(a, make_bounds(gi, sep='...')) for gi in grps])
-
-        def _make_group_title(ans):
-            lns = dict()
-            for ai in ans:
-    #            v = '{}{}'.format(ai.aliquot, ai.step)
-                v = (ai.aliquot, ai.step)
-                if ai.labnumber in lns:
-                    lns[ai.labnumber].append(v)
-                else:
-                    lns[ai.labnumber] = [v]
-
-            skeys = sorted(lns.keys())
-            grps = []
-            for si in skeys:
-                als = lns[si]
-                sals = sorted(als, key=lambda x: x[0])
-                aliquots, steps = zip(*sals)
-
-                pa = aliquots[0]
-                ggrps = []
-                cgrp = [pa]
-                sgrp = []
-                sgrps = []
-
-                for xi, sti in zip(aliquots[1:], steps[1:]):
-                    #handle analyses with steps
-                    if sti != '':
-                        if not sgrp:
-                            sgrp.append(xi)
-                        elif sgrp[0] != xi:
-                            sgrps.append(sgrp)
-                            sgrp = [xi]
-                        sgrp.append(sti)
-                    else:
-                        if sgrp:
-                            sgrps.append(sgrp)
-                            sgrp = []
-
-                        if pa + 1 == xi:
-                            cgrp.append(xi)
-                        else:
-                            ggrps.append(cgrp)
-                            cgrp = [xi]
-
-                    pa = xi
-
-                sgrps.append(sgrp)
-                ggrps.append(cgrp)
-                fs = [make_bounds(gi) for gi in ggrps]
-
-                if sgrps[0]:
-                    #handle steps
-                    pa = sgrps[0][0]
-                    ggrps = []
-                    cgrp = [sgrps[0]]
-                    for sgi in sgrps[1:]:
-                    #    print si
-                        if pa + 1 == sgi[0]:
-                            cgrp.append(sgi)
-                        else:
-                            grps.append(cgrp)
-                            cgrp = [sgi]
-                        pa = sgi[0]
-                    ggrps.append(cgrp)
-                    ss = ['{}-{}'.format(make_step_bounds(gi[0]),
-                            make_step_bounds(gi[-1])) for gi in ggrps]
-                    fs.extend(ss)
-
-                als = ','.join(fs)
-
-                grps.append('{}-({})'.format(si, als))
-
-            return ', '.join(grps)
-
-        group_ids = list(set([a.group_id for a in analyses]))
-        gtitles = []
-        for gid in group_ids:
-            anss = [ai for ai in analyses if ai.group_id == gid]
-            gtitles.append(_make_group_title(anss))
-
-        return ', '.join(gtitles)
-
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
-        hover = scatter.value.metadata.get('hover')
+#        hover = scatter.value.metadata.get('hover')
+        hover = scatter.index.metadata.get('hover')
         if hover:
             hoverid = hover[0]
             try:
@@ -455,50 +378,9 @@ class Plotter(Viewable):
     def _cmp_analyses(self, x):
         return x.timestamp
 
-#    def _show_pop_up(self, popup, analysis, value, obj):
-#        try:
-#            x, y = obj.metadata.get('mouse_xy')
-#        except Exception, e:
-#            popup.Close()
-#            return
-#
-#        def make_status(s):
-#            ss = 'OK' if s == 0 else 'Omitted'
-#            return 'Status= {}'.format(ss)
-#
-#        lines = [
-#                 '{}, {}'.format(analysis.record_id, analysis.sample),
-#                 analysis.age_string,
-#                 value,
-#                 make_status(analysis.status)
-#               ]
-#        t = '\n'.join(lines)
-#        gc = font_metrics_provider()
-#        with gc:
-#            font = popup.GetFont()
-#            from kiva.fonttools import Font
-#            gc.set_font(Font(face_name=font.GetFaceName(),
-#                             size=font.GetPointSize(),
-#                             family=font.GetFamily(),
-##                             weight=font.GetWeight(),
-##                             style=font.GetStyle(),
-##                             underline=0, 
-##                             encoding=DEFAULT
-#                             ))
-#            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-##            print linewidths, lineheights
-#            ml = max(linewidths)
-#            mh = max(lineheights)
-#
-##        ch = popup.GetCharWidth()
-#        mh = mh * len(lines)
-##        print ml, mh
-##        popup.Freeze()
-#        popup.SetPosition((x + 55, y + 25))
-#        popup.set_size(ml, mh)
-#        popup.SetText(t)
-#        popup.Show(True)
-##        popup.Thaw()
+    def _update_graph(self, graph):
+        pass
+
 
 #===============================================================================
 # views
@@ -544,3 +426,47 @@ class Plotter(Viewable):
         return op, r, c
 
 #============= EOF =============================================
+#    def _show_pop_up(self, popup, analysis, value, obj):
+#        try:
+#            x, y = obj.metadata.get('mouse_xy')
+#        except Exception, e:
+#            popup.Close()
+#            return
+#
+#        def make_status(s):
+#            ss = 'OK' if s == 0 else 'Omitted'
+#            return 'Status= {}'.format(ss)
+#
+#        lines = [
+#                 '{}, {}'.format(analysis.record_id, analysis.sample),
+#                 analysis.age_string,
+#                 value,
+#                 make_status(analysis.status)
+#               ]
+#        t = '\n'.join(lines)
+#        gc = font_metrics_provider()
+#        with gc:
+#            font = popup.GetFont()
+#            from kiva.fonttools import Font
+#            gc.set_font(Font(face_name=font.GetFaceName(),
+#                             size=font.GetPointSize(),
+#                             family=font.GetFamily(),
+##                             weight=font.GetWeight(),
+##                             style=font.GetStyle(),
+##                             underline=0, 
+##                             encoding=DEFAULT
+#                             ))
+#            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
+##            print linewidths, lineheights
+#            ml = max(linewidths)
+#            mh = max(lineheights)
+#
+##        ch = popup.GetCharWidth()
+#        mh = mh * len(lines)
+##        print ml, mh
+##        popup.Freeze()
+#        popup.SetPosition((x + 55, y + 25))
+#        popup.set_size(ml, mh)
+#        popup.SetText(t)
+#        popup.Show(True)
+##        popup.Thaw()

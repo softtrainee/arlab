@@ -22,13 +22,13 @@ from numpy import array
 
 class Mean(HasTraits):
     analyses = List
-    nanalyses = Property
-    age = Property
+    nanalyses = Property(depends_on='analyses:[status,temp_status]')
+    age = Property(depends_on='analyses:[status,temp_status]')
     identifier = Property
 
     def _calculate_mean(self, attr):
         vs = array([getattr(ai, attr) for ai in self.analyses
-                    if ai.status == 0])
+                    if ai.status == 0 and ai.temp_status == 0])
         return vs.mean()
 
     @cached_property
@@ -41,10 +41,35 @@ class Mean(HasTraits):
 
     @cached_property
     def _get_nanalyses(self):
-        return len(self.analyses)
+
+        return len([ai for ai in self.analyses
+                    if ai.status == 0 and ai.temp_status == 0])
 
 class AnalysisRatioMean(Mean):
-    pass
+    Ar40_39 = Property
+    Ar37_39 = Property
+    Ar36_39 = Property
+    kca = Property
+    kcl = Property
+
+    def _get_Ar40_39(self):
+        return self._calculate_mean('Ar40_39')
+#        return self._calculate_mean('rad40') / self._calculate_mean('k39')
+
+    def _get_Ar37_39(self):
+        return self._calculate_mean('Ar37_39')
+#        return self._calculate_mean('Ar37') / self._calculate_mean('Ar39')
+
+    def _get_Ar36_39(self):
+        return self._calculate_mean('Ar36_39')
+#        return self._calculate_mean('Ar36') / self._calculate_mean('Ar39')
+
+    def _get_kca(self):
+        return self._calculate_mean('kca')
+
+    def _get_kcl(self):
+        return self._calculate_mean('kcl')
+
 
 class AnalysisIntensityMean(Mean):
     Ar40 = Property

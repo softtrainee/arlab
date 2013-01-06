@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Int, Property, Event, Any, cached_property
+from traits.api import List, Int, Property, Event, Any, cached_property, on_trait_change
 from traitsui.api import Item, TabularEditor, Group, VGroup
 from traitsui.tabular_adapter import TabularAdapter
 from src.viewable import Viewable
@@ -26,19 +26,25 @@ from src.processing.analysis_means import AnalysisRatioMean, \
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class AnalysisAdapter(TabularAdapter):
-    columns = [('Status', 'status_string'),
+    columns = [('Status', 'status'),
                ('ID', 'record_id'),
                ('Age', 'age'),
                (u'\u00b11s', 'age_error')
 #               (unicode('03c3', encoding='symbol'), 'error')
                ]
 
-    status_string_width = Int(40)
+    status_text = Property
+    status_width = Int(40)
     age_text = Property
     age_error_text = Property
 #    age_error_format = Str('%0.4f')
 #    age_width = Int(80)
 #    age_error_width = Int(80)
+    def _get_status_text(self):
+        status = ''
+        if self.item.status != 0 or self.item.temp_status != 0:
+            status = 'X'
+        return status
 
     def _get_age_text(self):
         return self._get_value('age')
@@ -56,16 +62,17 @@ class AnalysisAdapter(TabularAdapter):
 
     def get_bg_color(self, obj, trait, row):
         bgcolor = 'white'
-        if self.item.status != 0:
+        if self.item.status != 0 or self.item.temp_status != 0:
             bgcolor = '#FF7373'
+
         elif row % 2 == 0:
             bgcolor = '#F0F8FF'
 
         return bgcolor
 
     def _floatfmt(self, f, n=5):
-        if abs(f) < math.pow(10, -n) or abs(f) > math.pow(10, n):
-            fmt = '{:0.2e}'
+        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, n):
+            fmt = '{:0.3e}'
         else:
             fmt = '{{:0.{}f}}'.format(n)
 
@@ -79,7 +86,7 @@ class AnalysisAdapter(TabularAdapter):
 
 class AnalysisIntensityAdapter(AnalysisAdapter):
     columns = [
-               ('Status', 'status_string'),
+               ('Status', 'status'),
                ('ID', 'record_id'),
                ('Ar40', 'Ar40'),
                (u'\u00b11s', 'Ar40_error'),
@@ -140,7 +147,7 @@ class AnalysisIntensityAdapter(AnalysisAdapter):
 
 class AnalysisRatioAdapter(AnalysisAdapter):
     columns = [
-               ('Status', 'status_string'),
+               ('Status', 'status'),
                ('ID', 'record_id'),
                ('40*/K39', 'Ar40_39'),
                (u'\u00b11s', 'Ar40_39_error'),
@@ -168,28 +175,22 @@ class AnalysisRatioAdapter(AnalysisAdapter):
     kcl_error_text = Property
 
     def _get_Ar40_39_text(self):
-        n = self.item.rad40 / self.item.k39
-        return self._floatfmt(n.nominal_value)
+        return self._get_value('Ar40_39')
 
     def _get_Ar40_39_error_text(self):
-        n = self.item.rad40 / self.item.k39
-        return self._floatfmt(n.std_dev(), n=6)
+        return self._get_error('Ar40_39')
 
     def _get_Ar37_39_text(self):
-        n = self.item.Ar37 / self.item.Ar39
-        return self._floatfmt(n.nominal_value)
+        return self._get_value('Ar37_39')
 
     def _get_Ar37_39_error_text(self):
-        n = self.item.Ar37 / self.item.Ar39
-        return self._floatfmt(n.std_dev(), n=6)
+        return self._get_error('Ar37_39')
 
     def _get_Ar36_39_text(self):
-        n = self.item.Ar36 / self.item.Ar39
-        return self._floatfmt(n.nominal_value)
+        return self._get_value('Ar36_39')
 
     def _get_Ar36_39_error_text(self):
-        n = self.item.Ar36 / self.item.Ar39
-        return self._floatfmt(n.std_dev(), n=6)
+        return self._get_error('Ar36_39')
 
     def _get_kca_text(self):
         return self._get_value('kca')
@@ -212,12 +213,23 @@ class MeanAdapter(AnalysisAdapter):
 
         return bgcolor
 
-class AnalysisRatioMeanAdapter(MeanAdapter):
+class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
     columns = [('N', 'nanalyses'),
                ('ID', 'identifier'),
+               ('40*/K39', 'Ar40_39'),
+               (u'\u00b11s', 'Ar40_39_error'),
+               ('Ar37/Ar39', 'Ar37_39'),
+               (u'\u00b11s', 'Ar37_39_error'),
+               ('Ar36/Ar39', 'Ar36_39'),
+               (u'\u00b11s', 'Ar36_39_error'),
+               ('K/Ca', 'kca'),
+               (u'\u00b11s', 'kca_error'),
+               ('K/Cl', 'kcl'),
+               (u'\u00b11s', 'kcl_error'),
                ('Age', 'age'),
                (u'\u00b11s', 'age_error'),
                ]
+
 
 class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
     columns = [('N', 'nanalyses'),
@@ -239,8 +251,9 @@ class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
 
 class TabularAnalysisManager(Viewable):
     analyses = List
-    ratio_means = Property(depends_on='analyses')
-    intensity_means = Property(depends_on='analyses')
+    ratio_means = Property(depends_on='analyses.[temp_status,status]')
+    intensity_means = Property(depends_on='analyses.[temp_status,status]')
+
     update_selected_analysis = Event
     selected_analysis = Any
     db = Any
@@ -267,13 +280,16 @@ class TabularAnalysisManager(Viewable):
                               editor=TabularEditor(adapter=AnalysisIntensityAdapter(),
                                    dclicked='update_selected_analysis',
                                    selected='selected_analysis',
-                                   editable=False
+                                   editable=False,
+                                   auto_update=True
                                    )),
                            Item('intensity_means',
                               height=100,
                               show_label=False,
                               editor=TabularEditor(adapter=AnalysisIntensityMeanAdapter(),
-                                                   editable=False)
+                                                   editable=False,
+                                                   auto_update=True
+                                                   )
                                 )
 
                            )
@@ -284,18 +300,20 @@ class TabularAnalysisManager(Viewable):
                           editor=TabularEditor(adapter=AnalysisRatioAdapter(),
                                dclicked='update_selected_analysis',
                                selected='selected_analysis',
-                               editable=False
+                               editable=False,
+                               auto_update=True
                                )
                             ),
                        Item('ratio_means',
                           height=100,
                           show_label=False,
                           editor=TabularEditor(adapter=AnalysisRatioMeanAdapter(),
-                                               editable=False)
+                                               editable=False,
+                                               auto_update=True
+                                               )
                             )
 
                        )
-
 
         return self.view_factory(Group(
                                        Group(intensity, label='Intensities'),
