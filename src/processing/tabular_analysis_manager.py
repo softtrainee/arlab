@@ -15,10 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Int, Property, Event, Any, cached_property, on_trait_change
+from traits.api import List, Int, Property, Event, Any, cached_property, Str
 from traitsui.api import Item, TabularEditor, Group, VGroup
 from traitsui.tabular_adapter import TabularAdapter
-from src.viewable import Viewable
+from src.viewable import Viewable, ViewableHandler
 import math
 from src.processing.analysis_means import AnalysisRatioMean, \
     AnalysisIntensityMean
@@ -248,6 +248,10 @@ class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
                (u'\u00b11s', 'age_error'),
                ]
 
+class TabularAnalysisHandler(ViewableHandler):
+    def object_title_changed(self, info):
+        if info.initialized:
+            info.ui.title = info.object.title
 
 class TabularAnalysisManager(Viewable):
     analyses = List
@@ -261,7 +265,11 @@ class TabularAnalysisManager(Viewable):
     window_y = 200
     window_width = 0.85
     window_height = 500
-    title = 'Analysis Table'
+    title = Str('Analysis Table')
+    handler_klass = TabularAnalysisHandler
+
+    def set_title(self, title):
+        self.title = 'Table {}'.format(title)
 
     @cached_property
     def _get_ratio_means(self):
