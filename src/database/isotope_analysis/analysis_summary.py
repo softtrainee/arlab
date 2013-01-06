@@ -15,11 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Property, Any, Str
+from traits.api import Instance, Property, Str
 from traitsui.api import View, Item, HGroup, EnumEditor
 #============= standard library imports ========================
-#import re
-#from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary, fixed_width, floatfmt
 from src.database.isotope_analysis.fit_selector import FitSelector

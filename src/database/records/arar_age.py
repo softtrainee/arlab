@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
     Event
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import datetime
 #============= local library imports  ==========================

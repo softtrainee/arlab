@@ -16,14 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Property, List, Any, cached_property, \
-    Event, Dict
+    Event
 from traitsui.api import View, Item, HGroup, ListStrEditor
-from pyface.timer.do_later import do_later
+
 #============= standard library imports ========================
 from uncertainties import ufloat
 import re
-import datetime
-from numpy import array, delete
 import struct
 #============= local library imports  ==========================
 from src.database.isotope_analysis.blanks_summary import BlanksSummary
@@ -35,7 +33,6 @@ from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.experiment.identifier import convert_shortname, convert_labnumber
 from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
-from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import InterpolatedRatio, Background, \
     Blank, Signal
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
@@ -1009,7 +1006,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         for ig in isogrps:
             for ti in dm.get_tables(ig):
-                name = ti.name
                 data = zip(*[(r['time'], r['value']) for r in ti.iterrows()])
 
                 iso = ig._v_name

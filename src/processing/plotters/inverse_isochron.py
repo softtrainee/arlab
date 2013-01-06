@@ -15,15 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool
-from traitsui.api import View, Item
+from traits.api import Bool
+from traitsui.api import Item
+from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.graph.regression_graph import RegressionGraph
 from src.processing.plotters.plotter import Plotter
 from src.processing.plotters.results_tabular_adapter import InverseIsochronResults
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
-from chaco.array_data_source import ArrayDataSource
 
 
 class InverseIsochron(Plotter):

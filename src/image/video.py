@@ -18,11 +18,9 @@
 from traits.api import  Any, Bool, Float, List
 #=============standard library imports ========================
 from threading import Thread, Lock, Event
-from os import path
 import time
 #=============local library imports ===========================
 from src.image.image import Image
-from src.paths import paths
 from cvwrapper import get_capture_device, query_frame, write_frame, \
     new_video_writer, grayspace, get_nframes, \
     set_frame_index, get_fps, set_video_pos, crop

@@ -15,17 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Enum, Str, Instance, Bool, on_trait_change
-from traitsui.api import View, Item, TableEditor, InstanceEditor
+from traits.api import Property, Enum, Str, on_trait_change
+from traitsui.api import View, Item, InstanceEditor
 import apptools.sweet_pickle as pickle
-import os
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.lasers.pattern.patternable import Patternable
 from src.saveable import Saveable, SaveableButtons
-from src.lasers.pattern.patterns import Pattern
 from src.paths import paths
-from src.managers.manager import Manager
+
 
 
 class PatternMakerView(Saveable, Patternable):

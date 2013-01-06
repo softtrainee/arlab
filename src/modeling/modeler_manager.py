@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, DelegatesTo, List, Property, Str, Int
+from traits.api import Instance, DelegatesTo, List, Property
 from traitsui.api import View, Item
 #============= standard library imports ========================
 #import os

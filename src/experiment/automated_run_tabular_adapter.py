@@ -15,9 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports=======================
-from traits.api import Property, Int, Bool
+from traits.api import Property, Int
 from traitsui.tabular_adapter import TabularAdapter
-from kiva.fonttools import Font
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================

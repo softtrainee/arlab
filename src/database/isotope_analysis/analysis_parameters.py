@@ -15,14 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Enum, Float, Any, List, Bool, Property
+from traits.api import HasTraits, Str, Float, Bool, Property
 from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
 from src.constants import FIT_TYPES
-#from constants import FIT_TYPES
+
 #============= standard library imports ========================
-#import wx
 #============= local library imports  ==========================
-#FIT_TYPES = ['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM']
 
 class AnalysisParameters(HasTraits):
     fit = Str#Enum('linear', 'parabolic', 'cubic')

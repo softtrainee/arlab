@@ -25,7 +25,7 @@ import os
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
-from pyface.timer.do_later import do_later
+
 
 UPDATE_MS = 150
 

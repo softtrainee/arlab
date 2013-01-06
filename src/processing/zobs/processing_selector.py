@@ -16,24 +16,21 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, DelegatesTo, Button, Property, Str, Int, \
-    Event, Any, Bool
+    Any, Bool
 from traitsui.api import View, Item, HGroup, VGroup, spring, HSplit, \
-    InstanceEditor, ListStrEditor, EnumEditor, Spring
-from src.database.core.database_adapter import DatabaseAdapter
-from traitsui.list_str_adapter import ListStrAdapter
-from traitsui.editors.tabular_editor import TabularEditor as traitsTabularEditor, \
-    TabularEditor
+    InstanceEditor, EnumEditor
+from traitsui.editors.tabular_editor import TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
-from src.viewable import Viewable
-from src.database.core.database_selector import ColumnSorterMixin
-from src.helpers.color_generators import colorname_generator, colornames
-from src.constants import NULL_STR
-import os
-from src.paths import paths
-from src.deprecate import deprecate_klass
 
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
+from src.viewable import Viewable
+from src.database.core.database_selector import ColumnSorterMixin
+from src.database.core.database_adapter import DatabaseAdapter
+from src.constants import NULL_STR
+from src.paths import paths
+from src.deprecate import deprecate_klass
 #from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 #from traitsui.basic_editor_factory import BasicEditorFactory
 #

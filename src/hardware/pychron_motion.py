@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from src.hardware.motion_controller import MotionController
 #============= standard library imports ========================
 #============= local library imports  ==========================

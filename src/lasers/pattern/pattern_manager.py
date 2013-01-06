@@ -15,10 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Enum, Instance, Button, Str, Property, Event, Bool, DelegatesTo
-from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor, spring
+from traits.api import Enum, Instance, Button, Str, Property, Event, Bool
+from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor
 import apptools.sweet_pickle as pickle
-from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import os
 from threading import Thread

@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Property, Str, DelegatesTo
-from traitsui.api import View, Item, TableEditor
+from traits.api import Instance, DelegatesTo
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================

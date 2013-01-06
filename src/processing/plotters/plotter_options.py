@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Property, Str, Enum, Int
 from traitsui.api import View, Item, HGroup, Label, Group, \
-    TableEditor, ListEditor, InstanceEditor, EnumEditor, Spring, spring, VGroup
+    ListEditor, InstanceEditor, EnumEditor, Spring, spring, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os

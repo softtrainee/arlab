@@ -15,18 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Any, Str, Instance, Property, cached_property, Bool
-from traitsui.api import View, Item, Group, HGroup, VGroup, spring
+from traits.api import Int, Any, Str, Property, cached_property, Bool
+from traitsui.api import View
 from traitsui.menu import Action
 #============= standard library imports ========================
-import os
-import datetime
 #============= local library imports  ==========================
-from src.viewable import Viewable
 from src.graph.graph import Graph
 import time
 from src.saveable import Saveable
-from src.deprecate import deprecated
 
 
 class DatabaseRecord(Saveable):

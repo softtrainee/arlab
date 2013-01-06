@@ -22,7 +22,7 @@
 
 #=============local library imports  ==========================
 from fusions_logic_board import FusionsLogicBoard
-from src.hardware.kerr.kerr_thor_motor import KerrThorMotor
+
 class FusionsDiodeLogicBoard(FusionsLogicBoard):
     '''
     '''

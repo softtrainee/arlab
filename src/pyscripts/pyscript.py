@@ -22,7 +22,7 @@ from pyface.wx.dialog import confirmation
 import time
 import os
 import inspect
-from threading import Thread, Event, Condition
+from threading import Thread, Event
 #============= local library imports  ==========================
 from src.pyscripts.wait_dialog import WaitDialog
 from src.loggable import Loggable

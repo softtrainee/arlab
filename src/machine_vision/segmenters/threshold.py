@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property
-from traitsui.api import View, Item, TableEditor
+from traits.api import Int
 #============= standard library imports ========================
 from src.image.cvwrapper import threshold
 #from skimage.morphology import closing, square

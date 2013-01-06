@@ -14,12 +14,11 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import Instance, Str, Property, Bool, CStr, Button
-from traitsui.api import View, Item, Group, VGroup, HGroup, spring, ButtonEditor
+from traits.api import  Str, Property, Bool, CStr, Button
+from traitsui.api import View, Item, Group, VGroup
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
-from src.graph.graph import Graph
 from src.config_loadable import ConfigLoadable
 
 

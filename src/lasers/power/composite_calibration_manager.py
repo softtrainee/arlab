@@ -29,7 +29,7 @@ from src.database.selectors.power_calibration_selector import PowerCalibrationSe
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 from src.paths import paths
 from src.graph.graph import Graph
-from src.lasers.power.power_calibration_manager import PowerCalibrationObject
+from src.hardware.meter_calibration import MeterCalibration
 
 '''
 use a dbselector to select data
@@ -116,7 +116,7 @@ class CompositeCalibrationManager(Manager):
         self._dump_calibration()
 
     def _dump_calibration(self):
-        pc = PowerCalibrationObject()
+        pc = MeterCalibration()
         coeffs = []
         bounds = []
         for s in self.selected_calibrations:

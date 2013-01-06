@@ -15,11 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, List, Str, Property, Button, Dict, Enum
+from traits.api import Any, Instance, List, Str, Property, Button, Dict
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.loggable import Loggable
 from src.experiment.automated_run import AutomatedRun
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.constants import NULL_STR, SCRIPT_KEYS

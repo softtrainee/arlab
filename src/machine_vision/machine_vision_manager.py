@@ -15,13 +15,11 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Any, Float, Instance, Range, Button, Int, Property, Tuple, \
-    DelegatesTo, on_trait_change, Bool
+from traits.api import Any, Float, Instance, on_trait_change
 from traitsui.api import View, Item, Handler
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from os import path
-import math
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths

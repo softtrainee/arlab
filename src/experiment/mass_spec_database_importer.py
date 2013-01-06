@@ -16,25 +16,18 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Button
-from traitsui.api import View, Item, Group, HGroup, VGroup
+from traitsui.api import View, Item
 
 #============= standard library imports ========================
-#import csv
 import struct
-#import os
-#from pylab import transpose
 from numpy import array
 #============= local library imports  ==========================
-#from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
-#from src.loggable import Loggable
-#from src.helpers.paths import data_dir
-#from src.data_processing.regression.ols import OLS
 from src.loggable import Loggable
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
-from src.experiment.info_blob import encode_infoblob, decode_infoblob
+from src.experiment.info_blob import encode_infoblob
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 

@@ -15,14 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor
+from traitsui.api import View
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.machine_vision.machine_vision_manager import MachineVisionManager
 from src.machine_vision.detectors.brightness_detector import BrightnessDetector
 from threading import Thread
-from pyface.timer.do_later import do_later
 
 
 class BrightnessManager(MachineVisionManager):

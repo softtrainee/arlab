@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Dict, Instance, Bool, on_trait_change, List
+from traits.api import Dict, Bool, on_trait_change, List
 from apptools.preferences.preference_binding import bind_preference
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
     ListEditor, TableEditor

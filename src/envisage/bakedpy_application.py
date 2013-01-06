@@ -17,20 +17,15 @@
 #============= enthought library imports =======================
 from traits.api import List
 from envisage.ui.workbench.api import WorkbenchApplication
-from envisage.api import Application
-from pyface.api import AboutDialog, SplashScreen
-from pyface.image_resource import ImageResource
-#from traits.api import List, on_trait_change
+#from pyface.api import AboutDialog, SplashScreen
+#from pyface.image_resource import ImageResource
 #============= standard library imports ========================
-from os import path
-import os
-from src.loggable import Loggable
 import copy
 
-#from envisage.ui.tasks.tasks_application import TasksApplication
 #============= local library imports  ==========================
+from src.loggable import Loggable
+
 class Bakedpy(WorkbenchApplication, Loggable):
-#class Pychron(TasksApplication):
     '''
     '''
     id = 'bakedpy'

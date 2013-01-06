@@ -16,22 +16,21 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, on_trait_change, Str, List, Property
-from traitsui.api import View, Item, HGroup, VGroup, spring
-from src.lasers.stage_managers.stage_map import StageMap
-from src.graph.graph import Graph
+from traitsui.api import View, Item, HGroup
+from chaco.abstract_overlay import AbstractOverlay
+from chaco.tools.scatter_inspector import ScatterInspector
+from kiva.constants import FILL_STROKE
+from enable.markers import CircleMarker
 import os
 import numpy as np
-from src.paths import paths
-from chaco.abstract_overlay import AbstractOverlay
-#from pylab import get_cmap
-from chaco.tools.scatter_inspector import ScatterInspector
-from src.displays.rich_text_display import RichTextDisplay
-#import math
-from kiva.constants import FILL_STROKE
-from src.viewable import Viewable
-from enable.markers import CircleMarker
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.lasers.stage_managers.stage_map import StageMap
+from src.graph.graph import Graph
+from src.paths import paths
+from src.displays.rich_text_display import RichTextDisplay
+from src.viewable import Viewable
+
 
 class MapItemSummary(HasTraits):
     display = Instance(RichTextDisplay)

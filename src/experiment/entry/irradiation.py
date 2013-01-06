@@ -15,20 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Str, Button, Instance, \
- Property, DelegatesTo, Range, Undefined, cached_property, List
-from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup, Label, spring
+from traits.api import  Str, Button, Instance, List
+from traitsui.api import View, Item, EnumEditor, HGroup, spring
 from traitsui.menu import Action
 #============= standard library imports ========================
-#============= local library imports  ==========================
-from src.loggable import Loggable
-from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.experiment.entry.production_ratio_input import ProductionRatioInput
-from src.experiment.entry.chronology_input import ChronologyInput
 import os
+#============= local library imports  ==========================
+from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.experiment.entry.chronology_input import ChronologyInput
+from src.experiment.entry.production_ratio_input import ProductionRatioInput
 from src.paths import paths
-from src.viewable import Viewable
-from src.saveable import SaveableHandler, Saveable
+from src.saveable import Saveable
 
 
 class Irradiation(Saveable):

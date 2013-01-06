@@ -18,12 +18,11 @@
 
 #=============enthought library imports=======================
 
+from chaco.scatterplot import ScatterPlot
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
 from graph import Graph
-from chaco.plot import Plot
-from chaco.scatterplot import ScatterPlot
 
 
 class StackedGraph(Graph):

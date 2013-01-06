@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Either, Float, Int, Callable, Bool
-from uncertainties import Variable, AffineScalarFunc
+from uncertainties import AffineScalarFunc
 
 #============= standard library imports ========================
 #============= local library imports  ==========================

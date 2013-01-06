@@ -21,7 +21,6 @@ from traits.api import Any
 #============= standard library imports ========================
 #from wx import EVT_IDLE, EVT_PAINT
 import wx
-import time
 #============= local library imports  ==========================
 from src.lasers.stage_managers.stage_component_editor import LaserComponentEditor, \
     _LaserComponentEditor

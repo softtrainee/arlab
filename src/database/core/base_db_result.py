@@ -15,13 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Long, Str, Any, Instance, Date, Time, \
-    Button, cached_property, Property
+from traits.api import Str, Any, Instance, Button, cached_property, Property
 from traitsui.api import View, Item, Group, HGroup, VGroup, spring
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.graph.graph import Graph
 import time
 from src.viewable import Viewable

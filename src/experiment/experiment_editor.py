@@ -15,14 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Bool, on_trait_change
+from traits.api import on_trait_change
 from traitsui.api import View, Item, HGroup
-from traitsui.menu import Action
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.experiment_manager import ExperimentManager
 from src.paths import paths
-import os
 from src.saveable import SaveableButtons, Saveable
 
 class ExperimentEditor(ExperimentManager, Saveable):

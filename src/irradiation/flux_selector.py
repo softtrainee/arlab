@@ -26,7 +26,6 @@ class FluxSelector(HasTraits):
     flux_monitor = Str
     flux_monitors = Property
 
-
     def traits_view(self):
         v = View(HGroup(Item('flux_monitor', show_label=False,
                              editor=EnumEditor(name='flux_monitors')),
@@ -38,28 +37,28 @@ class FluxSelector(HasTraits):
 #===============================================================================
 # handlers
 #===============================================================================
-    def _edit_monitor_button_fired(self):
-
-        names = self.flux_monitors
-        monitor = FluxMonitor(names=names)
-        info = monitor.edit_traits(kind='livemodal')
-        if info.result:
-            db = self.db
-            kw = dict(age=monitor.age,
-                       age_err=monitor.age_err,
-                       decay_constant=monitor.decay_constant,
-                       decay_constant_err=monitor.decay_constant_err)
-
-            dbmonitor = db.get_flux_monitor(monitor.name)
-            if dbmonitor:
-                for k, v in kw.iteritems():
-                    setattr(dbmonitor, k, v)
-            else:
-                db.add_flux_monitor(monitor.name, **kw)
-                self.flux_monitor = monitor.name
-
-            db.commit()
-            self.saved = True
+#    def _edit_monitor_button_fired(self):
+#
+#        names = self.flux_monitors
+#        monitor = FluxMonitor(names=names)
+#        info = monitor.edit_traits(kind='livemodal')
+#        if info.result:
+#            db = self.db
+#            kw = dict(age=monitor.age,
+#                       age_err=monitor.age_err,
+#                       decay_constant=monitor.decay_constant,
+#                       decay_constant_err=monitor.decay_constant_err)
+#
+#            dbmonitor = db.get_flux_monitor(monitor.name)
+#            if dbmonitor:
+#                for k, v in kw.iteritems():
+#                    setattr(dbmonitor, k, v)
+#            else:
+#                db.add_flux_monitor(monitor.name, **kw)
+#                self.flux_monitor = monitor.name
+#
+#            db.commit()
+#            self.saved = True
 #===============================================================================
 # property get/set
 #===============================================================================

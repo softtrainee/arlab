@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 import numpy as np
 from src.helpers.datetime_tools import get_datetime#, convert_timestamp
 
@@ -61,7 +59,7 @@ def downsample_1d(data, factor=5, estimator=np.mean):
 
 def autocorrelation(x, nlags=100):
 #    from autocorr import autocorr
-    from src.data_processing.time_series import autocorr
+    from src.time_series import autocorr
     return autocorr(x, nlags=nlags)
 
 #if __name__ == '__main__':

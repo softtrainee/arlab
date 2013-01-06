@@ -17,14 +17,9 @@
 
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
-#from src.experiments.process_view import ProcessView
-
-
 
 class PychronWorkbenchPlugin(CorePlugin):
     id = 'pychron.workbench'

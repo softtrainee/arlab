@@ -18,15 +18,11 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager
-from globals import globalv
-from src.paths import paths
-import os
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#EXPERIMENT_MANAGER_PROTOCOL =
-
+from src.envisage.core.action_helper import open_manager
+from globals import globalv
 
 
 class ExperimentAction(Action):

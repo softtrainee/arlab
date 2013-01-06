@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from src.processing.figures.base_figure import BaseFigure
 from src.processing.figures.fit_series_figure import FitSeriesFigure
 from src.processing.series_config import BackgroundsSeriesConfig

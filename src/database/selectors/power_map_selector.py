@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Any, Instance, Enum, Str, on_trait_change, Bool, \
+from traits.api import String, Instance, Enum, on_trait_change, Bool, \
     Range
-from traitsui.api import Group, VGroup, Item, EnumEditor, HGroup, spring
+from traitsui.api import Group, VGroup, Item, HGroup, spring
 #============= standard library imports ========================
 import os
 import csv

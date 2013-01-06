@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.export.base import Exporter
 import csv
+
 class CSVExporter(Exporter):
     def _export(self, p):
         fp = open(p, 'w')

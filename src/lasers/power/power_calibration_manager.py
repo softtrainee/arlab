@@ -17,25 +17,25 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Instance, Int, \
      Event, Property, Bool, Any, Enum, on_trait_change, List
-from traitsui.api import View, Item, VGroup, Group, Label
+from traitsui.api import View, Item, VGroup, Group
 import apptools.sweet_pickle as pickle
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
-from numpy import polyfit, linspace, polyval, poly1d
+from numpy import polyfit, linspace, polyval
 from threading import Event as TEvent
-from threading import Thread, Timer
+from threading import Thread
+import os
+import time
 import wx
+import random
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
-import os
-import time
 from src.graph.graph import Graph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
 #from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
-from pyface.timer.do_later import do_later
 from src.hardware.analog_power_meter import AnalogPowerMeter
-import random
 from src.hardware.meter_calibration import MeterCalibration
 
 FITDEGREES = dict(Linear=1, Parabolic=2, Cubic=3)

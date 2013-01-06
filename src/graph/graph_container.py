@@ -15,9 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-#from chaco.base_plot_container import BasePlotContainer
 from chaco.plot_containers import HPlotContainer
 #============= standard library imports ========================
 #============= local library imports  ==========================

@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class BaseSegmenter(HasTraits):

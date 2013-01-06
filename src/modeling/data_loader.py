@@ -162,7 +162,7 @@ class DataLoader(Loggable):
             if TopRowIgnore <= i < BottomRow:
                 a = row[labtable["Age"]]
                 try:
-                	age = float(a)
+                    age = float(a)
                 except ValueError:
                     self.info('Invalid age {}'.format(a))
                     continue

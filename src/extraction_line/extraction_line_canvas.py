@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Any, Property, Float, Enum
+from traits.api import HasTraits, Any, Property, Float, Enum
 from traitsui.api import View, Item
 #from enable.component_editor import ComponentEditor
 #============= standard library imports ========================

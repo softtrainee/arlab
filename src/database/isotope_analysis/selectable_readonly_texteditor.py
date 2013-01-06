@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, List, Dict
+from traits.api import List, Dict
 from traitsui.wx.text_editor import CustomEditor
 #============= standard library imports ========================
 import wx

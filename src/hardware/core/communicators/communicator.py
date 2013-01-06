@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Str, Bool
+from traits.api import Bool
 
 #============= standard library imports ========================
 import time

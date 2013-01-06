@@ -16,10 +16,9 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.progress_dialog import MProgressDialog
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.progress_dialog import MProgressDialog
 
 class BaseAnalysisManager(HasTraits):
     def _load_analyses(self, ans):

@@ -15,14 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Button, Str
-from traitsui.api import View, Item, TableEditor
+from traits.api import Instance, Button, Str
+from traitsui.api import View, Item
 from src.hardware.kerr.kerr_motor import KerrMotor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.hardware.newport.newport_axis import binstr_int
-from src.hardware.core.data_helper import make_bitarray
 
 class KerrManager(Loggable):
 

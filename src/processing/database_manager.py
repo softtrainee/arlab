@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor
+from traits.api import Instance
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================

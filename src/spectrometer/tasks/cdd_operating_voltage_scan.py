@@ -15,18 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float
-from traitsui.api import View, Item, TableEditor
+from traits.api import Float
+from traitsui.api import View, Item
 #============= standard library imports ========================
 import time
 import numpy as np
+from ConfigParser import ConfigParser
+import os
 #============= local library imports  ==========================
 from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
 from src.graph.graph import Graph
 from src.time_series.time_series import smooth
 from globals import globalv
-from ConfigParser import ConfigParser
-import os
 from src.paths import paths
 
 

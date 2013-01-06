@@ -15,16 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+from traitsui.wx.enum_editor import SimpleEditor
+from traitsui.editors.enum_editor \
+    import ToolkitEditorFactory
 #============= standard library imports ========================
 import wx
 #============= local library imports  ==========================
 
-from traitsui.api import CustomEditor
-from traitsui.wx.enum_editor import ListEditor, SimpleEditor
-from traitsui.editors.enum_editor \
-    import ToolkitEditorFactory
 
 class _BoundEnumEditor(SimpleEditor):
 #class _BoundEnumEditor(ListEditor):

@@ -16,14 +16,14 @@
 
 #============= enthought library imports =======================
 #from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+
 #============= standard library imports ========================
 from unittest import TestCase
 import numpy as np
+#============= local library imports  ==========================
 from src.regression.mean_regressor import WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.wls_regressor import WeightedPolynomialRegressor
-#============= local library imports  ==========================
 
 class WeightedMeanRegressionTest(TestCase):
     def setUp(self):

@@ -15,15 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, DelegatesTo, Str, Property
+from traits.api import  Instance, DelegatesTo, Str, Property
 from traitsui.api import View, Item, VGroup, HGroup, \
     EnumEditor, InstanceEditor
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.database.core.database_selector import ColumnSorterMixin
 from src.viewable import Viewable
 from src.database.core.database_adapter import DatabaseAdapter
 from src.constants import NULL_STR
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 
 class SearchManager(Viewable, ColumnSorterMixin):

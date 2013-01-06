@@ -27,7 +27,7 @@ from pyface.action.api import Action
 #from src.canvas.designer.canvas_manager import CEditor
 #from src.data_processing.modeling.modeler_manager import MEditor
 from src.helpers.gdisplays import gLoggerDisplay
-from src.paths import paths
+
 
 #def get_manager(window, editor=None):
 #    if editor is None:

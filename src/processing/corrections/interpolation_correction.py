@@ -17,34 +17,29 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, List, Any, Instance, Property, cached_property, \
     Event
-from traitsui.api import View, Item, TableEditor, EnumEditor, CheckListEditor
+from traitsui.api import View, Item
 import apptools.sweet_pickle as pickle
+from chaco.array_data_source import ArrayDataSource
 
 #============= standard library imports ========================
+from sqlalchemy.sql.expression import and_
 import os
-from numpy import array, asarray
+from numpy import  asarray
+import datetime
 #============= local library imports  ==========================
 from src.paths import paths
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    meas_ExperimentTable, meas_MeasurementTable, gen_AnalysisTypeTable, \
-    gen_LabTable
+    meas_ExperimentTable, meas_MeasurementTable, gen_AnalysisTypeTable
 from src.processing.analysis import Analysis
 from src.database.records.isotope_record import IsotopeRecord
-from src.graph.regression_graph import RegressionGraph, \
-    RegressionTimeSeriesGraph, StackedRegressionTimeSeriesGraph, \
-    StackedRegressionGraph
+from src.graph.regression_graph import StackedRegressionGraph
 from src.progress_dialog import MProgressDialog
 
 from src.regression.interpolation_regressor import InterpolationRegressor
 from src.helpers.traitsui_shortcuts import listeditor
 from src.processing.corrections.regression_correction import RegressionCorrection
-import time
-import datetime
-from sqlalchemy.sql.expression import and_
+
 from src.graph.error_bar_overlay import ErrorBarOverlay
-from chaco.array_data_source import ArrayDataSource
-from chaco.errorbar_plot import ErrorBarPlot
-from chaco.multi_line_plot import MultiLinePlot
 from src.helpers.datetime_tools import convert_timestamp
 
 class InterpolationGraph(StackedRegressionGraph):

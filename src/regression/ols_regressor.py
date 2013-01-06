@@ -15,14 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property, on_trait_change
-from traitsui.api import View, Item, TableEditor
+from traits.api import Int, Property
 #============= standard library imports ========================
-from numpy import polyval, polyfit, vander, asarray, column_stack, ones, \
-    matrix, sqrt, where, abs, apply_along_axis, zeros
+from numpy import polyval, asarray, column_stack, ones, \
+    matrix, sqrt, abs
 
 try:
-    from statsmodels.api import OLS, add_constant
+    from statsmodels.api import OLS
 except ImportError:
     from scikits.statsmodels.api import OLS
 

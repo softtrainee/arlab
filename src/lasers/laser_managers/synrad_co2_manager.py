@@ -24,10 +24,11 @@ from traitsui.api import VGroup, Item, HGroup
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.managers.laser_managers.laser_manager import LaserManager
 from src.hardware.agilent_dac import AgilentDAC
 from src.led.led_editor import LEDEditor
 from src.hardware.actuators.agilent_gp_actuator import AgilentGPActuator
+from src.lasers.laser_managers.laser_manager import LaserManager
+
 class SynradCO2Manager(LaserManager):
     name = 'SynradCO2'
 

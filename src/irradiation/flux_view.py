@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor, Group
+from traitsui.api import View, Group
 #============= standard library imports ========================
 import numpy as np
 import math
@@ -28,7 +28,7 @@ from src.graph.error_bar_overlay import ErrorBarOverlay
 from chaco.array_data_source import ArrayDataSource
 from matplotlib.figure import Figure
 from src.graph.mpl_editor import MPLFigureEditor
-from matplotlib import cm
+from matplotlib.cm import coolwarm
 
 
 class FluxView(HasTraits):
@@ -77,7 +77,7 @@ class FluxView(HasTraits):
 
         ax.plot_surface(xx, yy, z, alpha=0.3,
                         rstride=1, cstride=1,
-                        cmap=cm.coolwarm,
+                        cmap=coolwarm,
                         linewidths=0
                         )
 

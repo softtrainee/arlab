@@ -21,8 +21,7 @@ from traitsui.editors.tabular_editor import TabularEditor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-import wx
-from pyface.wx.drag_and_drop import PythonDropTarget, PythonDropSource
+
 class _TabularEditor(wxTabularEditor):
     drop_target = Any
 #    def init(self, parent):

@@ -15,12 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
-from traitsui.api import View, Item, TableEditor
+from traits.api import Str
 from src.regression.base_regressor import BaseRegressor
 #============= standard library imports ========================
-from numpy import where, polyval, polyfit, array, asarray, vander, \
-    ones
+from numpy import where, polyval, polyfit, asarray
 from sklearn.gaussian_process.gaussian_process import GaussianProcess
 #============= local library imports  ==========================
 

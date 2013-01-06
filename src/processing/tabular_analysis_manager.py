@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Int, Property, Str, Event, Any, cached_property
+from traits.api import List, Int, Property, Event, Any, cached_property
 from traitsui.api import Item, TabularEditor, Group, VGroup
 from traitsui.tabular_adapter import TabularAdapter
 from src.viewable import Viewable

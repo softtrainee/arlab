@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Enum, Float, Range, Bool, List, Str
-from traitsui.api import Item, VGroup, HGroup, Group, EnumEditor
+from traits.api import Enum, Float, Range, Bool
+from traitsui.api import Item, VGroup, HGroup, Group
 #============= standard library imports ========================
 import os
 

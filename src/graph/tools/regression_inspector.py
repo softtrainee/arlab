@@ -15,10 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Event, Any, on_trait_change, Tuple, Str
-from traitsui.api import View, Item, TableEditor
-from enable.base_tool import BaseTool
-from chaco.abstract_overlay import AbstractOverlay
 from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
 #============= standard library imports ========================
 #============= local library imports  ==========================

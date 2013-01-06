@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, Float, \
-    on_trait_change, DelegatesTo, Interface, implements
+    on_trait_change, Interface, implements
 from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================

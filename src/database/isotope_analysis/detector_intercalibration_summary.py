@@ -21,14 +21,14 @@ from traitsui.api import View, Item, VGroup, HGroup
 #============= standard library imports ========================
 import numpy as np
 #============= local library imports  ==========================
-#from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.history_summary import HistorySummary
 from src.graph.graph import Graph
-import time
+
 #from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
 #PLUSMINUS = unicode('\xb1')
 PLUSMINUS = u'\u00b1'
+
 class DetGraph(HasTraits):
     graph = Instance(Graph)
     value = Str

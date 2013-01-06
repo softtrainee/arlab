@@ -30,7 +30,7 @@ from src.time_series.time_series import smooth, \
 from stacked_graph import StackedGraph
 from stream_graph import StreamGraph, StreamStackedGraph
 from graph import Graph
-from src.helpers.datetime_tools import convert_timestamp
+
 
 HMSScales = [TimeScale(microseconds=100), TimeScale(milliseconds=10)] + \
            [TimeScale(seconds=dt) for dt in (1, 5, 15, 30)] + \

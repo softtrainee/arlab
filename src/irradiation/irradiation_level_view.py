@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Property, cached_property, Any
-from traitsui.api import View, Item, TabularEditor, TableEditor
+from traits.api import HasTraits, List, Any
+from traitsui.api import View, Item, TableEditor
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 #============= standard library imports ========================

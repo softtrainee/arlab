@@ -17,16 +17,17 @@
 #============= enthought library imports =======================
 from traits.api import Any, on_trait_change
 #============= standard library imports ========================
-from pyscript import PyScript
+
 import time
-from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
-    makeRegistry
 import os
-from src.paths import paths
 import random
 from ConfigParser import ConfigParser
-from src.pyscripts.valve_pyscript import ValvePyScript
 #============= local library imports  ==========================
+from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
+    makeRegistry
+from src.paths import paths
+from src.pyscripts.valve_pyscript import ValvePyScript
+
 estimated_duration_ff = 1.35
 
 

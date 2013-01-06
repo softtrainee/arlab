@@ -20,7 +20,7 @@ a combination of the logic board and the kerr microcontroller
 see Photon Machines Logic Board Command Set for additional information
 '''
 #=============enthought library imports=======================
-from traits.api import  Instance, DelegatesTo, Str, Button, Float, Dict, List
+from traits.api import  Instance, DelegatesTo, Str, Float, List
 #from traitsui.api import Item, VGroup, RangeEditor
 from traitsui.api import Item, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
@@ -29,8 +29,6 @@ import os
 from globals import globalv
 #from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
-
-from src.hardware.kerr.kerr_snap_motor import KerrSnapMotor
 from src.hardware.kerr.kerr_microcontroller import KerrMicrocontroller
 from src.hardware.kerr.kerr_motor import KerrMotor
 

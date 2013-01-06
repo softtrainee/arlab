@@ -17,12 +17,12 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Float, Button, Instance, Range, Any, Str, Property, \
+from traits.api import Bool, Float, Button, Instance, Range, Str, Property, \
     Event
 from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring
 from chaco.api import AbstractOverlay
 #============= standard library imports ========================
-from numpy import array, transpose, flipud
+from numpy import array, transpose
 #============= local library imports  ==========================
 from pattern_generators import square_spiral_pattern, line_spiral_pattern, random_pattern, \
     polygon_pattern, arc_pattern

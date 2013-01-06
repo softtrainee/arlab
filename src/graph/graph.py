@@ -15,20 +15,18 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Instance, Any, Bool, \
+from traits.api import Instance, Any, Bool, \
         List, Str, Property, Dict, Callable
 from traitsui.api import View, Item, Handler
 
 from enable.component_editor import ComponentEditor
 from chaco.api import OverlayPlotContainer, \
     VPlotContainer, HPlotContainer, GridPlotContainer, \
-    BasePlotContainer, Plot, ArrayPlotData, PlotLabel, \
-    add_default_axes, create_line_plot
+    BasePlotContainer, Plot, ArrayPlotData, PlotLabel
 from chaco.tools.api import ZoomTool, LineInspector, RangeSelection, \
     RangeSelectionOverlay
 from chaco.axis import PlotAxis
 from pyface.api import FileDialog, OK
-from kiva.fonttools import Font
 from pyface.timer.api import do_after as do_after_timer
 #=============standard library imports ========================
 import numpy as np
@@ -45,7 +43,6 @@ from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
 from chaco.data_label import DataLabel
 from src.loggable import Loggable
-from chaco.tools.broadcaster import BroadcasterTool
 from src.graph.context_menu_mixin import ContextMenuMixin
 from chaco.plot_graphics_context import PlotGraphicsContext
 VALID_FONTS = ['Helvetica', 'Arial',

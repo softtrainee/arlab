@@ -16,13 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 import struct
 from src.processing.argon_calculations import calculate_flux
 from src.database.records.isotope_record import IsotopeRecord
 from uncertainties import ufloat
 from src.regression.ols_regressor import MultipleLinearRegressor
-from src.graph.graph3D import Graph3D
+#from src.graph.graph3D import Graph3D
 #from mayavi import mlab
 import numpy as np
 #============= standard library imports ========================

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change, List
+from traits.api import  List
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.monitors.co2_laser_monitor import CO2LaserMonitor

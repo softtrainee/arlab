@@ -18,7 +18,6 @@
 
 #============= enthought library imports =======================
 from chaco.tools.api import PanTool
-from enable.base_tool import BaseTool
 #============= standard library imports ========================
 
 #============= local library imports  ==========================

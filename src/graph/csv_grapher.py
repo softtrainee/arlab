@@ -16,25 +16,26 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, List, Str, Property, Any, \
-    Enum, File, Int, DelegatesTo
+    Enum, File, Int
 from traitsui.api import View, Item, EnumEditor, HGroup, ListEditor, InstanceEditor, Label, Spring, \
     VGroup, spring
-from src.graph.graph import Graph
+from pyface.constant import OK
+from pyface.file_dialog import FileDialog
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
-#============= local library imports  ==========================
-
 import numpy as np
 import csv
-from src.graph.stacked_graph import StackedGraph
+import os
+#============= local library imports  ==========================
+
+from src.graph.graph import Graph
 from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
 from src.constants import FIT_TYPES, NULL_STR, DELIMITERS
-from pyface.file_dialog import FileDialog
 from src.paths import paths
-from pyface.constant import OK
-import os
 from src.loggable import Loggable
 from src.time_series.time_series import smooth
-from pyface.timer.do_later import do_later
+
+
 class DataSelector(HasTraits):
     index = Str
     value = Str

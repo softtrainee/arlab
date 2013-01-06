@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from envisage.ui.action.api import Action#, Group, Menu, ToolBar
-#from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================

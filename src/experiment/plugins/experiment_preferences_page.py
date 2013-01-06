@@ -15,15 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Password, Enum, List, Dict, \
-     Int, Any, Button, Property, on_trait_change
-from traitsui.api import View, Item, TableEditor, Group, VGroup, HGroup, spring, \
-    ListStrEditor, EnumEditor
+from traits.api import Str, Password, Enum, List, \
+     Int, Any, Button, on_trait_change
+from traitsui.api import View, Item, Group, VGroup, HGroup, \
+    ListStrEditor
 from apptools.preferences.ui.preferences_page import PreferencesPage
 from traitsui.list_str_adapter import ListStrAdapter
-from traitsui.editors.tabular_editor import TabularEditor
-from traitsui.tabular_adapter import TabularAdapter
-from traits.trait_types import CList
 
 #============= standard library imports ========================
 #============= local library imports  ==========================

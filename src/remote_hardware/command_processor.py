@@ -20,7 +20,6 @@ from traits.api import Bool, Str
 import socket
 from threading import Thread, Lock
 import os
-import hmac
 import select
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
@@ -130,7 +129,6 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-        from globals import globalv
         if not globalv.use_ipc:
             return True
 

@@ -17,12 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import Any, Int
 #============= standard library imports ========================
-from numpy import array, Inf, where, average, linspace
+from numpy import array, Inf, where, average
 #============= local library imports  ==========================
 #from src.graph.stacked_graph import StackedGraph
 from src.processing.plotters.results_tabular_adapter import SpectrumResults, \
     SpectrumResultsAdapter
-from src.processing.plotters.plotter import Plotter, mStackedGraph
+from src.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_mswd
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay

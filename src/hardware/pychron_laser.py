@@ -15,9 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.hardware.core.core_device import CoreDevice
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 #============= standard library imports ========================
 #============= local library imports  ==========================

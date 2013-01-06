@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change, HasTraits, Instance, List, \
-     Enum, Str, Float, Button, Property, Event, Any, CFloat
+from traits.api import HasTraits, Instance, List, \
+     Enum, Str, Float, Button, Property
 import apptools.sweet_pickle as pickle
-from traitsui.api import View, Item, HGroup, Spring, spring, VGroup, TabularEditor
+from traitsui.api import View, Item, HGroup, spring, VGroup, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
-#from traitsui.editors.tabular_editor import TabularEditor
 from pyface.api import FileDialog, OK
 #============= standard library imports ========================
 import os
@@ -289,10 +288,10 @@ class ExtractSchedule(HasTraits):
         if p is not None:
             self.path = p
             self._dump(p)
+
     def _get_path(self, action):
-        d = os.path.join(paths.heating_schedule_dir)
         dlg = FileDialog(action=action,
-                         default_directory=d)
+                         default_directory=paths.heating_schedule_dir)
         if dlg.open() == OK:
             return dlg.path
 

@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import HasTraits, List, Float, Str, Button, Int
-from traitsui.api import View, Item, CustomEditor, Handler, HGroup, VGroup, spring
+from traitsui.api import View, Item, CustomEditor, Handler, HGroup, spring
 
 #=============standard library imports ========================
 import wx

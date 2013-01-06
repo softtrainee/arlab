@@ -21,15 +21,14 @@ from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change
 
 #=============standard library imports ========================
 import wx
-from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros, \
-    percentile
+from numpy import asarray, flipud, ndarray
 from globals import globalv
-from src.image.pyopencv_image_helper import threshold, colorspace, crop
+from src.image.pyopencv_image_helper import colorspace
 #=============local library imports  ==========================
 try:
     from cvwrapper import swapRB, grayspace, cvFlip, \
-    draw_lines, add_scalar, new_dst, \
-    resize, asMat, frompil, save_image, load_image, \
+    draw_lines, new_dst, \
+    resize, asMat, save_image, load_image, \
     get_size
 except ImportError:
     pass

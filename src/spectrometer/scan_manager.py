@@ -603,7 +603,6 @@ if __name__ == '__main__':
         detectors = List
         magnet = Instance(Magnet, ())
         source = Instance(Source, ())
-        from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
         molecular_weights = MOLECULAR_WEIGHTS
         def get_intensities(self):
             return [d.name for d in self.detectors], [random.random() + (i * 12.3) for i in range(len(self.detectors))]

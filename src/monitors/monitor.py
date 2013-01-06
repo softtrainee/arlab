@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Float
+from traits.api import Float
 #============= standard library imports ========================
 from threading import Thread, Event
 import time

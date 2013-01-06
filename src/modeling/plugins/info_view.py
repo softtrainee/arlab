@@ -15,14 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, String, Instance
-from traitsui.api import View, Item, HGroup, spring
-
-
+from traits.api import HasTraits, Instance
+from traitsui.api import View, Item
 #============= standard library imports ========================
-import os
-from src.modeling.model_data_directory import ModelDataDirectory
+
 #============= local library imports  ==========================
+from src.modeling.model_data_directory import ModelDataDirectory
 
 #============= views ===================================
 class InfoView(HasTraits):

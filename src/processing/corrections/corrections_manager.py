@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Bool, Float, Str, Any, Instance, Button, Property, \
+from traits.api import List, Bool, Any, Instance, Button, Property, \
     cached_property
-from traitsui.api import View, Item, TableEditor, HGroup, Group, VGroup, Spring, spring, \
+from traitsui.api import View, Item, HGroup, Group, VGroup, Spring, spring, \
     Label, TabularEditor
 from traitsui.menu import Action
 

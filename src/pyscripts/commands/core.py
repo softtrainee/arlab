@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Instance
+from traits.api import HasTraits, Str, Float
 from traitsui.api import View, Item, FileEditor, VGroup, Group
 from traitsui.menu import OKCancelButtons
 #============= standard library imports ========================

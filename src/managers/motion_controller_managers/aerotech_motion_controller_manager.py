@@ -17,8 +17,6 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Bool, on_trait_change
-from traitsui.api import View, Item, VGroup
 
 #============= standard library imports ========================
 
@@ -27,6 +25,8 @@ from src.managers.motion_controller_managers.motion_controller_manager import Mo
 from src.hardware.aerotech.aerotech_motion_controller import AerotechMotionController
 from src.paths import paths
 from globals import globalv
+
+
 class AerotechMotionControllerManager(MotionControllerManager):
     '''
     '''

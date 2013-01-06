@@ -16,8 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
-     Event, Float, Instance, Bool, cached_property, Dict, on_trait_change, DelegatesTo, \
-    Either
+     Event, Float, Instance, Bool, cached_property, Dict
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group, spring, Spring
 #from pyface.timer.do_later import do_later
 #============= standard library imports ========================
@@ -54,7 +53,7 @@ from uncertainties import ufloat
 from src.database.records.arar_age import ArArAge
 from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
-import binascii
+
 
 
 class AutomatedRun(Loggable):

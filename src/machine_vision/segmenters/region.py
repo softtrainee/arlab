@@ -23,9 +23,7 @@ from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
 from src.machine_vision.segmenters.base import BaseSegmenter
-from scipy import ndimage
-from pyface.timer.do_later import do_later
-import time
+
 show = True
 class RegionSegmenter(BaseSegmenter):
     threshold_low = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')

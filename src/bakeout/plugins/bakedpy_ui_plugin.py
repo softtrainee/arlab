@@ -15,14 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List
-from traitsui.api import View, Item, TableEditor
-
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.bakeout.plugins.bakedpy_action_set import BakedpyActionSet
 from src.envisage.core.core_ui_plugin import CoreUIPlugin
 from src.bakeout.plugins.bakedpy_perspective import BakedpyPerspective
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 class BakedpyUIPlugin(CoreUIPlugin):
     name = 'Bakedpy'

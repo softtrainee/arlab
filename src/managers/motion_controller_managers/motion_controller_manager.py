@@ -28,7 +28,6 @@ from src.managers.manager import Manager
 from src.hardware.motion_controller import MotionController
 from src.paths import paths
 from src.helpers.filetools import parse_file
-import os
 
 #class MotionControllerManagerHandler(Handler):
 #    def closed(self, info, is_ok):

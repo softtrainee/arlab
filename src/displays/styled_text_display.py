@@ -31,10 +31,10 @@ class StyledTextHandler(Handler):
             @type info: C{str}
             @param info:
         '''
-        object = info.object
+        obj = info.object
 
-        for d in object.delegated_text:
-            object._write(**d)
+        for d in obj.delegated_text:
+            obj._write(**d)
 
 class _StyledTextEditor(Editor):
     '''

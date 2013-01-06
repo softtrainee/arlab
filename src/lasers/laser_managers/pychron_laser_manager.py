@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import CInt, Str, implements, on_trait_change
-from traitsui.api import View, Item, TableEditor
+from traits.api import CInt, Str, on_trait_change
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import time

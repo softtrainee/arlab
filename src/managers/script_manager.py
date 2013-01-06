@@ -17,12 +17,11 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Str, Enum, Bool, Instance, String
+from traits.api import Str, Enum, Bool, String
 from traitsui.api import View, Item, HGroup, spring, \
     Handler, VGroup, HTMLEditor, CodeEditor
 from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
-import csv
 import os
 from wx import stc
 

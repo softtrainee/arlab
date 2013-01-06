@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.database.isotope_analysis.summary import Summary
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.database.isotope_analysis.summary import Summary
 PRS = ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']
+
+
 class IrradiationSummary(Summary):
     def _build_summary(self):
         pm = u'\u00b1'

@@ -31,22 +31,9 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
     irrad_IrradiationTable, gen_ProjectTable, meas_MeasurementTable, \
     gen_MassSpectrometerTable, gen_AnalysisTypeTable
 
-#from src.graph.regression_graph import StackedRegressionTimeSeriesGraph, \
-#    StackedRegressionGraph
-#from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.database.core.base_results_adapter import BaseResultsAdapter
-#from src.graph.graph import Graph
-
-#from src.graph.stacked_graph import StackedGraph
-from src.managers.data_managers.ftp_h5_data_manager import FTPH5DataManager
-#from traits.trait_errors import TraitError
-from src.managers.data_managers.h5_data_manager import H5DataManager
-#from src.database.isotope_analysis.blanks_summary import BlanksSummary
-#from src.experiment.identifier import convert_identifier, convert_labnumber, \
-#    convert_shortname
-#from src.database.isotope_analysis.fit_selector import FitSelector
 from src.database.records.isotope_record import IsotopeRecord
-from src.database.core.query import compile_query, IsotopeQuery
+from src.database.core.query import  IsotopeQuery
 
 class IsotopeResultsAdapter(BaseResultsAdapter):
     columns = [

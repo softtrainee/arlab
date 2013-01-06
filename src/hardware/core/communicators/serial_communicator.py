@@ -24,7 +24,7 @@ import time
 import glob
 import os
 import sys
-import select
+
 
 #=============local library imports  ==========================
 from communicator import Communicator

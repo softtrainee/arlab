@@ -25,7 +25,7 @@
 #============= local library imports  ==========================
 from aerotech_axis import AerotechAxis
 from src.hardware.motion_controller import MotionController
-from src.hardware.core.data_helper import make_bitarray
+
 
 ACK = chr(6)
 NAK = chr(15)

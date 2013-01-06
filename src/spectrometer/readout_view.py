@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, List, Any, Property, Event, cached_property, \
+from traits.api import HasTraits, Str, List, Any, Property, Event, cached_property, \
     Button
 from traitsui.api import View, Item, HGroup, spring
 from src.helpers.traitsui_shortcuts import listeditor

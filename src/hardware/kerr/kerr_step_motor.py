@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, CInt
-from traitsui.api import View, Item, TableEditor
+from traits.api import CInt
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.kerr.kerr_motor import KerrMotor

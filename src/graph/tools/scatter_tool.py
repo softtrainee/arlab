@@ -17,7 +17,6 @@
 
 
 #=============enthought library imports=======================
-from traits.api import Any, Int
 from chaco.tools.api import ScatterInspector
 
 #=============standard library imports ========================

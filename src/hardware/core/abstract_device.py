@@ -15,8 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Any, Property, implements, DelegatesTo, Instance
-from traitsui.api import View, Item
+from traits.api import Property, implements, DelegatesTo, Instance
 
 #=============standard library imports ========================
 #=============local library imports  ==========================
@@ -25,7 +24,6 @@ from src.hardware.core.i_core_device import ICoreDevice
 #from viewable_device import ViewableDevice
 from src.has_communicator import HasCommunicator
 from src.rpc.rpcable import RPCable
-from src.hardware.core.scanable_device import ScanableDevice
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.viewable_device import ViewableDevice
 

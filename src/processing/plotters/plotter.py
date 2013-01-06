@@ -15,34 +15,29 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any, Range, Dict, Instance, Callable
+from traits.api import Property, List, Any, Dict, Instance
 from traitsui.api import View, Item, VGroup, TabularEditor
+from chaco.array_data_source import ArrayDataSource
+from chaco.tools.broadcaster import BroadcasterTool
+from chaco.plot_containers import GridPlotContainer
+from chaco.data_label import DataLabel
+from chaco.tools.data_label_tool import DataLabelTool
+from sqlalchemy.orm.session import object_session
 #============= standard library imports ========================
-from numpy import linspace, where
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapter, \
     BaseResults
-from chaco.tools.scatter_inspector import ScatterInspector
-from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
-from chaco.array_data_source import ArrayDataSource
 from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
-from chaco.tools.broadcaster import BroadcasterTool
 #from enable.font_metrics_provider import font_metrics_provider
 #from src.canvas.popup_window import PopupWindow
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.stacked_graph import StackedGraph
-from chaco.data_label import DataLabel
-from chaco.tools.data_label_tool import DataLabelTool
-from sqlalchemy.orm.session import object_session
-from chaco.plot_containers import GridPlotContainer
 from src.processing.plotters.graph_panel_info import GraphPanelInfo
-from src.graph.tools.point_inspector import PointInspector, \
-    PointInspectorOverlay
+from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
-
 
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):

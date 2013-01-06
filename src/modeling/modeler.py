@@ -15,10 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Any, Instance, Str, Event, \
+from traits.api import  Any, Instance, Str, \
     Directory, List, on_trait_change, Property, Enum, Int, Button
-from traitsui.api import View, Item, VSplit, TableEditor, \
-    CheckListEditor, EnumEditor, HGroup, VGroup
+from traitsui.api import View, Item, VSplit, TableEditor, EnumEditor, HGroup, VGroup
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.api import FileDialog, OK

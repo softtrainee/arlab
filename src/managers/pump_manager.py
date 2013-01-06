@@ -16,7 +16,7 @@
 
 
 
-from traits.api import HasTraits, Instance, Str, Event, Property, Bool, Int
+from traits.api import Instance, Str, Event, Property, Bool, Int
 from traitsui.api import View, Item, HGroup, ButtonEditor
 from src.managers.manager import Manager
 from src.hardware.core.core_device import CoreDevice

@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Callable, List
-from traitsui.api import View, Item, TableEditor
+from traits.api import Callable, List
 from src.regression.base_regressor import BaseRegressor
 #============= standard library imports ========================
 from scipy import optimize
-from numpy import asarray, sqrt, matrix, diagonal, ones
+from numpy import asarray, sqrt, matrix, diagonal
 #============= local library imports  ==========================
 
 class LeastSquaresRegressor(BaseRegressor):

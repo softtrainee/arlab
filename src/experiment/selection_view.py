@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, List, Bool
-from traitsui.api import View, Item, Group, VGroup, HGroup, HSplit, InstanceEditor, spring
+from traits.api import Instance, List, Bool
+from traitsui.api import View, Item, VGroup, HGroup, HSplit, InstanceEditor, spring
 from chaco.tools.zoom_tool import ZoomTool
 from chaco.tools.scatter_inspector import ScatterInspector
 from chaco.abstract_overlay import AbstractOverlay

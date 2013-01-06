@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Str, Instance, on_trait_change, Any, \
+from traits.api import HasTraits, Property, Instance, on_trait_change, Any, \
     cached_property, Int, Button, Event, DelegatesTo
 from traitsui.api import View, Item, HGroup, Group, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
@@ -24,7 +24,6 @@ import numpy as np
 import re
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
-from src.graph.stacked_graph import StackedGraph
 from src.graph.graph import Graph
 from src.database.orms.isotope_orm import proc_SelectedHistoriesTable
 from pyface.timer.do_later import do_later

@@ -15,14 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Event, on_trait_change, Callable
-from traitsui.api import View, Item, TableEditor
-from chaco.abstract_overlay import AbstractOverlay
-from enable.base_tool import BaseTool
-from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
+from traits.api import  Callable
 #============= standard library imports ========================
 from numpy import where, abs
 #============= local library imports  ==========================
+from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
+
+
 class PointInspector(InfoInspector):
     convert_index = Callable
 #    def _build_metadata(self, xy):

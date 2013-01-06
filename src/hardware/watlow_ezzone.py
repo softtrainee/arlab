@@ -18,7 +18,7 @@
 
 
 #=============enthought library imports========================
-from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str, List
+from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor, spring
 #from pyface.timer.api import Timer
 

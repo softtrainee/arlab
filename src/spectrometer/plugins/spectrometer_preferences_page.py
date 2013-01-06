@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float
-from traitsui.api import View, Item, TableEditor
+from traits.api import Float
+from traitsui.api import View, Item
 from apptools.preferences.ui.preferences_page import PreferencesPage
 #============= standard library imports ========================
 #============= local library imports  ==========================

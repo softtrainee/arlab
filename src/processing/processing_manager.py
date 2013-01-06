@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, cached_property, Property, List, Event, \
-    Bool, Button
+from traits.api import Instance, List
 #from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -74,15 +73,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             self.open_view(pv)
             pv.on_trait_change(self._open_sample_ideogram, 'update_selected_sample')
 
-    def _open_sample_ideogram(self, new):
-        pv = self.project_view
-        ans = pv.get_filtered_analyses()
-        if ans:
-            po = pv.plotter_options
 
-            self._load_analyses(ans)
-            ideo = self._display_ideogram(ans, po, pv.highlight_omitted)
-            self._display_tabular_data(ans, ideo.make_title())
 #===============================================================================
 # flux
 #===============================================================================
@@ -112,14 +103,6 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #===============================================================================
 # figures
 #===============================================================================
-    def _get_active_figure(self):
-        figure = next((obj for win, obj in self.figures if win.ui.control.IsActive()), None)
-        return figure
-
-    def _get_active_window(self):
-        window = next((win for win, obj in self.figures if win.ui.control.IsActive()), None)
-        return window
-
     def open_figures(self):
         fm = self.figure_manager
         fm.edit_traits()
@@ -205,16 +188,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 self._export(klass, p, grouped_analyses)
                 self.info('exported figure to {}'.format(p))
 
-    def _export(self, klass, p, grouped_analyses):
-        pub = klass(filename=p)
-        n = len(grouped_analyses)
-        for i, ans in enumerate(grouped_analyses):
-            pub.add_ideogram_table(ans,
-                                   add_title=i == 0,
-                                   add_header=i == 0,
-                                   add_group_marker=i < n - 1)
 
-        pub.publish()
 
 #===============================================================================
 # tables
@@ -247,16 +221,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         bm = self.detector_intercalibration_corrections_manager
         self._apply_correction(bm)
 
-    def _apply_correction(self, bm):
-        if self._gather_data():
 
-            ans = self._get_analyses()
-            bm.analyses = ans
-            bm.edit_traits()
-#            self._load_analyses(ans)
-#            info = bm.edit_traits(kind='livemodal')
-#            if info.result:
-#                bm.apply_correction()
 
 #===============================================================================
 # display
@@ -272,6 +237,49 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     def new_isochron(self):
         self._new_figure('isochron')
+
+#===============================================================================
+# private
+#===============================================================================
+    def _apply_correction(self, bm):
+        if self._gather_data():
+
+            ans = self._get_analyses()
+            bm.analyses = ans
+            self.open_view(bm)
+
+#            self._load_analyses(ans)
+#            info = bm.edit_traits(kind='livemodal')
+#            if info.result:
+#                bm.apply_correction()
+    def _open_sample_ideogram(self, new):
+        pv = self.project_view
+        ans = pv.get_filtered_analyses()
+        if ans:
+            po = pv.plotter_options
+
+            self._load_analyses(ans)
+            ideo = self._display_ideogram(ans, po, pv.highlight_omitted)
+            self._display_tabular_data(ans, ideo.make_title())
+
+    def _get_active_figure(self):
+        figure = next((obj for win, obj in self.figures if win.ui.control.IsActive()), None)
+        return figure
+
+    def _get_active_window(self):
+        window = next((win for win, obj in self.figures if win.ui.control.IsActive()), None)
+        return window
+
+    def _export(self, klass, p, grouped_analyses):
+        pub = klass(filename=p)
+        n = len(grouped_analyses)
+        for i, ans in enumerate(grouped_analyses):
+            pub.add_ideogram_table(ans,
+                                   add_title=i == 0,
+                                   add_header=i == 0,
+                                   add_group_marker=i < n - 1)
+
+        pub.publish()
 
     def _new_figure(self, name):
         '''

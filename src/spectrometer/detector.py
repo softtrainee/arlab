@@ -16,9 +16,9 @@
 
 #============= enthought library imports =======================
 from traits.api import  Float, Str, Bool, Property, Color, \
-    Int, on_trait_change, Array, Instance
+    Int, on_trait_change, Array
 from traitsui.api import View, Item, VGroup, HGroup, \
-     spring, Label, Spring, CustomEditor
+     spring, Spring, CustomEditor
 #============= standard library imports ========================
 import os
 from numpy import loadtxt, polyfit, polyval, hstack, poly1d

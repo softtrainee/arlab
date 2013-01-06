@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Str
+from traits.api import Float
 #============= standard library imports ========================
-from numpy import linspace, array, where, max, polyfit, argmax
+from numpy import array, max, polyfit, argmax
 #============= local library imports  ==========================
 from magnet_scan import MagnetScan
 from src.graph.graph import Graph

@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float, Event, Property, Bool, DelegatesTo
-from traitsui.api import View, Item, ButtonEditor, HGroup, spring, EnumEditor
+from traits.api import Any, Float, DelegatesTo
+from traitsui.api import View, Item, EnumEditor
 #============= standard library imports ========================
 from numpy import linspace, exp
 import random
