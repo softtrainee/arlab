@@ -15,16 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.orms.local_lab_orm import LabTable
-from src.database.core.functions import add
 from sqlalchemy.schema import MetaData, Table, Column
-from sqlalchemy.types import Integer, BLOB, DateTime, String
-import os
-
+from sqlalchemy.types import Integer, DateTime, String
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
 
 class LocalLabAdapter(DatabaseAdapter):

@@ -15,10 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button, Instance, Str, Date, File, Int, \
-    List, Enum
-from traitsui.api import View, Item, TableEditor, VGroup, HGroup, EnumEditor, \
-    FileEditor, spring
+from traits.api import Any, Button, Instance, Str, Date, File, Int
+from traitsui.api import View, Item, VGroup, HGroup, EnumEditor, spring
 #============= standard library imports ========================
 import struct
 import os

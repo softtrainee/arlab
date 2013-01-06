@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
+from traits.api import  Str
 from traitsui.api import View, Item, EnumEditor, HGroup, spring, Spring
 from src.constants import FIT_TYPES_INTERPOLATE
 #============= standard library imports ========================

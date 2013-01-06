@@ -22,7 +22,7 @@ from multiprocessing.process import Process
         - move to archive
     2. remove archive directories older than X
 '''
-from traits.api import Range, Int, Bool, Str
+from traits.api import Range, Bool, Str
 import os
 import shutil
 from datetime import datetime, timedelta

@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import HasTraits, Any, Event, List, Bool, Property
-from traitsui.api import View, Item, VGroup, TableEditor, \
+from traitsui.api import View, Item, TableEditor, \
     Handler
 from traitsui.table_column import ObjectColumn
 #from traitsui.extras.checkbox_column import CheckboxColumn

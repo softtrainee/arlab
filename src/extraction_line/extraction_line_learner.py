@@ -16,9 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from threading import Thread
 import time
 import os
 from numpy import linspace, polyfit

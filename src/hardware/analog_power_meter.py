@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Float, Enum, Int
+from traits.api import Enum, Int
 from traitsui.api import View, Item
 #=============standard library imports ========================
 

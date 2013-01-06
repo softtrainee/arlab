@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item, TableEditor
+from traits.api import Any
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.viewable import Viewable

@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from src.processing.export.base import Exporter
 import xlwt
 from datetime import datetime

@@ -17,13 +17,8 @@
 #=============enthought library imports=======================
 from traits.api import Any
 #============= standard library imports ========================
-import numpy as np
 #============= local library imports  ==========================
-from hole_detector import HoleDetector
-from src.image.cvwrapper import colorspace, grayspace, draw_rectangle, \
-    new_point, asMat, erode, dilate
-import time
-from pyface.timer.do_later import do_later
+from src.image.cvwrapper import grayspace
 from co2_detector import CO2HoleDetector
 from src.image.image import StandAloneImage
 #from src.image.pyopencv_image_helper import asMat

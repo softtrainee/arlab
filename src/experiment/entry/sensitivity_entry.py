@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, List, Button, Property, cached_property, \
-    Event, Str, Int
+from traits.api import HasTraits, Any, List, Button, Property, Str, Int
 from traitsui.api import View, Item, TabularEditor, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================

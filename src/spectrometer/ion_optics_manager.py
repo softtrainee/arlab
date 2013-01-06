@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Range, Instance, Bool, Event, Property, \
+from traits.api import Range, Instance, Bool, \
      Button, Any, DelegatesTo, Str, Float, Enum
-from traitsui.api import View, Item, TableEditor, EnumEditor
+from traitsui.api import View, Item, EnumEditor
 from src.managers.manager import Manager
 from src.graph.graph import Graph
 from src.spectrometer.tasks.peak_center import PeakCenter

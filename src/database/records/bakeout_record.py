@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, DelegatesTo
-from traitsui.api import View, Item, VGroup, HGroup, spring, Group
+from traitsui.api import Item, VGroup, HGroup, spring, Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer

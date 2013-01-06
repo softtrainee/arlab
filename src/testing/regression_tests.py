@@ -15,13 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-#============= local library imports  ==========================
 import numpy as np
-from src.regression.ols_regressor import PolynomialRegressor
 import unittest
+#============= local library imports  ==========================
+from src.regression.ols_regressor import PolynomialRegressor
 
 class RegressionTests(unittest.TestCase):
     def setUp(self):

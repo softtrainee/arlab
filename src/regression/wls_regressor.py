@@ -15,10 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import asarray, vander, matrix, diag
+from numpy import asarray
 from statsmodels.api import WLS
 #============= local library imports  ==========================
 #from src.regression.base_regressor import BaseRegressor

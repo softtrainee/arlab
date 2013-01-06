@@ -15,21 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Button
-from traitsui.api import View, Item
+from traits.api import HasTraits, Button
 #============= standard library imports ========================
-import cPickle as pickle
-import select
-import socket
 import os
 import sys
 from threading import Thread, Lock
-import time
 from numpy import fromstring
-from enable.component_editor import ComponentEditor
-from chaco.plot import Plot
-from chaco.array_plot_data import ArrayPlotData
-from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 
 # add src to the path
@@ -39,8 +30,6 @@ SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                        'mercurial', 'pychron_beta')
 sys.path.insert(0, SRC_DIR)
 
-from src.image.image_editor import ImageEditor
-from src.image.image import Image
 
 class VideoClient(HasTraits):
     _sock = None

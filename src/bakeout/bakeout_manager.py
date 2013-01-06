@@ -17,7 +17,7 @@
 
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
-    Float, Str, Property, List, on_trait_change, Dict, Any, Enum, cached_property
+    Float, Str, Property, List, on_trait_change, Dict, Any, cached_property
 from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor
 from pyface.timer.api import do_later, do_after as do_after_timer
 
@@ -290,11 +290,11 @@ class BakeoutManager(Manager):
 
     def _db_save(self):
         if not self.db_save_dialog():
-                self.info('rolling back')
-                self.database.rollback()
-                self.database.close()
-                if self.data_manager:
-                    self.data_manager.delete_frame()
+            self.info('rolling back')
+            self.database.rollback()
+            self.database.close()
+            if self.data_manager:
+                self.data_manager.delete_frame()
         else:
             self.database.commit()
 

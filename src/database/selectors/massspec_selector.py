@@ -15,15 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Button, Event, List
-from traitsui.api import HGroup, Item, spring
+from traits.api import Str, Event
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 from src.database.core.database_selector import DatabaseSelector
 from src.database.core.base_db_result import RIDDBResult
-from src.database.orms.massspec_orm import AnalysesTable, SampleTable
+from src.database.orms.massspec_orm import SampleTable
 
 class MassSpecDBResult(RIDDBResult):
     rid = Str

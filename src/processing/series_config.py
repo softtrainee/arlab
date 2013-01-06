@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Bool, Str, Enum, on_trait_change, Any, Property, Int
-from traitsui.api import View, Item, HGroup, EnumEditor, spring
+from traitsui.api import View, Item, HGroup, EnumEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

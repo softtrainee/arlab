@@ -15,9 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Bool
-from traitsui.api import View, Item, TableEditor
-import apptools.sweet_pickle as pickle
+from traits.api import  Any, Bool
 #============= standard library imports ========================
 import os
 import cStringIO

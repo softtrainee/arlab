@@ -15,9 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-
 from src.envisage.core.core_plugin import CorePlugin
 from src.bakeout.bakeout_manager import BakeoutManager
 from src.bakeout.bakeout_pyscript_manager import BakeoutPyScriptManager

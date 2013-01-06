@@ -15,11 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.database.isotope_analysis.summary import Summary
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.database.isotope_analysis.summary import Summary
 
 
 class SupplementalSummary(Summary):

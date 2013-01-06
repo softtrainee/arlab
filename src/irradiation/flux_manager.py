@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, on_trait_change, \
-    Button, Property, DelegatesTo, Event, Bool
+    Button, Property, Event, Bool
 from traitsui.api import View, Item, VGroup, HGroup, spring
 #============= standard library imports ========================
 from numpy import average, asarray, cos

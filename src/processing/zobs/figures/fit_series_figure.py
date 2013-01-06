@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import List, Event
-from traitsui.api import View, Item, TableEditor
+
 from traitsui.menu import Action
 #============= standard library imports ========================
 import os

@@ -15,19 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Event, cached_property, Property
-from traitsui.api import View, Item, TableEditor
-from traitsui.menu import  Action
 #============= standard library imports ========================
-import os
-from numpy import array, where, polyfit, polyval
 #============= local library imports  ==========================
 from src.processing.figures.base_figure import BaseFigure
 #from src.viewable import ViewableHandler
-from src.processing.plotters.series import Series
-from src.processing.series_config import SeriesConfig, BlanksSeriesConfig
+from src.processing.series_config import  BlanksSeriesConfig
 from src.processing.figures.fit_series_figure import FitSeriesFigure
-from src.processing.plotters.fit_series import FitSeries
 #from src.paths import paths
 
 #

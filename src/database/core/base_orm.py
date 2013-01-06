@@ -19,7 +19,7 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Time, Date, BLOB, TIMESTAMP
+from sqlalchemy import Column, Integer, String, BLOB, TIMESTAMP
 from sqlalchemy.sql.expression import func
 #============= local library imports  ==========================
 Base = declarative_base()

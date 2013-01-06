@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Instance
 #============= standard library imports ========================
-from threading import Thread, Lock, Event
+from threading import Thread, Event
 import time
 from numpy import array
 #============= local library imports  ==========================

@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Bool
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Correction(HasTraits):

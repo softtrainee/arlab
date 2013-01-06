@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List, Button
+from traits.api import HasTraits, List, Button
 from traitsui.api import View, Item, TabularEditor, HGroup, spring
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================

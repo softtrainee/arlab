@@ -15,13 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 import os
 import shlex
-from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.paths import paths
 
 KEYWORDS = dict(
               Message='info',

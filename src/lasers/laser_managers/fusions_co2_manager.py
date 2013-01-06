@@ -15,19 +15,16 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Button, DelegatesTo, Instance
+from traits.api import Button, DelegatesTo
 #import apptools.sweet_pickle as pickle
 #=============standard library imports ========================
 #import os
 #=============local library imports  ==========================
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
-#from src.monitors.co2_laser_monitor import CO2LaserMonitor
-from brightness_pid_manager import BrightnessPIDManager
-from fusions_laser_manager import FusionsLaserManager
-
 from src.paths import paths
 from src.monitors.fusions_co2_laser_monitor import FusionsCO2LaserMonitor
-from src.helpers.timer import Timer
+from fusions_laser_manager import FusionsLaserManager
+
 
 
 class FusionsCO2Manager(FusionsLaserManager):

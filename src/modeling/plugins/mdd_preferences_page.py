@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Int, Enum, Directory
-from traitsui.api import View, Item, VGroup, HGroup, Group, Label
+from traitsui.api import View, Item, VGroup, Group, Label
 #============= standard library imports ========================
 
 #============= local library imports  ==========================

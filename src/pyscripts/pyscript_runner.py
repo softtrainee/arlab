@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Button, Dict, List, on_trait_change
+from traits.api import Any, Dict, List
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from threading import Event, Lock

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Password, Property, cached_property, Event
+from traits.api import Str, Password, Property
 #============= standard library imports ========================
 import os
 import ftplib as ftp

@@ -18,7 +18,7 @@
 #============= standard library imports ========================
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph
-from reportlab.platypus.tables import Table, TableStyle
+from reportlab.platypus.tables import Table
 from reportlab.lib.units import inch
 #============= local library imports  ==========================
 STYLES = getSampleStyleSheet()

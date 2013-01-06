@@ -15,18 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, on_trait_change, Float, Button, Enum, String, Property, Str
+from traits.api import  on_trait_change, Float, Button, Enum, String, Property, Str
 from traitsui.api import View, Item, HGroup, VGroup, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
+from threading import Thread
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
-from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
-    CalibrationObject
-from threading import Thread
 
 PICKLE_PATH = p = os.path.join(paths.hidden_dir, '{}_stage_calibration')
 PYCHRON_HELP = '''1. Drag red circle to desired center position

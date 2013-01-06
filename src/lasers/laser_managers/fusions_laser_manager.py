@@ -17,12 +17,11 @@
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float, Any
-from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, Label
+from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
 from threading import Thread, Timer as DoLaterTimer, Lock
-import time
 import os
 #=============local library imports  ==========================
 from src.graph.stream_graph import StreamGraph

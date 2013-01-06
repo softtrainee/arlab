@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Property, Bool, Str
-from traitsui.api import View, Item, RangeEditor, Handler
+from traits.api import Float, Property, Bool, Str
+from traitsui.api import View, Item, RangeEditor
 from pyface.timer.timer import Timer
 from traitsui.menu import Action
 from src.viewable import ViewableHandler, Viewable

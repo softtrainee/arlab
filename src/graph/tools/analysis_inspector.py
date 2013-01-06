@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Callable
-from traitsui.api import View, Item, TableEditor
+from traits.api import List, Callable
 #============= standard library imports ========================
-from numpy import where
-from src.graph.tools.point_inspector import PointInspector
 #============= local library imports  ==========================
+from src.graph.tools.point_inspector import PointInspector
+
+
 class AnalysisPointInspector(PointInspector):
     analyses = List
     value_format = Callable

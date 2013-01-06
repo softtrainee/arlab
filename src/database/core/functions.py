@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 import sqlalchemy
-from src.deprecate import deprecated, deprecated_message
+from src.deprecate import  deprecated_message
 
 #============= enthought library imports =======================
 

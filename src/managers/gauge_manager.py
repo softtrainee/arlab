@@ -17,8 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, List
-from traitsui.api import View, Item
+from traitsui.api import View
 from src.managers.manager import Manager
 #============= standard library imports ========================
 #============= local library imports  ==========================

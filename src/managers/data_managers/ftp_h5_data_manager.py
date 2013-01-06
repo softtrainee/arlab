@@ -15,11 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-import os
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.repo.repository import FTPRepository, SFTPRepository
+from src.repo.repository import SFTPRepository
 
 
 class FTPH5DataManager(H5DataManager):

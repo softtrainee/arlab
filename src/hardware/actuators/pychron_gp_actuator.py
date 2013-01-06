@@ -15,11 +15,11 @@
 #===============================================================================
 
 #========== standard library imports ==========
+import time
 
 #========== local library imports =============
 from gp_actuator import GPActuator
-import time
-import random
+
 
 
 class PychronGPActuator(GPActuator):

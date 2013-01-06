@@ -23,9 +23,8 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 
 #=============standard library imports ========================
 from wx import Panel, PaintDC, \
-    CLIP_CHILDREN, EVT_MOTION, EVT_LEFT_DOWN, EVT_IDLE, \
-    RED_PEN, EVT_PAINT, BitmapFromBuffer
-from wx._misc import EVT_TIMER
+    CLIP_CHILDREN, \
+    RED_PEN, BitmapFromBuffer
 import wx
 
 #import math

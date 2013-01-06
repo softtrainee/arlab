@@ -17,24 +17,19 @@
 
 
 #============= enthought library imports =======================
-from traits.api import String, Instance, Int, Property, List, Dict, \
-    Any, Enum, Str, DelegatesTo, Float, Event
-from traitsui.api import View, Item, VGroup, EnumEditor, RangeEditor
+from traits.api import  Instance, Int, Property, List, \
+    Any, Enum, Str, DelegatesTo, Event
 #from pyface.timer.api import Timer, do_later, do_after
 #from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 import random
-#import numpy as np
-#import time
-#from threading import Thread
-
+import os
 #============= local library imports  ==========================
 from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-import os
 from src.paths import paths
 #from src.graph.graph import Graph
 #from src.graph.regression_graph import RegressionGraph

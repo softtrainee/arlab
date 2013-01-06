@@ -15,17 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Button, Str, Bool, Any, Int, \
+from traits.api import HasTraits, List, Str, \
     Instance, DelegatesTo
-from traitsui.api import View, Item, VGroup, HGroup, HSplit, spring, \
-    InstanceEditor, EnumEditor, TabularEditor, UItem
+from traitsui.api import View, HGroup, \
+    InstanceEditor, UItem
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
 from src.processing.search.search_manager import SearchManager
-from src.paths import paths
-from src.constants import NULL_STR
-from traitsui.tabular_adapter import TabularAdapter
 from src.processing.search.selected_view import SelectedView
 from src.processing.search.selector_view import SelectorView
 

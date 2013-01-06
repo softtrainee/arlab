@@ -25,7 +25,7 @@ from pyface.action.api import Action
 
 
 class ProcessingAction(Action):
-    def __get_manager(self, event):
+    def _get_manager(self, event):
         app = event.window.application
         manager = app.get_service('src.processing.processing_manager.ProcessingManager')
         return manager

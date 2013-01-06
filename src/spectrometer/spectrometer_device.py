@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Any, DelegatesTo, Property
+from traits.api import  Any, Property
 #from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================

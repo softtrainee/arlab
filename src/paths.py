@@ -94,7 +94,7 @@ class Paths():
     bakeout = None
 
     block_dir = None
-#    heating_schedule_dir = None
+    heating_schedule_dir = None
     map_dir = map_dir = None
     user_points_dir = None
     #==============================================================================
@@ -185,7 +185,7 @@ class Paths():
         self.bakeout_config_dir = join(setup_dir, 'bakeout_configurations')
         self.bakeout = join(device_dir, 'bakeout')
 
-#        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
+        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
         self.block_dir = join(setup_dir, 'blocks')
         self.map_dir = map_dir = join(setup_dir, 'tray_maps')
         self.user_points_dir = join(map_dir, 'user_points')

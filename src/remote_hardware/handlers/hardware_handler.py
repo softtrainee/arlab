@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+
 from src.remote_hardware.handlers.base_remote_hardware_handler import BaseRemoteHardwareHandler
 #============= standard library imports ========================
 #============= local library imports  ==========================

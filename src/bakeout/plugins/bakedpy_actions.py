@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from pyface.action.api import Action
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+
 class BakeoutAction(Action):
     def _get_manager(self, event):
         man = event.window.application.get_service('src.bakeout.bakeout_manager.BakeoutManager')

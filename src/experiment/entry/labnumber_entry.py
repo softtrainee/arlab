@@ -15,24 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Str, cached_property, \
+from traits.api import  Property, Str, cached_property, \
     List, on_trait_change, Int, Bool, Event, Any, Button, Undefined, Float
 from traitsui.api import View, Item, EnumEditor, \
-     VGroup, HGroup, Spring, spring, Group, Image, ImageEditor, TabularEditor, \
-     Handler
-
-from traitsui.tabular_adapter import TabularAdapter
+     VGroup, HGroup, spring, Group, Image, ImageEditor, TabularEditor
 from pyface.image_resource import ImageResource
 
 #============= standard library imports ========================
 import os
-#import struct
 #============= local library imports  ==========================
-#from src.loggable import Loggable
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
-#from src.experiment.entry.irradiated_position import IrradiatedPosition, \
-#    IrradiatedPositionAdapter
 from src.experiment.entry.level import Level
 from src.experiment.entry.flux_monitor import FluxMonitor
 from src.helpers.alphas import ALPHAS

@@ -24,8 +24,7 @@ import time
 from numpy import array, hstack
 #============= local library imports  ==========================
 from src.managers.data_managers.csv_data_manager import CSVDataManager
-from src.image.cvwrapper import draw_circle, new_point, find_circles, draw_lines, \
-    threshold, crop, colorspace, grayspace, contour, \
+from src.image.cvwrapper import threshold, colorspace, grayspace, contour, \
     get_polygons, draw_contour_list, draw_polygons
 from detector import Detector
 from src.graph.regression_graph import RegressionGraph

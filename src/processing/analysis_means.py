@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, List, Property, cached_property
-from traitsui.api import View, Item, TableEditor
+from traits.api import HasTraits, List, Property, cached_property
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================

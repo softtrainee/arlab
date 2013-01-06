@@ -21,7 +21,7 @@ from traitsui.api import View, Item, spring, ButtonEditor, HGroup
 from numpy import polyfit, linspace
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
-import time
+
 
 class RiseRate(SpectrometerTask):
     result_fit = Float

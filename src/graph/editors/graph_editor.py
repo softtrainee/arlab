@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, \
-    HasTraits, Any, Color, Property, Int, Str, on_trait_change, \
+    HasTraits, Any, Color, Property, Int, on_trait_change, \
     Enum
 from traitsui.api import View, Item, \
     TextEditor, ColorEditor, Handler, Group, VGroup, HGroup

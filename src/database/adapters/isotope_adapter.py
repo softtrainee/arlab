@@ -32,8 +32,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
     proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
-    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
-    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
+    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable
+    #proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
 
 #irrad_
 from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, irrad_ChronologyTable, irrad_LevelTable, \
@@ -588,7 +588,7 @@ class IsotopeAdapter(DatabaseAdapter):
         q = q.filter(irrad_LevelTable.name == level)
         try:
             return q.one()
-        except Exception, e:
+        except Exception, _:
             pass
 
     def get_irradiation_position(self, irrad, level, pos):
@@ -607,7 +607,7 @@ class IsotopeAdapter(DatabaseAdapter):
             func = 'one'
         try:
             return getattr(q, func)()
-        except Exception, e:
+        except Exception, _:
             pass
 
     def get_labnumber(self, labnum):

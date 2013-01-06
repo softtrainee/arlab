@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from reportlab.platypus.doctemplate import SimpleDocTemplate
 #from reportlab.platypus.tables import Table, TableStyle

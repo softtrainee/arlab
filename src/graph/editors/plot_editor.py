@@ -18,7 +18,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, DelegatesTo, Property, Any, Str, Int, Float, List
+from traits.api import HasTraits, Property, Any, Str, Int, Float, List
 from traitsui.api import View, Item, VGroup, Group, \
     TextEditor, TableEditor, Handler, InstanceEditor
 from chaco.polygon_plot import PolygonPlot
@@ -29,7 +29,7 @@ from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from kiva.trait_defs.kiva_font_trait import KivaFontFunc
 from src.graph.editors.series_editor import ContourPolyPlotEditor
-from chaco.contour_poly_plot import ContourPolyPlot
+#from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.base_2d_plot import Base2DPlot
 from chaco.cmap_image_plot import CMapImagePlot
 from chaco.base_contour_plot import BaseContourPlot

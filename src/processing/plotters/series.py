@@ -15,15 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
 from src.processing.plotters.plotter import Plotter
-from src.graph.regression_graph import AnnotatedRegresssionTimeSeriesGraph, \
-    AnnotatedRegressionGraph
-from chaco.array_data_source import ArrayDataSource
+from src.graph.regression_graph import AnnotatedRegressionGraph
 
 class Series(Plotter):
     def build(self, analyses, options):

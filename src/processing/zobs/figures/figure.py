@@ -16,9 +16,9 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, on_trait_change, Bool
-from traitsui.api import Item, Group, VGroup
+from traitsui.api import Item, VGroup
 from src.processing.analysis import AnalysisTabularAdapter
-from traitsui.editors.tabular_editor import TabularEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.plotters.api import Ideogram, InverseIsochron, Spectrum

@@ -20,7 +20,7 @@
 from enable.component_editor import ComponentEditor, _ComponentEditor
 
 #============= standard library imports ========================
-from wx import EVT_KEY_UP
+
 
 #============= local library imports  ==========================
 

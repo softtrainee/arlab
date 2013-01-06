@@ -14,8 +14,8 @@
 # limitations under the License.
 #===============================================================================
 #============= enthought library imports =======================
-from traits.api import Any, Bool, Float
-from traitsui.api import View, Item
+from traits.api import Bool, Float
+from traitsui.api import View
 #============= standard library imports ========================
 from numpy import pi, invert, asarray, ones_like, hsplit, ogrid
 import time

@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.lasers.power.power_map_processor import PowerMapProcessor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.lasers.power.power_map_processor import PowerMapProcessor
+
+
 def show():
     pmp = PowerMapProcessor()
     reader = H5DataManager()

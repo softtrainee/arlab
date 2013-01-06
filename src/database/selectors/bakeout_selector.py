@@ -15,79 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Instance, DelegatesTo
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
-from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
-from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
+from src.database.orms.bakeout_orm import BakeoutTable
 from src.database.core.database_selector import DatabaseSelector
-#from src.database.core.base_db_result import DBResult
 from src.database.core.query import BakeoutQuery
 from src.database.records.bakeout_record import BakeoutRecord
 from traitsui.tabular_adapter import TabularAdapter
 
 #
-#class BakeoutDBResult(DBResult):
-#    title_str = 'Bakeout'
-#
-#    viewer = Instance(BakeoutGraphViewer)
-#    graph = DelegatesTo('viewer')
-#    summary = DelegatesTo('viewer')
-#    export_button = DelegatesTo('viewer')
-#
-#    def load_graph(self, *args, **kw):
-#        self.viewer = BakeoutGraphViewer(title=self.title)
-#        p = os.path.join(self.directory,
-#                                      self.filename
-#                                      )
-#        self.viewer.load(p, dm=self.data_manager)
-#
-#    def load(self):
-#        dbr = self._db_result
-#        if dbr is not None:
-#            self.rid = dbr.id
-#            self.rundate = dbr.rundate
-#            self.runtime = dbr.runtime.strftime('%H:%M:%S')
-#            p = dbr.path
-#            if p is not None:
-#                self.directory = p.root
-#                self.filename = p.filename
-#
-#            self.title = 'Bakeout {}'.format(self.rid)
-#
-#            self.data_manager = self._data_manager_factory()
-
-#    def traits_view(self):
-#        interface_grp = VGroup(
-#                          VGroup(Item('_id', style='readonly', label='ID'),
-#                    Item('rundate', style='readonly', label='Run Date'),
-#                    Item('runtime', style='readonly', label='Run Time'),
-#                    Item('directory', style='readonly'),
-#                    Item('filename', style='readonly')),
-#                VGroup(Item('summary',
-#                            show_label=False,
-#                            style='custom')),
-#                       HGroup(spring, Item('export_button',
-#                                            show_label=False),),
-#                    label='Info',
-#                    )
-#
-#        return View(
-#                    Group(
-#                    interface_grp,
-#                    Item('graph', width=0.75, show_label=False,
-#                         style='custom'),
-#                    layout='tabbed'
-#                    ),
-#
-#                    width=800,
-#                    height=0.85,
-#                    resizable=True,
-#                    x=self.window_x,
-#                    y=self.window_y,
-#                    title=self.title
-#                    )
 
 class BakeoutTabularAdapter(TabularAdapter):
     columns = [('ID', 'record_id'),
@@ -105,74 +41,7 @@ class BakeoutDBSelector(DatabaseSelector):
     def _get_selector_records(self, queries=None, limit=None, **kw):
         sess = self.db.get_session()
         q = sess.query(self.query_table)
-
-        queries = [
-                   self._query_factory(parameter='Run Date',
-                                       comparator='=',
-                                       criterion='this month')
-                   ]
-        limit = None
         return self._get_records(q, queries, limit)
-
-
-#        return self.db.get_bakeouts(**kw)
-#    def _dclicked_fired(self):
-#        s = self.selected
-#
-#        if s is not None:
-#            for si in s:
-#                sid = si._id
-#                if sid in self.opened_windows:
-#                    c = self.opened_windows[sid].control
-#                    if c is None:
-#                        self.opened_windows.pop(sid)
-#                    else:
-#                        try:
-#                            c.Raise()
-#                        except:
-#                            self.opened_windows.pop(sid)
-#
-#                else:
-#                    try:
-#                        si.load_graph()
-#                        si.window_x = self.wx
-#                        si.window_y = self.wy
-#
-#                        info = si.edit_traits()
-#                        self.opened_windows[sid] = info
-#
-#                        self.wx += 0.005
-#                        self.wy += 0.03
-#
-#                        if self.wy > 0.65:
-#                            self.wx = 0.4
-#                            self.wy = 0.1
-#                    except Exception, e:
-#                        self.warning(e)
-
-#    def _execute_(self):
-#        db = self._db
-#        if db is not None:
-##            self.info(s)
-#            s = self._get_filter_str()
-#            if s is None:
-#                return
-#
-#            table, _col = self.parameter.split('.')
-#            kw = dict(filter_str=s)
-#            if not table == 'BakeoutTable':
-#                kw['join_table'] = table
-#
-#            dbs = db.get_bakeouts(**kw)
-#
-#            self.info('query {} returned {} results'.format(s,
-#                                    len(dbs) if dbs else 0))
-#            if dbs:
-#                self.results = []
-#                for di in dbs:
-#                    d = BakeoutDBResult(_db_result=di)
-#                    d.load()
-#                    self.results.append(d)
 
 #============= EOF =============================================
 

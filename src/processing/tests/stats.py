@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import linspace, array
+from numpy import array
 #============= local library imports  ==========================
 from unittest import TestCase
+
 from src.regression.regressors.polynomial import PolynomialRegressor
 class StatsTests(TestCase):
     def setUp(self):

@@ -15,13 +15,13 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Float, Range, Property, Tuple, Bool, Enum, \
+from traits.api import  Float, Property, Tuple, Bool, Enum, \
     Instance, Str, on_trait_change
 from traitsui.api import View, Item, VGroup, HGroup, spring
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 from scipy import ndimage
-from numpy import histogram, argmax, array, asarray, ogrid, percentile, zeros_like, \
-    delete, zeros, asarray, ones_like, rot90, max
+from numpy import histogram, argmax, array, percentile, delete, zeros, asarray, ones_like
 from skimage.exposure import rescale_intensity
 from skimage.draw import polygon
 from skimage.morphology import is_local_maximum, watershed
@@ -41,9 +41,8 @@ from detector import Detector
 from src.image.image import StandAloneImage
 from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
-from pyface.timer.do_later import do_later
 from globals import globalv
-import time
+
 #from src.image.pyopencv_image_helper import grayspace
 
 

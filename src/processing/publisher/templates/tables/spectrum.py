@@ -15,9 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from reportlab.platypus.tables import Table, TableStyle
+from reportlab.platypus.tables import TableStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 #============= standard library imports ========================

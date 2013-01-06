@@ -17,15 +17,13 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, List
-from traitsui.api import View, Item, ListEditor, TableEditor
+from traits.api import  List
 from traitsui.table_column import ObjectColumn
-
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 from src.graph.editors.plot_editor import PlotEditor
-from src.graph.editors.diffusion_series_editor import DiffusionSeriesEditor, \
+from src.graph.editors.diffusion_series_editor import  \
     SpectrumSeriesEditor, ChistSeriesEditor, UnchistSeriesEditor, \
     LogrroSeriesEditor, ArrheniusSeriesEditor
 from traitsui.extras.checkbox_column import CheckboxColumn

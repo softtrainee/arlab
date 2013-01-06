@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Str, on_trait_change, \
+from traits.api import Instance, Str, on_trait_change, \
     Bool, Tuple, Float
-from traitsui.api import View, Item, HGroup
+from traitsui.api import View, Item
 from enable.component_editor import ComponentEditor
 import apptools.sweet_pickle as pickle
 from pyface.timer.do_later import do_later

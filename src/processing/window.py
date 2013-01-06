@@ -15,13 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Float, Either, Any, Str
-from traitsui.api import View, Item, TableEditor
-from src.graph.graph_container import HGraphContainer
+from traits.api import Instance, Int, Float, Either, Any, Str
+from traitsui.api import View, Item
 from enable.component_editor import ComponentEditor
-from src.viewable import Viewable
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.graph.graph_container import HGraphContainer
+from src.viewable import Viewable
+
 class Window(Viewable):
     container = Instance(HGraphContainer, ())
     window_width = Either(Int, Float)

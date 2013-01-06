@@ -15,10 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance, Event, Property, \
-    DelegatesTo, Str, Enum, Bool, Any, Float, Int, List
+from traits.api import Event, Property, \
+    DelegatesTo, Enum, Bool, Any, List
 from traitsui.api import View, Item, HGroup, VGroup, \
-    TableEditor, InstanceEditor, Handler
+    TableEditor
 from traitsui.table_column import ObjectColumn
 
 import apptools.sweet_pickle as pickle

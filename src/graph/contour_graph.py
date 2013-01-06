@@ -20,7 +20,6 @@
 from chaco.api import ColorBar, LinearMapper
 from chaco.default_colormaps import color_map_name_dict
 #=============standard library imports ========================
-from numpy import linspace
 #=============local library imports  ==========================
 from graph import Graph
 from graph import name_generator

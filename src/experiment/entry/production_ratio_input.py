@@ -20,7 +20,6 @@ from traitsui.api import View, Item, HGroup, VGroup, CheckListEditor
 from traitsui.menu import Action
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from traits.trait_errors import TraitError
-from src.loggable import Loggable
 from src.saveable import Saveable
 from src.helpers.traitsui_shortcuts import instance_item
 #============= standard library imports ========================

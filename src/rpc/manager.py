@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
+import xmlrpclib
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-import xmlrpclib
 from src.rpc.server import RPCServer
+
 class RpcServer(Manager):
     def load(self):
         self.server = RPCServer(manager=self.manager)

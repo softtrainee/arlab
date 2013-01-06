@@ -15,11 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traits.api import Any, Instance
 from traitsui.wx.editor import Editor
 from traitsui.wx.basic_editor_factory import BasicEditorFactory
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx

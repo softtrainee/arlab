@@ -15,13 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-#import time
 import numpy as np
 from ConfigParser import ConfigParser
 import os
+import time
 #============= local library imports  ==========================
 from src.spectrometer.tasks.peak_center import calculate_peak_center
 from src.paths import paths

@@ -20,7 +20,6 @@ from traitsui.api import View, Item, HGroup, Spring, RangeEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
-import random
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.hardware.core.pid_object import PIDObject

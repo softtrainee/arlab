@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Float, Property, Int, Str, Enum, CFloat, CInt
-from traitsui.api import View, Item, Group, RangeEditor
+from traits.api import Int, Enum, CFloat
+from traitsui.api import View, Item, Group
 
 #============= standard library imports ========================
 #import math

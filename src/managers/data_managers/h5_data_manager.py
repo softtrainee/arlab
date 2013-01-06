@@ -20,7 +20,6 @@
 from traits.api import Any
 #============= standard library imports ========================
 from tables import openFile, Filters
-from numpy import array
 #============= local library imports  ==========================
 from data_manager import DataManager
 from table_descriptions import table_description_factory
@@ -71,7 +70,6 @@ class H5DataManager(DataManager):
             return self._frame.filename
 
     def lock_path(self, p):
-        import os
         import stat
         os.chmod(p, stat.S_IROTH | stat.S_IRGRP | stat.S_IREAD)
 

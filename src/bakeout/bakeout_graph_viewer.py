@@ -18,8 +18,7 @@
 #============= enthought library imports  ==========================
 from traits.api import HasTraits, Instance, \
     Float, Str, List, Property, Button
-from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
-    ListEditor, Group
+from traitsui.api import View, Item, ListEditor, Group
 #============= standard library imports  ==========================
 import numpy as np
 from wx import GetDisplaySize

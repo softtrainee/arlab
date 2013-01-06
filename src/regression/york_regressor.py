@@ -15,12 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from numpy import linspace, apply_along_axis, sign, roll, where, Inf
-from src.regression.ols_regressor import OLSRegressor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.regression.ols_regressor import OLSRegressor
 
 class YorkRegressor(OLSRegressor):
     def _set_degree(self, d):

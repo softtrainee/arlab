@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Int, Property, List, on_trait_change, Dict, Bool
+from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable

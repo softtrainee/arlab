@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import Str, Float, Any, Button, Int, List, Bool
-from traitsui.api import  Item, HGroup, VGroup, Handler, \
+from traitsui.api import  Item, HGroup, VGroup, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
 from pyface.api import FileDialog, OK, warning, DirectoryDialog

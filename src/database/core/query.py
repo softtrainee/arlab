@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
-    Bool, cached_property
-from traitsui.api import View, Item, EnumEditor, HGroup, Spring , spring
+    Bool
+from traitsui.api import View, Item, EnumEditor, HGroup, Spring
 from src.helpers.datetime_tools import get_date
 from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import and_

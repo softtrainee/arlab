@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from skimage.filter import threshold_adaptive
 from src.machine_vision.segmenters.base import BaseSegmenter

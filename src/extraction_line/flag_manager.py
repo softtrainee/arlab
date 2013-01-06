@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance
+from traits.api import HasTraits, List
 from traitsui.api import View, Item, ListEditor, InstanceEditor, \
     Group, VGroup
 #============= standard library imports ========================

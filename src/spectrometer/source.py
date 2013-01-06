@@ -18,7 +18,7 @@
 
 #============= enthought library imports =======================
 from traits.api import  Float, Range, Property
-from traitsui.api import View, Item, Group, HGroup, VGroup, RangeEditor
+from traitsui.api import View, Item, RangeEditor
 
 #============= standard library imports ========================
 

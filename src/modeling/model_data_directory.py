@@ -18,8 +18,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Bool, List, \
- Property, Str, Any, on_trait_change, Color
-from wx import ColourDatabase
+ Property, Str, Any, Color
 from traitsui.api import View, Item
 #============= standard library imports ========================
 import os

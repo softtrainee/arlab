@@ -15,12 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+#============= standard library imports ========================
 from threading import Thread
 import time
 import os
-#============= standard library imports ========================
 #============= local library imports  ==========================
 
 class FileListener(object):

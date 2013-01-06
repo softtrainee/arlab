@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor, ListEditor, InstanceEditor
+from traitsui.api import  Item, ListEditor, InstanceEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 def instance_item(name, **kw):

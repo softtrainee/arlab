@@ -15,14 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Array, List, Event, Property, cached_property, Any
-from traitsui.api import View, Item, TableEditor
+from traits.api import  Array, List, Event, Property, cached_property
 #============= standard library imports ========================
 import math
-from numpy import array, polyval, asarray, where, std
+from numpy import array, asarray, where
 #============= local library imports  ==========================
-from src.loggable import Loggable
 from tinv import tinv
+from src.loggable import Loggable
 from src.helpers.alphas import ALPHAS
 
 

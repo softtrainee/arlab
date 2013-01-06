@@ -22,7 +22,7 @@ from numpy import asarray, argmax
 from uncertainties import ufloat, umath
 import math
 from src.processing import constants
-from copy import copy, deepcopy
+from copy import deepcopy
 #============= local library imports  ==========================
 
 def calculate_error_F(signals, F, k4039, ca3937, ca3637):

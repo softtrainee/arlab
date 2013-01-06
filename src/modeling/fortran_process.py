@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Str
+from traits.api import  Str
 #from pyface.timer.do_later import do_later
 from pyface.message_dialog import warning
 #============= standard library imports ========================
@@ -110,7 +110,6 @@ class FortranProcess(Loggable):
 
 if __name__ == '__main__':
     import Queue
-    import time
     q = Queue.Queue()
     d = '/Users/Ross/Desktop'
     f = FortranProcess('hello_world', d, q)

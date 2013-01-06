@@ -17,9 +17,9 @@
 
 
 #============= enthought library imports =======================
-from traits.api import List, Instance, Any, Property, on_trait_change
+from traits.api import List, Instance, on_trait_change
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
-    ListEditor, TableEditor, CustomEditor, InstanceEditor, Handler
+    ListEditor, TableEditor, InstanceEditor
 from traitsui.table_column import ObjectColumn
 
 #============= standard library imports ========================

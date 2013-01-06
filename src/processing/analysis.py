@@ -15,17 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Int, Float, Property, cached_property, Dict, \
-    List, Color, Any, Event
-from traitsui.tabular_adapter import TabularAdapter
+from traits.api import HasTraits, Str, Int, Float, Property, Color, Any
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 
 from src.loggable import Loggable
-from uncertainties import ufloat
+
 from src.helpers import alphas
-from src.constants import NULL_STR
 
 
 #class AnalysisTabularAdapter(TabularAdapter):

@@ -15,15 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import math
-#============= local library imports  ==========================
 from unittest import TestCase
+from ConfigParser import ConfigParser
+#============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing import constants
-from ConfigParser import ConfigParser
 
 class AgeCalcTest(TestCase):
     def setUp(self):

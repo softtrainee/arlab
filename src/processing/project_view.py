@@ -209,7 +209,6 @@ class ProjectView(Viewable):
 
 if __name__ == '__main__':
     from launchers.helpers import build_version
-    import os
     from src.paths import paths
     build_version('_experiment')
     from src.paths import build_directories

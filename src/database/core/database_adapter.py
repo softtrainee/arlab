@@ -16,22 +16,17 @@
 
 #=============enthought library imports=======================
 from traits.api import Password, Bool, Str, on_trait_change, Any
-from traitsui.api import View
 #=============standard library imports ========================
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.exc import SQLAlchemyError
+import os
 #=============local library imports  ==========================
 
 from src.loggable import Loggable
-from src.helpers.datetime_tools import get_datetime
-import os
-from sqlalchemy.sql.expression import asc, desc
 from src.database.core.base_orm import MigrateVersionTable
 from src.deprecate import deprecated
-from sqlalchemy.exc import SQLAlchemyError
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
-
-
 
 
 #def create_url(kind, user, hostname, db, password=None):

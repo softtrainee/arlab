@@ -15,19 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, cached_property, Float, \
-    Instance, Array, Event, Int
+from traits.api import HasTraits, Str, Property, cached_property, Float, Array, Int
 #============= standard library imports ========================
-from numpy import array, polyfit, polyval, where, delete
-import random
+from numpy import array, delete
 #from src.regression.regressor import Regressor
 from uncertainties import ufloat
-from src.regression.mean_regressor import MeanRegressor, WeightedMeanRegressor
+from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 import struct
 from src.regression.interpolation_regressor import InterpolationRegressor
 from src.constants import INTERPOLATE_TYPES
-import time
+
 #============= local library imports  ==========================
 
 class Value(HasTraits):

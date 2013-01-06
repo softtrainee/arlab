@@ -15,15 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range, Property, Bool, \
+from traits.api import  Any, Int, Str, List, Range, Property, Bool, \
     Enum, on_trait_change
-from traitsui.api import View, Item, HGroup, spring, Group, VGroup, EnumEditor
+from traitsui.api import Item, HGroup, spring, Group
 #from chaco.api import ArrayDataSource
 #============= standard library imports ========================
 from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack, max
 from chaco.data_label import DataLabel
-from chaco.tools.data_label_tool import DataLabelTool
-from chaco.ticks import AbstractTickGenerator, DefaultTickGenerator
+from chaco.ticks import DefaultTickGenerator
 #============= local library imports  ==========================
 
 #from src.graph.stacked_graph import StackedGraph

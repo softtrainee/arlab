@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Date, Property, Time, List, Button
-from traitsui.api import View, Item, TableEditor, HGroup, VGroup, spring, Label
+from traits.api import HasTraits, Instance, Date, Time, List, Button
+from traitsui.api import View, Item, HGroup, VGroup, spring, Label
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.helpers.traitsui_shortcuts import listeditor
 #============= standard library imports ========================

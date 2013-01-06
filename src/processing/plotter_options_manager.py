@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Event, Instance, Button, cached_property, Enum
-from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup, Group
+from traits.api import Property, List, Event, Instance, Button, cached_property
+from traitsui.api import View, Item, EnumEditor, HGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -25,6 +25,8 @@ from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
     IdeogramOptions
 from src.paths import paths
+
+
 class PlotterOptionsManager(Viewable):
     plotter_options_list = Property(List(PlotterOptions), depends_on='_plotter_options_list_dirty')
     _plotter_options_list_dirty = Event

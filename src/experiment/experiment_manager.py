@@ -15,28 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, DelegatesTo, Bool, List, Str, Property
+from traits.api import Instance, List, Str, Property
 from apptools.preferences.preference_binding import bind_preference
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
 import time
-#import sha
 import hashlib
 #============= local library imports  ==========================
 from src.experiment.experiment_set import ExperimentSet
 from src.paths import paths
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from src.experiment.selection_view import SelectionView
 from src.experiment.file_listener import FileListener
 from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
-from src.repo.repository import Repository, FTPRepository
 from pyface.timer.do_later import do_later
 from src.helpers.alphas import ALPHAS
-#from globals import globalv
+
 
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):

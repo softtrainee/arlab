@@ -18,15 +18,14 @@
 from traits.api import HasTraits, Button, Bool, Int, Property, List, Any
 from traitsui.api import View, Item, VGroup, HGroup, TabularEditor, EnumEditor
 from traitsui.tabular_adapter import TabularAdapter
-import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
+import shelve
 #============= local library imports  ==========================
 from src.paths import paths
 from src.database.core.database_selector import ColumnSorterMixin
 from src.processing.search.previous_selection import PreviousSelection
 from src.database.records.isotope_record import IsotopeRecord
-import shelve
 
 
 class SelectedrecordsAdapter(TabularAdapter):

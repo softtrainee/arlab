@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Instance, Str
+from traits.api import HasTraits, Instance
 from traitsui.api import View, Item
 
 #============= standard library imports ========================

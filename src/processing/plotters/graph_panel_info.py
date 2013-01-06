@@ -16,10 +16,11 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int, Str, Property
-from traitsui.api import View, Item, TableEditor, HGroup, VGroup, EnumEditor
+from traitsui.api import View, Item, HGroup, VGroup, EnumEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 EInt = lambda x: Int(x, enter_set=True, auto_set=False)
+
 class GraphPanelInfo(HasTraits):
     nrows = EInt(1)#Int(1, enter_set=True, auto_set=False)
     ncols = EInt(2)#Int(2, enter_set=True, auto_set=False)

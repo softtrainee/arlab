@@ -16,10 +16,11 @@
 
 #============= enthought library imports =======================
 from traits.api import Any
-from traitsui.api import View, Item, TableEditor
-from src.loggable import Loggable
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.loggable import Loggable
+
+
 class Exporter(Loggable):
     figure = Any
     def export(self, path=None):

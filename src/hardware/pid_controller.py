@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+from traitsui.api import View, Item
 from src.hardware.core.abstract_device import AbstractDevice
 #============= standard library imports ========================
 #============= local library imports  ==========================

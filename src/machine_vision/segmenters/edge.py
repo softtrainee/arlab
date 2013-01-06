@@ -15,10 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property, Range
-from traitsui.api import View, Item, TableEditor
+from traits.api import Int, Range
 #============= standard library imports ========================
-from numpy import zeros_like, invert, asarray
+from numpy import  invert, asarray
 from scipy import ndimage
 from skimage.filter import canny
 #from skimage.morphology import closing, square

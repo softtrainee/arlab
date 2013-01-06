@@ -19,8 +19,7 @@ from pyface.action.api import Action
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.core.action_helper import open_protocol, open_manager, \
-    open_selector
+from src.envisage.core.action_helper import open_protocol, open_manager
 from src.database.adapters.hardware_adapter import HardwareAdapter
 from src.hardware.plugins.register_manager import RegisterManager
 

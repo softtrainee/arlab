@@ -18,30 +18,19 @@
 
 #=============enthought library imports=======================
 from traits.api import Instance, Float, Button, Int, Property, Event, Bool
-from traitsui.api import View, Item, RangeEditor, VGroup, HGroup
+from traitsui.api import View, Item, HGroup
 
 #=============standard library imports ========================
-#import os
-#import time
+from threading import Thread
 #=============local library imports  ==========================
 from src.image.video import Video
 from src.image.image import Image
-#from src.data_processing.image.target_image import TargetImage
-#from src.data_processing.image.calibration_image import CalibrationImage
-from src.image.image_editor import ImageEditor
-#from src.data_processing.image.image_helper import load_image#, save_image, subsample
-#from src.data_processing.image.image_helper import crop as icrop
-
-#from src.paths import paths
-
 from manager import Manager
 from src.canvas.canvas2D.video_canvas import VideoCanvas
 from src.lasers.stage_managers.video_component_editor import VideoComponentEditor
 from src.helpers.filetools import unique_path
 from src.paths import paths
-import os
-import time
-from threading import Thread
+
 
 class VideoManager(Manager):
     '''

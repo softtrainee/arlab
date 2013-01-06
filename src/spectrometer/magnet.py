@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Any, Property, Float, Event
-from traitsui.api import View, Item, VGroup, HGroup, Group, Spring, spring, \
+from traits.api import HasTraits, List, Any, Property, Float, Event
+from traitsui.api import View, Item, VGroup, HGroup, Spring, \
     TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
 
@@ -26,7 +26,7 @@ from traitsui.table_column import ObjectColumn
 import os
 import csv
 import time
-from numpy import isnan, polyval, polyfit
+from numpy import polyval, polyfit
 #============= local library imports  ==========================
 from src.paths import paths
 #import math

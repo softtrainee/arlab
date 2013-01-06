@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Instance, Color, Enum, Bool
+from traits.api import Str, Instance, Color, Enum, Bool
 #from traitsui.api import View, Item, TableEditor
 from traitsui.wx.code_editor import SourceEditor
 #from traitsui.editors.code_editor import CodeEditor

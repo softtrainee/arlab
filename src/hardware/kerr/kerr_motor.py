@@ -22,7 +22,6 @@ from pyface.timer.api import Timer
 #=============standard library imports ========================
 import struct
 import binascii
-import time
 #=============local library imports  ==========================
 from kerr_device import KerrDevice
 

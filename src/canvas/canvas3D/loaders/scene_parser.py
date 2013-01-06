@@ -14,15 +14,12 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
-from src.helpers.xml_parser import XMLParser
+from src.helpers.parsers.xml_parser import XMLParser
 
 class SceneParser(XMLParser):
     def _get_top(self):

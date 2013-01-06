@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
     Instance, Str, DelegatesTo, Any, on_trait_change
-from traitsui.api import View, Item, HGroup, Group, VGroup, spring
+from traitsui.api import View, Item, HGroup, Group, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
 #from src.loggable import Loggable

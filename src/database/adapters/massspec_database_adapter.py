@@ -21,15 +21,15 @@
 #=============local library imports  ==========================
 from src.database.orms.massspec_orm import IsotopeResultsTable, \
     AnalysesChangeableItemsTable, BaselinesTable, DetectorTable, \
-     IsotopeTable, AnalysesTable, ArArAnalysisTable, \
-    IrradiationPositionTable, MaterialTable, SampleTable, ProjectTable, \
+     IsotopeTable, AnalysesTable, \
+    IrradiationPositionTable, SampleTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
     PreferencesTable, DatabaseVersionTable, FittypeTable, \
     BaselinesChangeableItemsTable, SampleLoadingTable, MachineTable, \
     AnalysisPositionTable, LoginSessionTable, RunScriptTable
 from src.database.core.database_adapter import DatabaseAdapter
 
-from src.database.core.functions import add, delete_one, get_first
+from src.database.core.functions import delete_one, get_first
 from sqlalchemy.sql.expression import func
 
 from src.database.selectors.massspec_selector import MassSpecSelector

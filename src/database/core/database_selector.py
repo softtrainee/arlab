@@ -16,22 +16,20 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event
-
-from traitsui.api import View, Item, ButtonEditor, \
+from traitsui.api import View, Item, \
     HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
-from src.database.core.base_results_adapter import BaseResultsAdapter
+
 from src.graph.time_series_graph import TimeSeriesGraph
 
-import os
 from src.database.core.query import Query, compile_query
 from src.viewable import Viewable
 
 from traits.api import HasTraits
 from src.traits_editors.tabular_editor import myTabularEditor
-from pyface.timer.do_later import do_later
 
 class ColumnSorterMixin(HasTraits):
     _sort_field = None

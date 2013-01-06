@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Property, Str, Float, CInt
+from traits.api import Bool, Property, Float, CInt
 from traitsui.api import View, Item, HGroup, spring
 #============= standard library imports ========================
 from threading import Timer as OneShotTimer

@@ -19,10 +19,9 @@ from traits.api import Float
 
 #============= standard library imports ========================
 from threading import Lock
-import time
-from src.loggable import Loggable
 
 #============= local library imports  ==========================
+from src.loggable import Loggable
 
 SINGLE_ITEM_BUF = True
 #SINGLE_ITEM_BUF=False

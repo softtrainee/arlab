@@ -17,25 +17,20 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Any, Event, Instance, Dict, on_trait_change
 from traitsui.api import View, Item
-from src.graph.graph import Graph
-#============= standard library imports ========================
-from numpy import linspace, random, hstack, polyval, \
-    delete, bitwise_and, polyfit, ones, invert, average
 from chaco.tools.broadcaster import BroadcasterTool
+#============= standard library imports ========================
+from numpy import linspace, random, \
+    delete, bitwise_and, invert, average
 #============= local library imports  ==========================
+from src.graph.graph import Graph
 from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
-from src.graph.tools.data_tool import DataTool, DataToolOverlay
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.graph.stacked_graph import StackedGraph
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
-import copy
 from src.graph.context_menu_mixin import RegressionContextMenuMixin
-from enable.font_metrics_provider import font_metrics_provider
 from src.displays.rich_text_display import RichTextDisplay
-from src.helpers.datetime_tools import convert_timestamp
-from src.regression.interpolation_regressor import InterpolationRegressor
 from src.graph.tools.regression_inspector import RegressionInspectorTool, \
     RegressionInspectorOverlay
 from src.graph.tools.point_inspector import PointInspector, \

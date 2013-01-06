@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property
-from traitsui.api import View, Item, TableEditor
+from traits.api import Property
 from src.database.records.database_record import DatabaseRecord
 #============= standard library imports ========================
 #============= local library imports  ==========================

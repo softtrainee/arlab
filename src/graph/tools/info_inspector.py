@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Event, Instance, Tuple, on_trait_change, Dict
-from traitsui.api import View, Item, TableEditor
+from traits.api import  Event, Instance, on_trait_change
 from chaco.abstract_overlay import AbstractOverlay
 from enable.base_tool import BaseTool
 #============= standard library imports ========================

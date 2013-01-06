@@ -17,25 +17,21 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Float, Int, Any, Instance, Enum
+from traits.api import Float, Int, Any, Instance
 from traitsui.api import View, Item, VGroup, HGroup
 from pyface.timer.do_later import do_after
+from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import time
 import numpy as np
-from enable.component_editor import ComponentEditor
-from threading import Event, Thread
-
+import os
 #============= local library imports  ==========================
 from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.loggable import Loggable
 from src.database.data_warehouse import DataWarehouse
 from src.helpers.datetime_tools import generate_datestamp
-import random
-from src.graph.graph import Graph
 from src.paths import paths
-import os
 #from src.graph.graph3D import Graph3D
 
 

@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import Property, cached_property
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from numpy import array, where, polyval, polyfit
 #============= local library imports  ==========================

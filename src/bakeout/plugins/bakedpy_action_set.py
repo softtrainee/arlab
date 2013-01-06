@@ -15,13 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from envisage.ui.workbench.api import WorkbenchActionSet
 from envisage.ui.action.api import Action
 #============= standard library imports ========================
 #============= local library imports  ==========================
 BASE = 'src.bakeout.plugins.bakedpy_actions'
+
+
 class BakedpyActionSet(WorkbenchActionSet):
     def _actions_default(self):
         actions = [

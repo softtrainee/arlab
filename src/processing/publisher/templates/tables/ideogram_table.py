@@ -15,15 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.processing.publisher.templates.tables.pdf_table import PDFTable
+#============= standard library imports ========================
 from reportlab.platypus.tables import TableStyle
 from reportlab.lib.units import inch
-from src.stats.core import calculate_weighted_mean, calculate_mswd
 from reportlab.lib import colors
-#============= standard library imports ========================
 #============= local library imports  ==========================
+from src.stats.core import calculate_weighted_mean, calculate_mswd
+from src.processing.publisher.templates.tables.pdf_table import PDFTable
 
 class IdeogramTable(PDFTable):
 

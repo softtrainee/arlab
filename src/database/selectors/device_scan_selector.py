@@ -15,16 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float, Bool, Int
-from traitsui.api import VGroup, HGroup, Item
+from traits.api import Bool
 #============= standard library imports ========================
-from numpy import array
 #============= local library imports  ==========================
 from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.hardware_orm import ScanTable
-from src.graph.time_series_graph import TimeSeriesGraph
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.database.core.base_db_result import DBResult
 from src.database.core.query import compile_query, DeviceScanQuery
 from src.database.records.device_scan_record import DeviceScanRecord
 

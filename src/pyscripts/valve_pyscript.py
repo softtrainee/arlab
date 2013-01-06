@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item, TableEditor
+from traits.api import Any
 from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
     makeNamedRegistry
 #============= standard library imports ========================

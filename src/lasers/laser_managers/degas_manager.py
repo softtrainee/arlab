@@ -17,22 +17,17 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Instance, Event, Property, \
-    DelegatesTo, Str, Enum
-from traitsui.api import View, Item, HGroup, VGroup, \
-    TableEditor, InstanceEditor, Handler
-from traitsui.table_column import ObjectColumn
+from traits.api import  Instance, Event, Property, Str
+from traitsui.api import View, Item, VGroup, InstanceEditor, Handler
+
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-#from src.scripts.laser.power_map_script import DegasScript
-from src.scripts.laser.degas_script import DegasScript
-#class PowerMapStep(HasTraits):
-#    beam_diameter = Float
-#    padding = Float
-#    step_length = Float
-#    power = Float
+
+class DegasScript():
+    pass
+
 class DegasHandler(Handler):
     def close(self, info, ok):
         info.object.script.kill_script()

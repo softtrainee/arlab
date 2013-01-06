@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Float, Int
-from traitsui.api import  Item, Group, HGroup, VGroup, Tabbed
+from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Int
+from traitsui.api import  Item, Group, VGroup
 
 #============= standard library imports ========================
 
