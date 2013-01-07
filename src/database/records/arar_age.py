@@ -76,6 +76,7 @@ class ArArAge(HasTraits):
             k = result['k39']
             ca = result['ca37']
             prs = self.production_ratios
+
             k_ca_pr = 1
             if prs:
 #                k_ca_pr = 1
@@ -251,9 +252,9 @@ class ArArAge(HasTraits):
                     chronblob = chron.chronology
 
                     doses = chronblob.split('$')
-                    doses = [di.split('%') for di in doses]
+                    doses = [di.strip().split('%') for di in doses]
 
-                    doses = [map(convert_datetime, d) for d in doses]
+                    doses = [map(convert_datetime, d) for d in doses if d]
 
                     analts = self.timestamp
                     #convert float to datetime

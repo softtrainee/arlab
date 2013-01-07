@@ -155,9 +155,20 @@ class BaseSchedule(Saveable):
         writeline('#' + '=' * 80)
 
         tab(header)
+
+        def isNotNull(vi):
+            if vi and vi != NULL_STR:
+                try:
+                    vi = int(vi)
+                    return vi != 0
+                except ValueError:
+                    return True
+            else:
+                return False
+
         for arun in self.automated_runs:
             vs = arun.to_string_attrs(attrs)
-            vals = [v if v and v != NULL_STR else '' for v in vs]
+            vals = [v if isNotNull(v) else '' for v in vs]
             tab(vals)
 
         return stream

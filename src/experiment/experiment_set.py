@@ -48,8 +48,8 @@ class ExperimentSet(BaseSchedule):
 
     measuring = Property(depends_on='current_run.measuring')
 
-    delay_between_analyses = Float(1)
-    delay_before_analyses = Float(1)
+    delay_between_analyses = Float(25)
+    delay_before_analyses = Float(5)
     name = Property(depends_on='path')
     path = Str
     ok_to_add = Property

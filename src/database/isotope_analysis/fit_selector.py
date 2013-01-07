@@ -49,7 +49,7 @@ class FitSelector(HasTraits):
             fo = self.graph.get_filter_outliers(n - i)
 #            print reg.filter_outliers
             inte = reg.predict(0)
-            er = reg.coefficient_errors[-1]
+            er = reg.predict_error(0)
             if fit == 'average':
                 fit = u'average \u00b1' + reg.error_calc.upper()
         except IndexError:
@@ -62,7 +62,6 @@ class FitSelector(HasTraits):
                                  _error=er,
                                  )
         return obj
-
 
     @on_trait_change('fits:show')
     def _schanged(self, obj, name, new):
@@ -152,7 +151,7 @@ class FitSelector(HasTraits):
                     reg = new[n - i]
                     if reg:
                         fi._intercept = reg.predict(0)
-                        fi._error = reg.coefficient_errors[-1]
+                        fi._error = reg.predict_error(0)
                 except IndexError:
                     pass
 

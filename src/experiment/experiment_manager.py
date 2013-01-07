@@ -333,7 +333,6 @@ class ExperimentManager(Manager):
         stdict = dict()
         for arun in ans:
             arunid = arun.labnumber
-#            print arunid, id(arun)
             c = 1
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
@@ -343,7 +342,6 @@ class ExperimentManager(Manager):
 #                    c = 1
 #            else:
 #                c = 1
-
             ln = db.get_labnumber(arunid)
             if ln is not None:
                 try:
