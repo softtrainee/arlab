@@ -190,8 +190,15 @@ class PDFWriter(BaseWriter):
 #    def __init__(self,*args,**kw):
     _flowables = List
 
-    def add_ideogram_table(self, analyses, add_title=False, add_header=False, tablenum=1, **kw):
+    def add_ideogram_table(self, analyses,
+                           configure_table=True,
+                           add_title=False, add_header=False, tablenum=1, **kw):
         ta = IdeogramTable()
+        if configure_table:
+            info = ta.edit_traits(kind='modal')
+            if not info.result:
+                return True
+
         ta.add_header = add_header
         ta.add_title = add_title
         ta.number = tablenum

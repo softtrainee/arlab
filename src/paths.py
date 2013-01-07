@@ -39,7 +39,7 @@ class Paths():
     root = None
     #pychron_src_root = None
     #doc_html_root = None
-
+    icons = None
     #_dir suffix ensures the path is checked for existence
     root_dir = root
     stable_root = None
@@ -126,6 +126,7 @@ class Paths():
         join = path.join
 
         self.root = root = join(HOME, home)
+        self.icons = join('..', 'resources', 'icons')
 #        src_repo_name = 'pychron{}'.format(version)
         self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
         self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',

@@ -15,6 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Float, Range, Int
+from traitsui.api import View, Item, VGroup, HGroup, Label, spring, RangeEditor
 #============= standard library imports ========================
 from reportlab.platypus.tables import TableStyle
 from reportlab.lib.units import inch
@@ -24,6 +26,55 @@ from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.processing.publisher.templates.tables.pdf_table import PDFTable
 
 class IdeogramTable(PDFTable):
+    status_width = Int(5)
+    id_width = Int(20)
+    power_width = Int(30)
+    moles_width = Int(50)
+
+    low = Int(0)
+    high = Int(200)
+    ar40_width = Int(40)
+    ar40_error_width = Int(40)
+    ar39_width = Int(40)
+    ar39_error_width = Int(40)
+    ar38_width = Int(40)
+    ar38_error_width = Int(40)
+    ar37_width = Int(40)
+    ar37_error_width = Int(40)
+    ar36_width = Int(40)
+    ar36_error_width = Int(40)
+
+    def _value_error_width_factory(self, name):
+        top = HGroup(Label(name.capitalize()), spring, Label('Error'), spring)
+        bottom = HGroup(self._width_factory('{}_width'.format(name)),
+                        self._width_factory('{}_error_width'.format(name)))
+        return VGroup(top, bottom)
+
+    def _single_value_width_factory(self, name):
+        top = HGroup(Label(name.capitalize()))
+        bottom = self._width_factory('{}_width'.format(name))
+        return VGroup(top, bottom)
+
+    def _width_factory(self, name):
+        return Item(name,
+                    editor=RangeEditor(mode='spinner', low_name='low', high_name='high'),
+                    show_label=False)
+
+    def traits_view(self):
+        contents = []
+        for n in ['status', 'id', 'power']:
+            contents.append(self._single_value_width_factory(n))
+
+        for n in ['ar40', 'ar39', 'ar38', 'ar37', 'ar36']:
+            contents.append(self._value_error_width_factory(n))
+
+        column_widths = HGroup(*contents)
+        v = View(column_widths,
+                 buttons=['OK', 'Cancel']
+                 )
+        return v
+
+
 
     def make(self, analyses):
         if self.add_title:
@@ -75,13 +126,13 @@ class IdeogramTable(PDFTable):
                  '',
                  u'j: {:0.7f}\u00b1{:0.8f}'.format(*j),
                  ]
-        line1 = self._set_font(line1, 9)
+        line1 = self._set_font(line1, 8)
 
         line2 = ['Material: {}'.format(material),
                  '', '', '',
                  'IGSN #: {}'.format(igsn)
                  ]
-        line2 = self._set_font(line2, 9)
+        line2 = self._set_font(line2, 8)
 
 #        line3 = []
 #        line3 = self._set_font(line3, 10)
@@ -105,13 +156,13 @@ class IdeogramTable(PDFTable):
                    '%<super>40</super>Ar*',
                    '%<super>40</super>Ar*/<super>39</super>Ar<sub>K</sub>',
                    ]
-        name_line = self._set_font(name_line, 9)
+        name_line = self._set_font(name_line, 7)
         header.append(name_line)
 
         unit_line = ['', '', '(W)', '(moles)', '(10<super>3</super> fA)', '', '(10<super>3</super> fA)',
                      '', '', '', '', '', '', '(10<super>-2</super> fA)'
                      ]
-        unit_line = self._set_font(unit_line, 7)
+        unit_line = self._set_font(unit_line, 6)
 
         header.append(unit_line)
 
@@ -140,7 +191,7 @@ class IdeogramTable(PDFTable):
                self.floatfmt(R.nominal_value, n=3)
                ]
 
-        row = self._set_font(row, 9)
+        row = self._set_font(row, 6)
         return row
 
     def _set_font(self, row, fontsize):
@@ -151,6 +202,7 @@ class IdeogramTable(PDFTable):
     def _get_style(self):
         style = TableStyle()
         if self.add_title:
+            #(col, row)
             #make first row span entire table
             style.add('SPAN', (0, 0), (-1, 0))
             style.add('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.black)
@@ -168,7 +220,9 @@ class IdeogramTable(PDFTable):
             style.add('LINEBELOW', (0, 4), (-1, 4), 1.5, colors.black)
 
             style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)
-            style.add('ALIGN', (1, 0), (-1, -1), 'RIGHT')
+#            style.add('ALIGN', (1, 0), (-1, -1), 'CENTER')
+
+            style.add('LEFTPADDING', (1, 3), (-1, -1), 1)
 
 #            style.add('SPAN', (0, 3), (5, 1))
 #            style.add('SPAN', (0, 5), (7, 1))
@@ -176,23 +230,31 @@ class IdeogramTable(PDFTable):
         return style
 
     def _set_column_widths(self, ta):
-        ta._argW[0] = 0.05 * inch #status
-        ta._argW[1] = 0.2 * inch #id
-        ta._argW[2] = 0.45 * inch #power
+        scale = lambda x: x / 100.*inch
+        ta._argW[0] = scale(self.status_width)
+        ta._argW[1] = scale(self.id_width)
+        ta._argW[2] = scale(self.power_width)
 
-        ta._argW[3] = 0.5 * inch #ar40 moles
+        ta._argW[3] = scale(self.moles_width)
 
-        #set isotope widths 40-37
-        for i in range(8):
-            w = 0.6 if i % 2 == 0 else 0.4
-            ta._argW[4 + i] = w * inch
+        for i, n in enumerate(['ar40', 'ar39', 'ar38', 'ar37', 'ar36']):
+            w = 4 + 2 * i
+            ta._argW[w] = scale(getattr(self, '{}_width'.format(n)))
+            ta._argW[w + 1] = scale(getattr(self, '{}_error_width'.format(n)))
 
-        ta._argW[12] = 0.4 * inch #36
-        ta._argW[13] = 0.6 * inch #36err
+#        #set isotope widths 40-37
+#        for i in range(8):
+#            w = 0.4 if i % 2 == 0 else 0.4
+#            ta._argW[4 + i] = w * inch
+
+#        ta._argW[12] = 0.4 * inch #36
+#        ta._argW[13] = 0.6 * inch #36err
 
         ta._argW[14] = 0.5 * inch #rad40
         ta._argW[15] = 0.8 * inch #rad40/k39
 
 
-
+if __name__ == '__main__':
+    t = IdeogramTable()
+    t.configure_traits()
 #============= EOF =============================================

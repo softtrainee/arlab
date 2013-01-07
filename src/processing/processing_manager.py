@@ -136,12 +136,11 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #===============================================================================
 # export
 #===============================================================================
-    def export_figure(self):
+    def export_figure(self, kind='pdf'):
         '''
             save figure as a pdf
         '''
         win = self._get_active_window()
-        print win
         if win:
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 #            p = self.save_file_dialog()
@@ -298,12 +297,16 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         pub = klass(filename=p)
         n = len(grouped_analyses)
         for i, ans in enumerate(grouped_analyses):
-            pub.add_ideogram_table(ans,
+
+            canceled = pub.add_ideogram_table(ans,
+                                   configure_table=i == 0,
                                    add_title=i == 0,
                                    add_header=i == 0,
                                    add_group_marker=i < n - 1)
-
-        pub.publish()
+            if canceled:
+                break
+        else:
+            pub.publish()
 
     def _new_figure(self, name):
         '''
@@ -459,6 +462,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #        y = self.get_parameter('window', 'y', default=20)
         x, y, w, h = 20, 20, 500, 600
         g = Window(
+                   manager=self,
                    window_width=w,
                    window_height=h,
                    window_x=x, window_y=y
