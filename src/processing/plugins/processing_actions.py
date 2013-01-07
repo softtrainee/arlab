@@ -56,7 +56,7 @@ class ExportCSVFigureTableAction(ProcessingAction):
         man.export_figure_table(kind='csv')
 
 class ExportPDFFigureTableAction(ProcessingAction):
-    accelerator = 'Ctrl+e'
+    accelerator = 'Ctrl+shift+e'
     def perform(self, event):
         man = self._get_manager(event)
         man.export_figure_table(kind='pdf')

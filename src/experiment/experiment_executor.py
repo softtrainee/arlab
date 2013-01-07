@@ -112,7 +112,7 @@ class ExperimentExecutor(ExperimentManager):
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
 
     def experiment_blob(self):
-        return '{}\n{}'.format(self.path, self._text)
+        return '{}\n{}'.format(self.experiment_set.path, self._text)
 
     def opened(self):
 #        self.info_display.clear()
