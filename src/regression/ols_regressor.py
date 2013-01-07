@@ -138,8 +138,8 @@ class OLSRegressor(BaseRegressor):
 #            x = [x]
 
         x = asarray(x)
-        se = self.calculate_standard_error_fit()
-        def calc_error(xi):
+        sef = self.calculate_standard_error_fit()
+        def calc_error(xi,se):
             Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
 
             covarM = matrix(self.var_covar)
@@ -153,7 +153,7 @@ class OLSRegressor(BaseRegressor):
 
             return se
 
-        return [calc_error(xi) for xi in x]
+        return [calc_error(xi,sef) for xi in x]
 
     def predict_error_al(self, x, error_calc='sem'):
         '''
