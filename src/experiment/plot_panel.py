@@ -184,7 +184,7 @@ class PlotPanel(Viewable):
                 rr = ru / rl
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
-                  u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
+                  u'\u00b1' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
                     self._get_pee(rr)
             return res
 
@@ -247,9 +247,9 @@ class PlotPanel(Viewable):
             vv = uv.nominal_value
             ee = uv.std_dev()
 
-            v = pad('{:0.4f}'.format(vv))
-            e = pad('{:0.4f}'.format(ee), n=6)
-            v = v + u' \u00b1 ' + e + self._get_pee(uv)
+            v = pad('{:0.5f}'.format(vv))
+            e = pad('{:0.6f}'.format(ee), n=6)
+            v = v + u' \u00b1' + e + self._get_pee(uv)
             return '{}{}={:>10s}'.format(iso, name, v)
 
         ts = [func(iso) for iso in self.isotopes]
@@ -304,8 +304,8 @@ class PlotPanel(Viewable):
                                   Item('correct_for_blank'),
                                   spring),
                            HGroup(
-                               Item('signal_display', width=0.4, show_label=False, style='custom'),
-                               Item('ratio_display', width=0.6, show_label=False, style='custom'),
+                               Item('signal_display', width=0.5, show_label=False, style='custom'),
+                               Item('ratio_display', width=0.5, show_label=False, style='custom'),
                            ),
                            label='Results'
                            ),

@@ -92,7 +92,7 @@ class StackedGraph(Graph):
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
 
-        if n > 1:
+        if n >= 1:
 #            if not bottom:
 ##                plotiter = self.plots[1:]
 #                plotiter1 = self.plots[:-1]

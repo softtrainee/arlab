@@ -179,13 +179,15 @@ class IsotopeAdapter(DatabaseAdapter):
                                       script_blob=script_blob,
                                       hash=ha,
                                       **kw)
-            an = self.get_analysis(analysis)
-            if an:
-                an.extraction = ex
+            self._add_item(ex)
 
-            ed = self.get_extraction_device(extract_device)
-            if ed:
-                ed.extractions.append(ex)
+        an = self.get_analysis(analysis)
+        if an:
+            an.extraction = ex
+
+        ed = self.get_extraction_device(extract_device)
+        if ed:
+            ed.extractions.append(ex)
 
         return ex
 
@@ -345,20 +347,21 @@ class IsotopeAdapter(DatabaseAdapter):
                                          hash=ha,
                                          **kw)
     #        if isinstance(analysis, str):
-            an = self.get_analysis(analysis)
-            at = self.get_analysis_type(analysis_type)
-            ms = self.get_mass_spectrometer(mass_spec)
-
-            if an:
-                an.measurement = meas
-
-            if at:
-                at.measurements.append(meas)
-
-            if ms:
-                ms.measurements.append(meas)
 
             self._add_item(meas)
+
+        an = self.get_analysis(analysis)
+        at = self.get_analysis_type(analysis_type)
+        ms = self.get_mass_spectrometer(mass_spec)
+        if an:
+            an.measurement = meas
+
+        if at:
+            at.measurements.append(meas)
+
+        if ms:
+            ms.measurements.append(meas)
+
         return meas
 
     def _get_script(self, name, txt):
