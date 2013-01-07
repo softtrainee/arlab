@@ -64,7 +64,7 @@ class ExportPDFFigureTableAction(ProcessingAction):
 class ExportPDFFigureAction(ProcessingAction):
     def perform(self, event):
         man = self._get_manager(event)
-        man.export_figure()
+        man.export_figure(kind='pdf')
 
 class ViewAnalysisTableAction(ProcessingAction):
     accelerator = 'Ctrl+t'

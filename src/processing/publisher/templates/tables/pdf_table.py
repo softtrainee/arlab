@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import HasTraits
 #============= standard library imports ========================
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph
@@ -23,7 +24,7 @@ from reportlab.lib.units import inch
 #============= local library imports  ==========================
 STYLES = getSampleStyleSheet()
 
-class PDFTable(object):
+class PDFTable(HasTraits):
 
     add_title = True
     add_header = True
