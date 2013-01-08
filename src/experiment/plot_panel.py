@@ -291,6 +291,7 @@ class PlotPanel(Viewable):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
                                                 stack_order=self.stack_order
                                              ),
+                                      bind_index=False,
                                       use_data_tool=False,
                                       use_inspector_tool=True
                                       )
