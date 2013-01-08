@@ -101,6 +101,16 @@ class PychronGPActuator(GPActuator):
 #
 #        return resp
 
+    def get_state_word(self):
+        cmd = 'GetValveStates'
+        resp = self.ask(cmd)
+        return resp
+
+    def get_lock_word(self):
+        cmd = 'GetValveLockStates'
+        resp = self.ask(cmd)
+        return resp
+
 
     def get_channel_state(self, obj):
         '''
