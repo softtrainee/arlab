@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-
+from traits.api import Bool
 from chaco.scatterplot import ScatterPlot
 #=============standard library imports ========================
 
@@ -28,6 +28,7 @@ from graph import Graph
 class StackedGraph(Graph):
     '''
     '''
+    bind_index=Bool(True)
     equi_stack = True
     panel_height = 100
     _has_title = False
@@ -93,6 +94,7 @@ class StackedGraph(Graph):
         p.value_axis.ensure_labels_bounded = True
 
         if n >= 1:
+#        if n >1:
 #            if not bottom:
 ##                plotiter = self.plots[1:]
 #                plotiter1 = self.plots[:-1]

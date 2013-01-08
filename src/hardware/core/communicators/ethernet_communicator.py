@@ -127,7 +127,7 @@ class EthernetCommunicator(Communicator):
         return True
 
     def get_handler(self):
-        if self.kind == 'UDP':
+        if self.kind.lower() == 'udp':
             if self.handler is None:
                 h = UDPHandler()
                 h.open_socket((self.host, self.port))

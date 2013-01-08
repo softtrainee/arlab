@@ -137,9 +137,10 @@ class BaseRegressor(Loggable):
 
     def calculate_ci(self, rx):
         rmodel, cors = self._calculate_ci(rx)
-        if len(rmodel) and len(cors):
-            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-            return asarray(lci), asarray(uci)
+        if rmodel is not None and cors is not None:
+            if len(rmodel) and len(cors):
+                lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+                return asarray(lci), asarray(uci)
 
     def _calculate_ci(self, rx):
         if isinstance(rx, (float, int)):
@@ -191,7 +192,10 @@ class BaseRegressor(Loggable):
         n = len(self.xs)
         obs = self.ys
         model = self.predict(self.xs)
-        return (1. / (n - 2) * ((obs - model) ** 2).sum()) ** 0.5
+        if model is not None:
+            return (1. / (n - 2) * ((obs - model) ** 2).sum()) ** 0.5
+        else:
+            return 0
 
     @property
     def ssx(self):

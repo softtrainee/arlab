@@ -53,6 +53,7 @@ from uncertainties import ufloat
 from src.database.records.arar_age import ArArAge
 from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
+from pyface.timer.do_later import do_later
 
 
 
@@ -175,6 +176,9 @@ class AutomatedRun(Loggable):
     termination_conditions = List
     truncation_conditions = List
     action_conditions = List
+    
+    _total_counts=0
+    
     def add_termination(self, attr, comp, value, start_count, frequency):
         '''
             attr must be an attribute of arar_age
@@ -310,6 +314,7 @@ class AutomatedRun(Loggable):
         self.overlap_evt = TEvent()
         self.info('Start automated run {}'.format(self.name))
         self._alive = True
+        self._total_counts=0
 
     def cancel(self):
         self._alive = False
@@ -612,12 +617,13 @@ class AutomatedRun(Loggable):
 #                         fit=None,
 #                         label=l, plotid=i)
 
-            g.set_x_limits(min=0, max=400, plotid=i)
-
+#            g.set_x_limits(min=0, max=400, plotid=i)
+        g.set_x_limits(min=0, max=400)
+        
         g.suppress_regression = False
         self._active_detectors = [spec.get_detector(n) for n in dets]
         self.plot_panel.detectors = self._active_detectors
-
+        
     def set_regress_fits(self, fits, series=0):
         n = len(self._active_detectors)
         if isinstance(fits, str):
@@ -945,6 +951,12 @@ class AutomatedRun(Loggable):
 
         spec = self.spectrometer_manager.spectrometer
         graph = self.plot_panel.graph
+        self._total_counts+=ncounts
+        mi, ma = graph.get_x_limits()
+        dev = (ma - mi) * 0.05
+        if (self._total_counts + dev) > ma:
+            graph.set_x_limits(0,self._total_counts + (ma - mi) * 0.25)
+            
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -989,7 +1001,7 @@ class AutomatedRun(Loggable):
 
             self.signals = dict(zip(keys, signals))
 
-            kw = dict(series=series, do_after=1,
+            kw = dict(series=series, do_after=100,
                       update_y_limits=True,
                       ypadding='0.5'
                       )
@@ -1012,16 +1024,18 @@ class AutomatedRun(Loggable):
                 kw['fit'] = fi
                 func(x, signal, kw)
 
-            mi, ma = graph.get_x_limits()
-            dev = (ma - mi) * 0.05
-            if (x + dev) > ma:
-                graph.suppress_regression = True
-                for j, _ in enumerate(graph.plots):
-                    graph.set_x_limits(0, x + (ma - mi) * 0.25, plotid=j)
-                graph.suppress_regression = False
-            graph._update_graph()
+#            mi, ma = graph.get_x_limits()
+#            dev = (ma - mi) * 0.05
+#            if (x + dev) > ma:
+#                do_later(graph.set_x_limits, 0,x + (ma - mi) * 0.25)
+#                graph.suppress_regression = True
+#                for j, _ in enumerate(graph.plots):
+#                    graph.set_x_limits(0, x + (ma - mi) * 0.25, plotid=j)
+#                graph.suppress_regression = False
+#            graph._update_graph()
             data_write_hook(x, keys, signals)
-
+            do_later(graph._update_graph)
+            
         return True
 
 
