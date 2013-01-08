@@ -79,8 +79,8 @@ class RemoteResource(object):
 #===============================================================================
 # threading.Event interface
 #===============================================================================
-    def read(self):
-        resp = self.handle.ask('Read {}'.format(self.name))
+    def read(self, verbose=True):
+        resp = self.handle.ask('Read {}'.format(self.name), verbose=verbose)
         if resp is not None:
             return int(resp)
 
