@@ -120,59 +120,20 @@ def install_pychron_suite():
 
     apps = args.applications
     for ai in apps:
+        template = None
         if ai == 'pychron':
-            temp = PychronTemplate()
+            template = PychronTemplate()
         elif ai == 'remote_hardware_server':
-            temp = RemoteHardwareServerTemplate()
+            template = RemoteHardwareServerTemplate()
 #        elif ai == '':
-#            temp = ProcessManagerTemplate()
+#            template = ProcessManagerTemplate()
         elif ai == 'bakedpy':
-            temp = BakeoutTemplate()
-        if temp:
-            temp.install(version, src_dir)
-#    #build pychron
-#    i = Installer('pychron', 'pychron', icon_name='pyvalve')
-#    i.version = version
-#    i.install(src_dir)
-#
-#    #build remote hardware server
-#    i.prefix = 'remote_hardware_server'
-#    i.name = 'remote_hardware_server'
-#    default_pkgs = ['rpc', 'helpers', 'led']
-#    i.include_pkgs = ['remote_hardware', 'messaging'] + default_pkgs
-#
-#    default_mods = ['paths', 'loggable', 'config_loadable',
-#                    'viewable', 'managers/displays/rich_text_display',
-#                    'managers/manager',
-#                    ]
-#    i.include_mods = [
-#                      'managers/remote_hardware_server_manager',
-#                      ] + default_mods
-#    i.install(src_dir)
-#
-##    build bakeout
-#    i.prefix = 'bakeout'
-#    i.name = 'bakeout'
-#    i.include_mods = ['hardware/bakeout_controller',
-#                      'hardware/watlow_ezzone',
-#                      'database/orms/bakeout_orm',
-#                      'database/adapters/bakeout_adapter',
-#                      'database/selectors/bakeout_selector',
-#                      'database/data_warehouse',
-#                      'managers/script_manager',
-#                      'has_communicator'
-#                      ] + default_mods
-#    i.include_pkgs = ['bakeout',
-#                      'hardware/core',
-#                      'hardware/gauges',
-#                      'scripts',
-#                      'managers/data_managers',
-#                      'graph',
-#                      'data_processing/time_series',
-#                      'database/core'
-#                      ] + default_pkgs
-#
-#    i.install(src_dir)
+            template = BakeoutTemplate()
+
+        if template:
+            template.install(version, src_dir)
+        else:
+            print 'Invalid application name {}. Valid Names "pychron", "remote_hardware_server", "bakedpy"'.format(ai)
 
     # move data into place
     if not args.data:
