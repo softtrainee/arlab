@@ -264,14 +264,19 @@ class ExtractionLinePyScript(ValvePyScript):
         self.info('waiting for {} < {}'.format(name, criterion))
         r = self.runner.get_resource(name)
 
+        cnt = 0
         resp = r.read()
         if resp is not None:
             while resp != criterion:
-                resp = r.read()
+
+                resp = r.read(verbose=cnt % 10 == 0)
                 if resp is None:
                     continue
 
                 time.sleep(1)
+                cnt += 1
+                if cnt > 100:
+                    cnt = 0
 
         self.info('finished waiting')
 
