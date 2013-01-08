@@ -176,9 +176,9 @@ class AutomatedRun(Loggable):
     termination_conditions = List
     truncation_conditions = List
     action_conditions = List
-    
-    _total_counts=0
-    
+
+    _total_counts = 0
+
     def add_termination(self, attr, comp, value, start_count, frequency):
         '''
             attr must be an attribute of arar_age
@@ -314,7 +314,7 @@ class AutomatedRun(Loggable):
         self.overlap_evt = TEvent()
         self.info('Start automated run {}'.format(self.name))
         self._alive = True
-        self._total_counts=0
+        self._total_counts = 0
 
     def cancel(self):
         self._alive = False
@@ -619,11 +619,11 @@ class AutomatedRun(Loggable):
 
 #            g.set_x_limits(min=0, max=400, plotid=i)
         g.set_x_limits(min=0, max=400)
-        
+
         g.suppress_regression = False
         self._active_detectors = [spec.get_detector(n) for n in dets]
         self.plot_panel.detectors = self._active_detectors
-        
+
     def set_regress_fits(self, fits, series=0):
         n = len(self._active_detectors)
         if isinstance(fits, str):
@@ -951,12 +951,12 @@ class AutomatedRun(Loggable):
 
         spec = self.spectrometer_manager.spectrometer
         graph = self.plot_panel.graph
-        self._total_counts+=ncounts
+        self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
-            graph.set_x_limits(0,self._total_counts + (ma - mi) * 0.25)
-            
+            graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
+
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1035,7 +1035,7 @@ class AutomatedRun(Loggable):
 #            graph._update_graph()
             data_write_hook(x, keys, signals)
             do_later(graph._update_graph)
-            
+
         return True
 
 
@@ -1244,7 +1244,6 @@ class AutomatedRun(Loggable):
                           sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
 
-
         for pi in self.get_position_list():
             if isinstance(pi, tuple):
                 if len(pi) > 1:
@@ -1262,7 +1261,7 @@ class AutomatedRun(Loggable):
 
         if self.spectrometer_manager:
             spec_dict = self.spectrometer_manager.make_parameters_dict()
-            db.add_spectrometer_parameters(meas, **spec_dict)
+            db.add_spectrometer_parameters(meas, spec_dict)
             for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
                 det = db.add_detector(det)
                 db.add_deflection(meas, det, deflection)
@@ -1273,7 +1272,8 @@ class AutomatedRun(Loggable):
     def _save_history_info(self, analysis, name):
         db = self.db
 
-        if self.analysis_type != 'unknown':
+        if self.analysis_type.startswith('blank') or \
+            self.analysis_type.startswith('background'):
             return
 
         pb = getattr(self.experiment_manager, '_prev_{}'.format(name))

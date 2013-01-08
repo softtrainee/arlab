@@ -128,7 +128,7 @@ class IsotopeContextMenuMixin(ContextMenuMixin):
                     actions.append(self.action_factory('Include', 'set_status_include'))
                 actions.append(self.action_factory('Void', 'set_status_void'))
 
-        contents.append(MenuManager(name='Analysis', *actions))
+                contents.append(MenuManager(name='Analysis', *actions))
 
 #        contents.append(MenuManager(
 #                             self.action_factory('Recall', 'recall_analysis', enabled=enabled),

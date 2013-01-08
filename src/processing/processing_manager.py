@@ -341,7 +341,6 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         self.figures.append((fig, obj, table))
         self.open_view(fig)
 
-
 #===============================================================================
 # 
 #===============================================================================
@@ -352,7 +351,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             by default use a db connection
         '''
         d = self.selector_manager
-#        return True
+        return True
         info = d.edit_traits(kind='livemodal')
         if info.result:
             return True
@@ -704,7 +703,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if not db.connected:
             db.connect()
 
-        d.select_labnumber([6])
+        d.select_labnumber([22236])
         return d
 
     def _search_manager_default(self):

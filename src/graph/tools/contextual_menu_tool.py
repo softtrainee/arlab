@@ -15,7 +15,6 @@
 #===============================================================================
 
 
-
 #============= enthought library imports =======================
 from traits.api import Any
 from enable.api import Interactor

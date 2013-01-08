@@ -22,6 +22,7 @@ from src.viewable import Viewable, ViewableHandler
 import math
 from src.processing.analysis_means import AnalysisRatioMean, \
     AnalysisIntensityMean
+from src.database.core.database_selector import ColumnSorterMixin
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -83,6 +84,7 @@ class AnalysisAdapter(TabularAdapter):
 
     def _get_error(self, k):
         return self._floatfmt(getattr(self.item, k).std_dev(), n=6)
+
 
 class AnalysisIntensityAdapter(AnalysisAdapter):
     columns = [
@@ -204,6 +206,7 @@ class AnalysisRatioAdapter(AnalysisAdapter):
     def _get_kcl_error_text(self):
         return self._get_error('kcl')
 
+
 class MeanAdapter(AnalysisAdapter):
     nanalyses_width = Int(40)
     def get_bg_color(self, obj, trait, row):
@@ -212,6 +215,7 @@ class MeanAdapter(AnalysisAdapter):
             bgcolor = '#F0F8FF'
 
         return bgcolor
+
 
 class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
     columns = [('N', 'nanalyses'),
@@ -248,12 +252,14 @@ class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
                (u'\u00b11s', 'age_error'),
                ]
 
+
 class TabularAnalysisHandler(ViewableHandler):
     def object_title_changed(self, info):
         if info.initialized:
             info.ui.title = info.object.title
 
-class TabularAnalysisManager(Viewable):
+
+class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     analyses = List
     ratio_means = Property(depends_on='analyses.[temp_status,status]')
     intensity_means = Property(depends_on='analyses.[temp_status,status]')
@@ -288,6 +294,7 @@ class TabularAnalysisManager(Viewable):
                               editor=TabularEditor(adapter=AnalysisIntensityAdapter(),
                                    dclicked='update_selected_analysis',
                                    selected='selected_analysis',
+                                   column_clicked='column_clicked',
                                    editable=False,
                                    auto_update=True
                                    )),
@@ -296,7 +303,8 @@ class TabularAnalysisManager(Viewable):
                               show_label=False,
                               editor=TabularEditor(adapter=AnalysisIntensityMeanAdapter(),
                                                    editable=False,
-                                                   auto_update=True
+                                                   auto_update=True,
+                                                   column_clicked='column_clicked',
                                                    )
                                 )
 
@@ -308,6 +316,7 @@ class TabularAnalysisManager(Viewable):
                           editor=TabularEditor(adapter=AnalysisRatioAdapter(),
                                dclicked='update_selected_analysis',
                                selected='selected_analysis',
+                               column_clicked='column_clicked',
                                editable=False,
                                auto_update=True
                                )
@@ -317,7 +326,8 @@ class TabularAnalysisManager(Viewable):
                           show_label=False,
                           editor=TabularEditor(adapter=AnalysisRatioMeanAdapter(),
                                                editable=False,
-                                               auto_update=True
+                                               auto_update=True,
+                                               column_clicked='column_clicked',
                                                )
                             )
 
