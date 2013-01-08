@@ -349,7 +349,7 @@ class ExperimentExecutor(ExperimentManager):
             else:
                 t.join()
 
-            if run.analysis_type.startswith('blank'):
+            if self.isAlive() and run.analysis_type.startswith('blank'):
                 pb = run.get_corrected_signals()
                 if pb is not None:
                     self._prev_blanks = pb
