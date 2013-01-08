@@ -60,7 +60,7 @@ class PathMixin(BaseMixin):
 class ScriptTable(BaseMixin):
     script_name = Column(String(80))
     script_blob = Column(BLOB)
-    hash = Column(Integer)
+    hash = Column(String(32))
 
 
 #============= EOF =============================================

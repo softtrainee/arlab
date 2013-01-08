@@ -292,9 +292,7 @@ class meas_ExtractionTable(Base, ScriptTable):
 
     sensitivity_id = foreignkey('gen_SensitivityTable')
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
-    analysis = relationship('meas_AnalysisTable', backref='extraction',
-                          uselist=False
-                          )
+    analyses = relationship('meas_AnalysisTable', backref='extraction')
     positions = relationship('meas_PositionTable', backref='extraction')
 
 
@@ -308,12 +306,12 @@ class meas_PositionTable(Base, BaseMixin):
 
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):
-    measurement_id = foreignkey('meas_MeasurementTable')
+#    measurement_id = foreignkey('meas_MeasurementTable')
     extraction_lens = Column('extraction_lens', Float)
     ysymmetry = Column(Float)
     zsymmetry = Column(Float)
     zfocus = Column(Float)
-
+    measurements = relationship('meas_MeasurementTable', backref='spectrometer_parameters')
 
 class meas_SpectrometerDeflectionsTable(Base, BaseMixin):
     detector_id = foreignkey('gen_DetectorTable')
@@ -331,16 +329,15 @@ class meas_IsotopeTable(Base, BaseMixin):
     results = relationship('proc_IsotopeResultsTable', backref='isotope')
 
 class meas_MeasurementTable(Base, ScriptTable):
-    analysis = relationship('meas_AnalysisTable', backref='measurement',
-                          uselist=False
-                          )
+    analyses = relationship('meas_AnalysisTable', backref='measurement')
     mass_spectrometer_id = foreignkey('gen_MassSpectrometerTable')
     analysis_type_id = foreignkey('gen_AnalysisTypeTable')
+    spectrometer_parameters_id = foreignkey('meas_SpectrometerParametersTable')
 
-    spectrometer_parameters = relationship('meas_SpectrometerParametersTable',
-                                         backref='measurement',
-                                         uselist=False
-                                         )
+#    spectrometer_parameters = relationship('meas_SpectrometerParametersTable',
+#                                         backref='measurement',
+#                                         uselist=False
+#                                         )
     deflections = relationship('meas_SpectrometerDeflectionsTable', backref='measurement')
 
 

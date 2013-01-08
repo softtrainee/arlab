@@ -364,20 +364,6 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return meas
 
-    def _get_script(self, name, txt):
-        getter = getattr(self, 'get_{}'.format(name))
-        m = self._hash_factory()
-        m.update(txt)
-        return getter(m.digest())
-
-    def _make_hash(self, txt):
-        ha = self._hash_factory()
-        ha.update(txt)
-        return ha.digest()
-
-    def _hash_factory(self):
-        return hashlib.new('md5')
-
     def add_mass_spectrometer(self, name):
         ms = gen_MassSpectrometerTable(name=name)
         return self._add_unique(ms, 'mass_spectrometer', name)
@@ -448,7 +434,6 @@ class IsotopeAdapter(DatabaseAdapter):
             self._add_item(sam)
         return sample
 
-
     def add_selected_histories(self, analysis, **kw):
         sh = analysis.selected_histories
         if sh is None:
@@ -463,10 +448,18 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return s
 
-    def add_spectrometer_parameters(self, meas, **kw):
-        sp = meas_SpectrometerParametersTable(**kw)
+    def add_spectrometer_parameters(self, meas, params):
+        '''
+        '''
+        ha = self._make_hash(params)
+        sp = self.get_spectrometer_parameters(ha)
+        if sp is None:
+            sp = meas_SpectrometerParametersTable(hash=ha,
+                                                  **params)
+
         if meas:
-            meas.spectrometer_parameters = sp
+            sp.measurements.append(meas)
+
         return sp
 
     def add_deflection(self, meas, det, value):
@@ -699,6 +692,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_analysis_types(self, **kw):
         return self._retrieve_items(gen_AnalysisTypeTable)
 
+    def get_spectrometer_parameters(self, value):
+        return self._retrieve_item(meas_SpectrometerParametersTable, value, key='hash')
 #===============================================================================
 # deleters
 #===============================================================================
@@ -722,6 +717,25 @@ class IsotopeAdapter(DatabaseAdapter):
     def delete_labnumber(self, name):
         return gen_LabTable, 'labnumber'
 
+#===============================================================================
+# private
+#===============================================================================
+    def _get_script(self, name, txt):
+        getter = getattr(self, 'get_{}'.format(name))
+        m = self._hash_factory()
+        m.update(txt)
+        return getter(m.digest())
+
+    def _make_hash(self, txt):
+        if isinstance(txt, dict):
+            txt = repr(frozenset(txt.items()))
+
+        ha = self._hash_factory()
+        ha.update(txt)
+        return ha.hexdigest()
+
+    def _hash_factory(self):
+        return hashlib.new('md5')
 
     def _build_query_and(self, table, name, jtable, attr, q=None):
         '''
