@@ -311,6 +311,7 @@ class meas_SpectrometerParametersTable(Base, BaseMixin):
     ysymmetry = Column(Float)
     zsymmetry = Column(Float)
     zfocus = Column(Float)
+    hash = Column(String(32))
     measurements = relationship('meas_MeasurementTable', backref='spectrometer_parameters')
 
 class meas_SpectrometerDeflectionsTable(Base, BaseMixin):
