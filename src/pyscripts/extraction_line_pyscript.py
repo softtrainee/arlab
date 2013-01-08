@@ -269,6 +269,7 @@ class ExtractionLinePyScript(ValvePyScript):
         if resp is not None:
             while resp != criterion:
 
+                #only verbose every 10s
                 resp = r.read(verbose=cnt % 10 == 0)
                 if resp is None:
                     continue

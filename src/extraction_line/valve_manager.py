@@ -117,6 +117,42 @@ class ValveManager(Manager):
 
             pickle.dump(obj, f)
 
+    def load_valve_states(self):
+        elm = self.extraction_line_manager
+        word = self.get_state_word()
+        if word is not None:
+            for k in self.valves.keys():
+                if word.has_key(k):
+                    s = word[k]
+                    elm.update_valve_state(k, s)
+
+    def load_valve_lock_states(self):
+        word = self.get_lock_state_word()
+        if word is not None:
+            for k in self.valves.keys():
+                if word.has_key(k):
+                    func = self.lock if word[k] else self.unlock
+                    func(k, save=False)
+
+    def get_state_word(self):
+        actuator = self.actuators[0]
+        word = actuator.get_state_word()
+        return self._parse_word(word)
+
+    def get_lock_word(self):
+        actuator = self.actuators[0]
+        word = actuator.get_lock_word()
+        return self._parse_word(word)
+
+    def _parse_word(self, word):
+        if word is not None:
+            if ',' in word:
+                d = dict([(r[:-1], bool(r[-1:])) for r in word.split(',')])
+            else:
+                d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
+#
+            return d
+
     def _load_states(self):
         elm = self.extraction_line_manager
         for k, v in self.valves.iteritems():

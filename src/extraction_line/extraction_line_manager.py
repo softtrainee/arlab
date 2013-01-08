@@ -131,7 +131,17 @@ class ExtractionLineManager(Manager):
                 except pickle.PickleError:
                     pass
 
+        if self.mode == 'client':
+            self.start_status()
 
+    def start_status(self):
+        def func():
+            while self.isAlive():
+                self.valve_manager.load_valve_states()
+                self.valve_manager.load_valve_lock_states()
+
+        t = Thread(target=func)
+        t.start()
 
 #    def _view_controller(self):
 #        print self.ui.control
