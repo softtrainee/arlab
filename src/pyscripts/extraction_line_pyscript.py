@@ -261,7 +261,7 @@ class ExtractionLinePyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def wait(self, name=None, criterion=0):
-        self.info('waiting for {} < {}'.format(name, criterion))
+        self.info('waiting for {} = {}'.format(name, criterion))
         r = self.runner.get_resource(name)
 
         cnt = 0
