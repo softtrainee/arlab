@@ -138,72 +138,61 @@ class Ideogram(Plotter):
         if not analyses:
             return
 
-        ages, errors = self._get_ages(analyses)
         def get_ages_errors(group_id):
-#            nages = [a.age[0] for a in analyses if a.group_id == group_id]
-#            nerrors = [a.age[1] for a in analyses if a.group_id == group_id]
 
-            nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev()) for a in analyses if a.group_id == group_id])
-            aa = array(nages)
-            ee = array(nerrors)
-            return aa, ee
+            nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
+                                   for a in analyses if a.group_id == group_id])
+            return array(nages), array(nerrors)
 
-        if self.ideogram_of_means:
-
-            ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
-            xmin, xmax = self._get_limits(ages)
-            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
-
-        else:
-            xmin, xmax = self._get_limits(ages)
-            start = 1
-            offset = 0
-            for group_id in group_ids:
-                ans = [a for a in analyses if a.group_id == group_id]
-                labnumber = self.get_labnumber(ans)
-                nages, nerrors = get_ages_errors(group_id)
-                offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
-                               start=start,
-                               labnumber=labnumber,
-                               offset=offset,
-                               )
-
-                aux_namespace = dict(nages=nages,
-                                     nerrors=nerrors,
-                                     start=start)
-
-                for plotid, ap in enumerate(aux_plots):
-                    #get aux type and plot
-                    try:
-                        func = getattr(self, '_aux_plot_{}'.format(ap['func']))
-                        func(analyses, g, padding, plotid + 1, group_id, aux_namespace,
-                             value_scale=ap['scale']
-                             )
-                    except AttributeError, e:
-                        print e
-
-                #add analysis number plot
-                start = start + len(ans) + 1
-
-#            maxp = g.maxprob
-
-#            step = maxp / len(group_ids)
-#            print step
-#            step = 1
-#            #tweak age labels
-#            for i, (k, v) in enumerate(g.plots[0].plots.iteritems()):
-#                print k, v[0]
+#        if self.ideogram_of_means:
 #
-#                kk = int(k[-1]) + 1
-#                if not kk % 3:
-##                if k in ['plot2', 'plot5', ]:
-#                    v[0].value.set_data([(i + 1) * step])
+#            ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
+#            xmin, xmax = self._get_limits(ages)
+#            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
+#
+#        else:
 
+        ages, _ = self._get_ages(analyses)
+        options = self.plotter_options
+        ucr = options.use_centered_range
+        if ucr:
+            xmin, xmax = self._get_limits(ages, centered_range=options.centered_range)
+        else:
+            xmin, xmax = options.xlow, options.xhigh
 
+        if xmax == 0 and xmin == 0:
+            xmin, xmax = self._get_limits(ages)
 
-        g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=0)
-        for i, _ in enumerate(aux_plots):
-            g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=i + 1)
+        start = 1
+        offset = 0
+        for group_id in group_ids:
+            ans = [a for a in analyses if a.group_id == group_id]
+            labnumber = self.get_labnumber(ans)
+            nages, nerrors = get_ages_errors(group_id)
+            offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
+                           start=start,
+                           labnumber=labnumber,
+                           offset=offset,
+                           )
+
+            aux_namespace = dict(nages=nages,
+                                 nerrors=nerrors,
+                                 start=start)
+
+            for plotid, ap in enumerate(aux_plots):
+                #get aux type and plot
+                try:
+                    func = getattr(self, '_aux_plot_{}'.format(ap['func']))
+                    func(analyses, g, padding, plotid + 1, group_id, aux_namespace,
+                         value_scale=ap['scale']
+                         )
+                except AttributeError, e:
+                    print e
+
+            #add analysis number plot
+            start = start + len(ans) + 1
+
+        g.set_x_limits(min=xmin, max=xmax)
 
         minp = 0
         maxp = g.maxprob
@@ -620,12 +609,18 @@ class Ideogram(Plotter):
     def _get_adapter(self):
         return IdeoResultsAdapter
 
-    def _get_limits(self, ages):
+    def _get_limits(self, ages, centered_range=None, pad=0.02):
         xmin = min(ages)
         xmax = max(ages)
         dev = xmax - xmin
-        xmin -= dev * 0.01
-        xmax += dev * 0.01
+        if centered_range is None:
+            xmin -= dev * pad
+            xmax += dev * pad
+        else:
+            c = xmin + dev / 2.0
+            xmin = c - centered_range / 2.0
+            xmax = c + centered_range / 2.0
+
         return xmin, xmax
 
     def _get_plot_label_text(self):

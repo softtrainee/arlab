@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Property, Str, Enum, Int
+from traits.api import HasTraits, List, Property, Str, Enum, Int, Float, Bool
 from traitsui.api import View, Item, HGroup, Label, Group, \
     ListEditor, InstanceEditor, EnumEditor, Spring, spring, VGroup
 import apptools.sweet_pickle as pickle
@@ -205,14 +205,18 @@ class PlotterOptions(Viewable):
     def _get_groups(self):
         pass
 
+    def _get_x_axis_group(self):
+        v = VGroup(
+                    self._create_axis_group('x', 'title'),
+                    self._create_axis_group('x', 'tick'),
+                    show_border=True,
+                    label='X')
+        return v
+
     def traits_view(self):
         default_grp = VGroup(Item('name'),
                              Item('title'),
-                             VGroup(
-                                    self._create_axis_group('x', 'title'),
-                                    self._create_axis_group('x', 'tick'),
-                                    show_border=True,
-                                    label='X'),
+                             self._get_x_axis_group(),
 
                              VGroup(
                                     self._create_axis_group('y', 'title'),
@@ -251,6 +255,27 @@ class PlotterOptions(Viewable):
 class IdeogramOptions(PlotterOptions):
     probability_curve_kind = Enum('cumulative', 'kernel')
     mean_calculation_kind = Enum('weighted mean', 'kernel')
+    xlow = Float
+    xhigh = Float
+    use_centered_range = Bool
+    centered_range = Float(0.5)
+
+    def _get_x_axis_group(self):
+        vg = super(IdeogramOptions, self)._get_x_axis_group()
+
+        limits_grp = HGroup(Item('xlow', label='Min.'),
+                            Item('xhigh', label='Max.'),
+                            enabled_when='not object.use_centered_range'
+                            )
+        centered_grp = HGroup(Item('use_centered_range', label='Center'),
+                            Item('centered_range', show_label=False, enabled_when='object.use_centered_range')
+                            )
+        vg.content.append(limits_grp)
+        vg.content.append(centered_grp)
+
+        return vg
+
+
     def _get_groups(self):
         g = Group(
                   Item('probability_curve_kind',
@@ -265,7 +290,13 @@ class IdeogramOptions(PlotterOptions):
         attrs = super(IdeogramOptions, self)._get_dump_attrs()
         return attrs + [
                         'probability_curve_kind',
-                        'mean_calculation_kind'
+                        'mean_calculation_kind',
+                        'xlow', 'xhigh',
+                        'use_centered_range', 'centered_range'
                         ]
 
+
+if __name__ == '__main__':
+    ip = IdeogramOptions()
+    ip.configure_traits()
 #============= EOF =============================================
