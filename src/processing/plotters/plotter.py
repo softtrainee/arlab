@@ -76,8 +76,10 @@ class Plotter(Viewable):
     sorted_analyses = Property(depends_on='analyses')
     error_bar_overlay = Any
     figure = Any
-
     graph_panel_info = Instance(GraphPanelInfo, ())
+
+    options = None
+    plotter_options = None
 
     def edit_analyses(self):
         self.processing_manager.edit_analyses()
@@ -131,6 +133,7 @@ class Plotter(Viewable):
 
     def build(self, analyses=None, padding=None,
               options=None,
+              plotter_options=None,
               new_container=True
               ):
 
@@ -139,8 +142,11 @@ class Plotter(Viewable):
 
         if options is None:
             options = self.options
+        if plotter_options is None:
+            plotter_options = self.plotter_options
 
         self.options = options
+        self.plotter_options = plotter_options
         self.analyses = analyses
         graph_ids = sorted(list(set([a.graph_id for a in analyses])))
         def get_analyses(gii):
@@ -161,12 +167,14 @@ class Plotter(Viewable):
         self.results = []
         plots = []
 
-        aux_plots = self._get_plot_option(options, 'aux_plots', default=[])
         title = self._get_plot_option(options, 'title')
-        xtick_font = self._get_plot_option(options, 'xtick_font', default='modern 10')
-        xtitle_font = self._get_plot_option(options, 'xtitle_font', default='modern 12')
-        ytick_font = self._get_plot_option(options, 'ytick_font', default='modern 10')
-        ytitle_font = self._get_plot_option(options, 'ytitle_font', default='modern 12')
+
+        aux_plots = self._assemble_aux_plots(plotter_options)
+        xtick_font = plotter_options.xtick_font
+        xtitle_font = plotter_options.xtitle_font
+        ytick_font = plotter_options.ytick_font
+        ytitle_font = plotter_options.ytitle_font
+
         for i in range(r):
             for j in range(c):
                 k = i * c + j
@@ -196,6 +204,43 @@ class Plotter(Viewable):
         op.invalidate_and_redraw()
         self._plots = plots
         return op, plots
+
+    def _assemble_aux_plots(self, po):
+        aux = []
+        if po is not None:
+            aux_plots = po.get_aux_plots()
+            if aux_plots is None:
+                aux_plots = []
+
+            for ap in aux_plots:
+                if isinstance(ap, str):
+                    name = ap
+                    scale = 'linear'
+                    height = 100
+                else:
+                    name = ap.name
+                    scale = ap.scale
+                    height = ap.height
+
+                if name == 'radiogenic':
+                    d = dict(func='radiogenic_percent',
+                              ytitle='40Ar* %',
+                              )
+                elif name == 'analysis_number':
+                    d = dict(func='analysis_number',
+                         ytitle='Analysis #',
+                         )
+                elif name == 'kca':
+                    d = dict(func='kca',
+                         ytitle='K/Ca',
+                         )
+                else:
+                    continue
+
+                d['height'] = height
+                d['scale'] = scale
+                aux.append(d)
+        return aux
 
     def _build_xtitle(self, *args, **kw):
         pass

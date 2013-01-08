@@ -384,9 +384,10 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     def _display_ideogram(self, ans, po, title, highlight_omitted=True):
         rr = self._ideogram(ans,
+                            po,
                             title=title,
                             highlight_omitted=highlight_omitted,
-                            aux_plots=po.get_aux_plots(),
+#                            aux_plots=po.get_aux_plots(),
                             probability_curve_kind=po.probability_curve_kind,
                             mean_calculation_kind=po.mean_calculation_kind
                             )
@@ -470,14 +471,15 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         return g
 
     def _ideogram(self, analyses,
+                  plotter_options,
                   probability_curve_kind='cumulative',
                   mean_calculation_kind='weighted_mean',
-                  aux_plots=None,
+#                  aux_plots=None,
                   title=None,
-                  xtick_font=None,
-                  xtitle_font=None,
-                  ytick_font=None,
-                  ytitle_font=None,
+#                  xtick_font=None,
+#                  xtitle_font=None,
+#                  ytick_font=None,
+#                  ytitle_font=None,
                   data_label_font=None,
                   metadata_label_font=None,
                   highlight_omitted=True,
@@ -495,12 +497,17 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                      mean_calculation_kind=mean_calculation_kind
                      )
 
-        ps = self._build_aux_plots(aux_plots)
-        options = dict(aux_plots=ps,
-                       xtitle_font=xtitle_font,
-                       xtick_font=xtick_font,
-                       ytitle_font=ytitle_font,
-                       ytick_font=ytick_font,
+#        ps = self._build_aux_plots(plotter_options.get_aux_plots())
+        options = dict(
+#                       aux_plots=ps,
+#                       use_centered_range=plotter_options.use_centered_range,
+#                       centered_range=plotter_options.centered_range,
+#                       xmin=plotter_options.xmin,
+#                       xmax=plotter_options.xmax,
+#                       xtitle_font=xtitle_font,
+#                       xtick_font=xtick_font,
+#                       ytitle_font=ytitle_font,
+#                       ytick_font=ytick_font,
                        data_label_font=data_label_font,
                        metadata_label_font=metadata_label_font,
                        title=title,
@@ -508,7 +515,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                        display_mean_indicator=display_mean_indicator,
                        )
 
-        gideo = p.build(analyses, options=options)
+        gideo = p.build(analyses, options=options, plotter_options=plotter_options)
         if gideo:
             gideo, _plots = gideo
             g.container.add(gideo)
@@ -549,39 +556,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 g.edit_traits()
             return g, isochron
 
-    def _build_aux_plots(self, aux_plots):
-        ps = []
-        if aux_plots is None:
-            aux_plots = []
-        for ap in aux_plots:
-            if isinstance(ap, str):
-                name = ap
-                scale = 'linear'
-                height = 100
-            else:
-                name = ap.name
-                scale = ap.scale
-                height = ap.height
 
-            if name == 'radiogenic':
-                d = dict(func='radiogenic_percent',
-                          ytitle='40Ar* %',
-                          )
-            elif name == 'analysis_number':
-                d = dict(func='analysis_number',
-                     ytitle='Analysis #',
-                     )
-            elif name == 'kca':
-                d = dict(func='kca',
-                     ytitle='K/Ca',
-                     )
-            else:
-                continue
-
-            d['height'] = height
-            d['scale'] = scale
-            ps.append(d)
-        return ps
 #    def make_title(self, analyses=None):
 #        if analyses is None:
 #            analyses = self.analyses
@@ -703,7 +678,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if not db.connected:
             db.connect()
 
-        d.select_labnumber([22236])
+        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):
