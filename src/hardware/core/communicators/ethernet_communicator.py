@@ -58,7 +58,7 @@ class TCPHandler(Handler):
 class UDPHandler(Handler):
     datasize = 2 ** 10
 
-    def open_socket(self, addr, timeout=0.1):
+    def open_socket(self, addr, timeout=0.75):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         #self.sock.connect(addr)
