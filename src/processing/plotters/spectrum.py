@@ -31,6 +31,7 @@ from enable.colors import color_table
 from src.processing.argon_calculations import age_equation
 from src.processing.analysis import IntegratedAnalysis
 from uncertainties import ufloat
+from src.constants import PLUSMINUS
 #from chaco.plot_label import PlotLabel
 #from enable.font_metrics_provider import font_metrics_provider
 #from chaco.data_label import DataLabel
@@ -380,7 +381,7 @@ class Spectrum(Plotter):
 #        spec.overlays.append(pl)
 
 
-        text = u'{:0.3f} \u00b1{:0.3f}'.format(age, error)
+        text = u'{:0.3f} {}{:0.3f}'.format(age, PLUSMINUS, error)
         dl = self._add_data_label(spec, text, (50, miages),
                                   font='modern 18'
                                   )

@@ -23,6 +23,7 @@ from numpy import array, asarray, where
 from tinv import tinv
 from src.loggable import Loggable
 from src.helpers.alphas import ALPHAS
+from src.constants import PLUSMINUS
 
 
 class BaseRegressor(Loggable):
@@ -72,8 +73,8 @@ class BaseRegressor(Loggable):
             fmt = '{{:0.{}e}}' if abs(ei) < math.pow(10, -error_sig_figs) else '{{:0.{}f}}'
             ei = fmt.format(error_sig_figs).format(ei)
 
-            vfmt = u'{}= {}\u00b1{} {}'
-            coeffs.append(vfmt.format(a, ci, ei, pp))
+            vfmt = u'{}= {}{}{} {}'
+            coeffs.append(vfmt.format(a, ci, PLUSMINUS, ei, pp))
 
 #        s = ', '.join([fmt.format(a, ci, pm, cei, self.percent_error(ci, cei))
 #                       for a, ci, cei in zip(ALPHAS, cs, ce)

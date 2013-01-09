@@ -27,6 +27,7 @@ from src.database.isotope_analysis.summary import Summary
 from src.graph.graph import Graph
 from src.database.orms.isotope_orm import proc_SelectedHistoriesTable
 from pyface.timer.do_later import do_later
+from src.constants import PLUSMINUS
 
 
 class HistoryView(HasTraits):
@@ -193,7 +194,7 @@ class HistorySummary(Summary):
             else:
                 uv = bi.user_value
                 ue = bi.user_error
-                g.set_plot_title('{} {:0.5f} {}{:0.6f}'.format(iso, uv, u'\u00b1', ue), plotid=i)
+                g.set_plot_title('{} {:0.5f} {}{:0.6f}'.format(iso, uv, PLUSMINUS, ue), plotid=i)
 
                 kw = dict(plotid=i, color=(1, 0, 0))
                 g.add_horizontal_rule(uv, line_style='solid',

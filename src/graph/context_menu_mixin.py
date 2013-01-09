@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.menu import Action, Menu as MenuManager
+from src.constants import PLUSMINUS
 #from pyface.action.group import Group
 #from pyface.action.api import Group, MenuManager
 
@@ -144,8 +145,8 @@ class RegressionContextMenuMixin(ContextMenuMixin):
                  ('linear', 'cm_linear'),
                  ('parabolic', 'cm_parabolic'),
                  ('cubic', 'cm_cubic'),
-                 (u'average \u00b1SD', 'cm_average_std'),
-                 (u'average \u00b1SEM', 'cm_average_sem')
+                 (u'average {}SD'.format(PLUSMINUS), 'cm_average_std'),
+                 (u'average {}SEM'.format(PLUSMINUS), 'cm_average_sem')
                  ]
         menu = MenuManager(
                     *[self.action_factory(name, func) for name, func in actions],

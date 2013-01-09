@@ -23,71 +23,7 @@ from traits.api import HasTraits, Str, Int, Float, Property, Color, Any
 from src.loggable import Loggable
 
 from src.helpers import alphas
-
-
-#class AnalysisTabularAdapter(TabularAdapter):
-##    iso_keys = List
-##    columns = Property(depends_on='iso_keys')
-#    age_text = Property
-#    age_error_format = Str('%0.2f')
-#    age_width = Int(60)
-#    age_error_width = Int(40)
-#
-##    rid_width = Int(60)
-##    def get_column_keys(self):
-##        '''
-##            simple wrapper to add er columns
-##        '''
-##        isos = self.iso_keys
-##        es = map(lambda xi:'{}_er'.format(xi), isos)
-##        return [ci
-##                for pi in zip(isos, es)
-##                    for ci in pi]
-#
-#    def get_font(self, obj, trait, row):
-#        import wx
-#        s = 9
-#        f = wx.FONTFAMILY_DEFAULT
-#        st = wx.FONTSTYLE_NORMAL
-#        w = wx.FONTWEIGHT_NORMAL
-#        return wx.Font(s, f, st, w)
-#
-##    def _get_columns(self):
-##        return self._columns_factory()
-##
-##    def _columns_default(self):
-##        return self._columns_factory()
-##
-##    def _columns_factory(self):
-##        cols = [('Lab ID', 'rid'),
-##               ('Age', 'age'),
-##               ('Error', 'age_error'),
-##               ]
-##        colskeys = self.get_column_keys()
-##        def get_name(n):
-##            if n.endswith('_er'):
-##                return u'\u00b11s'
-##            else:
-##                return n.capitalize()
-##
-##        cols += [(get_name(i), i) for i in colskeys]
-##        for iso in colskeys:
-##            self.add_trait('{}_format'.format(iso),
-##                           '%0.4f')
-##            self.add_trait('{}_width'.format(iso),
-##                           60)
-##        return cols
-#
-#    def _get_age_text(self, trait, item):
-#        return '{:0.3f}'.format(self.item.age_value)
-#
-#    def get_text_color(self, obj, trait, row):
-#        o = getattr(obj, trait)[row]
-#        return o.color
-#
-#    def get_bg_color(self, obj, trait, row):
-#        o = getattr(obj, trait)[row]
-#        return o.bgcolor
+from src.constants import PLUSMINUS
 
 
 class Analysis(Loggable):
@@ -192,7 +128,7 @@ class Analysis(Loggable):
             pe = abs(e / a * 100)
         except ZeroDivisionError:
             pe = 'Inf'
-        return u'{:0.3f} \u00b1{:0.3f}({:0.2f}%)'.format(a, e, pe)
+        return u'{:0.3f} {}{:0.3f}({:0.2f}%)'.format(a, PLUSMINUS, e, pe)
 
 #    @property
 #    def timestamp(self):
@@ -281,7 +217,7 @@ class NonDBAnalysis(HasTraits):
             pe = abs(e / a * 100)
         except ZeroDivisionError:
             pe = 'Inf'
-        return u'{:0.3f} \u00b1{:0.3f}({:0.2f}%)'.format(a, e, pe)
+        return u'{:0.3f} {}{:0.3f}({:0.2f}%)'.format(a, PLUSMINUS, e, pe)
 
 class IntegratedAnalysis(NonDBAnalysis):
     rad40_percent = Property

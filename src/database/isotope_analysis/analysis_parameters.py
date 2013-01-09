@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Bool, Property
 from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
-from src.constants import FIT_TYPES
+from src.constants import FIT_TYPES, PLUSMINUS
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -47,7 +47,7 @@ class AnalysisParameters(HasTraits):
         except ZeroDivisionError:
             ee = 'Inf'
         e = '{:0.6f}'.format(e)
-        return u'\u00b1{:<12s}({}%)'.format(e, ee)
+        return u'{}{:<12s}({}%)'.format(PLUSMINUS, e, ee)
 
 #    def _name_changed(self):
 #        if self.name == 'Ar40':

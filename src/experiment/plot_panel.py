@@ -24,6 +24,7 @@ from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
 from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
+from src.constants import PLUSMINUS
 #============= standard library imports ========================
 #from numpy import Inf
 #from pyface.timer.do_later import do_later
@@ -122,8 +123,9 @@ class PlotPanel(Viewable):
 
     def _print_parameter(self, display, name, uvalue, **kw):
         name = '{:<15s}'.format(name)
-        msg = u'{}= {:0.3f} \u00b1{:0.4f}{}'.format(name,
+        msg = u'{}= {:0.3f} {}{:0.4f}{}'.format(name,
                                                     uvalue.nominal_value,
+                                                    PLUSMINUS,
                                                     uvalue.std_dev(),
                                                     self._get_pee(uvalue)
                                                     )
@@ -184,7 +186,7 @@ class PlotPanel(Viewable):
                 rr = ru / rl
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
-                  u'\u00b1' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
+                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
                     self._get_pee(rr)
             return res
 
@@ -249,7 +251,7 @@ class PlotPanel(Viewable):
 
             v = pad('{:0.5f}'.format(vv))
             e = pad('{:0.6f}'.format(ee), n=6)
-            v = v + u' \u00b1' + e + self._get_pee(uv)
+            v = v + u' {}'.format(PLUSMINUS) + e + self._get_pee(uv)
             return '{}{}={:>10s}'.format(iso, name, v)
 
         ts = [func(iso) for iso in self.isotopes]
