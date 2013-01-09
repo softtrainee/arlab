@@ -116,6 +116,7 @@ class ExperimentExecutor(ExperimentManager):
 
     def opened(self):
 #        self.info_display.clear()
+        self.end_at_run_completion = False
         self._was_executed = False
         self.stats.reset()
         super(ExperimentExecutor, self).opened()

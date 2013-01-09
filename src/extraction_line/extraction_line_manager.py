@@ -14,8 +14,8 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import  Instance
-from traitsui.api import View, Item
+from traits.api import  Instance, Button
+from traitsui.api import View, Item, HGroup, spring
 #=============standard library imports ========================
 import os
 import time
@@ -65,7 +65,7 @@ class ExtractionLineManager(Manager):
 
     learner = None
     mode = 'normal'
-
+#    refresh_state = Button('Refresh Valve States')
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -119,10 +119,10 @@ class ExtractionLineManager(Manager):
 #    def close(self, isok):
 #        e = self.explanation
 #        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-    def closed(self, ok):
-        self._update_status_flag.set()
-        return True
-    
+#    def closed(self, ok):
+#        self._update_status_flag.set()
+#        return True
+
     def opened(self):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
@@ -136,18 +136,18 @@ class ExtractionLineManager(Manager):
 
         if self.mode == 'client':
             self.start_status()
-
+#
     def start_status(self):
         def func():
             while not self._update_status_flag.isSet():
                 self.valve_manager.load_valve_states()
-                time.sleep(3)
-#                self.valve_manager.load_valve_lock_states()
-#                time.sleep(2)
-                
-        self._update_status_flag=Event()
-        t = Thread(target=func)
-        t.start()
+                time.sleep(1)
+                self.valve_manager.load_valve_lock_states()
+                time.sleep(5)
+#
+#        self._update_status_flag = Event()
+#        t = Thread(target=func)
+#        t.start()
 
 #    def _view_controller(self):
 #        print self.ui.control
@@ -408,10 +408,29 @@ class ExtractionLineManager(Manager):
             if selected:
                 self.explanation.selected = selected
 
+#===============================================================================
+# private
+#===============================================================================
+#===============================================================================
+# handlers
+#===============================================================================
+#    def _refresh_state_fired(self):
+#
+#        def func():
+#            self.valve_manager.load_valve_states()
+#            time.sleep(0.25)
+#            self.valve_manager.load_valve_lock_states()
+#
+#        t = Thread(target=func)
+#        t.start()
+
     def traits_view(self):
         '''
         '''
-        v = View(Item('canvas',
+        v = View(
+#                 HGroup(Item('refresh_state', show_label=False), spring),
+
+                 Item('canvas',
                       style='custom',
                       show_label=False),
                handler=self.handler_klass,
