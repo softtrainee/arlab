@@ -143,8 +143,8 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         win = self._get_active_window()
         if win:
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-#            p = self.save_file_dialog()
-            p = '/Users/ross/Sandbox/figure_export.pdf'
+            p = self.save_file_dialog()
+#            p = '/Users/ross/Sandbox/figure_export.pdf'
             if p:
                 gc = PdfPlotGraphicsContext(filename=p,
                                               pagesize='letter',
@@ -173,13 +173,13 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                                   ]
 
         if grouped_analyses:
-#            p = self.save_file_dialog()
-            p = '/Users/ross/Sandbox/figure_export.csv'
+            p = self.save_file_dialog()
+#            p = '/Users/ross/Sandbox/figure_export.csv'
             if p:
                 if kind == 'csv':
                     klass = CSVWriter
                 elif kind == 'pdf':
-                    p = '/Users/ross/Sandbox/figure_export.pdf'
+#                    p = '/Users/ross/Sandbox/figure_export.pdf'
                     klass = PDFWriter
                 elif kind == 'massspec':
                     klass = MassSpecCSVWriter
@@ -351,7 +351,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             by default use a db connection
         '''
         d = self.selector_manager
-        return True
+#        return True
         info = d.edit_traits(kind='livemodal')
         if info.result:
             return True
@@ -678,7 +678,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if not db.connected:
             db.connect()
 
-        d.select_labnumber([22233])
+#        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):

@@ -19,7 +19,7 @@ from traitsui.api import View, Item
 #=============standard library imports ========================
 import os
 import time
-from threading import Thread
+from threading import Thread, Event
 import pickle
 #=============local library imports  ==========================
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
@@ -119,7 +119,10 @@ class ExtractionLineManager(Manager):
 #    def close(self, isok):
 #        e = self.explanation
 #        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-
+    def closed(self, ok):
+        self._update_status_flag.set()
+        return True
+    
     def opened(self):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
@@ -136,10 +139,13 @@ class ExtractionLineManager(Manager):
 
     def start_status(self):
         def func():
-            while self.isAlive():
+            while not self._update_status_flag.isSet():
                 self.valve_manager.load_valve_states()
-                self.valve_manager.load_valve_lock_states()
-
+                time.sleep(3)
+#                self.valve_manager.load_valve_lock_states()
+#                time.sleep(2)
+                
+        self._update_status_flag=Event()
         t = Thread(target=func)
         t.start()
 

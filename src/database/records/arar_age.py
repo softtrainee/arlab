@@ -67,6 +67,11 @@ class ArArAge(HasTraits):
     Ar38 = Property(depends_on='age_dirty')
     Ar37 = Property(depends_on='age_dirty')
     Ar36 = Property(depends_on='age_dirty')
+    Ar40_error = Property(depends_on='age_dirty')
+    Ar39_error = Property(depends_on='age_dirty')
+    Ar38_error = Property(depends_on='age_dirty')
+    Ar37_error = Property(depends_on='age_dirty')
+    Ar36_error = Property(depends_on='age_dirty')
 
     moles_Ar40 = Property
 
@@ -336,8 +341,26 @@ class ArArAge(HasTraits):
     @cached_property
     def _get_Ar36(self):
         return self.arar_result['s36']
-#        rr = self.dbrecord.arar_result
-#        return rr['rad40'] / rr['tot40'] * 100
+    
+    @cached_property
+    def _get_Ar40_error(self):
+        return self.arar_result['s40'].std_dev()
+
+    @cached_property
+    def _get_Ar39_error(self):
+        return self.arar_result['s39'].std_dev()
+
+    @cached_property
+    def _get_Ar38_error(self):
+        return self.arar_result['s38'].std_dev()
+
+    @cached_property
+    def _get_Ar37_error(self):
+        return self.arar_result['s37'].std_dev()
+
+    @cached_property
+    def _get_Ar36_error(self):
+        return self.arar_result['s36'].std_dev()
 
     def _get_moles_Ar40(self):
         return 0.001

@@ -127,7 +127,7 @@ class ValveManager(Manager):
                     elm.update_valve_state(k, s)
 
     def load_valve_lock_states(self):
-        word = self.get_lock_state_word()
+        word = self.get_lock_word()
         if word is not None:
             for k in self.valves.keys():
                 if word.has_key(k):
@@ -146,12 +146,14 @@ class ValveManager(Manager):
 
     def _parse_word(self, word):
         if word is not None:
-            if ',' in word:
-                d = dict([(r[:-1], bool(r[-1:])) for r in word.split(',')])
-            else:
-                d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
-#
-            return d
+            try:
+                if ',' in word:
+                    d = dict([(r[:-1], bool(r[-1:])) for r in word.split(',')])
+                else:
+                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
+                return d
+            except ValueError:
+                pass
 
     def _load_states(self):
         elm = self.extraction_line_manager
