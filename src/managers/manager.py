@@ -50,7 +50,7 @@ class ManagerHandler(ViewableHandler):
     def closed(self, info, is_ok):
         '''
         '''
-
+        super(ManagerHandler, self).closed(info, is_ok)
         info.object.kill()
         try:
             MANAGERS.remove(info.object)

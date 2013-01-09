@@ -189,6 +189,16 @@ class ExtractionLineCanvas(HasTraits):
         if self.canvas3D:
             self.canvas3D.update_valve_state(name, state)
 
+    def update_valve_lock_state(self, name, state, *args, **kw):
+        '''
+            do the specific canvas action
+        '''
+        if self.canvas2D:
+            self.canvas2D.update_valve_lock_state(name, state)
+
+#        if self.canvas3D:
+#            self.canvas3D.update_valve_state(name, state)
+
     def _canvas2D_default(self):
         '''
         '''

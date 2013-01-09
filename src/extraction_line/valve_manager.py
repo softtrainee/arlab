@@ -127,13 +127,18 @@ class ValveManager(Manager):
                     elm.update_valve_state(k, s)
 
     def load_valve_lock_states(self):
+        elm=self.extraction_line_manager
         word = self.get_lock_word()
         if word is not None:
             for k in self.valves.keys():
                 if word.has_key(k):
-                    func = self.lock if word[k] else self.unlock
-                    func(k, save=False)
-
+                    if word[k]:
+                        self.lock(k, save=False)
+                        elm.update_valve_lock_state(k, True)
+                    else:
+                        self.unlock(k, save=False)
+                        elm.update_valve_lock_state(k, False)
+                    
     def get_state_word(self):
         actuator = self.actuators[0]
         word = actuator.get_state_word()
@@ -148,7 +153,7 @@ class ValveManager(Manager):
         if word is not None:
             try:
                 if ',' in word:
-                    d = dict([(r[:-1], bool(r[-1:])) for r in word.split(',')])
+                    d = dict([(r[:-1], bool(int(r[-1:]))) for r in word.split(',')])
                 else:
                     d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
                 return d
