@@ -21,6 +21,7 @@ from traitsui.api import View, Item, ListEditor, InstanceEditor, Group
 import re
 #============= local library imports  ==========================
 from analysis_parameters import AnalysisParameters
+from src.constants import PLUSMINUS
 
 
 class FitSelector(HasTraits):
@@ -51,7 +52,7 @@ class FitSelector(HasTraits):
             inte = reg.predict(0)
             er = reg.predict_error(0)
             if fit == 'average':
-                fit = u'average \u00b1' + reg.error_calc.upper()
+                fit = u'average {}'.format(PLUSMINUS) + reg.error_calc.upper()
         except IndexError:
             inte, er, fit, fo = 0, 0, '---', False
 

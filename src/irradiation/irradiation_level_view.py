@@ -24,6 +24,7 @@ import os
 #============= local library imports  ==========================
 from src.irradiation.irradiated_position import IrradiatedPosition
 from src.paths import paths
+from src.constants import PLUSMINUS
 
 
 class IrradiationLevelView(HasTraits):
@@ -94,10 +95,10 @@ class IrradiationLevelView(HasTraits):
               ObjectColumn(name='x', format='%0.1f', width=40, editable=False),
               ObjectColumn(name='y', format='%0.1f', width=40, editable=False),
               ObjectColumn(name='j', format='%0.4e', width=100),
-              ObjectColumn(name='j_err', format='%0.4e', label=u'\u00b1J', width=100),
+              ObjectColumn(name='j_err', format='%0.4e', label=u'{}J'.format(PLUSMINUS), width=100),
               CheckboxColumn(name='use', label='Use', width=30),
               ObjectColumn(name='pred_j', format='%0.4e', label='Pred. J', width=100),
-              ObjectColumn(name='pred_j_err', format='%0.4e', label=u'\u00b1Pred. J', width=100),
+              ObjectColumn(name='pred_j_err', format='%0.4e', label=u'{}Pred. J'.format(PLUSMINUS), width=100),
               ObjectColumn(name='residual', format='%0.5f', label='Residual', width=100),
               CheckboxColumn(name='save', width=30)
               ]

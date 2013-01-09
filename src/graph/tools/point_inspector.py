@@ -20,6 +20,7 @@ from traits.api import  Callable
 from numpy import where, abs
 #============= local library imports  ==========================
 from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
+from src.constants import PLUSMINUS
 
 
 class PointInspector(InfoInspector):
@@ -63,7 +64,7 @@ class PointInspector(InfoInspector):
 
                 fmt = '{:0.3e}' if abs(y) < 10e-6 else '{:0.6f}'
                 y = fmt.format(y)
-                y = u'{} \u00b1{}({:0.2f}%)'.format(y, ye, pe)
+                y = u'{} {}{}({:0.2f}%)'.format(y, PLUSMINUS, ye, pe)
 
 
             lines = ['x= {:0.5f}'.format(x), 'y= {}'.format(y)]

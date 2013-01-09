@@ -18,8 +18,8 @@ if __name__ == '__main__':
 #    url = 'mysql://massspec:DBArgon@129.138.12.131/isotopedb_dev?connect_timeout=3'
 #    url = 'mysql://massspec:DBArgon@129.138.12.131/isotopedb?connect_timeout=3'
 
-    url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
-#    main(url=url , debug='False', repository='isotopedb/')
+#    url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
+    main(url=url , debug='False', repository='isotopedb/')
 
 #    url = 'sqlite:////Users/ross/Sandbox/local_lab.db'
     #main(url=url , debug='False', repository='local_labdb/')
@@ -27,9 +27,9 @@ if __name__ == '__main__':
 #    url = 'mysql://root:Argon@localhost/hardwaredb_dev?connect_timeout=3'
 #    main(url=url , debug='False', repository='hardwaredb/')
 
-    url = 'sqlite:////Users/ross/Sandbox/bakeout.db'
-    url = 'sqlite:////usr/local/pychron/bakeoutdb/bakeouts.sqlite'
-    main(url=url , debug='False', repository='bakeoutdb/')
+#    url = 'sqlite:////Users/ross/Sandbox/bakeout.db'
+#    url = 'sqlite:////usr/local/pychron/bakeoutdb/bakeouts.sqlite'
+#    main(url=url , debug='False', repository='bakeoutdb/')
 
 
 #    pychron_main()

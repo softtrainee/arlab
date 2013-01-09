@@ -21,13 +21,8 @@ from traitsui.api import View, Item, HGroup, EnumEditor
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary, fixed_width, floatfmt
 from src.database.isotope_analysis.fit_selector import FitSelector
-from src.constants import NULL_STR
-PLUSMINUS = u'\u00b1'
-try:
-    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
-except UnicodeEncodeError:
-    PLUSMINUS = '+/-'
-    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
+from src.constants import NULL_STR, PLUSMINUS, PLUSMINUS_ERR
+
 
 
 class AnalysisSummary(Summary):
@@ -79,7 +74,7 @@ class AnalysisSummary(Summary):
 
         #add j
         j, je = record.j
-        ee = u'\u00b1{} ({})'.format(floatfmt(je), self.calc_percent_error(j, je))
+        ee = u'{}{} ({})'.format(PLUSMINUS, floatfmt(je), self.calc_percent_error(j, je))
         self._make_keyword('J', '{} {}'.format(j, ee), new_line=True)
 
         #add sensitivity
@@ -94,7 +89,6 @@ class AnalysisSummary(Summary):
             ss = NULL_STR
 
         self._make_keyword('Sensitivity', ss, new_line=True)
-
 
         #added header
         self.add_text(header, underline=True, bold=True)
@@ -142,13 +136,13 @@ class AnalysisSummary(Summary):
         except TypeError:
             ej = 0
 
-        e = u'\u00b1{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
-        ej = u'\u00b1{} ({})'.format(floatfmt(ej), self.calc_percent_error(v, ej))
+        e = u'{}{} ({})'.format(PLUSMINUS, floatfmt(e), self.calc_percent_error(v, e))
+        ej = u'{}{} ({})'.format(PLUSMINUS, floatfmt(ej), self.calc_percent_error(v, ej))
 
         kca = self.record.kca
         kv = kca.nominal_value
         ek = kca.std_dev()
-        ek = u'\u00b1{} ({})'.format(floatfmt(ek, 3), self.calc_percent_error(kv, ek))
+        ek = u'{}{} ({})'.format(PLUSMINUS, floatfmt(ek, 3), self.calc_percent_error(kv, ek))
 
         self._make_keyword('K/Ca', '{:0.2f} {}'.format(kv, ek),
                            new_line=True, underline=underline_width)

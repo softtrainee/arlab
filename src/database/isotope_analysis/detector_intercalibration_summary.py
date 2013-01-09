@@ -26,8 +26,7 @@ from src.graph.graph import Graph
 
 #from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
-#PLUSMINUS = unicode('\xb1')
-PLUSMINUS = u'\u00b1'
+
 
 class DetGraph(HasTraits):
     graph = Instance(Graph)

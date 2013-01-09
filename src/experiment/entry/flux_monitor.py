@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Str, List
 from traitsui.api import View, Item, HGroup, VGroup, EnumEditor
+from src.constants import PLUSMINUS, SIGMA
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -35,8 +36,8 @@ class FluxMonitor(HasTraits):
     def traits_view(self):
         v = View(VGroup(
                         HGroup(Item('name'), Item('dbname', show_label=False, editor=EnumEditor(name='names'))),
-                        HGroup(Item('age'), Item('age_err', label=u'\u00b11\u03c3')),
-                        HGroup(Item('decay_constant'), Item('decay_constant_err', label=u'\u00b11\u03c3'))
+                        HGroup(Item('age'), Item('age_err', label=u'{}1{}'.format(PLUSMINUS, SIGMA))),
+                        HGroup(Item('decay_constant'), Item('decay_constant_err', label=u'{}1{}'.format(PLUSMINUS, SIGMA)))
                         ),
 #                 HGroup(Item)
                  buttons=['OK', 'Cancel'],

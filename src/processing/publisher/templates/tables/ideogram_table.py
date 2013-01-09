@@ -24,6 +24,7 @@ from reportlab.lib import colors
 #============= local library imports  ==========================
 from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.processing.publisher.templates.tables.pdf_table import PDFTable
+from src.constants import PLUSMINUS
 
 class IdeogramTable(PDFTable):
     status_width = Int(5)
@@ -106,7 +107,7 @@ class IdeogramTable(PDFTable):
         wm, we = calculate_weighted_mean(ages, errors)
         wm = self.floatfmt(wm, n=3)
         we = self.floatfmt(we, n=4)
-        row = ['', u'weighted mean= {} \u00b1{}'.format(wm, we)]
+        row = ['', u'weighted mean= {} {}{}'.format(wm, PLUSMINUS, we)]
         rows.append(row)
 
         mswd = calculate_mswd(ages, errors)

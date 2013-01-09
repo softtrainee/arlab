@@ -18,12 +18,12 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
+from src.constants import PLUSMINUS
 PRS = ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']
 
 
 class IrradiationSummary(Summary):
     def _build_summary(self):
-        pm = u'\u00b1'
 
         level = self.record.irradiation_level
         if level:
@@ -49,9 +49,8 @@ class IrradiationSummary(Summary):
                 except AttributeError:
                     v, e = 0, 0
                 key = '{}= '.format(pri)
-                value = '{:0.5f} {}{:0.5f}'.format(v, pm, e)
+                value = '{:0.5f} {}{:0.5f}'.format(v, PLUSMINUS, e)
                 self._add_keyword_value(key, value)
-
 
     def _add_keyword_value(self, key, value, **kw):
         self.add_text(key, bold=True, new_line=False, *kw)

@@ -24,6 +24,7 @@ from src.graph.regression_graph import RegressionGraph
 from src.processing.plotters.plotter import Plotter
 from src.processing.plotters.results_tabular_adapter import InverseIsochronResults
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
+from src.constants import PLUSMINUS
 
 
 class InverseIsochron(Plotter):
@@ -79,7 +80,7 @@ class InverseIsochron(Plotter):
             print e
 
         g.add_horizontal_rule(1 / 295.5)
-        txt = u'Trapped 40Ar= {:0.2f} \u00b1{:0.5f}'.format(trapped_4036, trapped_4036err)
+        txt = u'Trapped 40Ar= {:0.2f} {}{:0.5f}'.format(trapped_4036, PLUSMINUS, trapped_4036err)
         g.add_plot_label(txt, 0, 0)
         g.refresh()
 

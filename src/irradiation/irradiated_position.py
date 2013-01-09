@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Bool, Int, on_trait_change, Property
 from traitsui.tabular_adapter import TabularAdapter
+from src.constants import PLUSMINUS
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class BaseIrradiatedPosition(HasTraits):
@@ -72,7 +73,7 @@ class BaseIrradiatedPositionAdapter(TabularAdapter):
                ('Sample', 'sample'),
                ('Project', 'project'),
                ('J', 'j'),
-               (u'\u00b1J', 'j_err'),
+               (u'{}J'.format(PLUSMINUS), 'j_err'),
                ('Note', 'note')
              ]
 
@@ -88,7 +89,7 @@ class IrradiatedPositionAdapter(TabularAdapter):
                ('Size', 'size'),
                ('Weight', 'weight'),
                ('J', 'j'),
-               (u'\u00b1J', 'j_err'),
+               (u'{}J'.format(PLUSMINUS), 'j_err'),
                ('Note', 'note')
              ]
 #    hole_can_edit = False

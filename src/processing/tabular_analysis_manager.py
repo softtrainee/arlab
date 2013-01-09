@@ -23,6 +23,7 @@ import math
 from src.processing.analysis_means import AnalysisRatioMean, \
     AnalysisIntensityMean
 from src.database.core.database_selector import ColumnSorterMixin
+from src.constants import PLUSMINUS
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -30,7 +31,7 @@ class AnalysisAdapter(TabularAdapter):
     columns = [('Status', 'status'),
                ('ID', 'record_id'),
                ('Age', 'age'),
-               (u'\u00b11s', 'age_error')
+               (u'{}1s'.format(PLUSMINUS), 'age_error')
 #               (unicode('03c3', encoding='symbol'), 'error')
                ]
 
@@ -91,17 +92,17 @@ class AnalysisIntensityAdapter(AnalysisAdapter):
                ('Status', 'status'),
                ('ID', 'record_id'),
                ('Ar40', 'Ar40'),
-               (u'\u00b11s', 'Ar40_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
                ('Ar39', 'Ar39'),
-               (u'\u00b11s', 'Ar39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
                ('Ar38', 'Ar38'),
-               (u'\u00b11s', 'Ar38_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
                ('Ar37', 'Ar37'),
-               (u'\u00b11s', 'Ar37_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
                ('Ar36', 'Ar36'),
-               (u'\u00b11s', 'Ar36_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar36_error'),
                ('Age', 'age'),
-               (u'\u00b11s', 'age_error'),
+               (u'{}1s'.format(PLUSMINUS), 'age_error'),
                ]
 
     Ar40_text = Property
@@ -152,17 +153,17 @@ class AnalysisRatioAdapter(AnalysisAdapter):
                ('Status', 'status'),
                ('ID', 'record_id'),
                ('40*/K39', 'Ar40_39'),
-               (u'\u00b11s', 'Ar40_39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
                ('Ar37/Ar39', 'Ar37_39'),
-               (u'\u00b11s', 'Ar37_39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
                ('Ar36/Ar39', 'Ar36_39'),
-               (u'\u00b11s', 'Ar36_39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
                ('K/Ca', 'kca'),
-               (u'\u00b11s', 'kca_error'),
+               (u'{}1s'.format(PLUSMINUS), 'kca_error'),
                ('K/Cl', 'kcl'),
-               (u'\u00b11s', 'kcl_error'),
+               (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
                ('Age', 'age'),
-               (u'\u00b11s', 'age_error'),
+               (u'{}1s'.format(PLUSMINUS), 'age_error'),
                ]
 
     Ar40_39_text = Property
@@ -221,17 +222,17 @@ class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
     columns = [('N', 'nanalyses'),
                ('ID', 'identifier'),
                ('40*/K39', 'Ar40_39'),
-               (u'\u00b11s', 'Ar40_39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
                ('Ar37/Ar39', 'Ar37_39'),
-               (u'\u00b11s', 'Ar37_39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
                ('Ar36/Ar39', 'Ar36_39'),
-               (u'\u00b11s', 'Ar36_39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
                ('K/Ca', 'kca'),
-               (u'\u00b11s', 'kca_error'),
+               (u'{}1s'.format(PLUSMINUS), 'kca_error'),
                ('K/Cl', 'kcl'),
-               (u'\u00b11s', 'kcl_error'),
+               (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
                ('Age', 'age'),
-               (u'\u00b11s', 'age_error'),
+               (u'{}1s'.format(PLUSMINUS), 'age_error'),
                ]
 
 
@@ -239,17 +240,17 @@ class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
     columns = [('N', 'nanalyses'),
                ('ID', 'identifier'),
                ('Ar40', 'Ar40'),
-               (u'\u00b11s', 'Ar40_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
                ('Ar39', 'Ar39'),
-               (u'\u00b11s', 'Ar39_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
                ('Ar38', 'Ar38'),
-               (u'\u00b11s', 'Ar38_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
                ('Ar37', 'Ar37'),
-               (u'\u00b11s', 'Ar37_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
                ('Ar36', 'Ar36'),
-               (u'\u00b11s', 'Ar36_error'),
+               (u'{}1s'.format(PLUSMINUS), 'Ar36_error'),
                ('Age', 'age'),
-               (u'\u00b11s', 'age_error'),
+               (u'{}1s'.format(PLUSMINUS), 'age_error'),
                ]
 
 

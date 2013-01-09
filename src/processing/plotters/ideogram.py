@@ -32,6 +32,7 @@ from src.processing.plotters.results_tabular_adapter import IdeoResults, \
 from src.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.stats.peak_detection import find_peaks
+from src.constants import PLUSMINUS
 #from src.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -424,7 +425,7 @@ class Ideogram(Plotter):
         else:
             mswd = ''
 
-        return u'{:0.3f} \u00b1{:0.3f} {} {}'.format(x, we, mswd, n)
+        return u'{:0.3f} {}{:0.3f} {} {}'.format(x, PLUSMINUS, we, mswd, n)
 
     def _calc_error(self, we, mswd):
         ec = self.error_calc_method
