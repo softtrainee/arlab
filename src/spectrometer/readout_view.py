@@ -39,7 +39,10 @@ class Readout(HasTraits):
         cmd = 'Get{}'.format(self.name)
         v = self.spectrometer.get_parameter(cmd)
         if v is not None:
-            v = self.format.format(v)
+            try:
+                v = self.format.format(float(v))
+            except ValueError:
+                pass
         else:
             v = ''
         return v
