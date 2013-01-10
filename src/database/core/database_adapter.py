@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Password, Bool, Str, on_trait_change, Any
+from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cached_property
 #=============standard library imports ========================
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
@@ -67,55 +67,17 @@ class DatabaseAdapter(Loggable):
     #name used when writing to database
     save_username = Str
     connection_parameters_changed = Bool
-#    url = None
 
-    @property
-    def url(self):
-        kind = self.kind
-        password = self.password
-        user = self.username
-        host = self.host
-        name = self.name
-        if kind == 'mysql':
-            if password is not None:
-                url = 'mysql://{}:{}@{}/{}?connect_timeout=3'.format(user, password, host, name)
-            else:
-                url = 'mysql://{}@{}/{}?connect_timeout=3'.format(user, host, name)
-        else:
-            url = 'sqlite:///{}'.format(name)
-
-        return url
+    url = Property(depends_on='connection_parameters_changed')
 
     @property
     def enabled(self):
         return self.kind in ['mysql', 'sqlite']
 
-
-#    window = Any
-
     @on_trait_change('username,host,password,name')
-    def _connect_attributes_changed(self, obj, name, old, new):
+    def reset_connection(self, obj, name, old, new):
         self.connection_parameters_changed = True
-#        print old, new
-#        if new:
-#        if name == 'use_db':
-#            if new:
-#                self.connect()
-#            else:
-#                self.connected = False
-#        else:
-#        self.reset()
-#        self.connect()
-#
-#        #refresh the open database views
-#        sess = None
-#        if self.window:
-#            for v in self.window.views:
-#                if v.category == 'Database':
-#                    sess = v.obj.load(sess=sess)
-#
-#        if sess is not None:
-#            sess.close()
+
     def isConnected(self):
         return self.connected
 
@@ -132,28 +94,23 @@ class DatabaseAdapter(Loggable):
             force = True
 #        print not self.isConnected() or force, self.connection_parameters_changed
         if not self.isConnected() or force:
-#            args = []
-#            for a in ATTR_KEYS:
-#                args.append(getattr(self, a))
-#            print args
-#            self._new_engine(*tuple(args))
             self.connected = True if self.kind == 'sqlite' else False
             if self.enabled:
-#                self._new_engine(self.kind, self.username, self.host, self.name, self.password)
+                url = self.url
+                if url is not None:
+                    self.info('connecting to database {}'.format(url))
+                    engine = create_engine(url)
+                    self.session_factory = sessionmaker(bind=engine)
+                    if test:
+                        self.connected = self._test_db_connection()
+                    else:
+                        self.connected = True
 
-                self.info('connecting to database {}'.format(self.url))
-                engine = create_engine(self.url)
-                self.session_factory = sessionmaker(bind=engine)
-                if test:
-                    self.connected = self._test_db_connection()
-                else:
-                    self.connected = True
-
-                if self.connected:
-                    self.info('connected to db')
-                    self.initialize_database()
-                else:
-                    self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user={} \
+                    if self.connected:
+                        self.info('connected to db')
+                        self.initialize_database()
+                    else:
+                        self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user={} \
 host={}'.format(self.name, self.username, self.host))
 
         self.connection_parameters_changed = False
@@ -161,75 +118,18 @@ host={}'.format(self.name, self.username, self.host))
 
     def new_session(self):
         sess = scoped_session(self.session_factory)
-#        engine = create_engine(self.url)
-#        session_factory = sessionmaker(bind=engine)
-#        sess = session_factory()
         sess.autoflush = False
         return sess
 
-#        return create_engine(self.url)
-
     def initialize_database(self):
         pass
-
-    def _test_db_connection(self):
-        try:
-            connected = False
-            if self.test_func is not None:
-                self.sess = None
-                self.get_session()
-#                sess = self.session_factory()
-                self.info('testing database connection')
-                getattr(self, self.test_func)()
-                connected = True
-
-        except Exception, e:
-            print e
-
-            self.warning('connection failed to {}'.format(self.url))
-            connected = False
-
-        finally:
-            if self.sess is not None:
-                self.info('closing test session')
-                self.sess.close()
-
-        return connected
-
-#    def _new_engine(self, kind, user, host, db, password):
-#        '''
-
-#        '''
-
-#        url = create_url(kind, user, host, db, password=password)
-#        self.url = url
-#        self.info('url = %s' % url)
-#        self.engine = create_engine(url)
-
-#    def _get_record(self, record, func, sess):
-#        '''
-#        '''
-#        if record is not None:
-#            result = None
-#            if isinstance(record, int) or isinstance(record, long):
-#                record = dict(id=record)
-#
-#            if isinstance(record, dict):
-#                result, sess = getattr(self, func)(filter=record, sess=sess)
-#            else:
-#                result = record
-#            return result
 
     def get_session(self):
         '''
         '''
         if self.sess is None:
             if self.session_factory is not None:
-#                self.sess = self.session_factory()
                 self.sess = self.new_session()
-#                self.sess = scoped_session(self.session_factory)
-##                print type(self.sess)
-#                self.sess.autoflush = False
             else:
                 self.warning_dialog('Not connected to the database {}'.format(self.name))
 
@@ -260,9 +160,6 @@ host={}'.format(self.name, self.username, self.host))
             self.sess.close()
             self.sess = None
 
-    def _get_tables(self):
-        pass
-
     def get_migrate_version(self):
         sess = self.get_session()
         q = sess.query(MigrateVersionTable)
@@ -285,6 +182,71 @@ host={}'.format(self.name, self.username, self.host))
 
         return q.all()
 
+    @cached_property
+    def _get_url(self):
+        kind = self.kind
+        password = self.password
+        user = self.username
+        host = self.host
+        name = self.name
+        if kind == 'mysql':
+            #add support for different mysql drivers
+            driver = self._import_mysql_driver()
+            if driver is None:
+                return
+
+            if password is not None:
+                url = 'mysql+{}://{}:{}@{}/{}?connect_timeout=3'.format(driver, user, password, host, name)
+            else:
+                url = 'mysql+{}://{}@{}/{}?connect_timeout=3'.format(driver, user, host, name)
+        else:
+            url = 'sqlite:///{}'.format(name)
+
+        return url
+
+    def _import_mysql_driver(self):
+        try:
+            '''
+                pymysql
+                https://github.com/petehunt/PyMySQL/
+            '''
+            import pymysql
+            driver = 'pymysql'
+        except ImportError:
+            try:
+                import _mysql
+                driver = 'mysqldb'
+            except ImportError:
+                self.warning_dialog('A mysql driver was not found. Install PyMySQL or MySQL-python')
+                return
+
+        self.info('using {}'.format(driver))
+        return driver
+
+    def _test_db_connection(self):
+        try:
+            connected = False
+            if self.test_func is not None:
+                self.sess = None
+                self.get_session()
+#                sess = self.session_factory()
+                self.info('testing database connection')
+                getattr(self, self.test_func)()
+                connected = True
+
+        except Exception, e:
+            print e
+
+            self.warning('connection failed to {}'.format(self.url))
+            connected = False
+
+        finally:
+            if self.sess is not None:
+                self.info('closing test session')
+                self.sess.close()
+
+        return connected
+
     @deprecated
     def _get_query(self, klass, join_table=None, filter_str=None, *args, **clause):
         sess = self.get_session()
@@ -299,6 +261,9 @@ host={}'.format(self.name, self.username, self.host))
             q = q.filter_by(**clause)
         return q
 
+    def _get_tables(self):
+        pass
+
     def _add_item(self, obj):
         sess = self.get_session()
         sess.add(obj)
@@ -312,22 +277,6 @@ host={}'.format(self.name, self.username, self.host))
 #            self.info('{}= {} already exists'.format(attr, name))
         return nitem
 
-#    def _get_datetime_keywords(self, kw):
-#        d = get_datetime()
-#        kw['rundate'] = d.date()
-#        kw['runtime'] = d.time()
-#        return kw
-#
-#    def _add_timestamped_item(self, klass, **kw):
-#
-##        args = dict(rundate=str(d.date()),
-##                    runtime=str(d.time()))
-##        args = dict(rundate=d.date(),
-##                    runtime=d.time())
-#        kw = self._get_datetime_keywords(kw)
-#        obj = klass(**kw)
-#        self._add_item(obj)
-#        return obj
 
     def _get_path_keywords(self, path, args):
         n = os.path.basename(path)
