@@ -65,8 +65,8 @@ class ExtractionLineManager(Manager):
 
     learner = None
     mode = 'normal'
-    _update_status_flag=None
-    
+    _update_status_flag = None
+
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -124,7 +124,7 @@ class ExtractionLineManager(Manager):
         self.info('stopping status monitor')
         self._update_status_flag.set()
         return True
-    
+
     def opened(self):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
@@ -146,19 +146,19 @@ class ExtractionLineManager(Manager):
                 time.sleep(1)
                 self.valve_manager.load_valve_lock_states()
                 time.sleep(2)
-                   
+
             self.info('status monitor stopped')
-        
-        if self._update_status_flag is None:       
-            self._update_status_flag=Event()
-        
+
+        if self._update_status_flag is None:
+            self._update_status_flag = Event()
+
         if self.isMonitoringValveState():
             self.info('monitor already running')
         else:
             t = Thread(target=func)
             t.start()
             self.info('starting status monitor')
-        
+
     def isMonitoringValveState(self):
         return self._update_status_flag.isSet()
 #    def _view_controller(self):

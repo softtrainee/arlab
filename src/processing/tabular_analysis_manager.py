@@ -34,9 +34,9 @@ class AnalysisAdapter(TabularAdapter):
 #               (u'{}1s'.format(PLUSMINUS), 'age_error')
 ##               (unicode('03c3', encoding='symbol'), 'error')
 #               ]
-    columns=Property
-    include_age=Bool(True)
-    
+    columns = Property
+    include_age = Bool(True)
+
     status_text = Property
     status_width = Int(40)
     age_text = Property
@@ -46,18 +46,18 @@ class AnalysisAdapter(TabularAdapter):
 #    age_error_width = Int(80)
     @cached_property
     def _get_columns(self):
-        columns=[('Status', 'status'),
+        columns = [('Status', 'status'),
                  ('ID', 'record_id')]
         columns.extend(self._construct_columns())
         if self.include_age:
-            a=[('Age', 'age'),
+            a = [('Age', 'age'),
                (u'{}1s'.format(PLUSMINUS), 'age_error')]
             columns.extend(a)
         return columns
-    
+
     def _construct_columns(self):
         return []
-    
+
     def _get_status_text(self):
         status = ''
         if self.item.status != 0 or self.item.temp_status != 0:
@@ -104,7 +104,7 @@ class AnalysisAdapter(TabularAdapter):
 
 
 class AnalysisIntensityAdapter(AnalysisAdapter):
-    
+
 
     Ar40_text = Property
     Ar40_error_text = Property
@@ -135,7 +135,7 @@ class AnalysisIntensityAdapter(AnalysisAdapter):
 #               (u'{}1s'.format(PLUSMINUS), 'age_error'),
                ]
         return columns
-    
+
     def _get_Ar40_text(self):
         return self._get_value('Ar40')
 
@@ -168,8 +168,8 @@ class AnalysisIntensityAdapter(AnalysisAdapter):
 
 
 class AnalysisRatioAdapter(AnalysisAdapter):
-    
-    
+
+
     Ar40_39_text = Property
     Ar40_39_error_text = Property
     Ar37_39_text = Property
@@ -198,7 +198,7 @@ class AnalysisRatioAdapter(AnalysisAdapter):
 #               (u'{}1s'.format(PLUSMINUS), 'age_error'),
                ]
         return columns
-        
+
     def _get_Ar40_39_text(self):
         return self._get_value('Ar40_39')
 
@@ -240,17 +240,17 @@ class MeanAdapter(AnalysisAdapter):
         return bgcolor
     @cached_property
     def _get_columns(self):
-        columns=[('N', 'nanalyses'),
+        columns = [('N', 'nanalyses'),
                  ('ID', 'identifier')]
         columns.extend(self._construct_columns())
         if self.include_age:
-            a=[('Age', 'age'),
+            a = [('Age', 'age'),
                (u'{}1s'.format(PLUSMINUS), 'age_error')]
             columns.extend(a)
         return columns
 
 class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
-    
+
     def _construct_columns(self):
         columns = [
 #                   ('N', 'nanalyses'),
@@ -271,7 +271,7 @@ class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
         return columns
 
 class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
-    
+
     def _construct_columns(self):
         columns = [
                    ('Ar40', 'Ar40'),
@@ -296,9 +296,9 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     analyses = List
     ratio_means = Property(depends_on='analyses.[temp_status,status]')
     intensity_means = Property(depends_on='analyses.[temp_status,status]')
-    
-    include_age=Property
-    
+
+    include_age = Property
+
     update_selected_analysis = Event
     selected_analysis = Any
     db = Any
@@ -308,18 +308,18 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     window_height = 500
     title = Str('Analysis Table')
     handler_klass = TabularAnalysisHandler
-    
-    
+
+
     def set_title(self, title):
         self.title = 'Table {}'.format(title)
 
     def _get_include_age(self):
         for a in self.analyses:
-            if a.analysis_type not in ['unknown','cocktail']:
+            if a.analysis_type not in ['unknown', 'cocktail']:
                 return False
         else:
             return True
-        
+
     @cached_property
     def _get_ratio_means(self):
         means = [AnalysisRatioMean(analyses=self.analyses)]
@@ -331,18 +331,18 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
         return means
 
     def _editor_factory(self, adapter_klass, **kw):
-        
-        ta=TabularEditor(adapter=adapter_klass(include_age=self.include_age),
+
+        ta = TabularEditor(adapter=adapter_klass(include_age=self.include_age),
                                    column_clicked='column_clicked',
                                    editable=False,
                                    auto_update=True,
                                    **kw
                                    )
         return ta
-    
+
     def traits_view(self):
-        
-        
+
+
         intensity = VGroup(Item('analyses',
                                 height=300,
                                 show_label=False,

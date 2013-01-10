@@ -203,7 +203,7 @@ class ExperimentExecutor(ExperimentManager):
             if self._has_preceeding_blank_or_background(exp):
                 #start the extraction line manager's valve state monitor
                 self.extraction_line_manager.start_status_monitor()
-                
+
                 t = Thread(target=self._execute_experiment_sets)
                 t.start()
 

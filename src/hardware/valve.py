@@ -92,7 +92,7 @@ class HardwareValve(Loggable):
             self._fsm.ROpen()
         else:
             self._fsm.RClose()
-        
+
     def get_hardware_state(self):
         '''
         '''

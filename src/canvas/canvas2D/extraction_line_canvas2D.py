@@ -72,14 +72,14 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             valve.state = nstate
 
         self.invalidate_and_redraw()
-    
+
     def update_valve_lock_state(self, name, lockstate):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.soft_lock = lockstate
 
         self.invalidate_and_redraw()
-        
+
 
     def _get_valve_by_name(self, name):
         '''

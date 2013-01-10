@@ -105,7 +105,7 @@ class Query(HasTraits):
             else:
                 comp = self._convert_comparator(comp)
                 query = query.filter(getattr(attr, comp)(c))
-            
+
         return query
 
     def date_query(self, query, attr):
