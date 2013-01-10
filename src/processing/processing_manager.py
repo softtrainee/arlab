@@ -351,10 +351,10 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             by default use a db connection
         '''
         d = self.selector_manager
-#        return True
-        info = d.edit_traits(kind='livemodal')
-        if info.result:
-            return True
+        if self.db.connect():
+            info = d.edit_traits(kind='livemodal')
+            if info.result:
+                return True
 
     def _display_tabular_data(self, ans, title):
         tm = TabularAnalysisManager(analyses=ans,
@@ -675,8 +675,8 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     def _selector_manager_default(self):
         db = self.db
         d = SelectorManager(db=db)
-        if not db.connected:
-            db.connect()
+#        if not db.connected:
+#            db.connect()
 
 #        d.select_labnumber([22233])
         return d
