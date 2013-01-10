@@ -341,7 +341,7 @@ class ArArAge(HasTraits):
     @cached_property
     def _get_Ar36(self):
         return self.arar_result['s36']
-    
+
     @cached_property
     def _get_Ar40_error(self):
         return self.arar_result['s40'].std_dev()

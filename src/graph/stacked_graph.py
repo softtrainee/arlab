@@ -28,7 +28,7 @@ from graph import Graph
 class StackedGraph(Graph):
     '''
     '''
-    bind_index=Bool(True)
+    bind_index = Bool(True)
     equi_stack = True
     panel_height = 100
     _has_title = False

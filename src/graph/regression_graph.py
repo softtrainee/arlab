@@ -103,7 +103,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.filter_outliers_dict['filter_outliers'] = fi
 #        scatter.index.metadata['selections'] = []
-    
+
         self.redraw()
 
     def get_filter_outliers(self, fi, plotid=0, series=0):
@@ -124,7 +124,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.fit = fi
         scatter.index.metadata['selections'] = []
-        scatter.index.metadata['filtered']=None
+        scatter.index.metadata['filtered'] = None
         self.redraw()
 
     def get_fit(self, plotid=0, series=0):

@@ -106,27 +106,27 @@ class SelectedView(ColumnSorterMixin):
         records = self.selected_records
         if not records:
             return
-        
+
         def make_name(rec):
             s = rec[0]
             e = rec[-1]
             return '{} - {}'.format(s.record_id, e.record_id)
-            
+
         d = self._open_shelve()
 
-        exists=False
-        name=make_name(records)
+        exists = False
+        name = make_name(records)
         for pi in d.itervalues():
-            if name==pi.name:
-                exists=True
+            if name == pi.name:
+                exists = True
                 break
-                        
+
         if not exists:
             keys = sorted(d.keys())
             next_key = '001'
             if keys:
                 next_key = '{:03n}'.format(int(keys[-1]) + 1)
-                
+
             records = filter(lambda ri:not isinstance(ri, Marker), records)
             ps = PreviousSelection(records, name=name)
 

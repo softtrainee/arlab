@@ -52,11 +52,11 @@ class FitSelector(HasTraits):
             inte = reg.predict(0)
             er = reg.predict_error(0)
             if 'average' in fit:
-                ee='SEM' if fit.endswith('SEM') else 'SD'
-                
-                fit = u'average {}{}'.format(PLUSMINUS,ee) 
-                
-        except IndexError,e:
+                ee = 'SEM' if fit.endswith('SEM') else 'SD'
+
+                fit = u'average {}{}'.format(PLUSMINUS, ee)
+
+        except IndexError, e:
             print e
             inte, er, fit, fo = 0, 0, '---', False
 

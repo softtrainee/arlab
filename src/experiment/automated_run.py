@@ -929,7 +929,7 @@ class AutomatedRun(Loggable):
 
         if i > self.plot_panel.ncounts:
             self.info('user termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
-            self._total_counts-=(ncounts-i)
+            self._total_counts -= (ncounts - i)
             return 'break'
 
         if self._truncate_signal:
