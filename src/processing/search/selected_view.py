@@ -99,50 +99,40 @@ class SelectedView(ColumnSorterMixin):
 #        self.previous_selections = ps
 
         d = self._open_shelve()
-        keys = sorted(d.keys())
+        keys = sorted(d.keys(), reverse=True)
         self.previous_selections = [d[ki] for ki in keys]
 
     def dump_selection(self):
         records = self.selected_records
         if not records:
             return
+        
+        def make_name(rec):
+            s = rec[0]
+            e = rec[-1]
+            return '{} - {}'.format(s.record_id, e.record_id)
+            
         d = self._open_shelve()
 
-        exists = False
-        if self.previous_selection:
-            exists = next((v for v in d.itervalues() if v.name == self.previous_selection.name), None)
-
+        exists=False
+        name=make_name(records)
+        for pi in d.itervalues():
+            if name==pi.name:
+                exists=True
+                break
+                        
         if not exists:
             keys = sorted(d.keys())
             next_key = '001'
             if keys:
                 next_key = '{:03n}'.format(int(keys[-1]) + 1)
-
-            s = records[0]
-            e = records[-1]
-            name = '{} - {}'.format(s.record_id, e.record_id)
-
+                
             records = filter(lambda ri:not isinstance(ri, Marker), records)
             ps = PreviousSelection(records, name=name)
 
             d[next_key] = ps
 
         d.close()
-
-#        ans = [ai.dbrecord.id  for ai in records]
-
-#        s = records[0]
-#        e = records[-1]
-#        name = '{} - {}'.format(s.record_id, e.record_id)
-#
-#        records = filter(lambda ri:not isinstance(ri, Marker), records)
-#        ps = PreviousSelection(records, name=name)
-#        p = os.path.join(paths.hidden_dir, 'stored_selections')
-#        if not os.path.isdir(p):
-#            os.mkdir(p)
-#
-#        with open(os.path.join(p, name), 'w') as fp:
-#            pickle.dump(ps, fp)
 
 #===============================================================================
 # grouping

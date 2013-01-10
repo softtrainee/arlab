@@ -85,7 +85,14 @@ class HardwareValve(Loggable):
     def get_lock_state(self):
         if self.actuator:
             return self.actuator.get_lock_state(self)
+    def set_state(self, state):
+        self.state = state
 
+        if state:
+            self._fsm.ROpen()
+        else:
+            self._fsm.RClose()
+        
     def get_hardware_state(self):
         '''
         '''
@@ -93,12 +100,7 @@ class HardwareValve(Loggable):
         if self.actuator is not None:
             result = self.actuator.get_channel_state(self)
             if isinstance(result, bool):
-                self.state = result
-
-                if result:
-                    self._fsm.ROpen()
-                else:
-                    self._fsm.RClose()
+                self.set_state(result)
             else:
                 result = False
 
@@ -197,7 +199,10 @@ class HardwareValve(Loggable):
         '''
         '''
         self.software_lock = False
-        self._fsm.Unlock()
+        try:
+            self._fsm.Unlock()
+        except Exception, e:
+            self.warning('valve unlock {}'.format(e))
 
     def _error_(self, message):
         self.error = message

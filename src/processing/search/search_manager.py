@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import  Instance, DelegatesTo, Str, Property
 from traitsui.api import View, Item, VGroup, HGroup, \
-    EnumEditor, InstanceEditor
+    EnumEditor, InstanceEditor, Label, Heading
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_selector import ColumnSorterMixin
@@ -101,12 +101,15 @@ class SearchManager(Viewable, ColumnSorterMixin):
         return ats
     def _get_control_group(self):
         cntrl_grp = VGroup(
+                           Label('Project'),
                            Item('project', editor=EnumEditor(name='projects'),
                                 show_label=False,
                                 ),
+                           Label('Spectrometer'),
                            Item('machine', editor=EnumEditor(name='machines'),
                                 show_label=False,
                                 ),
+                           Label('Analysis Type'),
                            Item('analysis_type', editor=EnumEditor(name='analysis_types'),
                                 show_label=False,
                                 ),

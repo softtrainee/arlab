@@ -194,13 +194,16 @@ class ExperimentExecutor(ExperimentManager):
                     arun.cancel()
         else:
             if self._was_executed:
-                self.load_experiment_set(self.path, edit=False)
+                self.load_experiment_set(self.experiment_set.path, edit=False)
 
             self.stop_file_listener()
 
             #check for blank before starting the thread
             exp = self.experiment_sets[0]
             if self._has_preceeding_blank_or_background(exp):
+                #start the extraction line manager's valve state monitor
+                self.extraction_line_manager.start_status_monitor()
+                
                 t = Thread(target=self._execute_experiment_sets)
                 t.start()
 

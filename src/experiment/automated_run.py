@@ -481,7 +481,7 @@ class AutomatedRun(Loggable):
                                 )
 
     def do_baselines(self, ncounts, starttime, mass, detector,
-                    series=0, nintegrations=5):
+                    series=0, nintegrations=5, settling_time=4):
         if not self._alive:
             return
 
@@ -496,7 +496,7 @@ class AutomatedRun(Loggable):
             if mass:
                 if ion is not None:
                     ion.position(mass, self._active_detectors[0].name, False)
-                    time.sleep(2)
+                    time.sleep(settling_time)
 
             gn = 'baseline'
             fits = ['average_SEM', ] * len(self._active_detectors)
@@ -929,6 +929,7 @@ class AutomatedRun(Loggable):
 
         if i > self.plot_panel.ncounts:
             self.info('user termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
+            self._total_counts-=(ncounts-i)
             return 'break'
 
         if self._truncate_signal:
