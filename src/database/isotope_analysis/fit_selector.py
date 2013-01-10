@@ -51,9 +51,13 @@ class FitSelector(HasTraits):
 #            print reg.filter_outliers
             inte = reg.predict(0)
             er = reg.predict_error(0)
-            if fit == 'average':
-                fit = u'average {}'.format(PLUSMINUS) + reg.error_calc.upper()
-        except IndexError:
+            if 'average' in fit:
+                ee='SEM' if fit.endswith('SEM') else 'SD'
+                
+                fit = u'average {}{}'.format(PLUSMINUS,ee) 
+                
+        except IndexError,e:
+            print e
             inte, er, fit, fo = 0, 0, '---', False
 
         obj = AnalysisParameters(name=name,

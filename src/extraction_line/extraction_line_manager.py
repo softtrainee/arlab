@@ -65,7 +65,8 @@ class ExtractionLineManager(Manager):
 
     learner = None
     mode = 'normal'
-
+    _update_status_flag=None
+    
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -136,9 +137,9 @@ class ExtractionLineManager(Manager):
                     pass
 
         if self.mode == 'client':
-            self.start_status()
+            self.start_status_monitor()
 
-    def start_status(self):
+    def start_status_monitor(self):
         def func():
             while not self._update_status_flag.isSet():
                 self.valve_manager.load_valve_states()
@@ -147,12 +148,19 @@ class ExtractionLineManager(Manager):
                 time.sleep(2)
                    
             self.info('status monitor stopped')
-                
-        self._update_status_flag=Event()
-        t = Thread(target=func)
-        t.start()
-        self.info('starting status monitor')
-
+        
+        if self._update_status_flag is None:       
+            self._update_status_flag=Event()
+        
+        if self.isMonitoringValveState():
+            self.info('monitor already running')
+        else:
+            t = Thread(target=func)
+            t.start()
+            self.info('starting status monitor')
+        
+    def isMonitoringValveState(self):
+        return self._update_status_flag.isSet()
 #    def _view_controller(self):
 #        print self.ui.control
 #        self.view_controller.edit_traits(kind = 'livemodal',

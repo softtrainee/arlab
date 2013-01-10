@@ -191,8 +191,8 @@ class proc_FitTable(Base, BaseMixin):
 
     fit = stringcolumn()
     filter_outliers = Column(Boolean)
-    filter_outlier_iterations = Column(Integer)
-    filter_outlier_std_devs = Column(Integer)
+    filter_outlier_iterations = Column(Integer, default=1)
+    filter_outlier_std_devs = Column(Integer, default=1)
 
 class proc_SelectedHistoriesTable(Base, BaseMixin):
     analysis_id = foreignkey('meas_AnalysisTable')

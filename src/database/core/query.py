@@ -74,12 +74,12 @@ class Query(HasTraits):
     parameters = Property
 
     comparator = Str('=')
-    comparisons = List(['=', '<', '>', '<=', '>=', '!=',
+    comparisons = List(['=', '<', '>', '<=', '>=', 'not =',
                          'like',
                          'contains'
                          ])
 #    criterion = String('')
-    criterion = String('', enter_set=True, auto_set=False)
+    criterion = String('')
     criteria = Property(depends_on='parameter')
 #    query_table = Any
 
@@ -93,16 +93,19 @@ class Query(HasTraits):
         comp = self.comparator
         if self.parameter == 'Run Date':
             query = self.date_query(query, attr)
-
-        elif comp in ['like', 'contains', '=']:
+        else:
             c = self.criterion
-            if comp == 'like':
-                c += '%'
-            elif comp == 'contains':
-                comp = 'like'
-                c = '%' + c + '%'
-            query = query.filter(attr == c)
-
+            if comp in ['like', 'contains']:
+                if comp == 'like':
+                    c += '%'
+                elif comp == 'contains':
+                    comp = 'like'
+                    c = '%' + c + '%'
+                query = query.filter(attr == c)
+            else:
+                comp = self._convert_comparator(comp)
+                query = query.filter(getattr(attr, comp)(c))
+            
         return query
 
     def date_query(self, query, attr):
@@ -246,7 +249,8 @@ class Query(HasTraits):
         self.selector.remove_query(self)
 
     def _criterion_changed(self):
-        self.selector.execute_query()
+        if self.criterion:
+            self.selector.execute_query()
 
 #===============================================================================
 # property get/set

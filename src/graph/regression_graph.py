@@ -103,7 +103,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.filter_outliers_dict['filter_outliers'] = fi
 #        scatter.index.metadata['selections'] = []
-
+    
         self.redraw()
 
     def get_filter_outliers(self, fi, plotid=0, series=0):
@@ -124,6 +124,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.fit = fi
         scatter.index.metadata['selections'] = []
+        scatter.index.metadata['filtered']=None
         self.redraw()
 
     def get_fit(self, plotid=0, series=0):
@@ -220,7 +221,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             index.trait_set(metadata=meta, trait_change_notify=False)
 
         meta = index.metadata
-        apply_filter = False
+#        apply_filter = False
         if not fod['filter_outliers']:
             apply_filter = False
             csel = set(meta['selections'])
@@ -333,15 +334,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         return r
 
     def _apply_outlier_filter(self, reg, ox, oy, index, fod):
-
         try:
             if fod['filter_outliers']:
                 t_fx, t_fy = ox[:], oy[:]
                 niterations = fod['filter_outlier_iterations']
                 n = fod['filter_outlier_std_devs']
-
-                for ni in range(niterations):
-                    excludes = list(reg.calculate_outliers(n=n))
+                for _ in range(niterations):
+                    excludes = list(reg.calculate_outliers(nsigma=n))
                     oxcl = excludes[:]
                     sels = index.metadata['selections']
 
@@ -353,9 +352,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     t_fy = delete(t_fy, excludes, 0)
                     reg.trait_set(xs=t_fx, ys=t_fy)
 
-        except (KeyError, TypeError):
+        except (KeyError, TypeError), e:
+            print e
             index.metadata['selections'] = []
-            index.metadata['filtered'] = []
+            index.metadata['filtered'] = None
 
         return reg
 

@@ -268,13 +268,13 @@ class ExtractionLinePyScript(ValvePyScript):
         resp = r.read()
         if resp is not None:
             while resp != criterion:
+                time.sleep(1)
 
                 #only verbose every 10s
                 resp = r.read(verbose=cnt % 10 == 0)
                 if resp is None:
                     continue
 
-                time.sleep(1)
                 cnt += 1
                 if cnt > 100:
                     cnt = 0

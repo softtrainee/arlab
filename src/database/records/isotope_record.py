@@ -219,10 +219,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 self.categories.append('baseline')
             graph = self._load_stacked_graph(baselines)
             self.baseline_graph = EditableGraph(graph=graph)
-            self.baseline_graph.fit_selector = fs = FitSelector(analysis=self,
-                                                           name='Baseline',
-                                                           graph=self.baseline_graph)
-            fs.on_trait_change(self.analysis_summary.refresh, 'fits:[fit,filterstr,filter_outliers]')
+            self.baseline_graph.fit_selector =  FitSelector(analysis=self,
+                                                                name='Baseline',
+                                                                graph=self.baseline_graph)
+            
+#            fs.on_trait_change(self.analysis_summary.refresh, 'fits:[fit,filterstr,filter_outliers]')
 
 #            fs.on_trait_change()
 
@@ -299,11 +300,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             else:
                 item = getattr(self, '{}_graph'.format(selected))
 
-            if hasattr(item, 'refresh'):
-                item.refresh()
-
             self.trait_set(display_item=item)
 
+            if hasattr(item, 'refresh'):
+                item.refresh(gui=False)
+                
     def _apply_history_change(self, new):
         self.changed = True
 
@@ -321,16 +322,18 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
                     if rs:
                         v = rs.predict(0)
+                        ve=rs.predict_error(0)
 #                        print rs, v
                         self._signals[iso] = Signal(_value=v,
-                                               _error=rs.coefficient_errors[-1])
+                                               _error=ve)
             graph = self.baseline_graph
             if graph:
                 for iso, rs in zip(self.isotope_keys, graph.regressors):
                     if rs:
                         v = rs.predict(0)
+                        ve=rs.predict_error(0)
                         self._signals['{}bs'.format(iso)] = Signal(_value=v,
-                                                              _error=rs.coefficient_errors[-1])
+                                                              _error=ve)
             return
 #            return self._signals_table, self._baselines_table
 
@@ -502,9 +505,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
             graph.new_plot(
                             **gkw)
+            
+            ite=ofit.filter_outlier_iterations
+            ite=ite if ite is not None else 1
+            sd=ofit.filter_outlier_std_devs
+            sd=sd if sd is not None else 1
+            
             fo_dict = dict(filter_outliers=ofit.filter_outliers,
-                             filter_outlier_iterations=ofit.filter_outlier_iterations,
-                             filter_outlier_std_devs=ofit.filter_outlier_std_devs)
+                             filter_outlier_iterations=ite,
+                             filter_outlier_std_devs=sd)
             graph.new_series(xs, ys, plotid=i,
                              type='scatter',
                              marker='circle',
