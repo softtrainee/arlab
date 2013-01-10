@@ -18,7 +18,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-__version__=007
+__version__=006
 */
 using System.IO;
 using System.Text;
@@ -35,21 +35,18 @@ using Thermo.Imhotep.Util;
 
 class RemoteControl
 {
-	private static int m_port = 1069;
-	public static TcpListener listener;
-	public static Socket udp_sock;
+	private static int m_PORT = 1069;
+	public static TcpListener TCPLISTENER;
+	public static Socket UDP_SOCK;
 	
-	private static bool use_udp=true;
-	private static bool tag_data=true;
-	private static bool use_beam_blank=false;	
-	private static double max_magnet_step=0.5;
-	private static boo use_magnet_step=true;
-	private static double magnet_move_time=2000; //millisecs
-	
-	
-	public static string scan_data;
-	
-	public static object m_lock=new object();
+	private static bool USE_UDP=true;
+	private static bool TAG_DATA=true;
+	private static bool USE_BEAM_BLANK=false;
+	private static double MAGNET_MOVE_THRESHOLD=0.25;// threshold to trigger stepped magnet move in DAC units
+	private static int MAGNET_STEPS=20; // number of steps to divide the total magnet displacement
+	private static int MAGNET_STEP_TIME=0; //ms to delay between magnet steps
+	private static double LAST_Y_SYMMETRY=0;
+	private static bool IsBLANKED=false;
 	
 	public const int ON = 1;
 	public const int OFF = 0;
@@ -59,17 +56,16 @@ class RemoteControl
 	
 	public static IRMSBaseCore Instrument;
 	public static IRMSBaseMeasurementInfo m_restoreMeasurementInfo;
+
+	public static string SCAN_DATA;
+	public static object m_lock=new object();
     
-	private static double last_y_symmetry=0;
-	private static bool isblanked=false;
-	
-	
 	public static void Main ()
 	{
 		Instrument= ArgusMC;
 		
 		//init parameters
-		Instrument.GetParameter("Y-Symmetry Set", out last_y_symmetry);
+		Instrument.GetParameter("Y-Symmetry Set", out LAST_Y_SYMMETRY);
 		
 		GetTuningSettings();
 		PrepareEnvironment();
@@ -77,7 +73,7 @@ class RemoteControl
         //setup data recording
 		InitializeDataRecord();
 		
-		if (use_udp)
+		if (USE_UDP)
 		{
 			UDPServeForever();
 		}
@@ -159,6 +155,8 @@ class RemoteControl
 		string[] args = cmd.Trim().Split (' ');
 		double r;
 		switch (args[0]) {
+
+		
 		case "GetTuningSettingsList":
 			result = GetTuningSettings();
 			break;
@@ -175,7 +173,7 @@ class RemoteControl
 			break;
 			
 		case "GetData":
-			result=scan_data;
+			result=SCAN_DATA;
 			break;
 			
 		case "SetIntegrationTime":
@@ -183,30 +181,31 @@ class RemoteControl
 			break;
 			
 		case "BlankBeam":
-			if (!use_beam_blank)
-			{
+		
+			if (!USE_BEAM_BLANK)
+			{	
 				result="OK";
 				break;
 			}
-		
-			double yval=last_y_symmetry;
+			
+			double yval=LAST_Y_SYMMETRY;
 			bool blankbeam=false;
 			if (args[1]=="true")
 			{
-				if(!isblanked)
+				if(!IsBLANKED)
 				{
 					//remember the non blanking Y-Symmetry value
-					Instrument.GetParameter("Y-Symmetry Set", out last_y_symmetry);
+					Instrument.GetParameter("Y-Symmetry Set", out LAST_Y_SYMMETRY);
 					yval=-50;
-					isblanked=true;
+					IsBLANKED=true;
 					blankbeam=true;
 				}
 			}
 			else
 			{
-				if(isblanked)
+				if(IsBLANKED)
 				{
-					isblanked=false;
+					IsBLANKED=false;
 					blankbeam=true;
 					result=SetParameter("Y-Symmetry Set",yval);
 				}
@@ -294,6 +293,7 @@ class RemoteControl
 //   Magnet
 //============================================================================================					
 		case "GetMagnetDAC":
+			//double r;
 			if (Instrument.GetParameter("Field Set", out r))
 			{
 				result=r.ToString();
@@ -301,14 +301,9 @@ class RemoteControl
 			break;
 			
 		case "SetMagnetDAC":
-			if (use_magnet_step)
-			{
-				result=SetMagnetDAC(Convert.ToDouble(args[1]));
-			}
-			else
-			{
-				result=SetParameter("Field Set",Convert.ToDouble(args[1]));
-			}
+		
+			result=SetMagnetDAC(Convert.ToDouble(args[1]));
+			//result=SetParameter("Field Set",Convert.ToDouble(args[1]));
 			break;
 			
 //============================================================================================
@@ -379,7 +374,7 @@ class RemoteControl
 			break;
 			
 		case "SetYSymmetry":
-			last_y_symmetry=Convert.ToDouble(args[1]);
+			LAST_Y_SYMMETRY=Convert.ToDouble(args[1]);
 			result=SetParameter("Y-Symmetry Set",Convert.ToDouble(args[1]));
 			break;
 		
@@ -482,13 +477,13 @@ class RemoteControl
 		ArgusMC.ScanDataAvailable-=ScanDataAvailable;
 		
 		//shutdown the server
-		if (use_udp)
+		if (USE_UDP)
 		{
-			udp_sock.Close();
+			UDP_SOCK.Close();
 		}
 		else
 		{
-			listener.Stop();
+			TCPLISTENER.Stop();
 		}
 
 	}
@@ -557,39 +552,35 @@ class RemoteControl
 	
 	public static string SetMagnetDAC(double d)
 	{
-		string result="Fail"
-		double current_dac;
 		
-		int sign=1;
-		int nsteps=1;
-		double rem=0;
-		double step=d;
+		string result="OK";
+		double current_dac;
 		
 		if (Instrument.GetParameter("Field Set", out current_dac))
 		{
-			if (current_dac >d){sign=-1}
-			double dev;
-			dev=Math.Abs(d-current_dac);
-			if (dev>max_magnet_step)
+			int sign=1;
+			if (current_dac>d)
 			{
-				nsteps=Convert.ToInt32(dev/max_magnet_step);
-				rem=dev%max_magnet_step;
-				step=max_magnet_step;
+				sign=-1;
 			}
-			
-			for(int i=1; i<=nsteps; i++)
+
+			double dev=Math.Abs(d-current_dac);			
+			if (dev>MAGNET_MOVE_THRESHOLD)
 			{
-				nv=current_dac+sign*i*step;
-				result=SetParameter("Field Set", nv);
-				Thread.CurrentThread.Sleep(magnet_move_time/nsteps)
-				
+				double step=dev/MAGNET_STEPS;
+				for(int i=1; i<=MAGNET_STEPS; i++)
+				{
+					result=SetParameter("Field Set", current_dac+sign*i*step);
+					if (MAGNET_STEP_TIME>0)
+					{
+						Thread.CurrentThread.Sleep(MAGNET_STEP_TIME);
+					}
+				}
 			}
-			if (rem>0)
+			else
 			{
-				Instrument.GetParameter("Field Set", out current_dac);
-				result=SetParameter("Field Set", current_dac+sign*rem);
+				result=SetParameter("Field Set", d);
 			}
-			
 		}
 		return result;
 		
@@ -657,7 +648,7 @@ class RemoteControl
 							else
 							{								
 								data.Add(point.Analog.ToString());
-								if (tag_data)
+								if (TAG_DATA)
 								{
 									data.Add(cupName);
 								}
@@ -672,14 +663,14 @@ class RemoteControl
 			data.Reverse();
 			if(cdd)
 			{
-				if (tag_data)
+				if (TAG_DATA)
 				{
 					data.Add("CDD");
 				}
 				data.Add(cddCounts.ToString());
 			}
 			
-			scan_data=string.Join(",",data.ToArray());
+			SCAN_DATA=string.Join(",",data.ToArray());
 			
 		}
 	}
@@ -837,8 +828,8 @@ class RemoteControl
 	private static void TCPServeForever ()
 	{
 		Logger.Log (LogLevel.UserInfo, "Starting TCP Server.");
-		listener = new TcpListener (IPAddress.Any, m_port);
-		listener.Start ();
+		TCPLISTENER = new TcpListener (IPAddress.Any, m_PORT);
+		TCPLISTENER.Start ();
 		
 		
 		Thread listenThread = new Thread (new ThreadStart (TCPListen));
@@ -858,9 +849,9 @@ class RemoteControl
 		int recv;
 		byte[] data= new byte[1024];
 		
-		IPEndPoint ipep = new IPEndPoint(IPAddress.Any, m_port);
-		udp_sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-		udp_sock.Bind(ipep);
+		IPEndPoint ipep = new IPEndPoint(IPAddress.Any, m_PORT);
+		UDP_SOCK = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+		UDP_SOCK.Bind(ipep);
 		
 		IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
 		EndPoint remote = (EndPoint)(sender);
@@ -869,13 +860,13 @@ class RemoteControl
 		{
 			try
 			{
-				recv=udp_sock.ReceiveFrom(data, ref remote);
+				recv=UDP_SOCK.ReceiveFrom(data, ref remote);
 				string rdata = Encoding.ASCII.GetString(data,0, recv);
 				
 				string result = ParseAndExecuteCommand(rdata.Trim());
 				
 				//Logger.Log(LogLevel.Debug, String.Format("Sending back {0}", result));
-				udp_sock.SendTo(Encoding.ASCII.GetBytes(result), remote);
+				UDP_SOCK.SendTo(Encoding.ASCII.GetBytes(result), remote);
 			} catch (Exception e) {
 			string error = string.Format ("Could not read from UDP sock. {0}", e.ToString ());
 			Logger.Log(LogLevel.Warning, error);
@@ -889,9 +880,9 @@ class RemoteControl
 		Logger.Log (LogLevel.UserInfo, "TCP Listening");
 		
 		while (true) {
-			TCPHandle(listener.AcceptTcpClient ());
+			TCPHandle(TCPLISTENER.AcceptTcpClient ());
 			
-			//TcpClient client = listener.AcceptTcpClient ();
+			//TcpClient client = TCPLISTENER.AcceptTcpClient ();
 			//Thread clientThread = new Thread (new ParameterizedThreadStart (TCPHandle));
 			//clientThread.Start (client);
 		}
