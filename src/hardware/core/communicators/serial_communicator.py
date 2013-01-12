@@ -65,6 +65,8 @@ class SerialCommunicator(Communicator):
 
     read_delay = None
     read_terminator = None
+    clear_output=False
+    
     def reset(self):
         handle = self.handle
         try:
@@ -101,6 +103,9 @@ class SerialCommunicator(Communicator):
                            cast='int', optional=True)
         self.set_attribute(config, 'timeout', 'Communications', 'timeout',
                            cast='float', optional=True)
+
+        self.set_attribute(config, 'clear_output', 'Communications', 'clear_output',
+                           cast='boolean', optional=True)
 
         parity = self.config_get(config, 'Communications', 'parity', optional=True)
         if parity is not None:
@@ -169,7 +174,8 @@ class SerialCommunicator(Communicator):
         
         with self._lock:
             #self.handle.flushInput()
-            self.handle.flushOutput()
+            if self.clear_output:
+                self.handle.flushOutput()
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
             re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes)
