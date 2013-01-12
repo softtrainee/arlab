@@ -432,8 +432,6 @@ class ExperimentExecutor(ExperimentManager):
             if dbr:
                 self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
                 self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
-                for iso, pi in self._prev_blanks.iteritems():
-                    print iso, pi
                 return True
 
     def _has_preceeding_blank_or_background(self, exp):

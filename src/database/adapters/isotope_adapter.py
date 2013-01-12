@@ -253,11 +253,13 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_irradiation(self, name, production=None, chronology=None):
         production = self.get_irradiation_production(production)
         chronology = self.get_irradiation_chronology(chronology)
-
+        
+        print production, chronology
         ir = irrad_IrradiationTable(name=name,
                                     production=production,
                                     chronology=chronology)
-        return self._add_unique(ir, 'irradiation', name)
+        self._add_item(ir)
+#        return self._add_unique(ir, 'irradiation', name)
 
     def add_irradiation_holder(self, name , **kw):
         ih = irrad_HolderTable(name=name, **kw)
@@ -406,34 +408,54 @@ class IsotopeAdapter(DatabaseAdapter):
         return user
 
     def add_sample(self, name, project=None, material=None, **kw):
-        sample = gen_SampleTable(name=name, **kw)
-
+        project=self.get_project(project)
+        material=self.get_material(material)
+        
         sess = self.get_session()
         q = sess.query(gen_SampleTable)
-        q = q.filter(gen_SampleTable.name == name)
-
-        sam = q.one()
-#        sam = sql_retrieve(q.one)
-        if sam is None:
-            if isinstance(project, str):
-                project = None
-
-            if project is not None:
-                project.samples.append(sample)
-
-            if isinstance(material, str):
-                material = None
-
-            if material is not None:
-                material.samples.append(sample)
-
-            self.info('adding sample {} project={}, material={}'.format(name,
-                                                                        project.name if project else 'None',
-                                                                        material.name if material else 'None',))
-
-            self._add_item(sam)
+        q = q.filter(and_(gen_SampleTable.name == name,
+                          gen_SampleTable.material==material,
+                          gen_SampleTable.project==project
+                          ))
+        
+        try:
+            sample = q.one()
+        except Exception, e:
+            print e
+            sample=None
+        
+#        print sample
+        if sample is None:
+            sample=self._add_sample(name, project, material)
+        else:
+            materialname=material.name if material else None
+            projectname=project.name if project else None
+            
+            sample_material_name=sample.material.name if sample.material else None
+            sample_project_name=sample.project.name if sample.project else None
+#            print sample_material_name, sample_project_name, materialname, projectname
+            if sample_material_name!=materialname and \
+                sample_project_name!=projectname:
+                sample=self._add_sample(name, project, material)
+                    
         return sample
+    
+    def _add_sample(self,name, project, material):
+        sample = gen_SampleTable(name=name)
 
+        if project is not None:
+            project.samples.append(sample)
+
+        if material is not None:
+            material.samples.append(sample)
+
+        self.info('adding sample {} project={}, material={}'.format(name,
+                                                                    project.name if project else 'None',
+                                                                    material.name if material else 'None',))
+
+        self._add_item(sample)
+        return sample
+    
     def add_selected_histories(self, analysis, **kw):
         sh = analysis.selected_histories
         if sh is None:

@@ -393,7 +393,7 @@ class ExperimentManager(Manager):
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
         if path is not None:
-            self.start_file_listener(path)
+            
             self.experiment_set = None
             self.experiment_sets = []
             #parse the file into individual experiment sets
@@ -413,7 +413,7 @@ class ExperimentManager(Manager):
             self._update_aliquots()
             if self.experiment_sets:
                 self.experiment_set = self.experiment_sets[0]
-
+                self.start_file_listener(self.experiment_set.path)
                 def func():
                     self.set_selector.selected_index = -2
                     self.set_selector.selected_index = 0

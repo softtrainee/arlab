@@ -72,15 +72,19 @@ class ProductionRatioInput(Saveable):
         keys = [
                 'k4039', 'k3839', 'k3739',
                 'ca3937', 'ca3837', 'ca3637',
-                'cl3638',
-                'Ca_K'
-                'Cl_K'
+                'cl3638'
                 ]
         ekeys = ['{}_err'.format(ki) for ki in keys]
         values = [getattr(self, ki).value for ki in keys]
         errors = [getattr(self, ki).error for ki in keys]
-
-        params = dict(zip(map(str.capitalize, keys + ekeys), values + errors))
+        ks=[ki.capitalize() for ki in keys+ekeys]
+        params = dict(zip(ks, values + errors))
+        
+        params['Ca_K']=self.Ca_K.value
+        params['Ca_K_err']=self.Ca_K.error
+        params['Cl_K']=self.Cl_K.value
+        params['Cl_K_err']=self.Cl_K.error
+    
         ip = db.get_irradiation_production(self.name)
         if ip:
             for k, v in params.iteritems():
@@ -180,7 +184,8 @@ class ProductionRatioInput(Saveable):
                  width=300,
                  resizable=True,
                  buttons=[Action(name='Save', action='save',
-                                enabled_when='object.save_enabled'),
+#                                enabled_when='object.save_enabled'
+                                ),
                           'Cancel'
                           ],
                  handler=self.handler_klass,

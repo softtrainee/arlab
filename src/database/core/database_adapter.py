@@ -271,9 +271,10 @@ host={}'.format(self.name, self.username, self.host))
     def _add_unique(self, item, attr, name):
         #test if already exists 
         nitem = getattr(self, 'get_{}'.format(attr))(name)
-        if nitem is None or isinstance(nitem, (str, unicode)):
+        if nitem is None: #or isinstance(nitem, (str, unicode)):
             self.info('adding {}= {}'.format(attr, name))
-            self._add_item(nitem)
+            self._add_item(item)
+            nitem=item
 #            self.info('{}= {} already exists'.format(attr, name))
         return nitem
 

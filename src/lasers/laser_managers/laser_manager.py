@@ -40,8 +40,9 @@ class ILaserManager(Interface):
 
 class BaseLaserManager(Manager):
     implements(ILaserManager)
-
     pattern_executor = Instance(PatternExecutor)
+    use_video=Bool(False)
+    
     def new_pattern_maker(self):
         pm = PatternMakerView()
         self.open_view(pm)
@@ -94,7 +95,7 @@ class LaserManager(BaseLaserManager):
     stage_manager = Instance(StageManager)
 #    pattern_executor = Instance(PatternExecutor)
 
-    use_video = Bool(False)
+    #use_video = Bool(False)
     record_lasing_video = Bool(False)
     record_lasing_power = Bool(False)
 
