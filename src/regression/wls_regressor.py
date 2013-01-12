@@ -17,7 +17,10 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 from numpy import asarray
-from statsmodels.api import WLS
+try:
+    from statsmodels.api import WLS
+except ImportError:
+    from scikits.statsmodels.api import WLS
 #============= local library imports  ==========================
 #from src.regression.base_regressor import BaseRegressor
 from src.regression.ols_regressor import OLSRegressor
