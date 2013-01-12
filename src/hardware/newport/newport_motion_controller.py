@@ -853,7 +853,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         while self._moving_(axis=axis):
             # is the sleep necessary and ehat period 
-            time.sleep(0.01)
+            time.sleep(0.1)
 
         if event is not None:
             event.set()

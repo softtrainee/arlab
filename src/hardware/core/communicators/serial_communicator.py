@@ -166,9 +166,7 @@ class SerialCommunicator(Communicator):
             if verbose:
                 self.info('no handle    {}'.format(cmd.strip()))
             return
-
-        #re=None
-
+        
         with self._lock:
             #self.handle.flushInput()
             self.handle.flushOutput()

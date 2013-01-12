@@ -33,8 +33,9 @@ class FusionsCO2LaserMonitor(FusionsLaserMonitor, CO2LaserMonitor):
     def stop(self):
         if self.setpoint and self.internal_meter_buffer:
             tol = 4
-            if abs(max(self.internal_meter_buffer) - self.setpoint) > tol:
-                self.manager.error_code = SetpointErrorCode(self.setpoint)
+            if self.internal_meter_buffer:
+                if abs(max(self.internal_meter_buffer) - self.setpoint) > tol:
+                    self.manager.error_code = SetpointErrorCode(self.setpoint)
 
         super(FusionsCO2LaserMonitor, self).stop()
 
