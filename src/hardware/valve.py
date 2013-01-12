@@ -31,17 +31,17 @@ class HardwareValve(Loggable):
     '''
     name = Str
     display_name = Str
+    display_state = Property(depends_on='state')
+    display_software_lock = Property(depends_on='software_lock')
 
     address = Str
     actuator = Any
 
-    success = Bool(False)
+#    success = Bool(False)
     interlocks = List
     state = Bool(False)
-    display_state = Property(depends_on='state')
-    display_software_lock = Property(depends_on='software_lock')
-    debug = False
-    error = None
+#    debug = False
+#    error = None
     software_lock = False
 
     cycle_period = Float(1)
@@ -57,15 +57,6 @@ class HardwareValve(Loggable):
 
     query_state = Bool(True)
     description = Str
-
-    def _get_shaft_low(self):
-        return self.canvas_valve.low_side.orientation
-
-    def _get_shaft_high(self):
-        return self.canvas_valve.high_side.orientation
-
-    def _get_position(self):
-        return ','.join(map(str, self.canvas_valve.translate))
 
     def __init__(self, name, *args, **kw):
         '''
@@ -85,13 +76,9 @@ class HardwareValve(Loggable):
     def get_lock_state(self):
         if self.actuator:
             return self.actuator.get_lock_state(self)
+
     def set_state(self, state):
         self.state = state
-
-        if state:
-            self._fsm.ROpen()
-        else:
-            self._fsm.RClose()
 
     def get_hardware_state(self):
         '''
@@ -106,138 +93,96 @@ class HardwareValve(Loggable):
 
         return result
 
-#    def get_hard_lock(self):
-#        '''
-#        '''
-#        if self.actuator is not None:
-#            r = self.actuator.get_hard_lock_indicator_state(self)
-#        else:
-#            r = False
-#
-#        return r
-#
-#    def get_hard_lock_indicator_state(self):
-#        '''
-#        '''
-#
-#        s = self.get_hardware_state()
-#        r = self.get_hard_lock()
-#
-#        if r:
-#            if s:
-#                self._fsm.HardLockOpen()
-#            else:
-#                self._fsm.HardLockClose()
-#        else:
-#            self._fsm.HardUnLock()
-#        #print self.auto
-#        return r
-
-    def open(self, mode='normal'):
-        '''
-
-        '''
-        self._state_change = False
+    def set_open(self, mode='normal'):
         self.info('open mode={}'.format(mode))
-        self.debug = mode == 'debug'
-        self._fsm.Open()
 
-#        if mode in ['auto', 'manual', 'debug', 'remote']:
-#            self._fsm.Open()
+        state_change = False
+        success = True
+        if self.software_lock:
+            self._software_locked()
+        else:
+            success = self._open_()
+            if success:
+                if self.state == False:
+                    state_change = True
+                self.state = True
 
-        result = self.success
-        if self.error is not None:
-            result = self.error
-            self.error = None
+        return success, state_change
 
-        if not result:
-            pass
-            #self._fsm.RClose()
-
-        return result, self._state_change
-
-    def close(self, mode='normal'):
-        '''
-
-        '''
-        self._state_change = False
+    def set_closed(self, mode='normal'):
         self.info('close mode={}'.format(mode))
 
-        self.debug = mode == 'debug'
-#        if mode in ['auto', 'manual', 'debug', 'remote']:
-#            self._fsm.Close()
-        self._fsm.Close()
+        state_change = False
+        success = True
+        if self.software_lock:
+            self._software_locked()
+        else:
+            success = self._close_()
+            if success:
+                if self.state == True:
+                    state_change = True
+                self.state = False
 
-        result = self.success
-        if self.error is not None:
-            result = self.error
-            self.error = None
+        return success, state_change
 
-        if not result:
-            pass
-            #self._fsm.ROpen()
-
-        return result, self._state_change
-
-#    def acquire_critical_section(self):
-#        self._critical_section = True
-#    
-#    def release_system_lock(self):
-#        self._critical_section = False
-#    
-#    def isCritical(self):
-#        return self._critical_section
+    def _software_locked(self):
+        self.info('{}({}) software locked'.format(self.name, self.description))
 
     def lock(self):
-        if self.state:
-            self._fsm.LockOpen()
-        else:
-            self._fsm.LockClose()
         self.software_lock = True
 
     def unlock(self):
-        '''
-        '''
         self.software_lock = False
-        try:
-            self._fsm.Unlock()
-        except Exception, e:
-            self.warning('valve unlock {}'.format(e))
 
-    def _error_(self, message):
-        self.error = message
-        self.warning(message)
-
-    def _open_(self, *args, **kw):
+    def _open_(self, mode='normal'):
         '''
         '''
-        r = True
-        if self.actuator is not None:
-            if self.debug:
-                r = True
+        actuator = self.actuator
+        if mode == 'debug':
+            r = True
+        elif self.actuator is not None:
+            if mode.startswith('client'):
+                #always actuate if mode is client
+                r = True if actuator.open_channel(self) else False
             else:
-                r = True if self.actuator.open_channel(self) else False
+                #dont actuate if already open
+                if self.state == True:
+                    r = True
+                else:
+                    r = True if actuator.open_channel(self) else False
 
-        self.success = r
-        if self.success:
-            self.state = True
-            self._state_change = True
+        if actuator.simulation:
+            r = True
+        return r
 
-    def _close_(self, *args, **kw):
+    def _close_(self, mode='normal'):
         '''
         '''
-        r = True
-        if self.actuator is not None:
-            if self.debug:
-                r = True
+        actuator = self.actuator
+        if mode == 'debug':
+            r = True
+        elif actuator is not None:
+            if mode.startswith('client'):
+                r = True if actuator.close_channel(self) else False
             else:
-                r = True if self.actuator.close_channel(self) else False
+                #dont actuate if already closed
+                if self.state == False:
+                    r = True
+                else:
+                    r = True if actuator.close_channel(self) else False
 
-        self.success = r
+        if actuator.simulation:
+            r = True
+        return r
 
-        if self.success:
-            self.state = False
-            self._state_change = True
+    def _get_shaft_low(self):
+        return self.canvas_valve.low_side.orientation
+
+    def _get_shaft_high(self):
+        return self.canvas_valve.high_side.orientation
+
+    def _get_position(self):
+        return ','.join(map(str, self.canvas_valve.translate))
 
     def _get_display_state(self):
         return 'Open' if self.state else 'Close'
@@ -279,6 +224,66 @@ class HardwareValve(Loggable):
                     buttons=['OK', 'Cancel'],
                     title='{} Properties'.format(self.name)
                     )
+
+#============= EOF ====================================
+#    def open(self, mode='normal'):
+#        '''
+#
+#        '''
+#        self._state_change = False
+#        self.info('open mode={}'.format(mode))
+#        self.debug = mode == 'debug'
+#        self._fsm.Open()
+#
+##        if mode in ['auto', 'manual', 'debug', 'remote']:
+##            self._fsm.Open()
+#
+#        result = self.success
+#        if self.error is not None:
+#            result = self.error
+#            self.error = None
+#
+#        if not result:
+#            pass
+#            #self._fsm.RClose()
+#
+#        return result, self._state_change
+#
+#    def close(self, mode='normal'):
+#        '''
+#
+#        '''
+#        self._state_change = False
+#        self.info('close mode={}'.format(mode))
+#
+#        self.debug = mode == 'debug'
+##        if mode in ['auto', 'manual', 'debug', 'remote']:
+##            self._fsm.Close()
+#        self._fsm.Close()
+#
+#        result = self.success
+#        if self.error is not None:
+#            result = self.error
+#            self.error = None
+#
+#        if not result:
+#            pass
+#            #self._fsm.ROpen()
+#
+#        return result, self._state_change
+
+#    def acquire_critical_section(self):
+#        self._critical_section = True
+#    
+#    def release_system_lock(self):
+#        self._critical_section = False
+#    
+#    def isCritical(self):
+#        return self._critical_section
+#    def _error_(self, message):
+#        self.error = message
+#        self.warning(message)
+
 #    def warning(self, msg):
 #        '''
 #            @type msg: C{str}
@@ -287,5 +292,29 @@ class HardwareValve(Loggable):
 ##        super(HardwareValve, self).warning(msg)
 #        Loggable.warning(self, msg)
 #        self.success = False
-
-#============= EOF ====================================
+#    def get_hard_lock(self):
+#        '''
+#        '''
+#        if self.actuator is not None:
+#            r = self.actuator.get_hard_lock_indicator_state(self)
+#        else:
+#            r = False
+#
+#        return r
+#
+#    def get_hard_lock_indicator_state(self):
+#        '''
+#        '''
+#
+#        s = self.get_hardware_state()
+#        r = self.get_hard_lock()
+#
+#        if r:
+#            if s:
+#                self._fsm.HardLockOpen()
+#            else:
+#                self._fsm.HardLockClose()
+#        else:
+#            self._fsm.HardUnLock()
+#        #print self.auto
+#        return r

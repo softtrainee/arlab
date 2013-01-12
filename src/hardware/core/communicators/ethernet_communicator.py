@@ -66,7 +66,7 @@ class UDPHandler(Handler):
 
     def get_packet(self):
         r = None
-        cnt = 5
+        cnt = 3
         for _ in range(cnt):
             try:
                 r, _address = self.sock.recvfrom(self.datasize)

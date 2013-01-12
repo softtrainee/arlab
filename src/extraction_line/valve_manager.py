@@ -490,28 +490,28 @@ class ValveManager(Manager):
     def _open_(self, name, mode):
         '''
         '''
-        open_close = 'open'
+        action = 'set_open'
         #check software interlocks and return None if True
         if self.check_soft_interlocks(name):
             self.warning('Software Interlock')
             return
 
-        return self._actuate_(name, open_close, mode)
+        return self._actuate_(name, action, mode)
 
     def _close_(self, name, mode):
         '''
         '''
-        open_close = 'close'
+        action = 'set_closed'
         if self.check_soft_interlocks(name):
             self.warning('Software Interlock')
             return
 
-        return self._actuate_(name, open_close, mode)
-    #@recordable
-    def _actuate_(self, name, open_close, mode, address=None):
+        return self._actuate_(name, action, mode)
+
+    def _actuate_(self, name, action, mode, address=None):
         '''
         '''
-        change = False
+        changed = False
         if address is None:
             v = self.get_valve_by_name(name)
             vid = name
@@ -521,13 +521,13 @@ class ValveManager(Manager):
 
         result = None
         if v is not None:
-            act = getattr(v, open_close)
+            act = getattr(v, action)
 
-            result, change = act(mode=mode)
+            result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
             if isinstance(result, bool):#else its an error message
                 if result:
                     ve = self.get_evalve_by_name(name)
-                    ve.state = True if open_close == 'open' else False
+                    ve.state = True if action == 'open' else False
 
 #                update the section state
 #                for s in self.sections:
@@ -539,7 +539,7 @@ class ValveManager(Manager):
             self.warning('Valve {} not available'.format(vid))
             #result = 'Valve %s not available' % id
 
-        return result, change
+        return result, changed
 
     def _get_system_address(self, name):
         return next((h for k, h in self.systems.iteritems() if k == name), None)
