@@ -20,8 +20,8 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-BASENAME = 'src.extraction_line.plugins.extraction_line_actions:{}'
-MPATH = 'MenuBar/Extraction Line'
+BASE = 'src.extraction_line.plugins.extraction_line_actions'
+PATH = 'MenuBar/Extraction Line'
 class ExtractionLineActionSet(WorkbenchActionSet):
     '''
     '''
@@ -29,33 +29,33 @@ class ExtractionLineActionSet(WorkbenchActionSet):
     actions = [
 
                Action(name='Extraction Line Manager',
-                      path=MPATH,
-                      class_name=BASENAME.format('OpenExtractionLineManager')
+                      path=PATH,
+                      class_name='{}:OpenExtractionLineManager'.format(BASE)
                       ),
                Action(name='Explanation',
-                      path=MPATH,
-                      class_name=BASENAME.format('OpenExtractionLineExplanation')
+                      path=PATH,
+                      class_name='{}:OpenExtractionLineExplanation'.format(BASE)
                       ),
-
                Action(name='Load Canvas',
-                      path=MPATH,
-                      class_name=BASENAME.format('LoadCanvasAction')
+                      path=PATH,
+                      class_name='{}:LoadCanvasAction'.format(BASE)
                       ),
                Action(name='Refresh Canvas',
-                      path=MPATH,
-                      class_name=BASENAME.format('RefreshCanvasAction')
+                      path=PATH,
+                      class_name='{}:RefreshCanvasAction'.format(BASE)
+#                      class_name=BASENAME.format('RefreshCanvasAction')
                       ),
-               Action(name='Canvas Views',
-                      path=MPATH,
-                      class_name=BASENAME.format('OpenViewControllerAction')
-                      ),
-                Action(name='Open PyScript Editor',
-                       path=MPATH,
-                       class_name=BASENAME.format('OpenPyScriptEditorAction'),
+#               Action(name='Canvas Views',
+#                      path=MPATH,
+#                      class_name=BASENAME.format('OpenViewControllerAction')
+#                      ),
+#                Action(name='Open PyScript Editor',
+#                       path=MPATH,
+#                       class_name=BASENAME.format('OpenPyScriptEditorAction'),
 #               Action(name='Device Streamer',
 #                      path='MenuBar/Extraction Line',
 #                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenDeviceStreamerAction'),
-                       )
+#                       )
 
               ]
 #============= EOF ====================================

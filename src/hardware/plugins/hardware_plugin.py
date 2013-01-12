@@ -24,7 +24,7 @@ from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from apptools.preferences.preference_binding import bind_preference
 from src.managers.hardware_manager import HardwareManager
 from src.hardware.core.i_core_device import ICoreDevice
-from src.extraction_line.flag_manager import FlagManager
+from src.hardware.flag_manager import FlagManager
 #from src.managers.system_lock_manager import SystemLockManager
 
 class Preference(HasTraits):

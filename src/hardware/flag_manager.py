@@ -21,8 +21,9 @@ from traitsui.api import View, Item, ListEditor, InstanceEditor, \
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.flag import Flag, TimedFlag
+from src.viewable import Viewable
 
-class FlagManager(HasTraits):
+class FlagManager(Viewable):
     flags = List(Flag)
     timed_flags = List(TimedFlag)
 
@@ -41,6 +42,7 @@ class FlagManager(HasTraits):
 
                  title='Flag Manager',
                  width=300,
+                 handler=self.handler_klass,
 #                 height=300
                  resizable=True
                  )

@@ -21,17 +21,7 @@ import time
 from src.hardware.actuators.gp_actuator import GPActuator
 
 '''
-Arduino Firmware syntax
 
-open channel
-o<A...Z>
-close channel
-c<A...Z>
-get channel state
-s<A...Z>
-    response indicator pin high == 1
-             indicator pin low == 0
-             
              
 disable DTR
 1. place 110ohm btw 5V and Reset
@@ -49,11 +39,9 @@ class ArduinoGPActuator(GPActuator):
     '''
     Abstract module for Arduino GP Actuator
     
-    communicator must be implement FirmataCommunicator protocol
     '''
     def open(self, **kw):
         super(ArduinoGPActuator, self).open(**kw)
-        time.sleep(0.5)
 
     def _parse_response(self, resp):
         if resp is not None:
@@ -64,15 +52,6 @@ class ArduinoGPActuator(GPActuator):
         except (TypeError, ValueError, AttributeError):
             return resp
 
-#        if resp is not None:
-#            args = resp.split(',')
-#            if len(args) == 2:
-#                if args[0] == '1':
-#                    try:
-#                        return int(args[1][:-1])
-#                    except ValueError:
-#                        return args[1][:-1]
-
     def _build_command(self, cmd, pin, state):
 #        delimiter = ','
         eol = '\r\n'
@@ -80,23 +59,16 @@ class ArduinoGPActuator(GPActuator):
             r = '{} {}{}'.format(cmd, pin, eol)
         else:
             r = '{} {} {}{}'.format(cmd, pin, state, eol)
-#        return '{}{}{}{}'.format(cmd, delimiter, value, eol)
         return r
 
     def open_channel(self, obj):
         pin = obj.address
-
-#        self.ask(self._build_command(4, pin))
-#        cmd = (4, pin)
         cmd = ('w', pin, 1)
         self.repeat_command(cmd, ntries=3, check_val='OK')
-
         return self._check_actuation(obj, True)
 
     def close_channel(self, obj):
         pin = obj.address
-#        self.ask(self._build_command(5, pin))
-#        cmd = (5, pin)
         cmd = ('w', pin, 0)
         self.repeat_command(cmd, ntries=3, check_val='OK')
         return self._check_actuation(obj, False)
@@ -104,12 +76,6 @@ class ArduinoGPActuator(GPActuator):
     def get_channel_state(self, obj):
         indicator_open_pin = int(obj.address) - 1
         indicator_close_pin = int(obj.address) - 2
-
-#        opened = self.ask(self._build_command(6, indicator_open_pin))
-#        closed = self.ask(self._build_command(7, indicator_close_pin))
-#
-#        opened = self._parse_response(opened)
-#        closed = self._parse_response(closed)
 
         opened = self.repeat_command(('r', indicator_open_pin, None),
                                      ntries=3, check_type=int)
@@ -124,22 +90,14 @@ class ArduinoGPActuator(GPActuator):
         try:
             s = closed + opened
         except (TypeError, ValueError, AttributeError):
-            #warning(None,err_msg)
             return err_msg
 
-#        print opened
         if s == 1:
             return opened == 1
         else:
-
-            #warning(None, err_msg)
             return err_msg
 
-#    def ask(self,*args,**kw):
-#        return super(ArduinoGPActuator,self).ask(*args,**kw)
-
     def _check_actuation(self, obj, request):
-        #time.sleep(0.25)
         cmd = 'r'
         if request:
             #open pin
@@ -151,7 +109,7 @@ class ArduinoGPActuator(GPActuator):
         ntries = 6
         i = 0
         while state is None and i < ntries:
-            time.sleep(0.15)
+            time.sleep(0.25)
             state = self.repeat_command((cmd, pin, None), ntries=3,
                                         check_type=int,
                                         )
@@ -161,15 +119,8 @@ class ArduinoGPActuator(GPActuator):
 
             state = None
 
-#        print request, pin, state,
-#        state = self.ask(self._build_command(cmd, pin))
-#        state = self._parse_response(state)
         if state is not None:
             return bool(state)
-#        return True
-
-#        if self._communicator.digital_read(pin):
-#            return True
 
 #============= EOF ====================================
 
