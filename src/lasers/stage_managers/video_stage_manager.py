@@ -276,7 +276,7 @@ class VideoStageManager(StageManager):
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:
             sm = self._stage_map
-            pos, interp = self._autocenter(holenum=holenum, ntries=2)
+            pos, interp = self._autocenter(holenum=holenum, ntries=1)
             if pos:
                 #add an adjustment value to the stage map
                 sm.set_hole_correction(holenum, *pos)
