@@ -19,6 +19,7 @@ from traits.api import HasTraits, Dict, Property, cached_property, \
     Event
 #============= standard library imports ========================
 import datetime
+from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import Signal
@@ -85,9 +86,14 @@ class ArArAge(HasTraits):
             k_ca_pr = 1
             if prs:
 #                k_ca_pr = 1
-                k_ca_pr = 1 / prs.Ca_K
-
-            return k / ca * k_ca_pr
+                cak=prs.Ca_K
+                cak=cak if cak else 1
+                k_ca_pr = 1 / cak
+            
+            try:
+                return k / ca * k_ca_pr
+            except ZeroDivisionError:
+                return ufloat((0,0))
 
     def _calculate_kcl(self):
         result = self.arar_result
@@ -98,10 +104,15 @@ class ArArAge(HasTraits):
             prs = self.production_ratios
             k_cl_pr = 1
             if prs:
-#                k_cl_pr = 1
+                clk=prs.Cl_K
+                clk=clk if clk else 1        
                 k_cl_pr = 1 / prs.Cl_K
-
-            return k / cl * k_cl_pr
+            
+            try:
+                return k / cl * k_cl_pr
+            except ZeroDivisionError:
+                return ufloat((0,0)) 
+            
 
 
     def _calculate_age(self):
@@ -262,11 +273,9 @@ class ArArAge(HasTraits):
                     doses = [map(convert_datetime, d) for d in doses if d]
 
                     analts = self.timestamp
-                    #convert float to datetime
-#                    time_tuple = time.localtime(analts)
-                    analts = datetime.datetime.fromtimestamp(analts)
-#                    analts = '{} {}'.format(analysis.rundate, analysis.runtime)
-#                    analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+                    if isinstance(analts, float):
+                        analts = datetime.datetime.fromtimestamp(analts)
+
                     segments = []
                     for st, en in doses:
                         if st is not None and en is not None:

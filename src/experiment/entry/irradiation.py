@@ -117,12 +117,13 @@ class Irradiation(Saveable):
                         ),
                  HGroup(spring, Item('set_chron_button', show_label=False)),
 
-#                 buttons=['OK', 'Cancel'],
+                 buttons=['OK', 'Cancel'],
                  title='New Irradiation',
-                 buttons=[Action(name='OK', action='save',
-                                enabled_when='object.save_enabled'),
-                          'Cancel'
-                          ],
+#                 buttons=[Action(name='OK', action='save',
+##                                enabled_when='object.save_enabled'
+#                                ),
+#                          'Cancel'
+#                          ],
                  handler=self.handler_klass,
                  )
         return v

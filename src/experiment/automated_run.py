@@ -596,9 +596,9 @@ class AutomatedRun(Loggable):
 
         #sync the arar_age object's signals
         if self.analysis_type == 'unknown':
-            for iso, v in blanks:
+            for iso, v in blanks.iteritems():
                 self.arar_age.signals['{}bl'.format(iso)] = v
-            for iso, v in baselines:
+            for iso, v in baselines.iteritems():
                 self.arar_age.signals['{}bs'.format(iso)] = v
 
         if not self.spectrometer_manager:

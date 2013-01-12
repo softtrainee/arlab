@@ -170,6 +170,9 @@ class LabnumberEntry(DBEntry):
                 add_flux()
 
             db.commit()
+            
+            self.info('changes saved to database')
+            
     def _add_irradiation(self, irrad):
         db = self.db
         ir = db.get_irradiation(irrad.name)
@@ -192,6 +195,7 @@ class LabnumberEntry(DBEntry):
             chronblob = '$'.join([make_ci(ci) for ci in irrad.chronology_input.dosages])
             cr = db.add_irradiation_chronology(chronblob)
 
+            print irrad.name, prn, cr
             ir = db.add_irradiation(irrad.name, prn, cr)
 
 #            holder = db.get_irradiation_holder(self.holder)

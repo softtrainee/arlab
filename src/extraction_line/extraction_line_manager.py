@@ -66,7 +66,10 @@ class ExtractionLineManager(Manager):
     learner = None
     mode = 'normal'
     _update_status_flag = None
-
+    _monitoring_valve_status=False
+    _valve_state_frequency=3
+    _valve_lock_frequency=10
+    
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -141,13 +144,23 @@ class ExtractionLineManager(Manager):
 
     def start_status_monitor(self):
         def func():
+            self._monitoring_valve_status=True
+            cnt=0
+            state_freq=self._valve_state_frequency
+            lock_freq=self._valve_lock_frequency
             while not self._update_status_flag.isSet():
-                self.valve_manager.load_valve_states()
                 time.sleep(1)
-                self.valve_manager.load_valve_lock_states()
-                time.sleep(2)
+                if cnt%state_freq==0:
+                    self.valve_manager.load_valve_states()
+                if cnt%lock_freq==0:                
+                    self.valve_manager.load_valve_lock_states()
+                
+                cnt+=1
+                if cnt>100:
+                    cnt=0
 
             self.info('status monitor stopped')
+            self._monitoring_valve_status=False
 
         if self._update_status_flag is None:
             self._update_status_flag = Event()
@@ -160,7 +173,8 @@ class ExtractionLineManager(Manager):
             self.info('starting status monitor')
 
     def isMonitoringValveState(self):
-        return self._update_status_flag.isSet()
+        return self._monitoring_valve_status
+#        return self._update_status_flag.isSet()
 #    def _view_controller(self):
 #        print self.ui.control
 #        self.view_controller.edit_traits(kind = 'livemodal',
@@ -384,7 +398,8 @@ class ExtractionLineManager(Manager):
         if isinstance(result, bool):
             #valve state show as changed if even it didnt actuate
 #            if result:
-            self.canvas.update_valve_state(name, True if action == 'open' else False)
+            if change:
+                self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 
         return result, change
