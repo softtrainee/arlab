@@ -169,7 +169,6 @@ class MagnetScan(SpectrometerTask):
             self._post_execute()
 
     def _do_scan(self, sm, em, stm, directions=None, map_mass=True):
-        print directions
         #default to forward scan
         if directions is None:
             directions = [1]

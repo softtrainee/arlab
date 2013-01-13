@@ -254,7 +254,7 @@ class IsotopeAdapter(DatabaseAdapter):
         production = self.get_irradiation_production(production)
         chronology = self.get_irradiation_chronology(chronology)
         
-        print production, chronology
+        #print production, chronology
         ir = irrad_IrradiationTable(name=name,
                                     production=production,
                                     chronology=chronology)

@@ -173,37 +173,7 @@ class LabnumberEntry(DBEntry):
             
             self.info('changes saved to database')
             
-    def _add_irradiation(self, irrad):
-        db = self.db
-        ir = db.get_irradiation(irrad.name)
-        if ir is not None:
-            self.warning_dialog('Irradiation already exists')
-            return
-        else:
-            prn = irrad.pr_name
-            if not prn:
-                prn = irrad.production_ratio_input.names[0]
-
-            def make_ci(ci):
-                return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
-                                        ci.enddate, ci.endtime)
-            err = irrad.chronology_input.validate_chronology()
-#            if err :
-#                self.warning_dialog('Invalid Chronology. {}'.format(err))
-#                return
-
-            chronblob = '$'.join([make_ci(ci) for ci in irrad.chronology_input.dosages])
-            cr = db.add_irradiation_chronology(chronblob)
-
-            print irrad.name, prn, cr
-            ir = db.add_irradiation(irrad.name, prn, cr)
-
-#            holder = db.get_irradiation_holder(self.holder)
-#            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
-#            for ni in alpha:
-#                db.add_irradiation_level(ni, ir, holder)
-
-            db.commit()
+    
 #===============================================================================
 # handlers
 #===============================================================================
@@ -245,7 +215,8 @@ class LabnumberEntry(DBEntry):
                             )
         info = irrad.edit_traits(kind='livemodal')
         if info.result:
-            self._add_irradiation(irrad)
+            irrad.save_to_db()
+#            self._add_irradiation(irrad)
             self.irradiation = irrad.name
             self.saved = True
 
@@ -254,9 +225,13 @@ class LabnumberEntry(DBEntry):
                             trays=self.trays,
                             name=self.irradiation
                             )
-
+        
+        irrad.load_production_name()
+        irrad.load_chronology()
+        
         info = irrad.edit_traits(kind='livemodal')
-
+        if info.result:
+            irrad.edit_db()
 
     def _add_level_button_fired(self):
         irrad = self.irradiation
@@ -330,6 +305,9 @@ class LabnumberEntry(DBEntry):
     @on_trait_change('level, irradiation')
     def irrad_change(self, obj, name, old, new):
         irrad = self.db.get_irradiation(self.irradiation)
+        if not irrad:
+            return
+        
         level = next((li for li in irrad.levels if li.name == self.level), None)
         if level:
             if level.holder:

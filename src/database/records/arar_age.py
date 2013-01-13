@@ -25,29 +25,31 @@ from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import Signal
 from src.constants import AGE_SCALARS
 
-class AgeProperty(Property):
-    depends_on = 'age_dirty'
+def AgeProperty():
+    return Property(depends_on='age_dirty')
+#class AgeProperty()(Property):
+#    depends_on = 'age_dirty'
 
 class ArArAge(HasTraits):
     arar_result = Dict
     age_units = 'Ma'
     age_scalar = Property(depends_on='age_units')
 
-    rad40 = AgeProperty
-    k39 = AgeProperty
-    rad40_percent = AgeProperty
+    rad40 = AgeProperty()
+    k39 = AgeProperty()
+    rad40_percent = AgeProperty()
 
-    kca = AgeProperty
-    cak = AgeProperty
-    kcl = AgeProperty
-    clk = AgeProperty
+    kca = AgeProperty()
+    cak = AgeProperty()
+    kcl = AgeProperty()
+    clk = AgeProperty()
 
     #ratios
-    Ar40_39 = AgeProperty
-    Ar37_39 = AgeProperty
-    Ar36_39 = AgeProperty
+    Ar40_39 = AgeProperty()
+    Ar37_39 = AgeProperty()
+    Ar36_39 = AgeProperty()
 
-    j = AgeProperty
+    j = AgeProperty()
     abundant_sensitivity = Property
 
     labnumber_record = Property
@@ -59,22 +61,22 @@ class ArArAge(HasTraits):
     irradiation_position = Property
     production_ratios = Property
 
-    signals = AgeProperty
+    signals = AgeProperty()
     _signals = Dict
 
-    age = AgeProperty
+    age = AgeProperty()
     age_dirty = Event
 
-    Ar40 = AgeProperty
-    Ar39 = AgeProperty
-    Ar38 = AgeProperty
-    Ar37 = AgeProperty
-    Ar36 = AgeProperty
-    Ar40_error = AgeProperty
-    Ar39_error = AgeProperty
-    Ar38_error = AgeProperty
-    Ar37_error = AgeProperty
-    Ar36_error = AgeProperty
+    Ar40 = AgeProperty()
+    Ar39 = AgeProperty()
+    Ar38 = AgeProperty()
+    Ar37 = AgeProperty()
+    Ar36 = AgeProperty()
+    Ar40_error = AgeProperty()
+    Ar39_error = AgeProperty()
+    Ar38_error = AgeProperty()
+    Ar37_error = AgeProperty()
+    Ar36_error = AgeProperty()
 
     moles_Ar40 = Property
 
