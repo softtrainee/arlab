@@ -424,12 +424,13 @@ class ExperimentExecutor(ExperimentManager):
         q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
         dbs = q.all()
 
-        sel.load_records(dbs)
+        sel.load_records(dbs, load=False)
 
         info = sel.edit_traits(kind='livemodal')
         if info.result:
             dbr = sel.selected
             if dbr:
+                dbr.load()
                 self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
                 self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
                 return True

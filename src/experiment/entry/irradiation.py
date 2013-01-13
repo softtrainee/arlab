@@ -26,6 +26,7 @@ from src.experiment.entry.chronology_input import ChronologyInput
 from src.experiment.entry.production_ratio_input import ProductionRatioInput
 from src.paths import paths
 from src.saveable import Saveable
+from src.constants import NULL_STR
 
 
 class Irradiation(Saveable):
@@ -46,7 +47,20 @@ class Irradiation(Saveable):
     chron_name = Str
     previd = 0
 #    pr_names = DelegatesTo('production_ratio_input', prefix='names')
-
+    def load_production_name(self):
+        pr=NULL_STR
+        irrad=self.db.get_irradiation(self.name)
+        if irrad is not None:
+            pr=irrad.production
+            if pr is not None:
+                self.pr_name=pr.name
+    
+    def load_chronology(self):
+        irrad=self.db.get_irradiation(self.name)
+        if irrad is not None:
+            chron=irrad.chronology
+#            print chron
+        
 #===============================================================================
 # handlers
 #===============================================================================
@@ -69,8 +83,54 @@ class Irradiation(Saveable):
         pr = self.chronology_input
         pr.db.reset()
         pr.edit_traits()
+    
+    def edit_db(self):
+        db=self.db
+        ir = db.get_irradiation(self.name)
+        cb=self._make_chronblob()
+        if cb:
+            ir.chronology.chronology=cb
+            
+        prn=db.get_irradiation_production(self.pr_name)
+        ir.production=prn
+        
+        db.commit()
+        
+    def _make_chronblob(self):
+        def make_ci(ci):
+                return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
+                                            ci.enddate, ci.endtime)
+        err = self.chronology_input.validate_chronology()
+        if err :
+            self.warning_dialog('Invalid Chronology. {}'.format(err))
+            return
 
+        chronblob = '$\n'.join([make_ci(ci) for ci in self.chronology_input.dosages])
+        return chronblob
+    
+    def save_to_db(self):
+        db = self.db
+        ir = db.get_irradiation(self.name)
+        if ir is not None:
+            self.warning_dialog('Irradiation already exists')
+            return
+        else:
+            prn = self.pr_name
+            if not prn:
+                prn = self.production_ratio_input.names[0]
 
+            chronblob=self._make_chronblob()
+            if chronblob:
+                cr = db.add_irradiation_chronology(chronblob)
+                
+            ir = db.add_irradiation(self.name, prn, cr)
+
+#            holder = db.get_irradiation_holder(self.holder)
+#            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
+#            for ni in alpha:
+#                db.add_irradiation_level(ni, ir, holder)
+
+            db.commit()
 #    def save(self):
 #
 #        db = self.db
