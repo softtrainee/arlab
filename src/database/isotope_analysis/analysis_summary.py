@@ -113,13 +113,12 @@ class AnalysisSummary(Summary):
         arar_result = rec.arar_result
         if arar_result:
             rad40 = arar_result['rad40']
-            tot40 = arar_result['tot40']
             k39 = arar_result['k39']
             s36 = arar_result['s36']
             s39dec_cor = arar_result['s39decay_cor']
             s40 = arar_result['s40']
 
-            self._make_ratio('%40*', rad40, tot40, scalar=100)
+            self._make_ratio('%40*', rad40, s40, scalar=100)
             self._make_ratio('40/36', s40, s36)
             self._make_ratio('40/39K', s40, k39)
             self._make_ratio('40/39', s40, s39dec_cor)
