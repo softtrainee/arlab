@@ -19,6 +19,7 @@ from traits.api import Any
 from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
     makeNamedRegistry
 #============= standard library imports ========================
+import time
 #============= local library imports  ==========================
 
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -46,10 +47,14 @@ class ValvePyScript(PyScript):
 
         self.info('opening {} ({})'.format(name, description))
 
-        self._manager_action([('open_valve', (name,), dict(
+        result=self._manager_action([('open_valve', (name,), dict(
                                                       mode='script',
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
+        if result is not None:
+            _, changed=result[0]
+            if changed:
+                time.sleep(0.25)
 
     @verbose_skip
     @command_register
@@ -59,10 +64,14 @@ class ValvePyScript(PyScript):
             description = '---'
 
         self.info('closing {} ({})'.format(name, description))
-        self._manager_action([('close_valve', (name,), dict(
+        result=self._manager_action([('close_valve', (name,), dict(
                                                       mode='script',
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
+        if result is not None:
+            _, changed=result[0]
+            if changed:
+                time.sleep(0.25)
 
     @verbose_skip
     @command_register

@@ -28,6 +28,7 @@ from src.paths import paths
 from view_controller import ViewController
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_editor import PyScriptManager
+from pyface.timer.do_later import do_later
 
 #from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -256,11 +257,13 @@ class ExtractionLineManager(Manager):
 #            self.canvas.update_pressure(o.name, n, o.state)
     def update_valve_state(self, *args, **kw):
         if self.canvas:
-            self.canvas.update_valve_state(*args, **kw)
+            do_later(self.canvas.update_valve_state, *args, **kw)
+#            self.canvas.update_valve_state(*args, **kw)
 
     def update_valve_lock_state(self, *args, **kw):
         if self.canvas:
-            self.canvas.update_valve_lock_state(*args, **kw)
+            do_later(self.canvas.update_valve_lock_state, *args, **kw)
+#            self.canvas.update_valve_lock_state(*args, **kw)
 
     def update_canvas2D(self, *args):
         if self.canvas:
@@ -312,17 +315,18 @@ class ExtractionLineManager(Manager):
 
     def _open_close_valve(self, name, action,
                           description=None, address=None, mode='remote', **kw):
-        if self.valve_manager is not None:
+        vm=self.valve_manager
+        if vm is not None:
             if address:
-                name = self.valve_manager.get_name_by_address(address)
+                name = vm.get_name_by_address(address)
 
             if description and description != '---':
-                name = self.valve_manager.get_name_by_description(description)
+                name = vm.get_name_by_description(description)
 
             result = self._change_valve_state(name, mode, action, **kw)
 
-            if self.learner:
-                self.learner.open_close_valve(name, action, result)
+#            if self.learner:
+#                self.learner.open_close_valve(name, action, result)
 
             return result
 
@@ -369,21 +373,22 @@ class ExtractionLineManager(Manager):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
 
-        owned = False
-        try:
-            claimer = self.valve_manager.get_system(sender_address)
-            if claimer:
-                owned = self.valve_manager.check_group_ownership(name, claimer)
-        except AttributeError:
-            #no systems are defined
-            pass
+#        owned = False
+#        try:
+#            claimer = self.valve_manager.get_system(sender_address)
+#            if claimer:
+#                owned = self.valve_manager.check_group_ownership(name, claimer)
+#        except AttributeError:
+#            #no systems are defined
+#            pass
 
-        change = False
-        if not owned:
-            result, change = func(name, mode=mode)
-        else:
-            result = '{} owned by {}'.format(name, claimer)
-            self.warning(result)
+        result, change = func(name, mode=mode)
+#        change = False
+#        if not owned:
+#            result, change = func(name, mode=mode)
+#        else:
+#            result = '{} owned by {}'.format(name, claimer)
+#            self.warning(result)
 
 #        system,f ok = self.valve_manager.check_ownership(name, sender_address)
 ##        ok = True
@@ -399,7 +404,8 @@ class ExtractionLineManager(Manager):
             #valve state show as changed if even it didnt actuate
 #            if result:
             if change:
-                self.canvas.update_valve_state(name, True if action == 'open' else False)
+                do_later(self.canvas.update_valve_state, name, True if action == 'open' else False)
+#                self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 
         return result, change
