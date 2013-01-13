@@ -81,9 +81,10 @@ class BaseSchedule(Saveable):
     _copy_cache = Any
 
     def update_loaded_scripts(self, new):
-#        print self.loaded_scripts, 'loadded scripts'
         if new:
             self.loaded_scripts[new.name] = new
+            for ai in self.automated_runs:
+                ai.scripts = self.loaded_scripts
             if self.automated_run:
                 self.automated_run.scripts = self.loaded_scripts
 
