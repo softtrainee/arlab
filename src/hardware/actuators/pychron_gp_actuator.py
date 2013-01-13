@@ -135,20 +135,20 @@ class PychronGPActuator(GPActuator):
         resp = self.ask(cmd)
         if resp:
             if resp.lower().strip() == 'ok':
-                time.sleep(0.01)
-                resp = self.get_channel_state(obj) == True
+                time.sleep(0.05)
+                resp = self.get_channel_state(obj) == False
         return resp
 
     def open_channel(self, obj):
         '''
-        Close the channel
+        Open the channel
    
         '''
         cmd = 'Open {}'.format(self._get_valve_name(obj))
         resp = self.ask(cmd)
         if resp:
             if resp.lower().strip() == 'ok':
-                time.sleep(0.01)
+                time.sleep(0.05)
                 resp = self.get_channel_state(obj) == True
 #        cmd = 'ROUT:OPEN (@{})'.format(self._get_valve_name(obj))
 #        self.tell(cmd)

@@ -579,6 +579,7 @@ class ExperimentExecutor(ExperimentManager):
                              dclicked='object.experiment_set.dclicked',
                              selected='object.selected',
                              selected_row='object.selected_row',
+                             editable=False,
 #                             refresh='object.refresh',
 #                             activated_row='object.activated_row',
                              auto_resize=True,

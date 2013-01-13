@@ -20,7 +20,7 @@
 from traits.api import  Str, Any, Bool, List, Float, Int, DelegatesTo, Property
 from traitsui.api import View, Item, VGroup
 #============= standard library imports ========================
-
+from copy import copy
 #============= local library imports  ==========================
 from state_machine.valve_FSM_sm import Valve_sm
 from src.loggable import Loggable
@@ -95,7 +95,7 @@ class HardwareValve(Loggable):
 
     def set_open(self, mode='normal'):
         self.info('open mode={}'.format(mode))
-
+        current_state=copy(self.state)
         state_change = False
         success = True
         if self.software_lock:
@@ -111,18 +111,20 @@ class HardwareValve(Loggable):
 
     def set_closed(self, mode='normal'):
         self.info('close mode={}'.format(mode))
-
+        current_state=copy(self.state)
         state_change = False
         success = True
         if self.software_lock:
             self._software_locked()
         else:
+#            print 'pre state', self.state, current_state
             success = self._close_()
             if success:
-                if self.state == True:
+#                print 'self.state',self.state, current_state
+                if current_state == True:
                     state_change = True
                 self.state = False
-
+    
         return success, state_change
 
     def _software_locked(self):
@@ -163,6 +165,7 @@ class HardwareValve(Loggable):
             r = True
         elif actuator is not None:
             if mode.startswith('client'):
+                print 'close', self.state
                 r = True if actuator.close_channel(self) else False
             else:
                 #dont actuate if already closed

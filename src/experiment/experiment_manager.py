@@ -65,7 +65,7 @@ class ExperimentManager(Manager):
     filelistener = None
     username = Str
 
-#    _text = None
+    _text = None
     _experiment_hash = None
 
 
@@ -261,6 +261,7 @@ class ExperimentManager(Manager):
                 tis.append(l)
             ts.append(''.join(tis))
             self._experiment_hash = hashlib.sha1(a).hexdigest()
+            self._text=a
             return ts
 
     def _get_all_automated_runs(self):
