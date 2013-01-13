@@ -36,7 +36,8 @@ class PyScriptRunner(Viewable):
 #    def _scripts_changed(self, obj, name, old, new):
 #        if not len(self.scripts):
 #            self.close_ui()
-
+    def connect(self):
+        pass
     def __resource_lock_default(self):
         return Lock()
 
@@ -106,7 +107,7 @@ class RemotePyScriptRunner(PyScriptRunner):
         self.handle.host = host
         self.handle.port = port
         self.handle.kind = kind
-        self.handle.open()
+#        self.handle.open()
 
     def _get_resource(self, name):
         r = RemoteResource()
@@ -114,6 +115,8 @@ class RemotePyScriptRunner(PyScriptRunner):
         r.handle = self.handle
         return r
 
+    def connect(self):
+        self.handle.open()
 
 if __name__ == '__main__':
     logging_setup('py_runner')

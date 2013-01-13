@@ -44,6 +44,7 @@ from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
 from src.constants import NULL_STR
+from src.experiment.automated_run_editor import AutomatedRunEditor
 
 #@todo: display total time in iso format 
 
@@ -73,9 +74,16 @@ class ExperimentExecutor(ExperimentManager):
         quick     1= the current measure_iteration is truncated and a quick baseline is collected, peak center?
         next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
     '''
-    right_clicked = Any
-    selected_row = Any
+
+#    right_clicked = Any
+#    selected_row = Any
     selected = Any
+    dclicked = Event
+    right_clicked = Event
+    recall_run = Button
+    edit_run = Button
+    edit_enabled = Property(depends_on='selected')
+    recall_enabled = Property(depends_on='selected')
 
     _alive = Bool(False)
     _last_ran = None
@@ -153,6 +161,8 @@ class ExperimentExecutor(ExperimentManager):
         self._execute_procedure(name)
 
     def _execute_procedure(self, name):
+        self.pyscript_runner.connect()
+
         root = paths.procedures_dir
         self.info('executing procedure {}'.format(os.path.join(root, name)))
 
@@ -232,7 +242,6 @@ class ExperimentExecutor(ExperimentManager):
         return nonfound
 
     def _execute_experiment_sets(self):
-
         self.stats.calculate()
         self.stats.start_timer()
         self.stats.nruns_finished = 0
@@ -250,6 +259,8 @@ class ExperimentExecutor(ExperimentManager):
             self.info('experiment canceled because could not find managers {}'.format(nonfound))
             self._alive = False
             return
+
+        self.pyscript_runner.connect()
 
         #check for a preceeding blank
 #        if not self._has_preceeding_blank_or_background(exp):
@@ -399,7 +410,7 @@ class ExperimentExecutor(ExperimentManager):
         exp = self.experiment_set
         exp.current_run = arun
 
-        arun.index = i
+#        arun.index = i
         arun.experiment_name = exp.name
         arun.experiment_manager = self
         arun.spectrometer_manager = self.spectrometer_manager
@@ -542,7 +553,21 @@ class ExperimentExecutor(ExperimentManager):
 #        exp = self.experiment_set
 #        exp.stats.nruns_finished = len(exp.automated_runs)
 #        self.stop_stats_timer()
+    def _recall_run(self):
+        selected = self.selected
+        if selected and self.recall_enabled:
+            selected = selected[-1]
+            db = self.db
+            #recall the analysis and display
+            db.selector.open_record(selected.uuid)
 
+    def _edit_run(self):
+        selected = self.selected
+        if self.edit_enabled and selected:
+            ae = AutomatedRunEditor(run=selected[-1])
+            info = ae.edit_traits(kind='livemodal')
+            if info.result:
+                ae.commit_changes(selected)
 #===============================================================================
 # handlers
 #===============================================================================
@@ -550,11 +575,25 @@ class ExperimentExecutor(ExperimentManager):
     def _resume_button_fired(self):
         self.resume_runs = True
 
+    def _dclicked_changed(self):
+        self._recall_run()
+
+    def _recall_run_fired(self):
+        self._recall_run()
+
+    def _right_clicked_fired(self):
+        self._edit_run()
+
+    def _edit_run_fired(self):
+        self._edit_run()
+
     def _selected_changed(self):
-        if self.selected:
-            self.stats.calculate_at(self.selected)
-            self.stats.calculate()
-            self.experiment_set.selected = [self.selected]
+        sel = self.selected
+        if sel:
+            if len(sel) == 1:
+                self.stats.calculate_at(sel[-1])
+                self.stats.calculate()
+#            self.experiment_set.selected = sel#[self.selected]
 
     def _execute_button_fired(self):
         self._execute()
@@ -574,20 +613,16 @@ class ExperimentExecutor(ExperimentManager):
 
     def traits_view(self):
         editor = myTabularEditor(adapter=AutomatedRunAdapter(),
-#                             update=update,
-                             right_clicked='object.experiment_set.right_clicked',
-                             dclicked='object.experiment_set.dclicked',
-                             selected='object.selected',
-                             selected_row='object.selected_row',
-                             editable=False,
-#                             refresh='object.refresh',
-#                             activated_row='object.activated_row',
-                             auto_resize=True,
-#                             multi_select=True,
-                             auto_update=True,
-                             scroll_to_bottom=False
-                            )
-#        editor = self.experiment_set._automated_run_editor(update='object.experiment_set.current_run.update')
+                                 dclicked='dclicked',
+                                 right_clicked='right_clicked',
+                                 selected='selected',
+                                 editable=False,
+                                 auto_resize=True,
+                                 multi_select=True,
+                                 auto_update=True,
+                                 scroll_to_bottom=False
+                                 )
+
         tb = HGroup(
                     Item('resume_button', enabled_when='object.delaying_between_runs', show_label=False),
                     Item('delay_between_runs_readback',
@@ -631,6 +666,8 @@ class ExperimentExecutor(ExperimentManager):
                       show_label=False,
                       editor=editor
                       ),
+                 HGroup(Item('recall_run', enabled_when='recall_enabled'),
+                        Item('edit_run', enabled_when='edit_enabled'), show_labels=False),
                  width=1150,
                  height=750,
                  resizable=True,
@@ -644,14 +681,22 @@ class ExperimentExecutor(ExperimentManager):
 #===============================================================================
     def _get_execute_label(self):
         return 'Start' if not self._alive else 'Stop'
+
+    def _get_edit_enabled(self):
+        if self.selected:
+            states = [ri.state == 'not run' for ri in self.selected]
+            return all(states)
+
+    def _get_recall_enabled(self):
+        if self.selected:
+            if len(self.selected) == 1:
+                return self.selected[0].state == 'success'
 #===============================================================================
 # defaults
 #===============================================================================
     def _massspec_importer_default(self):
         msdb = MassSpecDatabaseImporter()
         return msdb
-
-
 
 #    def _experiment_set_default(self):
 #        return ExperimentSet(db=self.db)

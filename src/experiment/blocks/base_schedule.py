@@ -26,7 +26,8 @@ import os
 from src.paths import paths
 import yaml
 from src.helpers.filetools import str_to_bool
-from src.saveable import Saveable
+from src.experiment.script_editable import ScriptEditable
+
 
 class RunAdapter(AutomatedRunAdapter):
     can_edit = True
@@ -54,22 +55,21 @@ class RunAdapter(AutomatedRunAdapter):
     def _set_cleanup_text(self, v):
         self._set_float('position', v)
 
-class BaseSchedule(Saveable):
+#class BaseSchedule(Saveable):
+class BaseSchedule(ScriptEditable):
     automated_runs = List(AutomatedRun)
     automated_run = Instance(AutomatedRun, ())
 
-    mass_spectrometer = Str(NULL_STR)
-    extract_device = Str(NULL_STR)
     tray = Str(NULL_STR)
 
-    measurement_script = Str
-    measurement_scripts = Property(depends_on='mass_spectrometer')
-    post_measurement_script = Str
-    post_measurement_scripts = Property(depends_on='mass_spectrometer')
-    post_equilibration_script = Str
-    post_equilibration_scripts = Property(depends_on='mass_spectrometer,extract_device')
-    extraction_script = Str
-    extraction_scripts = Property(depends_on='mass_spectrometer')
+#    measurement_script = Str
+#    measurement_scripts = Property(depends_on='mass_spectrometer')
+#    post_measurement_script = Str
+#    post_measurement_scripts = Property(depends_on='mass_spectrometer')
+#    post_equilibration_script = Str
+#    post_equilibration_scripts = Property(depends_on='mass_spectrometer,extract_device')
+#    extraction_script = Str
+#    extraction_scripts = Property(depends_on='mass_spectrometer')
 
     loaded_scripts = Dict
 
@@ -291,24 +291,7 @@ class BaseSchedule(Saveable):
 #===============================================================================
 # views
 #===============================================================================
-    def _get_script_group(self):
-        script_grp = VGroup(
-                        Item('extraction_script',
-                             label='Extraction',
-                             editor=EnumEditor(name='extraction_scripts')),
-                        Item('measurement_script',
-                             label='Measurement',
-                             editor=EnumEditor(name='measurement_scripts')),
-                        Item('post_equilibration_script',
-                             label='Post Equilibration',
-                             editor=EnumEditor(name='post_equilibration_scripts')),
-                        Item('post_measurement_script',
-                             label='Post Measurement',
-                             editor=EnumEditor(name='post_measurement_scripts')),
-                        show_border=True,
-                        label='Scripts'
-                        )
-        return script_grp
+
 
 #===============================================================================
 # scripts
@@ -321,79 +304,12 @@ class BaseSchedule(Saveable):
                 for ni in SCRIPT_KEYS]
         return dict(args)
 
-    def _load_script_names(self, name):
-        p = os.path.join(paths.scripts_dir, name)
-#        print 'fff', name, p
-        if os.path.isdir(p):
-            prep = lambda x:x
-    #        prep = lambda x: os.path.split(x)[0]
-
-            return [prep(s)
-                    for s in os.listdir(p)
-                        if not s.startswith('.') and s.endswith('.py')
-                        ]
-        else:
-            self.warning_dialog('{} script directory does not exist!'.format(p))
-
-    def _get_scripts(self, es):
-        if self.mass_spectrometer != '---':
-            k = '{}_'.format(self.mass_spectrometer)
-            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
-
-        es = [NULL_STR] + es
-        return es
-
-    def _clean_script_name(self, name):
-        name = self._remove_mass_spectrometer_name(name)
-        return self._remove_file_extension(name)
-
-    def _remove_file_extension(self, name, ext='.py'):
-        if name is NULL_STR:
-            return NULL_STR
-
-        if name.endswith('.py'):
-            name = name[:-3]
-
-        return name
-
-    def _remove_mass_spectrometer_name(self, name):
-        if self.mass_spectrometer:
-            name = name.replace('{}_'.format(self.mass_spectrometer), '')
-        return name
-
-    def _add_mass_spectromter_name(self, name):
-        if self.mass_spectrometer:
-            name = '{}_{}'.format(self.mass_spectrometer, name)
-        return name
-
     def _bind_automated_run(self, a):
         a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
         a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
         a.on_trait_change(self.update_loaded_scripts, '_post_measurement_script')
         a.on_trait_change(self.update_loaded_scripts, '_post_equilibration_script')
 
-#===============================================================================
-# property get/set
-#===============================================================================
-    def _get_extraction_scripts(self):
-        ms = self._load_script_names('extraction')
-        ms = self._get_scripts(ms)
-        return ms
-
-    def _get_measurement_scripts(self):
-        ms = self._load_script_names('measurement')
-        ms = self._get_scripts(ms)
-        return ms
-
-    def _get_post_measurement_scripts(self):
-        ms = self._load_script_names('post_measurement')
-        ms = self._get_scripts(ms)
-        return ms
-
-    def _get_post_equilibration_scripts(self):
-        ms = self._load_script_names('post_equilibration')
-        ms = self._get_scripts(ms)
-        return ms
 
 #===============================================================================
 # views
