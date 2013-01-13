@@ -55,8 +55,6 @@ from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from pyface.timer.do_later import do_later
 
-
-
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
     extraction_line_manager = Any
@@ -650,8 +648,9 @@ class AutomatedRun(Loggable):
             del p
 
         p = PlotPanel(
-                         window_y=0.05 + 0.01 * self.index,
-                         window_x=0.6 + 0.01 * self.index,
+                         window_y=0.05, #+ 0.01 * self.index,
+                         window_x=0.6, #+ 0.01 * self.index,
+
                          window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
                          stack_order=stack_order,
                          automated_run=self,
@@ -1692,13 +1691,13 @@ class AutomatedRun(Loggable):
         self._extraction_script = self._load_script('extraction')
         return self._extraction_script
 
-    @property
-    def index(self):
-        return self._index
-
-    @index.setter
-    def index(self, v):
-        self._index = v
+#    @property
+#    def index(self):
+#        return self._index
+#
+#    @index.setter
+#    def index(self, v):
+#        self._index = v
 
     @property
     def runid(self):
@@ -1833,7 +1832,7 @@ class AutomatedRun(Loggable):
                          )
         pos_grp = self._get_position_group()
         v = View(VGroup(ext_grp,
-                        pos_grp
+                        pos_grp,
                         )
                 )
         return v

@@ -504,17 +504,6 @@ post_measurement_script, post_equilibration_script''')
         if self.automated_run is not None:
             self._update_run_script(self.automated_run, name)
 
-    def _update_run_script(self, run, sname):
-        if run.state == 'not run':
-            ssname = '{}_script'.format(sname)
-            name = getattr(self, ssname)
-            name = self._add_mass_spectromter_name(name)
-            if run.configuration:
-                run.configuration[ssname] = os.path.join(paths.scripts_dir,
-                                                            sname,
-                                                            name
-                                                            )
-                setattr(run, '{}_dirty'.format(ssname), True)
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -610,21 +599,10 @@ post_measurement_script, post_equilibration_script''')
     @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
     duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
     def _sync_selected_runs(self, name, new):
-        print name
         if self.selected_runs:
             for si in self.selected_runs:
                 si.trait_set(**{name:new})
 
-    def _dclicked_changed(self):
-        selected = self.selected
-        if selected:
-            selected = selected[0]
-
-            if selected.state == 'success':
-                #recall the analysis and display
-
-                db = self.db
-                db.selector.open_record(selected.uuid)
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -768,7 +746,6 @@ post_measurement_script, post_equilibration_script''')
                                                                         ],
                                                             editable=False,
                                                             selected='selected',
-                                                            dclicked='dclicked',
                                                             auto_update=True,
                                                             multi_select=True,
                                                             scroll_to_bottom=False

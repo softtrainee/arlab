@@ -78,12 +78,21 @@ class Viewable(Loggable):
         func()
 
     def view_factory(self, *args, **kw):
+        if self.window_x:
+            kw['x'] = self.window_x
+        if self.window_y:
+            kw['y'] = self.window_y
+        if self.window_width:
+            kw['width'] = self.window_width
+        if self.window_y:
+            kw['height'] = self.window_height
+
         return View(
                     handler=self.handler_klass,
-                    x=self.window_x,
-                    y=self.window_y,
-                    width=self.window_width,
-                    height=self.window_height,
+#                    x=self.window_x,
+#                    y=self.window_y,
+#                    width=self.window_width,
+#                    height=self.window_height,
                     title=self.title,
                     resizable=True,
                     *args,
