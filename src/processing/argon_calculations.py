@@ -251,7 +251,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
-    k37 = ufloat((0, 0))
+    k37 = ufloat((0, 1e-20))
 
     #iteratively calculate 37, 39
     for _ in range(5):
@@ -273,7 +273,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         iteratively calculate atm36
     '''
     m = cl3638 * constants.lambda_cl36.nominal_value * decay_time
-    atm36 = ufloat((0, 0))
+    atm36 = ufloat((0, 1e-20))
     for _ in range(5):
         ar38atm = constants.atm3836.nominal_value * atm36
         cl38 = s38 - ar38atm - k38 - ca38
@@ -310,7 +310,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                 age=age_wo_jerr,
                   age_err_wo_jerr=age_wo_jerr.std_dev(),
                   rad40=ar40rad,
-                  tot40=s40,
+
                   k39=k39,
                   ca37=ca37,
                   atm36=atm36,

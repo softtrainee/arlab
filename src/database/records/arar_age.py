@@ -25,27 +25,29 @@ from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import Signal
 from src.constants import AGE_SCALARS
 
+class AgeProperty(Property):
+    depends_on = 'age_dirty'
+
 class ArArAge(HasTraits):
     arar_result = Dict
     age_units = 'Ma'
     age_scalar = Property(depends_on='age_units')
 
-    rad40 = Property
-    k39 = Property
-    rad40_percent = Property
+    rad40 = AgeProperty
+    k39 = AgeProperty
+    rad40_percent = AgeProperty
 
-    kca = Property(depends_on='age_dirty')
-    cak = Property(depends_on='age_dirty')
-    kcl = Property(depends_on='age_dirty')
-    clk = Property(depends_on='age_dirty')
+    kca = AgeProperty
+    cak = AgeProperty
+    kcl = AgeProperty
+    clk = AgeProperty
 
     #ratios
-    Ar40_39 = Property
-    Ar37_39 = Property
-    Ar36_39 = Property
+    Ar40_39 = AgeProperty
+    Ar37_39 = AgeProperty
+    Ar36_39 = AgeProperty
 
-
-    j = Property
+    j = AgeProperty
     abundant_sensitivity = Property
 
     labnumber_record = Property
@@ -57,22 +59,22 @@ class ArArAge(HasTraits):
     irradiation_position = Property
     production_ratios = Property
 
-    signals = Property(depends_on='age_dirty')
+    signals = AgeProperty
     _signals = Dict
 
-    age = Property(depends_on='age_dirty')
+    age = AgeProperty
     age_dirty = Event
 
-    Ar40 = Property(depends_on='age_dirty')
-    Ar39 = Property(depends_on='age_dirty')
-    Ar38 = Property(depends_on='age_dirty')
-    Ar37 = Property(depends_on='age_dirty')
-    Ar36 = Property(depends_on='age_dirty')
-    Ar40_error = Property(depends_on='age_dirty')
-    Ar39_error = Property(depends_on='age_dirty')
-    Ar38_error = Property(depends_on='age_dirty')
-    Ar37_error = Property(depends_on='age_dirty')
-    Ar36_error = Property(depends_on='age_dirty')
+    Ar40 = AgeProperty
+    Ar39 = AgeProperty
+    Ar38 = AgeProperty
+    Ar37 = AgeProperty
+    Ar36 = AgeProperty
+    Ar40_error = AgeProperty
+    Ar39_error = AgeProperty
+    Ar38_error = AgeProperty
+    Ar37_error = AgeProperty
+    Ar36_error = AgeProperty
 
     moles_Ar40 = Property
 
@@ -86,14 +88,14 @@ class ArArAge(HasTraits):
             k_ca_pr = 1
             if prs:
 #                k_ca_pr = 1
-                cak=prs.Ca_K
-                cak=cak if cak else 1
+                cak = prs.Ca_K
+                cak = cak if cak else 1
                 k_ca_pr = 1 / cak
-            
+
             try:
                 return k / ca * k_ca_pr
             except ZeroDivisionError:
-                return ufloat((0,0))
+                return ufloat((0, 0))
 
     def _calculate_kcl(self):
         result = self.arar_result
@@ -104,15 +106,15 @@ class ArArAge(HasTraits):
             prs = self.production_ratios
             k_cl_pr = 1
             if prs:
-                clk=prs.Cl_K
-                clk=clk if clk else 1        
+                clk = prs.Cl_K
+                clk = clk if clk else 1
                 k_cl_pr = 1 / prs.Cl_K
-            
+
             try:
                 return k / cl * k_cl_pr
             except ZeroDivisionError:
-                return ufloat((0,0)) 
-            
+                return ufloat((0, 0))
+
 
 
     def _calculate_age(self):
@@ -329,7 +331,8 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_rad40_percent(self):
-        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
+        return self.rad40 / self.Ar40 * 100
+#        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
     @cached_property
     def _get_Ar40(self):

@@ -25,6 +25,7 @@ from uncertainties import ufloat
 from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
+import math
 #============= standard library imports ========================
 #from numpy import Inf
 #from pyface.timer.do_later import do_later
@@ -121,14 +122,21 @@ class PlotPanel(Viewable):
         kw['gui'] = False
         disp.add_text(*args, **kw)
 
-    def _print_parameter(self, display, name, uvalue, **kw):
+    def _floatfmt(self, f, n=5):
+        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, n):
+            fmt = '{:0.3e}'
+        else:
+            fmt = '{{:0.{}f}}'.format(n)
+
+        return fmt.format(f)
+
+    def _print_parameter(self, display, name, uvalue, sig_figs=(3, 4), **kw):
         name = '{:<15s}'.format(name)
-        msg = u'{}= {:0.3f} {}{:0.4f}{}'.format(name,
-                                                    uvalue.nominal_value,
-                                                    PLUSMINUS,
-                                                    uvalue.std_dev(),
-                                                    self._get_pee(uvalue)
-                                                    )
+
+        v = self._floatfmt(uvalue.nominal_value, sig_figs[0])
+        e = self._floatfmt(uvalue.std_dev(), sig_figs[1])
+
+        msg = u'{}= {} {}{}{}'.format(name, v, PLUSMINUS, e, self._get_pee(uvalue))
         self.add_text(display, msg, **kw)
 
     def _print_summary(self, display):
@@ -144,7 +152,7 @@ class PlotPanel(Viewable):
             kcl = arar_age.kcl
 
             self._print_parameter(display, 'Age', age)
-            self._print_parameter(display, 'J', j)
+            self._print_parameter(display, 'J', j, sig_figs=(5, 6))
             self._print_parameter(display, '% rad40', rad40)
             self._print_parameter(display, 'K/Ca', kca)
             self._print_parameter(display, 'K/Cl', kcl)
