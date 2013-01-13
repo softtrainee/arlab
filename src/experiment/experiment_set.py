@@ -19,7 +19,7 @@ from traits.api import  List, Instance, Str, Button, Any, \
     Bool, Property, Float, on_trait_change, cached_property, \
     Event
 from traitsui.api import View, Item, VGroup, HGroup, spring, \
-    EnumEditor
+    EnumEditor, TabularEditor, TableEditor
 #============= standard library imports ========================
 import os
 import yaml
@@ -27,7 +27,6 @@ import yaml
 from src.experiment.automated_run import AutomatedRun
 from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
-from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
@@ -35,7 +34,6 @@ from src.experiment.identifier import convert_identifier, convert_labnumber
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
 from src.experiment.blocks.block import Block
-
 
 class ExperimentSet(BaseSchedule):
     current_run = Instance(AutomatedRun)
@@ -58,7 +56,7 @@ class ExperimentSet(BaseSchedule):
     dirty = Bool(False)
 
     executable = Bool(True)
-    auto_increment = Bool(True)
+    auto_increment = Bool(False)
     update_aliquots_needed = Event
 
     mass_spectrometer = Str('obama')
@@ -84,41 +82,75 @@ class ExperimentSet(BaseSchedule):
     schedule_block_added = Event
     edit_schedule_block = Button('Edit')
     new_schedule_block = Button('New')
-#===============================================================================
-# persistence
-#===============================================================================
-    def _meta_dumper(self, fp=None):
-        def make_frequency_runs(name):
-            tmp = '''{}:
- frequency: {{}}
- scripts:
-  extraction: {{}}
-  measurement: {{}}
-  post_equilibration: {{}}
-  post_measurement: {{}}'''.format(name)
-            s = tmp.format(0, '', '', '', '')
-            return s
 
-        s = '''mass_spectrometer: {}
-delay_before_analyses: {}
-delay_between_analyses: {}
-extract_device: {}
-tray: {} 
-'''.format(self.mass_spectrometer,
-           self.delay_before_analyses,
-           self.delay_between_analyses,
-           self.extract_device,
-           self.tray if self.tray else '',
-#           make_frequency_runs('blanks'),
-#           make_frequency_runs('airs'),
-#           make_frequency_runs('cocktails'),
-#           make_frequency_runs('backgrounds'),
-           )
+    def automated_run_factory(self, copy_automated_run=False, **params):
+        extraction = self.extraction_script
+        measurement = self.measurement_script
+        post_measurement = self.post_measurement_script
+        post_equilibration = self.post_equilibration_script
 
-        if fp:
-            fp.write(s)
-        else:
-            return s
+        if not extraction:
+            extraction = self.extraction_scripts[0]
+        if not measurement:
+            measurement = self.measurement_scripts[0]
+        if not post_measurement:
+            post_measurement = self.post_measurement_scripts[0]
+        if not post_equilibration:
+            post_equilibration = self.post_equilibration_scripts[0]
+
+        names = dict(extraction=extraction,
+                           measurement=measurement,
+                           post_measurement=post_measurement,
+                           post_equilibration=post_equilibration
+                           )
+
+        def make_script_name(ni):
+            na = names[ni]
+            if na is NULL_STR:
+                return na
+            if not na.startswith(self.mass_spectrometer):
+                na = '{}_{}'.format(self.mass_spectrometer, na)
+            return na
+
+        configuration = self._build_configuration(make_script_name)
+
+        arun = self.automated_run
+        if arun and copy_automated_run:
+            params.update(dict(
+                               labnumber=arun.labnumber,
+                               position=arun.position,
+                               aliquot=arun.aliquot))
+
+        params['configuration'] = configuration
+        params['db'] = self.db
+        return self._automated_run_factory(**params)
+
+    def save_to_db(self):
+        self.info('saving experiment {} to database'.format(self.name))
+        db = self.db
+        db.add_experiment(self.name)
+        db.commit()
+
+    def set_script_names(self):
+        arun = self.automated_run
+
+        def get_name(si):
+            script = getattr(arun, '{}_script'.format(si))
+            if script:
+                scripts = getattr(self, '{}_scripts'.format(si))
+                name = self._clean_script_name(script.name)
+#                name = self._remove_mass_spectrometer_name(script.name)
+                if not name in scripts:
+                    name = NULL_STR
+            else:
+                name = NULL_STR
+
+            return name
+#        print 'setting script names'
+        traits = dict([('{}_script'.format(k), get_name(k)) for k in SCRIPT_KEYS])
+        self.trait_set(**traits)
+
+
 #===============================================================================
 # execution
 #===============================================================================
@@ -338,58 +370,6 @@ tray: {}
 
         return nruns
 
-    def _dclicked_changed(self):
-        self._right_clicked_changed()
-
-    def _right_clicked_changed(self):
-#        self.debug('Right click currently disabled')
-#        return
-
-        selected = self.selected
-        if selected:
-            selected = selected[0]
-
-            if selected.state == 'success':
-                #recall the analysis and display
-
-                db = self.db
-                db.selector.open_record(selected.uuid)
-
-    def _batch_edit(self, selected):
-        ms = selected.measurement_script.name
-        es = selected.extraction_script.name
-        be = BatchEdit(
-                       batch=len(self.selected) > 1,
-                       measurement_scripts=self.measurement_scripts,
-                       measurement_script=ms,
-                       orig_measurement_script=ms,
-
-                       extraction_scripts=self.extraction_scripts,
-                       extraction_script=es,
-                       orig_extraction_script=es,
-
-                       power=selected.extract_value,
-                       orig_power=selected.extract_value,
-
-                       duration=selected.duration,
-                       orig_duration=selected.duration,
-
-                       position=selected.position,
-                       orig_position=selected.position
-                       )
-
-        be.reset()
-        info = be.edit_traits()
-        if info.result:
-            be.apply_edits(self.selected)
-            self.automated_run.update = True
-
-    def save_to_db(self):
-        self.info('saving experiment {} to database'.format(self.name))
-        db = self.db
-        db.add_experiment(self.name)
-        db.commit()
-
     def _auto_increment(self, m):
 
         try:
@@ -409,6 +389,38 @@ tray: {}
 
         return s
 
+    def _meta_dumper(self, fp=None):
+        def make_frequency_runs(name):
+            tmp = '''{}:
+ frequency: {{}}
+ scripts:
+  extraction: {{}}
+  measurement: {{}}
+  post_equilibration: {{}}
+  post_measurement: {{}}'''.format(name)
+            s = tmp.format(0, '', '', '', '')
+            return s
+
+        s = '''mass_spectrometer: {}
+delay_before_analyses: {}
+delay_between_analyses: {}
+extract_device: {}
+tray: {} 
+'''.format(self.mass_spectrometer,
+           self.delay_before_analyses,
+           self.delay_between_analyses,
+           self.extract_device,
+           self.tray if self.tray else '',
+#           make_frequency_runs('blanks'),
+#           make_frequency_runs('airs'),
+#           make_frequency_runs('cocktails'),
+#           make_frequency_runs('backgrounds'),
+           )
+
+        if fp:
+            fp.write(s)
+        else:
+            return s
 #===============================================================================
 # handlers
 #===============================================================================
@@ -471,13 +483,15 @@ tray: {}
         self.automated_run = ar.clone_traits()
         #if analysis type is bg, b- or a overwrite a few defaults
         if not ar.analysis_type == 'unknown':
-            kw['position'] = '0'
+            kw['position'] = ''
             kw['extract_value'] = 0
 
         self.automated_run.trait_set(**kw)
         self._bind_automated_run(self.automated_run)
 
         self.update_aliquots_needed = True
+        self.automated_run._labnumber = NULL_STR
+        self.automated_run.special_labnumber = NULL_STR
 
     @on_trait_change('''extraction_script, measurement_script,
 post_measurement_script, post_equilibration_script''')
@@ -500,7 +514,7 @@ post_measurement_script, post_equilibration_script''')
                                                             sname,
                                                             name
                                                             )
-                setattr(run, '{}_script_dirty'.format(sname), True)
+                setattr(run, '{}_dirty'.format(ssname), True)
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -586,7 +600,6 @@ post_measurement_script, post_equilibration_script''')
             run = new[0]
             if run.state == 'not run':
                 self.automated_run = run.clone_traits()
-
                 for si in SCRIPT_KEYS:
                     try:
                         n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
@@ -594,6 +607,24 @@ post_measurement_script, post_equilibration_script''')
                     except AttributeError:
                         pass
 
+    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
+    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+    def _sync_selected_runs(self, name, new):
+        print name
+        if self.selected_runs:
+            for si in self.selected_runs:
+                si.trait_set(**{name:new})
+
+    def _dclicked_changed(self):
+        selected = self.selected
+        if selected:
+            selected = selected[0]
+
+            if selected.state == 'success':
+                #recall the analysis and display
+
+                db = self.db
+                db.selector.open_record(selected.uuid)
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -608,25 +639,6 @@ post_measurement_script, post_equilibration_script''')
     def _get_measuring(self):
         if self.current_run:
             return self.current_run.measuring
-
-    def set_script_names(self):
-        arun = self.automated_run
-
-        def get_name(si):
-            script = getattr(arun, '{}_script'.format(si))
-            if script:
-                scripts = getattr(self, '{}_scripts'.format(si))
-                name = self._clean_script_name(script.name)
-#                name = self._remove_mass_spectrometer_name(script.name)
-                if not name in scripts:
-                    name = NULL_STR
-            else:
-                name = NULL_STR
-
-            return name
-#        print 'setting script names'
-        traits = dict([('{}_script'.format(k), get_name(k)) for k in SCRIPT_KEYS])
-        self.trait_set(**traits)
 
     def _list_dir(self, d, condition=None):
         if condition is None:
@@ -665,47 +677,6 @@ post_measurement_script, post_equilibration_script''')
 #===============================================================================
 # factories
 #===============================================================================
-    def automated_run_factory(self, copy_automated_run=False, ** params):
-        extraction = self.extraction_script
-        measurement = self.measurement_script
-        post_measurement = self.post_measurement_script
-        post_equilibration = self.post_equilibration_script
-
-        if not extraction:
-            extraction = self.extraction_scripts[0]
-        if not measurement:
-            measurement = self.measurement_scripts[0]
-        if not post_measurement:
-            post_measurement = self.post_measurement_scripts[0]
-        if not post_equilibration:
-            post_equilibration = self.post_equilibration_scripts[0]
-
-        names = dict(extraction=extraction,
-                           measurement=measurement,
-                           post_measurement=post_measurement,
-                           post_equilibration=post_equilibration
-                           )
-
-        def make_script_name(ni):
-            na = names[ni]
-            if na is NULL_STR:
-                return na
-            if not na.startswith(self.mass_spectrometer):
-                na = '{}_{}'.format(self.mass_spectrometer, na)
-            return na
-
-        configuration = self._build_configuration(make_script_name)
-
-        arun = self.automated_run
-        if arun and copy_automated_run:
-            params.update(dict(
-                               labnumber=arun.labnumber,
-                               position=arun.position,
-                               aliquot=arun.aliquot))
-
-        params['configuration'] = configuration
-        params['db'] = self.db
-        return self._automated_run_factory(**params)
 
     def _automated_run_factory(self, labnumber=None, **kw):
         '''
@@ -713,9 +684,6 @@ post_measurement_script, post_equilibration_script''')
              it sets the configuration, loaded scripts and binds our update_loaded_script
              handler so we are aware of scripts that have been tested
         '''
-
-
-
         #copy some of the last runs values
         if self.automated_runs:
             pa = self.automated_runs[-1]
@@ -761,24 +729,7 @@ post_measurement_script, post_equilibration_script''')
 #===============================================================================
 # views
 #===============================================================================
-    def _automated_run_editor(self, update=''):
-        r = myTabularEditor(adapter=AutomatedRunAdapter(),
-                             update=update,
-                             right_clicked='object.right_clicked',
-                             selected='object.selected',
-#                             refresh='object.refresh',
-#                             activated_row='object.activated_row',
-                            operations=['delete',
-                                        'move',
-                                        'edit'],
-#                            editable=False,
-                             auto_resize=True,
-                             multi_select=True,
-                             auto_update=True,
-                             scroll_to_bottom=False
-                            )
-        self.tabular_editor = r
-        return r
+
 
     def _get_global_parameters_group(self):
         gparams_grp = VGroup(
@@ -810,12 +761,21 @@ post_measurement_script, post_equilibration_script''')
         analysis_table = VGroup(
                                 self._get_copy_paste_group(),
                                 Item('automated_runs', show_label=False,
-                                    editor=self._automated_run_editor(),
-                                    height=0.75,
-#                                    width=400,
-                                    ), show_border=True,
-
-                                label='Analyses'
+                                     editor=myTabularEditor(adapter=AutomatedRunAdapter(),
+                                                            operations=['delete',
+                                                                        'move',
+#                                                                        'edit'
+                                                                        ],
+                                                            editable=False,
+                                                            selected='selected',
+                                                            dclicked='dclicked',
+                                                            auto_update=True,
+                                                            multi_select=True,
+                                                            scroll_to_bottom=False
+                                                            ),
+                                    ),
+                                show_border=True,
+                                label='Analyses',
                                 )
 
         script_grp = self._get_script_group()
@@ -841,11 +801,12 @@ post_measurement_script, post_equilibration_script''')
                                           enabled_when='ok_to_add'),
                                      ),
                                ),
+                        analysis_table
 
-                        VGroup(
+#                        VGroup(
 #                               schedule_grp,
-                               analysis_table
-                               )
+#                               analysis_table
+#                               )
 
                         )
                  )
@@ -908,4 +869,32 @@ post_measurement_script, post_equilibration_script''')
 #
 #                fo[ai.identifier] = ai.aliquot
 #============= EOF =============================================
-
+# def _automated_run_editor(self, update=''):
+#        r = myTabularEditor(adapter=AutomatedRunAdapter(),
+#                            operations=['delete',
+#                                        'move',
+#                                        'edit'],
+##                            editable=False,
+##                             auto_resize=True,
+#                             multi_select=True,
+##                             auto_update=True,
+#                             scroll_to_bottom=False
+#                            )
+#        return r
+#    def _dclicked_changed(self):
+#        self._right_clicked_changed()
+#
+#    def _right_clicked_changed(self):
+##        self.debug('Right click currently disabled')
+##        return
+#
+#        selected = self.selected
+#        if selected:
+#            selected = selected[0]
+#
+#            if selected.state == 'success':
+#                #recall the analysis and display
+#
+#                db = self.db
+#                db.selector.open_record(selected.uuid)
+#

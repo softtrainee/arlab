@@ -22,6 +22,7 @@ from pyface.wx.dialog import confirmation
 import time
 import os
 import inspect
+import hashlib
 from threading import Thread, Event
 #============= local library imports  ==========================
 from src.pyscripts.wait_dialog import WaitDialog
@@ -159,6 +160,7 @@ class PyScript(Loggable):
     manager = Any
     parent = Any
     root = Str
+    filename = Str
     _ctx = Dict
 
     parent_script = Any
@@ -183,6 +185,12 @@ class PyScript(Loggable):
     _estimated_duration = 0
 
     _graph_calc = False
+
+    def check_for_modifications(self):
+        old = self.toblob()
+        with open(self.filename, 'r') as f:
+            new = f.read()
+        return old != new
 
     def toblob(self):
         return self.text

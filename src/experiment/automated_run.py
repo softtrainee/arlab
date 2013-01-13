@@ -80,7 +80,7 @@ class AutomatedRun(Loggable):
     labnumber = String(enter_set=True, auto_set=False)
     special_labnumber = Str
 
-    _labnumber = Int
+    _labnumber = Str
     labnumbers = Property(depends_on='project')
 
     project = Any
@@ -109,7 +109,8 @@ class AutomatedRun(Loggable):
     extract_device = Str
 
     tray = Str
-    position = Str
+    position = Property
+    _position = Str
     endposition = Int
     multiposition = Bool
     autocenter = Bool
@@ -496,6 +497,7 @@ class AutomatedRun(Loggable):
             if mass:
                 if ion is not None:
                     ion.position(mass, self._active_detectors[0].name, False)
+                    self.info('Delaying {}s for detectors to settle'.format(settling_time))
                     time.sleep(settling_time)
 
             gn = 'baseline'
@@ -1433,7 +1435,8 @@ class AutomatedRun(Loggable):
 # handlers
 #===============================================================================
     def __labnumber_changed(self):
-        self.labnumber = self._labnumber
+        if self._labnumber != NULL_STR:
+            self.labnumber = self._labnumber
 
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
@@ -1463,9 +1466,13 @@ class AutomatedRun(Loggable):
         fname = fname if fname.endswith('.py') else fname + '.py'
 
         if fname in self.scripts:
-#            self.debug('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname]
-            if s is not None:
+            if s.check_for_modifications():
+                self.info('script {} modified reloading'.format(fname))
+                s = self._bootstrap_script(fname, name, ec)
+                if s:
+                    self.scripts[fname] = s
+            else:
                 s = s.clone_traits()
                 s.automated_run = self
                 hdn = self.extract_device.replace(' ', '_').lower()
@@ -1480,25 +1487,26 @@ class AutomatedRun(Loggable):
                                 )
             return s
         else:
+            return self._bootstrap_script(fname, name, ec)
 
-            self.info('loading script "{}"'.format(fname))
-            func = getattr(self, '{}_script_factory'.format(name))
-            s = func(ec)
-            if s and os.path.isfile(s.filename):
-                if s.bootstrap():
-                    try:
-                        s.test()
-                        setattr(self, '_{}_script'.format(name), s)
-                    except Exception, e:
-                        self.warning(e)
-                        self.warning_dialog('Invalid Scripta {}'.format(s.filename if s else 'None'))
-                        self._executable = False
-                        setattr(self, '_{}_script'.format(name), None)
-
-                return s
-            else:
-                self._executable = False
-                self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
+    def _bootstrap_script(self, fname, name, ec):
+        self.info('loading script "{}"'.format(fname))
+        func = getattr(self, '{}_script_factory'.format(name))
+        s = func(ec)
+        if s and os.path.isfile(s.filename):
+            if s.bootstrap():
+                try:
+                    s.test()
+                    setattr(self, '_{}_script'.format(name), s)
+                except Exception, e:
+                    self.warning(e)
+                    self.warning_dialog('Invalid Scripta {}'.format(s.filename if s else 'None'))
+                    self._executable = False
+                    setattr(self, '_{}_script'.format(name), None)
+            return s
+        else:
+            self._executable = False
+            self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
 
     def measurement_script_factory(self, ec):
         ec = self.configuration
@@ -1650,6 +1658,20 @@ class AutomatedRun(Loggable):
 
         return default
 
+    def _get_position(self):
+        return self._position
+
+    def _set_position(self, pos):
+        self._position = pos
+
+    def _validate_position(self, pos):
+        ps = pos.split(',')
+        try:
+            _ = map(int, ps)
+            return pos
+        except ValueError:
+            return self._position
+
     @cached_property
     def _get_post_measurement_script(self):
         self._post_measurement_script = self._load_script('post_measurement')
@@ -1702,50 +1724,19 @@ class AutomatedRun(Loggable):
         d = self._duration
         return d
 
-#    def _get_temp_or_power(self):
-#        if self.heat_step:
-#
-#            t = self.heat_step.temp_or_power
-#        else:
-#            t = self._temp_or_power
-#        return t
-#    def _get_temp_or_power(self):
-#        if self.heat_step:
-#
-#            t = self.heat_step.temp_or_power
-#        else:
-#            t = self._temp_or_power
-#        return t
     def _get_extract_units(self):
         return self._extract_units
-#        units = dict(t='temp', w='watts', p='percent')
-#        if self._extract_units == '---':
-#            return 'watts'
-#
-#        return units[self._extract_units[0]]
 
     def _set_extract_units(self, v):
         self._extract_units = v
 
     def _get_extract_value(self):
-#        if self.heat_step:
-#            v = self.heat_step.extract_value
-#            u = self.heat_step.extract_units
-#        else:
         v = self._extract_value
         return v
-#        u = self._extract_units[0]
-#        return (v, u)
-
-#    @property
-#    def extract_value_str(self):
-#        return '{},{}'.format(*self.extract_value)
 
     def _validate_duration(self, d):
         return self._validate_float(d)
 
-#    def _validate_temp_or_power(self, d):
-#        return self._validate_float(d)
     def _validate_extract_value(self, d):
         return self._validate_float(d)
 
@@ -1799,10 +1790,10 @@ class AutomatedRun(Loggable):
     def _get_labnumbers(self):
         lns = []
         if self.project:
-            lns = [int(ln.labnumber)
+            lns = [str(ln.labnumber)
                     for s in self.project.samples
                         for ln in s.labnumbers]
-        return sorted(lns)
+        return [NULL_STR] + sorted(lns)
 
     @cached_property
     def _get_patterns(self):

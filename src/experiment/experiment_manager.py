@@ -65,8 +65,8 @@ class ExperimentManager(Manager):
     filelistener = None
     username = Str
 
-    _text = None
-
+#    _text = None
+    _experiment_hash = None
 
 
 #===============================================================================
@@ -148,11 +148,10 @@ class ExperimentManager(Manager):
 
     def check_for_mods(self):
         path = self.experiment_set.path
-        currenthash = hashlib.sha1(self._text).hexdigest()
         if path:
             with open(path, 'r') as f:
                 diskhash = hashlib.sha1(f.read()).hexdigest()
-            return currenthash != diskhash
+            return self._experiment_hash != diskhash
 
     def start_file_listener(self, path):
         fl = FileListener(
@@ -261,7 +260,7 @@ class ExperimentManager(Manager):
 
                 tis.append(l)
             ts.append(''.join(tis))
-            self._text = a
+            self._experiment_hash = hashlib.sha1(a).hexdigest()
             return ts
 
     def _get_all_automated_runs(self):
@@ -393,7 +392,7 @@ class ExperimentManager(Manager):
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
         if path is not None:
-            
+
             self.experiment_set = None
             self.experiment_sets = []
             #parse the file into individual experiment sets
