@@ -160,6 +160,7 @@ class MakePlotSeriesAction(ExperimentAction):
 # database actions
 #===============================================================================
 class LabnumberEntryAction(ExperimentAction):
+    accelerator = 'Ctrl+Shift+l'
     def perform(self, event):
         manager = self._get_manager(event)
         lne = manager._labnumber_entry_factory()

@@ -225,16 +225,17 @@ class AutomatedRun(Loggable):
             return d
 
     def to_string_attrs(self, attr):
-        def get_attr(ai):
-            aii = getattr(self, ai)
-            if ai in ['measurement_script',
+        def get_attr(attrname):
+            v = getattr(self, attrname)
+            if attrname in ['measurement_script',
                       'extraction_script',
                       'post_measurement_script',
                       'post_equilibration_script']:
-                if aii:
-                    aii = str(aii).replace(self.mass_spectrometer, '')
-
-            return aii
+                print v, self.mass_spectrometer,
+                if v:
+                    v = str(v).replace(self.mass_spectrometer, '')
+                print v
+            return v
 
         return [get_attr(ai) for ai in attr]
 
@@ -645,7 +646,6 @@ class AutomatedRun(Loggable):
     def _open_plot_panel(self, p=None, stack_order='bottom_to_top'):
         if p is not None:
             p.ui.dispose()
-            del p
 
         p = PlotPanel(
                          window_y=0.05, #+ 0.01 * self.index,
@@ -654,9 +654,11 @@ class AutomatedRun(Loggable):
                          window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
                          stack_order=stack_order,
                          automated_run=self,
-                         signals=dict()
+#                         signals=dict(),
                          )
+
         p.graph.clear()
+        p.clear_displays()
 
         self.experiment_manager.open_view(p)
         return p
@@ -1780,6 +1782,10 @@ class AutomatedRun(Loggable):
         if self._state != 'truncate':
             self._state = s
 
+    def _set_step(self, v):
+        if v in ALPHAS:
+            self._step = list(ALPHAS).index(v) + 1
+
     def _get_step(self):
         if self._step == 0:
             return ''
@@ -1829,6 +1835,10 @@ class AutomatedRun(Loggable):
 
     def simple_view(self):
         ext_grp = VGroup(HGroup(Spring(springy=False, width=33),
+                         HGroup(Item('labnumber', style='readonly'),
+                                Item('aliquot'),
+                                Item('step')
+                                ),
                          Item('extract_value', label='Extract'),
                             spring,
                             Item('extract_units',

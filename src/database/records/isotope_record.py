@@ -400,8 +400,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             data[n] = (det, n, fit, (x, y))
         return data
 
-    def _unpack_blob(self, blob):
-        return zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+    def _unpack_blob(self, blob, endianness='>'):
+        return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
     def _load_histories(self):
 
@@ -544,12 +544,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #            xs, ys, center_dac, pcdacs, pcsignals = data
 #            xs, ys = zip(*xsys)
 
-        graph = self._graph_factory()
+        graph = self._graph_factory(width=700)
         graph.container_dict = dict(padding=[10, 0, 30, 10])
         graph.clear()
 
-        title = ''
-        graph.new_plot(title='{}'.format(title),
+        graph.new_plot(title='Center= {:0.8f}'.format(center_dac),
                        xtitle='DAC (V)',
                        ytitle='Intensity (fA)',
                        )
@@ -565,6 +564,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                          type='scatter', marker='circle',
                          marker_size=2
                          )
+
         graph.add_vertical_rule(center_dac)
 
 #        graph.plots[0].value_range.tight_bounds = False
@@ -626,7 +626,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_peakcenter(self):
         pc = self._dbrecord.peak_center
         if pc:
-            x, y = self._unpack_blob(pc.points)
+            x, y = self._unpack_blob(pc.points, endianness='<')
             center = pc.center
             return x, y, center, [], []
 
@@ -944,7 +944,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     pp.append('({})'.format(','.join(ppp)))
 
         if pp:
-            r = ','.join(map(str,pp))
+            r = ','.join(map(str, pp))
 
         return r
 

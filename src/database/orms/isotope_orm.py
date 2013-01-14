@@ -26,6 +26,7 @@ from sqlalchemy.orm import relationship
 from src.database.core.base_orm import BaseMixin, NameMixin
 #from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
 from sqlalchemy.sql.expression import func
+from datetime import datetime
 #from sqlalchemy.types import FLOAT
 
 Base = declarative_base()
@@ -362,6 +363,7 @@ class irrad_HolderTable(Base, NameMixin):
     geometry = Column(BLOB)
 
 class irrad_LevelTable(Base, NameMixin):
+    z = Column(Float)
     holder_id = foreignkey('irrad_HolderTable')
     irradiation_id = foreignkey('irrad_IrradiationTable')
     positions = relationship('irrad_PositionTable', backref='level')
@@ -410,6 +412,14 @@ class irrad_ChronologyTable(Base, BaseMixin):
     chronology = Column(BLOB)
     irradiation = relationship('irrad_IrradiationTable', backref='chronology')
 
+    def get_doses(self):
+        def convert(x):
+            return datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+
+        doses = self.chronology.split('$')
+        doses = [di.strip().split('%') for di in doses]
+        doses = [map(convert, d) for d in doses if d]
+        return doses
 #===============================================================================
 # 
 #===============================================================================

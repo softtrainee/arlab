@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List
+from traits.api import HasTraits, Str, List, Float
 from traitsui.api import View, Item, EnumEditor, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -23,6 +23,7 @@ from traitsui.api import View, Item, EnumEditor, HGroup
 class Level(HasTraits):
     name = Str
     tray = Str
+    z = Float
     trays = List
     def traits_view(self):
         v = View(HGroup(Item('name'),

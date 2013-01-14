@@ -59,13 +59,13 @@ class ExperimentSet(BaseSchedule):
     auto_increment = Bool(False)
     update_aliquots_needed = Event
 
-    mass_spectrometer = Str('obama')
-#    mass_spectrometer = Str(NULL_STR)
+#    mass_spectrometer = Str('obama')
+    mass_spectrometer = Str(NULL_STR)
     mass_spectrometers = Property
 #    tray = Str(NULL_STR)
     trays = Property
-    extract_device = Str('Fusions CO2')
-#    extract_device = Str(NULL_STR)
+#    extract_device = Str('Fusions CO2')
+    extract_device = Str(NULL_STR)
     extract_devices = Property
 
     right_clicked = Any
@@ -123,6 +123,7 @@ class ExperimentSet(BaseSchedule):
 
         params['configuration'] = configuration
         params['db'] = self.db
+        params['mass_spectrometer'] = self.mass_spectrometer
         return self._automated_run_factory(**params)
 
     def save_to_db(self):

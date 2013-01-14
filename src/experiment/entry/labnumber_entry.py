@@ -170,10 +170,10 @@ class LabnumberEntry(DBEntry):
                 add_flux()
 
             db.commit()
-            
+
             self.info('changes saved to database')
-            
-    
+
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -225,10 +225,10 @@ class LabnumberEntry(DBEntry):
                             trays=self.trays,
                             name=self.irradiation
                             )
-        
+
         irrad.load_production_name()
         irrad.load_chronology()
-        
+
         info = irrad.edit_traits(kind='livemodal')
         if info.result:
             irrad.edit_db()
@@ -237,13 +237,17 @@ class LabnumberEntry(DBEntry):
         irrad = self.irradiation
         irrad = self.db.get_irradiation(irrad)
         try:
-            lastlevel = irrad.levels[-1].name
+            level = irrad.levels[-1]
+            lastlevel = level.name
+            lastz = level.z
             nind = list(ALPHAS).index(lastlevel) + 1
         except IndexError:
             nind = 0
+            lastz = 0
 
         try:
             t = Level(name=ALPHAS[nind],
+                      z=lastz,
                       tray=self.tray_name,
                       trays=self.trays)
         except IndexError:
@@ -254,7 +258,7 @@ class LabnumberEntry(DBEntry):
         if info.result:
             irrad = self.db.get_irradiation(irrad)
             if not next((li for li in irrad.levels if li.name == t.name), None):
-                self.db.add_irradiation_level(t.name, irrad, t.tray)
+                self.db.add_irradiation_level(t.name, irrad, t.tray, t.z)
                 self.db.commit()
                 self.level = t.name
                 self.saved = True
@@ -307,7 +311,7 @@ class LabnumberEntry(DBEntry):
         irrad = self.db.get_irradiation(self.irradiation)
         if not irrad:
             return
-        
+
         level = next((li for li in irrad.levels if li.name == self.level), None)
         if level:
             if level.holder:

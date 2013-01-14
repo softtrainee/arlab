@@ -247,7 +247,6 @@ class ExtractionLinePyScript(ValvePyScript):
             self.info('waiting for access')
 
         while s:
-
             if self._cancel:
                 break
             self._sleep(1)
