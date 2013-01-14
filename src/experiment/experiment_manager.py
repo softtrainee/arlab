@@ -292,7 +292,6 @@ class ExperimentManager(Manager):
                     else:
                         aoffs[arunid] = 1
 
-
 #                    aoff += 1
                     idcnt_dict, stdict = dict(), dict()
                     c = 1
@@ -305,11 +304,15 @@ class ExperimentManager(Manager):
 
                 ln = db.get_labnumber(arunid)
                 if ln is not None:
-                    try:
-                        st = ln.analyses[-1].step
-                        st = list(ALPHAS).index(st)
-                    except (IndexError, ValueError):
-                        st = 0
+                    an=ln.analyses[-1]
+                    if an.aliquot!=arun.aliquot:
+                        st=0
+                    else:
+                        try:
+                            st = an.step
+                            st = list(ALPHAS).index(st)+1
+                        except (IndexError, ValueError):
+                            st = 0
                 else:
                     st = stdict[arunid] if arunid in stdict else 0
                     
