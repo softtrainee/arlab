@@ -239,7 +239,7 @@ class BaseSchedule(ScriptEditable):
 
         #load numbers
         for attr in ['duration', 'overlap', 'cleanup',
-#                     'extract_group'
+                     'extract_group'
                      ]:
             try:
                 param = args[header.index(attr)].strip()
