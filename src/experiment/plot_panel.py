@@ -62,6 +62,12 @@ class PlotPanel(Viewable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
+    def clear_displays(self):
+        self.ratio_display.clear()
+        self.signal_display.clear()
+        self.summary_display.clear()
+        self.fit_display.clear()
+
 
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):

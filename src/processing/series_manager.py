@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List, Bool, Float, Property
+from traits.api import HasTraits, Str, List, Bool, Float, Property, Instance
 from traitsui.api import View, Item, HGroup, Label, EnumEditor, \
     spring, Group
 import apptools.sweet_pickle as pickle
@@ -58,6 +58,11 @@ class SeriesOptions(HasTraits):
             return self._key
         else:
             return self.name
+class PeakCenterOption(HasTraits):
+    show = Bool(False)
+    def traits_view(self):
+        v = View(Item('show'))
+        return v
 
 class SeriesManager(Viewable):
     analyses = List
@@ -67,6 +72,7 @@ class SeriesManager(Viewable):
     baseline_values = List(SeriesOptions)
     blank_values = List(SeriesOptions)
     background_values = List(SeriesOptions)
+    peak_center_option = Instance(PeakCenterOption, ())
     use_single_window = Bool(False)
 
 #===============================================================================
@@ -103,7 +109,6 @@ class SeriesManager(Viewable):
             self.baseline_values = [SeriesOptions(name=ki, key='{}bs'.format(ki)) for ki in keys]
             self.blank_values = [SeriesOptions(name=ki, key='{}bl'.format(ki)) for ki in keys]
             self.background_values = [SeriesOptions(name=ki, key='{}bg'.format(ki)) for ki in keys]
-
             #make ratios
             for n, d in [('Ar40', 'Ar36')]:
                 if n in keys and d in keys:
@@ -179,6 +184,7 @@ class SeriesManager(Viewable):
                      Group(listeditor('baseline_values'), label='Baseline'),
                      Group(listeditor('blank_values'), label='Blanks'),
                      Group(listeditor('background_values'), label='Backgrounds'),
+                     Group(Item('peak_center_option'), label='Peak Centers'),
                      layout='tabbed'
                      ),
                  buttons=['OK', 'Cancel'],

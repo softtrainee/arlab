@@ -260,21 +260,22 @@ class ArArAge(HasTraits):
 #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
 
                 chron = irradiation.chronology
-                def convert_datetime(x):
-                    try:
-                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-                    except ValueError:
-                        pass
+#                def convert_datetime(x):
+#                    try:
+#                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+#                    except ValueError:
+#                        pass
 #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
                 if chron:
-                    chronblob = chron.chronology
-
-                    doses = chronblob.split('$')
-                    doses = [di.strip().split('%') for di in doses]
-
-                    doses = [map(convert_datetime, d) for d in doses if d]
+                    doses = chron.get_doses()
+#                    chronblob = chron.chronology
+#                    
+#                    doses = chronblob.split('$')
+#                    doses = [di.strip().split('%') for di in doses]
+#
+#                    doses = [map(convert_datetime, d) for d in doses if d]
 
                     analts = self.timestamp
                     if isinstance(analts, float):

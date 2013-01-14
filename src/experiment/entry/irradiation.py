@@ -20,6 +20,7 @@ from traitsui.api import View, Item, EnumEditor, HGroup, spring
 from traitsui.menu import Action
 #============= standard library imports ========================
 import os
+from datetime import datetime
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.experiment.entry.chronology_input import ChronologyInput
@@ -48,19 +49,20 @@ class Irradiation(Saveable):
     previd = 0
 #    pr_names = DelegatesTo('production_ratio_input', prefix='names')
     def load_production_name(self):
-        pr=NULL_STR
-        irrad=self.db.get_irradiation(self.name)
+        pr = NULL_STR
+        irrad = self.db.get_irradiation(self.name)
         if irrad is not None:
-            pr=irrad.production
+            pr = irrad.production
             if pr is not None:
-                self.pr_name=pr.name
-    
+                self.pr_name = pr.name
+
     def load_chronology(self):
-        irrad=self.db.get_irradiation(self.name)
+        irrad = self.db.get_irradiation(self.name)
         if irrad is not None:
-            chron=irrad.chronology
-#            print chron
-        
+            chron = irrad.chronology
+            doses = chron.get_doses()
+            self.chronology_input.set_dosages(doses)
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -83,19 +85,25 @@ class Irradiation(Saveable):
         pr = self.chronology_input
         pr.db.reset()
         pr.edit_traits()
-    
+
     def edit_db(self):
-        db=self.db
+        db = self.db
         ir = db.get_irradiation(self.name)
-        cb=self._make_chronblob()
+        cb = self._make_chronblob()
         if cb:
-            ir.chronology.chronology=cb
-            
-        prn=db.get_irradiation_production(self.pr_name)
-        ir.production=prn
-        
+            ir.chronology.chronology = cb
+
+        prn = db.get_irradiation_production(self.pr_name)
+        ir.production = prn
+
         db.commit()
-        
+
+#    def _parse_chronblob(self, chronblob):
+#        doses = chronblob.split('$')
+#        doses = [di.strip().split('%') for di in doses]
+#        doses = [datetime.strptime(d, '%Y-%m-%d %H:%M:%S') for d in doses if d]
+#        print doses
+
     def _make_chronblob(self):
         def make_ci(ci):
                 return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
@@ -107,7 +115,7 @@ class Irradiation(Saveable):
 
         chronblob = '$\n'.join([make_ci(ci) for ci in self.chronology_input.dosages])
         return chronblob
-    
+
     def save_to_db(self):
         db = self.db
         ir = db.get_irradiation(self.name)
@@ -119,10 +127,10 @@ class Irradiation(Saveable):
             if not prn:
                 prn = self.production_ratio_input.names[0]
 
-            chronblob=self._make_chronblob()
+            chronblob = self._make_chronblob()
             if chronblob:
                 cr = db.add_irradiation_chronology(chronblob)
-                
+
             ir = db.add_irradiation(self.name, prn, cr)
 
 #            holder = db.get_irradiation_holder(self.holder)

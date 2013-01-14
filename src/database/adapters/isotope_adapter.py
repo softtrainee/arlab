@@ -288,7 +288,7 @@ class IsotopeAdapter(DatabaseAdapter):
         self._add_item(ch)
         return ch
 
-    def add_irradiation_level(self, name, irradiation, holder):
+    def add_irradiation_level(self, name, irradiation, holder, z):
         irradiation = self.get_irradiation(irradiation)
         holder = self.get_irradiation_holder(holder)
 
@@ -296,7 +296,7 @@ class IsotopeAdapter(DatabaseAdapter):
         hn = holder.name if holder else None
         self.info('adding level {} {} to {}'.format(name, hn, irn))
 
-        level = irrad_LevelTable(name=name)
+        level = irrad_LevelTable(name=name, z=z)
         if irradiation is not None:
             irradiation.levels.append(level)
 

@@ -70,6 +70,17 @@ class ChronologyInput(HasTraits):
     dosages = List(Dosage)
     add = Button('+')
     remove = Button('-')
+    def set_dosages(self, ds):
+        def dose_factory(di):
+            s, e = di
+            return Dosage(startdate=s.date(),
+                          starttime=s.time(),
+                          enddate=e.date(),
+                          endtime=e.time()
+                          )
+
+        self.dosages = map(dose_factory, ds)
+
     def validate_chronology(self):
         pdi = None
         for di in self.dosages:
