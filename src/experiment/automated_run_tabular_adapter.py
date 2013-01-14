@@ -37,7 +37,7 @@ def get_name(func):
 class AutomatedRunAdapter(TabularAdapter):
     state_width = Int(20)
     aliquot_width = Int(50)
-
+    
     sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
