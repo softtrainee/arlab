@@ -161,6 +161,8 @@ class PyScript(Loggable):
     parent = Any
     root = Str
     filename = Str
+    info_color = Str
+
     _ctx = Dict
 
     parent_script = Any
@@ -417,7 +419,11 @@ class PyScript(Loggable):
 
         try:
             if self.info_display:
-                self.info_display.add_text(message)
+                if self.info_color:
+                    self.info_display.add_text(message, color=self.info_color)
+                else:
+                    self.info_display.add_text(message)
+
         except AttributeError:
             pass
 #            do_later(self.info_display.add_text, message)

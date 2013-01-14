@@ -185,7 +185,9 @@ class Ideogram(Plotter):
                 try:
                     func = getattr(self, '_aux_plot_{}'.format(ap['func']))
                     func(analyses, g, padding, plotid + 1, group_id, aux_namespace,
-                         value_scale=ap['scale']
+                         value_scale=ap['scale'],
+                         x_error=ap['x_error'],
+                         y_error=ap['y_error']
                          )
                 except AttributeError, e:
                     print e
@@ -206,7 +208,9 @@ class Ideogram(Plotter):
         return g
 
     def _aux_plot_radiogenic_percent(self, analyses, g, padding, plotid, group_id, aux_namespace,
-                                     value_scale='linear'
+                                     value_scale='linear',
+                                     x_error=False,
+                                     y_error=False,
                                      ):
         nages = aux_namespace['nages']
         rads = [a.rad40_percent for a in analyses if a.group_id == group_id]
@@ -222,11 +226,16 @@ class Ideogram(Plotter):
                            padding,
                            group_id,
                            plotid=plotid,
-                           value_scale=value_scale
+                           value_scale=value_scale,
+                           x_error=x_error,
+                           y_error=y_error
                            )
 
     def _aux_plot_kca(self, analyses, g, padding, plotid, group_id, aux_namespace,
-                      value_scale='linear'):
+                      value_scale='linear',
+                      x_error=False,
+                      y_error=False
+                      ):
         nages = aux_namespace['nages']
         k39s = [a.k39 for a in analyses if a.group_id == group_id]
         n = zip(nages, k39s)
@@ -241,7 +250,9 @@ class Ideogram(Plotter):
                            padding,
                            group_id,
                            plotid=plotid,
-                           value_scale=value_scale
+                           value_scale=value_scale,
+                           x_error=x_error,
+                           y_error=y_error
                            )
 
 
@@ -259,6 +270,7 @@ class Ideogram(Plotter):
         age_ys = linspace(start, maa, len(aages))
         self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
                                value_format=lambda x: '{:d}'.format(int(x)),
+                               additional_info=lambda x: x.age_string,
                                plotid=plotid,
                                value_scale=value_scale
                                )
@@ -440,7 +452,10 @@ class Ideogram(Plotter):
     def _add_aux_plot(self, g, ages, ys, xerrors, yerrors, padding, group_id,
                       plotid=1,
                       value_format=None,
-                      value_scale='linear'
+                      value_scale='linear',
+                      x_error=False,
+                      y_error=False,
+                      additional_info=None
                       ):
 
         g.set_grid_traits(visible=False, plotid=plotid)
@@ -453,15 +468,16 @@ class Ideogram(Plotter):
 #                                   selection_marker='circle',
                                    selection_marker_size=3,
                                    plotid=plotid)
-        if xerrors:
+        if xerrors and x_error:
             self._add_error_bars(scatter, xerrors, 'x')
 
-        if yerrors:
+        if yerrors and y_error:
             self._add_error_bars(scatter, yerrors, 'y')
 
         self._add_scatter_inspector(g.plotcontainer, p, scatter,
                                     group_id=group_id,
-                                    value_format=value_format
+                                    value_format=value_format,
+                                    additional_info=additional_info
                                     )
 
         d = lambda *args: self._update_graph(g, *args)

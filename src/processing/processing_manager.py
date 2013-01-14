@@ -675,10 +675,10 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     def _selector_manager_default(self):
         db = self.db
         d = SelectorManager(db=db)
-#        if not db.connected:
-#            db.connect()
+        if not db.connected:
+            db.connect()
 
-#        d.select_labnumber([22233])
+        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):

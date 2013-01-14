@@ -274,7 +274,7 @@ host={}'.format(self.name, self.username, self.host))
         if nitem is None: #or isinstance(nitem, (str, unicode)):
             self.info('adding {}= {}'.format(attr, name))
             self._add_item(item)
-            nitem=item
+            nitem = item
 #            self.info('{}= {} already exists'.format(attr, name))
         return nitem
 
@@ -302,6 +302,9 @@ host={}'.format(self.name, self.username, self.host))
             return value
 
         sess = self.get_session()
+        if sess is None:
+            return
+
         q = sess.query(table)
         q = q.filter(getattr(table, key) == value)
 
