@@ -43,6 +43,7 @@ from src.database.records.arar_age import ArArAge
 import time
 from src.database.isotope_analysis.script_summary import MeasurementSummary, \
     ExtractionSummary
+from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -86,6 +87,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     supplemental_summary = Property
     measurement_summary = Property
     extraction_summary = Property
+    blanks_summary = Property
+    backgrounds_summary = Property
 
     categories = List(['summary', 'irradiation',
                        'supplemental', 'measurement', 'extraction'])#'signal', 'sniff', 'baseline', 'peak center' ])
@@ -285,7 +288,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             if selected == 'summary':
                 item = self.analysis_summary
             elif selected == 'blanks':
-                item = BlanksSummary(record=self)
+                item = self.blanks_summary#BlanksSummary(record=self)
+            elif selected == 'backgrounds':
+                item = self.backgrounds_summary
+#                item = BackgroundsSummary(record=self)
             elif selected == 'det._intercal.':
                 item = self.detector_intercalibration_summary
             elif selected == 'irradiation':
@@ -736,6 +742,16 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_extraction_summary(self):
         si = ExtractionSummary(record=self)
         return si
+
+    @cached_property
+    def _get_blanks_summary(self):
+        bs = BlanksSummary(record=self)
+        return bs
+
+    @cached_property
+    def _get_backgrounds_summary(self):
+        bs = BackgroundsSummary(record=self)
+        return bs
 
     @cached_property
     def _get_record_id(self):

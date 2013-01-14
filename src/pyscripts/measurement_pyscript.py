@@ -68,7 +68,7 @@ command_register = makeRegistry()
 class MeasurementPyScript(ValvePyScript):
     automated_run = Any
     ncounts = 0
-
+    info_color = 'orange'
     _time_zero = None
 
     _series_count = 0

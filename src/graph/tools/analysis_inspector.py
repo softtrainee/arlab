@@ -24,7 +24,7 @@ from src.graph.tools.point_inspector import PointInspector
 class AnalysisPointInspector(PointInspector):
     analyses = List
     value_format = Callable
-
+    additional_info = Callable
 
     def assemble_lines(self):
         lines = []
@@ -49,6 +49,9 @@ class AnalysisPointInspector(PointInspector):
                          'Status= {}'.format(status),
                          '{}= {}'.format(name, y)
                          ]
+                if self.additional_info is not None:
+                    lines.append(self.additional_info(analysis))
+
         return lines
 
 #============= EOF =============================================

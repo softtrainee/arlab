@@ -213,14 +213,17 @@ class Plotter(Viewable):
                 aux_plots = []
 
             for ap in aux_plots:
-                if isinstance(ap, str):
-                    name = ap
-                    scale = 'linear'
-                    height = 100
-                else:
-                    name = ap.name
-                    scale = ap.scale
-                    height = ap.height
+#                if isinstance(ap, str):
+#                    name = ap
+#                    scale = 'linear'
+#                    height = 100
+#                    xerror = False
+#                else:
+                name = ap.name
+                scale = ap.scale
+                height = ap.height
+                x_error = ap.x_error
+                y_error = ap.y_error
 
                 if name == 'radiogenic':
                     d = dict(func='radiogenic_percent',
@@ -239,6 +242,8 @@ class Plotter(Viewable):
 
                 d['height'] = height
                 d['scale'] = scale
+                d['x_error'] = x_error
+                d['y_error'] = y_error
                 aux.append(d)
         return aux
 
@@ -328,7 +333,8 @@ class Plotter(Viewable):
                                group_id=0,
                                add_tool=True,
 #                               popup=True,
-                               value_format=None
+                               value_format=None,
+                               additional_info=None
                                ):
         #add a scatter hover tool
 #        bc = BroadcasterTool()
@@ -375,7 +381,8 @@ class Plotter(Viewable):
                                                      analyses=[a for a in self.sorted_analyses
                                                                     if a.group_id == group_id],
                                                      convert_index=lambda x: '{:0.3f}'.format(x),
-                                                     value_format=value_format
+                                                     value_format=value_format,
+                                                     additional_info=additional_info
                                                      )
 
             pinspector_overlay = PointInspectorOverlay(component=scatter,

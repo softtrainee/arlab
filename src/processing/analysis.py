@@ -128,7 +128,7 @@ class Analysis(Loggable):
             pe = abs(e / a * 100)
         except ZeroDivisionError:
             pe = 'Inf'
-        return u'{:0.3f} {}{:0.3f}({:0.2f}%)'.format(a, PLUSMINUS, e, pe)
+        return u'Age= {:0.3f} {}{:0.3f}({:0.2f}%)'.format(a, PLUSMINUS, e, pe)
 
 #    @property
 #    def timestamp(self):

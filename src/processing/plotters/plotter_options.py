@@ -32,6 +32,8 @@ class PlotterOption(HasTraits):
 
     scale = Enum('linear', 'log')
     height = Int(100)
+    x_error = Bool(False)
+    y_error = Bool(False)
     def _get_plot_names(self):
         return {NULL_STR:NULL_STR,
                 'analysis_number':'Analysis Number',
@@ -46,7 +48,11 @@ class PlotterOption(HasTraits):
                              editor=EnumEditor(name='plot_names')),
 
                         Item('scale', show_label=False),
-                        Item('height')
+                        Item('height', show_label=False),
+                        spring,
+                        Item('x_error', show_label=False),
+                        spring,
+                        Item('y_error', show_label=False)
                         ),
                 )
 
@@ -214,6 +220,12 @@ class PlotterOptions(Viewable):
         return v
 
     def traits_view(self):
+        header_grp = HGroup(Label('Plot'),
+                            Spring(width=132, springy=False),
+                            Label('Scale'),
+                            spring, Label('Height'),
+                            spring,
+                                    Label('X Err.'), Label('Y Err.'))
         default_grp = VGroup(Item('name'),
                              Item('title'),
                              self._get_x_axis_group(),
@@ -223,7 +235,7 @@ class PlotterOptions(Viewable):
                                     self._create_axis_group('y', 'tick'),
                                     show_border=True,
                                     label='Y'),
-
+                             header_grp,
                              Item('aux_plots',
                                   style='custom',
                                   show_label=False,

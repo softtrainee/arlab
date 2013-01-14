@@ -28,6 +28,7 @@ from src.graph.graph import Graph
 from src.database.orms.isotope_orm import proc_SelectedHistoriesTable
 from pyface.timer.do_later import do_later
 from src.constants import PLUSMINUS
+import time
 
 
 class HistoryView(HasTraits):
@@ -117,7 +118,7 @@ class HistorySummary(Summary):
     def _history_view_default(self):
         return HistoryView(summary=self)
 
-    def refresh(self):
+    def refresh(self, gui=True):
         hist = None
         if self.histories:
             selh = self.record._dbrecord.selected_histories
@@ -129,9 +130,11 @@ class HistorySummary(Summary):
                 self.selected_history = None
                 self.selected_history = sh
 
-        super(HistorySummary, self).build_summary(history=hist)
-
-        do_later(up)
+            super(HistorySummary, self).build_summary(history=hist)
+            if gui:
+                do_later(up)
+            else:
+                up()
 
     def _get_isotope_keys(self, history, name):
         isokeys = sorted([bi.isotope for bi in getattr(history, name)
@@ -181,14 +184,14 @@ class HistorySummary(Summary):
 
                        )
             if bi.use_set:
-                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
-                                     str(bs.analysis.runtime)) for bs in bi.sets]
-
+#                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
+#                                         str(bs.analysis.runtime)) for bs in bi.sets]
+                xs = [time.mktime(bs.analysis.analysis_timestamp.timetuple()) for bs in bi.sets ]
                 xs = np.array(xs)
                 if xs.shape[0]:
                     xs = xs - np.min(xs)
                     ys = np.random.random(xs.shape[0])
-                    g.new_series(xs, ys)
+                    g.new_series(xs, ys, type='scatter')
                     xma = max(xma, max(xs))
                     xmi = min(xmi, min(xs))
             else:
