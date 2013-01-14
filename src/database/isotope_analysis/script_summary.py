@@ -35,7 +35,7 @@ class MeasurementSummary(ScriptSummary):
     @cached_property
     def _get_script_text(self):
         try:
-            txt = self.record.dbrecord.measurement.script_blob
+            txt = self.record.dbrecord.measurement.script.blob
         except AttributeError:
             txt = ' '
 
@@ -48,7 +48,7 @@ class ExtractionSummary(ScriptSummary):
     @cached_property
     def _get_script_text(self):
         try:
-            txt = self.record.dbrecord.extraction.script_blob
+            txt = self.record.dbrecord.extraction.script.blob
         except AttributeError:
             txt = ' '
         if txt is None:

@@ -19,27 +19,57 @@ from traits.api import HasTraits, Any, Instance
 from traitsui.api import View, Item
 from src.displays.rich_text_display import RichTextDisplay
 from pyface.timer.do_later import do_later
+import math
 #============= standard library imports ========================
 #============= local library imports  ==========================
-def fixed_width(m, i):
-    return '{{:<{}s}}'.format(i).format(m)
-def floatfmt(m, i=6):
-    if abs(m) < 10 ** -i:
-        return '{:0.2e}'.format(m)
-    else:
-        return '{{:0.{}f}}'.format(i).format(m)
+#def fixed_width(m, i):
+#    return '{{:<{}s}}'.format(i).format(m)
+#def floatfmt(m, i=6):
+#    if abs(m) < 10 ** -i:
+#        return '{:0.2e}'.format(m)
+#    else:
+#        return '{{:0.{}f}}'.format(i).format(m)
 class Summary(HasTraits):
     display = Instance(RichTextDisplay)
     record = Any
 
+
+    @classmethod
+    def fixed_width(cls, m, i):
+        return '{{:<{}s}}'.format(i).format(m)
+
     @classmethod
     def calc_percent_error(cls, v, e):
-        if v:
+        try:
             sigpee = '{:0.2f}%'.format(abs(e / v * 100))
-        else:
-            sigpee = 'Inf'
+        except ZeroDivisionError:
+            sigpee = 'NaN'
         return sigpee
 
+    @classmethod
+    def make_error(cls, v, e):
+        return '{} ({})'.format(cls.floatfmt(e), cls.calc_percent_error(v, e))
+
+#    @classmethod
+#    def floatfmt(cls, m, i=6):
+#        if not m:
+#            return '0.0'
+#
+#        if abs(m) < 10 ** -i:
+#            return '{:0.2e}'.format(m)
+#        else:
+#            return '{{:0.{}f}}'.format(i).format(m)
+
+    @classmethod
+    def floatfmt(cls, f, n=6):
+        if not f:
+            return '0.0'
+        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, n):
+            fmt = '{:0.2e}'
+        else:
+            fmt = '{{:0.{}f}}'.format(n)
+
+        return fmt.format(f)
 #    def __init__(self, *args, **kw):
 #        super(Summary, self).__init__(*args, **kw)
 #        self.refresh()
@@ -74,10 +104,10 @@ class Summary(HasTraits):
         self.add_text(name, new_line=False, bold=True, underline=underline)
 
         if not underline:
-            self.add_text(fixed_width(value, max(0, width - len(name))),
+            self.add_text(self.fixed_width(value, max(0, width - len(name))),
                           new_line=new_line)
         else:
-            self.add_text(fixed_width(value, max(0, underline - len(name))),
+            self.add_text(self.fixed_width(value, max(0, underline - len(name))),
                           new_line=new_line, underline=True)
 
     def _build_summary(self, *args, **kw):

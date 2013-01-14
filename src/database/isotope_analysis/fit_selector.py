@@ -161,7 +161,7 @@ class FitSelector(HasTraits):
                     pass
 
         self.analysis.age_dirty = True
-#        self.analysis.analysis_summary.refresh()
+
 
     def traits_view(self):
         v = View(
