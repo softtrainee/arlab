@@ -272,7 +272,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         return d
 
-
 #===============================================================================
 # handlers
 #===============================================================================
@@ -300,8 +299,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             else:
                 item = getattr(self, '{}_graph'.format(selected))
 
-            self.trait_set(display_item=item)
-
+            self.display_item = item
             if hasattr(item, 'refresh'):
                 item.refresh(gui=False)
 
@@ -708,6 +706,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                                fit_selector=fs
                                )
         fs.on_trait_change(item.refresh, 'fits:[fit,filterstr,filter_outliers]')
+
+#        from src.database.isotope_analysis.analysis_display import AnalysisDisplay
+#        item = AnalysisDisplay(record=self)
         return item
 
     @cached_property

@@ -1221,21 +1221,25 @@ class AutomatedRun(Loggable):
 
     def _save_measurement(self, analysis):
         db = self.db
+
         meas = db.add_measurement(
                               analysis,
                               self.analysis_type,
                               self.mass_spectrometer,
-                              self.measurement_script.name,
-                              script_blob=self.measurement_script.toblob()
+#                              self.measurement_script.name,
+#                              script_blob=self.measurement_script.toblob()
                               )
+        script = db.add_script(self.measurement_script.name,
+                            self.measurement_script.toblob())
+        script.measurements.append(meas)
 
         return meas
 
     def _save_extraction(self, analysis):
         db = self.db
         ext = db.add_extraction(analysis,
-                          self.extraction_script.name,
-                          script_blob=self._assemble_extraction_blob(),
+#                          self.extraction_script.name,
+#                          script_blob=self._assemble_extraction_blob(),
                           extract_device=self.extract_device,
                           experiment_blob=self.experiment_manager.experiment_blob(),
                           extract_value=self.extract_value,
@@ -1245,6 +1249,9 @@ class AutomatedRun(Loggable):
                           weight=self.weight,
                           sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
+        script = db.add_script(self.extraction_script.name,
+                               self._assemble_extraction_blob())
+        script.extractions.append(ext)
 
         for pi in self.get_position_list():
             if isinstance(pi, tuple):

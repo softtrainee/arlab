@@ -139,7 +139,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         super(RegressionGraph, self).clear()
         self.regressors = []
 
-    def refresh(self):
+    def refresh(self, **kw):
         self._update_graph()
 
     def _update_graph(self, obj=None, name=None, old=None, new=None):

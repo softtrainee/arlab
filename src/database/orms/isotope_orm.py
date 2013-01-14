@@ -19,14 +19,14 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey, BLOB, Float, Time, Boolean, DateTime, Date
+     ForeignKey, BLOB, Float, Time, Boolean, DateTime
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
 from src.database.core.base_orm import BaseMixin, NameMixin
-from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
+#from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
 from sqlalchemy.sql.expression import func
-from sqlalchemy.types import FLOAT
+#from sqlalchemy.types import FLOAT
 
 Base = declarative_base()
 
@@ -281,7 +281,7 @@ class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')
 
 
-class meas_ExtractionTable(Base, ScriptTable):
+class meas_ExtractionTable(Base, BaseMixin):
 #    position = Column(Integer)
     extract_value = Column(Float)
     extract_duration = Column(Float)
@@ -292,6 +292,8 @@ class meas_ExtractionTable(Base, ScriptTable):
 
     sensitivity_id = foreignkey('gen_SensitivityTable')
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
+    script_id = foreignkey('meas_ScriptTable')
+
     analyses = relationship('meas_AnalysisTable', backref='extraction')
     positions = relationship('meas_PositionTable', backref='extraction')
 
@@ -329,16 +331,16 @@ class meas_IsotopeTable(Base, BaseMixin):
     fits = relationship('proc_FitTable', backref='isotope')
     results = relationship('proc_IsotopeResultsTable', backref='isotope')
 
-class meas_MeasurementTable(Base, ScriptTable):
-    analyses = relationship('meas_AnalysisTable', backref='measurement')
+class meas_MeasurementTable(Base, BaseMixin):
     mass_spectrometer_id = foreignkey('gen_MassSpectrometerTable')
     analysis_type_id = foreignkey('gen_AnalysisTypeTable')
     spectrometer_parameters_id = foreignkey('meas_SpectrometerParametersTable')
-
+    script_id = foreignkey('meas_ScriptTable')
 #    spectrometer_parameters = relationship('meas_SpectrometerParametersTable',
 #                                         backref='measurement',
 #                                         uselist=False
 #                                         )
+    analyses = relationship('meas_AnalysisTable', backref='measurement')
     deflections = relationship('meas_SpectrometerDeflectionsTable', backref='measurement')
 
 
@@ -347,6 +349,11 @@ class meas_PeakCenterTable(Base, BaseMixin):
     points = Column(BLOB)
     analysis_id = foreignkey('meas_AnalysisTable')
 
+class meas_ScriptTable(Base, NameMixin):
+    hash = Column(String(32))
+    blob = Column(BLOB)
+    measurements = relationship('meas_MeasurementTable', backref='script')
+    extractions = relationship('meas_ExtractionTable', backref='script')
 #===============================================================================
 # irradiation
 #===============================================================================
@@ -467,7 +474,7 @@ class gen_SampleTable(Base, NameMixin):
     material_id = foreignkey('gen_MaterialTable')
     project_id = foreignkey('gen_ProjectTable')
     labnumbers = relationship('gen_LabTable', backref='sample')
-    
+
 
 class gen_SensitivityTable(Base, BaseMixin):
     mass_spectrometer_id = foreignkey('gen_MassSpectrometerTable')

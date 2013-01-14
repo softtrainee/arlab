@@ -27,7 +27,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable, proc_FigureTable, \
-    proc_FigureAnalysisTable, meas_PositionTable
+    proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
@@ -171,15 +171,12 @@ class IsotopeAdapter(DatabaseAdapter):
         self._add_item(exp)
         return exp
 
-    def add_extraction(self, analysis, name, script_blob, extract_device=None, **kw):
-        ex = self._get_script('extraction', script_blob)
-        if ex is None:
-            ha = self._make_hash(script_blob)
-            ex = meas_ExtractionTable(script_name=name,
-                                      script_blob=script_blob,
-                                      hash=ha,
-                                      **kw)
-            self._add_item(ex)
+    def add_extraction(self, analysis, extract_device=None, **kw):
+#        ex = self._get_script('extraction', script_blob)
+#        if ex is None:
+#            ha = self._make_hash(script_blob)
+        ex = meas_ExtractionTable(**kw)
+        self._add_item(ex)
 
         an = self.get_analysis(analysis)
         if an:
@@ -253,7 +250,7 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_irradiation(self, name, production=None, chronology=None):
         production = self.get_irradiation_production(production)
         chronology = self.get_irradiation_chronology(chronology)
-        
+
         #print production, chronology
         ir = irrad_IrradiationTable(name=name,
                                     production=production,
@@ -340,17 +337,11 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return r
 
-    def add_measurement(self, analysis, analysis_type, mass_spec, name, script_blob, **kw):
-        meas = self._get_script('measurement', script_blob)
-        if meas is None:
-            ha = self._make_hash(script_blob)
-            meas = meas_MeasurementTable(script_name=name,
-                                         script_blob=script_blob,
-                                         hash=ha,
-                                         **kw)
-    #        if isinstance(analysis, str):
+    def add_measurement(self, analysis, analysis_type, mass_spec, **kw):
+        meas = meas_MeasurementTable(**kw)
+#        if isinstance(analysis, str):
 
-            self._add_item(meas)
+        self._add_item(meas)
 
         an = self.get_analysis(analysis)
         at = self.get_analysis_type(analysis_type)
@@ -407,40 +398,41 @@ class IsotopeAdapter(DatabaseAdapter):
             self._add_item(user)
         return user
 
+
     def add_sample(self, name, project=None, material=None, **kw):
-        project=self.get_project(project)
-        material=self.get_material(material)
-        
+        project = self.get_project(project)
+        material = self.get_material(material)
+
         sess = self.get_session()
         q = sess.query(gen_SampleTable)
         q = q.filter(and_(gen_SampleTable.name == name,
-                          gen_SampleTable.material==material,
-                          gen_SampleTable.project==project
+                          gen_SampleTable.material == material,
+                          gen_SampleTable.project == project
                           ))
-        
+
         try:
             sample = q.one()
         except Exception, e:
             print e
-            sample=None
-        
+            sample = None
+
 #        print sample
         if sample is None:
-            sample=self._add_sample(name, project, material)
+            sample = self._add_sample(name, project, material)
         else:
-            materialname=material.name if material else None
-            projectname=project.name if project else None
-            
-            sample_material_name=sample.material.name if sample.material else None
-            sample_project_name=sample.project.name if sample.project else None
+            materialname = material.name if material else None
+            projectname = project.name if project else None
+
+            sample_material_name = sample.material.name if sample.material else None
+            sample_project_name = sample.project.name if sample.project else None
 #            print sample_material_name, sample_project_name, materialname, projectname
-            if sample_material_name!=materialname and \
-                sample_project_name!=projectname:
-                sample=self._add_sample(name, project, material)
-                    
+            if sample_material_name != materialname and \
+                sample_project_name != projectname:
+                sample = self._add_sample(name, project, material)
+
         return sample
-    
-    def _add_sample(self,name, project, material):
+
+    def _add_sample(self, name, project, material):
         sample = gen_SampleTable(name=name)
 
         if project is not None:
@@ -455,7 +447,17 @@ class IsotopeAdapter(DatabaseAdapter):
 
         self._add_item(sample)
         return sample
-    
+
+    def add_script(self, name, blob):
+        seed = '{}{}'.format(name, blob)
+        ha = self._make_hash(seed)
+        scr = self.get_script(ha)
+        if scr is None:
+            scr = meas_ScriptTable(name=name, blob=blob, hash=ha)
+            self._add_item(scr)
+
+        return scr
+
     def add_selected_histories(self, analysis, **kw):
         sh = analysis.selected_histories
         if sh is None:
@@ -577,8 +579,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_experiment(self, value):
         return self._retrieve_item(meas_ExperimentTable, value)
 
-    def get_extraction(self, value):
-        return self._retrieve_item(meas_ExtractionTable, value, key='hash')
+#    def get_extraction(self, value):
+#        return self._retrieve_item(meas_ExtractionTable, value, key='hash')
 
     def get_extraction_device(self, value):
         return self._retrieve_item(gen_ExtractionDeviceTable, value)
@@ -645,14 +647,17 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_material(self, value):
         return self._retrieve_item(gen_MaterialTable, value)
 
-    def get_measurement(self, value):
-        return self._retrieve_item(meas_MeasurementTable, value, key='hash')
+#    def get_measurement(self, value):
+#        return self._retrieve_item(meas_MeasurementTable, value, key='hash')
 
     def get_molecular_weight(self, value):
         return self._retrieve_item(gen_MolecularWeightTable, value)
 
     def get_project(self, value):
         return self._retrieve_item(gen_ProjectTable, value)
+
+    def get_script(self, value):
+        return self._retrieve_item(meas_ScriptTable, value, key='hash')
 
     def get_sample(self, value):
         return self._retrieve_item(gen_SampleTable, value)
@@ -742,11 +747,11 @@ class IsotopeAdapter(DatabaseAdapter):
 #===============================================================================
 # private
 #===============================================================================
-    def _get_script(self, name, txt):
-        getter = getattr(self, 'get_{}'.format(name))
-        m = self._hash_factory()
-        m.update(txt)
-        return getter(m.digest())
+#    def _get_script(self, name, txt):
+#        getter = getattr(self, 'get_{}'.format(name))
+#        m = self._hash_factory()
+#        m.update(txt)
+#        return getter(m.hexdigest())
 
     def _make_hash(self, txt):
         if isinstance(txt, dict):
