@@ -928,7 +928,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     pp.append('({})'.format(','.join(ppp)))
 
         if pp:
-            r = ','.join(pp)
+            r = ','.join(map(str,pp))
 
         return r
 
