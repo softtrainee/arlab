@@ -231,10 +231,8 @@ class AutomatedRun(Loggable):
                       'extraction_script',
                       'post_measurement_script',
                       'post_equilibration_script']:
-                print v, self.mass_spectrometer,
                 if v:
                     v = str(v).replace(self.mass_spectrometer, '')
-                print v
             return v
 
         return [get_attr(ai) for ai in attr]
