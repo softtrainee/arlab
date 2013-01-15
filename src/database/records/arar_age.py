@@ -80,6 +80,8 @@ class ArArAge(HasTraits):
 
     moles_Ar40 = Property
 
+    ic_factor = Property
+
     def _calculate_kca(self):
         result = self.arar_result
         if result:
@@ -149,13 +151,12 @@ class ArArAge(HasTraits):
         bssignals = sigs('bs')
         blsignals = sigs('bl')
         bksignals = sigs('bg')
-#        ic = self.ic_factor
         j = self.j
         irrad = self.irradiation_info
         ab = self.abundant_sensitivity
 
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    j, irrad, abundant_sensitivity=ab)
+                                    j, irrad, abundant_sensitivity=ab, ic=self.ic_factor)
 
         if result:
             self.arar_result = result
@@ -379,6 +380,9 @@ class ArArAge(HasTraits):
 
     def _get_moles_Ar40(self):
         return 0.001
+
+    def _get_ic_factor(self):
+        return 1, 0
 
     @cached_property
     def _get_Ar40_39(self):

@@ -41,6 +41,8 @@ from src.processing.corrections.regression_correction import RegressionCorrectio
 
 from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.helpers.datetime_tools import convert_timestamp
+from src.regression.mean_regressor import MeanRegressor
+from src.regression.ols_regressor import OLSRegressor
 
 class InterpolationGraph(StackedRegressionGraph):
     pass
@@ -197,8 +199,14 @@ class InterpolationCorrection(HasTraits):
                                            yerror=ArrayDataSource(data=es),
                                            fit=fit,
                                            plotid=plotid)
-                ays = [1, ] * len(axs)
-                aes = [0, ] * len(axs)
+                if fit.startswith('average'):
+                    reg = MeanRegressor(xs=xs, ys=ys, yserr=es)
+                else:
+                    reg = OLSRegressor(xs=xs, ys=ys, yserr=es, fit=fit)
+                ays = reg.predict(axs)
+                aes = reg.predict_error(axs)
+#                ays = [1, ] * len(axs)
+#                aes = [0, ] * len(axs)
 
             ebo = ErrorBarOverlay(component=scatter,
                                   orientation='y')
@@ -349,7 +357,7 @@ class InterpolationCorrection(HasTraits):
             q = q.join(gen_AnalysisTypeTable)
             q = q.filter(and_(gen_AnalysisTypeTable.name == atype,
                               meas_ExperimentTable.id == exp.id,
-                              meas_AnalysisTable.id != analysis.id))
+                              meas_AnalysisTable.id != analysis.record_id))
 
         return q.all()
 

@@ -155,7 +155,6 @@ class proc_DetectorIntercalibrationTable(Base, BaseMixin):
     detector_id = foreignkey('gen_DetectorTable')
     user_value = Column(Float)
     user_error = Column(Float)
-#    use_set = Column(Boolean)
     fit = stringcolumn()
     sets = relationship('proc_DetectorIntercalibrationSetTable',
                         backref='detector_intercalibration',

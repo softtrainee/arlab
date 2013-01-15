@@ -31,7 +31,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
-    proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
+    proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, proc_SelectedHistoriesTable, \
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable
     #proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
 
@@ -92,15 +92,16 @@ class IsotopeAdapter(DatabaseAdapter):
         self._add_item(h)
         return h
 
-    def _add_set(self, name, key, value, analysis, **kw):
+    def _add_set(self, name, key, value, analysis, idname=None, **kw):
         table = globals()['proc_{}SetTable'.format(name)]
         nset = table(**kw)
         pa = getattr(self, 'get_{}'.format(key))(value)
 
         analysis = self.get_analysis(analysis)
-
         if analysis:
-            setattr(nset, '{}_analysis_id'.format(key), analysis.id)
+            if idname is None:
+                idname = key
+            setattr(nset, '{}_analysis_id'.format(idname), analysis.id)
         if pa:
             pa.sets.append(nset)
         return nset
@@ -158,13 +159,14 @@ class IsotopeAdapter(DatabaseAdapter):
         a = self._add_series_item('DetectorIntercalibration',
                                      'detector_intercalibration', history, **kw)
         if a:
+            detector = self.get_detector(detector)
             detector.intercalibrations.append(a)
 
         return a
 
     def add_detector_intercalibration_set(self, detector_intercalibration, analysis, **kw):
         return self._add_set('DetectorIntercalibration', 'detector_intercalibration',
-                             detector_intercalibration, analysis, **kw)
+                             detector_intercalibration, analysis, idname='ic', **kw)
 
     def add_experiment(self, name, **kw):
         exp = meas_ExperimentTable(name=name, **kw)

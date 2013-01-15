@@ -89,7 +89,6 @@ class CorrectionsManager(Saveable):
         self.apply_correction()
 
     def apply_correction(self):
-        print 'asdfsdf'
         if self.use_fixed_values:
             for ai in self.analyses:
                 history = self._add_history(ai)
@@ -140,8 +139,8 @@ class CorrectionsManager(Saveable):
 
     def _apply_interpolation_correction(self):
         db = self.db
-        func = getattr(db, 'add_{}'.format(self.correction_name))
-        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
+#        func = getattr(db, 'add_{}'.format(self.correction_name))
+#        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
         for ai in self.analyses:
 
             histories = getattr(ai.dbrecord, '{}_histories'.format(self.correction_name))
@@ -150,31 +149,43 @@ class CorrectionsManager(Saveable):
             history = self._add_history(ai)
             for si in self.interpolation_correction.fits:
                 if not si.use:
-                    if phistory:
-                        bs = getattr(phistory, self.correction_name)
-                        bs = reversed(bs)
-                        prev = next((bi for bi in bs if bi.isotope == si.name), None)
-                        if prev:
-                            uv = prev.user_value
-                            ue = prev.user_error
-                            func = getattr(db, 'add_{}'.format(self.correction_name))
-                            func(history,
-                                  isotope=prev.isotope,
-                                  fit=prev.fit,
-                                  use_set=prev.use_set,
-                                  user_value=uv,
-                                  user_error=ue
-                                  )
+                    self._apply_fixed_value_correction(phistory, history, si)
                 else:
-                    ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
-                    item = func(history, isotope=si.name,
-                                user_value=ss.value,
-                                user_error=ss.error,
-                                use_set=True, fit=si.fit)
-                    ps = self.interpolation_correction.predictors
-                    if ps:
-                        for pi in ps:
-                            func2(item, pi.dbrecord)
+                    self._apply_correction(history, ai, si)
+
+    def _apply_fixed_value_correction(self, phistory, history, si):
+        db = self.db
+        if phistory:
+            bs = getattr(phistory, self.correction_name)
+            bs = reversed(bs)
+            prev = next((bi for bi in bs if bi.isotope == si.name), None)
+            if prev:
+                uv = prev.user_value
+                ue = prev.user_error
+                func = getattr(db, 'add_{}'.format(self.correction_name))
+                func(history,
+                      isotope=prev.isotope,
+                      fit=prev.fit,
+#                                  use_set=prev.use_set,
+                      user_value=uv,
+                      user_error=ue
+                      )
+
+    def _apply_set_correction(self, history, ai, si):
+        db = self.db
+        func = getattr(db, 'add_{}'.format(self.correction_name))
+        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
+        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+        item = func(history, isotope=si.name,
+                    user_value=ss.value,
+                    user_error=ss.error,
+#                                use_set=True, 
+                    fit=si.fit)
+        ps = self.interpolation_correction.predictors
+        if ps:
+            for pi in ps:
+                func2(item, pi.dbrecord)
+
     @cached_property
     def _get_all_analyses(self):
         ans = self.analyses
@@ -364,5 +375,36 @@ class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
         if not self.fixed_values:
             self.fixed_values = [FixedValueCorrection(name='ICFactor')]
 
+    def _apply_fixed_value_correction(self, phistory, history, si):
+#        db = self.db
+        if phistory:
+            bs = phistory.detector_intercalibration
+#            bs = getattr(phistory, self.correction_name)
+            bs = reversed(bs)
+            prev = next((bi for bi in bs if bi.detector.name == 'CDD'), None)
+            if prev:
+                uv = prev.user_value
+                ue = prev.user_error
+                func = self.db.add_detector_intercalibration
+#                func = getattr(db, 'add_{}'.format(self.correction_name))
+                func(history,
+                      fit=prev.fit,
+                      user_value=uv,
+                      user_error=ue
+                      )
 
+    def _apply_correction(self, history, ai, si):
+#        db = self.db
+#        func = getattr(db, 'add_{}'.format(self.correction_name))
+#        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
+#        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+        ss = ai.signals[si.name]
+        item = self.db.add_detector_intercalibration(history, 'CDD',
+                    user_value=float(ss.value),
+                    user_error=float(ss.error),
+                    fit=si.fit)
+        ps = self.interpolation_correction.predictors
+        if ps:
+            for pi in ps:
+                self.db.add_detector_intercalibration_set(item, pi.dbrecord)
 #============= EOF =============================================

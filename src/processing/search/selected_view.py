@@ -180,20 +180,20 @@ class SelectedView(ColumnSorterMixin):
 # handlers
 #===============================================================================
     def _previous_selection_changed(self):
-        db = self.selector.db
-        def func(pi):
-            iso = IsotopeRecord(_dbrecord=db.get_analysis_record(pi.record_id),
-                          graph_id=pi.graph_id,
-                          group_id=pi.group_id
-                          )
-            return iso
+        if self.previous_selection:
+            db = self.selector.db
+            def func(pi):
+                iso = IsotopeRecord(_dbrecord=db.get_analysis_record(pi.record_id),
+                              graph_id=pi.graph_id,
+                              group_id=pi.group_id
+                              )
+                return iso
 
-        ps = [func(si)
-              for si in self.previous_selection.analysis_ids]
+            ps = [func(si) for si in self.previous_selection.analysis_ids]
 
-        self.selected_records = ps
-        self._set_grouping('graph_id')
-        self._set_grouping('group_id')
+            self.selected_records = ps
+            self._set_grouping('graph_id')
+            self._set_grouping('group_id')
 
     def _dclicked_changed(self):
         self.selector.open_record(self.selected)

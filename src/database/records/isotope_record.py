@@ -118,6 +118,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     extract_units = Property
     extract_duration = Property
     cleanup_duration = Property
+    experiment = Property
 
     changed = Event
 
@@ -629,7 +630,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         if pc:
             x, y = self._unpack_blob(pc.points, endianness='<')
             center = pc.center
-            self.peak_center_dac = center
+#            self.peak_center_dac = center
             return x, y, center, [], []
 
 #===============================================================================
@@ -666,7 +667,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         ic = (1.0, 0)
         name = 'detector_intercalibration'
         items = self._get_history_item(name)
-
+#        print items
         if items:
 
             '''
@@ -679,25 +680,25 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                       if iso.molecular_weight.name == 'Ar36'), None)
 #            for iso in self.dbrecord.isotopes:
 #                print iso
-#            print det
             if det:
 
                 #get the intercalibration for this detector
                 item = next((item for item in items if item.detector == det), None)
+                ic = item.user_value, item.user_error
 
-                if not item.fit:
-    #                s = Value(value=item.user_value, error=item.user_error)
-                    ic = item.user_value, item.user_error
-                else:
-                    intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
-                    data = map(intercal, item.sets)
-                    xs, ys, es = zip(*data)
-
-                    s = InterpolatedRatio(timestamp=self.timestamp,
-                                          fit=item.fit,
-                                          xs=xs, ys=ys, es=es
-                                          )
-                    ic = s.value, s.error
+#                if not item.fit:
+#    #                s = Value(value=item.user_value, error=item.user_error)
+#                    ic = item.user_value, item.user_error
+#                else:
+#                    intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
+#                    data = map(intercal, item.sets)
+#                    xs, ys, es = zip(*data)
+#
+#                    s = InterpolatedRatio(timestamp=self.timestamp,
+#                                          fit=item.fit,
+#                                          xs=xs, ys=ys, es=es
+#                                          )
+#                    ic = s.value, s.error
 
         return ic
 
@@ -982,6 +983,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             return pc.center
         else:
             return 0
+
+    def _get_experiment(self):
+        return self._get_dbrecord_value('experiment')
 #===============================================================================
 # factories
 #===============================================================================
