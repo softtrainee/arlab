@@ -97,6 +97,7 @@ class BakeoutController(WatlowEZZone):
 
     heating = False
     _check_buffer = None
+    _check_temp_enabled = True
     _check_temp_minutes = 2
     _check_temp_threshold = 40
 #    (depends_on='_ok_to_run')
@@ -133,6 +134,13 @@ class BakeoutController(WatlowEZZone):
         '''
         '''
         self.load_scripts()
+
+
+        self.set_attribute(config, '_check_temp_enabled', 'Monitor', 'enabled', cast='boolean', default=True)
+        self.set_attribute(config, '_check_temp_minutes', 'Monitor', 'time', cast='float', default=2)
+        self.set_attribute(config, '_check_temp_threshold', 'Monitor', 'threshold', cast='float', default=40)
+
+
         return True
 
     def load_scripts(self):
@@ -339,7 +347,8 @@ Add {}'.format(sd)):
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
-        self._check_temp()
+        if self._check_temp_enabled:
+            self._check_temp()
 #        self.get_temp_and_power(verbose=True)
 
         if self._duration_timeout:
@@ -349,16 +358,21 @@ Add {}'.format(sd)):
     def _check_temp(self):
         if self.isActive() and self.heating:
 
-            n = self._check_temp_minutes * 60 / float(self.update_interval)
+            n = int(self._check_temp_minutes * 60 / float(self.update_interval))
             cb = self._check_buffer
             cb.append(self.process_value)
             if len(cb) >= n:
                 cb = cb[-n:]
                 avgtemp = sum(cb) / len(cb)
                 if avgtemp < self._check_temp_threshold:
-                    self.end()
-                    self.warning('controller failed to heat')
-                    self.warning_dialog('Controller failed to heat. Check thermocouple')
+                    self.led.state = False
+                    self.active = False
+                    self.alive = False
+                    self.setpoint = 0
+                    self._duration = 0
+                    self.warning('controller failed to heat average temp= {}, duration={}'.format(avgtemp, self._check_temp_minutes))
+                    self.warning_dialog('Controller failed to heat. Average temp.={:0.1f} after {} minutes. Check thermocouple and heating tape'.\
+                                        format(avgtemp, self._check_temp_minutes))
 
             self._check_buffer = cb
 #===============================================================================
