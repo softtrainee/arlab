@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Event, Float, Str, Instance, Bool, Property
+from traits.api import List, Event, Float, Str, Instance, Bool, Property, HasTraits
 from traitsui.api import View, Item, spring, HGroup, Label, VGroup, Spring, \
     ButtonEditor, EnumEditor
 #============= standard library imports ========================
@@ -29,8 +29,15 @@ from src.paths import paths
 from watlow_ezzone import WatlowEZZone
 from src.constants import NULL_STR
 
-class BakeoutMonitor():
-    pass
+#class BakeoutMonitor():
+#    pass
+#class WarningMessge(HasTraits):
+#    message = Str
+#    def traits_view(self):
+#        v=View(HGroup(Item('image'),
+#                      
+#                      )
+
 
 BLANK_SCRIPT = NULL_STR
 class BakeoutController(WatlowEZZone):
@@ -86,6 +93,11 @@ class BakeoutController(WatlowEZZone):
     state_label = Property(depends_on='alive')
 
     ok_to_run = Property
+
+    heating = False
+    _check_buffer = None
+    _check_temp_minutes = 2
+    _check_temp_threshold = 40
 #    (depends_on='_ok_to_run')
 #    _ok_to_run = Bool(False)
 
@@ -165,16 +177,19 @@ Add {}'.format(sd)):
         self.active = True
         self.alive = True
 
+        self._check_buffer = []
         #set led to green
         self.led.state = 'green'
         time.sleep(0.005)
         if self.script == NULL_STR:
+            self.heating = True
             self._duration_timeout = True
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)
             self._oduration = self._duration
 
         else:
+            self.heating = False
             self._duration_timeout = False
 #            if self.script.endswith('.bo'):
 #                t = BakeoutScript(name='{}_script'.format(self.name),
@@ -328,12 +343,28 @@ Add {}'.format(sd)):
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
+        self._check_temp()
 #        self.get_temp_and_power(verbose=True)
 
         if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:
                 self.end()
 
+    def _check_temp(self):
+        if self.isActive() and self.heating:
+
+            n = self._check_temp_minutes * 60 / float(self.update_interval)
+            cb = self._check_buffer
+            cb.append(self.process_value)
+            if len(cb) >= n:
+                cb = cb[-n:]
+                avgtemp = sum(cb) / len(cb)
+                if avgtemp < self._check_temp_threshold:
+                    self.end()
+                    self.warning('controller failed to heat')
+                    self.warning_dialog('Controller failed to heat. Check thermocouple')
+
+            self._check_buffer = cb
 #===============================================================================
 # handlers
 #===============================================================================

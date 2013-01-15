@@ -64,6 +64,8 @@ class BakeoutPyScript(PyScript):
     def ramp(self, temperature=0, rate=0, start=None, period=60):
         temperature = float(temperature)
         rate = float(rate)
+
+
         period = float(period)
 
         if self._graph_calc:
@@ -99,7 +101,10 @@ class BakeoutPyScript(PyScript):
         dur = abs(dT / rate)
         if c is not None:
             c.duration = dur
-
+            if rate > 0:
+                c.heating = True
+            else:
+                c.heating = False
         #convert period to hours
 #        hperiod = period / 3600.
 #        steps = linspace(start, temperature, dur * 3600 / float(period))
@@ -124,6 +129,7 @@ class BakeoutPyScript(PyScript):
 
     @command_register
     def setpoint(self, temperature=0, duration=0, units='h'):
+
         ts = TIMEDICT[units]
         if self._graph_calc:
             self._current_setpoint = temperature
@@ -142,9 +148,11 @@ class BakeoutPyScript(PyScript):
         self.info('setting setpoint to {} for {}'.format(temperature, duration))
         c = self.controller
         if c is not None:
+
             self._set_setpoint(temperature)
             #convert back to hours
-            self.controller.duration = duration / 3600.
+            c.duration = duration / 3600.
+            c.heating = True
 
         self._block(duration)
 
