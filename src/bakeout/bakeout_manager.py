@@ -576,7 +576,7 @@ class BakeoutManager(Manager):
             states = []
             for c in self._get_controllers():
                 if c.ok_to_run:
-                    c.on_trait_change(self._update_alive, 'alive')
+                    c.on_trait_change(self.update_alive, 'alive')
                     c.run()
                     states.append(True)
 
