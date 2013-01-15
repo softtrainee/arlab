@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, List, Bool, Float, Property, Instance
 from traitsui.api import View, Item, HGroup, Label, EnumEditor, \
-    spring, Group
+    spring, Group, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import re
@@ -59,9 +59,56 @@ class SeriesOptions(HasTraits):
         else:
             return self.name
 class PeakCenterOption(HasTraits):
-    show = Bool(False)
+    show = Bool(True)
+    plot_centers = Bool(False)
+
+    plot_scans = Bool(True)
+    overlay = Bool(False)
+
+    def _plot_centers_changed(self):
+        if self.plot_centers:
+            self.plot_scans = False
+
+    def _plot_scans_changed(self):
+        if self.plot_scans:
+            self.plot_centers = False
+
     def traits_view(self):
-        v = View(Item('show'))
+        v = View(Item('show', label='Display Peak Center'),
+                HGroup(
+                       VGroup(HGroup(Label('Plot Centers')),
+                              spring,
+                              HGroup(Label('Plot Scans'))
+                              ),
+                       VGroup(
+                              HGroup(Item('plot_centers',
+                                          tooltip='Display a time series of peak center values',
+                                          show_label=False)),
+                              HGroup(
+                                     Item('plot_scans',
+                                          tooltip='Plot peak center scans (DAC vs Intensity)',
+                                          show_label=False),
+                                     Item('overlay',
+                                          tooltip='Overlay all scans on one graph',
+                                          enabled_when='plot_scans')
+                                     )
+                              ),
+                       show_border=True,
+                       enabled_when='show'
+                       )
+
+#                 Group(
+#                       Item('plot_centers',
+#                            tooltip='Display a time series of peak center values'
+#                            ),
+#                       HGroup(Item('plot_scan', tooltip='Plot peak center scans (DAC vs Intensity)'),
+#                              Item('overlay',
+#                                   enabled_when='plot_scan',
+#                                   tooltip='Overlay all scans on one graph')
+#                              ),
+#                       show_border=True,
+#                       enabled_when='show')
+                 )
         return v
 
 class SeriesManager(Viewable):
@@ -104,7 +151,7 @@ class SeriesManager(Viewable):
                           reverse=True
                           )
 
-            self.calculated_values = [SeriesOptions(name=ki, key=ki.replace('Ar', 's')) for ki in keys]
+            self.calculated_values = cv = [SeriesOptions(name=ki, key=ki.replace('Ar', 's')) for ki in keys]
             self.measured_values = [SeriesOptions(name=ki) for ki in keys]
             self.baseline_values = [SeriesOptions(name=ki, key='{}bs'.format(ki)) for ki in keys]
             self.blank_values = [SeriesOptions(name=ki, key='{}bl'.format(ki)) for ki in keys]
@@ -112,19 +159,18 @@ class SeriesManager(Viewable):
             #make ratios
             for n, d in [('Ar40', 'Ar36')]:
                 if n in keys and d in keys:
-                    self.calculated_values.append(SeriesOptions(name='{}/{}'.format(n, d),
-                                                     ))
+                    cv.append(SeriesOptions(name='{}/{}'.format(n, d)))
 
-            self.calculated_values.append(SeriesOptions(name='IC',
-                                             key='Ar40/Ar36',
-                                             scalar=295.5))
+            cv.append(SeriesOptions(name='IC', key='Ar40/Ar36', scalar=295.5))
 
 #===============================================================================
 # persistence
 #===============================================================================
     def dump(self):
         for ai in ['calculated_values', 'measured_values',
-                    'baseline_values', 'blank_values', 'background_values']:
+                    'baseline_values', 'blank_values', 'background_values',
+                    'peak_center_option'
+                    ]:
             self._dump(ai)
 
         p = os.path.join(paths.hidden_dir, 'series_manager.traits')
@@ -140,8 +186,9 @@ class SeriesManager(Viewable):
     def load(self):
         for ai in ['calculated_values', 'measured_values',
                     'baseline_values', 'blank_values', 'background_values']:
+            self._load(ai, self._load_values)
 
-            self._load(ai)
+        self._load('peak_center_option', self._load_peak_center)
 
         p = os.path.join(paths.hidden_dir, 'series_manager.traits')
         if os.path.isfile(p):
@@ -152,20 +199,25 @@ class SeriesManager(Viewable):
             except pickle.PickleError:
                 pass
 
-    def _load(self, attr):
+    def _load(self, attr, func):
         p = os.path.join(paths.hidden_dir, 'series_manager.{}'.format(attr))
         if os.path.isfile(p):
             try:
                 with open(p, 'r') as fp:
-                    nso = pickle.load(fp)
-                    for si in nso:
-                        obj = next((ni for ni in getattr(self, attr)
-                                    if ni.key == si.key and ni.name == si.name), None)
-                        for ai in ['show', 'fit']:
-                            setattr(obj, ai, getattr(si, ai))
-
+                    pobj = pickle.load(fp)
+                    func(pobj, attr)
             except pickle.PickleError:
                 pass
+
+    def _load_values(self, pobj, attr):
+        for si in pobj:
+            obj = next((ni for ni in getattr(self, attr)
+                        if ni.key == si.key and ni.name == si.name), None)
+            for ai in ['show', 'fit']:
+                setattr(obj, ai, getattr(si, ai))
+
+    def _load_peak_center(self, pobj, attr):
+        self.peak_center_option = pobj
 
 #===============================================================================
 # property get/set
@@ -179,12 +231,13 @@ class SeriesManager(Viewable):
     def traits_view(self):
         v = View(
                  Group(
+                     Group(Item('peak_center_option', show_label=False, style='custom'),
+                           label='Peak Centers'),
                      Group(listeditor('calculated_values'), label='Calculated'),
                      Group(listeditor('measured_values'), label='Measured'),
                      Group(listeditor('baseline_values'), label='Baseline'),
                      Group(listeditor('blank_values'), label='Blanks'),
                      Group(listeditor('background_values'), label='Backgrounds'),
-                     Group(Item('peak_center_option'), label='Peak Centers'),
                      layout='tabbed'
                      ),
                  buttons=['OK', 'Cancel'],

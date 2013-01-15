@@ -241,7 +241,9 @@ class SelectedView(ColumnSorterMixin):
 
     def traits_view(self):
         grouping_grp = VGroup(
-                              HGroup(Item('set_group', show_label=False),
+                              HGroup(Item('set_group',
+                                          tooltip='Highlight a set of runs then Set Group',
+                                          show_label=False),
                                      Item('group_by_labnumber', show_label=False)),
                               HGroup(Item('set_graph', show_label=False),
                                      Item('graph_by_labnumber', show_label=False))

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Property, List, Any, cached_property, \
-    Event
+    Event, Float
 from traitsui.api import View, Item, HGroup, ListStrEditor
 
 #============= standard library imports ========================
@@ -135,6 +135,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     status = Property
     uuid = Property
 
+    peak_center_dac = Property
     _no_load = False
 
 #    rad40 = None
@@ -628,6 +629,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         if pc:
             x, y = self._unpack_blob(pc.points, endianness='<')
             center = pc.center
+            self.peak_center_dac = center
             return x, y, center, [], []
 
 #===============================================================================
@@ -974,7 +976,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_cleanup_duration(self):
         return self._get_extraction_value('cleanup_duration')
 
-
+    def _get_peak_center_dac(self):
+        pc = self._get_peakcenter()
+        if pc:
+            return pc.center
+        else:
+            return 0
 #===============================================================================
 # factories
 #===============================================================================
