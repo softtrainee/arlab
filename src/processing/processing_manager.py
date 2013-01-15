@@ -47,6 +47,8 @@ from src.irradiation.flux_manager import FluxManager
 from src.processing.base_analysis_manager import BaseAnalysisManager
 from src.processing.series_manager import SeriesManager
 from src.processing.project_view import ProjectView
+from src.graph.graph import Graph
+from src.graph.time_series_graph import TimeSeriesGraph
 
 
 class ProcessingManager(DatabaseManager, BaseAnalysisManager):
@@ -419,8 +421,67 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 if s is None:
                     s = sb
 
+                self._build_peak_center_series(ans, sm.peak_center_option)
+
+
 #                return s
 #            return sm
+#    def _calculate_window_xy(self, i, cnt, offsetcnt,
+#                             xstep=0.25, ystep=0.2, xstart=0.25, ystart=0.25):
+    def _increment_window_xy(self, wx, wy, cnt, xstep=0.025, ystep=0.025, ystart=0.25):
+        wx += xstep
+        wy += ystep
+        if wy > 0.6:
+            wy = ystart + cnt * ystep / 4.0
+            cnt += 1
+
+        return wx, wy, cnt
+
+    def _build_peak_center_series(self, ans, options):
+        if options.plot_centers:
+            g = TimeSeriesGraph(container_dict=dict(padding=5))
+            g.new_plot(xtitle='Time',
+                       ytitle='Peak Center (DAC)')
+            xs, ys = zip(*[(ai.timestamp, ai.peak_center_dac) for ai in ans])
+
+            g.new_series(xs, ys, type='scatter', marker='circle', marker_size=2)
+            self.open_view(g)
+        elif options.plot_scans:
+            if options.overlay:
+                g = Graph(container_dict=dict(padding=5))
+#                import numpy as np
+                g.new_plot(xtitle='DAC', ytitle='Intensity')
+                for ai in ans:
+                    args = ai._get_peakcenter()
+                    if args:
+                        x, y, c = args[0], args[1], args[2]
+                        g.new_series(x, y)
+                        g.add_vertical_rule(c)
+                self.open_view(g)
+            else:
+#                import numpy as np
+                wx, wy, cnt = 0.25, 0.25, 1
+                for i, ai in enumerate(ans):
+                    args = ai._get_peakcenter()
+#                    x = np.linspace(0, 10, 100)
+#                    y = -(x - 5) ** 2
+#                    c = np.random.random() * 10
+                    args = x, y, c
+                    if args:
+                        x, y, c = args[0], args[1], args[2]
+                        if i > 0:
+                            wx, wy, cnt = self._increment_window_xy(wx, wy, cnt, ystart=0.25)
+
+                        g = Graph(container_dict=dict(padding=5),
+                                  window_x=wx,
+                                  window_y=wy,
+                                  window_title=str(i)
+                                  )
+                        g.new_plot(xtitle='DAC', ytitle='Intensity')
+                        g.new_series(x, y)
+                        g.add_vertical_rule(c)
+                    self.open_view(g)
+
 
     def _build_series(self, ans, ss):
         s = None
@@ -675,10 +736,11 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     def _selector_manager_default(self):
         db = self.db
         d = SelectorManager(db=db)
-        if not db.connected:
-            db.connect()
+#        if not db.connected:
+#            db.connect()
 
-        d.select_labnumber([22233])
+#        d.select_labnumber([61541])
+#        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):

@@ -78,8 +78,8 @@ class Query(HasTraits):
                          'like',
                          'contains'
                          ])
-#    criterion = String('')
     criterion = String('')
+#    criterion = String('')
     criteria = Property(depends_on='parameter')
 #    query_table = Any
 
@@ -248,9 +248,9 @@ class Query(HasTraits):
     def _remove_fired(self):
         self.selector.remove_query(self)
 
-    def _criterion_changed(self):
-        if self.criterion:
-            self.selector.execute_query()
+#    def _criterion_changed(self):
+#        if self.criterion:
+#            self.selector.execute_query()
 
 #===============================================================================
 # property get/set
