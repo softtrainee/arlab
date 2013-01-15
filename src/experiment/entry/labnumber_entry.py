@@ -32,6 +32,7 @@ from src.helpers.alphas import ALPHAS
 from src.experiment.entry.db_entry import DBEntry
 from src.irradiation.irradiated_position import IrradiatedPosition, \
     IrradiatedPositionAdapter
+from src.constants import NULL_STR
 
 
 class LabnumberEntry(DBEntry):
@@ -43,13 +44,13 @@ class LabnumberEntry(DBEntry):
     irradiations = Property(depends_on='saved')
     levels = Property(depends_on='irradiation,saved')
     trays = Property
-
     edit_irradiation_button = Button('Edit')
-
+    edit_level_enabled = Property(depends_on='level')
+    edit_irradiation_enabled = Property(depends_on='irradiation')
     saved = Event
 #    irradiation_trays = Property
     tray_name = Str
-    irradiation_tray_image = Property(Image, depends_on='level, irradiation')
+    irradiation_tray_image = Property(Image, depends_on='level, irradiation, saved')
     irradiated_positions = List(IrradiatedPosition)
 
     auto_assign = Bool
@@ -73,6 +74,7 @@ class LabnumberEntry(DBEntry):
     save_button = Button('Save')
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
+    edit_level_button = Button('Edit')
     edit_monitor_button = Button('Edit Flux Monitor')
     calculate_flux_button = Button('Calculate Flux')
     calculate_flux_enabled = Property(depends_on='selected[]')
@@ -225,13 +227,39 @@ class LabnumberEntry(DBEntry):
                             trays=self.trays,
                             name=self.irradiation
                             )
-
         irrad.load_production_name()
         irrad.load_chronology()
 
         info = irrad.edit_traits(kind='livemodal')
         if info.result:
             irrad.edit_db()
+
+    def _edit_level_button_fired(self):
+
+        _prev_tray = self.tray_name
+        irradiation = self.irradiation
+        level = Level(db=self.db,
+                      name=self.level,
+                      trays=self.trays
+                      )
+        level.load(irradiation)
+        info = level.edit_traits(kind='livemodal')
+        if info.result:
+
+            self.info('saving level. Irradiation={}, Name={}, Tray={}, Z={}'.format(irradiation,
+                                                                                    level.name,
+                                                                                    level.tray,
+                                                                                    level.z))
+            level.edit_db()
+
+            self.saved = True
+            self.irradiation = irradiation
+            self.level = level.name
+
+            if _prev_tray != level.tray:
+                if not self.confirmation_dialog('Irradiation Tray changed. Copy labnumbers to new tray'):
+                    self._load_irradiated_samples(level.tray)
+
 
     def _add_level_button_fired(self):
         irrad = self.irradiation
@@ -247,7 +275,7 @@ class LabnumberEntry(DBEntry):
 
         try:
             t = Level(name=ALPHAS[nind],
-                      z=lastz,
+                      z=lastz if lastz is not None else 0,
                       tray=self.tray_name,
                       trays=self.trays)
         except IndexError:
@@ -306,13 +334,22 @@ class LabnumberEntry(DBEntry):
 
         self._update_sample_table = True
 
-    @on_trait_change('level, irradiation')
-    def irrad_change(self, obj, name, old, new):
+#    @on_trait_change('level, irradiation')
+#    @on_trait_change('level')
+#    def irrad_change(self, obj, name, old, new):
+#    def _irradiation_changed(self):
+#        self.level = ''
+
+    def _level_changed(self):
+        if self.level == NULL_STR:
+            return
+
         irrad = self.db.get_irradiation(self.irradiation)
         if not irrad:
             return
 
         level = next((li for li in irrad.levels if li.name == self.level), None)
+
         if level:
             if level.holder:
                 holder = level.holder.name
@@ -325,6 +362,9 @@ class LabnumberEntry(DBEntry):
                     ir = self._position_factory(pi)
                     hi = pi.position - 1
                     self.irradiated_positions[hi] = ir
+#        else:
+#            self.trait_set(level='', trait_change_notify=False)
+
 
     def _position_factory(self, dbpos):
         ln = dbpos.labnumber
@@ -374,19 +414,22 @@ class LabnumberEntry(DBEntry):
 #===============================================================================
     @cached_property
     def _get_irradiations(self):
+        self.irradiation = NULL_STR
 #        r = ['NM-Test', 'NM-100', 'NM-200']
-        r = [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
-        if r and not self.irradiation:
-            self.irradiation = r[-1]
+        r = [NULL_STR] + [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
+#        if r and not self.irradiation:
+#            self.irradiation = r[-1]
         return r
 
+    @cached_property
     def _get_levels(self):
+        self.level = NULL_STR
         r = []
         irrad = self.db.get_irradiation(self.irradiation)
         if irrad:
-            r = [str(ri.name) for ri in irrad.levels]
-            if r and not self.level:
-                self.level = r[-1]
+            r = [NULL_STR] + [str(ri.name) for ri in irrad.levels]
+#            if r and not self.level:
+
         return r
 
     def _get_irradiation_tray_image(self):
@@ -398,7 +441,7 @@ class LabnumberEntry(DBEntry):
         if level:
             holder = level.holder
             holder = holder.name if holder else None
-        holder = holder if holder is not None else '---'
+        holder = holder if holder is not None else NULL_STR
         self.tray_name = holder
         im = ImageResource('{}.png'.format(holder),
                              search_path=[p]
@@ -439,17 +482,28 @@ class LabnumberEntry(DBEntry):
         if self.selected:
             return len(self.selected) >= 3
 
+    def _get_edit_irradiation_enabled(self):
+        return self.irradiation != NULL_STR
+
+    def _get_edit_level_enabled(self):
+        return self.level != NULL_STR
+
     def traits_view(self):
         irradiation = Group(
                             HGroup(
                                    VGroup(HGroup(Item('irradiation',
                                                       editor=EnumEditor(name='irradiations')
                                                       ),
-                                                 Item('edit_irradiation_button', show_label=False)
+                                                 Item('edit_irradiation_button',
+                                                      enabled_when='edit_irradiation_enabled',
+                                                      show_label=False)
                                                  ),
-                                        Item('level',
-                                             editor=EnumEditor(name='levels')
-                                             ),
+                                          HGroup(Item('level', editor=EnumEditor(name='levels')),
+                                                 spring,
+                                                 Item('edit_level_button',
+                                                      enabled_when='edit_level_enabled',
+                                                      show_label=False)
+                                                 ),
                                           Item('add_irradiation_button', show_label=False),
                                           Item('add_level_button', show_label=False),
 #                                        Item('irradiation_tray',

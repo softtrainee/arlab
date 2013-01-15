@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List, Float
+from traits.api import HasTraits, Str, List, Float, Any
 from traitsui.api import View, Item, EnumEditor, HGroup
+from src.constants import NULL_STR
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -25,10 +26,33 @@ class Level(HasTraits):
     tray = Str
     z = Float
     trays = List
+    db = Any
+    dblevel = Any
+    def load(self, irrad):
+        self.dblevel = level = self.db.get_irradiation_level(irrad, self.name)
+        if level.holder:
+            name = level.holder.name
+            if not name in self.trays:
+                name = NULL_STR
+            self.tray = name
+        z = level.z
+        self.z = z if z is not None else 0
+
+
+    def edit_db(self):
+        self.dblevel.name = self.name
+        self.dblevel.z = self.z
+        holder = self.db.get_irradiation_holder(self.tray)
+        if holder:
+            self.dblevel.holder = holder
+        self.db.commit()
+
     def traits_view(self):
         v = View(HGroup(Item('name'),
+                        Item('z'),
                         Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
-                 buttons=['OK', 'Cancel']
+                 buttons=['OK', 'Cancel'],
+                 title='Edit Level'
                  )
         return v
 
