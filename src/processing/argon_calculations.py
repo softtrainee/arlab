@@ -176,7 +176,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     ic = ufloat(ic)
     j = ufloat(j)
 #    temp_ic = ufloat(ic)
-
 #===============================================================================
 # debugging
 #===============================================================================
@@ -279,7 +278,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         cl38 = s38 - ar38atm - k38 - ca38
         cl36 = cl38 * m
         atm36 = s36 - ca36 - cl36
-        
+
     #calculate rodiogenic
     #dont include error in 40/36
     atm40 = atm36 * constants.atm4036.nominal_value

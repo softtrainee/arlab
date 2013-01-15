@@ -392,10 +392,10 @@ class Ideogram(Plotter):
         self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
 
         if g.minprob:
-            minp = min(g.minprob, minp)
+            minp = min([g.minprob, minp])
 
         if g.maxprob:
-            maxp = max(g.maxprob, maxp)
+            maxp = max([g.maxprob, maxp])
 
         g.minprob = minp
         g.maxprob = maxp

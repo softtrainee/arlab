@@ -23,6 +23,8 @@ import numpy as np
 #============= local library imports  ==========================
 from src.database.isotope_analysis.history_summary import HistorySummary
 from src.graph.graph import Graph
+import time
+from src.constants import PLUSMINUS
 
 #from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
@@ -63,41 +65,40 @@ class DetectorIntercalibrationSummary(HistorySummary):
     def _build_graph(self, history):
 
         dbr = self.record
-#        g = Graph(container_dict=dict(padding=5, bgcolor='lightgray'),
-#                  width=510
-#                  )
         g = self.graph.graph
         g.clear()
         g.new_plot(padding=[50, 0, 0, 50])
-#        self.graph = DetGraph(graph=g)
-
-#        bi = getattr(history, self.history_name)
         bi = history.detector_intercalibration
         if not bi:
             return
-#        print bi.fit
 
         det = next((iso.detector for iso in dbr.dbrecord.isotopes
                       if iso.molecular_weight.name == 'Ar36'), None)
         bi = next((item for item in bi if item.detector == det), None)
-
-
+        uv = bi.user_value
+        ue = bi.user_error
         if bi.fit:
-            xs = [dbr.make_timestamp(str(bs.analysis.rundate),
-                                     str(bs.analysis.runtime)) for bs in bi.sets]
+            recs = [dbr.__class__(_dbrecord=bs.analysis) for bs in bi.sets]
+            xs, ys, es = [], [], []
+            for ri in recs:
+                ri.load()
+                xs.append(ri.timestamp)
+                ic = (ri.Ar40 / ri.Ar36) / 295.5
+                ys.append(ic.nominal_value)
+                es.append(ic.std_dev())
 
+            txs = xs + [dbr.timestamp]
             xs = np.array(xs)
             if xs.shape[0]:
-                xs = xs - np.min(xs)
-                ys = np.random.random(xs.shape[0])
-                g.new_series(xs, ys)
-#                xma = max(xma, max(xs))
-#                xmi = min(xmi, min(xs))
+                xs = xs - np.min(txs)
+                _, p = g.new_series(xs, ys, type='scatter')
+                p.index_range.tight_bounds = False
+                p.value_range.tight_bounds = False
+
+            ic, err = dbr.ic_factor
+            g.new_series([dbr.timestamp - np.min(txs)], [ic], type='scatter')
 
         else:
-            uv = bi.user_value
-            ue = bi.user_error
-
             s, _p = g.new_series([0], [uv], type='scatter')
 
             kw = dict(plotid=0, color=(0, 0, 0))
@@ -106,10 +107,6 @@ class DetectorIntercalibrationSummary(HistorySummary):
             g.add_horizontal_rule(uv + ue, **kw)
             g.add_horizontal_rule(uv - ue, **kw)
 
-#            s.value_range.trait_set(tight_bounds=False,
-#                                    margin=0.01
-#                                    )
-#            g.set_x_limits(-10, 10)
             s.index_range.trait_set(tight_bounds=False,
                                     margin=0.1
                                     )
@@ -119,7 +116,7 @@ class DetectorIntercalibrationSummary(HistorySummary):
             g.set_y_limits(min=mi,
                            max=ma, plotid=0)
         g.redraw()
-        v = '{:0.5f} '.format(uv) + PLUSMINUS + ' {:0.5f}'.format(ue)
+        v = '{:0.5f} {}{:0.5f}'.format(uv, PLUSMINUS, ue)
         self.graph.value = v
 #        g.redraw()
 
