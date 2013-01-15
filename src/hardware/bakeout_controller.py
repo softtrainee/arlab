@@ -28,6 +28,7 @@ from src.led.led_editor import LEDEditor
 from src.paths import paths
 from watlow_ezzone import WatlowEZZone
 from src.constants import NULL_STR
+from src.pyscripts.bakeout_pyscript import BakeoutPyScript
 
 #class BakeoutMonitor():
 #    pass
@@ -191,15 +192,10 @@ Add {}'.format(sd)):
         else:
             self.heating = False
             self._duration_timeout = False
-#            if self.script.endswith('.bo'):
-#                t = BakeoutScript(name='{}_script'.format(self.name),
-#                                  source_dir=os.path.join(paths.scripts_dir,
-#                                                          'bakeout'),
-#                                     file_name=self.script,
-#                                     controller=self)
-#                t.bootstrap()
-#            else:
-            from src.pyscripts.bakeout_pyscript import BakeoutPyScript
+
+            if self._active_script is not None:
+                self._active_script.cancel()
+
             t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
                                                       'bakeout'),
                                 name=self.script,

@@ -64,20 +64,18 @@ class BakeoutPyScript(PyScript):
     def ramp(self, temperature=0, rate=0, start=None, period=60):
         temperature = float(temperature)
         rate = float(rate)
-
-
         period = float(period)
 
-        if self._graph_calc:
-
-            xs = self._xs[-1]
-            ds = temperature - self._current_setpoint
-            self._current_setpoint = temperature
-
-            dx = ds / (rate / 3600.)
-            self._xs.append(xs + dx)
-            self._ys.append(temperature)
-            return
+#        if self._graph_calc:
+#
+#            xs = self._xs[-1]
+#            ds = temperature - self._current_setpoint
+#            self._current_setpoint = temperature
+#
+#            dx = ds / (rate / 3600.)
+#            self._xs.append(xs + dx)
+#            self._ys.append(temperature)
+#            return
 
         if self._syntax_checking or self._cancel:
             return
