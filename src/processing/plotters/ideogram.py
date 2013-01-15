@@ -258,7 +258,10 @@ class Ideogram(Plotter):
 
 
     def _aux_plot_analysis_number(self, analyses, g, padding, plotid, group_id, aux_namespace,
-                                  value_scale='linear'):
+                                  value_scale='linear',
+                                  x_error=None,
+                                  y_error=None
+                                  ):
         nages = aux_namespace['nages']
         nerrors = aux_namespace['nerrors']
         start = aux_namespace['start']
@@ -272,7 +275,9 @@ class Ideogram(Plotter):
                                value_format=lambda x: '{:d}'.format(int(x)),
                                additional_info=lambda x: x.age_string,
                                plotid=plotid,
-                               value_scale=value_scale
+                               value_scale=value_scale,
+                               x_error=x_error,
+                               y_error=y_error
                                )
         g.set_axis_traits(tick_visible=False,
           tick_label_formatter=lambda x:'',
