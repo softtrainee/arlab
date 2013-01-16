@@ -29,7 +29,7 @@ from src.processing.analysis import Analysis
 #from src.constants import NULL_STR
 #from src.progress_dialog import MProgressDialog
 from src.processing.plotter_options_manager import PlotterOptionsManager, \
-    IdeogramOptionsManager
+    IdeogramOptionsManager, SpectrumOptionsManager
 from src.processing.window import Window
 from src.processing.tabular_analysis_manager import TabularAnalysisManager
 from src.processing.plotters.series import Series
@@ -61,8 +61,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     detector_intercalibration_corrections_manager = Instance(DetectorIntercalibrationCorrectionsManager)
 
     ideogram_options_manager = Instance(IdeogramOptionsManager, ())
-    spectrum_plotter_options_manager = Instance(PlotterOptionsManager, ())
-    isochron_plotter_options_manager = Instance(PlotterOptionsManager, ())
+    spectrum_options_manager = Instance(SpectrumOptionsManager, ())
+#    spectrum_plotter_options_manager = Instance(PlotterOptionsManager, ())
+#    isochron_plotter_options_manager = Instance(PlotterOptionsManager, ())
 
     figure_manager = Instance(FigureManager)
     figures = List
@@ -376,7 +377,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             return isochron
 
     def _display_spectrum(self, ans, po, title):
-        rr = self._spectrum(ans, aux_plots=po.get_aux_plots())
+        rr = self._spectrum(ans, po)
         if rr is not None:
             g, spec = rr
 
@@ -589,14 +590,14 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
             return g, p
 
-    def _spectrum(self, analyses, aux_plots=None):
+    def _spectrum(self, analyses, plotter_options):
         from src.processing.plotters.spectrum import Spectrum
         g = self._window_factory()
         spec = Spectrum(db=self.db)
 
-        options = dict(aux_plots=self._build_aux_plots(aux_plots))
+#        options = dict(aux_plots=self._build_aux_plots(aux_plots))
 
-        spec_graph = spec.build(analyses, options=options)
+        spec_graph = spec.build(analyses, plotter_options=plotter_options)
 
         if spec_graph:
             spec_graph, _plots = spec_graph

@@ -129,12 +129,9 @@ class PlotPanel(Viewable):
         disp.add_text(*args, **kw)
 
     def _floatfmt(self, f, n=5):
-        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, n):
-            fmt = '{:0.3e}'
-        else:
-            fmt = '{{:0.{}f}}'.format(n)
+        from src.helpers.formatting import floatfmt
+        return floatfmt(f, n)
 
-        return fmt.format(f)
 
     def _print_parameter(self, display, name, uvalue, sig_figs=(3, 4), **kw):
         name = '{:<15s}'.format(name)

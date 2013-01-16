@@ -97,6 +97,8 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #
 #        self.data_manager = dm
     lookup = {'Labnumber':([gen_LabTable], gen_LabTable.labnumber),
+              'Step':([], meas_AnalysisTable.step),
+              'Aliquot':([], meas_AnalysisTable.aliquot),
               'Sample':([gen_LabTable, gen_SampleTable], gen_SampleTable.name),
               'Irradiation':([gen_LabTable,
                               irrad_PositionTable,

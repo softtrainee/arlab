@@ -20,7 +20,7 @@ from traits.api import  Any, Int, Str, List, Range, Property, Bool, \
 from traitsui.api import Item, HGroup, spring, Group
 #from chaco.api import ArrayDataSource
 #============= standard library imports ========================
-from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack, max
+from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack, max, min, Inf
 from chaco.data_label import DataLabel
 from chaco.ticks import DefaultTickGenerator
 #============= local library imports  ==========================
@@ -30,9 +30,13 @@ from chaco.ticks import DefaultTickGenerator
 from src.processing.plotters.results_tabular_adapter import IdeoResults, \
     IdeoResultsAdapter
 from src.processing.plotters.plotter import Plotter
-from src.stats.core import calculate_weighted_mean, calculate_mswd
+from src.stats.core import calculate_weighted_mean, calculate_mswd, \
+    validate_mswd
 from src.stats.peak_detection import find_peaks
 from src.constants import PLUSMINUS
+from src.helpers.formatting import floatfmt
+from numpy import log10
+from src.processing.plotters.point_move_tool import PointMoveTool
 #from src.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -64,13 +68,23 @@ class SparseTicks(DefaultTickGenerator):
         except IndexError:
             return ticks
 
+class SparseLogTicks(DefaultTickGenerator):
+    step = Int(2)
+    def get_ticks(self, *args, **kw):
+        ticks = super(SparseLogTicks, self).get_ticks(*args, **kw)
+        #get only 10s
+        ticks = ticks[ticks % 10 == 0]
+        #get only 10,100,1000...
+        ticks = ticks[log10(ticks) % 1 == 0]
+        return ticks
+
 
 class Ideogram(Plotter):
     ages = None
     errors = None
 
-    ideogram_of_means = Bool
-    error_calc_method = Enum('SEM, but if MSWD>1 use SEM * sqrt(MSWD)', 'SEM')
+#    ideogram_of_means = Bool
+#    error_calc_method = Enum('SEM, but if MSWD>1 use SEM * sqrt(MSWD)', 'SEM')
 #    ideogram_of_means = Bool(False)
 #    error_bar_overlay = Any
 #    graph = Any
@@ -78,9 +92,9 @@ class Ideogram(Plotter):
 #    analyses = Any
 
 #    nsigma = Int(1, enter_set=True, auto_set=False)
-    nsigma = Range(1, 3, enter_set=True, auto_set=False)
+#    nsigma = Range(1, 3, enter_set=True, auto_set=False)
 
-    plot_label_text = Property(depends_on='nsigma')
+    plot_label_text = Property(depends_on='plotter_options.nsigma')
     plot_label = Any
     graphs = List
 
@@ -129,7 +143,7 @@ class Ideogram(Plotter):
                 for gid in group_ids
                 ]
 
-    def _build_hook(self, g, analyses, padding, aux_plots=None):
+    def _build_hook(self, g, analyses, aux_plots=None):
         g.analyses = analyses
         g.maxprob = None
         g.minprob = None
@@ -139,11 +153,11 @@ class Ideogram(Plotter):
         if not analyses:
             return
 
-        def get_ages_errors(group_id):
-
-            nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
-                                   for a in analyses if a.group_id == group_id])
-            return array(nages), array(nerrors)
+#        def get_ages_errors(group_id):
+#
+#            nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
+#                                   for a in analyses if a.group_id == group_id])
+#            return array(nages), array(nerrors)
 
 #        if self.ideogram_of_means:
 #
@@ -169,8 +183,8 @@ class Ideogram(Plotter):
         for group_id in group_ids:
             ans = [a for a in analyses if a.group_id == group_id]
             labnumber = self.get_labnumber(ans)
-            nages, nerrors = get_ages_errors(group_id)
-            offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
+            nages, nerrors = self._get_ages(analyses, group_id)
+            offset = self._add_ideo(g, nages, nerrors, xmin, xmax, group_id,
                            start=start,
                            labnumber=labnumber,
                            offset=offset,
@@ -183,8 +197,8 @@ class Ideogram(Plotter):
             for plotid, ap in enumerate(aux_plots):
                 #get aux type and plot
                 try:
-                    func = getattr(self, '_aux_plot_{}'.format(ap['func']))
-                    func(analyses, g, padding, plotid + 1, group_id, aux_namespace,
+                    func = getattr(self, '_aux_plot_{}'.format(ap['name']))
+                    func(analyses, g, plotid + 1, group_id, aux_namespace,
                          value_scale=ap['scale'],
                          x_error=ap['x_error'],
                          y_error=ap['y_error']
@@ -197,9 +211,7 @@ class Ideogram(Plotter):
 
         g.set_x_limits(min=xmin, max=xmax)
 
-        minp = 0
-        maxp = g.maxprob
-        g.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
+        self._set_y_limits(g)
 
         #add meta plot info
         font = self._get_plot_option(self.options, 'metadata_label_font', default='modern 10')
@@ -207,23 +219,23 @@ class Ideogram(Plotter):
 
         return g
 
-    def _aux_plot_radiogenic_percent(self, analyses, g, padding, plotid, group_id, aux_namespace,
+    def _aux_plot_radiogenic_percent(self, g, analyses, plotid, group_id,
                                      value_scale='linear',
                                      x_error=False,
                                      y_error=False,
                                      ):
-        nages = aux_namespace['nages']
-        rads = [a.rad40_percent for a in analyses if a.group_id == group_id]
+#        nages = aux_namespace['nages']
+        ages, rads = zip([(a.age.nominal_value, a.rad40_percent) for a in analyses
+                          if a.group_id == group_id])
 
-        n = zip(nages, rads)
-        n = sorted(n, key=lambda x:x[0])
-        aages, rads = zip(*n)
+#        n = zip(nages, rads)
+#        n = sorted(n, key=lambda x:x[0])
+#        aages, rads = zip(*n)
         rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
-        self._add_aux_plot(g, aages,
+        self._add_aux_plot(g, ages,
                            rads,
                            None,
                            rad_errs,
-                           padding,
                            group_id,
                            plotid=plotid,
                            value_scale=value_scale,
@@ -231,7 +243,7 @@ class Ideogram(Plotter):
                            y_error=y_error
                            )
 
-    def _aux_plot_kca(self, analyses, g, padding, plotid, group_id, aux_namespace,
+    def _aux_plot_kca(self, analyses, g, plotid, group_id, aux_namespace,
                       value_scale='linear',
                       x_error=False,
                       y_error=False
@@ -247,7 +259,6 @@ class Ideogram(Plotter):
                            k39,
                            None,
                            k39_errs,
-                           padding,
                            group_id,
                            plotid=plotid,
                            value_scale=value_scale,
@@ -257,7 +268,7 @@ class Ideogram(Plotter):
 
 
 
-    def _aux_plot_analysis_number(self, analyses, g, padding, plotid, group_id, aux_namespace,
+    def _aux_plot_analysis_number(self, analyses, g, plotid, group_id, aux_namespace,
                                   value_scale='linear',
                                   x_error=None,
                                   y_error=None
@@ -271,7 +282,7 @@ class Ideogram(Plotter):
         aages, xerrs = zip(*n)
         maa = start + len(aages)
         age_ys = linspace(start, maa, len(aages))
-        self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
+        self._add_aux_plot(g, aages, age_ys, xerrs, None, group_id,
                                value_format=lambda x: '{:d}'.format(int(x)),
                                additional_info=lambda x: x.age_string,
                                plotid=plotid,
@@ -326,6 +337,8 @@ class Ideogram(Plotter):
 
     def _calculate_stats(self, ages, errors, xs, ys):
         mswd = calculate_mswd(ages, errors)
+        valid_mswd = validate_mswd(mswd, len(ages))
+
         if self.mean_calculation_kind == 'kernel':
             wm , we = 0, 0
             delta = 1
@@ -334,9 +347,10 @@ class Ideogram(Plotter):
         else:
             wm, we = calculate_weighted_mean(ages, errors)
             we = self._calc_error(we, mswd)
-        return wm, we, mswd
 
-    def _add_ideo(self, g, ages, errors, xmi, xma, padding,
+        return wm, we, mswd, valid_mswd
+
+    def _add_ideo(self, g, ages, errors, xmi, xma,
                    group_id, start=1,
                    labnumber=None,
                    offset=0,
@@ -345,15 +359,15 @@ class Ideogram(Plotter):
         ages = asarray(ages)
         errors = asarray(errors)
         bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
-        wm, we, mswd = self._calculate_stats(ages, errors, bins, probs)
+        wm, we, mswd, valid_mswd = self._calculate_stats(ages, errors, bins, probs)
 
-        self.results.append(IdeoResults(
-                                        labnumber=labnumber,
-                                        age=wm,
-                                        mswd=mswd,
-                                        error=we,
-                                        error_calc_method=self.error_calc_method
-                                        ))
+#        self.results.append(IdeoResults(
+#                                        labnumber=labnumber,
+#                                        age=wm,
+#                                        mswd=mswd,
+#                                        error=we,
+#                                        error_calc_method=self.error_calc_method
+#                                        ))
         minp = min(probs)
         maxp = max(probs)
 
@@ -374,22 +388,28 @@ class Ideogram(Plotter):
                              color=s.color,
                              plotid=0
                              )
+
         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
         if not display_mean_indicator:
             s.visible = False
 
+        label = None
         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
         if display_mean:
-            text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
+            text = self._build_label_text(wm, ym, we, mswd, valid_mswd, ages.shape[0])
             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
             self._add_data_label(s, text, (wm, ym),
                                  font=font
                                  )
+        #add a tool to move the mean age point
+        s.tools.append(PointMoveTool(component=s,
+                                     label=label,
+                                     constrain='y'))
 
         d = lambda *args: self._update_graph(g, *args)
         s.index_mapper.on_trait_change(d, 'updated')
 
-        self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
+        self._add_error_bars(s, [we], 'x', self.plotter_options.nsigma)
 
         if g.minprob:
             minp = min([g.minprob, minp])
@@ -403,11 +423,6 @@ class Ideogram(Plotter):
         g.set_axis_traits(tick_visible=False,
                           tick_label_formatter=lambda x:'',
                           axis='y', plotid=0)
-
-#        if g.analyses:
-        #set the color
-#        for a in g.analyses:
-#            a.color = s.color
 
         return ym * 2.5
 
@@ -429,7 +444,7 @@ class Ideogram(Plotter):
 #        label.tools.append(tool)
 
 
-    def _build_label_text(self, x, y, we, mswd, n):
+    def _build_label_text(self, x, y, we, mswd, valid_mswd, n):
         display_n = True
         display_mswd = True
         if display_n:
@@ -438,14 +453,17 @@ class Ideogram(Plotter):
             n = ''
 
         if display_mswd:
-            mswd = 'mswd= {:0.2f}'.format(mswd)
+            vd = '' if valid_mswd else '*'
+            mswd = '{}mswd= {:0.2f}'.format(vd, mswd)
         else:
             mswd = ''
 
-        return u'{:0.3f} {}{:0.3f} {} {}'.format(x, PLUSMINUS, we, mswd, n)
+        x = floatfmt(x, 3)
+        we = floatfmt(we, 4)
+        return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
 
     def _calc_error(self, we, mswd):
-        ec = self.error_calc_method
+        ec = self.plotter_options.error_calc_method
         if ec == 'SEM':
             a = 1
         elif ec == 'SEM, but if MSWD>1 use SEM * sqrt(MSWD)':
@@ -454,7 +472,7 @@ class Ideogram(Plotter):
                 a = mswd ** 0.5
         return we * a
 
-    def _add_aux_plot(self, g, ages, ys, xerrors, yerrors, padding, group_id,
+    def _add_aux_plot(self, g, ages, ys, xerrors, yerrors, group_id,
                       plotid=1,
                       value_format=None,
                       value_scale='linear',
@@ -474,10 +492,10 @@ class Ideogram(Plotter):
                                    selection_marker_size=3,
                                    plotid=plotid)
         if xerrors and x_error:
-            self._add_error_bars(scatter, xerrors, 'x')
+            self._add_error_bars(scatter, xerrors, 'x', 1)
 
         if yerrors and y_error:
-            self._add_error_bars(scatter, yerrors, 'y')
+            self._add_error_bars(scatter, yerrors, 'y', 1)
 
         self._add_scatter_inspector(g.plotcontainer, p, scatter,
                                     group_id=group_id,
@@ -488,9 +506,7 @@ class Ideogram(Plotter):
         d = lambda *args: self._update_graph(g, *args)
         scatter.index.on_trait_change(d, 'metadata_changed')
 
-        #use sparse ticks
         p = g.plots[plotid]
-        p.value_axis.tick_generator = SparseTicks()
 
         if value_scale == 'log':
             pad = 0.1
@@ -507,6 +523,9 @@ class Ideogram(Plotter):
             mi = nmi
             p.value_range.low_setting = mi
             p.value_range.high_setting = ma
+            p.value_axis.tick_generator = SparseLogTicks()
+        else:
+            p.value_axis.tick_generator = SparseTicks()
 
 
 #    def update_graph_metadata(self, obj, name, old, new):
@@ -542,7 +561,7 @@ class Ideogram(Plotter):
             except KeyError:
                 sel = []
 
-            result = self.results[i]
+#            result = self.results[i]
 
             lp = ideo.plots['plot{}'.format(i * 3)][0]
             dp = ideo.plots['plot{}'.format(i * 3 + 1)][0]
@@ -554,16 +573,18 @@ class Ideogram(Plotter):
                 ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors) if not j in sel])
 
                 xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
-                wm, we, mswd = self._calculate_stats(ages, errors, xs, ys)
+                wm, we, mswd, valid_mswd = self._calculate_stats(ages, errors, xs, ys)
 
-                result.age = wm
-                result.error = we
-                result.mswd = mswd
-                result.error_calc_method = self.error_calc_method
+#                result.age = wm
+#                result.error = we
+#                result.mswd = mswd
+#                result.error_calc_method = self.error_calc_method
             except ValueError:
                 wm, we = 0, 0
                 ys = zeros(N)
 
+            mi = min(ys)
+            ma = max(ys)
             lp.value.set_data(ys)
             lp.index.set_data(xs)
             sp.index.set_data([wm])
@@ -574,7 +595,7 @@ class Ideogram(Plotter):
                     _, y = ov.data_point
                     ov.data_point = wm, y
                     n = len(ages)
-                    ov.label_text = self._build_label_text(wm, y, we, mswd, n)
+                    ov.label_text = self._build_label_text(wm, y, we, mswd, valid_mswd, n)
 
             if sel:
                 dp.visible = True
@@ -582,22 +603,36 @@ class Ideogram(Plotter):
                 wm, we = calculate_weighted_mean(ages, errors)
                 mswd = calculate_mswd(ages, errors)
                 we = self._calc_error(we, mswd)
-                result.oage, result.oerror, result.omswd = wm, we, mswd
+#                result.oage, result.oerror, result.omswd = wm, we, mswd
                 xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
+
+                mi = min([min(ys), mi])
+                ma = max([max(ys), ma])
                 dp.value.set_data(ys)
                 dp.index.set_data(xs)
             else:
-                result.oage, result.oerror, result.omswd = None, None, None
+#                result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False
+
+        self._set_y_limits(graph, mi, ma)
 
         graph.redraw()
 
+    def _set_y_limits(self, graph, ymin=None, ymax=None):
+#        minp = min([0, mi])
+        minp = 0
+        if ymax is None:
+            ymax = -Inf
+        maxp = max([graph.maxprob, ymax])
+        graph.maxprob = maxp
+
+        graph.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
 #===============================================================================
 # handlers
 #==============================================================================
-    def _error_calc_method_changed(self):
-        for g in self.graphs:
-            self._update_graph(g)
+#    def _error_calc_method_changed(self):
+#        for g in self.graphs:
+#            self._update_graph(g)
 
     @on_trait_change('graph_panel_info:[ncols,nrows, padding_+]')
     def _graph_panel_info_changed(self, obj, name, new):
@@ -648,37 +683,31 @@ class Ideogram(Plotter):
     def _get_plot_label_text(self):
         #sigmas displayed as separate chars in Illustrator
         #use the 's' instead
-        ustr = u'data 1\u03c3, age {}\u03c3'.format(self.nsigma)
+        ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)
+#        ustr = u'data 1\u03c3, age {}\u03c3'.format(self.plotter_options.nsigma)
 #        ustr = 'data 1s, age {}s'.format(self.nsigma)
         return ustr
 
-    def _get_ages(self, analyses):
-        ages, errors = zip(*[(a.age.nominal_value,
-                              a.age.std_dev())
-                               for a in analyses
-                                    if a.age is not None])
-        ages = asarray(ages)
-        errors = asarray(errors)
-        return ages, errors
+
 
 #===============================================================================
 # views
 #===============================================================================
-    def _get_content(self):
-        g = Group(layout='tabbed')
-        r = super(Ideogram, self)._get_content()
-        g.content.append(r)
-        e = Item('graph_panel_info', show_label=False, style='custom')
-        g.content.append(e)
-        return g
+#    def _get_content(self):
+#        g = Group(layout='tabbed')
+#        r = super(Ideogram, self)._get_content()
+#        g.content.append(r)
+#        e = Item('graph_panel_info', show_label=False, style='custom')
+#        g.content.append(e)
+#        return g
 
-    def _get_toolbar(self):
-        return HGroup(
-                      Item('nsigma', style='custom'),
-                      Item('ideogram_of_means'),
-                      Item('error_calc_method', show_label=False),
-                      spring
-                      )
+#    def _get_toolbar(self):
+#        return HGroup(
+#                      Item('nsigma', style='custom'),
+#                      Item('ideogram_of_means'),
+#                      Item('error_calc_method', show_label=False),
+#                      spring
+#                      )
 #    def traits_view(self):
 #        v = View(HGroup(Item('nsigma'), spring),
 #                 Item('results',

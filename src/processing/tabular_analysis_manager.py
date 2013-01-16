@@ -24,6 +24,7 @@ from src.processing.analysis_means import AnalysisRatioMean, \
     AnalysisIntensityMean
 from src.database.core.database_selector import ColumnSorterMixin
 from src.constants import PLUSMINUS
+from src.helpers.formatting import floatfmt
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -89,12 +90,7 @@ class AnalysisAdapter(TabularAdapter):
         return bgcolor
 
     def _floatfmt(self, f, n=5):
-        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, n):
-            fmt = '{:0.3e}'
-        else:
-            fmt = '{{:0.{}f}}'.format(n)
-
-        return fmt.format(f)
+        return floatfmt(f, n, 3)
 
     def _get_value(self, k):
         return self._floatfmt(getattr(self.item, k).nominal_value)

@@ -84,10 +84,10 @@ class PlotterOptions(Viewable):
     ytitle_font_name = Enum(*FONTS)
 
 
-    def __init__(self, clean=False, *args, **kw):
+    def __init__(self, root, clean=False, *args, **kw):
         super(PlotterOptions, self).__init__(*args, **kw)
         if not clean:
-            self._load()
+            self._load(root)
 
 #    def closed(self, isok):
 #        self._dump()
@@ -126,13 +126,13 @@ class PlotterOptions(Viewable):
 #===============================================================================
 # persistence
 #===============================================================================
-    def dump(self):
-        self._dump()
+    def dump(self, root):
+        self._dump(root)
 
-    def _dump(self):
+    def _dump(self, root):
         if not self.name:
             return
-        p = os.path.join(paths.plotter_options_dir, self.name)
+        p = os.path.join(root, self.name)
         with open(p, 'w') as fp:
             d = dict()
             attrs = self._get_dump_attrs()
@@ -141,8 +141,8 @@ class PlotterOptions(Viewable):
 
             pickle.dump(d, fp)
 
-    def _load(self):
-        p = os.path.join(paths.plotter_options_dir, self.name)
+    def _load(self, root):
+        p = os.path.join(root, self.name)
         if os.path.isfile(p):
             with open(p, 'r') as fp:
                 try:
@@ -267,10 +267,12 @@ class PlotterOptions(Viewable):
 class IdeogramOptions(PlotterOptions):
     probability_curve_kind = Enum('cumulative', 'kernel')
     mean_calculation_kind = Enum('weighted mean', 'kernel')
+    error_calc_method = Enum('SEM, but if MSWD>1 use SEM * sqrt(MSWD)', 'SEM')
     xlow = Float
     xhigh = Float
     use_centered_range = Bool
     centered_range = Float(0.5)
+    nsigma = Enum(1, 2, 3)
 
     def _get_x_axis_group(self):
         vg = super(IdeogramOptions, self)._get_x_axis_group()
@@ -294,6 +296,8 @@ class IdeogramOptions(PlotterOptions):
                        label='Probability Curve Method'),
                   Item('mean_calculation_kind',
                        label='Mean Calculation Method'),
+                  Item('error_calc_method', label='Error Calculation Method'),
+                  Item('nsigma', label='Age Error NSigma'),
                   label='Calculations'
                   )
         return g
@@ -303,11 +307,14 @@ class IdeogramOptions(PlotterOptions):
         return attrs + [
                         'probability_curve_kind',
                         'mean_calculation_kind',
+                        'error_calc_method',
+                        'nsigma',
                         'xlow', 'xhigh',
                         'use_centered_range', 'centered_range'
                         ]
 
-
+class SpectrumOptions(PlotterOptions):
+    pass
 if __name__ == '__main__':
     ip = IdeogramOptions()
     ip.configure_traits()
