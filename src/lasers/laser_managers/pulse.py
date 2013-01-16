@@ -21,10 +21,12 @@ from traitsui.api import View, Item, Handler, HGroup, ButtonEditor, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
-from threading import Thread, Condition
+from threading import Thread, Event as TEvent
 #============= local library imports  ==========================
 from src.paths import paths
 from src.pyscripts.wait_dialog import WaitDialog
+import time
+from pyface.timer.do_later import do_later
 
 
 
@@ -73,19 +75,21 @@ class Pulse(HasTraits):
     def start(self):
         self._duration_changed()
 
-        condition = Condition()
-
-        condition.acquire()
-
+        evt = TEvent()
         man = self.manager
         if man is not None:
             #man.enable_laser()
-            man.set_laser_power(self.power)
+            resp = man.set_laser_power(self.power)
+            if resp is False:
+                self.pulsing = False
+                self.trait_set(duration=0, trait_change_notify=False)
+                return
 
-        self.wait_control.start(condition)
-        condition.wait()
-        condition.release()
-        self.pulsing = False
+        self.wait_control.start(evt)
+        while not evt.isSet():
+            time.sleep(0.5)
+
+        do_later(self.trait_set, pulsing=False)
 
         if man is not None:
             if self.disable_at_end:
