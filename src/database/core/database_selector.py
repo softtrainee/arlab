@@ -74,8 +74,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     records = List
 
     search = Button
-    open_button = Button
-    open_button_label = 'Open'
+#    open_button = Button
+#    open_button_label = 'Open'
 
     db = DatabaseAdapter
 
@@ -139,8 +139,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def query_factory(self, **kw):
         return self._query_factory(**kw)
 
-    def add_query(self, table):
-        self.queries.append(self._query_factory(table=table))
+    def add_query(self, parent_query, parameter, criterion):
+        q = self._query_factory(parent_parameter=parameter,
+                                parent_criterion=criterion)
+        self.queries.append(q)
+        parent_query.on_trait_change(q._update_parent_parameter, 'parameter')
+        parent_query.on_trait_change(q._update_parent_criterion, 'criterion')
 
     def remove_query(self, q):
         self.queries.remove(q)

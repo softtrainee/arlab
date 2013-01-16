@@ -774,7 +774,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     def _detector_intercalibration_corrections_manager_default(self):
         bm = DetectorIntercalibrationCorrectionsManager(db=self.db,
-                                                        processing_manager=self
+                                                        processing_manager=self,
                                                         )
         return bm
 

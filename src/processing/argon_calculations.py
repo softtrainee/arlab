@@ -21,47 +21,10 @@ from numpy import asarray, argmax
 
 from uncertainties import ufloat, umath
 import math
-from src.processing import constants
 from copy import deepcopy
 #============= local library imports  ==========================
 
-def calculate_error_F(signals, F, k4039, ca3937, ca3637):
-    '''
-        McDougall and Harrison
-        p92 eq 3.43
-     
-    '''
 
-    m40, m39, m38, m37, m36 = signals
-    G = m40 / m39
-    B = m36 / m39
-    D = m37 / m39
-    C1 = 295.5
-    C2 = ca3637.nominal_value
-    C3 = k4039.nominal_value
-    C4 = ca3937.nominal_value
-
-    ssD = D.std_dev() ** 2
-    ssB = B.std_dev() ** 2
-    ssG = G.std_dev() ** 2
-    G = G.nominal_value
-    B = B.nominal_value
-    D = D.nominal_value
-
-    ssF = ssG + C1 ** 2 * ssB + ssD * (C4 * G - C1 * C4 * B + C1 * C2) ** 2
-    return ssF ** 0.5
-
-def calculate_error_t(F, ssF, j, ssJ):
-    '''
-        McDougall and Harrison
-        p92 eq. 3.43
-    '''
-    JJ = j * j
-    FF = F * F
-
-    ll = constants.lambdak.nominal_value ** 2
-    sst = (JJ * ssF + FF * ssJ) / (ll * (1 + F * j) ** 2)
-    return sst ** 0.5
 
 def calculate_flux(rad40, k39, age):
     '''
@@ -79,8 +42,8 @@ def calculate_flux(rad40, k39, age):
         age = ufloat(age)
 #    age = (1 / constants.lambdak) * umath.log(1 + JR)
     r = rad40 / k39
-
-    j = (umath.exp(age * constants.lambdak) - 1) / r
+    from src.processing.constants import constants
+    j = (umath.exp(age * constants().lambdak) - 1) / r
     return j.nominal_value, j.std_dev()
 #    return j
 
@@ -152,6 +115,10 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         if isinstance(v, tuple):
             v = ufloat(v)
         return v
+
+    #lazy load constants
+    from src.processing.constants import constants
+
 #    if isinstance(signals[0], tuple):
     s40, s39, s38, s37, s36 = map(to_ufloat, signals)
 
@@ -231,17 +198,19 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     n36 = s36 - abundant_sensitivity * (s37 + 0)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
+    const = constants()
+
     #calculate decay factors
     if a37decayfactor is None:
         try:
-            dc = constants.lambda_37.nominal_value
+            dc = const.lambda_Ar37.nominal_value
             a37decayfactor = calculate_decay_factor(dc, chronology_segments)
         except ZeroDivisionError:
             a37decayfactor = 1
 
     if a39decayfactor is None:
         try:
-            dc = constants.lambda_39.nominal_value
+            dc = const.lambda_Ar39.nominal_value
             a39decayfactor = calculate_decay_factor(dc, chronology_segments)
         except ZeroDivisionError:
             a39decayfactor = 1
@@ -271,17 +240,22 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         
         iteratively calculate atm36
     '''
-    m = cl3638 * constants.lambda_cl36.nominal_value * decay_time
+    m = cl3638 * const.lambda_Cl36.nominal_value * decay_time
     atm36 = ufloat((0, 1e-20))
     for _ in range(5):
-        ar38atm = constants.atm3836.nominal_value * atm36
+        ar38atm = const.atm3836.nominal_value * atm36
         cl38 = s38 - ar38atm - k38 - ca38
         cl36 = cl38 * m
         atm36 = s36 - ca36 - cl36
 
     #calculate rodiogenic
     #dont include error in 40/36
-    atm40 = atm36 * constants.atm4036.nominal_value
+
+#    pc = sc.node('pychron').node('experiment')
+#    print pc
+#    print pc.get('constants')
+#    print pc.node_names()
+    atm40 = atm36 * const.atm4036.nominal_value
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
@@ -334,8 +308,9 @@ def age_equation(j, R, scalar=1):
         j = ufloat(j)
     if isinstance(R, (tuple, str)):
         R = ufloat(R)
-
-    return (1 / constants.lambdak.nominal_value) * umath.log(1 + j * R) / float(scalar)
+    from src.processing.constants import constants
+    con = constants()
+    return (1 / con.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
 #def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                       j, irradinfo,
 #                       ic=(1.0, 0),
@@ -560,6 +535,43 @@ def check_plateau_r(ages, errors, start, end, isplat=True):
                     if not overlap(ages[i], ages[j], errors[i], errors[j]):
                         return False
         return True
+def calculate_error_F(signals, F, k4039, ca3937, ca3637):
+    '''
+        McDougall and Harrison
+        p92 eq 3.43
+     
+    '''
+
+    m40, m39, m38, m37, m36 = signals
+    G = m40 / m39
+    B = m36 / m39
+    D = m37 / m39
+    C1 = 295.5
+    C2 = ca3637.nominal_value
+    C3 = k4039.nominal_value
+    C4 = ca3937.nominal_value
+
+    ssD = D.std_dev() ** 2
+    ssB = B.std_dev() ** 2
+    ssG = G.std_dev() ** 2
+    G = G.nominal_value
+    B = B.nominal_value
+    D = D.nominal_value
+
+    ssF = ssG + C1 ** 2 * ssB + ssD * (C4 * G - C1 * C4 * B + C1 * C2) ** 2
+    return ssF ** 0.5
+
+def calculate_error_t(F, ssF, j, ssJ):
+    '''
+        McDougall and Harrison
+        p92 eq. 3.43
+    '''
+    JJ = j * j
+    FF = F * F
+
+    ll = constants().lambdak.nominal_value ** 2
+    sst = (JJ * ssF + FF * ssJ) / (ll * (1 + F * j) ** 2)
+    return sst ** 0.5
 
 ages = [10] * 50
 errors = [1] * 1

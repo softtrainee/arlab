@@ -675,18 +675,22 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_analyses(self, **kw):
         return self._get_items(meas_AnalysisTable, globals(), **kw)
 
-    def get_labnumbers(self, **kw):
-        return self._get_items(gen_LabTable, globals(), **kw)
+#    def get_labnumbers(self, **kw):
+#        return self._get_items(gen_LabTable, globals(), **kw)
 
-    def get_materials(self, **kw):
-        return self._get_items(gen_MaterialTable, globals(), **kw)
+#    def get_materials(self, **kw):
+#        return self._get_items(gen_MaterialTable, globals(), **kw)
+#
+#    def get_samples(self, **kw):
+#        return self._get_items(gen_SampleTable, globals(), **kw)
+#
+#    def get_users(self, **kw):
+#        return self._get_items(gen_UserTable, globals(), **kw)
 
-    def get_samples(self, **kw):
-        return self._get_items(gen_SampleTable, globals(), **kw)
-
-    def get_users(self, **kw):
-        return self._get_items(gen_UserTable, globals(), **kw)
-
+    '''
+        new style using _retrieve_items, _get_items is deprecated. 
+        rewrite functionality if required
+    '''
     def get_figures(self, project=None):
         if project:
             project = self.get_project(project)
@@ -695,31 +699,39 @@ class IsotopeAdapter(DatabaseAdapter):
 
         else:
             return self._retrieve_items(proc_FigureTable)
-    '''
-        new style using _retrieve_items, _get_items is deprecated. 
-        rewrite functionality if required
-    '''
+
+    def get_materials(self, **kw):
+        return self._retrieve_items(gen_MaterialTable, **kw)
+
+    def get_samples(self, **kw):
+        return self._retrieve_items(gen_SampleTable, **kw)
+
+    def get_users(self, **kw):
+        return self._retrieve_items(gen_UserTable, **kw)
+
+    def get_labnumbers(self, **kw):
+        return self._retrieve_items(gen_LabTable, **kw)
 
     def get_flux_monitors(self, **kw):
-        return self._retrieve_items(flux_MonitorTable)
+        return self._retrieve_items(flux_MonitorTable, **kw)
 
     def get_irradiations(self, **kw):
-        return self._retrieve_items(irrad_IrradiationTable)
+        return self._retrieve_items(irrad_IrradiationTable, **kw)
 
     def get_irradiation_productions(self, **kw):
-        return self._retrieve_items(irrad_ProductionTable)
+        return self._retrieve_items(irrad_ProductionTable, **kw)
 
     def get_projects(self, **kw):
-        return self._retrieve_items(gen_ProjectTable)
+        return self._retrieve_items(gen_ProjectTable, **kw)
 
     def get_sensitivities(self, **kw):
-        return self._retrieve_items(gen_SensitivityTable)
+        return self._retrieve_items(gen_SensitivityTable, **kw)
 
     def get_mass_spectrometers(self, **kw):
-        return self._retrieve_items(gen_MassSpectrometerTable)
+        return self._retrieve_items(gen_MassSpectrometerTable, **kw)
 
     def get_analysis_types(self, **kw):
-        return self._retrieve_items(gen_AnalysisTypeTable)
+        return self._retrieve_items(gen_AnalysisTypeTable, **kw)
 
     def get_spectrometer_parameters(self, value):
         return self._retrieve_item(meas_SpectrometerParametersTable, value, key='hash')

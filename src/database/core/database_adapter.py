@@ -286,10 +286,21 @@ host={}'.format(self.name, self.username, self.host))
         args['filename'] = n
         return args
 
-    def _retrieve_items(self, table, limit=None, order=None):
+    def _retrieve_items(self, table,
+                        joins=None,
+                        filters=None,
+                        limit=None, order=None):
         sess = self.get_session()
         if sess is not None:
             q = sess.query(table)
+
+            if joins:
+                for ji in joins:
+                    q = q.join(ji)
+            print filters
+            if filters:
+                for fi in filters:
+                    q = q.filter(fi)
             if order:
                 q = q.order_by(order)
 
