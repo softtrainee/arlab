@@ -57,7 +57,7 @@ def calculate_weighted_mean(x, errs, error=0):
         werr = 1
     return wmean, werr
 
-def validate_mswd(n, mswd):
+def validate_mswd(mswd, n):
     '''
          is mswd acceptable based on Mahon 1996
     '''
