@@ -55,7 +55,6 @@ class RegionSegmenter(BaseSegmenter):
             markers = invert(markers)
 
         else:
-#            print self.threshold_low, self.threshold_high
             markers = zeros_like(image)
             markers[image < self.threshold_low] = 1
             markers[image > self.threshold_high] = 255

@@ -32,13 +32,13 @@ def circular_contour_pattern(cx, cy, radius, nsteps, pc):
 
 def polygon_pattern(cx, cy, radius, nsides, rotation=0):
 
-    for i in range(nsides + 1 + 2):
-        if i == 0 or i == nsides + 2:
-            x, y = cx, cy
-        else:
-            a = 360 * i / float(nsides) + rotation
-            x = cx + radius * math.cos(math.radians(a))
-            y = cy + radius * math.sin(math.radians(a))
+    for i in range(nsides + 1):
+#        if i == 0: #or i == nsides + 2:
+#            x, y = cx, cy
+#        else:
+        a = 360 * i / float(nsides) + rotation
+        x = cx + radius * math.cos(math.radians(a))
+        y = cy + radius * math.sin(math.radians(a))
         yield x, y
 
 def arc_pattern(cx, cy, degrees, radius):

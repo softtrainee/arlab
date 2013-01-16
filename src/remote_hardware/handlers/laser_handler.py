@@ -23,7 +23,7 @@ from src.remote_hardware.errors import InvalidArgumentsErrorCode
 #from dummies import DummyLM
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode
-
+from pyface.timer.do_later import do_later
 
 
 class LaserHandler(BaseRemoteHardwareHandler):
@@ -176,11 +176,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
         z = smanager.get_z()
         if smanager.temp_position is not None and not smanager.moving():
             x, y = smanager.temp_position
-            smanager.temp_position = None
+#            smanager.temp_position = None
 
         else:
             x, y = smanager.get_uncalibrated_xy()
 
+#        print smanager.temp_position, not smanager.moving(), x, y
         result = ','.join(['{:0.5f}' .format(i) for i in (x, y, z)])
 
         return result
@@ -232,33 +233,30 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def GetJogProcedures(self, manager, *args):
         jogs = manager.get_pattern_names()
         return ','.join(jogs)
-
-    def DoPattern(self, manager, name, *args):
+    
+    def DoPattern(self,*args,**kw):
+        return self.DoJog(*args,**kw)
+    def AbortPattern(self,*args, **kw):
+        return self.AbortJog(*args,**kw)
+    def IsPatterning(self,*args, **kw):
+        return self.IsJogging(*args, **kw)
+    
+    def DoJog(self, manager, name, *args):
         if name is None:
-            err = InvalidArgumentsErrorCode('DoJog/DoPattern', name)
+            err = InvalidArgumentsErrorCode('DoJog', name)
         else:
-            err = manager.execute_pattern(name)
-#            err = manager.stage_manager.pattern_manager.execute_pattern(name)
+            err = manager.stage_manager.pattern_manager.execute_pattern(name)
         return self.error_response(err)
 
-    def AbortPattern(self, manager, *args):
-        err = manager.stop_pattern()
+    def AbortJog(self, manager, *args):
+        err = manager.stage_manager.pattern_manager.stop_pattern()
         return self.error_response(err)
 
-    def IsPatterning(self, manager, *args):
-        err = manager.isPatterning()
+    def IsJogging(self, manager, *args):
+        err = manager.stage_manager.pattern_manager.isAlive()
 
         # returns "True" or "False"
         return self.error_response(str(err))
-
-    def DoJog(self, *args):
-        return self.DoPattern(*args)
-
-    def AbortJog(self, *args):
-        return self.AbortPattern(*args)
-
-    def IsJogging(self, *args):
-        return self.IsPatterning(*args)
 
     def SetBeamDiameter(self, manager, data, *args):
         try:

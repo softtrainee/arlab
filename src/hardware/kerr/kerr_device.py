@@ -33,12 +33,14 @@ class KerrDevice(ConfigLoadable):
     def ask(self, cmd, **kw):
         '''         
         '''
-        return self.parent.ask(cmd, **kw)
+        if self.parent:
+            return self.parent.ask(cmd, **kw)
 
     def tell(self, cmd, **kw):
         '''
         '''
-        self.parent.tell(cmd, **kw)
+        if self.parent:
+            self.parent.tell(cmd, **kw)
 
     def load(self, path):
         '''

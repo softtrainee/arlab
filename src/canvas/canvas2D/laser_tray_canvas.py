@@ -297,6 +297,9 @@ class LaserTrayCanvas(MapCanvas):
         self.request_redraw()
         event.handled = True
 
+    def get_stage_position(self):
+        return self._stage_position
+
     def _get_stage_position(self):
         '''
         '''

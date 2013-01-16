@@ -39,6 +39,7 @@ class FusionsLaserMonitor(LaserMonitor):
     _cur_setpoints = None
     _setpoint_check_cnt = 0
     _coolant_check_cnt = 0
+    _coolant_check_status_cnt = 0
     _setpoint_tolerance = 5
 
     def load_additional_args(self, config):
@@ -92,9 +93,14 @@ class FusionsLaserMonitor(LaserMonitor):
         if status is None:
             self._chiller_unavailable()
         elif status:
-            status = ','.join(status) if isinstance(status, list) else status
-            reason = 'Laser coolant error {}'.format(status)
-            manager.emergency_shutoff(reason)
+            if self._coolant_check_status_cnt > self.max_coolant_temp_tries:
+                status = ','.join(status) if isinstance(status, list) else status
+                reason = 'Laser coolant error {}'.format(status)
+                manager.emergency_shutoff(reason)
+            else:
+                self._coolant_check_status_cnt += 1
+        else:
+            self._coolant_check_status_cnt = 0
 
     def _chiller_unavailable(self):
         from globals import globalv

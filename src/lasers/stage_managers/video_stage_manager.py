@@ -434,7 +434,8 @@ class VideoStageManager(StageManager):
     def _update_zoom(self, new):
         s = self.stage_controller
         if self.camera:
-            self.camera.set_limits_by_zoom(new, s.x, s.y)
+            if new is not None:
+                self.camera.set_limits_by_zoom(new, s.x, s.y)
 
     def _autocenter_button_fired(self):
 
