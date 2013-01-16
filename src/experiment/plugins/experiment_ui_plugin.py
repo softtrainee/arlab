@@ -32,7 +32,9 @@ class ExperimentUIPlugin(CoreUIPlugin):
 #        return p
     def _preferences_pages_default(self):
         from experiment_preferences_page import ExperimentPreferencesPage
-        return [ExperimentPreferencesPage]
+        from constants_preferences_page import ConstantsPreferencesPage
+        return [ExperimentPreferencesPage, ConstantsPreferencesPage]
+
     def _action_sets_default(self):
         '''
         '''

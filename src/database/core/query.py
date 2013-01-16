@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
-    Bool
-from traitsui.api import View, Item, EnumEditor, HGroup, Spring
+    Bool, cached_property
+from traitsui.api import View, Item, EnumEditor, HGroup, Spring, CheckListEditor
 from src.helpers.datetime_tools import get_date
 from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import and_
@@ -75,7 +75,7 @@ class Query(HasTraits):
 
     comparator = Str('=')
     comparisons = List(['=', '<', '>', '<=', '>=', 'not =',
-                         'like',
+                         'starts with',
                          'contains'
                          ])
     criterion = String('')
@@ -87,6 +87,7 @@ class Query(HasTraits):
     add = Button('+')
     remove = Button('-')
     removable = Bool(True)
+
 #    date_str = 'rundate'
 
     def assemble_filter(self, query, attr):
@@ -95,16 +96,16 @@ class Query(HasTraits):
             query = self.date_query(query, attr)
         else:
             c = self.criterion
-            if comp in ['like', 'contains']:
-                if comp == 'like':
+            if comp in ['starts with', 'contains']:
+                if comp == 'starts with':
+                    comp = 'like'
                     c += '%'
                 elif comp == 'contains':
                     comp = 'like'
                     c = '%' + c + '%'
-                query = query.filter(attr == c)
-            else:
-                comp = self._convert_comparator(comp)
-                query = query.filter(getattr(attr, comp)(c))
+
+            comp = self._convert_comparator(comp)
+            query = query.filter(getattr(attr, comp)(c))
 
         return query
 
@@ -216,6 +217,8 @@ class Query(HasTraits):
             c = '__le__'
         elif c == '>=':
             c = '__ge__'
+#        elif c=='like':
+
         return c
 
 #    @cached_property
@@ -255,8 +258,22 @@ class Query(HasTraits):
 #===============================================================================
 # property get/set
 #===============================================================================
+    @cached_property
     def _get_criteria(self):
-        return []
+        cs = []
+        db = self.selector.db
+        param = self.parameter.lower()
+        if param == 'run date/time':
+            cs = ['2013', '2012', 'last month', 'yesterday', 'last week']
+        else:
+            funcname = 'get_{}s'.format(param)
+            if hasattr(db, funcname):
+                cs = getattr(db, funcname)()
+                display_name = 'name'
+                if param == 'labnumber':
+                    display_name = 'labnumber'
+                cs = [str(getattr(ci, display_name)) for ci in cs]
+        return cs
 #===============================================================================
 # views
 #===============================================================================
@@ -269,6 +286,7 @@ class Query(HasTraits):
                        width=10),
                 Item('comparator', editor=EnumEditor(name='comparisons')),
                 Item('criterion'),
+                Item('criterion', width= -20, editor=CheckListEditor(name='criteria')),
                 Item('add'),
                 Spring(springy=False,
                        width=50, visible_when='not removable'),
@@ -286,7 +304,9 @@ class IsotopeQuery(Query):
                 'Irradiation Position',
                 'Sample',
                 'Project',
-                'Experiment'
+                'Experiment',
+                'Aliquot',
+                'Step'
                 ]
 
 class DeviceScanQuery(Query):

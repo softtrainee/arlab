@@ -138,7 +138,7 @@ class CorrectionsManager(Saveable):
             self._load_fixed_values()
 
     def _apply_interpolation_correction(self):
-        db = self.db
+#        db = self.db
 #        func = getattr(db, 'add_{}'.format(self.correction_name))
 #        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
         for ai in self.analyses:
@@ -166,7 +166,6 @@ class CorrectionsManager(Saveable):
                 func(history,
                       isotope=prev.isotope,
                       fit=prev.fit,
-#                                  use_set=prev.use_set,
                       user_value=uv,
                       user_error=ue
                       )
@@ -212,7 +211,6 @@ class CorrectionsManager(Saveable):
                       )
         return keys
 
-
     def _add_history(self, analysis):
         dbrecord = analysis.dbrecord
         db = self.db
@@ -229,12 +227,12 @@ class CorrectionsManager(Saveable):
         return history
 
     def _apply_fixed_correction(self, analysis, history, isotope, value, error):
-        dbrecord = analysis.dbrecord
+#        dbrecord = analysis.dbrecord
         db = self.db
 
 #        histories = dbrecord.blanks_histories
-        histories = getattr(dbrecord, '{}_histories'.format(self.correction_name))
-        phistory = histories[-1] if histories else None
+#        histories = getattr(dbrecord, '{}_histories'.format(self.correction_name))
+#        phistory = histories[-1] if histories else None
 
         func = getattr(db, 'add_{}'.format(self.correction_name))
         func(history, isotope=isotope, use_set=False, user_value=value, user_error=error)
@@ -376,17 +374,14 @@ class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
             self.fixed_values = [FixedValueCorrection(name='ICFactor')]
 
     def _apply_fixed_value_correction(self, phistory, history, si):
-#        db = self.db
         if phistory:
             bs = phistory.detector_intercalibration
-#            bs = getattr(phistory, self.correction_name)
             bs = reversed(bs)
             prev = next((bi for bi in bs if bi.detector.name == 'CDD'), None)
             if prev:
                 uv = prev.user_value
                 ue = prev.user_error
                 func = self.db.add_detector_intercalibration
-#                func = getattr(db, 'add_{}'.format(self.correction_name))
                 func(history,
                       fit=prev.fit,
                       user_value=uv,
@@ -394,10 +389,6 @@ class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
                       )
 
     def _apply_correction(self, history, ai, si):
-#        db = self.db
-#        func = getattr(db, 'add_{}'.format(self.correction_name))
-#        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
-#        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
         ss = ai.signals[si.name]
         item = self.db.add_detector_intercalibration(history, 'CDD',
                     user_value=float(ss.value),

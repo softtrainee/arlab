@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Int
+from traits.api import Any, Int, List
 #============= standard library imports ========================
 from numpy import array, Inf, where, average
 #============= local library imports  ==========================
@@ -148,7 +148,6 @@ class SpectrumErrorOverlay(AbstractOverlay):
             es = self.component.errors
             sels = self.component.index.metadata['selections']
 
-
     #        print sels
             n = len(xs)
             xs = xs.reshape(n / 2, 2)
@@ -177,7 +176,7 @@ class SpectrumErrorOverlay(AbstractOverlay):
                 gc.fill_path()
 
 class Spectrum(Plotter):
-
+    padding = List([60, 10, 5, 40])
     def _get_adapter(self):
         return SpectrumResultsAdapter
 
@@ -193,7 +192,7 @@ class Spectrum(Plotter):
             g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
             g.set_axis_traits(axis='y', tick_label_font=ytick_font)
 
-    def _build_hook(self, g, analyses, padding, aux_plots=None):
+    def _build_hook(self, g, analyses, aux_plots=None):
         group_ids = list(set([a.group_id for a in analyses]))
         ma, mi = -Inf, Inf
         self.cumulative39s = []
@@ -210,16 +209,15 @@ class Spectrum(Plotter):
             #add aux plots
             for plotid, ap in enumerate(aux_plots):
                 #get aux type and plot
-                try:
-                    func = getattr(self, '_aux_plot_{}'.format(ap['func']))
-                    func(g,
-                         analyses,
-                         padding,
-                         plotid + 1, group_id,
+                name = ap['name']
+                print name
+                if name != 'analysis_number':
+                    func = getattr(self, '_aux_plot_{}'.format(name))
+                    func(g, analyses,
+                         plotid + 1,
+                         group_id,
                          value_scale=ap['scale'],
                          )
-                except AttributeError, e:
-                    print e
 
         offset = (ma - mi) / len(labels) * 0.25
         for i, l in enumerate(labels):
@@ -301,10 +299,12 @@ class Spectrum(Plotter):
 
         return array(xs), array(ys), array(es), array(c39s)
 
-    def _add_plot(self, g, xs, ys, es, group_id, plotid=0):
+    def _add_plot(self, g, xs, ys, es, group_id=0, plotid=0, value_scale='linear'):
+        xs, ys, es = map(array, (xs, ys, es))
         ds, _p = g.new_series(xs, ys, plotid=plotid)
 
         ds.index.sort_order = 'ascending'
+
         ds.index.on_trait_change(self._update_graph, 'metadata_changed')
 
         sp = SpectrumTool(ds, spectrum=self, group_id=group_id)
@@ -346,9 +346,9 @@ class Spectrum(Plotter):
 
         mswd = calculate_mswd(ys, es)
 
-        ages, errors = zip(*[(a.age[0], a.age[1]) for a in analyses])
-        ages = array(ages)
-
+#        ages, errors = zip(*[(a.age[0], a.age[1]) for a in analyses])
+#        ages = array(ages)
+        ages, errors = self._get_ages(analyses)
         mean_age = ages.mean()
         mean_error = ages.std()
 
@@ -400,17 +400,19 @@ class Spectrum(Plotter):
 
         return miages, maages, dl
 
-    def _update_graph(self, new):
-        g = self.graph
+    def _update_graph(self):
+        g = self.graphs[0]
         for i, p in enumerate(g.plots):
             lp = p.plots['plot0'][0]
 #            dp = p.plots['plot1'][0]
 #            print pp
             sel = lp.index.metadata['selections']
 
-            ages, errors = zip(*[a.age for j, a in enumerate(self.analyses) if j not in sel])
+            ans = [a for j, a in enumerate(self.analyses)
+                                 if j not in sel]
+            ages, errors = zip(*[(a.age.nominal_value, a.age.std_dev()) for a in ans])
             mswd = calculate_mswd(ages, errors)
-            self.results[i].mswd = mswd
+#            self.results[i].mswd = mswd
 #            if sel:
 #                pass
 #                #draw dp
@@ -448,13 +450,14 @@ class Spectrum(Plotter):
 #===============================================================================
 # aux plots
 #===============================================================================
-    def _add_aux_plot(self, g, x, ys, es):
-        pass
+#    def _add_aux_plot(self, g, xs, ys, y_errs, plotid):
+#        pass
+    def _filter_aux_plots(self, aux_plots):
+        return [ap for ap in aux_plots if ap.name != 'analysis_number']
 
     def _aux_plot_radiogenic_percent(self, g, analyses, padding, plotid, group_id,
                                      value_scale='linear'
                                      ):
-
 
         xs, ys, es, cs = self._calculate_spectrum(analyses,
                                                   group_id=group_id,
@@ -476,41 +479,30 @@ class Spectrum(Plotter):
 #                           value_scale=value_scale
 #                           )
 
-    def _aux_plot_kca(self, analyses, g, padding, plotid, group_id, aux_namespace,
+    def _aux_plot_kca(self, g, analyses,
+                      plotid,
+                      group_id,
                       value_scale='linear'):
-        nages = aux_namespace['nages']
-        k39s = [a.k39 for a in analyses if a.group_id == group_id]
-        n = zip(nages, k39s)
-        n = sorted(n, key=lambda x:x[0])
-        aages, k39s = zip(*n)
 
-        k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
-        self._add_aux_plot(g, aages,
-                           k39,
-                           None,
-                           k39_errs,
-                           padding,
-                           group_id,
-                           plotid=plotid,
-                           value_scale=value_scale
-                           )
-
-
-
-    def _aux_plot_analysis_number(self, analyses, g, padding, plotid, group_id,
-                                  value_scale='linear'):
-        return
-#        n = zip(nages, nerrors)
+        xs, ys, es, _c39s = self._calculate_spectrum(analyses, group_id=group_id, value_key='kca')
+        self._add_plot(g, xs, ys, es,
+                       plotid=plotid,
+                       group_id=group_id,
+                       value_scale=value_scale)
+#        nages = aux_namespace['nages']
+#        ages, k39s = zip(*[(a.age.nominal_value, a.k39) for a in analyses
+#                           if a.group_id == group_id])
+#        n = zip(nages, k39s)
 #        n = sorted(n, key=lambda x:x[0])
-#        aages, xerrs = zip(*n)
-#        maa = start + len(aages)
-#        age_ys = linspace(start, maa, len(aages))
-#        self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
-#                               value_format=lambda x: '{:d}'.format(int(x)),
-#                               plotid=plotid,
-#                               value_scale=value_scale
-#                               )
-#        g.set_axis_traits(tick_visible=False,
-#          tick_label_formatter=lambda x:'',
-#          axis='y', plotid=1)
+#        aages, k39s = zip(*n)
+
+#        k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
+#        print ages, k39
+#        self._add_plot(g, ages, k39, k39_errs,
+#                           group_id=group_id,
+#                           plotid=plotid,
+#                           value_scale=value_scale
+#                           )
+
+
 #============= EOF =============================================

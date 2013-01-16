@@ -23,7 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
-    IdeogramOptions
+    IdeogramOptions, SpectrumOptions
 from src.paths import paths
 
 
@@ -35,15 +35,26 @@ class PlotterOptionsManager(Viewable):
     plotter_options_klass = PlotterOptions
 
     delete_options = Button('-')
+    persistence_name = ''
+    persistence_root = Property
+
+    def _get_persistence_root(self):
+        return os.path.join(paths.plotter_options_dir, self.persistence_name)
+
     def close(self, ok):
         if ok:
+
             #dump the default plotter options
-            p = os.path.join(paths.plotter_options_dir, '{}.default'.format(self.plotter_options_name))
+            if not os.path.isdir(self.persistence_root):
+                os.mkdir(self.persistence_root)
+
+            p = os.path.join(self.persistence_root,
+                             '{}.default'.format(self.plotter_options_name))
             with open(p, 'w') as fp:
                 obj = self.plotter_options.name
                 pickle.dump(obj, fp)
 
-            self.plotter_options.dump()
+            self.plotter_options.dump(self.persistence_root)
             self._plotter_options_list_dirty = True
 
 #            self.plotter_options = next((pi for pi in self.plotter_options_list
@@ -61,7 +72,7 @@ class PlotterOptionsManager(Viewable):
     def _delete_options_fired(self):
         po = self.plotter_options
         if self.confirmation_dialog('Are you sure you want to delete {}'.format(po.name)):
-            p = os.path.join(paths.plotter_options_dir, po.name)
+            p = os.path.join(self.persistence_root, po.name)
             os.remove(p)
             self._plotter_options_list_dirty = True
             self.plotter_options = self.plotter_options_list[0]
@@ -88,20 +99,20 @@ class PlotterOptionsManager(Viewable):
 
     @cached_property
     def _get_plotter_options_list(self):
-        r = paths.plotter_options_dir
         klass = self.plotter_options_klass
-        ps = [klass(name='Default')]
-        for n in os.listdir(r):
-            if n.startswith('.') or n.endswith('.default') or n == 'Default':
-                continue
+        ps = [klass(self.persistence_root, name='Default')]
+        if os.path.isdir(self.persistence_root):
+            for n in os.listdir(self.persistence_root):
+                if n.startswith('.') or n.endswith('.default') or n == 'Default':
+                    continue
 
-            po = klass(name=n)
-            ps.append(po)
+                po = klass(self.persistence_root, name=n)
+                ps.append(po)
 
         return ps
 
     def _plotter_options_default(self):
-        p = os.path.join(paths.plotter_options_dir, '{}.default'.format(self.plotter_options_name))
+        p = os.path.join(self.persistence_root, '{}.default'.format(self.plotter_options_name))
 
         n = 'Default'
         if os.path.isfile(p):
@@ -120,5 +131,11 @@ class PlotterOptionsManager(Viewable):
 
 class IdeogramOptionsManager(PlotterOptionsManager):
     plotter_options_klass = IdeogramOptions
+    persistence_name = 'ideogram'
+
+
+class SpectrumOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = SpectrumOptions
+    persistence_name = 'spectrum'
 
 #============= EOF =============================================

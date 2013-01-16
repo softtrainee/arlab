@@ -224,7 +224,6 @@ class GraphEditor(HasTraits):
             padding = [getattr(self, 'padding_{}'.format(a)) for a in PADDING_KEYS]
             l, r, t, b = padding
             if isinstance(self.graph, StackedGraph):
-                print 'isstac'
                 _pl, _pr, pt, _pb = self.graph.plots[0].padding
                 _pl, _pr, pt2, _pb = self.graph.plots[-1].padding
 

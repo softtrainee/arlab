@@ -68,6 +68,7 @@ class PyScriptManager(Manager):
     _parser = None
     title = 'Script Editor - '
 
+    default_directory = Property
     default_directory_name = Str
     context = Dict
 

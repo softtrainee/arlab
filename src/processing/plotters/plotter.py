@@ -25,6 +25,7 @@ from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
 from chaco.scatterplot import ScatterPlot
 #============= standard library imports ========================
+from numpy import array
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapter, \
@@ -68,7 +69,8 @@ class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
 class Plotter(Viewable):
     adapter = Property
     results = List(BaseResults)
-    graph = Any
+    graphs = List
+#    graph = Any
     db = Any
     processing_manager = Any
     selected_analysis = Any
@@ -80,6 +82,8 @@ class Plotter(Viewable):
 
     options = None
     plotter_options = None
+
+    padding = List([40, 10, 5, 40])
 
     def edit_analyses(self):
         self.processing_manager.edit_analyses()
@@ -131,7 +135,7 @@ class Plotter(Viewable):
         except IndexError, e:
             print e
 
-    def build(self, analyses=None, padding=None,
+    def build(self, analyses=None,
               options=None,
               plotter_options=None,
               new_container=True
@@ -183,8 +187,7 @@ class Plotter(Viewable):
                 except IndexError:
                     break
 
-                g = self._build(ans, padding=padding,
-                                aux_plots=aux_plots,
+                g = self._build(ans, aux_plots=aux_plots,
                                 title=title
                                 )
                 if i == r - 1:
@@ -212,6 +215,7 @@ class Plotter(Viewable):
             if aux_plots is None:
                 aux_plots = []
 
+            aux_plots = self._filter_aux_plots(aux_plots)
             for ap in aux_plots:
 #                if isinstance(ap, str):
 #                    name = ap
@@ -226,15 +230,15 @@ class Plotter(Viewable):
                 y_error = ap.y_error
 
                 if name == 'radiogenic':
-                    d = dict(func='radiogenic_percent',
+                    d = dict(name='radiogenic_percent',
                               ytitle='40Ar* %',
                               )
                 elif name == 'analysis_number':
-                    d = dict(func='analysis_number',
+                    d = dict(name='analysis_number',
                          ytitle='Analysis #',
                          )
                 elif name == 'kca':
-                    d = dict(func='kca',
+                    d = dict(name='kca',
                          ytitle='K/Ca',
                          )
                 else:
@@ -252,13 +256,9 @@ class Plotter(Viewable):
     def _build_ytitle(self, *args, **kw):
         pass
 
-    def _build(self, analyses, aux_plots=None, padding=None, title=''):
+    def _build(self, analyses, aux_plots=None, title=''):
         if aux_plots is None:
             aux_plots = []
-
-        if padding is None:
-            padding = [50, 5 , 35, 35]
-
 
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
@@ -269,12 +269,23 @@ class Plotter(Viewable):
 #        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
         g._has_title = True
 
-        p = g.new_plot(padding=padding, title=None if aux_plots else title)
+        p = g.new_plot(padding=self.padding, title=None if aux_plots else title)
         p.value_range.tight_bounds = False
 
+        self._build_aux_plots(g, aux_plots, title)
+
+        g.set_grid_traits(visible=False)
+        g.set_grid_traits(visible=False, grid='y')
+        self._build_hook(g, analyses, aux_plots=aux_plots)
+        return g
+
+    def _filter_aux_plots(self, aux_plots):
+        return aux_plots
+
+    def _build_aux_plots(self, g, aux_plots, title):
         for i, ap in enumerate(aux_plots):
-            kwargs = dict(padding=padding,
-                       bounds=[50, ap['height']])
+            kwargs = dict(padding=self.padding,
+                          bounds=[50, ap['height']])
 
             if i == len(aux_plots) - 1:
                 kwargs['title'] = title
@@ -284,11 +295,6 @@ class Plotter(Viewable):
                 p.value_range.tight_bounds = True
             else:
                 p.value_range.tight_bounds = False
-
-        g.set_grid_traits(visible=False)
-        g.set_grid_traits(visible=False, grid='y')
-        self._build_hook(g, analyses, padding, aux_plots=aux_plots)
-        return g
 
     def _modify_excluded_point(self, func, point, group_id, graph_id=0):
         graph = self.graphs[graph_id]
@@ -305,29 +311,45 @@ class Plotter(Viewable):
             print e
 
         self._update_graph(graph)
-    def _get_adapter(self):
-        return ResultsTabularAdapter
 
-    def _get_toolbar(self):
-        return
+#    def _get_ages_errors(self, analyses, group_id=0):
+#        nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
+#                                   for a in analyses if a.group_id == group_id])
+#        return array(nages), array(nerrors)
+    def _get_ages(self, analyses, group_id=None):
+        if group_id is not None:
+            analyses = [ai for ai in analyses if ai.group_id == group_id]
 
-    def _get_content(self):
-        content = Item('results',
-                      style='custom',
-                      show_label=False,
-                      editor=TabularEditor(adapter=self.adapter(),
-                                           auto_update=True
-                                           ),
-                       height=50
-                       )
-        return content
+        ages, errors = zip(*[(a.age.nominal_value,
+                              a.age.std_dev())
+                               for a in analyses
+                                    if a.age is not None])
+        ages = array(ages)
+        errors = array(errors)
+        return ages, errors
+#    def _get_adapter(self):
+#        return ResultsTabularAdapter
+#
+#    def _get_toolbar(self):
+#        return
+#
+#    def _get_content(self):
+#        content = Item('results',
+#                      style='custom',
+#                      show_label=False,
+#                      editor=TabularEditor(adapter=self.adapter(),
+#                                           auto_update=True
+#                                           ),
+#                       height=50
+#                       )
+#        return content
 
-    def _add_error_bars(self, scatter, errors, axis, sigma_trait=None):
-        ebo = ErrorBarOverlay(component=scatter, orientation=axis)
+    def _add_error_bars(self, scatter, errors, axis, nsigma):
+        ebo = ErrorBarOverlay(component=scatter, orientation=axis, nsigma=nsigma)
         scatter.underlays.append(ebo)
         setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
-        if sigma_trait:
-            self.on_trait_change(ebo.update_sigma, sigma_trait)
+#        if sigma_trait:
+#            self.on_trait_change(ebo.update_sigma, sigma_trait)
 
     def _add_scatter_inspector(self, container, plot, scatter,
                                group_id=0,
