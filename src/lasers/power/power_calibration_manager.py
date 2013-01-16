@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Instance, Int, \
-     Event, Property, Bool, Any, Enum, on_trait_change, List
+     Event, Property, Bool, Any, Enum, on_trait_change, List, Str
 from traitsui.api import View, Item, VGroup, Group
 import apptools.sweet_pickle as pickle
 from pyface.timer.do_later import do_later
@@ -359,32 +359,32 @@ class PowerCalibrationManager(Manager):
             self._calculate_calibration()
 #            pc = PowerCalibrationObject()
             pc = MeterCalibration(self._coefficients)
-            self._dump_calibration(pc)
+            self.dump_calibration(pc)
 
 
-    def _dump_calibration(self, pc):
-        name = self.parent.name if self.parent else 'foo'
-        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(name))
-        self.info('saving power calibration to {}'.format(p))
-        try:
-            with open(p, 'wb') as f:
-                pickle.dump(pc, f)
-
-        except pickle.PickleError:
-            pass
-
-        #also update logic board configuration file
-        if self.parent is not None:
-            lb = self.parent.laser_controller
-            config = lb.get_configuration()
-            section = 'PowerOutput'
-            if not config.has_section(section):
-                config.add_section(section)
-            config.set(section,
-                       'coefficients',
-                       ','.join(map('{:0.3e}'.format, pc.coefficients))
-                       )
-            lb.write_configuration(config)
+#    def _dump_calibration(self, pc):
+#        name = self.parent.name if self.parent else 'foo'
+#        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(name))
+#        self.info('saving power calibration to {}'.format(p))
+#        try:
+#            with open(p, 'wb') as f:
+#                pickle.dump(pc, f)
+#
+#        except pickle.PickleError:
+#            pass
+#
+#        #also update logic board configuration file
+#        if self.parent is not None:
+#            lb = self.parent.laser_controller
+#            config = lb.get_configuration()
+#            section = 'PowerOutput'
+#            if not config.has_section(section):
+#                config.add_section(section)
+#            config.set(section,
+#                       'coefficients',
+#                       ','.join(map('{:0.3e}'.format, pc.coefficients))
+#                       )
+#            lb.write_configuration(config)
 
 
     def _save_to_db(self):
@@ -476,8 +476,15 @@ class PowerCalibrationManager(Manager):
 
     def _save_fired(self):
 #        pc = PowerCalibrationObject()
-        pc = MeterCalibration(self._coefficients)
-        self._dump_calibration(pc)
+        pc = MeterCalibration(self.coefficients)
+        self.dump_power_calibration(pc.coefficients)
+
+    def _parse_coefficient_string(self, cs, warn=True):
+        try:
+            return map(float, cs.split(','))
+        except ValueError:
+            if warn:
+                self.warning_dialog('Invalid coefficient string {}'.format(cs))
 
     def _execute_check_fired(self):
         if self._check_alive:
@@ -540,7 +547,8 @@ class PowerCalibrationManager(Manager):
                                 show_border=True,
                                 label='Setup'
                                 ),
-                 VGroup(Item('coefficients'),
+                 VGroup(Item('coefficients', tooltip='Polynomial coefficients. Enter A,B,C... where\
+                 Watts=Ax^2+Bx+C, x=Power'),
                         self._button_factory('save', align='right'),
                         show_border=True,
                         label='Set Calibration'
@@ -586,13 +594,12 @@ class PowerCalibrationManager(Manager):
         return self._load_parameters(p)
 
     def __coefficients_default(self):
-        r = []
-        if self.parent:
-            pc = self.parent.load_power_calibration()
-            if pc:
-                if pc.coefficients:
-                    r = list(pc.coefficients)
-
+        r = [1, 0]
+#        if self.parent:
+        pc = self.load_power_calibration()
+        if pc:
+            if pc.coefficients:
+                r = list(pc.coefficients)
         return r
 
     def _power_meter_default(self):
@@ -601,6 +608,81 @@ class PowerCalibrationManager(Manager):
         else:
             apm = AnalogPowerMeter()
         return apm
+
+    def _get_calibration_path(self, cp):
+        if cp is None:
+            cp = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.parent.name))
+        return cp
+
+#===============================================================================
+# persistence
+#===============================================================================
+    def dump_power_calibration(self, coefficients, calibration_path=None):
+
+#        calibration_path = self._get_calibration_path(calibration_path)
+#        self.info('dumping power calibration {}'.format(calibration_path))
+
+        coeffstr = lambda c:'calibration coefficients= {}'.format(', '.join(map('{:0.3e}'.format, c)))
+        self.info(coeffstr(coefficients))
+#        if bounds:
+#            for coeffs, bi in zip(coefficients, bounds):
+#                self.info('calibration coefficient')
+#            self.info('{} min={:0.2f}, max={:0.2f}'.format(coeffstr(coeffs, *bi)))
+#        else:
+#            self.info(coeffstr(coefficients))
+#
+#        pc = MeterCalibration(coefficients)
+#        pc.bounds = bounds
+#        try:
+#            with open(calibration_path, 'wb') as f:
+#                pickle.dump(pc, f)
+#        except  (pickle.PickleError, EOFError, OSError), e:
+#            self.warning('pickling error {}'.format(e))
+
+        #also update logic board configuration file
+        if self.parent is not None:
+            lb = self.parent.laser_controller
+            config = lb.get_configuration()
+            section = 'PowerOutput'
+            if not config.has_section(section):
+                config.add_section(section)
+
+            config.set(section,
+                       'coefficients',
+                       ','.join(map('{:0.3e}'.format, coefficients))
+                       )
+            lb.write_configuration(config)
+
+    def load_power_calibration(self, calibration_path=None, verbose=True, warn=True):
+#        calibration_path = self._get_calibration_path(calibration_path)
+#        if os.path.isfile(calibration_path):
+#            if verbose:
+#                self.info('loading power calibration {}'.format(calibration_path))
+
+#            with open(calibration_path, 'rb') as f:
+#                try:
+#                    pc = pickle.load(f)
+#                except (pickle.PickleError, EOFError, OSError), e:
+#                    self.warning('unpickling error {}'.format(e))
+#                    pc = MeterCalibration([1, 0])
+
+#        else:
+#            pc = MeterCalibration([1, 0])
+
+        if self.parent is not None:
+            lb = self.parent.laser_controller
+            config = lb.get_configuration()
+            section = 'PowerOutput'
+            if config.has_section(section):
+                coefficients = config.get(section, 'coefficients')
+                cs = self._parse_coefficient_string(coefficients, warn)
+                if cs is None:
+                    return
+            else:
+                cs = [1, 0]
+
+        pc = MeterCalibration(cs)
+        return pc
 
 class FusionsCO2PowerCalibrationManager(PowerCalibrationManager):
     '''

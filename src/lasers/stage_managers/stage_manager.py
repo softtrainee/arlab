@@ -161,9 +161,7 @@ class StageManager(Manager):
         mapfiles = self.config_get(config, 'General', 'mapfiles')
         for mapfile in mapfiles.split(','):
             path = os.path.join(paths.map_dir, mapfile.strip())
-            sm = StageMap(file_path=path,
-
-                        )
+            sm = StageMap(file_path=path)
             sm.load_correction_file()
             self._stage_maps.append(sm)
 

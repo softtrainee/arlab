@@ -88,7 +88,6 @@ class WaitDialog(Viewable):
         self._current_time -= 1
 
     def _end(self):
-
         if self.timer is not None:
             self.timer.Stop()
         if self.end_evt is not None:

@@ -260,30 +260,30 @@ class MotionController(CoreDevice):
     def _get_xaxes_max(self):
         '''
         '''
-        return self.axes['x'].positive_limit
+        return self.axes['x'].positive_limit if self.axes.has_key('x') else 0
 
     def _get_xaxes_min(self):
         '''
         '''
-        return self.axes['x'].negative_limit
+        return self.axes['x'].negative_limit if self.axes.has_key('x') else 0
 
     def _get_yaxes_min(self):
         '''
         '''
-        return self.axes['y'].negative_limit
+        return self.axes['y'].negative_limit if self.axes.has_key('y') else 0
 
     def _get_yaxes_max(self):
         '''
         '''
-        return self.axes['y'].positive_limit
+        return self.axes['y'].positive_limit if self.axes.has_key('y') else 0
 
     def _get_zaxes_min(self):
         '''
         '''
-        return self.axes['z'].negative_limit
+        return self.axes['z'].negative_limit if self.axes.has_key('z') else 0
 
     def _get_zaxes_max(self):
         '''
         '''
-        return self.axes['z'].positive_limit
+        return self.axes['z'].positive_limit if self.axes.has_key('z') else 0
 #============= EOF ====================================

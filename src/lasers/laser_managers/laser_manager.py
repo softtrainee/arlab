@@ -33,6 +33,7 @@ from src.paths import paths
 from src.hardware.meter_calibration import MeterCalibration
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
+from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 
 class ILaserManager(Interface):
     def move_to_position(self, pos):
@@ -94,6 +95,7 @@ class LaserManager(BaseLaserManager):
 #    graph_manager = Instance(GraphManager, ())
     stage_manager = Instance(StageManager)
 #    pattern_executor = Instance(PatternExecutor)
+    power_calibration_manager = Instance(PowerCalibrationManager)
 
     #use_video = Bool(False)
     record_lasing_video = Bool(False)
@@ -153,7 +155,12 @@ class LaserManager(BaseLaserManager):
         self.info('enable laser')
         enabled = self._enable_hook()
 
-        if self.simulation or (isinstance(enabled, bool) and enabled):
+        if self.simulation:
+            self.enabled = True
+            self.enabled_led.state = 'green'
+            return True
+
+        if isinstance(enabled, bool) and enabled:
             if self.clear_flag('enable_error_flag'):
                 self.debug('clearing enable error flag')
 
@@ -171,6 +178,7 @@ class LaserManager(BaseLaserManager):
                 self.debug('setting enable_error_flag')
 
             self.disable_laser()
+
 
         return enabled
 
@@ -196,6 +204,10 @@ class LaserManager(BaseLaserManager):
         '''
         '''
         p = self._get_calibrated_power(power, verbose=verbose, **kw)
+        if p is None:
+            self.emergency_shutoff('Invalid power calibration')
+            self.warning_dialog('Invalid Power Calibration')
+            return False
 
         if verbose:
             self.info('request power {:0.3f}, calibrated power {:0.3f}'.format(power, p))
@@ -346,47 +358,47 @@ class LaserManager(BaseLaserManager):
             self.stage_manager = sm
         except AttributeError, e:
             print e
-#===============================================================================
-# persistence
-#===============================================================================
-    def dump_power_calibration(self, coefficients, bounds=None, calibration_path=None):
-
-        calibration_path = self._get_calibration_path(calibration_path)
-        self.info('dumping power calibration {}'.format(calibration_path))
-
-        coeffstr = lambda c:'calibration coefficients= {}'.format(', '.join(map('{:0.3f}'.format, c)))
-        if bounds:
-            for coeffs, bi in zip(coefficients, bounds):
-                self.info('calibration coefficient')
-            self.info('{} min={:0.2f}, max={:0.2f}'.format(coeffstr(coeffs, *bi)))
-        else:
-            self.info(coeffstr(coefficients))
-
-        pc = MeterCalibration(coefficients)
-        pc.bounds = bounds
-        try:
-            with open(calibration_path, 'wb') as f:
-                pickle.dump(pc, f)
-        except  (pickle.PickleError, EOFError, OSError), e:
-            self.warning('pickling error {}'.format(e))
-
-    def load_power_calibration(self, calibration_path=None, verbose=True):
-        calibration_path = self._get_calibration_path(calibration_path)
-        if os.path.isfile(calibration_path):
-            if verbose:
-                self.info('loading power calibration {}'.format(calibration_path))
-
-            with open(calibration_path, 'rb') as f:
-                try:
-                    pc = pickle.load(f)
-                except (pickle.PickleError, EOFError, OSError), e:
-                    self.warning('unpickling error {}'.format(e))
-                    pc = MeterCalibration([1, 0])
-
-        else:
-            pc = MeterCalibration([1, 0])
-
-        return pc
+##===============================================================================
+## persistence
+##===============================================================================
+#    def dump_power_calibration(self, coefficients, bounds=None, calibration_path=None):
+#
+#        calibration_path = self._get_calibration_path(calibration_path)
+#        self.info('dumping power calibration {}'.format(calibration_path))
+#
+#        coeffstr = lambda c:'calibration coefficients= {}'.format(', '.join(map('{:0.3f}'.format, c)))
+#        if bounds:
+#            for coeffs, bi in zip(coefficients, bounds):
+#                self.info('calibration coefficient')
+#            self.info('{} min={:0.2f}, max={:0.2f}'.format(coeffstr(coeffs, *bi)))
+#        else:
+#            self.info(coeffstr(coefficients))
+#
+#        pc = MeterCalibration(coefficients)
+#        pc.bounds = bounds
+#        try:
+#            with open(calibration_path, 'wb') as f:
+#                pickle.dump(pc, f)
+#        except  (pickle.PickleError, EOFError, OSError), e:
+#            self.warning('pickling error {}'.format(e))
+#
+#    def load_power_calibration(self, calibration_path=None, verbose=True):
+#        calibration_path = self._get_calibration_path(calibration_path)
+#        if os.path.isfile(calibration_path):
+#            if verbose:
+#                self.info('loading power calibration {}'.format(calibration_path))
+#
+#            with open(calibration_path, 'rb') as f:
+#                try:
+#                    pc = pickle.load(f)
+#                except (pickle.PickleError, EOFError, OSError), e:
+#                    self.warning('unpickling error {}'.format(e))
+#                    pc = MeterCalibration([1, 0])
+#
+#        else:
+#            pc = MeterCalibration([1, 0])
+#
+#        return pc
 #===============================================================================
 # hooks
 #===============================================================================
@@ -404,29 +416,26 @@ class LaserManager(BaseLaserManager):
 
     def _set_laser_power_hook(self, *args, **kw):
         pass
+
 #===============================================================================
 # getter/setters
 #===============================================================================
-
     def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
 
         if self.use_calibrated_power and use_calibration:
-            pc = self.load_power_calibration(verbose=verbose)
+            pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
+            if pc is None:
+                return
 
             if power < 0.1:
                 power = 0
             else:
                 power, coeffs = pc.get_input(power)
                 if coeffs is not None:
-                    sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
+                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
                     if verbose:
                         self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
         return power
-
-    def _get_calibration_path(self, cp):
-        if cp is None:
-            cp = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.name))
-        return cp
 
     def _get_requested_power(self):
         return self._requested_power
@@ -476,6 +485,13 @@ class LaserManager(BaseLaserManager):
             pul = Pulse(manager=self)
 
         return pul
+
+    def _power_calibration_manager_default(self):
+        return PowerCalibrationManager(
+                                       parent=self,
+                                       db=self.get_power_calibration_database(),
+                                       application=self.application
+                                       )
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

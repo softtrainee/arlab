@@ -89,7 +89,6 @@ class FusionsLaserManager(LaserManager):
 
     _current_rid = None
 
-    power_calibration_manager = Instance(PowerCalibrationManager)
     brightness_meter = Instance(BrightnessPIDManager)
 
     chiller = Any
@@ -399,14 +398,14 @@ class FusionsLaserManager(LaserManager):
         stage_controller = self.stage_manager.stage_controller
         package = 'src.managers.motion_controller_managers'
         if 'Aerotech' in stage_controller.__class__.__name__:
-            _class_ = 'AerotechMotionControllerManager'
+            klass = 'AerotechMotionControllerManager'
             package += '.aerotech_motion_controller_manager'
         else:
-            _class_ = 'NewportMotionControllerManager'
+            klass = 'NewportMotionControllerManager'
             package += '.newport_motion_controller_manager'
 
-        module = __import__(package, globals(), locals(), [_class_], -1)
-        factory = getattr(module, _class_)
+        module = __import__(package, globals(), locals(), [klass], -1)
+        factory = getattr(module, klass)
         m = factory(motion_controller=stage_controller)
         m.edit_traits()
 
@@ -561,8 +560,10 @@ class FusionsLaserManager(LaserManager):
 
     def _get_record_brightness(self):
         return self.record_brightness and self._get_machine_vision() is not None
+
     def _get_units(self):
         return '(W)' if self.use_calibrated_power else '(%)'
+
 #========================= defaults =======================
     def get_power_database(self):
 #        db = PowerAdapter(dbname='co2laserdb',
@@ -582,11 +583,7 @@ class FusionsLaserManager(LaserManager):
 #        '''
 #        '''
 #        return ArduinoSubsystem(name='arduino_subsystem_2')
-    def _power_calibration_manager_default(self):
-        return PowerCalibrationManager(parent=self,
-                                       db=self.get_power_calibration_database(),
-                                       application=self.application
-                                       )
+
 
     def _brightness_meter_default(self):
         if self.use_video:
