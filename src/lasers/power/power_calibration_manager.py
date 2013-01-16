@@ -382,7 +382,7 @@ class PowerCalibrationManager(Manager):
                 config.add_section(section)
             config.set(section,
                        'coefficients',
-                       ','.join(map('{:0.3f}'.format, pc.coefficients))
+                       ','.join(map('{:0.3e}'.format, pc.coefficients))
                        )
             lb.write_configuration(config)
 
