@@ -41,8 +41,8 @@ class ILaserManager(Interface):
 class BaseLaserManager(Manager):
     implements(ILaserManager)
     pattern_executor = Instance(PatternExecutor)
-    use_video=Bool(False)
-    
+    use_video = Bool(False)
+
     def new_pattern_maker(self):
         pm = PatternMakerView()
         self.open_view(pm)
@@ -190,16 +190,12 @@ class LaserManager(BaseLaserManager):
 
         return enabled
 
-    def set_laser_power(self, power, use_calibration=True,
-                        memoize_calibration=False,
+    def set_laser_power(self, power,
                         verbose=True,
                          *args, **kw):
         '''
         '''
-        p = self._get_calibrated_power(power,
-                                       use_calibration,
-                                       memoize_calibration,
-                                       verbose=verbose)
+        p = self._get_calibrated_power(power, verbose=verbose, **kw)
 
         if verbose:
             self.info('request power {:0.3f}, calibrated power {:0.3f}'.format(power, p))
@@ -375,9 +371,8 @@ class LaserManager(BaseLaserManager):
             self.warning('pickling error {}'.format(e))
 
     def load_power_calibration(self, calibration_path=None, verbose=True):
-        ospath = os.path
         calibration_path = self._get_calibration_path(calibration_path)
-        if ospath.isfile(calibration_path):
+        if os.path.isfile(calibration_path):
             if verbose:
                 self.info('loading power calibration {}'.format(calibration_path))
 
@@ -391,7 +386,6 @@ class LaserManager(BaseLaserManager):
         else:
             pc = MeterCalibration([1, 0])
 
-        self._power_calibration = pc
         return pc
 #===============================================================================
 # hooks
@@ -414,24 +408,10 @@ class LaserManager(BaseLaserManager):
 # getter/setters
 #===============================================================================
 
-    def _get_calibrated_power(self, power, calibration,
-                              memoize_calibration=False,
-                              verbose=True):
+    def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
 
-        if self.use_calibrated_power and calibration:
-            path = None
-            if isinstance(calibration, str):
-                path = calibration
-            elif isinstance(calibration, tuple):
-                pass
-
-            if memoize_calibration:
-                pc = self._power_calibration
-                if pc is None:
-                    pc = self.load_power_calibration(calibration_path=path, verbose=verbose)
-
-            else:
-                pc = self.load_power_calibration(calibration_path=path, verbose=verbose)
+        if self.use_calibrated_power and use_calibration:
+            pc = self.load_power_calibration(verbose=verbose)
 
             if power < 0.1:
                 power = 0

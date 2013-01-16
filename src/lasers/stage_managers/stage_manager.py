@@ -154,8 +154,6 @@ class StageManager(Manager):
 
         self.canvas.change_indicator_visibility()
 
-
-
     def load(self):
         self._stage_maps = []
         config = self.get_configuration()
