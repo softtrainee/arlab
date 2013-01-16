@@ -584,7 +584,8 @@ class FusionsLaserManager(LaserManager):
 #        return ArduinoSubsystem(name='arduino_subsystem_2')
     def _power_calibration_manager_default(self):
         return PowerCalibrationManager(parent=self,
-                                       db=self.get_power_calibration_database()
+                                       db=self.get_power_calibration_database(),
+                                       application=self.application
                                        )
 
     def _brightness_meter_default(self):
