@@ -228,9 +228,9 @@ class VideoStageManager(StageManager):
 
 #        if self.use_video_server:
 #            self.video_server.stop()
-
-        for s in self._stage_maps:
-            s.dump_correction_file()
+        if self._stage_maps:
+            for s in self._stage_maps:
+                s.dump_correction_file()
 
         self.clean_video_archive()
 
