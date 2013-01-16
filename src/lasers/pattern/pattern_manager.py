@@ -15,9 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Enum, Instance, Button, Str, Property, Event, Bool
-from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor
+from traits.api import Enum, Instance, Button, Str, Property, Event, Bool, DelegatesTo
+from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor, spring
 import apptools.sweet_pickle as pickle
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import os
 from threading import Thread
@@ -25,21 +26,19 @@ import time
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
-from src.lasers.pattern.patterns import Pattern
-from src.deprecate import deprecate_klass
+from src.lasers.stage_managers.pattern.patterns import Pattern
 
-@deprecate_klass()
 class PatternManager(Manager):
     kind = Property(Enum(
                          'Polygon',
-                         'Arc',
-                         'LineSpiral',
-                        'SquareSpiral',
-                        'Random',
-                        'CircularContour'
+#                         'Arc',
+#                         'LineSpiral',
+#                        'SquareSpiral',
+#                        'Random',
+#                        'CircularContour'
                         ),
                         depends_on='_kind')
-    _kind = Str('CircularContour')
+    _kind = Str('Polygon')
 
     pattern = Instance(Pattern)
     load_button = Button('Load')
@@ -58,6 +57,8 @@ class PatternManager(Manager):
     window_x = 0.75
     window_y = 0.05
 
+    nominal_velocity = 2.5
+
     def isAlive(self):
         return self._alive
 
@@ -68,11 +69,13 @@ class PatternManager(Manager):
         self.info('User requested stop')
         self._alive = False
         self.parent.stage_controller.stop()
-
         if self.record_patterning:
             self.parent.stop_recording()
 
-        self.close_ui()
+            self.close_ui()
+
+            #clear current pattern
+            self.pattern = None
 
     def execute_pattern(self, pattern_name=None):
         path = None
@@ -80,6 +83,7 @@ class PatternManager(Manager):
             path = os.path.join(paths.pattern_dir, '{}.lp'.format(pattern_name))
             if not os.path.isfile(path):
                 err = 'invalid pattern name. {} not in {}'.format(pattern_name, paths.pattern_dir)
+                self.pattern = None
                 self.warning(err)
                 return err
 
@@ -117,6 +121,8 @@ class PatternManager(Manager):
                 except:
                     if self.confirmation_dialog('Invalid Pattern File {}'.format(path)):
                         os.remove(path)
+        else:
+            self.pattern = None
 
 
     def save_pattern(self):
@@ -136,19 +142,34 @@ class PatternManager(Manager):
             self.info('saved {} pattern to {}'.format(self.pattern_name, path))
 
     def _execute_(self):
+        controller = self.parent.stage_controller
+
+        #if the laser is moving wait until finished
+        controller.block()
+
         self.info('started pattern {}'.format(self.pattern_name))
 
         if self.record_patterning:
             self.parent.start_recording(basename=self.pattern_name)
 
+        controller.update_axes()
+
         pat = self.pattern
+        pat.cx = controller._x_position
+        pat.cy = controller._y_position
 
         for ni in range(pat.niterations):
             if not self.isAlive():
                 break
             self.info('doing pattern iteration {}'.format(ni + 1))
             self._iteration()
-            time.sleep(0.1)
+            time.sleep(0.05)
+
+        if self.isAlive():
+            controller.linear_move(pat.cx, pat.cy,
+                                   velocity=self.nominal_velocity,
+                                   block=True)
+
 
         pat.graph.set_data([], series=1, axis=0)
         pat.graph.set_data([], series=1, axis=1)
@@ -167,8 +188,6 @@ class PatternManager(Manager):
         pattern = self.pattern
         controller = self.parent.stage_controller
 
-        pattern.cx = controller._x_position
-        pattern.cy = controller._y_position
         pts = pattern.points_factory()
         kind = pattern.kind
         if kind == 'ArcPattern':
@@ -195,10 +214,11 @@ class PatternManager(Manager):
                 else:
 #                    graph = pattern.graph
                     for x, y in pts:
+                        if self._alive:
 #                        graph.set_data([x], series=1, axis=0)
 #                        graph.set_data([y], series=1, axis=1)
 #                        graph.redraw()
-                        controller.linear_move(x, y, block=True,
+                            controller.linear_move(x, y, block=True,
                                                velocity=pattern.velocity)
     def _simulate_pattern(self, pat):
         from numpy import linspace

@@ -107,6 +107,7 @@ class StageManager(Manager):
 
     visualizer = Instance(StageVisualizer)
 
+    temp_position = None
     linear_move_history = List
 
     def __init__(self, *args, **kw):
@@ -422,9 +423,9 @@ class StageManager(Manager):
 
     def _move_to_hole(self, key, correct_position=True):
         self.info('Move to hole {}'.format(key))
+        self.temp_position = self._stage_map.get_hole_pos(key)
 #        holes = self._stage_map.holes
         pos = self._stage_map.get_corrected_hole_pos(key)
-        print pos, 'poss'
         if pos is not None:
 #            correct_position = True
             if abs(pos[0]) < 1e-6:
@@ -831,15 +832,15 @@ class StageManager(Manager):
 #===============================================================================
 # mass spec hacks
 #===============================================================================
-    _temp_position = None
-    def _get_temp_position(self):
-        return self._temp_position
-
-    def _set_temp_position(self, v):
-        self._temp_position = v
-
-    temp_position = property(fget=_get_temp_position,
-                           fset=_set_temp_position)
+#    _temp_position = None
+#    def _get_temp_position(self):
+#        return self._temp_position
+#
+#    def _set_temp_position(self, v):
+#        self._temp_position = v
+#
+#    temp_position = property(fget=_get_temp_position,
+#                           fset=_set_temp_position)
 
 
 if __name__ == '__main__':

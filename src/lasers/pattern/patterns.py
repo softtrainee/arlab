@@ -392,7 +392,7 @@ class RandomPattern(Pattern):
 
 class PolygonPattern(Pattern):
     nsides = Range(3, 200)
-    radius = Range(0.0, 1.0, 0.5)
+    radius = Range(0.0, 4.0, 0.5)
     rotation = Range(0.0, 360.0, 0.0)
 
     def _get_path_length(self):

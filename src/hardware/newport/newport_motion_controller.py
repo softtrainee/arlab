@@ -530,11 +530,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if self.mode == 'grouped':
             #check group is moving
-
+            cmd = '1HS'
             while self.group_moving() and not self.simulation:
-                cmd = '1HS'
                 self.tell(cmd)
-                time.sleep(0.1)
+                time.sleep(0.35)
         else:
             if isinstance(ax_key, str):
                 cmd = self._build_command('ST', xx=self.axes[ax_key].id)
@@ -853,7 +852,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         while self._moving_(axis=axis):
             # is the sleep necessary and ehat period 
-            time.sleep(0.3)
+            time.sleep(0.35)
 
         if event is not None:
             event.set()
