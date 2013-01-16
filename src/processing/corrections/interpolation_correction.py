@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, List, Any, Instance, Property, cached_property, \
-    Event
+    Event, Float
 from traitsui.api import View, Item
 import apptools.sweet_pickle as pickle
 from chaco.array_data_source import ArrayDataSource
@@ -43,6 +43,7 @@ from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.helpers.datetime_tools import convert_timestamp
 from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import OLSRegressor
+from apptools.preferences.preference_binding import bind_preference
 
 class InterpolationGraph(StackedRegressionGraph):
     pass
@@ -53,12 +54,14 @@ class InterpolationCorrection(HasTraits):
     analysis_type = Str
     signal_key = Str
     signal_klass = Any
-    db = Any
     graph = Instance(InterpolationGraph)
     fits = List(RegressionCorrection)
     dirty = Event
     predictors = Property(depends_on='dirty')
     _predictors = List
+
+    db = Any
+
     def dump_fits(self):
         p = os.path.join(paths.hidden_dir, '{}_interpolation_correction_fits'.format(self.kind))
         obj = dict([(di.name, di) for di in self.fits])
@@ -472,10 +475,17 @@ class InterpolationCorrection(HasTraits):
         return fi
 
 class DetectorIntercalibrationInterpolationCorrection(InterpolationCorrection):
+    normalization_factor = Float
+
+    def __init__(self, *args, **kw):
+        super(DetectorIntercalibrationInterpolationCorrection, self).__init__(*args, **kw)
+        bind_preference(self, 'normalization_factor', 'pychron.experiment.constants.Ar40_Ar36_atm')
+        print self.normalization_factor
+
     def _get_predictor_value(self, pi, key):
         v = (pi.get_corrected_intercept('Ar40') / pi.get_corrected_intercept('Ar36'))
         if key == 'IC':
-            v /= 295.5
+            v /= self.normalization_factor
         return  v
 
     def load_fits(self, names):

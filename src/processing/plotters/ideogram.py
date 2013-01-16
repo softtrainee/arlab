@@ -446,7 +446,7 @@ class Ideogram(Plotter):
 
     def _build_label_text(self, x, y, we, mswd, valid_mswd, n):
         display_n = True
-        display_mswd = True
+        display_mswd = n >= 2
         if display_n:
             n = 'n= {}'.format(n)
         else:

@@ -88,6 +88,8 @@ class Query(HasTraits):
     remove = Button('-')
     removable = Bool(True)
 
+    parent_parameter = String
+    parent_criterion = String
 #    date_str = 'rundate'
 
     def assemble_filter(self, query, attr):
@@ -246,11 +248,17 @@ class Query(HasTraits):
 #        info = g.edit_traits()
 #        if info.result:
 #            self.selector.add_query(g.parameter)
-        self.selector.add_query('')
+        self.selector.add_query(self, self.parameter, self.criterion)
 
     def _remove_fired(self):
         self.selector.remove_query(self)
 
+    def _update_parent_parameter(self, new):
+        self.parent_parameter = new
+        print new
+    def _update_parent_criterion(self, new):
+        self.parent_criterion = new
+        print new
 #    def _criterion_changed(self):
 #        if self.criterion:
 #            self.selector.execute_query()
@@ -268,12 +276,20 @@ class Query(HasTraits):
         else:
             funcname = 'get_{}s'.format(param)
             if hasattr(db, funcname):
-                cs = getattr(db, funcname)()
                 display_name = 'name'
                 if param == 'labnumber':
                     display_name = 'labnumber'
+
+                cs = getattr(db, funcname)(joins=self._cumulate_joins(),
+                                           filters=self._cumulate_filters())
                 cs = [str(getattr(ci, display_name)) for ci in cs]
         return cs
+
+    def _cumulate_joins(self):
+        print self.parent_parameter, self.parent_criterion
+        return
+    def _cumulate_filters(self):
+        return
 #===============================================================================
 # views
 #===============================================================================
