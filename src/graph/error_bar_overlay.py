@@ -26,13 +26,10 @@ import wx
 
 
 class ErrorBarOverlay(AbstractOverlay):
-    nsigma = Int(1)
     orientation = Enum('x', 'y')
 
     draw_layer = 'underlay'
-    def update_sigma(self, new):
-        self.nsigma = new
-        self.component.invalidate_and_redraw()
+    nsigma = 1
 
     def overlay(self, comp, gc, view_bounds=None, mode='normal'):
         '''

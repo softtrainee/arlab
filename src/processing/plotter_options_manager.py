@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Event, Instance, Button, cached_property
+from traits.api import Property, List, Event, Instance, Button, cached_property, Str
 from traitsui.api import View, Item, EnumEditor, HGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -35,6 +35,8 @@ class PlotterOptionsManager(Viewable):
     plotter_options_klass = PlotterOptions
 
     delete_options = Button('-')
+    add_options = Button('+')
+    new_options_name = Str
     persistence_name = ''
     persistence_root = Property
 
@@ -69,6 +71,15 @@ class PlotterOptionsManager(Viewable):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _add_options_fired(self):
+        info = self.edit_traits(view='new_options_name_view')
+        if info.result:
+            self.plotter_options.name = self.new_options_name
+            self.plotter_options.dump(self.persistence_root)
+
+            self._plotter_options_list_dirty = True
+            self.set_plotter_options(self.new_options_name)
+
     def _delete_options_fired(self):
         po = self.plotter_options
         if self.confirmation_dialog('Are you sure you want to delete {}'.format(po.name)):
@@ -77,20 +88,32 @@ class PlotterOptionsManager(Viewable):
             self._plotter_options_list_dirty = True
             self.plotter_options = self.plotter_options_list[0]
 
+    def new_options_name_view(self):
+        v = View(
+                 Item('new_options_name', label='New Plot Options Name'),
+                 width=500,
+                 title=' ',
+                 buttons=['OK', 'Cancel'],
+                 kind='livemodal')
+        return v
+
     def traits_view(self):
         v = View(
                  HGroup(
                     Item('plotter_options', show_label=False,
-                                   editor=EnumEditor(name='plotter_options_list')
-                                ),
+                         editor=EnumEditor(name='plotter_options_list'),
+                         tooltip='List of available plot options'
+                         ),
+                    Item('add_options', tooltip='Add new plot options',
+                         show_label=False),
                     Item('delete_options',
+                         tooltip='Delete current plot options',
                          enabled_when='object.plotter_options.name!="Default"',
                          show_label=False),
                         ),
                    Item('plotter_options', show_label=False,
-                      style='custom'),
+                        style='custom'),
                  resizable=True,
-#                               Item('edit_plotter_options', show_label=False),    
                  buttons=['OK', 'Cancel'],
                  handler=self.handler_klass,
                  title='Plot Options'

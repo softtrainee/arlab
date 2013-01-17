@@ -172,7 +172,6 @@ class Plotter(Viewable):
         plots = []
 
         title = self._get_plot_option(options, 'title')
-
         aux_plots = self._assemble_aux_plots(plotter_options)
         xtick_font = plotter_options.xtick_font
         xtitle_font = plotter_options.xtitle_font

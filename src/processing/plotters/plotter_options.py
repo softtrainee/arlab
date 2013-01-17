@@ -65,6 +65,7 @@ SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 
 class PlotterOptions(Viewable):
     title = Str
+    auto_generate_title = Bool
     aux_plots = List
 
     xtick_font = Property
@@ -153,7 +154,8 @@ class PlotterOptions(Viewable):
                     pass
 
     def _get_dump_attrs(self):
-        attrs = ['title', 'aux_plots',
+        attrs = ['title', 'auto_generate_title',
+                  'aux_plots',
                      'xtick_font_size',
                      'xtick_font_name',
                      'xtitle_font_size',
@@ -226,8 +228,10 @@ class PlotterOptions(Viewable):
                             spring, Label('Height'),
                             spring,
                                     Label('X Err.'), Label('Y Err.'))
-        default_grp = VGroup(Item('name'),
-                             Item('title'),
+        default_grp = VGroup(
+                             HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
+                                    Item('title', springy=True, enabled_when='not auto_generate_title',
+                                         tooltip='User specified plot title')),
                              self._get_x_axis_group(),
 
                              VGroup(

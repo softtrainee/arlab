@@ -69,12 +69,9 @@ class SparseTicks(DefaultTickGenerator):
             return ticks
 
 class SparseLogTicks(DefaultTickGenerator):
-    step = Int(2)
     def get_ticks(self, *args, **kw):
         ticks = super(SparseLogTicks, self).get_ticks(*args, **kw)
-        #get only 10s
-        ticks = ticks[ticks % 10 == 0]
-        #get only 10,100,1000...
+        #get only 0.1,1,10,100,1000...
         ticks = ticks[log10(ticks) % 1 == 0]
         return ticks
 
@@ -410,7 +407,8 @@ class Ideogram(Plotter):
         d = lambda *args: self._update_graph(g, *args)
         s.index_mapper.on_trait_change(d, 'updated')
 
-        self._add_error_bars(s, [we], 'x', self.plotter_options.nsigma)
+        #we already scaled by nsigma 
+        self._add_error_bars(s, [we], 'x', 1)
 
         if g.minprob:
             minp = min([g.minprob, minp])
@@ -465,13 +463,14 @@ class Ideogram(Plotter):
 
     def _calc_error(self, we, mswd):
         ec = self.plotter_options.error_calc_method
+        n = self.plotter_options.nsigma
         if ec == 'SEM':
             a = 1
         elif ec == 'SEM, but if MSWD>1 use SEM * sqrt(MSWD)':
             a = 1
             if mswd > 1:
                 a = mswd ** 0.5
-        return we * a
+        return we * a * n
 
     def _add_aux_plot(self, g, ages, ys, xerrors, yerrors, group_id,
                       plotid=1,
