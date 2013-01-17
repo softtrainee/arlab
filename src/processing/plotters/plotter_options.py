@@ -279,6 +279,10 @@ class IdeogramOptions(PlotterOptions):
     centered_range = Float(0.5)
     nsigma = Enum(1, 2, 3)
 
+    include_j_error = Bool(True)
+    include_irradiation_error = Bool(True)
+    include_decay_error = Bool(False)
+
     def _get_x_axis_group(self):
         vg = super(IdeogramOptions, self)._get_x_axis_group()
 
@@ -294,7 +298,6 @@ class IdeogramOptions(PlotterOptions):
 
         return vg
 
-
     def _get_groups(self):
         g = Group(
                   Item('probability_curve_kind',
@@ -303,6 +306,9 @@ class IdeogramOptions(PlotterOptions):
                        label='Mean Calculation Method'),
                   Item('error_calc_method', label='Error Calculation Method'),
                   Item('nsigma', label='Age Error NSigma'),
+                  Item('include_j_error'),
+                  Item('include_irradiation_error'),
+                  Item('include_decay_error'),
                   label='Calculations'
                   )
         return g
@@ -314,6 +320,9 @@ class IdeogramOptions(PlotterOptions):
                         'mean_calculation_kind',
                         'error_calc_method',
                         'nsigma',
+                        'include_j_error',
+                        'include_irradiation_error',
+                        'include_decay_error',
                         'xlow', 'xhigh',
                         'use_centered_range', 'centered_range'
                         ]

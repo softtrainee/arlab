@@ -501,7 +501,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     def _get_analyses(self):
         ps = self.selector_manager
-        ans = [Analysis(isotope_record=ri) for ri in ps.selected_records if not isinstance(ri, Marker)]
+        ans = [Analysis(isotope_record=ri.clone_traits()) for ri in ps.selected_records if not isinstance(ri, Marker)]
         return ans
 
     def _set_window_xy(self, obj):

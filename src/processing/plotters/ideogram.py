@@ -216,10 +216,10 @@ class Ideogram(Plotter):
 
         return g
     def _make_sorted_pairs(self, attr, analyses, group_id):
-        age_attr_pairs = [(a.age, getattr(a, attr)) for a in analyses
-                           if a.group_id == group_id]
-
-#        n = zip(nages, rads)
+        ages = self._get_ages(analyses, group_id, unzip=False)
+        attrs = [getattr(a, attr) for a in analyses
+                        if a.group_id == group_id]
+        age_attr_pairs = zip(ages, attrs)
         age_attr_pairs = sorted(age_attr_pairs, key=lambda x:x[0])
         return zip(*age_attr_pairs)
 
@@ -307,6 +307,9 @@ class Ideogram(Plotter):
 #        maxs, mins = find_peaks(y, 1, x)
 
         return x, y
+
+    def _unmix_ages(self, ages, errors, xmi, xma):
+        pass
 
     def _cumulative_probability(self, ages, errors, xmi, xma):
         bins = linspace(xmi, xma, N)
@@ -565,10 +568,10 @@ class Ideogram(Plotter):
             sp = ideo.plots['plot{}'.format(i * 3 + 2)][0]
 
             try:
-                ages_errors = sorted([a.age for a in graph.analyses if a.group_id == i],
-                                     key=lambda x: x.nominal_value)
-                ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors) if not j in sel])
-
+                ages_errors = self._get_ages(graph.analyses, group_id=i, unzip=False)
+                ages_errors = sorted(ages_errors, key=lambda x: x.nominal_value)
+                ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors)
+                                     if not j in sel])
                 xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
                 wm, we, mswd, valid_mswd = self._calculate_stats(ages, errors, xs, ys)
 

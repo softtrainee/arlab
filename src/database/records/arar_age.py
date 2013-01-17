@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event
+    Event, Bool
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
@@ -31,6 +31,10 @@ def AgeProperty():
 #    depends_on = 'age_dirty'
 
 class ArArAge(HasTraits):
+    include_j_error = Bool(True)
+    include_irradiation_error = Bool(True)
+    include_decay_error = Bool(False)
+
     arar_result = Dict
     age_units = 'Ma'
     age_scalar = Property(depends_on='age_units')
@@ -66,7 +70,7 @@ class ArArAge(HasTraits):
     signals = AgeProperty()
     _signals = Dict
 
-    age = AgeProperty()
+    age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
     age_error = AgeProperty()
     age_dirty = Event
 
@@ -124,11 +128,26 @@ class ArArAge(HasTraits):
                 return ufloat((0, 0))
 
 
+    def calculate_age(self, **kw):
+        return self._calculate_age(**kw)
 
-    def _calculate_age(self):
+    def _calculate_age(self, include_j_error=None, include_decay_error=None, include_irradiation_error=None):
+        if include_decay_error is None:
+            include_decay_error = self.include_decay_error
+        else:
+            self.include_decay_error = include_decay_error
 
-#        self._load_signals()
-#        signals = self._signals
+        if include_j_error is None:
+            include_j_error = self.include_j_error
+        else:
+            self.include_j_error = include_j_error
+
+        if include_irradiation_error is None:
+            include_irradiation_error = self.include_irradiation_error
+        else:
+            self.include_irradiation_error = include_irradiation_error
+
+
         signals = self.signals
 
         nsignals = dict()
@@ -155,17 +174,27 @@ class ArArAge(HasTraits):
         bssignals = sigs('bs')
         blsignals = sigs('bl')
         bksignals = sigs('bg')
-        j = self.j
-        irrad = self.irradiation_info
-        ab = self.abundant_sensitivity
 
+        j = self.j
+        if not include_j_error:
+            j = j[0], 0
+
+        irrad = self.irradiation_info
+        if not include_irradiation_error:
+            nirrad = []
+            for ir in irrad[:-2]:
+                nirrad.append((ir[0], 0))
+            nirrad.extend(irrad[-2:])
+            irrad = nirrad
+
+        ab = self.abundant_sensitivity
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    j, irrad, abundant_sensitivity=ab, ic=self.ic_factor)
+                                    j, irrad, abundant_sensitivity=ab, ic=self.ic_factor,
+                                    include_decay_error=include_decay_error)
 
         if result:
             self.arar_result = result
             ai = result['age']
-
             ai = ai / self.age_scalar
             return ai
 #            age = ai.nominal_value
