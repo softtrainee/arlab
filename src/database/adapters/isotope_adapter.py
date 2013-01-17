@@ -27,7 +27,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable, proc_FigureTable, \
-    proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable
+    proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable, \
+    proc_NotesTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
@@ -129,6 +130,13 @@ class IsotopeAdapter(DatabaseAdapter):
             extraction.positions.append(dbpos)
 
         return dbpos
+
+    def add_note(self, analysis, note, **kw):
+        analysis = self.get_analysis(analysis)
+        obj = proc_NotesTable(note=note, user=self.save_username)
+        if analysis:
+            analysis.notes.append(obj)
+        return obj
 
     def add_blanks_history(self, analysis, **kw):
         return self._add_history('Blanks', analysis, **kw)
