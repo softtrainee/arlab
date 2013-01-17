@@ -293,6 +293,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             if isinstance(si, str):
                 di = self.db.get_analysis_uuid(si)
                 si = self._result_factory(di, False)
+            else:
+                si.selector = self
 
             if not si.initialize():
                 continue
@@ -386,7 +388,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _result_factory(self, di, load, **kw):
-
+        print self
         d = self.record_klass(_dbrecord=di,
                                  selector=self,
                                  **kw)

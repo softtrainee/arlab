@@ -207,6 +207,10 @@ class proc_IsotopeResultsTable(Base, BaseMixin):
     signal_err = Column(Float(32))
     isotope_id = foreignkey('meas_IsotopeTable')
     history_id = foreignkey('proc_FitHistoryTable')
+
+class proc_NotesTable(Base, HistoryMixin):
+    note = Column(BLOB)
+
 #class proc_WorkspaceHistoryTable(Base, HistoryMixin):
 #    workspace_id = foreignkey('WorkspaceTable')
 #
@@ -275,7 +279,7 @@ class meas_AnalysisTable(Base, BaseMixin):
                                       backref='analysis', uselist=False)
     arar_histories = relationship('proc_ArArHistoryTable', backref='analysis')
     figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
-
+    notes = relationship('proc_NotesTable', backref='analysis')
 
 class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')

@@ -44,6 +44,7 @@ import time
 from src.database.isotope_analysis.script_summary import MeasurementSummary, \
     ExtractionSummary, ExperimentSummary
 from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
+from src.database.isotope_analysis.notes_summary import NotesSummary
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -90,9 +91,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     experiment_summary = Property
     blanks_summary = Property
     backgrounds_summary = Property
+    notes_summary = Property
 
     categories = List(['summary', 'irradiation',
-                       'supplemental', 'measurement', 'extraction', 'experiment'])#'signal', 'sniff', 'baseline', 'peak center' ])
+                       'supplemental', 'measurement', 'extraction', 'experiment',
+                       'notes'
+                       ])#'signal', 'sniff', 'baseline', 'peak center' ])
     selected = Any('signal')
     display_item = Instance(HasTraits)
 
@@ -150,6 +154,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         self.load()
         return True
 
+    def add_note(self, text):
+        db = self.selector.db
+        note = db.add_note(self.dbrecord, text)
+        db.commit()
+        return note
+
     def save(self):
         fit_hist = None
         db = self.selector.db
@@ -193,7 +203,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 ##            self.selected = None
 #            self.selected = 'summary'
 #        do_later(d)
-        self.selected = 'summary'
+#        self.selected = 'summary'
+        self.selected = 'notes'
         super(IsotopeRecord, self).opened()
 
     def closed(self, isok):
@@ -213,7 +224,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         baselines = self._get_peak_time_data('baseline')
         if signals:
             if 'signal' not in self.categories:
-                self.categories.append('signal')
+                self.categories.insert(-1, 'signal')
+#                self.categories.append('signal')
             graph = self._load_stacked_graph(signals)
             if self.signal_graph is None:
                 self.signal_graph = EditableGraph(graph=graph)
@@ -222,7 +234,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         if baselines:
             if 'baseline' not in self.categories:
-                self.categories.append('baseline')
+                self.categories.insert(-1, 'baseline')
+#                self.categories.append('baseline')
             graph = self._load_stacked_graph(baselines)
             self.baseline_graph = EditableGraph(graph=graph)
             self.baseline_graph.fit_selector = FitSelector(analysis=self,
@@ -241,23 +254,27 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         peakcenter = self._get_peakcenter()
         if peakcenter:
-            self.categories.append('peak center')
+            self.categories.insert(-1, 'peak center')
+#            self.categories.append('peak center')
             graph = self._load_peak_center_graph(*peakcenter)
             self.peak_center_graph = graph
 
         blanks = self._get_blanks()
         if blanks:
             if 'blanks' not in self.categories:
-                self.categories.append('blanks')
+                self.categories.insert(-1, 'blanks')
+#                self.categories.append('blanks')
 
         backgrounds = self._get_backgrounds()
         if backgrounds:
             if 'backgrounds' not in self.categories:
-                self.categories.append('backgrounds')
+                self.categories.insert(-1, 'backgrounds')
+#                self.categories.append('backgrounds')
 
         det_intercals = self._get_detector_intercalibrations()
         if det_intercals:
-            self.categories.append('Det. Intercal.')
+            self.categories.insert(-1, 'Det. Intercal.')
+#            self.categories.append('Det. Intercal.')
 
     def get_baseline_corrected_signal_dict(self):
 #        self._load_signals()
@@ -281,6 +298,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # handlers
 #===============================================================================
+
     def _selected_changed(self):
         selected = self.selected
         if selected is not None:
@@ -307,6 +325,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 item = self.extraction_summary
             elif selected == 'experiment':
                 item = self.experiment_summary
+            elif selected == 'notes':
+                item = self.notes_summary
             else:
                 item = getattr(self, '{}_graph'.format(selected))
 
@@ -762,6 +782,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     @cached_property
     def _get_backgrounds_summary(self):
         bs = BackgroundsSummary(record=self)
+        return bs
+
+    @cached_property
+    def _get_notes_summary(self):
+        bs = NotesSummary(record=self)
         return bs
 
     @cached_property
