@@ -1241,7 +1241,7 @@ class AutomatedRun(Loggable):
 #                          self.extraction_script.name,
 #                          script_blob=self._assemble_extraction_blob(),
                           extract_device=self.extract_device,
-                          experiment_blob=self.experiment_manager.experiment_blob(),
+#                          experiment_blob=self.experiment_manager.experiment_blob(),
                           extract_value=self.extract_value,
 #                          position=self.position,
                           extract_duration=self.duration,
@@ -1249,6 +1249,12 @@ class AutomatedRun(Loggable):
                           weight=self.weight,
                           sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
+
+        exp = db.add_script(self.experiment_manager.experiment_set.name,
+                          self.experiment_manager.experiment_blob()
+                          )
+        exp.experiments.append(ext)
+
         script = db.add_script(self.extraction_script.name,
                                self._assemble_extraction_blob())
         script.extractions.append(ext)

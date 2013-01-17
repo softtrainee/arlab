@@ -333,7 +333,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                 ans = self._get_analyses()
                 if ans:
                     self._load_analyses(ans)
-                    if po and po.title and not po.auto_generate_title:
+                    if po and po.title != '' and not po.auto_generate_title:
                         title = po.title
                     else:
                         title = self._make_title(ans)
