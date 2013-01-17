@@ -296,8 +296,9 @@ host={}'.format(self.name, self.username, self.host))
 
             if joins:
                 for ji in joins:
-                    q = q.join(ji)
-            print filters
+                    if ji != table:
+                        q = q.join(ji)
+
             if filters:
                 for fi in filters:
                     q = q.filter(fi)

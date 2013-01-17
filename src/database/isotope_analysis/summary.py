@@ -74,28 +74,24 @@ class Summary(HasTraits):
 #        super(Summary, self).__init__(*args, **kw)
 #        self.refresh()
 
-    def refresh(self, gui=True):
-        self.build_summary(gui=gui)
+    def refresh(self):
+        self.build_summary()
 
-    def build_summary(self, gui=True, *args, **kw):
-        def do():
-            d = self.display
-            #d.freeze()
+    def build_summary(self, *args, **kw):
+        self.display.clear(gui=False)
+        self._build_summary()
+#        def do():
+#
+#            #d.freeze()
+#
+#            #double clear for safety 
+#            #d.clear(gui=False)
+#            self._build_summary(*args, **kw)
+#            #d.thaw()
 
-            #double clear for safety 
-            #d.clear(gui=False)
-            d.clear(gui=False)
-
-            self._build_summary(*args, **kw)
-            #d.thaw()
-        if gui:
-            do_later(do)
-        else:
-            do()
 
     def add_text(self, *args, **kw):
-        kw['gui'] = False
-        self.display.add_text(*args, **kw)
+        self.display.add_text(gui=False, *args, **kw)
 
     def _make_keyword(self, name, value, new_line=False, underline=0, width=20):
         value = str(value)

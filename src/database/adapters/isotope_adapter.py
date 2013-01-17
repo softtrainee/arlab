@@ -408,8 +408,8 @@ class IsotopeAdapter(DatabaseAdapter):
         sess = self.get_session()
         q = sess.query(gen_SampleTable)
         q = q.filter(and_(gen_SampleTable.name == name,
-                          gen_SampleTable.material == material,
-                          gen_SampleTable.project == project
+                          getattr(gen_SampleTable, 'material') == material,
+                          getattr(gen_SampleTable, 'project') == project,
                           ))
 
         try:
@@ -699,6 +699,12 @@ class IsotopeAdapter(DatabaseAdapter):
 
         else:
             return self._retrieve_items(proc_FigureTable)
+
+    def get_aliquots(self, **kw):
+        return self._retrieve_items(meas_AnalysisTable, **kw)
+
+    def get_steps(self, **kw):
+        return self._retrieve_items(meas_AnalysisTable, **kw)
 
     def get_materials(self, **kw):
         return self._retrieve_items(gen_MaterialTable, **kw)

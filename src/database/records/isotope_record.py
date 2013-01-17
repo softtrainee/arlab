@@ -309,7 +309,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
             self.display_item = item
             if hasattr(item, 'refresh'):
-                item.refresh(gui=False)
+                item.refresh()
 
     def _apply_history_change(self, new):
         self.changed = True

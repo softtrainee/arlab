@@ -198,7 +198,7 @@ class Ideogram(Plotter):
                 #get aux type and plot
                 try:
                     func = getattr(self, '_aux_plot_{}'.format(ap['name']))
-                    func(analyses, g, plotid + 1, group_id, aux_namespace,
+                    func(g, analyses, plotid + 1, group_id, aux_namespace,
                          value_scale=ap['scale'],
                          x_error=ap['x_error'],
                          y_error=ap['y_error']
@@ -218,61 +218,61 @@ class Ideogram(Plotter):
         self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0, font=font)
 
         return g
-
-    def _aux_plot_radiogenic_percent(self, g, analyses, plotid, group_id,
-                                     value_scale='linear',
-                                     x_error=False,
-                                     y_error=False,
-                                     ):
-#        nages = aux_namespace['nages']
-        ages, rads = zip([(a.age.nominal_value, a.rad40_percent) for a in analyses
-                          if a.group_id == group_id])
+    def _make_sorted_pairs(self, attr, analyses, group_id):
+        age_attr_pairs = [(a.age.nominal_value, a.rad40_percent) for a in analyses
+                           if a.group_id == group_id]
 
 #        n = zip(nages, rads)
-#        n = sorted(n, key=lambda x:x[0])
-#        aages, rads = zip(*n)
-        rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
+        age_attr_pairs = sorted(age_attr_pairs, key=lambda x:x[0])
+        return zip(*age_attr_pairs)
+
+    def _unzip_value_error(self, pairs):
+#        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
+        return zip(*[(ri.nominal_value, ri.std_dev()) for ri in pairs])
+
+    def _aux_plot_moles_k39(self, g, analyses, plotid, group_id, aux_namespace, **kw):
+        ages, mk39 = self._make_sorted_pairs('moles_k39', analyses, group_id)
+
+#        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
+        mk39, mk39_errs = self._unzip_value_error(mk39)
+        self._add_aux_plot(g, ages, mk39, None, mk39_errs, group_id, plotid, **kw)
+
+    def _aux_plot_radiogenic_percent(self, g, analyses, plotid, group_id, aux_namespace, **kw):
+#        nages = aux_namespace['nages']
+        ages, rads = self._make_sorted_pairs('rad40_percent', analyses, group_id)
+        rads, rad_errs = self._unzip_value_error(rads)
+#        rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
         self._add_aux_plot(g, ages,
                            rads,
                            None,
                            rad_errs,
                            group_id,
-                           plotid=plotid,
-                           value_scale=value_scale,
-                           x_error=x_error,
-                           y_error=y_error
+                           plotid=plotid, **kw
                            )
 
-    def _aux_plot_kca(self, analyses, g, plotid, group_id, aux_namespace,
-                      value_scale='linear',
-                      x_error=False,
-                      y_error=False
-                      ):
-        nages = aux_namespace['nages']
-        k39s = [a.k39 for a in analyses if a.group_id == group_id]
-        n = zip(nages, k39s)
-        n = sorted(n, key=lambda x:x[0])
-        aages, k39s = zip(*n)
+    def _aux_plot_kca(self, g, analyses, plotid, group_id, aux_namespace, **kw):
+#        nages = aux_namespace['nages']
+#        k39s = [a.k39 for a in analyses if a.group_id == group_id]
+#        n = zip(nages, k39s)
+#        n = sorted(n, key=lambda x:x[0])
+#        aages, k39s = zip(*n)
 
-        k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
-        self._add_aux_plot(g, aages,
-                           k39,
+        ages, kcas = self._make_sorted_pairs('kca', analyses, group_id)
+        kcas, kca_errs = self._unzip_value_error(kcas)
+#        kcas, kca_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in kcas])
+        self._add_aux_plot(g, ages,
+                           kcas,
                            None,
-                           k39_errs,
+                           kca_errs,
                            group_id,
                            plotid=plotid,
-                           value_scale=value_scale,
-                           x_error=x_error,
-                           y_error=y_error
+                           **kw
+#                           value_scale=value_scale,
+#                           x_error=x_error,
+#                           y_error=y_error
                            )
 
-
-
-    def _aux_plot_analysis_number(self, analyses, g, plotid, group_id, aux_namespace,
-                                  value_scale='linear',
-                                  x_error=None,
-                                  y_error=None
-                                  ):
+    def _aux_plot_analysis_number(self, g, analyses, plotid, group_id, aux_namespace, **kw):
         nages = aux_namespace['nages']
         nerrors = aux_namespace['nerrors']
         start = aux_namespace['start']
@@ -286,9 +286,10 @@ class Ideogram(Plotter):
                                value_format=lambda x: '{:d}'.format(int(x)),
                                additional_info=lambda x: x.age_string,
                                plotid=plotid,
-                               value_scale=value_scale,
-                               x_error=x_error,
-                               y_error=y_error
+                               **kw
+#                               value_scale=value_scale,
+#                               x_error=x_error,
+#                               y_error=y_error
                                )
         g.set_axis_traits(tick_visible=False,
           tick_label_formatter=lambda x:'',
@@ -624,7 +625,7 @@ class Ideogram(Plotter):
         if ymax is None:
             ymax = -Inf
         maxp = max([graph.maxprob, ymax])
-        graph.maxprob = maxp
+#        graph.maxprob = maxp
 
         graph.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
 #===============================================================================

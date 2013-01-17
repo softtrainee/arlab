@@ -105,7 +105,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     multi_graphable = Bool(False)
 
     queries = List(Query)
-
+    lookup = Dict
     style = Enum('normal', 'panel', 'simple', 'single')
 
     verbose = False
@@ -140,8 +140,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return self._query_factory(**kw)
 
     def add_query(self, parent_query, parameter, criterion):
-        q = self._query_factory(parent_parameter=parameter,
-                                parent_criterion=criterion)
+        q = self._query_factory(
+                                parent_parameters=parent_query.parent_parameters + [parameter],
+                                parent_criterions=parent_query.parent_criterions + [criterion])
         self.queries.append(q)
         parent_query.on_trait_change(q._update_parent_parameter, 'parameter')
         parent_query.on_trait_change(q._update_parent_criterion, 'criterion')

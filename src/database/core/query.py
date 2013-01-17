@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
-    Bool, cached_property
+    Bool, cached_property, Event
 from traitsui.api import View, Item, EnumEditor, HGroup, Spring, CheckListEditor
 from src.helpers.datetime_tools import get_date
 from datetime import datetime, timedelta
@@ -80,7 +80,8 @@ class Query(HasTraits):
                          ])
     criterion = String('')
 #    criterion = String('')
-    criteria = Property(depends_on='parameter')
+    criteria = Property(depends_on='parameter,criteria_dirty')
+    criteria_dirty = Event
 #    query_table = Any
 
     selector = Any
@@ -88,8 +89,8 @@ class Query(HasTraits):
     remove = Button('-')
     removable = Bool(True)
 
-    parent_parameter = String
-    parent_criterion = String
+    parent_parameters = List(String)
+    parent_criterions = List(String)
 #    date_str = 'rundate'
 
     def assemble_filter(self, query, attr):
@@ -253,15 +254,19 @@ class Query(HasTraits):
     def _remove_fired(self):
         self.selector.remove_query(self)
 
-    def _update_parent_parameter(self, new):
-        self.parent_parameter = new
-        print new
-    def _update_parent_criterion(self, new):
-        self.parent_criterion = new
-        print new
-#    def _criterion_changed(self):
-#        if self.criterion:
-#            self.selector.execute_query()
+    def _update_parent_parameter(self, obj, name, old, new):
+        if old in self.parent_parameters:
+            self.parent_parameters.remove(old)
+
+        self.parent_parameters.append(new)
+        self.criteria_dirty = True
+
+    def _update_parent_criterion(self, obj, name, old, new):
+        if old in self.parent_criterions:
+            self.parent_criterions.remove(old)
+
+        self.parent_criterions.append(new)
+        self.criteria_dirty = True
 
 #===============================================================================
 # property get/set
@@ -279,17 +284,36 @@ class Query(HasTraits):
                 display_name = 'name'
                 if param == 'labnumber':
                     display_name = 'labnumber'
+                elif param == 'aliquot':
+                    display_name = 'aliquot'
+                elif param == 'step':
+                    display_name = 'step'
 
                 cs = getattr(db, funcname)(joins=self._cumulate_joins(),
                                            filters=self._cumulate_filters())
-                cs = [str(getattr(ci, display_name)) for ci in cs]
+                cs = list(set([getattr(ci, display_name) for ci in cs]))
+                cs.sort()
+                cs = map(str, cs)
         return cs
 
     def _cumulate_joins(self):
-        print self.parent_parameter, self.parent_criterion
-        return
+        if self.parent_parameters:
+            tjs = []
+            for pi in self.parent_parameters:
+                js = self.selector.lookup[pi][0]
+                for ji in js:
+                    if ji not in tjs:
+                        tjs.append(ji)
+            return tjs
+
     def _cumulate_filters(self):
-        return
+        if self.parent_parameters:
+            tfs = []
+            for pi, ci in zip(self.parent_parameters, self.parent_criterions):
+                fi = self.selector.lookup[pi][1]
+                tfs.append(fi == ci)
+            return tfs
+
 #===============================================================================
 # views
 #===============================================================================

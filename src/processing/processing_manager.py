@@ -706,7 +706,6 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                     ggrps = []
                     cgrp = [sgrps[0]]
                     for sgi in sgrps[1:]:
-                    #    print si
                         if pa + 1 == sgi[0]:
                             cgrp.append(sgi)
                         else:
