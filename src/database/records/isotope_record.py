@@ -42,7 +42,7 @@ from src.database.isotope_analysis.supplemental_summary import SupplementalSumma
 from src.database.records.arar_age import ArArAge
 import time
 from src.database.isotope_analysis.script_summary import MeasurementSummary, \
-    ExtractionSummary
+    ExtractionSummary, ExperimentSummary
 from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 
 class EditableGraph(HasTraits):
@@ -87,11 +87,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     supplemental_summary = Property
     measurement_summary = Property
     extraction_summary = Property
+    experiment_summary = Property
     blanks_summary = Property
     backgrounds_summary = Property
 
     categories = List(['summary', 'irradiation',
-                       'supplemental', 'measurement', 'extraction'])#'signal', 'sniff', 'baseline', 'peak center' ])
+                       'supplemental', 'measurement', 'extraction', 'experiment'])#'signal', 'sniff', 'baseline', 'peak center' ])
     selected = Any('signal')
     display_item = Instance(HasTraits)
 
@@ -304,6 +305,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 item = self.measurement_summary
             elif selected == 'extraction':
                 item = self.extraction_summary
+            elif selected == 'experiment':
+                item = self.experiment_summary
             else:
                 item = getattr(self, '{}_graph'.format(selected))
 
@@ -744,6 +747,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     @cached_property
     def _get_extraction_summary(self):
         si = ExtractionSummary(record=self)
+        return si
+
+    @cached_property
+    def _get_experiment_summary(self):
+        si = ExperimentSummary(record=self)
         return si
 
     @cached_property

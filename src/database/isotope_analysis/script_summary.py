@@ -16,19 +16,22 @@
 
 #============= enthought library imports =======================
 from traits.api import Property, cached_property
-from traitsui.api import View, Item, CodeEditor
+from traitsui.api import View, Item, CodeEditor, TextEditor
 from src.database.isotope_analysis.summary import Summary
+from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class ScriptSummary(Summary):
     script_text = Property
+    editor_klass = CodeEditor
+    style = 'readonly'
     def traits_view(self):
         v = View(Item('script_text',
                       width=755,
-                      style='readonly',
-                      editor=CodeEditor(), show_label=False))
+                      style=self.style,
+                      editor=self.editor_klass(), show_label=False))
         return v
 
 class MeasurementSummary(ScriptSummary):
@@ -37,10 +40,12 @@ class MeasurementSummary(ScriptSummary):
         try:
             txt = self.record.dbrecord.measurement.script.blob
         except AttributeError:
-            txt = ' '
+            pass
 
         if txt is None:
-            txt = ' '
+            txt = 'No Measurement script saved with analysis'
+
+
         return txt
 
 class ExtractionSummary(ScriptSummary):
@@ -50,8 +55,24 @@ class ExtractionSummary(ScriptSummary):
         try:
             txt = self.record.dbrecord.extraction.script.blob
         except AttributeError:
-            txt = ' '
+            pass
         if txt is None:
-            txt = ' '
+            txt = 'No Extraction script saved with analysis'
         return txt
+
+
+class ExperimentSummary(ScriptSummary):
+    editor_klass = SelectableReadonlyTextEditor
+    style = 'custom'
+    @cached_property
+    def _get_script_text(self):
+        try:
+            txt = self.record.dbrecord.extraction.experiment.blob
+        except AttributeError:
+            pass
+
+        if txt is None:
+            txt = 'No Experiment Set saved with analysis'
+        return txt
+
 #============= EOF =============================================
