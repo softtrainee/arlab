@@ -164,16 +164,16 @@ class Ideogram(Plotter):
 #
 #        else:
 
-        ages, _ = self._get_ages(analyses)
+
         options = self.plotter_options
         ucr = options.use_centered_range
         if ucr:
-            xmin, xmax = self._get_limits(ages, centered_range=options.centered_range)
+            xmin, xmax = self._get_limits(analyses, centered_range=options.centered_range)
         else:
             xmin, xmax = options.xlow, options.xhigh
 
         if xmax == 0 and xmin == 0:
-            xmin, xmax = self._get_limits(ages)
+            xmin, xmax = self._get_limits(analyses)
 
         start = 1
         offset = 0
@@ -663,9 +663,14 @@ class Ideogram(Plotter):
     def _get_adapter(self):
         return IdeoResultsAdapter
 
-    def _get_limits(self, ages, centered_range=None, pad=0.02):
-        xmin = min(ages)
-        xmax = max(ages)
+    def _get_limits(self, analyses, centered_range=None, pad=0.02):
+
+        ages, errors = self._get_ages(analyses)
+        ma_ages = ages + errors
+        mi_ages = ages - errors
+
+        xmin = min(mi_ages)
+        xmax = max(ma_ages)
         dev = xmax - xmin
         if centered_range is None:
             xmin -= dev * pad
