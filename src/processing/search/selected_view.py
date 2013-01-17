@@ -222,22 +222,24 @@ class SelectedView(ColumnSorterMixin):
         self._graphed_by_labnumber = not self._graphed_by_labnumber
 
     def _set_group_fired(self):
-        self.group_cnt += 1
-        for r in self.selected:
-            r.group_id = self.group_cnt
+        if self.selected:
+            self.group_cnt += 1
+            for r in self.selected:
+                r.group_id = self.group_cnt
 #            r.color = 'red'
 
-        oruns = set(self.selected_records) ^ set(self.selected)
-        self.selected_records = list(oruns) + [Marker()] + self.selected
+            oruns = set(self.selected_records) ^ set(self.selected)
+            self.selected_records = list(oruns) + [Marker()] + self.selected
 
     def _set_graph_fired(self):
-        self.graph_cnt += 1
-        for r in self.selected:
-            r.graph_id = self.graph_cnt
-#            r.color = 'red'
+        if self.selected:
+            self.graph_cnt += 1
+            for r in self.selected:
+                r.graph_id = self.graph_cnt
+    #            r.color = 'red'
 
-        oruns = set(self.selected_records) ^ set(self.selected)
-        self.selected_records = list(oruns) + [Marker()] + self.selected
+            oruns = set(self.selected_records) ^ set(self.selected)
+            self.selected_records = list(oruns) + [Marker()] + self.selected
 
     def traits_view(self):
         grouping_grp = VGroup(

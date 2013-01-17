@@ -118,7 +118,7 @@ class HistorySummary(Summary):
     def _history_view_default(self):
         return HistoryView(summary=self)
 
-    def refresh(self, gui=True):
+    def refresh(self):
         hist = None
         if self.histories:
             selh = self.record._dbrecord.selected_histories
@@ -131,10 +131,7 @@ class HistorySummary(Summary):
                 self.selected_history = sh
 
             super(HistorySummary, self).build_summary(history=hist)
-            if gui:
-                do_later(up)
-            else:
-                up()
+            do_later(up)
 
     def _get_isotope_keys(self, history, name):
         isokeys = sorted([bi.isotope for bi in getattr(history, name)

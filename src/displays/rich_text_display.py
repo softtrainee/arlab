@@ -51,8 +51,9 @@ class DisplayHandler(Handler):
 
     def init(self, info):
         info.object.ui = info.ui
+        if not info.object.opened and not info.object.was_closed:
+            info.object.load_text_buffer()
         info.object.opened = True
-        info.object.load_text_buffer()
 
 class RichTextDisplay(HasTraits):
     '''
@@ -153,8 +154,15 @@ class RichTextDisplay(HasTraits):
         self.add_text(self._text_buffer)
         self._text_buffer = []
 
-    @gui_decorator
+#    @gui_decorator
     def clear(self, gui=True):
+        self._text_buffer = []
+        if gui:
+            do_later(self._clear)
+        else:
+            self._clear()
+
+    def _clear(self):
         d = self._display
         if d:
             d.Freeze()
@@ -291,8 +299,7 @@ class RichTextDisplay(HasTraits):
     #                return True
 #        return False
 
-    @gui_decorator
-    def add_text(self, msg, gui=True, **kw):
+    def _add_text(self, msg, **kw):
         '''
         '''
 
@@ -309,6 +316,12 @@ class RichTextDisplay(HasTraits):
                 self._add_(msg, **kw)
         else:
             self._text_buffer.append((msg, kw))
+
+    def add_text(self, msg, gui=True, **kw):
+        if gui:
+            do_later(self._add_text, msg, **kw)
+        else:
+            self._add_text(msg, **kw)
 
 #        def _add(msg, **kw):
 #            disp = self._display
