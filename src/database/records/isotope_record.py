@@ -68,7 +68,6 @@ class EditableGraph(HasTraits):
         return v
 
 
-
 class IsotopeRecord(DatabaseRecord, ArArAge):
     title_str = 'Analysis'
     window_height = 800
@@ -135,8 +134,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     ic_factor = Property
     irradiation = Property
 #    production_ratios = Property
-    sensitivity = Property
-    sensitivity_multiplier = Property
+#    sensitivity = Property
+#    sensitivity_multiplier = Property
 
     status = Property
     uuid = Property
@@ -916,24 +915,26 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             if dbr.extraction:
                 return dbr.extraction.sensitivity
 
-        return self._get_dbrecord_value('sensitivity', func=func)
+        return self._get_dbrecord_value('sensitivity', func=func, default=1)
 
     @cached_property
     def _get_sensitivity_multiplier(self):
         def func(dbr):
             if dbr.extraction:
                 return dbr.extraction.sensitivity_multiplier
-        s = self._get_dbrecord_value('sensitivity_multiplier', func=func)
-        if s is None:
-            s = 1.0
-        return s
+        return self._get_dbrecord_value('sensitivity_multiplier', func=func, default=1)
 
-    def _get_dbrecord_value(self, attr, func=None):
+    def _get_dbrecord_value(self, attr, func=None, default=None):
+        v = None
         if self._dbrecord:
             if func is not None:
-                return func(self._dbrecord)
+                v = func(self._dbrecord)
             else:
-                return getattr(self._dbrecord, attr)
+                v = getattr(self._dbrecord, attr)
+
+        if v is None:
+            v = default
+        return v
 
 #===============================================================================
 # extraction

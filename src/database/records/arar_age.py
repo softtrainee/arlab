@@ -51,6 +51,8 @@ class ArArAge(HasTraits):
 
     j = AgeProperty()
     abundant_sensitivity = Property
+    sensitivity = Property
+    sensitivity_multiplier = Property
 
     labnumber_record = Property
     _labnumber_record = None
@@ -65,6 +67,7 @@ class ArArAge(HasTraits):
     _signals = Dict
 
     age = AgeProperty()
+    age_error = AgeProperty()
     age_dirty = Event
 
     Ar40 = AgeProperty()
@@ -78,7 +81,8 @@ class ArArAge(HasTraits):
     Ar37_error = AgeProperty()
     Ar36_error = AgeProperty()
 
-    moles_Ar40 = Property
+    moles_Ar40 = AgeProperty()
+    moles_K39 = AgeProperty()
 
     ic_factor = Property
 
@@ -217,6 +221,10 @@ class ArArAge(HasTraits):
     def _get_age(self):
         r = self._calculate_age()
         return r
+
+    @cached_property
+    def _get_age_error(self):
+        return self.age.std_dev()
 
     @cached_property
     def _get_timestamp(self):
@@ -378,8 +386,13 @@ class ArArAge(HasTraits):
     def _get_Ar36_error(self):
         return self.arar_result['s36'].std_dev()
 
+    @cached_property
     def _get_moles_Ar40(self):
         return 0.001
+
+    @cached_property
+    def _get_moles_K39(self):
+        return self.k39 * self.sensitivity * self.sensitivity_multiplier
 
     def _get_ic_factor(self):
         return 1, 0
@@ -396,6 +409,11 @@ class ArArAge(HasTraits):
     def _get_Ar36_39(self):
         return self.Ar36 / self.Ar39
 
+    def _get_sensitivity(self):
+        return 1.0
+
+    def _get_sensitivity_multiplier(self):
+        return 1.0
 
 
 #============= EOF =============================================

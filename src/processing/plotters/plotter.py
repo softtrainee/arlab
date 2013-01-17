@@ -240,6 +240,10 @@ class Plotter(Viewable):
                     d = dict(name='kca',
                          ytitle='K/Ca',
                          )
+                elif name == 'moles_K39':
+                    d = dict(name='moles_K39',
+                             ytitle='K39 moles'
+                             )
                 else:
                     continue
 

@@ -38,7 +38,8 @@ class PlotterOption(HasTraits):
         return {NULL_STR:NULL_STR,
                 'analysis_number':'Analysis Number',
                 'radiogenic':'Radiogenic 40Ar',
-                'kca':'K/Ca'
+                'kca':'K/Ca',
+                'moles_K39':'K39 Moles'
                 }
     def traits_view(self):
         v = View(

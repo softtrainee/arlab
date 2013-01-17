@@ -216,7 +216,7 @@ class Ideogram(Plotter):
 
         return g
     def _make_sorted_pairs(self, attr, analyses, group_id):
-        age_attr_pairs = [(a.age.nominal_value, a.rad40_percent) for a in analyses
+        age_attr_pairs = [(a.age, getattr(a, attr)) for a in analyses
                            if a.group_id == group_id]
 
 #        n = zip(nages, rads)
@@ -227,22 +227,21 @@ class Ideogram(Plotter):
 #        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
         return zip(*[(ri.nominal_value, ri.std_dev()) for ri in pairs])
 
-    def _aux_plot_moles_k39(self, g, analyses, plotid, group_id, aux_namespace, **kw):
-        ages, mk39 = self._make_sorted_pairs('moles_k39', analyses, group_id)
+    def _aux_plot_moles_K39(self, g, analyses, plotid, group_id, aux_namespace, **kw):
+        ages, mk39 = self._make_sorted_pairs('moles_K39', analyses, group_id)
 
 #        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
+        ages, age_errs = self._unzip_value_error(ages)
         mk39, mk39_errs = self._unzip_value_error(mk39)
-        self._add_aux_plot(g, ages, mk39, None, mk39_errs, group_id, plotid, **kw)
+        self._add_aux_plot(g, ages, mk39, age_errs, mk39_errs, group_id, plotid, **kw)
 
     def _aux_plot_radiogenic_percent(self, g, analyses, plotid, group_id, aux_namespace, **kw):
 #        nages = aux_namespace['nages']
         ages, rads = self._make_sorted_pairs('rad40_percent', analyses, group_id)
+        ages, age_errs = self._unzip_value_error(ages)
         rads, rad_errs = self._unzip_value_error(rads)
 #        rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
-        self._add_aux_plot(g, ages,
-                           rads,
-                           None,
-                           rad_errs,
+        self._add_aux_plot(g, ages, rads, age_errs, rad_errs,
                            group_id,
                            plotid=plotid, **kw
                            )
@@ -255,12 +254,10 @@ class Ideogram(Plotter):
 #        aages, k39s = zip(*n)
 
         ages, kcas = self._make_sorted_pairs('kca', analyses, group_id)
+        ages, age_errs = self._unzip_value_error(ages)
         kcas, kca_errs = self._unzip_value_error(kcas)
 #        kcas, kca_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in kcas])
-        self._add_aux_plot(g, ages,
-                           kcas,
-                           None,
-                           kca_errs,
+        self._add_aux_plot(g, ages, kcas, age_errs, kca_errs,
                            group_id,
                            plotid=plotid,
                            **kw
