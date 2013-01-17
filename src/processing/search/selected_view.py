@@ -246,39 +246,40 @@ class SelectedView(ColumnSorterMixin):
                               HGroup(Item('set_group',
                                           tooltip='Highlight a set of runs then Set Group',
                                           show_label=False),
-                                     Item('group_by_labnumber', show_label=False)),
-                              HGroup(Item('set_graph', show_label=False),
-                                     Item('graph_by_labnumber', show_label=False))
+                                     Item('group_by_labnumber', show_label=False,
+                                          tooltip='Group analyses based on Labnumber')
+                                     ),
+                              HGroup(Item('set_graph', show_label=False,
+                                          tooltip='Highlight a set of runs to group in to multiple graphs'),
+                                     Item('graph_by_labnumber', show_label=False,
+                                          tooltip='Group analyses into graphes bases on Labnumber')
+                                    )
                               )
 
         selected_grp = VGroup(
                               Item('previous_selection', show_label=False,
-                                   editor=EnumEditor(name='previous_selections')
-                                   ),
-
+                                   editor=EnumEditor(name='previous_selections'),
+                                   tooltip='List of previous selected analyses'),
                               Item('selected_records',
-                                          show_label=False,
-                                          style='custom',
-                                          editor=TabularEditor(
-                                                               multi_select=True,
-                                                               auto_update=True,
-                                                        editable=False,
-#                                                        drag_move=True,
-                                                        dclicked='object.dclicked',
-                                                        selected='object.selected',
-                                                        selected_row='object.selected_row',
-                                                        column_clicked='object.column_clicked',
-                                                        adapter=SelectedrecordsAdapter(),
-                                                        ),
-                                          ),
-
+                                   show_label=False,
+                                   style='custom',
+                                   editor=TabularEditor(
+                                                       multi_select=True,
+                                                       auto_update=True,
+                                                       editable=False,
+                                                       dclicked='object.dclicked',
+                                                       selected='object.selected',
+                                                       selected_row='object.selected_row',
+                                                       column_clicked='object.column_clicked',
+                                                       adapter=SelectedrecordsAdapter())
+                                   )
                               )
 
         v = View(
                  VGroup(
                         selected_grp,
                         grouping_grp
-                        ),
+                        )
                  )
         return v
 #============= EOF =============================================
