@@ -319,17 +319,35 @@ class Plotter(Viewable):
 #        nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
 #                                   for a in analyses if a.group_id == group_id])
 #        return array(nages), array(nerrors)
-    def _get_ages(self, analyses, group_id=None):
+    def _get_ages(self, analyses, group_id=None, unzip=True):
         if group_id is not None:
             analyses = [ai for ai in analyses if ai.group_id == group_id]
 
-        ages, errors = zip(*[(a.age.nominal_value,
-                              a.age.std_dev())
-                               for a in analyses
-                                    if a.age is not None])
-        ages = array(ages)
-        errors = array(errors)
-        return ages, errors
+        ije = self.plotter_options.include_j_error
+        iie = self.plotter_options.include_irradiation_error
+        ide = self.plotter_options.include_decay_error
+#        for ai in analyses:
+#            ai.age_dirty = True
+#            ai.include_decay_error = True
+#            print 'setting', id(ai), ai.include_decay_error
+#            ai.trait_set(include_j_error=ije,
+#                         include_irradiation_error=iie,
+#                         include_decay_error=ide,
+#                         )
+
+        ages = [ai.calculate_age(include_j_error=ije,
+                         include_irradiation_error=iie,
+                         include_decay_error=ide) for ai in analyses]
+
+        if unzip:
+
+            ages, errors = zip(*[(a.nominal_value, a.std_dev())
+                                 for a in ages])
+            ages = array(ages)
+            errors = array(errors)
+            return ages, errors
+        else:
+            return ages
 #    def _get_adapter(self):
 #        return ResultsTabularAdapter
 #

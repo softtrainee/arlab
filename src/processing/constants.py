@@ -29,7 +29,8 @@ def get(name, v, e):
     ee = scope.get('{}.{}_error'.format(base_path, name))
     v = vv if vv is not None else v
     e = ee if ee is not None else e
-    return ufloat((v, e))
+#    print name, v, e
+    return ufloat((float(v), float(e)))
 
 class constants(object):
     def __init__(self):
@@ -38,16 +39,17 @@ class constants(object):
         #lambda_beta = ufloat((4.962e-10,
         #                                 0))
 
-        #lambda_epsilon = ufloat((5.755e-11,
-        #                                    1.6e-13))
-        #lambda_beta = ufloat((4.9737e-10,
-        #                                 9.3e-13))
+#        lambda_e = ufloat((5.755e-11,
+#                                            1.6e-13))
+#        lambda_b = ufloat((4.9737e-10,
+#                                         9.3e-13))
 
-        lambda_e = get('lambda_e', 5.81e-11, 0)
-        lambda_b = get('lambda_b', 4.962e-10, 0)
+        lambda_e = get('lambda_e', 5.81e-11, 1.6e-13)
+#        lambda_e = get('lambda_e', 5.81e-11, 0)
+        lambda_b = get('lambda_b', 4.962e-10, 9.3e-13)
+#        lambda_b = get('lambda_b', 4.962e-10, 0)
 
         self.lambda_k = lambda_e + lambda_b
-
         #lambda_k = get('lambda_K', 5.81e-11 + 4.962e-10, 0)
 
         self.lambda_Ar37 = get('lambda_Ar37', 0.01975, 0) #per day

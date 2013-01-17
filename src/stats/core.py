@@ -58,13 +58,20 @@ def calculate_weighted_mean(x, errs, error=0):
         werr = 1
     return wmean, werr
 
-def validate_mswd(mswd, n):
+def validate_mswd(mswd, n, k=1):
     '''
          is mswd acceptable based on Mahon 1996
+         
+         does the mswd fall in the %95 confidence interval of the reduced chi2
+         reduced chi2 =chi2/dof
+         
+         http://en.wikipedia.org/wiki/Goodness_of_fit
+         http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html#scipy.stats.chi2
     '''
     if n < 2:
         return
-    dof = n - 1
+
+    dof = n - k
     #calculate the reduced chi2 95% interval for given dof
     #use scale parameter to calculate the chi2_reduced from chi2
 

@@ -72,7 +72,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        ic=(1.0, 0),
                        abundant_sensitivity=0,
                        a37decayfactor=None,
-                       a39decayfactor=None
+                       a39decayfactor=None,
+                       include_decay_error=False
                        ):
     '''
         signals: measured uncorrected isotope intensities, tuple of value,error pairs
@@ -143,37 +144,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     ic = ufloat(ic)
     j = ufloat(j)
 #    temp_ic = ufloat(ic)
-#===============================================================================
-# debugging
-#===============================================================================
-    debug = False
-    if debug:
-        tmpj = ufloat(j)
-        j = ufloat((tmpj.nominal_value, tmpj.std_dev() * 100))
-
-        s40 = ufloat((300, 1))
-        s39 = ufloat((90, 1))
-        s38 = ufloat((1, 1))
-        s37 = ufloat((0.2, 0.01))
-        s36 = ufloat((0.005, 0.001))
-
-        s40bl = ufloat((1, 0.1))
-        s39bl = ufloat((1, 0.1))
-        s38bl = ufloat((0.0001, 0.00005))
-        s37bl = ufloat((0.0001, 0.00005))
-        s36bl = ufloat((0.0001, 0.00005))
-
-        s40bs = ufloat((0, 0))
-        s39bs = ufloat((0, 0))
-        s38bs = ufloat((0, 0))
-        s37bs = ufloat((0, 0))
-        s36bs = ufloat((0, 0))
-
-        s40bk = ufloat((0, 0))
-        s39bk = ufloat((0, 0))
-        s38bk = ufloat((0, 0))
-        s37bk = ufloat((0, 0))
-        s36bk = ufloat((0, 0))
 
 #===============================================================================
 # 
@@ -263,17 +233,19 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     age_wo_jerr = ufloat((0, 0))
     try:
         R = ar40rad / k39
-
         #dont include error in decay constant
-        age = age_equation(j, R)
+        age = age_equation(j, R, include_decay_error=include_decay_error)
+#        age = age_equation(j, R)
         age_with_jerr = deepcopy(age)
 
         #dont include error in decay constant
         j.set_std_dev(0)
-        age = age_equation(j, R)
+        age = age_equation(j, R, include_decay_error=include_decay_error)
+#        age = age_equation(j, R)
         age_wo_jerr = deepcopy(age)
 
-    except (ZeroDivisionError, ValueError):
+    except (ZeroDivisionError, ValueError), e:
+        print e
         age = ufloat((0, 0))
         age_wo_jerr = ufloat((0, 0))
 
@@ -303,14 +275,19 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                   )
     return result
 
-def age_equation(j, R, scalar=1):
+def age_equation(j, R, scalar=1, include_decay_error=False):
     if isinstance(j, (tuple, str)):
         j = ufloat(j)
     if isinstance(R, (tuple, str)):
         R = ufloat(R)
     from src.processing.constants import constants
     con = constants()
-    return (1 / con.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
+#    print con.lambda_k, 'dec'
+    if include_decay_error:
+        age = (1 / con.lambda_k) * umath.log(1 + j * R) / float(scalar)
+    else:
+        age = (1 / con.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
+    return age
 #def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                       j, irradinfo,
 #                       ic=(1.0, 0),
