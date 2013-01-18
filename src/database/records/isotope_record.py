@@ -143,6 +143,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     peak_center_dac = Property
     _no_load = False
 
+    item_width = 760
 #    rad40 = None
 #    arar_result = None
 #    filter_outliers = True
@@ -202,8 +203,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 ##            self.selected = None
 #            self.selected = 'summary'
 #        do_later(d)
-#        self.selected = 'summary'
-        self.selected = 'notes'
+        self.selected = 'summary'
+#        self.selected = 'notes'
         super(IsotopeRecord, self).opened()
 
     def closed(self, isok):
@@ -492,7 +493,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         else:
             klass = StackedGraph
 
-        graph = self._graph_factory(klass, width=700)
+        graph = self._graph_factory(klass, width=self.item_width)
 #        graph.suppress_regression = True
         gkw = dict(padding=[50, 50, 5, 50],
                    fill_padding=True

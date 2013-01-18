@@ -20,7 +20,8 @@ from traits.api import HasTraits, Property, Instance, on_trait_change, Any, \
 from traitsui.api import View, Item, HGroup, Group, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
-import numpy as np
+#import numpy as np
+from numpy import Inf, array, random
 import re
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
@@ -112,7 +113,7 @@ class HistorySummary(Summary):
     history_name = ''
     def _graph_default(self):
         g = Graph(container_dict=dict(padding=5, stack_order='top_to_bottom'))
-        g.width = 510
+        g.width = self.record.item_width * 0.73
         return g
 
     def _history_view_default(self):
@@ -169,8 +170,8 @@ class HistorySummary(Summary):
         g.clear()
 #        self.graph = g
         isokeys = self._get_isotope_keys(hi, hn)
-        xma = -np.Inf
-        xmi = np.Inf
+        xma = -Inf
+        xmi = Inf
 
         for i, iso in enumerate(isokeys):
             bi = next((bii for bii in getattr(hi, hn)
@@ -184,10 +185,10 @@ class HistorySummary(Summary):
 #                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
 #                                         str(bs.analysis.runtime)) for bs in bi.sets]
                 xs = [time.mktime(bs.analysis.analysis_timestamp.timetuple()) for bs in bi.sets ]
-                xs = np.array(xs)
+                xs = array(xs)
                 if xs.shape[0]:
-                    xs = xs - np.min(xs)
-                    ys = np.random.random(xs.shape[0])
+                    xs = xs - min(xs)
+                    ys = random.random(xs.shape[0])
                     g.new_series(xs, ys, type='scatter')
                     xma = max(xma, max(xs))
                     xmi = min(xmi, min(xs))

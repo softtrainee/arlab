@@ -247,7 +247,7 @@ class DatabaseRecord(Saveable):
                     y=self.window_y,
                     title=self.title,
                     handler=self.handler_klass,
-                    buttons=[Action(name='Save', action='save')]
+#                    buttons=[Action(name='Save', action='save')]
                     )
 
         if self.window_width:

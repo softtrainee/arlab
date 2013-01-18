@@ -67,6 +67,7 @@ SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 class PlotterOptions(Viewable):
     title = Str
     auto_generate_title = Bool
+    data_type = Enum('database', 'data_file', 'manual_entry')
     aux_plots = List
 
     xtick_font = Property
@@ -84,7 +85,7 @@ class PlotterOptions(Viewable):
     ytitle_font = Property
     ytitle_font_size = Enum(*SIZES)
     ytitle_font_name = Enum(*FONTS)
-
+    data_type_editable = Bool(True)
 
     def __init__(self, root, clean=False, *args, **kw):
         super(PlotterOptions, self).__init__(*args, **kw)
@@ -156,6 +157,7 @@ class PlotterOptions(Viewable):
 
     def _get_dump_attrs(self):
         attrs = ['title', 'auto_generate_title',
+                 'data_type',
                   'aux_plots',
                      'xtick_font_size',
                      'xtick_font_name',
@@ -206,7 +208,7 @@ class PlotterOptions(Viewable):
         return 10
 
     def _aux_plots_default(self):
-        return [PlotterOption() for i in range(5)]
+        return [PlotterOption() for _ in range(5)]
 
 #===============================================================================
 # views
@@ -233,6 +235,7 @@ class PlotterOptions(Viewable):
                              HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
                                     Item('title', springy=True, enabled_when='not auto_generate_title',
                                          tooltip='User specified plot title')),
+                             Item('data_type', defined_when='data_type_editable'),
                              self._get_x_axis_group(),
 
                              VGroup(
@@ -269,7 +272,18 @@ class PlotterOptions(Viewable):
     def __repr__(self):
         return self.name
 
-class IdeogramOptions(PlotterOptions):
+class AgeOptions(PlotterOptions):
+    include_j_error = Bool(True)
+    include_irradiation_error = Bool(True)
+    include_decay_error = Bool(False)
+    def _get_dump_attrs(self):
+        attrs = super(AgeOptions, self)._get_dump_attrs()
+        attrs += ['include_j_error',
+                        'include_irradiation_error',
+                        'include_decay_error']
+        return attrs
+
+class IdeogramOptions(AgeOptions):
     probability_curve_kind = Enum('cumulative', 'kernel')
     mean_calculation_kind = Enum('weighted mean', 'kernel')
     error_calc_method = Enum('SEM, but if MSWD>1 use SEM * sqrt(MSWD)', 'SEM')
@@ -279,9 +293,6 @@ class IdeogramOptions(PlotterOptions):
     centered_range = Float(0.5)
     nsigma = Enum(1, 2, 3)
 
-    include_j_error = Bool(True)
-    include_irradiation_error = Bool(True)
-    include_decay_error = Bool(False)
 
     def _get_x_axis_group(self):
         vg = super(IdeogramOptions, self)._get_x_axis_group()
@@ -320,14 +331,11 @@ class IdeogramOptions(PlotterOptions):
                         'mean_calculation_kind',
                         'error_calc_method',
                         'nsigma',
-                        'include_j_error',
-                        'include_irradiation_error',
-                        'include_decay_error',
                         'xlow', 'xhigh',
                         'use_centered_range', 'centered_range'
                         ]
 
-class SpectrumOptions(PlotterOptions):
+class SpectrumOptions(AgeOptions):
     pass
 if __name__ == '__main__':
     ip = IdeogramOptions()

@@ -297,7 +297,7 @@ class meas_ExtractionTable(Base, BaseMixin):
     sensitivity_id = foreignkey('gen_SensitivityTable')
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
     script_id = foreignkey('meas_ScriptTable')
-    experiment_id = foreignkey('meas_ScriptTable')
+    experiment_blob_id = foreignkey('meas_ScriptTable')
 
     analyses = relationship('meas_AnalysisTable', backref='extraction')
     positions = relationship('meas_PositionTable', backref='extraction')
@@ -359,7 +359,7 @@ class meas_ScriptTable(Base, NameMixin):
     blob = Column(BLOB)
     measurements = relationship('meas_MeasurementTable', backref='script')
     extractions = relationship('meas_ExtractionTable',
-                               primaryjoin='meas_ExtractionTable.experiment_id==meas_ScriptTable.id',
+                               primaryjoin='meas_ExtractionTable.experiment_blob_id==meas_ScriptTable.id',
                                backref='script')
     experiments = relationship('meas_ExtractionTable',
                                primaryjoin='meas_ExtractionTable.script_id==meas_ScriptTable.id',

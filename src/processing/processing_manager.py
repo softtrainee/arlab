@@ -24,7 +24,7 @@ from traits.api import Instance, List
 #============= local library imports  ==========================
 from src.processing.database_manager import DatabaseManager
 #from src.processing.processing_selector import ProcessingSelector
-from src.processing.analysis import Analysis
+from src.processing.analysis import Analysis, NonDBAnalysis
 #from src.processing.script import ProcessScript
 #from src.constants import NULL_STR
 #from src.progress_dialog import MProgressDialog
@@ -49,6 +49,10 @@ from src.processing.series_manager import SeriesManager
 from src.processing.project_view import ProjectView
 from src.graph.graph import Graph
 from src.graph.time_series_graph import TimeSeriesGraph
+from src.paths import paths
+import csv
+from src.helpers.filetools import str_to_bool
+from src.processing.manual_entry_manager import ManualEntryManager
 
 
 class ProcessingManager(DatabaseManager, BaseAnalysisManager):
@@ -313,33 +317,44 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     def _new_figure(self, name):
         '''
-            ask for data and plot options
+            ask for data and plot option
+            ask for plot options first
         '''
-
-        if self._gather_data():
-
-            if name != 'series':
+        if name != 'series':
 #                pom = self.plotter_options_manager
-                pom = getattr(self, '{}_options_manager'.format(name))
-                po = pom.plotter_options
-                info = pom.edit_traits(kind='livemodal')
-                result = info.result
+            pom = getattr(self, '{}_options_manager'.format(name))
+            po = pom.plotter_options
+            info = pom.edit_traits(kind='livemodal')
+            result = info.result
+            data_type = po.data_type
+            if data_type is None:
+                data_type = 'database'
+        else:
+            result = True
+            po = None
+            data_type = 'database'
 
-            else:
-                result = True
-                po = None
+        if result:
+            if data_type in ['database', 'data_file']:
+                use_db_or_path = self._gather_data(data_type)
+                if use_db_or_path is not None:
+                    ans = self._get_analyses(use_db_or_path)
+                    if ans:
+                        self._load_analyses(ans)
+                        if po and po.title != '' and not po.auto_generate_title:
+                            title = po.title
+                        else:
+                            title = self._make_title(ans)
 
-            if result:
-                ans = self._get_analyses()
-                if ans:
-                    self._load_analyses(ans)
-                    if po and po.title != '' and not po.auto_generate_title:
-                        title = po.title
-                    else:
-                        title = self._make_title(ans)
-
-                    func = getattr(self, '_display_{}'.format(name))
-                    func(ans, po, title)
+                        func = getattr(self, '_display_{}'.format(name))
+                        func(ans, po, title, data_type=data_type)
+            elif name == 'ideogram':
+                #open manual entry plotter
+                mep = ManualEntryManager(processing_manager=self,
+                                         plotter_options_manager=pom
+                                         )
+                mep.update = True
+                self.open_view(mep)
 
 
     def _open_figure(self, fig, obj=None, table=None):
@@ -350,17 +365,35 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #===============================================================================
 # 
 #===============================================================================
-    def _gather_data(self):
+    def _gather_data(self, data_type):
         '''
             open a data selector view
             
             by default use a db connection
+            returns database for database entry
+                    path for data_file
+                    
         '''
-        d = self.selector_manager
-        if self.db.connect():
-            info = d.edit_traits(kind='livemodal')
-            if info.result:
-                return True
+        return True
+        if data_type == 'database':
+            d = self.selector_manager
+            if self.db.connect():
+                info = d.edit_traits(kind='livemodal')
+                if info.result:
+                    return True
+        elif data_type == 'data_file':
+            if self.confirmation_dialog('''Select a file with the following format. (Include first Line)
+            
+identifer, age, error
+1000,10.0, 0.1
+1001,10.0, 0.1
+g
+2001,10.0, 0.1
+2002,10.0, 0.1
+Use 'g' to separate groups''', title='Select a DataFile'):
+                p = self.open_file_dialog(default_directory=paths.data_dir)
+                return p
+
 
     def _display_tabular_data(self, ans, title):
         tm = TabularAnalysisManager(analyses=ans,
@@ -379,7 +412,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             self._open_figure(g, isochron)
             return isochron
 
-    def _display_spectrum(self, ans, po, title):
+    def _display_spectrum(self, ans, po, title, data_type='database'):
         rr = self._spectrum(ans, po)
         if rr is not None:
             g, spec = rr
@@ -388,7 +421,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             self._open_figure(g, spec)
             return spec
 
-    def _display_ideogram(self, ans, po, title, highlight_omitted=True):
+    def _display_ideogram(self, ans, po, title, highlight_omitted=True, data_type='database'):
         rr = self._ideogram(ans,
                             po,
                             title=title,
@@ -399,8 +432,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                             )
         if rr is not None:
             g, ideo = rr
-
-            table = self._display_tabular_data(ans, title)
+            table = None
+            if data_type == 'database':
+                table = self._display_tabular_data(ans, title)
             self._open_figure(g, ideo, table)
             return ideo
 
@@ -499,10 +533,51 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #            self._set_window_xy(g)
 #            self.open_view(g)
 
-    def _get_analyses(self):
-        ps = self.selector_manager
-        ans = [Analysis(isotope_record=ri.clone_traits()) for ri in ps.selected_records if not isinstance(ri, Marker)]
+    def _get_analyses(self, use_db_or_path):
+        if isinstance(use_db_or_path, bool):
+            ps = self.selector_manager
+            ans = [Analysis(isotope_record=ri.clone_traits()) for ri in ps.selected_records if not isinstance(ri, Marker)]
+        else:
+            ans = self._parse_data_file(use_db_or_path)
+            if isinstance(ans, str):
+                self.warning_dialog('Invalid file. {}'.format(ans))
+                return
+
         return ans
+
+    def _parse_data_file(self, path):
+
+        with open(path, 'U') as fp:
+            reader = csv.reader(fp)
+            header = reader.next()
+            header = map(str.lower, header)
+            header = map(str.strip, header)
+            try:
+                age_index = header.index('age')
+                error_index = header.index('error')
+                identifier_index = header.index('identifier')
+            except ValueError, e:
+                return str(e).replace('is not in list', 'is not in header line {}'.format(','.join(header)))
+
+            ans = []
+            for line in reader:
+#                status = str_to_bool(line[status_index])
+#                if status:
+                record_id = line[identifier_index]
+                try:
+                    age = float(line[age_index])
+                except ValueError:
+                    return 'Invalid age value {}'.format(line[age_index])
+                try:
+                    error = float(line[error_index])
+                except ValueError:
+                    return 'Invalid age value {}'.format(line[age_index])
+
+                ai = NonDBAnalysis(record_id=record_id,
+                                   analysis_type='unknown',
+                                   age=(age, error))
+                ans.append(ai)
+            return ans
 
     def _set_window_xy(self, obj):
         x = 50
@@ -739,11 +814,11 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     def _selector_manager_default(self):
         db = self.db
         d = SelectorManager(db=db)
-#        if not db.connected:
-#            db.connect()
+        if not db.connected:
+            db.connect()
 
 #        d.select_labnumber([61541])
-#        d.select_labnumber([22233])
+        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):

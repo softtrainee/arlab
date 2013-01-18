@@ -40,6 +40,8 @@ from src.graph.stacked_graph import StackedGraph
 from src.processing.plotters.graph_panel_info import GraphPanelInfo
 from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
+from src.helpers.formatting import floatfmt
+from src.constants import PLUSMINUS
 
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
@@ -173,10 +175,15 @@ class Plotter(Viewable):
 
         title = self._get_plot_option(options, 'title')
         aux_plots = self._assemble_aux_plots(plotter_options)
-        xtick_font = plotter_options.xtick_font
-        xtitle_font = plotter_options.xtitle_font
-        ytick_font = plotter_options.ytick_font
-        ytitle_font = plotter_options.ytitle_font
+
+        xtick_font = self._get_plot_option(plotter_options, 'xtick_font', 'helvetica 10')
+        xtitle_font = self._get_plot_option(plotter_options, 'xtitle_font', 'helvetica 10')
+        ytick_font = self._get_plot_option(plotter_options, 'ytick_font', 'helvetica 10')
+        ytitle_font = self._get_plot_option(plotter_options, 'ytitle_font', 'helvetica 10')
+#        xtick_font = plotter_options.xtick_font
+#        xtitle_font = plotter_options.xtitle_font
+#        ytick_font = plotter_options.ytick_font
+#        ytitle_font = plotter_options.ytitle_font
 
         for i in range(r):
             for j in range(c):
@@ -503,6 +510,23 @@ class Plotter(Viewable):
     def _update_graph(self, graph):
         pass
 
+    def _build_label_text(self, x, we, mswd, valid_mswd, n):
+        display_n = True
+        display_mswd = n >= 2
+        if display_n:
+            n = 'n= {}'.format(n)
+        else:
+            n = ''
+
+        if display_mswd:
+            vd = '' if valid_mswd else '*'
+            mswd = '{}mswd= {:0.2f}'.format(vd, mswd)
+        else:
+            mswd = ''
+
+        x = floatfmt(x, 3)
+        we = floatfmt(we, 4)
+        return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
 
 #===============================================================================
 # views
@@ -521,8 +545,12 @@ class Plotter(Viewable):
     def _get_plot_option(self, options, attr, default=None):
         option = None
         if options is not None:
-            if options.has_key(attr):
-                option = options[attr]
+            if isinstance(options, dict):
+                if options.has_key(attr):
+                    option = options[attr]
+            else:
+                if hasattr(options, attr):
+                    option = getattr(options, attr)
 
         return default if option is None else option
 
