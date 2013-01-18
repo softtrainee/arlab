@@ -23,7 +23,7 @@ from numpy import array, Inf, where, average
 from src.processing.plotters.results_tabular_adapter import SpectrumResults, \
     SpectrumResultsAdapter
 from src.processing.plotters.plotter import Plotter
-from src.stats.core import calculate_mswd
+from src.stats.core import calculate_mswd, validate_mswd
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
 #from enable.enable_traits import Pointer
@@ -32,6 +32,9 @@ from src.processing.argon_calculations import age_equation
 from src.processing.analysis import IntegratedAnalysis
 from uncertainties import ufloat
 from src.constants import PLUSMINUS
+from chaco.data_label import DataLabel
+from src.helpers.formatting import floatfmt
+from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 #from chaco.plot_label import PlotLabel
 #from enable.font_metrics_provider import font_metrics_provider
 #from chaco.data_label import DataLabel
@@ -44,19 +47,9 @@ class SpectrumTool(BaseTool):
         pt = event.x, event.y
         if self.component.hittest(pt):
 
-            d = self.component.map_data(pt)
-#            print d
-            cs = self.spectrum.cumulative39s[self.group_id]
-
-            t = where(cs < d)[0]
-            if len(t):
-                tt = t[-1] + 1
-            else:
-                tt = 0
-
+            s = self._get_section(pt)
             sels = self.component.index.metadata['selections']
-            self.component.index.metadata['selections'] = list(set(sels) ^ set([tt]))
-
+            self.component.index.metadata['selections'] = list(set(sels) ^ set([s]))
             #replot excluding the selected point
             #plot origin with dash line
             #see ideogram for example
@@ -67,12 +60,25 @@ class SpectrumTool(BaseTool):
         pt = event.x, event.y
         if self.component.hittest(pt):
             event.window.set_pointer('cross')
+            hover = self._get_section(pt)
+            self.component.index.metadata['hover'] = [hover]
         else:
             event.window.set_pointer('arrow')
+            self.component.index.metadata['hover'] = None
 #            print t
 #            print cs, d
 #            print t
 #            print self.spectrum.cumulative39s[self.group_id].index(d)
+    def _get_section(self, pt):
+        d = self.component.map_data(pt)
+        cs = self.spectrum.cumulative39s[self.group_id]
+
+        t = where(cs < d)[0]
+        if len(t):
+            tt = t[-1] + 1
+        else:
+            tt = 0
+        return tt
 
 #class SpectrumOverlay(AbstractOverlay):
 #    group_id = 0
@@ -148,7 +154,6 @@ class SpectrumErrorOverlay(AbstractOverlay):
             es = self.component.errors
             sels = self.component.index.metadata['selections']
 
-    #        print sels
             n = len(xs)
             xs = xs.reshape(n / 2, 2)
             ys = ys.reshape(n / 2, 2)
@@ -210,7 +215,6 @@ class Spectrum(Plotter):
             for plotid, ap in enumerate(aux_plots):
                 #get aux type and plot
                 name = ap['name']
-                print name
                 if name != 'analysis_number':
                     func = getattr(self, '_aux_plot_{}'.format(name))
                     func(g, analyses,
@@ -226,6 +230,7 @@ class Spectrum(Plotter):
                             mi + offset * i
                             )
         g.set_y_limits(min=mi, max=ma, pad='0.1')
+        g.analyses = analyses
 #        self.graph = g
         return g
 
@@ -301,7 +306,10 @@ class Spectrum(Plotter):
 
     def _add_plot(self, g, xs, ys, es, group_id=0, plotid=0, value_scale='linear'):
         xs, ys, es = map(array, (xs, ys, es))
-        ds, _p = g.new_series(xs, ys, plotid=plotid)
+        ds, p = g.new_series(xs, ys, plotid=plotid)
+
+        u = lambda a, b, c, d: self.update_graph_metadata(ds, group_id, a, b, c, d)
+        ds.index.on_trait_change(u, 'metadata_changed')
 
         ds.index.sort_order = 'ascending'
 
@@ -313,6 +321,11 @@ class Spectrum(Plotter):
         ds.errors = es
         sp = SpectrumErrorOverlay(component=ds, spectrum=self, group_id=group_id)
         ds.overlays.append(sp)
+
+        if value_scale == 'log':
+            p.value_axis.tick_generator = SparseLogTicks()
+        else:
+            p.value_axis.tick_generator = SparseTicks()
         return ds
 
     def _add_spectrum(self, g, analyses, group_id):
@@ -363,9 +376,9 @@ class Spectrum(Plotter):
         #print 'mean', mean_age, mean_error
         #print 'wmean', weighted_mean_age, weighted_mean_error
 #        print '----------'
-        rad40_percent = self._calculate_total_gas_rad40(analyses)
-        age = mean_age
-        error = mean_error
+#        rad40_percent = self._calculate_total_gas_rad40(analyses)
+#        age = mean_age
+#        error = mean_error
 #        pl = DataLabel(
 #                       component=spec,
 #                       data_point=(50, miages),
@@ -379,39 +392,58 @@ class Spectrum(Plotter):
 #                       )
 #        
 #        spec.overlays.append(pl)
+        age = tga.nominal_value
+        error = tga.std_dev()
+        n = len(ages)
+        valid_mswd = validate_mswd(mswd, n)
 
-
-        text = u'{:0.3f} {}{:0.3f}'.format(age, PLUSMINUS, error)
+        text = self._build_integrated_age_label(age, error, mswd, valid_mswd, n)
         dl = self._add_data_label(spec, text, (50, miages),
-                                  font='modern 18'
-                                  )
+                                  font='modern 10')
 
-        self.results.append(SpectrumResults(
-                                           labnumber=self.get_labnumber(analyses),
-                                           mean_age=mean_age,
-                                           mean_error=mean_error,
-                                           weighted_mean_age=weighted_mean_age,
-                                           weighted_mean_error=weighted_mean_error,
-                                           tga=tga.nominal_value,
-                                           tga_error=tga.std_dev(),
-                                           rad40_percent=rad40_percent,
-                                           mswd=mswd
-                                           ))
+#        self.results.append(SpectrumResults(
+#                                           labnumber=self.get_labnumber(analyses),
+#                                           mean_age=mean_age,
+#                                           mean_error=mean_error,
+#                                           weighted_mean_age=weighted_mean_age,
+#                                           weighted_mean_error=weighted_mean_error,
+#                                           tga=tga.nominal_value,
+#                                           tga_error=tga.std_dev(),
+#                                           rad40_percent=rad40_percent,
+#                                           mswd=mswd
+#                                           ))
 
         return miages, maages, dl
 
+    def _build_integrated_age_label(self, age, error, mswd, valid_mswd, n):
+        txt = self._build_label_text(age, error, mswd, valid_mswd, n)
+        return 'Integrated Age= {}'.format(txt)
+
     def _update_graph(self):
         g = self.graphs[0]
-        for i, p in enumerate(g.plots):
-            lp = p.plots['plot0'][0]
+#        for i, p in enumerate(g.plots):
+        lp = g.plots[0].plots['plot0'][0]
+#        print lp.overlays, 'ff'
+
 #            dp = p.plots['plot1'][0]
 #            print pp
+#            ages, errors = zip(*[(a.age.nominal_value, a.age.std_dev()) for a in ans])
+        label = next((ov for ov in lp.overlays if isinstance(ov, DataLabel)), None)
+        if label:
             sel = lp.index.metadata['selections']
 
-            ans = [a for j, a in enumerate(self.analyses)
+            ans = [a for j, a in enumerate(g.analyses)
                                  if j not in sel]
-            ages, errors = zip(*[(a.age.nominal_value, a.age.std_dev()) for a in ans])
+            ages, errors = self._get_ages(ans)
+            tga = self._calculate_total_gas_age(ans)
             mswd = calculate_mswd(ages, errors)
+            age, error = tga.nominal_value, tga.std_dev()
+            n = len(ages)
+            valid_mswd = validate_mswd(mswd, n)
+            label.label_text = self._build_integrated_age_label(age, error, mswd, valid_mswd, n)
+
+
+
 #            self.results[i].mswd = mswd
 #            if sel:
 #                pass

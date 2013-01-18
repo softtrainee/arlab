@@ -54,7 +54,7 @@ def str_to_bool(a):
     '''
     '''
 
-    tks = ['true', 't', 'yes', 'y', '1']
+    tks = ['true', 't', 'yes', 'y', '1', 'ok']
     fks = ['false', 'f', 'no', 'n', '0']
 
     if a is not None:

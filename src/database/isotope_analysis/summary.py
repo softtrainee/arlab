@@ -111,7 +111,7 @@ class Summary(HasTraits):
 
     def _display_default(self):
         return RichTextDisplay(default_size=12,
-                               width=750,
+                               width=self.record.item_width - 10,
                                selectable=True,
                                default_color='black',
                                scroll_to_bottom=False,

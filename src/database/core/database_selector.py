@@ -388,7 +388,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _result_factory(self, di, load, **kw):
-        print self
         d = self.record_klass(_dbrecord=di,
                                  selector=self,
                                  **kw)

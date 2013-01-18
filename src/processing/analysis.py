@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Int, Float, Property, Color, Any
+from traits.api import HasTraits, Str, Int, Float, Property, Color, Any, cached_property
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -24,6 +24,7 @@ from src.loggable import Loggable
 
 from src.helpers import alphas
 from src.constants import PLUSMINUS
+from uncertainties import ufloat
 
 
 class Analysis(Loggable):
@@ -190,7 +191,12 @@ class NonDBAnalysis(HasTraits):
     graph_id = Int
     group_id = Int
     status = Int
+    temp_status = Int
     sample = Str
+    analysis_type = 'unknown'
+
+    status_text = Property
+    temp_status_text = Property
 
     def _set_record_id(self, r):
         al = 1
@@ -204,20 +210,38 @@ class NonDBAnalysis(HasTraits):
         self.aliquot = int(al)
         self.labnumber = int(r)
 
+    def calculate_age(self, **kw):
+        return self.age
+
+    def load_age(self):
+        return
+
     def _get_record_id(self):
         return '{}-{:02n}{}'.format(self.labnumber, self.aliquot, self.step)
 
+    @cached_property
     def _get_age(self):
-        return (self._age, self._error)
+        return ufloat((self._age, self._error))
+
+    def _set_age(self, ae):
+        self._age = ae[0]
+        self._error = ae[1]
 
     @property
     def age_string(self):
-        a, e = self.age
+        a = self._age
+        e = self._error
         try:
             pe = abs(e / a * 100)
         except ZeroDivisionError:
             pe = 'Inf'
         return u'{:0.3f} {}{:0.3f}({:0.2f}%)'.format(a, PLUSMINUS, e, pe)
+
+    def _get_status_text(self):
+        return 'OK' if self.status == 0 else 'Omitted'
+
+    def _get_temp_status_text(self):
+        return 'OK' if self.temp_status == 0 else 'Omitted'
 
 class IntegratedAnalysis(NonDBAnalysis):
     rad40_percent = Property

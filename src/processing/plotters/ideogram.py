@@ -37,6 +37,7 @@ from src.constants import PLUSMINUS
 from src.helpers.formatting import floatfmt
 from numpy import log10
 from src.processing.plotters.point_move_tool import PointMoveTool
+from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 #from src.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -54,26 +55,7 @@ from src.processing.plotters.point_move_tool import PointMoveTool
 
 N = 700
 
-class SparseTicks(DefaultTickGenerator):
-    step = Int(2)
-    def get_ticks(self, *args, **kw):
-        ticks = super(SparseTicks, self).get_ticks(*args, **kw)
-        s = self.step
-        try:
-            if len(ticks) > s + 2:
-                nticks = hstack((ticks[0], ticks[s:-s:s], ticks[-1]))
-                return nticks
-            else:
-                return ticks
-        except IndexError:
-            return ticks
 
-class SparseLogTicks(DefaultTickGenerator):
-    def get_ticks(self, *args, **kw):
-        ticks = super(SparseLogTicks, self).get_ticks(*args, **kw)
-        #get only 0.1,1,10,100,1000...
-        ticks = ticks[log10(ticks) % 1 == 0]
-        return ticks
 
 
 class Ideogram(Plotter):
@@ -394,7 +376,7 @@ class Ideogram(Plotter):
         label = None
         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
         if display_mean:
-            text = self._build_label_text(wm, ym, we, mswd, valid_mswd, ages.shape[0])
+            text = self._build_label_text(wm, we, mswd, valid_mswd, ages.shape[0])
             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
             self._add_data_label(s, text, (wm, ym),
                                  font=font
@@ -441,25 +423,6 @@ class Ideogram(Plotter):
 #        s.overlays.append(label)
 #        tool = DataLabelTool(label)
 #        label.tools.append(tool)
-
-
-    def _build_label_text(self, x, y, we, mswd, valid_mswd, n):
-        display_n = True
-        display_mswd = n >= 2
-        if display_n:
-            n = 'n= {}'.format(n)
-        else:
-            n = ''
-
-        if display_mswd:
-            vd = '' if valid_mswd else '*'
-            mswd = '{}mswd= {:0.2f}'.format(vd, mswd)
-        else:
-            mswd = ''
-
-        x = floatfmt(x, 3)
-        we = floatfmt(we, 4)
-        return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
 
     def _calc_error(self, we, mswd):
         ec = self.plotter_options.error_calc_method
@@ -595,7 +558,7 @@ class Ideogram(Plotter):
                     _, y = ov.data_point
                     ov.data_point = wm, y
                     n = len(ages)
-                    ov.label_text = self._build_label_text(wm, y, we, mswd, valid_mswd, n)
+                    ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
 
             if sel:
                 dp.visible = True

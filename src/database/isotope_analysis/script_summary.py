@@ -15,28 +15,32 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, cached_property
-from traitsui.api import View, Item, CodeEditor, TextEditor
-from src.database.isotope_analysis.summary import Summary
-from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
+from traits.api import HasTraits, Property, cached_property, Any
+from traitsui.api import View, Item, CodeEditor
+#from src.database.isotope_analysis.summary import Summary
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ScriptSummary(Summary):
+class ScriptSummary(HasTraits):
+    record = Any
     script_text = Property
     editor_klass = CodeEditor
     style = 'readonly'
     def traits_view(self):
-        v = View(Item('script_text',
-                      width=755,
-                      style=self.style,
-                      editor=self.editor_klass(), show_label=False))
+        v = View(self._get_script_text_item())
         return v
+    def _get_script_text_item(self, **kw):
+        return Item('script_text',
+                      width=self.record.item_width,
+                      style=self.style,
+                      editor=self.editor_klass(),
+                      show_label=False, **kw)
 
 class MeasurementSummary(ScriptSummary):
     @cached_property
     def _get_script_text(self):
+        txt = None
         try:
             txt = self.record.dbrecord.measurement.script.blob
         except AttributeError:
@@ -45,27 +49,27 @@ class MeasurementSummary(ScriptSummary):
         if txt is None:
             txt = 'No Measurement script saved with analysis'
 
-
         return txt
 
 class ExtractionSummary(ScriptSummary):
 
     @cached_property
     def _get_script_text(self):
+        txt = None
         try:
             txt = self.record.dbrecord.extraction.script.blob
-        except AttributeError:
-            pass
+        except AttributeError, e:
+            print e
+
         if txt is None:
             txt = 'No Extraction script saved with analysis'
         return txt
 
 
 class ExperimentSummary(ScriptSummary):
-    editor_klass = SelectableReadonlyTextEditor
-    style = 'custom'
     @cached_property
     def _get_script_text(self):
+        txt = None
         try:
             txt = self.record.dbrecord.extraction.experiment.blob
         except AttributeError:

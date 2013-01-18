@@ -16,13 +16,15 @@
 
 #============= enthought library imports =======================
 from traits.api import List, Dict
-from traitsui.wx.text_editor import CustomEditor
+from traitsui.wx.text_editor import ReadonlyEditor, CustomEditor
+
 #============= standard library imports ========================
 import wx
 #============= local library imports  ==========================
 from traitsui.editors.text_editor \
     import ToolkitEditorFactory
 
+#class _TextEditor(ReadonlyEditor):
 class _TextEditor(CustomEditor):
 #    evaluate = evaluate_trait
 #    parent = Any
@@ -30,28 +32,29 @@ class _TextEditor(CustomEditor):
         super(_TextEditor, self).init(parent)
         self.control.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
 
-        p = 0
-        for i, l in enumerate(self.value.split('\n')):
-            e = len(l)
-            st = next((st for st in self.factory.styles if st == i or
-                                                            (i in st if isinstance(st, tuple) else False)
-
-                       ), None)
-
-            if st:
-                sa = self.factory.styles[st]
-                self.control.SetStyle(p, p + e + 1, sa)
-            p += e + 1
-
-
+#        p = 0
+#        for i, l in enumerate(self.value.split('\n')):
+#            e = len(l)
+#            st = next((st for st in self.factory.styles if st == i or
+#                                                            (i in st if isinstance(st, tuple) else False)
+#
+#                       ), None)
+#
+#            if st:
+#                sa = self.factory.styles[st]
+#                self.control.SetStyle(p, p + e + 1, sa)
+#            p += e + 1
+#
+#
     def onKeyDown(self, event):
         if event.CmdDown():
             event.Skip()
-
+#    def _set_color(self):
+#        pass
 
 class SelectableReadonlyTextEditor(ToolkitEditorFactory):
-    tabs = List
-    styles = Dict
+#    tabs = List
+#    styles = Dict
     def _get_custom_editor_class(self):
         return _TextEditor
 #============= EOF =============================================
