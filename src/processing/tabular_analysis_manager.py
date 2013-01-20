@@ -228,6 +228,23 @@ class AnalysisRatioAdapter(AnalysisAdapter):
 
 class MeanAdapter(AnalysisAdapter):
     nanalyses_width = Int(40)
+
+    weighted_age_text = Property
+    arith_age_text = Property
+    age_se_text = Property
+    age_sd_text = Property
+    def _get_weighted_age_text(self):
+        return self._get_value('weighted_age')
+
+    def _get_arith_age_text(self):
+        return self._get_value('arith_age')
+
+    def _get_age_se_text(self):
+        return self._get_error('weighted_age')
+
+    def _get_age_sd_text(self):
+        return self._get_error('arith_age')
+
     def get_bg_color(self, obj, trait, row):
         bgcolor = 'white'
         if row % 2 == 0:
@@ -240,8 +257,13 @@ class MeanAdapter(AnalysisAdapter):
                  ('ID', 'identifier')]
         columns.extend(self._construct_columns())
         if self.include_age:
-            a = [('Age', 'age'),
-               (u'{}1s'.format(PLUSMINUS), 'age_error')]
+            a = [
+                 ('Wtd. Age', 'weighted_age'),
+                 ('S.E', 'age_se'),
+                 ('Arith. Age', 'arith_age'),
+                 ('S.D', 'age_sd')
+#                 (u'{}1s'.format(PLUSMINUS), 'age_error')
+                 ]
             columns.extend(a)
         return columns
 
@@ -252,15 +274,20 @@ class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
 #                   ('N', 'nanalyses'),
 #                   ('ID', 'identifier'),
                    ('40*/K39', 'Ar40_39'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
+                   ('S.E.', 'Ar40_39_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
                    ('Ar37/Ar39', 'Ar37_39'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
+                   ('S.E.', 'Ar37_39_error'),
                    ('Ar36/Ar39', 'Ar36_39'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
+                   ('S.E.', 'Ar36_39_error'),
                    ('K/Ca', 'kca'),
-                   (u'{}1s'.format(PLUSMINUS), 'kca_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'kca_error'),
+                   ('S.E.', 'kca_error'),
                    ('K/Cl', 'kcl'),
-                   (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
+                   ('S.E.', 'kcl_error'),
 #                   ('Age', 'age'),
 #                   (u'{}1s'.format(PLUSMINUS), 'age_error'),
                    ]
@@ -271,15 +298,21 @@ class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
     def _construct_columns(self):
         columns = [
                    ('Ar40', 'Ar40'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
+                   ('S.E.', 'Ar40_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
                    ('Ar39', 'Ar39'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
+                   ('S.E.', 'Ar39_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
                    ('Ar38', 'Ar38'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
+                   ('S.E.', 'Ar38_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
                    ('Ar37', 'Ar37'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
+                   ('S.E.', 'Ar37_error'),
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
                    ('Ar36', 'Ar36'),
-                   (u'{}1s'.format(PLUSMINUS), 'Ar36_error')]
+                   ('S.E.', 'Ar36_error')
+#                   (u'{}1s'.format(PLUSMINUS), 'Ar36_error')
+                   ]
         return columns
 
 class TabularAnalysisHandler(ViewableHandler):

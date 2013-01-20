@@ -567,11 +567,10 @@ class Graph(Loggable, ContextMenuMixin):
 #        x, y = self.plots[plotid].map_screen([(x, y)])[0]
 #        print x, y
         c = self.plots[plotid]
-        pl = PlotLabel(txt, overlay_position='inside top',
-                                         hjustify='left',
-                                         component=c,
-                        **kw
-                        )
+
+        pl = PlotLabel(txt, overlay_position='inside top', hjustify='left',
+                       component=c,
+                       **kw)
         c.overlays.append(pl)
         return pl
 

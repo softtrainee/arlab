@@ -152,7 +152,7 @@ class PlotterOptions(Viewable):
                     obj = pickle.load(fp)
                     self.trait_set(**obj)
 
-                except (pickle.PickleError, TypeError):
+                except (pickle.PickleError, TypeError, EOFError):
                     pass
 
     def _get_dump_attrs(self):
@@ -276,11 +276,14 @@ class AgeOptions(PlotterOptions):
     include_j_error = Bool(True)
     include_irradiation_error = Bool(True)
     include_decay_error = Bool(False)
+    nsigma = Enum(1, 2, 3)
     def _get_dump_attrs(self):
         attrs = super(AgeOptions, self)._get_dump_attrs()
         attrs += ['include_j_error',
-                        'include_irradiation_error',
-                        'include_decay_error']
+                  'include_irradiation_error',
+                  'include_decay_error',
+                  'nsigma'
+                  ]
         return attrs
 
 class IdeogramOptions(AgeOptions):
@@ -291,7 +294,7 @@ class IdeogramOptions(AgeOptions):
     xhigh = Float
     use_centered_range = Bool
     centered_range = Float(0.5)
-    nsigma = Enum(1, 2, 3)
+
 
 
     def _get_x_axis_group(self):
@@ -330,13 +333,16 @@ class IdeogramOptions(AgeOptions):
                         'probability_curve_kind',
                         'mean_calculation_kind',
                         'error_calc_method',
-                        'nsigma',
                         'xlow', 'xhigh',
                         'use_centered_range', 'centered_range'
                         ]
 
 class SpectrumOptions(AgeOptions):
-    pass
+    step_nsigma = Int(2)
+    def _get_dump_attrs(self):
+        attrs = super(SpectrumOptions, self)._get_dump_attrs()
+        return attrs + ['step_nsigma']
+
 if __name__ == '__main__':
     ip = IdeogramOptions()
     ip.configure_traits()

@@ -23,7 +23,7 @@ from chaco.plot_containers import GridPlotContainer
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
-from chaco.scatterplot import ScatterPlot
+#from chaco.scatterplot import ScatterPlot
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
@@ -68,6 +68,16 @@ class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     def edit_analyses(self):
         self.plotter.edit_analyses()
 
+class mDataLabelTool(DataLabelTool):
+    def normal_left_down(self, event):
+        if self.is_draggable(event.x, event.y):
+            event.handled = True
+
+    def normal_mouse_move(self, event):
+        if self.is_draggable(event.x, event.y):
+            event.window.set_pointer('arrow')
+            event.handled = True
+
 class Plotter(Viewable):
     adapter = Property
     results = List(BaseResults)
@@ -86,6 +96,8 @@ class Plotter(Viewable):
     plotter_options = None
 
     padding = List([40, 10, 5, 40])
+
+    metadata_label_text = Property
 
     def edit_analyses(self):
         self.processing_manager.edit_analyses()
@@ -460,15 +472,19 @@ class Plotter(Viewable):
 
 
 #        self.metadata = scatter.index.metadata
-    def _add_data_label(self, s, text, point, **kw):
+    def _add_data_label(self, s, text, point, bgcolor='transparent',
+                        label_position='top right', color=None, append=True, **kw):
+        if color is None:
+            color = s.color
+
         label = DataLabel(component=s, data_point=point,
-                          label_position='top right',
+                          label_position=label_position,
                           label_text=text,
                           border_visible=False,
-                          bgcolor='transparent',
+                          bgcolor=bgcolor,
                           show_label_coords=False,
                           marker_visible=False,
-                          text_color=s.color,
+                          text_color=color,
 
                           #setting the arrow to visible causes an error when reading with illustrator
                           #if the arrow is not drawn
@@ -476,8 +492,11 @@ class Plotter(Viewable):
                           **kw
                           )
         s.overlays.append(label)
-        tool = DataLabelTool(label)
-        label.tools.append(tool)
+        tool = mDataLabelTool(label)
+        if append:
+            label.tools.append(tool)
+        else:
+            label.tools.insert(0, tool)
         return label
 
     def _get_sorted_analyses(self):
@@ -527,7 +546,25 @@ class Plotter(Viewable):
         x = floatfmt(x, 3)
         we = floatfmt(we, 4)
         return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
+    def _unzip_value_error(self, pairs):
+#        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
+        return zip(*[(ri.nominal_value, ri.std_dev()) for ri in pairs])
 
+    def _add_plot_metadata(self, g):
+        #add meta plot info
+        font = self._get_plot_option(self.options, 'metadata_label_font', default='modern 10')
+        ustr = self.metadata_label_text
+#        ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)
+#        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0, font=font)
+        self.plot_label = g.add_plot_label(ustr, 0, 0, font=font)
+
+    def _get_grouped_analyses(self):
+        analyses = self.analyses
+        group_ids = list(set([a.group_id for a in analyses]))
+
+        return [[ai for ai in analyses if ai.group_id == gid]
+                for gid in group_ids
+                ]
 #===============================================================================
 # views
 #===============================================================================
