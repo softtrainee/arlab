@@ -21,12 +21,16 @@ from src.database.core.database_adapter import PathDatabaseAdapter
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, BakeoutPathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
 from src.paths import paths
+from src.database.migrate.manage_database import manage_database
 
 
 class BakeoutAdapter(PathDatabaseAdapter):
-    test_func = None
     selector_klass = BakeoutDBSelector
     path_table = BakeoutPathTable
+
+    def manage_database(self):
+        manage_database(self.url, 'bakeoutdb')
+
 #==============================================================================
 #    getters
 #==============================================================================

@@ -102,7 +102,9 @@ class TimeSeriesGraph(Graph):
     def new_plot(self, *args, **kw):
         '''
         '''
+
         kw['pan'] = 'x' if not 'pan' in kw else kw['pan']
+
         return super(TimeSeriesGraph, self).new_plot(*args, **kw)
 
     def new_series(self, x=None, y=None, plotid=0, normalize=False,

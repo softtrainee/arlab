@@ -119,10 +119,10 @@ class Query(HasTraits):
         if criterion == 'today':
             c = get_date()
         elif criterion == 'this month':
-            d = datetime.today().date()
-            today = get_date()
+            d = datetime.today()
+            today = datetime.today()#.date()#.datetime()
             if '=' in comp:
-                d = d - timedelta(days=d.day)
+                d = d - timedelta(days=d.day, seconds=d.second, hours=d.hour, minutes=d.minute)
                 query = query.filter(and_(attr <= today,
                                    attr >= d
                                    ))

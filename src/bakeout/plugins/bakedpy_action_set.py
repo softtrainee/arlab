@@ -36,6 +36,10 @@ class BakedpyActionSet(WorkbenchActionSet):
                    Action(name='Find Bakeout...',
                           path='MenuBar/File',
                           class_name='{}:FindAction'.format(BASE)
+                          ),
+                   Action(name='Open Latest Bakeout...',
+                          path='MenuBar/File',
+                          class_name='{}:OpenLatestAction'.format(BASE)
 
                           )
 

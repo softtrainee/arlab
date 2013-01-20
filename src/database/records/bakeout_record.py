@@ -47,8 +47,8 @@ class BakeoutRecord(SQLiteRecord):
         graph_grp = Item('graph', show_label=False, style='custom')
 
         grp = Group(
-                  info_grp,
                   graph_grp,
+                  info_grp,
                   layout='tabbed'
                   )
         button_grp = HGroup(spring, Item('export_button', show_label=False)),

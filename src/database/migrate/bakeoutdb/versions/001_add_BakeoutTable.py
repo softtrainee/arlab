@@ -19,7 +19,7 @@ from migrate import *
 meta = MetaData()
 t = Table('BakeoutTable', meta,
               Column('id', Integer, primary_key=True),
-              Column('timestamp', TIMESTAMP)
+              Column('timestamp', DateTime)
 #              Column('rundate', Date),
 #              Column('runtime', Time),
               )

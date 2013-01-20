@@ -70,7 +70,7 @@ class BakeoutController(WatlowEZZone):
 #    led = Instance(LED, ())
     led = Instance(ButtonLED, ())
 
-    alive = Bool(False)
+#    alive = Bool(False)
     active = Bool(False)
     cnt = 0
     ramp_scale = None
@@ -91,9 +91,11 @@ class BakeoutController(WatlowEZZone):
     _timer = None
 
     state_button = Event
-    state_label = Property(depends_on='alive')
+    state_label = Property(depends_on='active')
 
     ok_to_run = Property
+    execute_dirty = Event
+    user_cancel = Bool
 
     heating = False
     _check_buffer = None
@@ -114,15 +116,16 @@ class BakeoutController(WatlowEZZone):
         if p:
             self._max_output = p
 
-    def isAlive(self):
-        return self.alive
+#    def isAlive(self):
+#        return self.alive
 
     def isActive(self):
         return self.active
 
     def kill(self):
         self.led.state = 'red'
-        if self.isAlive() and self.isActive():
+#        if self.isAlive() and self.isActive():
+        if self.isActive():
             self.info('killing')
             if self._active_script is not None:
                 self._active_script._alive = False
@@ -173,7 +176,8 @@ Add {}'.format(sd)):
         return ok
 
     def on_led_action(self):
-        if self.isAlive():
+#        if self.isAlive():
+        if self.isActive():
             self.end()
         else:
             self.led.state = 'red'
@@ -184,7 +188,7 @@ Add {}'.format(sd)):
         self.cnt = 0
         self.start_time = time.time()
         self.active = True
-        self.alive = True
+#        self.alive = True
 
         self._check_buffer = []
         #set led to green
@@ -271,7 +275,8 @@ Add {}'.format(sd)):
 
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
         self.led.state = 'red'
-        if self.isActive() and self.isAlive():
+#        if self.isActive() and self.isAlive():
+        if self.isActive():
 #            if hasattr(self, '_timer'):
 #                self._timer.Stop()
 
@@ -293,7 +298,7 @@ Add {}'.format(sd)):
             self.kill()
 
             func(msg)
-            self.alive = False
+#            self.alive = False
             self.active = False
             self._duration = 0
 #            self.process_value = 0
@@ -337,7 +342,7 @@ Add {}'.format(sd)):
     def _update_(self):
         '''
         '''
-        if self.isAlive():
+        if self.isActive():
             self.cnt += self.update_interval
             nsecs = 15
             if self.cnt >= nsecs:
@@ -357,7 +362,6 @@ Add {}'.format(sd)):
 
     def _check_temp(self):
         if self.isActive() and self.heating:
-
             n = int(self._check_temp_minutes * 60 / float(self.update_interval))
             cb = self._check_buffer
             cb.append(self.process_value)
@@ -365,11 +369,12 @@ Add {}'.format(sd)):
                 cb = cb[-n:]
                 avgtemp = sum(cb) / len(cb)
                 if avgtemp < self._check_temp_threshold:
-                    self.led.state = False
-                    self.active = False
-                    self.alive = False
                     self.setpoint = 0
                     self._duration = 0
+
+                    self.led.state = False
+                    self.active = False
+#                    self.alive = False
                     self.warning('controller failed to heat average temp= {}, duration={}'.format(avgtemp, self._check_temp_minutes))
                     self.warning_dialog('Controller failed to heat. Average temp.={:0.1f} after {} minutes. Check thermocouple and heating tape'.\
                                         format(avgtemp, self._check_temp_minutes))
@@ -380,23 +385,30 @@ Add {}'.format(sd)):
 #===============================================================================
 
     def _state_button_fired(self):
-        if self.isAlive():
+#        if self.isAlive():
+        if self.isActive():
+            self.user_cancel = True
             self.end()
         else:
+            self.user_cancel = False
             self.run()
 
+        self.execute_dirty = True
+
     def _setpoint_changed(self):
-        if self.isAlive():
+        if self.isActive():
             self.set_closed_loop_setpoint(self.setpoint)
 
     def _script_changed(self):
         self._duration = 0
         self.setpoint = 0
+        self.execute_dirty = True
 #===============================================================================
 # property get/set
 #===============================================================================
     def _get_state_label(self):
-        return 'Stop' if self.isAlive() else 'Start'
+#        return 'Stop' if self.isAlive() else 'Start'
+        return 'Stop' if self.isActive() else 'Start'
 
     def _validate_max_output(self, v):
         try:
@@ -416,9 +428,12 @@ Add {}'.format(sd)):
         return self._duration
 
     def _set_duration(self, v):
-        if self.isAlive():
+#        if self.isAlive():
+        if self.isActive():
             self._oduration = v
             self.start_time = time.time()
+        else:
+            self.execute_dirty = True
 
         self._duration = v
 
@@ -487,7 +502,7 @@ Add {}'.format(sd)):
                             Item('script', show_label=False,
                                  editor=EnumEditor(name='scripts'),
                                                          width= -200,
-                                enabled_when='not alive'
+                                enabled_when='not active'
                                  ),
                             Item('duration', label='Duration (hrs)',
                                  show_label=show_label,
@@ -500,7 +515,7 @@ Add {}'.format(sd)):
                             Item('max_output', label='Max.Out (%)',
                                  format_str='%0.2f',
                                  show_label=show_label,
-                                 enabled_when='not object.alive'),
+                                 enabled_when='not active'),
                             process_grp
                             ),
                         )

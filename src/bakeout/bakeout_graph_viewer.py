@@ -32,6 +32,7 @@ from src.paths import paths
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.loggable import Loggable
+from src.viewable import Viewable
 
 DISPLAYSIZE = GetDisplaySize()
 
@@ -62,7 +63,8 @@ class BakeoutParameters(HasTraits):
         return '\n'.join((s0, s1, s2, self.script_text))
 
 
-class BakeoutGraphViewer(Loggable):
+#class BakeoutGraphViewer(Loggable):
+class BakeoutGraphViewer(Viewable):
     graph = Instance(Graph)
     bakeouts = List
     summary = Property(depends_on='bakeouts')
@@ -213,7 +215,6 @@ class BakeoutGraphViewer(Loggable):
 
     def load(self, path):
         self.path = path
-        print path
         args = self._load_graph(path)
         if args:
             attrs = args[-1]
@@ -236,12 +237,9 @@ class BakeoutGraphViewer(Loggable):
 #        attrs = args[-1]
         self.graph = self._bakeout_graph_factory(ph=0.65,
                 *args,
-                container_dict=dict(
-                                    #bgcolor='red',
-                                    #fill_bg=True,
-                                    padding_top=60
-                                    ),
+                padding=[50, 10, 10, 50],
                 transpose_data=not ish5
+
                 )
         return args
 
@@ -277,7 +275,7 @@ class BakeoutGraphViewer(Loggable):
         # temps
 
         if include_bits[0]:
-            graph.new_plot(show_legend='ll', **kw)
+            graph.new_plot(show_legend='ll', zoom=True, **kw)
             graph.set_y_title('Temp (C)')
         else:
             self.plotids = [0, 0, 1]
@@ -315,7 +313,7 @@ class BakeoutGraphViewer(Loggable):
         attrs,
         ph=0.5,
         transpose_data=True,
-        ** kw
+        **kw
         ):
 
         ph = DISPLAYSIZE.height * ph / max(1, sum(include_bits))
@@ -387,30 +385,33 @@ class BakeoutGraphViewer(Loggable):
 #        bc = BakeoutParameters(name=name)
 #        self.bakeouts.append(bc)
 #        return bc
-
-    def traits_view(self):
-        bakeout_group = Group(Item('bakeouts', style='custom',
-                             show_label=False,
-                             editor=ListEditor(use_notebook=True,
-                                                           dock_style='tab',
-                                                           page_name='.name'
-
-                                                           )),
-                                layout='tabbed'
-                              )
-        v = View(Group(Item('graph', style='custom', show_label=False),
-                       layout='tabbed'
-                       ),
-                        bakeout_group,
-
-                 resizable=True,
-                 title=self.title,
-                 x=self.window_x,
-                 y=self.window_y,
-                 width=self.window_width,
-                 height=self.window_height
-                 )
-        return v
+#
+#    def traits_view(self):
+#        bakeout_grp = Group(Item('bakeouts', style='custom',
+#                             show_label=False,
+#                             editor=ListEditor(use_notebook=True,
+#                                                           dock_style='tab',
+#                                                           page_name='.name'
+#
+#                                                           )),
+##                                layout='tabbed'
+#                              )
+#        graph_grp = Group(Item('graph', style='custom', show_label=False),
+##                       layout='tabbed'
+#                       )
+#        grp = Group(graph_grp, bakeout_grp, layout='tabbed')
+##        v = View(    
+##                 graph_grp,
+##                 bakeout_grp,
+##                 resizable=True,
+##                 title=self.title,
+##                 x=self.window_x,
+##                 y=self.window_y,
+##                 width=self.window_width,
+##                 height=self.window_height
+##                 )
+#        v = self.view_factory(grp)
+#        return v
 
 if __name__ == '__main__':
     d = BakeoutGraphViewer()

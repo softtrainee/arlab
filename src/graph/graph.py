@@ -40,10 +40,12 @@ from guide_overlay import GuideOverlay
 
 from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
+
 from chaco.data_label import DataLabel
 from src.loggable import Loggable
 from src.graph.context_menu_mixin import ContextMenuMixin
 from chaco.plot_graphics_context import PlotGraphicsContext
+#from chaco.tools.pan_tool import PanTool
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
 #               'Times New Roman',
@@ -646,6 +648,7 @@ class Graph(Loggable, ContextMenuMixin):
                 kwargs['constrain'] = True
                 kwargs['constrain_direction'] = pan
                 kwargs['constrain_key'] = None
+
             pt = PanTool(p, container=pc, **kwargs)
             tools.append(pt)
 
@@ -670,7 +673,7 @@ class Graph(Loggable, ContextMenuMixin):
 #        broadcaster = BroadcasterTool(tools=tools
 #                                      )
 #        p.tools.insert(0, broadcaster)
-
+        p.tools = tools
         return p
 
     def new_graph(self, *args, **kw):

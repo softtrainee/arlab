@@ -22,7 +22,7 @@ from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor
 from pyface.timer.api import do_later, do_after as do_after_timer
 
 #============= standard library imports  ==========================
-import numpy as np
+from numpy import hstack
 import os
 import time
 from ConfigParser import NoSectionError
@@ -44,6 +44,7 @@ from src.managers.data_managers.data_manager import DataManager
 from src.helpers.archiver import Archiver
 from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
+import datetime
 
 
 BATCH_SET_BAUDRATE = False
@@ -72,12 +73,11 @@ class BakeoutManager(Manager):
     # scan_window = Float(0.25)
 
     execute = Event
-    execute_ok = Property
-    execute_label = Property(depends_on='alive')
-    alive = Bool(False)
+    execute_ok = Property(depends_on='bakeout+:execute_dirty')
+    execute_label = Property(depends_on='active')
+    active = Bool(False)
 
     save = Button
-#    edit_scripts_button = Button('Edit Scripts')
 
     configuration = Str
     configurations = Property(depends_on='_configurations_dirty')
@@ -133,8 +133,16 @@ class BakeoutManager(Manager):
     def find_bakeout(self):
         db = self.database
         if db.connect():
+#            db.selector.load_last()
             db.selector.load_recent()
             self.open_view(db.selector)
+
+    def open_latest_bake(self):
+        db = self.database
+        if db.connect():
+            db.selector.load_recent()
+            rec = db.selector.records[-1]
+            db.selector.open_record(rec)
 
     def refresh_scripts(self):
         for c in self._get_controllers():
@@ -196,12 +204,13 @@ class BakeoutManager(Manager):
         if self.data_manager:
             self.data_manager.close()
 
+        self._stop_controllers()
+        self._clean_archive()
+
+    def _stop_controllers(self):
         for c in self._get_controllers():
             c.end()
             c.stop_timer()
-
-        self._clean_archive()
-
 #==============================================================================
 # private
 #==============================================================================
@@ -212,6 +221,7 @@ class BakeoutManager(Manager):
         program = False
         cnt = 0
         for bc in self._get_controllers():
+#            bc.on_trait_change(self.update_active, 'active')
             # set the communicators scheduler
             # used to synchronize access to port
             if bc.load():
@@ -287,39 +297,9 @@ class BakeoutManager(Manager):
         self.info('cleaning bakeout data directory {}'.format(root))
         a = Archiver(root=root, archive_days=14, archive_months=8)
         a.clean(spawn_process=False)
-
-    def _db_save(self):
-        if not self.db_save_dialog():
-            self.info('rolling back')
-            self.database.rollback()
-            self.database.close()
-            if self.data_manager:
-                self.data_manager.delete_frame()
-        else:
-            self.database.commit()
-
-        if self.data_manager is not None:
-            self.data_manager.close()
-
-    def _add_bakeout_to_db(self, controllers, path):
-        db = self.database
-
-        #add to BakeoutTable
-        b = db.add_bakeout()
-
-        #add to PathTable
-        db.add_path(b, path)
-
-        args = dict()
-
-        #add to ControllerTable
-        for c in controllers:
-            args['name'] = c.name
-            args['script'] = c.script
-            args['setpoint'] = c.setpoint
-            args['duration'] = c.duration
-            _ci = db.add_controller(b, **args)
-
+#===============================================================================
+# graph
+#===============================================================================
     def _setup_graph(self, name, pid):
         self.graph.new_series()
         self.graph_info[name] = dict(id=pid)
@@ -364,22 +344,21 @@ class BakeoutManager(Manager):
         if self.include_pressure:
             self._get_pressure(nx)
 
-        if self.alive:
+        if self.active:
             self._write_data()
 
         self.data_buffer = []
         self.data_buffer_x = []
         self.data_count_flag = 0
-
+#===============================================================================
+# datamanager
+#===============================================================================
     def _write_data(self):
 
         if isinstance(self.data_manager, CSVDataManager):
             self._write_csv_data()
         else:
             self._write_h5_data()
-#        for i in range(100):
-#            self._write_csv_data()
-#            self._write_h5_data()
 
     def _write_h5_data(self):
         dm = self.data_manager
@@ -425,16 +404,49 @@ class BakeoutManager(Manager):
             if container[ind] < 0.001:
                 container[ind] = x
 
-        self.data_manager2.write_to_frame(container)
+        self.data_manager.write_to_frame(container)
 
+#===============================================================================
+# database
+#===============================================================================
+    def _db_save(self):
+        if not self.db_save_dialog():
+            self._db_rollback()
+        else:
+            self.database.commit()
+
+        if self.data_manager is not None:
+            self.data_manager.close()
+
+    def _db_rollback(self):
+        self.info('rolling back')
+        self.database.rollback()
+        self.database.close()
+        if self.data_manager:
+            self.data_manager.delete_frame()
+
+    def _add_bakeout_to_db(self, controllers, path):
+        db = self.database
+        #add to BakeoutTable
+        b = db.add_bakeout()
+        b.timestamp = datetime.datetime.now()
+
+        #add to PathTable
+        db.add_path(b, path)
+
+        #add to ControllerTable
+        for c in controllers:
+            db.add_controller(b, name=c.name, script=c.script,
+                              setpoint=c.setpoint, duration=c.duration)
 #===============================================================================
 # handlers 
 #===============================================================================
-    def update_alive(self, new):
+    @on_trait_change('bakeout+:active')
+    def update_active(self, new):
         if new:
-            self.alive = new
+            self.active = new
         else:
-            self.alive = bool(len(self._get_active_controllers()))
+            self.active = bool(len(self._get_active_controllers()))
 
     def _update_interval_changed(self):
         for tr in self._get_controller_names():
@@ -459,17 +471,26 @@ class BakeoutManager(Manager):
             self._parse_config_file(os.path.join(paths.bakeout_config_dir, self.configuration))
 #        self.reset_general_scan()
 
-    def _alive_changed(self, name, old, new):
+    def _active_changed(self, name, old, new):
         if old and not new and not self._suppress_commit:
             if self.database is not None:
-                self.info('commit session to db')
-                do_later(self.database.commit)
+                ok_to_commit = True
+                user_cancel = any([tr.user_cancel for tr in self._get_controllers()])
+                if user_cancel:
+                    ok_to_commit = self.db_save_dialog()
+
+                if ok_to_commit:
+                    self.info('commit session to db')
+                    #database session started in main thread so use do_later for commit
+                    do_later(self.database.commit)
+
+                    do_later(self.open_latest_bake)
+
+                else:
+                    do_later(self._db_rollback)
+
             if self.data_manager is not None:
                 self.data_manager.close()
-
-            #completed successfully so we should restart a general scan
-#            self.reset_general_scan()
-
 
     @on_trait_change('include_+')
     def _toggle_graphs(self):
@@ -485,7 +506,7 @@ class BakeoutManager(Manager):
         new,
         ):
 
-#        if self.alive and not obj.isAlive():
+#        if self.active and not obj.isAlive():
 #            return
 
         try:
@@ -500,7 +521,7 @@ class BakeoutManager(Manager):
 
             self.data_count_flag += 1
 
-            if self.alive:
+            if self.active:
                 n = len(self.active_controllers)
             else:
                 n = len(self._get_controller_names())
@@ -558,17 +579,18 @@ class BakeoutManager(Manager):
             self.configuration = os.path.basename(path)
 
     def _execute_fired(self):
-        if self.alive:
-
-            self._suppress_commit = True
-            self.kill(user_kill=True,
-                      close=False
-                      )
-            self._suppress_commit = False
-
+        if self.active:
             self._db_save()
 
-            self.alive = False
+#            self.kill(user_kill=True,
+#                      close=False
+#                      )
+            self._stop_controllers()
+
+            self._suppress_commit = True
+            self.active = False
+            self._suppress_commit = False
+
             self.reset_data_recording()
 #            self.reset_general_scan()
 
@@ -576,11 +598,10 @@ class BakeoutManager(Manager):
             states = []
             for c in self._get_controllers():
                 if c.ok_to_run:
-                    c.on_trait_change(self.update_alive, 'alive')
                     c.run()
                     states.append(True)
 
-            self.alive = True in states
+#            self.active = True in states
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -593,7 +614,7 @@ class BakeoutManager(Manager):
         return cs
 
     def _get_execute_label(self):
-        return 'Stop' if self.alive else 'Execute'
+        return 'Stop' if self.active else 'Execute'
 
     def _get_controller_names(self):
         '''
@@ -608,18 +629,15 @@ class BakeoutManager(Manager):
                 for tr in self._get_controller_names()]
 
     def _get_active_controllers(self):
-#        ac = []
-#        for tr in self._get_controllers():
-#            if tr.isActive() and tr.isAlive():
-#                ac.append(tr)
-
-        return [tr for tr in self._get_controllers() if tr.isActive()
-                and tr.isAlive()
-                ]
+        return [tr for tr in self._get_controllers()
+                    if tr.isActive()]
 
     def _get_execute_ok(self):
-        return sum(map(int, [self.include_temp, self.include_heat,
-                   self.include_pressure])) > 0
+        include_bit = sum(map(int, [self.include_temp, self.include_heat,
+                             self.include_pressure])) > 0
+
+        ok_to_run_bit = any([tr.ok_to_run for tr in self._get_controllers()])
+        return include_bit and ok_to_run_bit
 
 #===============================================================================
 # factories
@@ -765,11 +783,15 @@ class BakeoutManager(Manager):
 #        return m
 
     def _database_default(self):
-        db = BakeoutAdapter(name=paths.bakeout_db,
+        db = BakeoutAdapter(
+                            name='/Users/ross/Sandbox/bakeout.sqlite',
+#                            name=paths.bakeout_db,
 #                            password='Argon',
-                            kind='sqlite'
+                            kind='sqlite',
+                            application=self.application
                             )
-        db.connect(test=False)
+        db.manage_database()
+        db.connect()
         return db
 
 #==============================================================================
@@ -797,7 +819,7 @@ class BakeoutManager(Manager):
             dbuffer = self.pressure_buffer
             window = 100
 
-            dbuffer = np.hstack((dbuffer[-window:], pressure))
+            dbuffer = hstack((dbuffer[-window:], pressure))
             n = len(dbuffer)
             std = dbuffer.std()
             mean = dbuffer.mean()
@@ -831,7 +853,7 @@ class BakeoutManager(Manager):
 #                             editor=ButtonEditor(label_value='open_label'
 #                             ), show_label=False),
 #                            Item('edit_scripts_button', show_label=False,
-##                                 enabled_when='not alive'
+##                                 enabled_when='not active'
 #                                 ),
                                     ),
                              HGroup(Item('configuration',
@@ -840,7 +862,7 @@ class BakeoutManager(Manager):
                                     Item('save',
                                          show_label=False)),
                              VGroup('include_pressure', 'include_heat',
-                             'include_temp', enabled_when='not alive'),
+                             'include_temp', enabled_when='not active'),
                              label='Control', show_border=True),
 
         scan_grp = VGroup(Item('update_interval',
@@ -858,7 +880,7 @@ class BakeoutManager(Manager):
                               enabled_when='use_pressure_monitor'),
                               label='Pressure', show_border=True)
         v = View(VGroup(HGroup(control_grp, HGroup(scan_grp,
-                 pressure_grp, enabled_when='not alive')),
+                 pressure_grp, enabled_when='not active')),
                  controller_grp, Item('graph', show_label=False,
                  style='custom')), handler=AppHandler,
                  resizable=True, title='Bakedpy', height=830)
@@ -915,7 +937,7 @@ if __name__ == '__main__':
 ##            bc = self.trait_get(name)[name]
 #            if bc.ok_to_run():
 #
-#                bc.on_trait_change(self.update_alive, 'alive')
+#                bc.on_trait_change(self.update_alive, 'active')
 #
 #                # set up graph
 ##                self.graph.new_series()
@@ -982,7 +1004,7 @@ if __name__ == '__main__':
 #
 #            self._start_time = time.time()
 #        else:
-#            self.alive = False
+#            self.active = False
 #            self.reset_general_scan()
 
 #    def _pressure_monitor(self):

@@ -56,4 +56,10 @@ class FindAction(BakeoutAction):
     def perform(self, event):
         man = self._get_manager(event)
         man.find_bakeout()
+
+class OpenLatestAction(BakeoutAction):
+    accelerator = 'Ctrl+l'
+    def perform(self, event):
+        man = self._get_manager(event)
+        man.open_latest_bake()
 #============= EOF =============================================
