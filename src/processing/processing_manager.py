@@ -395,7 +395,8 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 return p
 
 
-    def _display_tabular_data(self, ans, title):
+
+    def _display_tabular_data(self, ans, title, associated_window=None):
         tm = TabularAnalysisManager(analyses=ans,
                                     db=self.db,
                                     )
@@ -416,10 +417,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
         rr = self._spectrum(ans, po)
         if rr is not None:
             g, spec = rr
-
-            self._display_tabular_data(ans, title)
-            self._open_figure(g, spec)
-            return spec
+            return self._display_figure_and_table(g, spec, data_type, ans, title)
 
     def _display_ideogram(self, ans, po, title, highlight_omitted=True, data_type='database'):
         rr = self._ideogram(ans,
@@ -432,11 +430,18 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                             )
         if rr is not None:
             g, ideo = rr
-            table = None
-            if data_type == 'database':
-                table = self._display_tabular_data(ans, title)
-            self._open_figure(g, ideo, table)
-            return ideo
+            return self._display_figure_and_table(g, ideo, data_type, ans, title)
+
+    def _display_figure_and_table(self, g, fig, data_type, ans, title):
+        table = None
+        if data_type == 'database':
+            table = self._display_tabular_data(ans, title)
+
+        self._open_figure(g, fig, table=table)
+        if table is not None:
+            g.associated_windows.append(table)
+
+        return fig
 
     def _display_series(self, ans, po, title):
         #open a series manager

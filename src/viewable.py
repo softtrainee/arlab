@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Either, Int, Float, Any, Str
+from traits.api import HasTraits, Either, Int, Float, Any, Str, List
 from traitsui.api import View, Item, TableEditor
 from traitsui.api import Handler
 from pyface.timer.do_later import do_after
@@ -51,7 +51,7 @@ class Viewable(Loggable):
     window_height = Either(Int, Float)
 
     title = Str
-
+    associated_windows = List
 
     def opened(self):
         pass
@@ -60,20 +60,23 @@ class Viewable(Loggable):
         return True
 
     def closed(self, ok):
+        for ai in self.associated_windows:
+            ai.close_ui()
+
         return True
 
     def close_ui(self):
         if self.ui is not None:
             #disposes 50 ms from now
-            do_after(1, self.ui.dispose)
+            do_after(50, self.ui.dispose)
             #sleep a little so everything has time to update
             #time.sleep(0.05) 
 
     def show(self, **kw):
         if self.ui is None or self.ui.control is None:
-            func = lambda:do_after(1, self.edit_traits, **kw)
+            func = lambda:do_after(10, self.edit_traits, **kw)
         else:
-            func = lambda:do_after(1, self.ui.control.Raise)
+            func = lambda:do_after(10, self.ui.control.Raise)
 
         func()
 

@@ -73,8 +73,9 @@ class Ideogram(Plotter):
 #    nsigma = Int(1, enter_set=True, auto_set=False)
 #    nsigma = Range(1, 3, enter_set=True, auto_set=False)
 
-    plot_label_text = Property(depends_on='plotter_options.nsigma')
-    plot_label = Any
+#    plot_label_text = Property(depends_on='plotter_options.nsigma')
+
+#    plot/_label = Any
     graphs = List
 
     probability_curve_kind = Str
@@ -113,14 +114,6 @@ class Ideogram(Plotter):
         for k, ap in enumerate(aux_plots):
             g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
             g.set_axis_traits(axis='y', tick_label_font=ytick_font)
-
-    def _get_grouped_analyses(self):
-        analyses = self.analyses
-        group_ids = list(set([a.group_id for a in analyses]))
-
-        return [[ai for ai in analyses if ai.group_id == gid]
-                for gid in group_ids
-                ]
 
     def _build_hook(self, g, analyses, aux_plots=None):
         g.analyses = analyses
@@ -192,9 +185,8 @@ class Ideogram(Plotter):
 
         self._set_y_limits(g)
 
-        #add meta plot info
-        font = self._get_plot_option(self.options, 'metadata_label_font', default='modern 10')
-        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0, font=font)
+        self._add_plot_metadata(g)
+
 
         return g
     def _make_sorted_pairs(self, attr, analyses, group_id):
@@ -205,9 +197,6 @@ class Ideogram(Plotter):
         age_attr_pairs = sorted(age_attr_pairs, key=lambda x:x[0])
         return zip(*age_attr_pairs)
 
-    def _unzip_value_error(self, pairs):
-#        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
-        return zip(*[(ri.nominal_value, ri.std_dev()) for ri in pairs])
 
     def _aux_plot_moles_K39(self, g, analyses, plotid, group_id, aux_namespace, **kw):
         ages, mk39 = self._make_sorted_pairs('moles_K39', analyses, group_id)
@@ -648,7 +637,7 @@ class Ideogram(Plotter):
 
         return xmin, xmax
 
-    def _get_plot_label_text(self):
+    def _get_metadata_label_text(self):
         #sigmas displayed as separate chars in Illustrator
         #use the 's' instead
         ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)

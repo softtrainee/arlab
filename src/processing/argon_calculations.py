@@ -413,20 +413,24 @@ def age_equation(j, R, scalar=1, include_decay_error=False):
 #plateau definition
 plateau_criteria = {'number_steps':3}
 
-def overlap(a1, a2, e1, e2):
-    e1 *= 2
-    e2 *= 2
+def overlap(a1, a2, e1, e2, overlap_sigma):
+    e1 *= overlap_sigma
+    e2 *= overlap_sigma
     if a1 - e1 < a2 + e2 and a1 + e1 > a2 - e2:
         return True
 
 #===============================================================================
 # non-recursive
 #===============================================================================
-def find_plateaus(ages, errors, signals):
+def find_plateaus(ages, errors, signals, overlap_sigma=1, exclude=None):
+    if exclude is None:
+        exclude = []
     plats = []
     platids = []
     for i in range(len(ages)):
-        ids = _find_plateau(ages, errors, signals, i)
+        if i in exclude:
+            continue
+        ids = _find_plateau(ages, errors, signals, i, overlap_sigma, exclude)
         if ids is not None and ids.any():
             start, end = ids
             plats.append(end - start)
@@ -439,11 +443,13 @@ def find_plateaus(ages, errors, signals):
 
         return platids[argmax(plats)]
 
-def _find_plateau(ages, errors, signals, start):
+def _find_plateau(ages, errors, signals, start, overlap_sigma, exclude):
     plats = []
     platids = []
     for i in range(1, len(ages)):
-        if check_plateau(ages, errors, signals, start, i):
+        if i in exclude:
+            continue
+        if check_plateau(ages, errors, signals, start, i, overlap_sigma, exclude):
             plats.append(i - start)
             platids.append((start, i))
     if plats:
@@ -451,11 +457,15 @@ def _find_plateau(ages, errors, signals, start):
         platids = asarray(platids)
         return platids[argmax(plats)]
 
-def check_plateau(ages, errors, signals, start, end):
+def check_plateau(ages, errors, signals, start, end, overlap_sigma, exclude):
     for i in range(start, min(len(ages), end + 1)):
+        if i in exclude:
+            continue
         for j in range(start, min(len(ages), end + 1)):
+            if j in exclude:
+                continue
             if i != j:
-                obit = not overlap(ages[i], ages[j], errors[i], errors[j])
+                obit = not overlap(ages[i], ages[j], errors[i], errors[j], overlap_sigma)
                 mswdbit = not check_mswd(ages, errors, start, end)
                 percent_releasedbit = not check_percent_released(signals, start, end)
                 n_steps_bit = (end - start) + 1 < 3
