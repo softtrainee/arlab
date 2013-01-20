@@ -19,7 +19,7 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, BLOB, TIMESTAMP
+from sqlalchemy import Column, Integer, String, BLOB, DateTime
 from sqlalchemy.sql.expression import func
 #============= local library imports  ==========================
 Base = declarative_base()
@@ -41,7 +41,7 @@ class NameMixin(BaseMixin):
 
 
 class ResultsMixin(BaseMixin):
-    timestamp = Column(TIMESTAMP, default=func.now())
+    timestamp = Column(DateTime, default=func.current_timestamp())
 
     @declared_attr
     def path(self):

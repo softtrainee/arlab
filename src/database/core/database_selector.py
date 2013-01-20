@@ -170,11 +170,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
     def _get_recent(self):
         #param = '{}.{}'.format(self.query_table.__tablename__, self.date_str)
-        comp = '='
+#        comp = '='
         criterion = 'this month'
         q = self.queries[0]
         q.parameter = self.date_str
-        q.comparator = comp
+        q.comparator = '='
 #        q.criterion = criterion
         q.trait_set(criterion=criterion, trait_change_notify=False)
 

@@ -34,7 +34,7 @@ class BakedpyPlugin(CorePlugin):
         return [so, so1]
 
     def _factory(self):
-        bm = BakeoutManager()
+        bm = BakeoutManager(application=self.application)
         bm.load()
         return bm
 #============= EOF =============================================
