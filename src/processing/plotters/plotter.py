@@ -166,6 +166,7 @@ class Plotter(Viewable):
         self.options = options
         self.plotter_options = plotter_options
         self.analyses = analyses
+
         graph_ids = sorted(list(set([a.graph_id for a in analyses])))
         def get_analyses(gii):
             return [a for a in analyses if a.graph_id == gii]
@@ -197,6 +198,7 @@ class Plotter(Viewable):
 #        ytick_font = plotter_options.ytick_font
 #        ytitle_font = plotter_options.ytitle_font
 
+        age_unit = analyses[0].age_units
         for i in range(r):
             for j in range(c):
                 k = i * c + j
@@ -209,10 +211,10 @@ class Plotter(Viewable):
                                 title=title
                                 )
                 if i == r - 1:
-                    self._build_xtitle(g, xtitle_font, xtick_font)
+                    self._build_xtitle(g, xtitle_font, xtick_font, age_unit=age_unit)
 
                 if j == 0:
-                    self._build_ytitle(g, ytitle_font, ytick_font, aux_plots)
+                    self._build_ytitle(g, ytitle_font, ytick_font, aux_plots, age_unit=age_unit)
 
                 for pi in g.plots:
                     pi.y_axis.tick_in = False

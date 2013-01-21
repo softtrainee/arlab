@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool
+    Event, Bool, Str
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
@@ -24,6 +24,7 @@ from uncertainties import ufloat
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import Signal
 from src.constants import AGE_SCALARS
+from apptools.preferences.preference_binding import bind_preference
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
@@ -36,7 +37,7 @@ class ArArAge(HasTraits):
     include_decay_error = Bool(False)
 
     arar_result = Dict
-    age_units = 'Ma'
+    age_units = Str('Ma')
     age_scalar = Property(depends_on='age_units')
 
     rad40 = AgeProperty()
@@ -89,6 +90,9 @@ class ArArAge(HasTraits):
     moles_K39 = AgeProperty()
 
     ic_factor = Property
+    def __init__(self, *args, **kw):
+        super(ArArAge, self).__init__(*args, **kw)
+        bind_preference(self, 'age_units', 'pychron.experiment.general_age.age_units')
 
     def _calculate_kca(self):
         result = self.arar_result
@@ -234,8 +238,10 @@ class ArArAge(HasTraits):
         return 1 / self.kcl
 
     def _get_age_scalar(self):
+#        return 1e6
         try:
             return AGE_SCALARS[self.age_units]
+##            return AGE_SCALARS[constants.constants.age_units]
         except KeyError:
             return 1
 
