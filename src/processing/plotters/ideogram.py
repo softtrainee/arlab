@@ -103,12 +103,12 @@ class Ideogram(Plotter):
 #        self.figure.refresh()
 
 
-    def _build_xtitle(self, g, xtitle_font, xtick_font):
+    def _build_xtitle(self, g, xtitle_font, xtick_font, age_unit='Ma'):
         f, s = xtitle_font.split(' ')
-        g.set_x_title('Age (Ma)', font=f, size=int(s))
+        g.set_x_title('Age ({})'.format(age_unit), font=f, size=int(s))
         g.set_axis_traits(axis='x', tick_label_font=xtick_font)
 
-    def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots):
+    def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots, **kw):
         f, s = ytitle_font.split(' ')
         g.set_y_title('Relative Probability', font=f, size=int(s))
         for k, ap in enumerate(aux_plots):

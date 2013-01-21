@@ -21,6 +21,10 @@
 from src.envisage.core.core_ui_plugin import CoreUIPlugin
 
 class ProcessingUIPlugin(CoreUIPlugin):
+    def _preferences_pages_default(self):
+        from general_age_preferences_page import GeneralAgePreferencesPage
+        return [GeneralAgePreferencesPage]
+
     def _action_sets_default(self):
         '''
         '''

@@ -303,14 +303,14 @@ class Spectrum(Plotter):
     def _get_adapter(self):
         return SpectrumResultsAdapter
 
-    def _build_xtitle(self, g, xtitle_font, xtick_font):
+    def _build_xtitle(self, g, xtitle_font, xtick_font, **kw):
         f, s = xtitle_font.split(' ')
         g.set_x_title('cumulative 39ArK', font=f, size=int(s))
         g.set_axis_traits(axis='x', tick_label_font=xtick_font)
 
-    def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots):
+    def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots, age_unit='Ma', **kw):
         f, s = ytitle_font.split(' ')
-        g.set_y_title('Age', font=f, size=int(s))
+        g.set_y_title('Age ({})'.format(age_unit), font=f, size=int(s))
         for k, ap in enumerate(aux_plots):
             g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
             g.set_axis_traits(axis='y', tick_label_font=ytick_font)
@@ -461,6 +461,8 @@ class Spectrum(Plotter):
 
 #    def _get_plateau(self, ages, k39s, analyses, exclude=None):
     def _get_plateau(self, analyses, exclude=None):
+        if exclude is None:
+            exclude = []
         ages = self._get_ages(analyses, unzip=False)
         k39s = [a.k39.nominal_value for a in analyses]
         ages, errors = self._unzip_value_error(ages)
@@ -469,11 +471,19 @@ class Spectrum(Plotter):
         platbounds = find_plateaus(ages, errors, k39s, overlap_sigma=2, exclude=exclude)
         n = platbounds[1] - platbounds[0] + 1
         if n > 1:
-            ans = analyses[platbounds[0]:platbounds[1]]
+            ans = []
+
+            for j, ai in enumerate(analyses):
+                if j not in exclude and platbounds[0] <= j <= platbounds[1]:
+                    ans.append(ai)
+#            ans=[ai for (j,ai) in analyses if]
+#            ans = analyses[platbounds[0]:platbounds[1]]
+            ages, errors = self._get_ages(ans)
+            mswd, valid, n = self._get_mswd(ages, errors)
             plateau_age = self._calculate_total_gas_age(ans)
-            return plateau_age, platbounds, n
+            return plateau_age, platbounds, mswd, valid, len(ages)
         else:
-            return 0, array([0, 0]), 0
+            return 0, array([0, 0]), 0, 0, 0
 
     def _get_mswd(self, ages, errors):
         mswd = calculate_mswd(ages, errors)
@@ -524,10 +534,10 @@ class Spectrum(Plotter):
                                   )
 
 #        plateau_age, platbounds, nplateau_steps = self._get_plateau(ages, k39s, analyses)
-        plateau_age, platbounds, nplateau_steps = self._get_plateau(analyses)
+        plateau_age, platbounds, mswd, valid, nplateau_steps = self._get_plateau(analyses)
 
         point = (50, plateau_age.nominal_value)
-        ptext = self._build_plateau_age_label(plateau_age, nplateau_steps)
+        ptext = self._build_plateau_age_label(plateau_age, mswd, valid, nplateau_steps)
         pdl = self._add_data_label(spec,
                                    ptext,
                                    point,
@@ -552,12 +562,11 @@ class Spectrum(Plotter):
 
         return miages, maages, dl
 
-    def _build_plateau_age_label(self, plat_age, n):
+    def _build_plateau_age_label(self, plat_age, *args):
         age, error = plat_age.nominal_value, plat_age.std_dev()
         error *= self.plotter_options.nsigma
-        age = floatfmt(age, 3)
-        error = floatfmt(error, 4)
-        return 'Age={} {}{} n={}'.format(age, PLUSMINUS, error, n)
+        txt = self._build_label_text(age, error, *args)
+        return 'Age= {}'.format(txt)
 
     def _build_integrated_age_label(self, tga, *args):
         age, error = tga.nominal_value, tga.std_dev()
@@ -579,7 +588,7 @@ class Spectrum(Plotter):
 #        k39s = [a.k39 for a in ans]
 
 #        plateau_age, platbounds, nplateau_steps = self._get_plateau(ages, k39s, ans, exclude=sel)
-        plateau_age, platbounds, nplateau_steps = self._get_plateau(ans, exclude=sel)
+        plateau_age, platbounds, plateau_mswd, valid_mswd, nplateau_steps = self._get_plateau(ans, exclude=sel)
 #        n = platbounds[1] - platbounds[0]
 
         #provide 1s errors
@@ -604,12 +613,13 @@ class Spectrum(Plotter):
 #            pa, pe = age.nominal_value, plateau_age.std_dev()
             if not po.dragged:
                 po.y = plateau_age.nominal_value
-            offset = 0
-            for si in sel:
-                if si > platbounds[0] and si < platbounds[1]:
-                    offset = len(sel)
-                    break
-            text = self._build_plateau_age_label(plateau_age, nplateau_steps - offset)
+#            offset = 0
+#            for si in sel:
+#                if si > platbounds[0] and si < platbounds[1]:
+#                    offset = len(sel)
+#                    break
+
+            text = self._build_plateau_age_label(plateau_age, plateau_mswd, valid_mswd, nplateau_steps)
             plateau_age_label.label_text = text
 
         filtered_analyses = [ai for (j, ai) in enumerate(ans)

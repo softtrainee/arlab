@@ -53,7 +53,7 @@ class Analysis(Loggable):
     bgcolor = Color('white')
 
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
-    age_scalar = 1e6
+#    age_scalar = 1e6
     temp_status = Int
     temp_status_text = Property
     status_text = Property

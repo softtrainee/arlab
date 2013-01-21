@@ -309,7 +309,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             sid = si.record_id
             if sid in self.opened_windows:
                 c = self.opened_windows[sid].control
-                do_later(c.Raise)
+                if c is not None:
+                    do_later(c.Raise)
             else:
                 try:
                     si.load_graph()
