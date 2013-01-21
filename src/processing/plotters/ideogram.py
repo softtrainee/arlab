@@ -252,13 +252,7 @@ class Ideogram(Plotter):
                                additional_info=lambda x: x.age_string,
                                plotid=plotid,
                                **kw
-#                               value_scale=value_scale,
-#                               x_error=x_error,
-#                               y_error=y_error
                                )
-        g.set_axis_traits(tick_visible=False,
-          tick_label_formatter=lambda x:'',
-          axis='y', plotid=1)
 
     def _calculate_probability_curve(self, ages, errors, xmi, xma):
 #        print self.probability_curve_kind

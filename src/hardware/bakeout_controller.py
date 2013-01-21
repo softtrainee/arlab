@@ -138,12 +138,9 @@ class BakeoutController(WatlowEZZone):
         '''
         self.load_scripts()
 
-
         self.set_attribute(config, '_check_temp_enabled', 'Monitor', 'enabled', cast='boolean', default=True)
         self.set_attribute(config, '_check_temp_minutes', 'Monitor', 'time', cast='float', default=2)
         self.set_attribute(config, '_check_temp_threshold', 'Monitor', 'threshold', cast='float', default=40)
-
-
         return True
 
     def load_scripts(self):

@@ -23,6 +23,7 @@ from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import PyScript, makeRegistry
 import time
+from pyface.timer.do_later import do_later
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
 command_register = makeRegistry()
@@ -129,13 +130,13 @@ class BakeoutPyScript(PyScript):
     def setpoint(self, temperature=0, duration=0, units='h'):
 
         ts = TIMEDICT[units]
-        if self._graph_calc:
-            self._current_setpoint = temperature
-            self._xs.append(self._xs[-1])
-            self._xs.append(self._xs[-1] + duration * ts)
-            self._ys.append(temperature)
-            self._ys.append(temperature)
-            return
+#        if self._graph_calc:
+#            self._current_setpoint = temperature
+#            self._xs.append(self._xs[-1])
+#            self._xs.append(self._xs[-1] + duration * ts)
+#            self._ys.append(temperature)
+#            self._ys.append(temperature)
+#            return
 
         if self._syntax_checking or self._cancel:
             return
@@ -149,8 +150,11 @@ class BakeoutPyScript(PyScript):
 
             self._set_setpoint(temperature)
             #convert back to hours
-            c.duration = duration / 3600.
-            c.heating = True
+            do_later(c.trait_set, duration=duration / 3600.,
+                                 heating=True
+                                 )
+#            c.duration = duration / 3600.
+#            c.heating = True
 
         self._block(duration)
 

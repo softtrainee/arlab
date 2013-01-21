@@ -614,6 +614,7 @@ class PyScript(Loggable):
 
         else:
             st = time.time()
+            time.sleep(1)
             while time.time() - st < timeout:
                 if self._cancel:
                     break

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Any, Str, Property, cached_property, Bool
+from traits.api import Int, Any, Str, Property, cached_property, Bool, Event
 from traitsui.api import View
 from traitsui.menu import Action
 #============= standard library imports ========================
@@ -26,6 +26,7 @@ from src.saveable import Saveable
 
 
 class DatabaseRecord(Saveable):
+    selector = Any
     dbrecord = Property(depends_on='_dbrecord')
     _dbrecord = Any
 
@@ -56,6 +57,7 @@ class DatabaseRecord(Saveable):
     group_id = Int
     graph_id = Int
 
+    close_event = Event
     @classmethod
     def make_timestamp(cls, rd, rt):
         timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
@@ -65,6 +67,8 @@ class DatabaseRecord(Saveable):
     def opened(self):
         self.show()
 
+    def closed(self, isok):
+        self.close_event = True
 #    def load(self):
 #        dbr = self._dbrecord
 #        if dbr is not None:
