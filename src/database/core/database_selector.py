@@ -248,6 +248,13 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         db = self.db
         db.commit()
 
+    def _record_closed(self, obj, name, old, new):
+        sid = obj.record_id
+        if sid in self.opened_windows:
+            self.opened_windows.pop(sid)
+        obj.on_trait_change(self._record_closed, 'closed_event', remove=True)
+        obj.on_trait_change(self._changed, '_changed', remove=True)
+
     def open_record(self, records):
         self._open_selected(records)
 
@@ -302,11 +309,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             sid = si.record_id
             if sid in self.opened_windows:
                 c = self.opened_windows[sid].control
-                if c is None:
-                    self.opened_windows.pop(sid)
-                else:
-                    do_later(c.Raise)
-
+                do_later(c.Raise)
             else:
                 try:
                     si.load_graph()
@@ -395,6 +398,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             d.load()
 
         d.on_trait_change(self._changed, 'changed')
+        d.on_trait_change(self._record_closed, 'close_event')
         return d
 #===============================================================================
 # views

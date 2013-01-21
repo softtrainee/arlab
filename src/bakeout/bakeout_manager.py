@@ -143,6 +143,7 @@ class BakeoutManager(Manager):
             self.open_view(db.selector)
 
     def open_latest_bake(self):
+        self.info('open last bake')
         db = self.database
         if db.connect():
             db.selector.load_recent()
@@ -165,7 +166,7 @@ class BakeoutManager(Manager):
         self.info('Starting general scan')
         self._buffer_lock = Lock()
 
-        self.reset_data_recording()
+#        self.reset_data_recording()
         #reset the graph
         self.graph = self._graph_factory()
         for i, name in enumerate(self._get_controller_names()):
@@ -525,8 +526,8 @@ class BakeoutManager(Manager):
                     self.info('commit session to db')
                     #database session started in main thread so use do_later for commit
                     do_later(self.database.commit)
-                    do_later(self.open_latest_bake)
-
+#                    time.sleep(0.5)
+                    do_after_timer(1000, self.open_latest_bake)
 
                 else:
                     do_later(self._db_rollback)
@@ -637,6 +638,7 @@ class BakeoutManager(Manager):
 #            self.reset_general_scan()
 
         else:
+            self.reset_data_recording()
             for c in self._get_controllers():
                 if c.ok_to_run:
                     c.run()

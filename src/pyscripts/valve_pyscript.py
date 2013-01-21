@@ -47,14 +47,18 @@ class ValvePyScript(PyScript):
 
         self.info('opening {} ({})'.format(name, description))
 
-        result=self._manager_action([('open_valve', (name,), dict(
+        result = self._manager_action([('open_valve', (name,), dict(
                                                       mode='script',
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
         if result is not None:
-            _, changed=result[0]
+            ok, changed = result[0]
             if changed:
                 time.sleep(0.25)
+
+            if not ok:
+                self.info('Failed to open valve {} {}'.format(name, description))
+                self.cancel()
 
     @verbose_skip
     @command_register
@@ -64,14 +68,17 @@ class ValvePyScript(PyScript):
             description = '---'
 
         self.info('closing {} ({})'.format(name, description))
-        result=self._manager_action([('close_valve', (name,), dict(
+        result = self._manager_action([('close_valve', (name,), dict(
                                                       mode='script',
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
         if result is not None:
-            _, changed=result[0]
+            ok, changed = result[0]
             if changed:
                 time.sleep(0.25)
+            if not ok:
+                self.info('Failed to close valve {} {}'.format(name, description))
+                self.cancel()
 
     @verbose_skip
     @command_register

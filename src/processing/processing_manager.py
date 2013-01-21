@@ -384,7 +384,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         elif data_type == 'data_file':
             if self.confirmation_dialog('''Select a file with the following format. (Include first Line)
             
-identifer, age, error
+identifier, age, error
 1000,10.0, 0.1
 1001,10.0, 0.1
 g
@@ -393,8 +393,6 @@ g
 Use 'g' to separate groups''', title='Select a DataFile'):
                 p = self.open_file_dialog(default_directory=paths.data_dir)
                 return p
-
-
 
     def _display_tabular_data(self, ans, title, associated_window=None):
         tm = TabularAnalysisManager(analyses=ans,
@@ -565,9 +563,14 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 return str(e).replace('is not in list', 'is not in header line {}'.format(','.join(header)))
 
             ans = []
+            group_id = 0
             for line in reader:
 #                status = str_to_bool(line[status_index])
 #                if status:
+                if line[0].strip().lower() == 'g':
+                    group_id += 1
+                    continue
+
                 record_id = line[identifier_index]
                 try:
                     age = float(line[age_index])
@@ -580,7 +583,9 @@ Use 'g' to separate groups''', title='Select a DataFile'):
 
                 ai = NonDBAnalysis(record_id=record_id,
                                    analysis_type='unknown',
-                                   age=(age, error))
+                                   age=(age, error),
+                                   group_id=group_id
+                                   )
                 ans.append(ai)
             return ans
 
