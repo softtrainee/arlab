@@ -122,16 +122,16 @@ class BakeoutController(WatlowEZZone):
     def isActive(self):
         return self.active
 
-    def kill(self):
-        self.led.state = 'red'
-#        if self.isAlive() and self.isActive():
-        if self.isActive():
-            self.info('killing')
-            if self._active_script is not None:
-                self._active_script._alive = False
-
-            if abs(self.setpoint) > 0.001:
-                self.set_closed_loop_setpoint(0)
+#    def kill(self):
+#        self.led.state = 'red'
+##        if self.isAlive() and self.isActive():
+#        if self.isActive():
+#            self.info('killing')
+#            if self._active_script is not None:
+#                self._active_script._alive = False
+#
+#            if abs(self.setpoint) > 0.001:
+#                self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
         '''
@@ -188,13 +188,13 @@ Add {}'.format(sd)):
         self.cnt = 0
         self.start_time = time.time()
         self.active = True
-#        self.alive = True
 
         self._check_buffer = []
+
         #set led to green
         self.led.state = 'green'
-        time.sleep(0.005)
         if self.script == NULL_STR:
+            self._active_script = None
             self.heating = True
             self._duration_timeout = True
             self.set_control_mode('closed')
@@ -205,8 +205,8 @@ Add {}'.format(sd)):
             self.heating = False
             self._duration_timeout = False
 
-            if self._active_script is not None:
-                self._active_script.cancel()
+#            if self._active_script is not None:
+#                self._active_script.cancel()
 
             t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
                                                       'bakeout'),
@@ -274,33 +274,28 @@ Add {}'.format(sd)):
         self.write(register, value, nregisters=2, **kw)
 
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
-        self.led.state = 'red'
+#        self.led.state = 'red'
 #        if self.isActive() and self.isAlive():
         if self.isActive():
-#            if hasattr(self, '_timer'):
-#                self._timer.Stop()
-
-            if self._active_script is not None:
-#                if not script_kill:
-#                    self._active_script.cancel()
-                    self._active_script = None
-
             if msg is None:
                 msg = 'bakeout finished'
+                self.info(msg)
 
-            func = self.info
             if user_kill:
                 msg = '{} - Canceled by user'.format(msg)
+                self.info(msg)
             elif error:
-                msg = error
-                func = self.warning
+                self.warning(error)
 
-            self.kill()
+            self.led.state = 'red'
 
-            func(msg)
-#            self.alive = False
-            self.active = False
+            if self._active_script is not None:
+                self._active_script.cancel()
+#                self._active_script = None
+
+            self.setpoint = 0
             self._duration = 0
+            self.active = False
 #            self.process_value = 0
 
 #    def complex_query(self, **kw):
@@ -369,11 +364,16 @@ Add {}'.format(sd)):
                 cb = cb[-n:]
                 avgtemp = sum(cb) / len(cb)
                 if avgtemp < self._check_temp_threshold:
+
+                    if self._active_script is not None:
+                        self._active_script.cancel()
+
                     self.setpoint = 0
                     self._duration = 0
 
                     self.led.state = False
                     self.active = False
+
 #                    self.alive = False
                     self.warning('controller failed to heat average temp= {}, duration={}'.format(avgtemp, self._check_temp_minutes))
                     self.warning_dialog('Controller failed to heat. Average temp.={:0.1f} after {} minutes. Check thermocouple and heating tape'.\

@@ -617,7 +617,7 @@ class PyScript(Loggable):
             while time.time() - st < timeout:
                 if self._cancel:
                     break
-                self._sleep(0.5)
+                time.sleep(1)
 
 #===============================================================================
 # properties
