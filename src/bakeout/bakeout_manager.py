@@ -18,7 +18,7 @@
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
     Float, Str, Property, List, on_trait_change, Dict, Any, cached_property
-from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor
+from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor, spring
 from pyface.timer.api import do_later, do_after as do_after_timer
 
 #============= standard library imports  ==========================
@@ -45,6 +45,8 @@ from src.helpers.archiver import Archiver
 from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
 import datetime
+from src.bakeout.classifier import Classifier
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 BATCH_SET_BAUDRATE = False
@@ -76,6 +78,9 @@ class BakeoutManager(Manager):
     execute_ok = Property(depends_on='bakeout+:execute_dirty')
     execute_label = Property(depends_on='active')
     active = Bool(False)
+
+    training_run = Bool(False)
+#    _training_controllers = List
 
     save = Button
 
@@ -153,9 +158,8 @@ class BakeoutManager(Manager):
         self.data_manager = self._data_manager_factory(controllers,
                                                        [],
                                                        style='h5')
-
-        self._add_bakeout_to_db(controllers,
-                                    self.data_manager.get_current_path())
+        self._current_data_path = cp = self.data_manager.get_current_path()
+        self._add_bakeout_to_db(controllers, cp)
 
     def reset_general_scan(self):
         self.info('Starting general scan')
@@ -204,13 +208,11 @@ class BakeoutManager(Manager):
         if self.data_manager:
             self.data_manager.close()
 
-        self._stop_controllers()
-        self._clean_archive()
-
-    def _stop_controllers(self):
         for c in self._get_controllers():
             c.end()
             c.stop_timer()
+
+        self._clean_archive()
 #==============================================================================
 # private
 #==============================================================================
@@ -364,17 +366,17 @@ class BakeoutManager(Manager):
         dm = self.data_manager
         for ((name, _, pi, hp), xi) in zip(self.data_buffer,
                                              self.data_buffer_x):
-            for (ti, di, inc) in [('temp', pi, self.include_temp),
-                                  ('heat', hp, self.include_heat),
-                                  ]:
-                if inc:
-                    table = dm.get_table(ti, name)
-                    if table is not None:
-                        row = table.row
-                        row['time'] = xi
-                        row['value'] = di
-                        row.append()
-                        table.flush()
+
+
+
+            for (ti, di) in [('temp', pi), ('heat', hp)]:
+                table = dm.get_table(ti, name)
+                if table is not None:
+                    row = table.row
+                    row['time'] = xi
+                    row['value'] = di
+                    row.append()
+                    table.flush()
 
     def _write_csv_data(self):
         ns = sum(map(int, [self.include_heat,
@@ -406,6 +408,42 @@ class BakeoutManager(Manager):
 
         self.data_manager.write_to_frame(container)
 
+#===============================================================================
+# classifier
+#===============================================================================
+    def _classifier_save(self):
+        if self.confirmation_dialog('Use data for classification'):
+            classification = self.confirmation_dialog('Classify this bake as successful?')
+
+            gxs, gys, gps = self._assemble_classifier_data()
+            classifier = Classifier()
+            classifier.add_to_training_data(gxs, gys, gps, int(classification))
+
+    def _classify(self):
+        classifier = Classifier()
+
+        gxs, gys, gps = self._assemble_classifier_data()
+        obs = classifier.assemble_observation(gxs, gys, gps)
+        return classifier.sv_classify(obs)
+
+    def _assemble_classifier_data(self):
+#        dm = H5DataManager()
+        dm = self.data_manager
+#        dm.open_data(self._current_data_path)
+        controllers = dm.get_groups()
+        gxs = []
+        gys = []
+        gps = []
+
+        #use only the first 10 minutes of data
+        npts = 10 * 60 / float(self.update_interval)
+        for ci in controllers:
+            temptable = ci.temp[:npts]
+            heattable = ci.heat[:npts]
+            gxs.append([x['time'] for x in temptable])
+            gys.append([x['value'] for x in temptable])
+            gps.append([x['value'] for x in heattable])
+        return gxs, gys, gps
 #===============================================================================
 # database
 #===============================================================================
@@ -442,10 +480,11 @@ class BakeoutManager(Manager):
 # handlers 
 #===============================================================================
     @on_trait_change('bakeout+:active')
-    def update_active(self, new):
+    def update_active(self, obj, name, old, new):
         if new:
             self.active = new
         else:
+#            self._training_controllers.remove(obj.name)
             self.active = bool(len(self._get_active_controllers()))
 
     def _update_interval_changed(self):
@@ -480,11 +519,14 @@ class BakeoutManager(Manager):
                     ok_to_commit = self.db_save_dialog()
 
                 if ok_to_commit:
+                    if self.training_run:
+                        self._classifier_save()
+
                     self.info('commit session to db')
                     #database session started in main thread so use do_later for commit
                     do_later(self.database.commit)
-
                     do_later(self.open_latest_bake)
+
 
                 else:
                     do_later(self._db_rollback)
@@ -580,28 +622,26 @@ class BakeoutManager(Manager):
 
     def _execute_fired(self):
         if self.active:
+            self._suppress_commit = True
+            if self.training_run:
+                self._classifier_save()
+
             self._db_save()
 
-#            self.kill(user_kill=True,
-#                      close=False
-#                      )
-            self._stop_controllers()
+            for c in self._get_controllers():
+                c.end()
 
-            self._suppress_commit = True
-            self.active = False
             self._suppress_commit = False
 
             self.reset_data_recording()
 #            self.reset_general_scan()
 
         else:
-            states = []
             for c in self._get_controllers():
                 if c.ok_to_run:
                     c.run()
-                    states.append(True)
-
-#            self.active = True in states
+#                    self._training_controllers.append(c.name)
+#                    states.append(True)
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -619,7 +659,6 @@ class BakeoutManager(Manager):
     def _get_controller_names(self):
         '''
         '''
-
         c = [tr for tr in self.traits() if tr.startswith('bakeout')]
         c.sort()
         return c
@@ -673,10 +712,8 @@ class BakeoutManager(Manager):
         else:
             for ci in controllers:
                 cgrp = dm.new_group(ci.name)
-                if self.include_temp:
-                    dm.new_table(cgrp, 'temp')
-                if self.include_heat:
-                    dm.new_table(cgrp, 'heat')
+                dm.new_table(cgrp, 'temp')
+                dm.new_table(cgrp, 'heat')
                 if self.include_pressure:
                     dm.new_table(cgrp, 'pressure')
 
@@ -844,45 +881,50 @@ class BakeoutManager(Manager):
             controller_grp.content.append(Item(tr,
                                      show_label=False, style='custom'))
 
-        control_grp = HGroup(VGroup(Item('execute',
-                             editor=ButtonEditor(label_value='execute_label'
-                             ), show_label=False,
-                             enabled_when='execute_ok'),
-
-#                             Item('open_button',
-#                             editor=ButtonEditor(label_value='open_label'
-#                             ), show_label=False),
-#                            Item('edit_scripts_button', show_label=False,
-##                                 enabled_when='not active'
-#                                 ),
+        control_grp = HGroup(
+                             VGroup(Item('execute',
+                                         editor=ButtonEditor(label_value='execute_label'), show_label=False,
+                                         enabled_when='execute_ok'),
+                                    HGroup(spring, Item('training_run', label='Training Run'))
                                     ),
                              HGroup(Item('configuration',
                                          editor=EnumEditor(name='configurations'),
                                          show_label=False),
                                     Item('save',
                                          show_label=False)),
-                             VGroup('include_pressure', 'include_heat',
-                             'include_temp', enabled_when='not active'),
-                             label='Control', show_border=True),
+                             VGroup('include_pressure',
+                                    'include_heat',
+                                    'include_temp', enabled_when='not active'),
+                             label='Control', show_border=True
+                             )
 
         scan_grp = VGroup(Item('update_interval',
                           label='Sample Period (s)'), Item('scan_window'
                           , label='Data Window (mins)'), label='Scan',
                           show_border=True)
 
-        pressure_grp = VGroup(HGroup(Item('use_pressure_monitor'),
-                              Item('_pressure_sampling_period',
-                              label='Sample Period (s)')),
-                              VGroup(Item('_max_duration',
-                              label='Max. Duration (hrs)'),
-                              Item('_pressure_monitor_std_threshold'),
-                              Item('_pressure_monitor_threshold'),
-                              enabled_when='use_pressure_monitor'),
-                              label='Pressure', show_border=True)
-        v = View(VGroup(HGroup(control_grp, HGroup(scan_grp,
-                 pressure_grp, enabled_when='not active')),
-                 controller_grp, Item('graph', show_label=False,
-                 style='custom')), handler=AppHandler,
+        pressure_grp = VGroup(
+                              HGroup(
+                                     Item('use_pressure_monitor'),
+                                     Item('_pressure_sampling_period',
+                                          label='Sample Period (s)')),
+                              VGroup(
+                                     Item('_max_duration',
+                                          label='Max. Duration (hrs)'),
+                                     Item('_pressure_monitor_std_threshold'),
+                                     Item('_pressure_monitor_threshold'),
+                                          enabled_when='use_pressure_monitor'
+                                     ),
+                                     label='Pressure', show_border=True
+                            )
+        v = View(VGroup(
+                        HGroup(control_grp,
+                               HGroup(scan_grp, pressure_grp,
+                                      enabled_when='not active')
+                               ),
+                        controller_grp,
+                        Item('graph', show_label=False, style='custom')),
+                 handler=AppHandler,
                  resizable=True, title='Bakedpy', height=830)
         return v
 #def launch_bakeout():

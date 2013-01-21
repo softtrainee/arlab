@@ -67,7 +67,7 @@ SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 class PlotterOptions(Viewable):
     title = Str
     auto_generate_title = Bool
-    data_type = Enum('database', 'data_file', 'manual_entry')
+    data_type = Str#Enum()
     aux_plots = List
 
     xtick_font = Property
@@ -235,7 +235,11 @@ class PlotterOptions(Viewable):
                              HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
                                     Item('title', springy=True, enabled_when='not auto_generate_title',
                                          tooltip='User specified plot title')),
-                             Item('data_type', defined_when='data_type_editable'),
+                             Item('data_type',
+                                  editor=EnumEditor(values={'database':'0:Database',
+                                                            'data_file':'1:Data File',
+                                                            'manual_entry':'2:Manual Entry'}),
+                                  defined_when='data_type_editable'),
                              self._get_x_axis_group(),
 
                              VGroup(
