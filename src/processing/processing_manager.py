@@ -374,7 +374,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                     path for data_file
                     
         '''
-        return True
+#        return True
         if data_type == 'database':
             d = self.selector_manager
             if self.db.connect():
@@ -819,11 +819,11 @@ Use 'g' to separate groups''', title='Select a DataFile'):
     def _selector_manager_default(self):
         db = self.db
         d = SelectorManager(db=db)
-        if not db.connected:
-            db.connect()
+#        if not db.connected:
+#            db.connect()
 
 #        d.select_labnumber([61541])
-        d.select_labnumber([22233])
+#        d.select_labnumber([22233])
         return d
 
     def _search_manager_default(self):
