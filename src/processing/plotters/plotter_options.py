@@ -67,7 +67,7 @@ SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 class PlotterOptions(Viewable):
     title = Str
     auto_generate_title = Bool
-    data_type = Str#Enum()
+    data_type = Str('database')
     aux_plots = List
 
     xtick_font = Property
