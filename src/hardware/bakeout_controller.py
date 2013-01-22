@@ -102,6 +102,7 @@ class BakeoutController(WatlowEZZone):
     _check_temp_enabled = True
     _check_temp_minutes = 2
     _check_temp_threshold = 40
+    _check_start_minutes=5
 #    (depends_on='_ok_to_run')
 #    _ok_to_run = Bool(False)
 
@@ -355,9 +356,10 @@ Add {}'.format(sd)):
     def _check_temp(self):
         if self.isActive() and self.heating:
             n = int(self._check_temp_minutes * 60 / float(self.update_interval))
+            st = int(self._check_start_minutes * 60 / float(self.update_interval))
             cb = self._check_buffer
             cb.append(self.process_value)
-            if len(cb) >= n:
+            if len(cb) >= st:
                 cb = cb[-n:]
                 avgtemp = sum(cb) / len(cb)
                 if avgtemp < self._check_temp_threshold:

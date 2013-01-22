@@ -823,8 +823,8 @@ class BakeoutManager(Manager):
 
     def _database_default(self):
         db = BakeoutAdapter(
-                            name='/Users/ross/Sandbox/bakeout.sqlite',
-#                            name=paths.bakeout_db,
+#                            name='/Users/ross/Sandbox/bakeout.sqlite',
+                            name=paths.bakeout_db,
 #                            password='Argon',
                             kind='sqlite',
                             application=self.application
