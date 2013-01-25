@@ -17,7 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Any, Str, Int, Float, Bool, Property, on_trait_change
+from traits.api import  Any, Str, Int, Float, \
+    Bool, Property, on_trait_change, CInt
 from traitsui.api import View, Item
 
 #============= standard library imports ========================
@@ -56,7 +57,8 @@ class Axis(ConfigLoadable):
     nominal_velocity = Float
     nominal_acceleration = Float
     nominal_deceleration = Float
-
+    
+    sign = CInt(1)
     def _get_velocity(self):
         return self._velocity
 
@@ -139,4 +141,10 @@ class Axis(ConfigLoadable):
 #            for i in cp.items(s):
 #                params.append(i)
         return params
+    def _validate_float(self, v):
+        try:
+            v = float(v)
+            return v
+        except ValueError:
+            pass
 #============= EOF ====================================

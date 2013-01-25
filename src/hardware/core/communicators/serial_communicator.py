@@ -65,6 +65,7 @@ class SerialCommunicator(Communicator):
 
     read_delay = None
     read_terminator = None
+    write_terminator=None
     clear_output=False
     
     def reset(self):
@@ -162,7 +163,10 @@ class SerialCommunicator(Communicator):
             #self._lock.release()
             return r
 
-    def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None, nbytes=8):
+    def ask(self, cmd, is_hex=False, verbose=True, delay=None, 
+            replace=None, remove_eol=True, info=None, nbytes=8,
+            handshake_only=False,
+            handshake=None):
         '''
             
         '''
@@ -173,13 +177,14 @@ class SerialCommunicator(Communicator):
             return
         
         with self._lock:
-            #self.handle.flushInput()
             if self.clear_output:
+                self.handle.flushInput()
                 self.handle.flushOutput()
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
-            re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes)
-
+            re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes,
+                            handshake=handshake, handshake_only=handshake_only)
+        #print re, len(re)
         re = self.process_response(re, replace, remove_eol)
 
         if verbose:
@@ -344,8 +349,8 @@ class SerialCommunicator(Communicator):
                 cmd = cmd.decode('hex')
                 #write(cmd)
             else:
-                if self._terminator is not None:
-                    cmd += self._terminator
+                if self.write_terminator is not None:
+                    cmd += self.write_terminator
 
 #                if self.char_write:
 #                    for c in cmd:
@@ -353,14 +358,14 @@ class SerialCommunicator(Communicator):
 #                        time.sleep(0.0005)
 #                else:
 #                    write(cmd)
-            #print cmd, len(cmd)
 #            time.sleep(50e-9)
             write(cmd)
 
-    def _read(self, is_hex=False, nbytes=8, timeout=1, delay=None):
-
+    def _read(self, is_hex=False, nbytes=8, timeout=1, delay=None,
+              handshake=None, handshake_only=False):  
         func = (lambda: self._get_nbytes(nbytes)) \
-                    if is_hex else self._get_isline
+                if is_hex else lambda: self._get_isline(self.read_terminator)
+                    
         if delay is not None:
             time.sleep(delay / 1000.)
 
@@ -371,14 +376,23 @@ class SerialCommunicator(Communicator):
         st = time.time()
 
         while time.time() - st < timeout:
-            try:
-                r, isline = func()
-                if isline:
+            if handshake is not None:
+                ack,r=self._check_handshake(handshake)
+                if handshake_only and ack:
+                    r=handshake[0]
                     break
-            except (ValueError, TypeError):
-                import traceback
-                traceback.print_exc()
-
+                elif ack and r is not None:
+                    break
+            else:  
+                try:
+                    r, isline = func()
+                    if isline:
+                        break
+                except (ValueError, TypeError):
+                    import traceback
+                    traceback.print_exc()
+                time.sleep(0.001)
+                
         return r
 
     def _get_nbytes(self, nbytes=8):
@@ -401,11 +415,20 @@ class SerialCommunicator(Communicator):
             tt += d
 
         return r, tt < timeout
-
+    
+    def _check_handshake(self, handshake_chrs):
+        ack,nak=handshake_chrs
+        inw = self.handle.inWaiting()
+        r = self.handle.read(inw)
+        if r:
+            return ack==r[0], r[1:]
+        return False, None
+    
     def _get_isline(self, terminator=None):
         try:
             inw = self.handle.inWaiting()
             r = self.handle.read(inw)
+#            print 'inw',inw,r
             if terminator is None:
                 t1 = '\n'
                 t2 = '\r'

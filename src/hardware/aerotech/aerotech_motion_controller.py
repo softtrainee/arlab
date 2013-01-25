@@ -25,6 +25,8 @@
 #============= local library imports  ==========================
 from aerotech_axis import AerotechAxis
 from src.hardware.motion_controller import MotionController
+import time
+from src.hardware.core.data_helper import make_bitarray
 
 
 ACK = chr(6)
@@ -36,10 +38,12 @@ class AerotechMotionController(MotionController):
     def initialize(self, *args, **kw):
         '''
         '''
-        self._communicator._terminator = None
+        self._communicator.write_terminator = None
         self.tell('##')
-        self._communicator._terminator = chr(10)
-
+        self._communicator.write_terminator = chr(13)
+        self._communicator.read_delay=25
+        self.enable()
+        self.home()
 #        for a in self.axes.itervalues():
 #            a.load_parameters()
 
@@ -49,34 +53,78 @@ class AerotechMotionController(MotionController):
         '''
 
         '''
-        path = self.configuration_dir_path
-        for i, a in enumerate(['x', 'y', 'z']):
-            ma = 5
-            mi = -ma
-            self.axes[a] = self._axis_factory(
-#                                            path,
-                                            name=a.upper(),
-                                            parent=self,
-                                            id=i + 1,
-                                            negative_limit=mi,
-                                            positive_limit=ma)
-
+#        path = self.configuration_dir_path
+#        for i, a in enumerate(['x', 'y', 'z']):
+#            ma = 5
+#            mi = -ma
+#            self.axes[a] = self._axis_factory(
+##                                            path,
+#                                            name=a.upper(),
+#                                            parent=self,
+#                                            id=i + 1,
+#                                            negative_limit=mi,
+#                                            positive_limit=ma)
+        self.axes_factory()
         return True
+   
+    def linear_move(self,x,y, sign_correct=True,**kw):
+        errx = self._validate(x, 'x', cur=self._x_position)
+        erry = self._validate(y, 'y', cur=self._y_position)
+        print x,y
+        if errx is None and erry is None:
+            return 'invalid position {},{}'.format(x, y)
+        
+        self.parent.canvas.set_desired_position(x, y)
+        self._x_position = x
+        self._y_position = y
+        
+        nx=x-self.get_current_position('x')
+        ny=y-self.get_current_position('y')
+        if sign_correct:
+            nx=self._sign_correct(nx, 'x', ratio=False)
+            ny=self._sign_correct(ny, 'y', ratio=False)
 
-#    def single_axis_move(self, key, value):
-#        '''
-#        '''
-#        axis = self.axes[key]
-#        name = axis.name
-#
-#        # self._relative_move([name], [value-axis.position])
-#        cmd = EIC + '%s%i' % (name, value - axis.position)
-#
-#        self.ask(cmd)
-#
-#        #for debugging 
-#        #axis.position=value
-#        #self._moving_()
+        self.timer = self.timer_factory()
+        if self.axes.keys().index('y')==0:
+            cmd='ILI X{} Y{}'.format(ny, nx)
+        else:
+            cmd='ILI X{} Y{}'.format(nx,ny)
+            
+        self.ask(cmd, handshake_only=True)
+        
+    def set_single_axis_motion_parameters(self,axis=None, pdict=None):
+        if pdict is not None:
+            key=pdict['key']
+            self.axes[key].velocity=pdict['velocity']
+        
+    def single_axis_move(self, key, value,block=False):
+        '''
+        '''
+        nkey=self._get_axis_name(key)
+        axis = self.axes[nkey]
+        name = axis.name.upper()
+        cp=self.get_current_position(key)
+        if self._validate(value, nkey, cp) is not None:
+            nv=value-cp
+            
+            nv=self._sign_correct(nv, key, ratio=False)
+    #        cmd='IIN {}{} {}F100'.format(name, int(value), name)
+            cmd='IIN {}{} {}F{}'.format(name, nv, name, axis.velocity)
+    #
+    #        # self._relative_move([name], [value-axis.position])
+    #        cmd = EIC + '%s%i' % (name, value - axis.position)
+            if name=='Z':
+                func=self._z_inprogress_update
+            else:
+                func=self._inprogress_update
+                
+            self.ask(cmd, handshake_only=True)
+            self.timer = self.timer_factory(func= func)
+
+            if block:
+                time.sleep(0.5)
+                self.block()
+        #self._moving_()
 #
 #    def _relative_move(self, axes, values):
 #        '''
@@ -87,20 +135,54 @@ class AerotechMotionController(MotionController):
 #        cmd = self._build_command(cmd, axes, values=values)
 #        resp = self.ask(cmd)
 #        return self._parse_response(resp)
-#
-#    def enable(self):
-#        '''
-#        '''
-#
-#        cmd = 'EN'
-#
-#        axes = ['X', 'Y']
-#        axes = ' '.join(axes)
-#        cmd = self._build_command(cmd, axes)
-#        self.tell(cmd)
-#        #resp=self.ask(cmd)
-#        #return self._parse_response(resp)
-#
+    def block(self, axis=None):
+#        for i in range(100):
+#            self._moving()
+        while self._moving_():
+            time.sleep(0.5)
+            
+    def _moving_(self):
+        cmd='Q'
+        sb=self.ask(cmd, verbose=False)
+        if sb is not None:
+        #cover status bit to binstr
+            b=make_bitarray(int(sb))
+            return int(b[2])
+        
+    def _get_axis_name(self, axis):
+#        print self.axes.keys(),self.axes.keys().index('y')
+        if axis in ('x','y'):
+            if self.axes.keys().index('y')==0:
+                if axis=='y':
+                    axis='x'
+                else:
+                    axis='y'
+        return axis
+        
+    def get_current_position(self, axis, verbose=False):
+        naxis=self._get_axis_name(axis)
+        
+        cmd='P{}'.format(naxis)
+        pos=self.ask(cmd, verbose=verbose)
+        pos=float(pos)
+        pos=self._sign_correct(pos, axis)
+        setattr(self, '_{}_position'.format(axis), pos)
+        return pos
+            
+    def enable(self, axes=None):
+        '''
+        '''
+
+        cmd = 'IEN'
+        axes=self._get_axes_name_list(axes)
+        cmd='{} {}'.format(cmd, axes)
+        resp=self.ask(cmd, handshake_only=True)
+    
+    def _get_axes_name_list(self, axes):
+        if axes is None:
+            axes = self.axes.keys()
+        axes=map(str.upper, axes)
+        return ' '.join(axes)
 #    def disable(self):
 #        '''
 #        '''
@@ -113,17 +195,28 @@ class AerotechMotionController(MotionController):
 #        self.tell(cmd)
 #        #resp=self.ask(cmd)
 #        #return self._parse_response(resp)
-#
-#    def home(self, *args, **ke):
-#        '''
-#        '''
-#        cmd = 'HO'
-#
-#        axes = ['X', 'Y']
-#        axes = ' '.join(axes)
-#        cmd = self._build_command(cmd, axes)
-#        resp = self.ask(cmd)
-#        return self._parse_response(resp)
+    def define_home(self, axes=None):
+        cmd = 'ISO HOME'
+        axes=self._get_axes_name_list(axes)
+            
+        cmd='{} {}'.format(cmd, axes)
+        resp = self.ask(cmd, handshake_only=True)
+        
+    def home(self, axes=None):
+        '''
+        '''
+        cmd = 'IHO'
+        axes=self._get_axes_name_list(axes)
+            
+        cmd='{} {}'.format(cmd, axes)
+        resp = self.ask(cmd, handshake_only=True)
+        time.sleep(1)
+        self.block()
+        time.sleep(1)
+        self.linear_move(25, 25, sign_correct=False)
+        self.block()
+        self.define_home()
+        
 #
 #    def get_current_position(self, key):
 #        '''
@@ -227,11 +320,14 @@ class AerotechMotionController(MotionController):
 #        '''
 #        if resp is not None:
 #            return resp.strip()
+    def ask(self, cmd, **kw):
+        return super(AerotechMotionController,self).ask(cmd,handshake=[ACK,NAK],**kw)
 
-    def _axis_factory(self, **kw):
+    def _axis_factory(self, path,**kw):
         '''
         '''
-        a = AerotechAxis(**kw)
+        a = AerotechAxis(parent=self,**kw)
+        p = a.load(path)
         return a
 
 #if __name__ == '__main__':

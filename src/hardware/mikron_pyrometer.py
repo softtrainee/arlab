@@ -42,7 +42,7 @@ class MikronGA140Pyrometer(CoreDevice):
     device_address = '00'
     global_address = 99
     global_address_wo_response = 98
-    _terminator = chr(13)
+#    _terminator = chr(13)
 
     emissivity = Property(Float(enter_set=True, auto_set=False), depends_on='_emissivity')
     _emissivity = Float(50.0)

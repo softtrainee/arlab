@@ -310,7 +310,6 @@ class FusionsUVManager(FusionsLaserManager):
         '''
         args = dict(name='stage',
                             configuration_dir_name='uv',
-                             parent=self,
                              stage_controller_class='Aerotech'
                              )
 

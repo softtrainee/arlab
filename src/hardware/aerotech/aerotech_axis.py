@@ -35,7 +35,19 @@ class AerotechAxis(Axis):
     home_feedrate = CFloat
     home_offset = CFloat
     limit_switch_normally_open = yes_no
-
+    def load(self, path):
+        for key, value in self._get_parameters(path):
+#            if key in ['sign']:
+#                value = int(value)
+            setattr(self, key, value)
+            
+    def _validate_velocity(self, v):
+        return self._validate_float(v)
+    
+    def _set_velocity(self, v):
+        self.nominal_velocity = v
+        self.trait_set(_velocity=v, trait_change_notify=False)
+        
     def load_parameters(self):
 
         #homing and limts 4.7
