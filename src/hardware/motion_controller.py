@@ -112,15 +112,13 @@ class MotionController(CoreDevice):
     def _inprogress_update(self):
         '''
         '''
-
-        x = self.get_current_position('x')
-        y = self.get_current_position('y')
-
         if not self._moving_():
 #            x = self.get_current_position('x')
 #            y = self.get_current_position('y')
             self.timer.Stop()
 
+        x = self.get_current_position('x')
+        y = self.get_current_position('y')
 #        self.info('setting x={:3f}, y={:3f}'.format(x, y))
 #        do_later(self.parent.canvas.set_stage_position, x, y)
         self.parent.canvas.set_stage_position(x, y)
@@ -144,7 +142,6 @@ class MotionController(CoreDevice):
     def _validate(self, v, key, cur):
         '''
         '''
-        #print 'vin', v, key, cur
         mi = self.axes[key].negative_limit
         ma = self.axes[key].positive_limit
 
@@ -188,6 +185,7 @@ class MotionController(CoreDevice):
     def set_z(self, v, **kw):
         self.single_axis_move('z', v, **kw)
         self._z_position = v
+        self.axes['z'].position=v
 
     def _set_z(self, v):
         '''
@@ -201,6 +199,7 @@ class MotionController(CoreDevice):
         if v is not None:
             self.single_axis_move('x', v)
             self._x_position = v
+            self.axes['x'].position=v
 
     def _set_y(self, v):
         '''
@@ -209,6 +208,7 @@ class MotionController(CoreDevice):
         if v is not None:
             self.single_axis_move('y', v)
             self._y_position = v
+            self.axes['y'].position=v
 
     def get_current_position(self, *args, **kw):
         '''
@@ -256,7 +256,37 @@ class MotionController(CoreDevice):
         pass
     def linear_move(self, *args, **kw):
         pass
+    
+    def axes_factory(self, config=None):
+        if config is None:
 
+            config = self.get_configuration(self.config_path)
+
+        mapping = self.config_get(config, 'General', 'mapping')
+        if mapping is not None:
+            mapping = mapping.split(',')
+        else:
+            mapping = 'x,y,z'
+
+        lp = self.config_get(config, 'General', 'loadposition')
+        if lp is not None:
+            loadposition = [float(f) for f in lp.split(',')]
+        else:
+            loadposition = [0, 0, 0]
+
+        config_path = self.configuration_dir_path
+        for i, a in enumerate(mapping):
+            self.info('loading axis {},{}'.format(i, a))
+            limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
+            na = self._axis_factory(config_path,
+                                  name=a,
+                                  id=i + 1,
+                                  negative_limit=limits[0],
+                                  positive_limit=limits[1],
+                                  loadposition=loadposition[i]
+                                  )
+
+            self.axes[a] = na
     def _get_xaxes_max(self):
         '''
         '''
@@ -286,4 +316,15 @@ class MotionController(CoreDevice):
         '''
         '''
         return self.axes['z'].positive_limit if self.axes.has_key('z') else 0
+    
+    def _sign_correct(self, val, key, ratio=True):
+        '''
+        '''
+        axis = self.axes[key]
+        r = 1
+        if ratio:
+            r = axis.drive_ratio
+#            self.info('using drive ratio {}={}'.format(key, r))
+        
+        return val * axis.sign * r
 #============= EOF ====================================

@@ -293,6 +293,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             while controller.timer.IsRunning() and not self._evt_autofocusing.isSet():
                 src = self._load_source()
                 x = controller.get_current_position('z')
+                
                 y = self._calculate_focus_measure(src, operator, roi)
                 self.graph.add_datum((x, y), series=series, do_after=1)
 
@@ -409,7 +410,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             self.passive_focus()
         else:
             self.autofocusing = False
-            self._evt_autofocusing.Set()
+            self._evt_autofocusing.set()
             self.stop_focus()
 
     def _configure_button_fired(self):

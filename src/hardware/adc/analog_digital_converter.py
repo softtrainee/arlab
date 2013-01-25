@@ -75,7 +75,7 @@ class AgilentADC(AnalogDigitalConverter):
         '''
         '''
 
-        self._communicator._terminator = chr(10)
+        self._communicator.write_terminator = chr(10)
         if self.address is not None:
             cmds = [
                   '*CLS',

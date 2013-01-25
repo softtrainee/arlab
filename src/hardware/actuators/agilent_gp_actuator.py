@@ -36,7 +36,7 @@ class AgilentGPActuator(GPActuator):
     def initialize(self, *args, **kw):
         '''
         '''
-        self._communicator._terminator = chr(10)
+        self._communicator.write_terminator = chr(10)
 
         #clear and record any accumulated errors
         errs = self._get_errors()

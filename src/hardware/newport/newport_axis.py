@@ -155,7 +155,7 @@ class NewportAxis(Axis):
 
     loadposition = Float
 
-    sign = CInt(1)
+    
 
     kind = Property(depends_on='_kind')
     _kind = Int
@@ -249,13 +249,6 @@ class NewportAxis(Axis):
 
     def _validate_deceleration(self, v):
         return self._validate_float(v)
-
-    def _validate_float(self, v):
-        try:
-            v = float(v)
-            return v
-        except ValueError:
-            pass
 
     def _set_acceleration(self, v):
         self.nominal_acceleration = v

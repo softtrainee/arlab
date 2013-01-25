@@ -56,36 +56,36 @@ class NewportMotionController(MotionController):
 
         return r
 
-    def axes_factory(self, config=None):
-        if config is None:
-
-            config = self.get_configuration(self.config_path)
-
-        mapping = self.config_get(config, 'General', 'mapping')
-        if mapping is not None:
-            mapping = mapping.split(',')
-        else:
-            mapping = 'x,y,z'
-
-        lp = self.config_get(config, 'General', 'loadposition')
-        if lp is not None:
-            loadposition = [float(f) for f in lp.split(',')]
-        else:
-            loadposition = [0, 0, 0]
-
-        config_path = self.configuration_dir_path
-        for i, a in enumerate(mapping):
-            self.info('loading axis {},{}'.format(i, a))
-            limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
-            na = self._axis_factory(config_path,
-                                  name=a,
-                                  id=i + 1,
-                                  negative_limit=limits[0],
-                                  positive_limit=limits[1],
-                                  loadposition=loadposition[i]
-                                  )
-
-            self.axes[a] = na
+#    def axes_factory(self, config=None):
+#        if config is None:
+#
+#            config = self.get_configuration(self.config_path)
+#
+#        mapping = self.config_get(config, 'General', 'mapping')
+#        if mapping is not None:
+#            mapping = mapping.split(',')
+#        else:
+#            mapping = 'x,y,z'
+#
+#        lp = self.config_get(config, 'General', 'loadposition')
+#        if lp is not None:
+#            loadposition = [float(f) for f in lp.split(',')]
+#        else:
+#            loadposition = [0, 0, 0]
+#
+#        config_path = self.configuration_dir_path
+#        for i, a in enumerate(mapping):
+#            self.info('loading axis {},{}'.format(i, a))
+#            limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
+#            na = self._axis_factory(config_path,
+#                                  name=a,
+#                                  id=i + 1,
+#                                  negative_limit=limits[0],
+#                                  positive_limit=limits[1],
+#                                  loadposition=loadposition[i]
+#                                  )
+#
+#            self.axes[a] = na
 
     def load_additional_args(self, config):
         '''
@@ -831,16 +831,6 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if block:
             self._block_(axis=block)
-
-    def _sign_correct(self, val, key, ratio=True):
-        '''
-        '''
-        axis = self.axes[key]
-        r = 1
-        if ratio:
-            r = axis.drive_ratio
-#            self.info('using drive ratio {}={}'.format(key, r))
-        return val * axis.sign * r
 
     def _block_(self, axis=None, event=None):
         '''

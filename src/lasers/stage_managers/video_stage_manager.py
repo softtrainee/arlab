@@ -525,12 +525,10 @@ class VideoStageManager(StageManager):
             self.warning('Video not Available')
             video = None
 
-#        from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
-#        v = LaserTrayCanvas(parent=self,
         v = VideoLaserTrayCanvas(parent=self,
                                padding=30,
                                video=video,
-                               camera=self.camera
+                               camera=self.camera,
 #                               use_camera=True,
 #                               map=self._stage_map
                                )

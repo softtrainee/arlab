@@ -190,7 +190,14 @@ class StageManager(Manager):
         self.update_axes()
         axes = self.stage_controller.axes
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
-
+#        x_range=(self.stage_controller.xaxes_min,
+#                self.stage_controller.xaxes_max)
+#        y_range=(self.stage_controller.yaxes_min,
+#                self.stage_controller.yaxes_max)
+#        print x_range             
+#        self.canvas.set_mapper_limits('x', x_range)
+#        self.canvas.set_mapper_limits('y', y_range)
+        
     def finish_loading(self):
         self.update_axes()
 
@@ -747,7 +754,7 @@ class StageManager(Manager):
 
         if p:
             self.canvas.save_points(p)
-
+            
 #===============================================================================
 # factories
 #===============================================================================
@@ -765,7 +772,7 @@ class StageManager(Manager):
             factory = AerotechMotionController
 
         m = factory(name='{}controller'.format(self.name),
-                    configuration_name='stagecontroller',
+                    configuration_name='stage_controller',
                     configuration_dir_name=self.configuration_dir_name,
                     parent=self
                     )
@@ -776,9 +783,16 @@ class StageManager(Manager):
         '''
         w = 640 / 2.0 / 23.2
         h = 0.75 * w
+       
         l = LaserTrayCanvas(parent=self,
                                padding=[30, 5, 5, 30],
                                map=self._stage_map,
+                               x_range=(self.stage_controller.xaxes_min,
+                                        self.stage_controller.xaxes_max),
+                              
+                               y_range=(self.stage_controller.yaxes_min,
+                                        self.stage_controller.yaxes_max),
+                              
                                view_x_range=[-w, w],
                                view_y_range=[-h, h],
                                )
@@ -799,6 +813,9 @@ class StageManager(Manager):
 #===============================================================================
 # defaults
 #===============================================================================
+#    def _stage_controller_default(self):
+#        return self._stage_controller_factory()
+#     
     def _canvas_default(self):
         '''
         '''
