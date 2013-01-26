@@ -68,10 +68,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_detector_type(self, value):
         return self._retrieve_item(DetectorTypeTable, value, key='Label')
 
-    @get_first
-    def get_detector(self, dtype):
-        return DetectorTable, 'DetectorTypeID', \
-                DetectorTable.DetectorID.desc() # gets the most recent value
+#    @get_first
+    def get_detector(self, name):
+        return self._retrieve_first(DetectorTable, name, key='Label', order_by=DetectorTable.DetectorID.desc())
+
+#        return DetectorTable, 'DetectorTypeID', \
+#                DetectorTable.DetectorID.desc() # gets the most recent value
 
     def get_isotope(self, value):
         return self._retrieve_item(IsotopeTable, value, key='AnalysisID')
@@ -146,7 +148,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
 
 #    @add
-    def add_analysis(self, rid, aliquot, step, irradpos, runtype, **kw):
+    def add_analysis(self, rid, aliquot, step, irradpos, runtype, refdetlabel, **kw):
         '''
         '''
 
@@ -156,7 +158,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            rid, aliquot = rid.split('-')
 #            r = int(args[0])
 #            d = int(args[1]) if len(args) == 2 else None
-
+            rd = self.get_detector(refdetlabel)
 
             #query the IrradiationPositionTable
             irradpos = self.get_irradiation_position(irradpos)
@@ -165,7 +167,9 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                          RunDateTime=func.current_timestamp(),
                          LoginSessionID=1,
                          SpecRunType=runtype,
-                         Increment=step
+                         Increment=step,
+                         RefDetID=rd.DetectorID,
+                         ReferenceDetectorLabel=rd.Label
                          )
 
             #IrradPosition cannot be null

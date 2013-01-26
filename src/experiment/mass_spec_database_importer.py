@@ -141,7 +141,7 @@ class MassSpecDatabaseImporter(Loggable):
         runscript_name = 'Foo'
         runscript_text = 'this is a test script'
 
-        self.add_analysis('4318', '44', '', '4318',
+        self.add_analysis('4318', '500', '', '4318',
                           base, sig, blanks,
                           keys,
                           regresults,
@@ -179,7 +179,7 @@ class MassSpecDatabaseImporter(Loggable):
 #                                     password='DBArgon',
 #                                     name='massspecdata_isotopedb'
                                      )
-#        db.connect()
+        db.connect()
 
         return db
 
@@ -267,7 +267,7 @@ class MassSpecDatabaseImporter(Loggable):
         analysis = db.add_analysis(rid, aliquot, step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
-
+                                   'H1',
                                    RedundantSampleID=sample_id,
                                    HeatingItemName=heating_device_name,
                                    PwrAchieved_Max=power_achieved,
@@ -277,8 +277,8 @@ class MassSpecDatabaseImporter(Loggable):
                                    TotDurHeatingAtReqPwr=duration_at_request,
                                    FirstStageDly=first_stage_delay,
                                    SecondStageDly=second_stage_delay,
-
                                    )
+        print analysis
         analysis.SampleLoadingID = self.sample_loading_id
         analysis.LoginSessionID = self.login_session_id
         analysis.RunScriptID = rs.RunScriptID
