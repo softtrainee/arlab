@@ -43,10 +43,10 @@ class KerrStepMotor(KerrMotor):
     def _build_parameters(self):
 
         cmd = '56'
-        op = (int('00000011', 16), 2)
-        mps = (16, 2)
-        rcl = (40, 2)
-        hcl = (40, 2)
+        op = (int('00001011', 2), 2)
+        mps = (1, 2)
+        rcl = (150, 2)
+        hcl = (20, 2)
         tl = (0, 2)
 
         hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
@@ -57,17 +57,55 @@ class KerrStepMotor(KerrMotor):
         addr = self.address
         commands = [
                     (addr, '1706', 100, 'stop motor, turn off amp'),
-#                    (addr, '1804', 100, 'configure io pins'),
                     (addr, self._build_parameters(), 100, 'set parameters'),
                     (addr, '1701', 100, 'turn on amp'),
                     (addr, '00', 100, 'reset position')
                     ]
         self._execute_hex_commands(commands)
+        
+        self._set_motor_position_(100)
+#        self._home_motor(*args, **kw)
+    
+    def _home_motor(self, *args, **kw):
+        '''
+        '''
+        progress = self.progress
+        if progress is not None:
+            progress = kw['progress']
+            progress.increase_max()
+            progress.change_message('Homing {}'.format(self.name))
+            progress.increment()
 
-        self._home_motor(*args, **kw)
-        cb = '00001000'
-        self.read_status(cb)
+        addr = self.address
 
+        cmd = '94'
+        control = 'F6'
+
+        v = self._float_to_hexstr(self.home_velocity)
+        a = self._float_to_hexstr(self.home_acceleration)
+        print self.home_acceleration
+        move_cmd = ''.join((cmd, control, v, a))
+
+        cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
+              (addr, move_cmd, 100, 'Send to Home')]
+        self._execute_hex_commands(cmds)
+
+
+        '''
+            this is a hack. Because the home move is in velocity profile mode we cannot use the 0bit of the status byte to 
+            determine when the move is complete (0bit indicates when motor has reached requested velocity).
+            
+            instead we will poll the motor position until n successive positions are equal ie at a limt
+        '''
+
+#        self.block(4, progress=progress)
+#
+#        #we are homed and should reset position
+#
+#        cmds = [(addr, '00', 100, 'reset position')]
+#
+#        self._execute_hex_commands(cmds)
+#        
     def _load_trajectory_controlbyte(self):
         '''
            control byte
