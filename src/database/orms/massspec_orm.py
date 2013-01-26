@@ -86,6 +86,9 @@ class AnalysesTable(Base):
     LoginSessionID = Column(Integer, ForeignKey('LoginSessionTable.LoginSessionID'))
     SpecRunType = Column(Integer)
 
+    ReferenceDetectorLabel = Column(String(40))
+    RefDetID = Column(Integer)
+
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
     araranalyses = relation('ArArAnalysisTable')
 #    araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
@@ -167,7 +170,7 @@ class DetectorTable(Base):
     ICFactor = Column(Float, default=1)
     ICFactorEr = Column(Float, default=0)
     IonCounterDeadtimeSec = Column(Float, default=0)
-#    Label = Column(String(40))
+    Label = Column(String(40))
 
     isotopes = relationship('IsotopeTable', backref='detector')
 

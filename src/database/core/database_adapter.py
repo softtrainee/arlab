@@ -309,6 +309,24 @@ host={}'.format(self.name, self.username, self.host))
                 q = q.limit(limit)
             return q.all()
 
+    def _retrieve_first(self, table, value, key='name', order_by=None):
+        if not isinstance(value, (str, int, unicode, long, float)):
+            return value
+        sess = self.get_session()
+        if sess is None:
+            return
+        print table, value, key
+        q = sess.query(table)
+        q = q.filter(getattr(table, key) == value)
+        try:
+            if order_by is not None:
+                q = q.order_by(order_by)
+            return q.first()
+        except SQLAlchemyError, e:
+            print e
+            return
+
+
     def _retrieve_item(self, table, value, key='name'):
         if not isinstance(value, (str, int, unicode, long, float)):
             return value
