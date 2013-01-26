@@ -24,6 +24,7 @@ import struct
 import binascii
 #=============local library imports  ==========================
 from kerr_device import KerrDevice
+from src.hardware.core.data_helper import make_bitarray
 
 SIGN = ['negative', 'positive']
 
@@ -247,7 +248,7 @@ class KerrMotor(KerrDevice):
         if fail_cnt > 5:
             self.warning('Problem Communicating')
 
-    def read_status(self, cb):
+    def read_status(self, cb, verbose=True):
         if isinstance(cb, str):
             cb = '{:02x}'.format(int(cb, 2))
 
@@ -255,7 +256,9 @@ class KerrMotor(KerrDevice):
         cb = '13{}'.format(cb)
         cmd = self._build_command(addr, cb)
         status_byte = self.ask(cmd, is_hex=True,
-                                delay=100,
+#                                delay=100,
+                                nbytes=2,
+                                verbose=verbose,
                                 info='get status byte')
         return status_byte
 
@@ -269,37 +272,48 @@ class KerrMotor(KerrDevice):
                                 nbytes=2,
                                 info='get defined status')
         return status_byte
-
-    def _check_status_byte(self, check_bit):
-        '''
-        return bool 
-        check bit =0 False
-        check bit =1 True
-        '''
+    
+    def _moving(self):
         status_byte = self.read_defined_status()
 
         if status_byte == 'simulation':
             status_byte = 'DFDF'
 
-        #2 status bytes were returned ?    
-        if len(status_byte) > 4:
-            status_byte = status_byte[-4:-2]
-
-        else:
-            status_byte = status_byte[:2]
-
-        try:
-            status_register = self._check_bits(int(status_byte, 16))
-        except Exception, e:
-            self.warning('kerr_motor:228 {}'.format(str(e)))
-            status_register = []
-            if self.timer is not None:
-                self.timer.Stop()
-        '''
-        if X bits is set to one its index will be in the status register
-        '''
-
-        return check_bit in status_register
+        status_register=map(int,make_bitarray(int(status_byte[:2], 16)))
+        return status_register[7]
+    
+#    def _check_status_byte(self, check_bit):
+#        '''
+#        return bool 
+#        check bit =0 False
+#        check bit =1 True
+#        '''
+#        status_byte = self.read_defined_status()
+#
+#        if status_byte == 'simulation':
+#            status_byte = 'DFDF'
+#
+#        status_register=map(int,make_bitarray(int(status_byte[:2], 16)))
+#        print status_register
+#        #2 status bytes were returned ?    
+#        if len(status_byte) > 4:
+#            status_byte = status_byte[-4:-2]
+#
+#        else:
+#            status_byte = status_byte[:2]
+#
+#        try:
+#            status_register = self._check_bits(int(status_byte, 16))
+#        except Exception, e:
+#            self.warning('kerr_motor:228 {}'.format(str(e)))
+#            status_register = []
+#            if self.timer is not None:
+#                self.timer.Stop()
+#        '''
+#        if X bits is set to one its index will be in the status register
+#        '''
+#
+#        return check_bit in status_register
 
     def _get_motor_position(self, **kw):
         '''
@@ -336,6 +350,7 @@ class KerrMotor(KerrDevice):
             7=start motion now
             
         '''
+        
         return '{:02x}'.format(int('10010111', 2))
 
     def _set_motor_position_(self, pos, hysteresis=0):
@@ -358,7 +373,8 @@ class KerrMotor(KerrDevice):
     def _update_position(self):
         '''
         '''
-        if not self._check_status_byte(0):
+        if self._moving():
+#        if not self._check_status_byte(0):
             self.enabled = False
 
         else:
@@ -469,11 +485,13 @@ class KerrMotor(KerrDevice):
     def control_view(self):
         return View(Label(self.name),
                     Item('data_position', show_label=False,
-                         editor=RangeEditor(low_name='min',
+                         editor=RangeEditor(mode='slider',
+                                            low_name='min',
                                             high_name='max')
                          ),
                     Item('update_position', show_label=False,
-                         editor=RangeEditor(low_name='min',
+                         editor=RangeEditor(mode='slider',
+                                            low_name='min',
                                             high_name='max', enabled=False),
                          ),
 

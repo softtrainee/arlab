@@ -142,10 +142,11 @@ class FusionsLogicBoard(CoreDevice):
 #        self.info('adding motor {} klass={}'.format(name, klassname if klassname else 'KerrMotor'))
         self.info('adding motor {} klass={}'.format(name, m.__class__.__name__))
         self.motors.append(m)
-        if name == 'beam':
-            self.beam_motor = m
-        elif name == 'zoom':
-            self.zoom_motor = m
+        setattr(self, '{}_motor'.format(name), m)
+#        if name == 'beam':
+#            self.beam_motor = m
+#        elif name == 'zoom':
+#            self.zoom_motor = m
 
 #    def __getattr__(self, attr):
 #        if attr.endswith('_motor'):
