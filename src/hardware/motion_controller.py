@@ -98,16 +98,22 @@ class MotionController(CoreDevice):
     def _z_inprogress_update(self):
         '''
         '''
-        if self._moving_():
-            z = self.get_current_position('z')
-            if z is not None:
-                self.z_progress = z
-        elif self._not_moving_count > 3:
+        if not self._moving_():
             self.timer.Stop()
-            self.z_progress = self.z
-
-        else:
-            self._not_moving_count += 1
+        
+        z = self.get_current_position('z')
+        self.z_progress = z
+        
+#        if self._moving_():
+#            z = self.get_current_position('z')
+#            if z is not None:
+#                self.z_progress = z
+#        elif self._not_moving_count > 3:
+#            self.timer.Stop()
+#            self.z_progress = self.z
+#
+#        else:
+#            self._not_moving_count += 1
 
     def _inprogress_update(self):
         '''
@@ -256,7 +262,8 @@ class MotionController(CoreDevice):
         pass
     def linear_move(self, *args, **kw):
         pass
-    
+    def set_home_position(self,*args, **kw):
+        pass
     def axes_factory(self, config=None):
         if config is None:
 
