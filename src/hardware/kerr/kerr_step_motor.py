@@ -15,9 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import CInt
+from traits.api import CInt, Str, Bool, Dict
+from traitsui.api import View, Item, EnumEditor, RangeEditor, Label
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+SPEED_MODES={'1x':'11', '2x':'10', '4x':'01', '8x':'00'}
 from src.hardware.kerr.kerr_motor import KerrMotor
 '''
     status byte
@@ -42,11 +45,37 @@ class KerrStepMotor(KerrMotor):
 
     run_current = CInt
     hold_current = CInt
+    speed_mode=Str('1x')
+    disable_estop=Bool
+    disable_limits=Bool
+    motor_off=Bool
+    
+    discrete_position = Str
+    discrete_positions = Dict
+    
     def load_additional_args(self, config):
         super(KerrStepMotor, self).load_additional_args(config)
-        for section, option in [('Parameters', 'run_current'), ('Parameters', 'hold_current')]:
+        for section, option in [('Parameters', 'run_current'), 
+                                ('Parameters', 'hold_current'),
+                                ]:
             self.set_attribute(config, option, section, option, optional=False, cast='int')
 
+        self.set_attribute(config, 'speed_mode', 'Parameters', 'speed_mode', optional=False)
+        self.set_attribute(config, 'disable_estop', 'Parameters', 'disable_estop', optional=False, cast='boolean')
+        self.set_attribute(config, 'disable_limits', 'Parameters', 'disable_limits', optional=False, cast='boolean')
+        self.set_attribute(config, 'motor_off', 'Parameters', 'motor_off', optional=False, cast='boolean')
+        #load discrete positions
+        section='Discrete Positions'
+        if config.has_section(section):
+            for i, option in enumerate(config.options(section)):
+                value=config.get(section,option)
+                option=option.replace('_', ' ').capitalize()
+                self.discrete_positions[value] = '{:02n}:{}'.format(i+1,option)
+                
+    def _discrete_position_changed(self):
+        if self.discrete_position:
+            self.data_position=int(self.discrete_position)  
+            
     def _initialize_(self, *args, **kw):
         addr = self.address
         commands = [
@@ -60,10 +89,24 @@ class KerrStepMotor(KerrMotor):
 #        self._set_motor_position_(100)
         self._home_motor(*args, **kw)
 
+    def _assemble_options_byte(self):
+        ob=[]
+        sbit=SPEED_MODES[self.speed_mode]
+        ob.append(sbit) #1,2
+        ob.append('1' if self.disable_limits else '0')  
+        ob.append('1' if self.disable_estop else '0')  
+        ob.append('1' if self.motor_off else '0')  
+        ob.append('000')
+        ob.reverse()
+        
+        return ''.join(ob)
+            
+            
     def _build_parameters(self):
 
         cmd = '56'
-        op = (int('00000011', 16), 2)
+        obbyte=self._assemble_options_byte()
+        op = (int(obbyte, 2), 2)#'00001011'
         mps = (1, 2)
         rcl = (self.run_current, 2)
         hcl = (self.hold_current, 2)
@@ -91,18 +134,19 @@ class KerrStepMotor(KerrMotor):
 #        cmd = '94'
 #        control = 'F6' #'11110110'
 
-        cmd = '24'
-        control = '{:02x}'.format(int('10010110'))
+        cmd = '34'
+        control = '{:02x}'.format(int('10010110',2))
 
         v = '{:02x}'.format(int(self.home_velocity))
         a = '{:02x}'.format(int(self.home_acceleration))
-
+        
+        print control, v,a
 #        v = self._float_to_hexstr(self.home_velocity)
 #        a = self._float_to_hexstr(self.home_acceleration)
         move_cmd = ''.join((cmd, control, v, a))
 
         cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
-                (addr, home_cmd, 100, 'Set homing options')
+                (addr, home_cmd, 100, 'Set homing options'),
                 (addr, move_cmd, 100, 'Send to Home')]
         self._execute_hex_commands(cmds)
 
@@ -114,13 +158,13 @@ class KerrStepMotor(KerrMotor):
             instead we will poll the motor position until n successive positions are equal ie at a limt
         '''
 
-#        self.block(4, progress=progress)
-#
-#        #we are homed and should reset position
-#
-#        cmds = [(addr, '00', 100, 'reset position')]
-#
-#        self._execute_hex_commands(cmds)
+        self.block(4, progress=progress)
+
+        #we are homed and should reset position
+
+        cmds = [(addr, '00', 100, 'reset position')]
+
+        self._execute_hex_commands(cmds)
 #   
     def _set_motor_position_(self, pos, hysteresis=0):
         '''
@@ -131,11 +175,9 @@ class KerrStepMotor(KerrMotor):
         cmd = '74'
         control = self._load_trajectory_controlbyte()
         position = self._float_to_hexstr(pos)
-        v = '{:02x}'.format(self.velocity)
-        a = '{:02x}'.format(self.acceleration)
-#        v = self._float_to_hexstr(self.velocity)
-#        a = self._float_to_hexstr(self.acceleration)
-        print cmd, control, position, v, a
+        v = '{:02x}'.format(int(self.velocity))
+        a = '{:02x}'.format(int(self.acceleration))
+
         cmd = ''.join((cmd, control, position, v, a))
         cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
 
@@ -185,4 +227,24 @@ class KerrStepMotor(KerrMotor):
 
         return int('00010010', 2)
 
+    def control_view(self):
+        v = View(
+                 Label(self.name),
+                 Item('discrete_position', show_label=False,
+                      editor=EnumEditor(name='discrete_positions'),
+                      defined_when='discrete_positions'
+                      ),
+                 Item('data_position', show_label=False,
+                         editor=RangeEditor(mode='slider',
+                                            low_name='min',
+                                            high_name='max')
+                         ),
+                 Item('update_position', show_label=False,
+                     editor=RangeEditor(mode='slider',
+                                        low_name='min',
+                                        high_name='max', enabled=False),
+                     ),
+
+                 )
+        return v
 #============= EOF =============================================

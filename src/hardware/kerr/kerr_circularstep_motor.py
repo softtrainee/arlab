@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import CInt, Str, Dict
-from traitsui.api import View, Item, EnumEditor, RangeEditor, Label
+from traits.api import CInt
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.kerr.kerr_step_motor import KerrStepMotor
@@ -42,34 +41,24 @@ from src.hardware.core.data_helper import make_bitarray
 class KerrCircularStepMotor(KerrStepMotor):
     min = CInt
     max = CInt
-    discrete_position = Str
-    discrete_positions = Dict
-    def load_additional_args(self, config):
-        super(KerrCircularStepMotor, self).load_additional_args(config)
+    
+        
+       
+#            pos = self.discrete_positions[self.discrete_position]
+#            self._set_motor_position_(int(self.discrete_position))
 
-        #load discrete positions
-        if config.has_section('Discrete Positions'):
-            for option in config.options('Discrete Positions'):
-                self.discrete_positions[option] = config.getint(option)
-
-    def _discrete_position_changed(self):
-        if self.discrete_position:
-            pos = self.discrete_positions[self.discrete_position]
-            self._set_motor_position_(pos)
-
-    def _build_parameters(self):
-
-        cmd = '56'
-        op = (int('00001111', 2), 2)
-        mps = (1, 2)
-        rcl = (self.run_current, 2)
-        hcl = (self.hold_current, 2)
-        tl = (0, 2)
-
-        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
-        bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
-#        print bs,''.join(bs)
-        return ''.join(bs)
+#    def _build_parameters(self):
+#        cmd = '56'
+#        op = (int(self._assemble_options_byte(), 2), 2)#'00001111'
+#        mps = (1, 2)
+#        rcl = (self.run_current, 2)
+#        hcl = (self.hold_current, 2)
+#        tl = (0, 2)
+#
+#        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
+#        bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
+##        print bs,''.join(bs)
+#        return ''.join(bs)
 
     def _initialize_(self, *args, **kw):
         addr = self.address
@@ -97,9 +86,9 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         addr = self.address
 
-        cmd = '74'
-        control = 'F6'
-
+        cmd = '34'
+#        control = 'F6' #'11110110'
+        control = '{:02x}'.format(int('10010110',2))
 #        v = self._float_to_hexstr(self.home_velocity)
 #        a = self._float_to_hexstr(self.home_acceleration)
         v = '{:02x}'.format(int(self.home_velocity))
@@ -170,24 +159,7 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         return int('00011000', 2)
 
-    def control_view(self):
-        v = View(
-                 Label(self.name),
-                 Item('discrete_position', show_label=False,
-                      editor=EnumEditor(name='discrete_positions')),
-                 Item('data_position', show_label=False,
-                         editor=RangeEditor(mode='slider',
-                                            low_name='min',
-                                            high_name='max')
-                         ),
-                 Item('update_position', show_label=False,
-                     editor=RangeEditor(mode='slider',
-                                        low_name='min',
-                                        high_name='max', enabled=False),
-                     ),
-
-                 )
-        return v
+    
 
 #============= EOF =============================================
 #            
