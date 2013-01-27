@@ -261,7 +261,7 @@ class KerrMotor(KerrDevice):
                                 info='get status byte')
         return status_byte
 
-    def read_defined_status(self):
+    def read_defined_status(self, verbose=True):
 
         addr = self.address
         cmd = '0E'
@@ -269,11 +269,13 @@ class KerrMotor(KerrDevice):
         status_byte = self.ask(cmd, is_hex=True,
                                 delay=100,
                                 nbytes=2,
-                                info='get defined status')
+                                info='get defined status',
+                                verbose=verbose
+                                )
         return status_byte
 
-    def _moving(self):
-        status_byte = self.read_defined_status()
+    def _moving(self, verbose=True):
+        status_byte = self.read_defined_status(verbose=verbose)
 
         if status_byte == 'simulation':
             status_byte = 'DFDF'
@@ -372,7 +374,7 @@ class KerrMotor(KerrDevice):
     def _update_position(self):
         '''
         '''
-        if self._moving():
+        if self._moving(verbose=False):
 #        if not self._check_status_byte(0):
             self.enabled = False
 
@@ -389,7 +391,7 @@ class KerrMotor(KerrDevice):
                     self.update_position = self._data_position
 
         if not self.enabled:
-            pos = self._get_motor_position()
+            pos = self._get_motor_position(verbose=False)
             if pos is not None:
                 pos /= (self.steps * (1 - self.home_position))
 
