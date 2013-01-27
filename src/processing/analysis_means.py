@@ -20,6 +20,7 @@ from traits.api import HasTraits, List, Property, cached_property
 from numpy import array, average, ones
 #============= local library imports  ==========================
 from uncertainties import ufloat
+from src.processing.analysis import Marker
 
 class Mean(HasTraits):
     analyses = List
@@ -56,8 +57,10 @@ class Mean(HasTraits):
 
 
     def _calculate_mean(self, attr, use_weights=True):
-        vs = [getattr(ai, attr) for ai in self.analyses
-                    if ai.status == 0 and ai.temp_status == 0]
+        vs = (getattr(ai, attr) for ai in self.analyses
+                                if not isinstance(ai, Marker) and\
+                                    ai.status == 0 and \
+                                        ai.temp_status == 0)
         vs, es = zip(*[(v.nominal_value, v.std_dev()) for v in vs])
         vs, es = array(vs), array(es)
         if use_weights:

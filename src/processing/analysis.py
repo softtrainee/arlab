@@ -26,6 +26,11 @@ from src.helpers import alphas
 from src.constants import PLUSMINUS
 from uncertainties import ufloat
 
+class Marker(HasTraits):
+    status = 0
+    temp_status = 0
+    def __getattr__(self, attr):
+        return ''
 
 class Analysis(Loggable):
     ''' 

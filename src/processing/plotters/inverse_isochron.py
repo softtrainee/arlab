@@ -33,11 +33,16 @@ class InverseIsochron(Plotter):
         if not analyses:
             return
 
-        xs, xerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
-                          [a.arar_result['s39'] / a.arar_result['s40'] for a in analyses]
-                          ])
-        ys, yerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
-                          [a.arar_result['s36'] / a.arar_result['s40'] for a in analyses]])
+        xx = [a.Ar39 / a.Ar40 for a in analyses]
+        yy = [a.Ar36 / a.Ar40 for a in analyses]
+        xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev()) for xi in xx])
+        ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev()) for yi in yy])
+        print xerrs, yerrs
+#        xs, xerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
+#                          [a.arar_result['s39'] / a.arar_result['s40'] for a in analyses]
+#                          ])
+#        ys, yerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
+#                          [a.arar_result['s36'] / a.arar_result['s40'] for a in analyses]])
 
         g = RegressionGraph(container_dict=dict(padding=5,
                                                bgcolor='lightgray'
@@ -59,42 +64,22 @@ class InverseIsochron(Plotter):
         sc.overlays.append(eo)
 
         g.set_x_limits(min=0)
-        g.set_y_limits(min=0, max=1 / 100.)
-        trapped_4036 = 1
-        trapped_4036err = 1
-        try:
+        g.set_y_limits(min=0, max=0.004)
+#        trapped_4036 = 1
+#        trapped_4036err = 1
 #            rdict = g.regression_results[0]
-            rdict = g.regressors[0]
-            try:
-                coeffs = rdict.coefficients
-                cerrors = rdict.coefficient_errors
-                if coeffs is not None and cerrors is not None:
-                    try:
-                        trapped_4036 = 1 / coeffs[-1]
-                        trapped_4036err = cerrors[-1]
-                    except IndexError, e:
-                        print e
-            except KeyError, e:
-                print e
-        except IndexError, e:
-            print e
+        reg = g.regressors[0]
+#        trapped_4036 = 1 / reg.predict(0)
+#        trapped_4036err = reg.predict_error(0)
+        trapped_4036 = 1 / reg.coefficients[0]
+        trapped_4036err = reg.coefficient_errors[0]
 
         g.add_horizontal_rule(1 / 295.5)
-        txt = u'Trapped 40Ar= {:0.2f} {}{:0.5f}'.format(trapped_4036, PLUSMINUS, trapped_4036err)
-        g.add_plot_label(txt, 0, 0)
-        g.refresh()
 
-        self.results.append(InverseIsochronResults(
-                                                   age=100,
-                                                   error=0.1,
-                                                   mswd=0,
-                                                   trapped_4036=trapped_4036,
-                                                   trapped_4036err=trapped_4036err))
+        txt = u'Trapped 40Ar= {:0.2f} {}{:0.7f}'.format(trapped_4036, PLUSMINUS, trapped_4036err)
+        g.add_plot_label(txt, 0, 0)
 
         return g
-
-    def _get_content(self):
-        return Item('show_error_ellipse')
 
 
 #============= EOF =============================================

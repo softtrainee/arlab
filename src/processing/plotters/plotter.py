@@ -95,7 +95,7 @@ class Plotter(Viewable):
     options = None
     plotter_options = None
 
-    padding = List([40, 10, 5, 40])
+    padding = List([60, 10, 5, 40])
 
     metadata_label_text = Property
 
