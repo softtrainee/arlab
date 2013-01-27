@@ -29,7 +29,7 @@ from src.processing.analysis import Analysis, NonDBAnalysis
 #from src.constants import NULL_STR
 #from src.progress_dialog import MProgressDialog
 from src.processing.plotter_options_manager import PlotterOptionsManager, \
-    IdeogramOptionsManager, SpectrumOptionsManager
+    IdeogramOptionsManager, SpectrumOptionsManager, IsochronOptionsManager
 from src.processing.window import Window
 from src.processing.tabular_analysis_manager import TabularAnalysisManager
 from src.processing.plotters.series import Series
@@ -66,6 +66,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 
     ideogram_options_manager = Instance(IdeogramOptionsManager, ())
     spectrum_options_manager = Instance(SpectrumOptionsManager, ())
+    isochron_options_manager = Instance(IsochronOptionsManager, ())
 #    spectrum_plotter_options_manager = Instance(PlotterOptionsManager, ())
 #    isochron_plotter_options_manager = Instance(PlotterOptionsManager, ())
 
@@ -395,21 +396,23 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 return p
 
     def _display_tabular_data(self, ans, title, associated_window=None):
-        tm = TabularAnalysisManager(analyses=ans,
-                                    db=self.db,
-                                    )
+
+
+        tm = TabularAnalysisManager(db=self.db)
+        tm.set_analyses(ans)
         tm.set_title(title)
         self.open_view(tm)
         return tm
 
-    def _display_isochron(self, ans, po, title):
+    def _display_isochron(self, ans, po, title, data_type='database'):
         rr = self._isochron(ans)
         if rr is not None:
             g, isochron = rr
+            return self._display_figure_and_table(g, isochron, data_type, ans, title)
 
-            self._display_tabular_data(ans, title)
-            self._open_figure(g, isochron)
-            return isochron
+#            self._display_tabular_data(ans, title)
+#            self._open_figure(g, isochron)
+#            return isochron
 
     def _display_spectrum(self, ans, po, title, data_type='database'):
         rr = self._spectrum(ans, po)

@@ -23,7 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
-    IdeogramOptions, SpectrumOptions
+    IdeogramOptions, SpectrumOptions, IsochronOptions
 from src.paths import paths
 
 
@@ -116,7 +116,7 @@ class PlotterOptionsManager(Viewable):
                  resizable=True,
                  buttons=['OK', 'Cancel'],
                  handler=self.handler_klass,
-                 title='Plot Options'
+                 title=self.title
                 )
         return v
 
@@ -155,10 +155,16 @@ class PlotterOptionsManager(Viewable):
 class IdeogramOptionsManager(PlotterOptionsManager):
     plotter_options_klass = IdeogramOptions
     persistence_name = 'ideogram'
-
+    title = 'Ideogram Plot Options'
 
 class SpectrumOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SpectrumOptions
     persistence_name = 'spectrum'
+    title = 'Spectrum Plot Options'
+
+class IsochronOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = IsochronOptions
+    persistence_name = 'isochron'
+    title = 'Isochron Plot Options'
 
 #============= EOF =============================================

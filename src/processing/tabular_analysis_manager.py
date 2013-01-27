@@ -18,16 +18,16 @@
 from traits.api import List, Int, Property, Event, Any, cached_property, Str, Bool
 from traitsui.api import Item, TabularEditor, Group, VGroup
 from traitsui.tabular_adapter import TabularAdapter
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.viewable import Viewable, ViewableHandler
-import math
 from src.processing.analysis_means import AnalysisRatioMean, \
-    AnalysisIntensityMean
+    AnalysisIntensityMean, Marker
 from src.database.core.database_selector import ColumnSorterMixin
 from src.constants import PLUSMINUS
 from src.helpers.formatting import floatfmt
+from src.helpers.color_generators import colornames
 
-#============= standard library imports ========================
-#============= local library imports  ==========================
 class AnalysisAdapter(TabularAdapter):
 #    columns = [('Status', 'status'),
 #               ('ID', 'record_id'),
@@ -89,15 +89,30 @@ class AnalysisAdapter(TabularAdapter):
 
         return bgcolor
 
+    def get_text_color(self, obj, trait, row):
+        if isinstance(self.item, Marker):
+            color = 'white'
+        else:
+            gid = self.item.group_id
+            color = colornames[gid]
+        return color
+
     def _floatfmt(self, f, n=5):
         return floatfmt(f, n, 3)
 
     def _get_value(self, k):
-        return self._floatfmt(getattr(self.item, k).nominal_value)
+        v = ''
+        vv = getattr(self.item, k)
+        if not isinstance(vv, str):
+            v = self._floatfmt(vv.nominal_value)
+        return v
 
     def _get_error(self, k):
-        return self._floatfmt(getattr(self.item, k).std_dev(), n=6)
-
+        e = ''
+        ee = getattr(self.item, k)
+        if not isinstance(ee, str):
+            e = self._floatfmt(ee.std_dev(), n=6)
+        return e
 
 class AnalysisIntensityAdapter(AnalysisAdapter):
 
@@ -233,6 +248,9 @@ class MeanAdapter(AnalysisAdapter):
     arith_age_text = Property
     age_se_text = Property
     age_sd_text = Property
+    def get_text_color(self, *args):
+        return 'black'
+
     def _get_weighted_age_text(self):
         return self._get_value('weighted_age')
 
@@ -320,7 +338,6 @@ class TabularAnalysisHandler(ViewableHandler):
         if info.initialized:
             info.ui.title = info.object.title
 
-
 class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     analyses = List
     ratio_means = Property(depends_on='analyses.[temp_status,status]')
@@ -339,6 +356,17 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     handler_klass = TabularAnalysisHandler
 
 
+    def set_analyses(self, ans):
+        curgrp = 0
+        aans = []
+        for ai in ans:
+            if ai.group_id != curgrp:
+                aans.append(Marker())
+                curgrp += 1
+            aans.append(ai)
+
+        self.analyses = aans
+
     def set_title(self, title):
         self.title = 'Table {}'.format(title)
 
@@ -351,12 +379,29 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
 
     @cached_property
     def _get_ratio_means(self):
-        means = [AnalysisRatioMean(analyses=self.analyses)]
-        return means
+        return self._get_means(AnalysisRatioMean)
+#        means = [AnalysisRatioMean(analyses=ans) for ans in grps]
+#        means = [AnalysisRatioMean(analyses=self.analyses)]
+#        return means
 
     @cached_property
     def _get_intensity_means(self):
-        means = [AnalysisIntensityMean(analyses=self.analyses)]
+        return self._get_means(AnalysisIntensityMean)
+#        means = [AnalysisIntensityMean(analyses=self.analyses)]
+#        return means
+
+    def _get_means(self, klass):
+        means = []
+        grp = []
+        for ai in self.analyses:
+            if isinstance(ai, Marker):
+                means.append(klass(analyses=grp))
+#                grps.append(grp)
+                grp = []
+            else:
+                grp.append(ai)
+
+        means.append(klass(analyses=grp))
         return means
 
     def _editor_factory(self, adapter_klass, **kw):

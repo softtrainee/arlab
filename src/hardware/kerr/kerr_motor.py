@@ -96,7 +96,6 @@ class KerrMotor(KerrDevice):
               ('General', 'min'),
               ('General', 'max'),
               ('General', 'nominal_position')
-
               ]
         for section, key in args:
             self.set_attribute(config, key, section, key, cast='float')
@@ -272,16 +271,16 @@ class KerrMotor(KerrDevice):
                                 nbytes=2,
                                 info='get defined status')
         return status_byte
-    
+
     def _moving(self):
         status_byte = self.read_defined_status()
 
         if status_byte == 'simulation':
             status_byte = 'DFDF'
 
-        status_register=map(int,make_bitarray(int(status_byte[:2], 16)))
+        status_register = map(int, make_bitarray(int(status_byte[:2], 16)))
         return status_register[7]
-    
+
 #    def _check_status_byte(self, check_bit):
 #        '''
 #        return bool 
@@ -350,7 +349,7 @@ class KerrMotor(KerrDevice):
             7=start motion now
             
         '''
-        
+
         return '{:02x}'.format(int('10010111', 2))
 
     def _set_motor_position_(self, pos, hysteresis=0):

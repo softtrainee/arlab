@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import CInt
+from traits.api import CInt, Str, Dict
+from traitsui.api import View, Item, EnumEditor, RangeEditor, Label
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.kerr.kerr_step_motor import KerrStepMotor
@@ -41,14 +42,28 @@ from src.hardware.core.data_helper import make_bitarray
 class KerrCircularStepMotor(KerrStepMotor):
     min = CInt
     max = CInt
+    discrete_position = Str
+    discrete_positions = Dict
+    def load_additional_args(self, config):
+        super(KerrCircularStepMotor, self).load_additional_args(config)
+
+        #load discrete positions
+        if config.has_section('Discrete Positions'):
+            for option in config.options('Discrete Positions'):
+                self.discrete_positions[option] = config.getint(option)
+
+    def _discrete_position_changed(self):
+        if self.discrete_position:
+            pos = self.discrete_positions[self.discrete_position]
+            self._set_motor_position_(pos)
 
     def _build_parameters(self):
 
         cmd = '56'
-        op = (int('00001111',2), 2)
+        op = (int('00001111', 2), 2)
         mps = (1, 2)
-        rcl = (40, 2)
-        hcl = (20, 2)
+        rcl = (self.run_current, 2)
+        hcl = (self.hold_current, 2)
         tl = (0, 2)
 
         hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
@@ -68,9 +83,9 @@ class KerrCircularStepMotor(KerrStepMotor):
         self._execute_hex_commands(commands)
 #        time.sleep(5)
 #        self._execute_hex_commands([(addr, '1706', 100, 'stop motor, turn off amp')])
-        
+
         self._home_motor(*args, **kw)
-        
+
     def _home_motor(self, *args, **kw):
         #start moving
         progress = self.progress
@@ -82,11 +97,14 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         addr = self.address
 
-        cmd = '94'
+        cmd = '74'
         control = 'F6'
 
-        v = self._float_to_hexstr(self.home_velocity)
-        a = self._float_to_hexstr(self.home_acceleration)
+#        v = self._float_to_hexstr(self.home_velocity)
+#        a = self._float_to_hexstr(self.home_acceleration)
+        v = '{:02x}'.format(int(self.home_velocity))
+        a = '{:02x}'.format(int(self.home_acceleration))
+
         move_cmd = ''.join((cmd, control, v, a))
 
         cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
@@ -97,41 +115,45 @@ class KerrCircularStepMotor(KerrStepMotor):
             time.sleep(0.05)
             if self._get_proximity_limit():
                 break
-            
+
         #stop moving when proximity limit set
-        cmds=[(addr, '1707',100, 'Stop motor'),
-              (addr, '00', 100, 'Reset Position')
-              ] #leave amp on
+        cmds = [(addr, '1707', 100, 'Stop motor'), #leave amp on
+                (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-        
+
         #define homing options
         #stop abruptly on home signal
-        #start moving
-        home_control_byte=self._load_home_control_byte()
-        home_cmd='19{:02x}'.format(home_control_byte)
-        cmds=[(addr, home_cmd, 100, 'Set home options')]
+        home_control_byte = self._load_home_control_byte()
+        home_cmd = '19{:02x}'.format(home_control_byte)
+        cmds = [(addr, home_cmd, 100, 'Set home options')]
         self._execute_hex_commands(cmds)
+
+        #start moving
         self._set_motor_position_(1000)
+
+        #wait until home signal is set.
         while 1:
             time.sleep(0.05)
-            lim=self._read_limits()
-            if int(lim[2])==1:
+            lim = self._read_limits()
+            if int(lim[2]) == 1:
                 break
-#        reset pos
+
+        #motor is stopped 
+        #reset pos
         self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
-               
-    def _read_limits(self):      
+
+    def _read_limits(self):
         cb = '00001000'
-        inb=self.read_status(cb, verbose=False)
+        inb = self.read_status(cb, verbose=False)
         inb = inb[2:-2]
         #resp_byte consists of input_byte
-        ba= make_bitarray(int(inb, 16))#, self._hexstr_to_float(rb)
+        ba = make_bitarray(int(inb, 16))#, self._hexstr_to_float(rb)
         return ba
-    
+
     def _get_proximity_limit(self):
-        ba=self._read_limits()
+        ba = self._read_limits()
         return int(ba[4])
-#        print input_byte
+
     def _load_home_control_byte(self):
         '''
            control byte
@@ -145,9 +167,29 @@ class KerrCircularStepMotor(KerrStepMotor):
             5=stop smoothly
             6,7=not used- clear to 0
         '''
-        
-        return int('00011000',2)
-        
+
+        return int('00011000', 2)
+
+    def control_view(self):
+        v = View(
+                 Label(self.name),
+                 Item('discrete_position', show_label=False,
+                      editor=EnumEditor(name='discrete_positions')),
+                 Item('data_position', show_label=False,
+                         editor=RangeEditor(mode='slider',
+                                            low_name='min',
+                                            high_name='max')
+                         ),
+                 Item('update_position', show_label=False,
+                     editor=RangeEditor(mode='slider',
+                                        low_name='min',
+                                        high_name='max', enabled=False),
+                     ),
+
+                 )
+        return v
+
+#============= EOF =============================================
 #            
 #    def _load_trajectory_controlbyte(self):
 #        '''
@@ -175,5 +217,3 @@ class KerrCircularStepMotor(KerrStepMotor):
 #        result = min(max(1, result), 250)
 #        print 'calcualtes velocity', result
 #        return result
-
-#============= EOF =============================================

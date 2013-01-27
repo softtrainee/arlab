@@ -338,7 +338,7 @@ class Spectrum(Plotter):
                     func(g, analyses,
                          plotid + 1,
                          group_id,
-                         value_scale=ap['scale'],
+                         value_scale=ap['scale']
                          )
 
 #        offset = (ma - mi) / len(labels)
@@ -431,7 +431,7 @@ class Spectrum(Plotter):
 
         return array(xs), array(ys), array(es), array(c39s)#, array(ar39s), array(values)
 
-    def _add_plot(self, g, xs, ys, es, cum39s=None, group_id=0, plotid=0, value_scale='linear'):
+    def _add_plot(self, g, xs, ys, es, cum39s=None, group_id=0, plotid=0, value_scale='linear', **kw):
         xs, ys, es = map(array, (xs, ys, es))
         ds, p = g.new_series(xs, ys, plotid=plotid)
 
@@ -535,8 +535,11 @@ class Spectrum(Plotter):
 
 #        plateau_age, platbounds, nplateau_steps = self._get_plateau(ages, k39s, analyses)
         plateau_age, platbounds, mswd, valid, nplateau_steps = self._get_plateau(analyses)
-
-        point = (50, plateau_age.nominal_value)
+        if isinstance(plateau_age, int):
+            pa = 0
+        else:
+            pa = plateau_age.nominal_value
+        point = (50, pa)
         ptext = self._build_plateau_age_label(plateau_age, mswd, valid, nplateau_steps)
         pdl = self._add_data_label(spec,
                                    ptext,
@@ -547,7 +550,7 @@ class Spectrum(Plotter):
         if nplateau_steps == 0:
             pdl.visible = False
 
-        self._add_plateau_overlay(spec, platbounds, c39s, plateau_age.nominal_value)
+        self._add_plateau_overlay(spec, platbounds, c39s, pa)
 #        self.results.append(SpectrumResults(
 #                                           labnumber=self.get_labnumber(analyses),
 #                                           mean_age=mean_age,
@@ -563,7 +566,12 @@ class Spectrum(Plotter):
         return miages, maages, dl
 
     def _build_plateau_age_label(self, plat_age, *args):
-        age, error = plat_age.nominal_value, plat_age.std_dev()
+        if isinstance(plat_age, int):
+            age, error = 1, 1
+        else:
+
+            age, error = plat_age.nominal_value, plat_age.std_dev()
+
         error *= self.plotter_options.nsigma
         txt = self._build_label_text(age, error, *args)
         return 'Age= {}'.format(txt)
@@ -682,9 +690,7 @@ class Spectrum(Plotter):
     def _filter_aux_plots(self, aux_plots):
         return [ap for ap in aux_plots if ap.name != 'analysis_number']
 
-    def _aux_plot_radiogenic_percent(self, g, analyses, padding, plotid, group_id,
-                                     value_scale='linear'
-                                     ):
+    def _aux_plot_radiogenic_percent(self, g, analyses, plotid, group_id, **kw):
 
         xs, ys, es, c39s = self._calculate_spectrum(analyses,
                                                   group_id=group_id,
@@ -695,7 +701,8 @@ class Spectrum(Plotter):
 #        n = sorted(n, key=lambda x:x[0])
 #        aages, rads = zip(*n)
 #        rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
-        self._add_plot(g, xs, ys, es, group_id, plotid=plotid, cum39s=c39s)
+
+        self._add_plot(g, xs, ys, es, group_id=group_id, plotid=plotid, cum39s=c39s, **kw)
 #        self._add_aux_plot(g, aages,
 #                           rads,
 #                           None,
@@ -709,14 +716,13 @@ class Spectrum(Plotter):
     def _aux_plot_kca(self, g, analyses,
                       plotid,
                       group_id,
-                      value_scale='linear'):
+                      **kw):
 
         xs, ys, es, c39s = self._calculate_spectrum(analyses, group_id=group_id, value_key='kca')
         self._add_plot(g, xs, ys, es,
                        plotid=plotid,
                        group_id=group_id,
-                       value_scale=value_scale,
-                       cum39s=c39s)
+                       cum39s=c39s, **kw)
 #        nages = aux_namespace['nages']
 #        ages, k39s = zip(*[(a.age.nominal_value, a.k39) for a in analyses
 #                           if a.group_id == group_id])

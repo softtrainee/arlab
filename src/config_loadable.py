@@ -87,24 +87,11 @@ class ConfigLoadable(Loggable):
         else:
             return func(section, option)
 
-    def set_attribute(
-        self,
-        config,
-        attribute,
-        section,
-        option,
-        #cast=None,
-        #optional=False,
-        **kw
-        ):
+    def set_attribute(self, config, attribute, section, option, **kw):
         '''
         '''
 
-        r = self.config_get(config, section, option,
-                            **kw
-#                            cast=cast,
-#                            optional=optional
-                            )
+        r = self.config_get(config, section, option, **kw)
         if r is not None:
             setattr(self, attribute, r)
 

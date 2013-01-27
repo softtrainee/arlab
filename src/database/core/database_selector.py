@@ -98,7 +98,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     omit_bogus = Bool(True)
 
-    limit = Int(200)
+    limit = Int(200, enter_set=True, auto_set=False)
     date_str = 'Run Date'
 
     multi_select_graph = Bool(False)
@@ -201,6 +201,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if queries is None:
             queries = self.queries
 
+        #@todo: only get displayed columns
         dbs, query_str = self._get_selector_records(limit=self.limit,
                                                     queries=queries
                                                     )
@@ -217,43 +218,27 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def load_records(self, dbs, load=True, append=False):
         if not append:
             self.records = []
-        self._load_records(dbs, load)
-        self._sort_columns(self.records)
 
-#        self.selected = self.records[-1:]
+        self._load_records(dbs, load)
+#        self._sort_columns(self.records)
+
         self.scroll_to_row = len(self.records)
-#        self.selected_row = [29, 30]#len(self.records) - 1
-#        print self.scroll_to_row
-#        print self.selected
-#        print self.selected_row
 
     def _load_records(self, records, load):
-#        db = self.db
-#        r = os.path.dirname(db.name)
         if records:
-#            nd = [self._result_factory(di, root=r) for di in records]
-            nd = [self._result_factory(di, load) for di in records]
-            self.records.extend(nd)
-#            for di in records:
-#                r = os.path.dirname(db.name)
-#                d = self._result_factory(di,
-#                                         root=r
-#                                         )
-#                    d = self.record_klass(_db_result=di)
+            self.records.extend([self._result_factory(di, load) for di in records])
 
 
-#                self.records.append(d)
-
-    def _changed(self, new):
-        db = self.db
-        db.commit()
+#    def _changed(self, new):
+#        db = self.db
+#        db.commit()
 
     def _record_closed(self, obj, name, old, new):
         sid = obj.record_id
         if sid in self.opened_windows:
             self.opened_windows.pop(sid)
         obj.on_trait_change(self._record_closed, 'closed_event', remove=True)
-        obj.on_trait_change(self._changed, '_changed', remove=True)
+#        obj.on_trait_change(self._changed, '_changed', remove=True)
 
     def open_record(self, records):
         self._open_selected(records)
@@ -398,7 +383,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if load:
             d.load()
 
-        d.on_trait_change(self._changed, 'changed')
+#        d.on_trait_change(self._changed, 'changed')
         d.on_trait_change(self._record_closed, 'close_event')
         return d
 #===============================================================================
@@ -427,7 +412,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                selected='object.selected',
                                selected_row='object.selected_row',
                                update='update',
-                               auto_update=True,
+#                               auto_update=True,
                                column_clicked='object.column_clicked',
                                editable=False,
                                multi_select=not self.style == 'single',

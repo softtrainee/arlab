@@ -27,6 +27,7 @@ class TempAnalysis(HasTraits):
 class PreviousSelection(HasTraits):
     analysis_ids = List(TempAnalysis)
     name = Str
+    hash_str = Str
     def __init__(self, records, **kw):
         super(PreviousSelection, self).__init__(**kw)
 

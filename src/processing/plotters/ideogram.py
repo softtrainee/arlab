@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import  Any, Int, Str, List, Range, Property, Bool, \
-    Enum, on_trait_change
+    Enum, on_trait_change, Dict
 from traitsui.api import Item, HGroup, spring, Group
 #from chaco.api import ArrayDataSource
 #============= standard library imports ========================
@@ -53,7 +53,7 @@ from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 #class mStackedGraph(IsotopeContextMenuMixin, StackedGraph):
 #    pass
 
-N = 700
+N = 300
 
 
 
@@ -80,6 +80,8 @@ class Ideogram(Plotter):
 
     probability_curve_kind = Str
     mean_calculation_kind = Str
+
+    _prev_selection = Dict
 #    graph_panel_info = Instance(GraphPanelInfo, ())
 
 
@@ -181,7 +183,7 @@ class Ideogram(Plotter):
             #add analysis number plot
             start = start + len(ans) + 1
 
-        g.set_x_limits(min=xmin, max=xmax)
+#        g.set_x_limits(min=xmin, max=xmax)
 
         self._set_y_limits(g)
 
@@ -344,7 +346,7 @@ class Ideogram(Plotter):
                               )
 
         ym = maxp * percentH + offset
-        s, _p = g.new_series([wm], [ym],
+        s, p = g.new_series([wm], [ym],
                              type='scatter',
                              marker='circle',
                              marker_size=3,
@@ -369,9 +371,10 @@ class Ideogram(Plotter):
                                      label=label,
                                      constrain='y'))
 
-        d = lambda *args: self._update_graph(g, *args)
-        s.index_mapper.on_trait_change(d, 'updated')
+        d = lambda *args: self._update_bounds(g, s, group_id)
+        p.index_mapper.on_trait_change(d, 'updated')
 
+        print group_id, we
         #we already scaled by nsigma 
         self._add_error_bars(s, [we], 'x', 1)
 
@@ -388,7 +391,7 @@ class Ideogram(Plotter):
                           tick_label_formatter=lambda x:'',
                           axis='y', plotid=0)
 
-        return ym * 2.5
+        return ym
 
 #    def _add_data_label(self, s, args):
 #        wm, ym, we, mswd, n = args
@@ -449,7 +452,7 @@ class Ideogram(Plotter):
                                     additional_info=additional_info
                                     )
 
-        d = lambda *args: self._update_graph(g, *args)
+        d = lambda *args: self._update_meta(g, scatter, group_id, *args)
         scatter.index.on_trait_change(d, 'metadata_changed')
 
         p = g.plots[plotid]
@@ -484,57 +487,45 @@ class Ideogram(Plotter):
     def _cmp_analyses(self, x):
         return x.age.nominal_value
 
-    def _update_graph(self, graph):
+    def _update_bounds(self, graph, scatter, group_id):
+        self._update_graph(graph, scatter, group_id, bounds_only=True)
+
+    def _update_meta(self, graph, scatter, group_id):
+        self._update_graph(graph, scatter, group_id)
+
+    def _update_graph(self, graph, scatter, group_id, bounds_only=False):
         xmi, xma = graph.get_x_limits()
         ideo = graph.plots[0]
+        sel = scatter.index.metadata['selections']
+        if self._prev_selection.has_key(scatter):
+            if self._prev_selection[scatter] == sel:
+                if not bounds_only:
+                    return
 
-        sels = dict()
-        for pp in graph.plots[1:]:
-            for i, p in enumerate(pp.plots.itervalues()):
-                ss = p[0].index.metadata['selections']
+        self._prev_selection[scatter] = sel
 
-                if i in sels:
-                    sels[i] = list(set(ss + sels[i]))
-                else:
-                    sels[i] = ss
+        lp = ideo.plots['plot{}'.format(group_id * 3)][0]
+        dp = ideo.plots['plot{}'.format(group_id * 3 + 1)][0]
+        sp = ideo.plots['plot{}'.format(group_id * 3 + 2)][0]
 
-        ideoplots = filter(lambda a:a[0] % 3 == 0, enumerate(graph.plots[0].plots.iteritems()))
-        for i, p in enumerate(ideoplots):
-#            if not i in sels:
-#                continue
-            try:
-                sel = sels[i]
-            except KeyError:
-                sel = []
+        ages_errors = self._get_ages(graph.analyses, group_id=group_id, unzip=False)
+        ages_errors = sorted(ages_errors, key=lambda x: x.nominal_value)
+        ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors)
+                             if not j in sel])
 
-#            result = self.results[i]
+        xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
+        wm, we, mswd, valid_mswd = self._calculate_stats(ages, errors, xs, ys)
 
-            lp = ideo.plots['plot{}'.format(i * 3)][0]
-            dp = ideo.plots['plot{}'.format(i * 3 + 1)][0]
-            sp = ideo.plots['plot{}'.format(i * 3 + 2)][0]
+        lp.value.set_data(ys)
+        lp.index.set_data(xs)
+        sp.index.set_data([wm])
+        sp.xerror.set_data([we])
 
-            try:
-                ages_errors = self._get_ages(graph.analyses, group_id=i, unzip=False)
-                ages_errors = sorted(ages_errors, key=lambda x: x.nominal_value)
-                ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors)
-                                     if not j in sel])
-                xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
-                wm, we, mswd, valid_mswd = self._calculate_stats(ages, errors, xs, ys)
+        mi = min(ys)
+        ma = max(ys)
+        self._set_y_limits(graph, mi, ma)
 
-#                result.age = wm
-#                result.error = we
-#                result.mswd = mswd
-#                result.error_calc_method = self.error_calc_method
-            except ValueError:
-                wm, we = 0, 0
-                ys = zeros(N)
-
-            mi = min(ys)
-            ma = max(ys)
-            lp.value.set_data(ys)
-            lp.index.set_data(xs)
-            sp.index.set_data([wm])
-            sp.xerror.set_data([we])
+        if not bounds_only:
             #update the data label position
             for ov in sp.overlays:
                 if isinstance(ov, DataLabel):
@@ -546,23 +537,16 @@ class Ideogram(Plotter):
             if sel:
                 dp.visible = True
                 ages, errors = zip(*[(a.nominal_value, a.std_dev()) for a in ages_errors])
-                wm, we = calculate_weighted_mean(ages, errors)
-                mswd = calculate_mswd(ages, errors)
-                we = self._calc_error(we, mswd)
-#                result.oage, result.oerror, result.omswd = wm, we, mswd
                 xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
-
-                mi = min([min(ys), mi])
-                ma = max([max(ys), ma])
                 dp.value.set_data(ys)
                 dp.index.set_data(xs)
             else:
-#                result.oage, result.oerror, result.omswd = None, None, None
+    #                result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False
 
-        self._set_y_limits(graph, mi, ma)
 
-        graph.redraw()
+
+#        graph.redraw()
 
     def _set_y_limits(self, graph, ymin=None, ymax=None):
 #        minp = min([0, mi])
