@@ -43,7 +43,7 @@ class AerotechMotionController(MotionController):
         self._communicator.write_terminator = chr(13)
         self._communicator.read_delay=25
         self.enable()
-        self.home()
+        #self.home()
 #        for a in self.axes.itervalues():
 #            a.load_parameters()
 
@@ -53,24 +53,12 @@ class AerotechMotionController(MotionController):
         '''
 
         '''
-#        path = self.configuration_dir_path
-#        for i, a in enumerate(['x', 'y', 'z']):
-#            ma = 5
-#            mi = -ma
-#            self.axes[a] = self._axis_factory(
-##                                            path,
-#                                            name=a.upper(),
-#                                            parent=self,
-#                                            id=i + 1,
-#                                            negative_limit=mi,
-#                                            positive_limit=ma)
         self.axes_factory()
         return True
    
-    def linear_move(self,x,y, sign_correct=True,**kw):
+    def linear_move(self,x,y, sign_correct=True,block=False,**kw):
         errx = self._validate(x, 'x', cur=self._x_position)
         erry = self._validate(y, 'y', cur=self._y_position)
-        print x,y
         if errx is None and erry is None:
             return 'invalid position {},{}'.format(x, y)
         
@@ -91,7 +79,9 @@ class AerotechMotionController(MotionController):
             cmd='ILI X{} Y{}'.format(nx,ny)
             
         self.ask(cmd, handshake_only=True)
-        
+        if block:
+            self.block()
+            
     def set_single_axis_motion_parameters(self,axis=None, pdict=None):
         if pdict is not None:
             key=pdict['key']
@@ -108,11 +98,8 @@ class AerotechMotionController(MotionController):
             nv=value-cp
             
             nv=self._sign_correct(nv, key, ratio=False)
-    #        cmd='IIN {}{} {}F100'.format(name, int(value), name)
             cmd='IIN {}{} {}F{}'.format(name, nv, name, axis.velocity)
-    #
-    #        # self._relative_move([name], [value-axis.position])
-    #        cmd = EIC + '%s%i' % (name, value - axis.position)
+
             if name=='Z':
                 func=self._z_inprogress_update
             else:
@@ -122,9 +109,7 @@ class AerotechMotionController(MotionController):
             self.timer = self.timer_factory(func= func)
 
             if block:
-                time.sleep(0.5)
                 self.block()
-        #self._moving_()
 #
 #    def _relative_move(self, axes, values):
 #        '''
@@ -136,6 +121,7 @@ class AerotechMotionController(MotionController):
 #        resp = self.ask(cmd)
 #        return self._parse_response(resp)
     def block(self, axis=None):
+        time.sleep(0.25)
 #        for i in range(100):
 #            self._moving()
         while self._moving_():
