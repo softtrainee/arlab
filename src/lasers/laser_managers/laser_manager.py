@@ -30,7 +30,7 @@ from src.monitors.laser_monitor import LaserMonitor
 #from src.managers.graph_manager import GraphManager
 from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
-from src.hardware.meter_calibration import MeterCalibration
+#from src.hardware.meter_calibration import MeterCalibration
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
@@ -287,7 +287,8 @@ class LaserManager(BaseLaserManager):
         '''
         return [('enable', 'enable_label', None)
                 ]
-    def get_control_sliders(self):
+
+    def get_control_items(self):
         pass
 
     def get_additional_controls(self):

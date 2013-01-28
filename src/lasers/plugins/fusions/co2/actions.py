@@ -20,7 +20,8 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenVideoAction, FOpenPo
     FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction, \
     FOpenMotionControllerManagerAction, FOpenLaserManagerAction, \
     FOpenPatternAction, FNewPatternAction, FMotorConfigureAction, \
-    FExecutePatternAction, FConfigureBrightnessMeterAction
+    FExecutePatternAction, FConfigureBrightnessMeterAction, FPulseAction, \
+    FOpticsAction
 
 #============= standard library imports ========================
 
@@ -37,6 +38,12 @@ class MotorConfigureAction(CO2Mixin, FMotorConfigureAction):
 #===============================================================================
 # ##fusions action
 #===============================================================================
+class OpticsAction(CO2Mixin, FOpticsAction):
+    pass
+
+class PulseAction(CO2Mixin, FPulseAction):
+    pass
+
 class OpenLaserManagerAction(CO2Mixin, FOpenLaserManagerAction):
     name = 'Open Laser Manager'
 

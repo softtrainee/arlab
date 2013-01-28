@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float, Any
-from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
+from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, InstanceEditor, View
 from pyface.timer.do_later import do_later
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
@@ -39,6 +39,17 @@ from src.database.adapters.power_calibration_adapter import PowerCalibrationAdap
 
 from laser_manager import LaserManager
 from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
+from src.viewable import Viewable
+
+class OpticsView(Viewable):
+    title = 'Optics'
+    laser_controller = Instance(FusionsLogicBoard)
+    def traits_view(self):
+        item = Item('laser_controller', show_label=False,
+                    editor=InstanceEditor(view='control_view'),
+                    style='custom')
+        return self.view_factory(item, id='optics_view')
+
 
 class FusionsLaserManager(LaserManager):
     '''
@@ -47,18 +58,19 @@ class FusionsLaserManager(LaserManager):
     units = Property(depends_on='use_calibrated_power')
     laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
+    optics_view = Instance(OpticsView)
 
-    beam = DelegatesTo('laser_controller')
-    beammin = DelegatesTo('laser_controller')
-    beammax = DelegatesTo('laser_controller')
-    update_beam = DelegatesTo('laser_controller')
-    beam_enabled = DelegatesTo('laser_controller')
-#    beam_enabled = Bool(True)
-
-    zoom = DelegatesTo('laser_controller')
-    zoommin = DelegatesTo('laser_controller')
-    zoommax = DelegatesTo('laser_controller')
-    update_zoom = DelegatesTo('laser_controller')
+#    beam = DelegatesTo('laser_controller')
+#    beammin = DelegatesTo('laser_controller')
+#    beammax = DelegatesTo('laser_controller')
+#    update_beam = DelegatesTo('laser_controller')
+#    beam_enabled = DelegatesTo('laser_controller')
+##    beam_enabled = Bool(True)
+#
+#    zoom = DelegatesTo('laser_controller')
+#    zoommin = DelegatesTo('laser_controller')
+#    zoommax = DelegatesTo('laser_controller')
+#    update_zoom = DelegatesTo('laser_controller')
 
     pointer = Event
     pointer_state = Bool(False)
@@ -410,6 +422,7 @@ class FusionsLaserManager(LaserManager):
         m.edit_traits()
 
 #========================= views =========================
+
     def get_control_buttons(self):
         '''
         '''
@@ -419,32 +432,37 @@ class FusionsLaserManager(LaserManager):
                 #('light', 'light_label', None)
                 ]
 
-    def get_control_sliders(self):
-        '''
-        '''
-        s = [('zoom', 'zoom', {}),
-            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
-            ]
-        return s
+#    def get_control_items(self):
+#        '''
+#        '''
+##        return Item('laser_controller', show_label=False,
+##                    editor=InstanceEditor(view='control_view'),
+##                    style='custom',
+##                    springy=False, height= -100)
+#
+##        return self.laser_controller.get_control_group()
+#        s = [('zoom', 'zoom', {}),
+#            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
+#            ]
+#        return self._update_slider_group_factory(s)
 
-    def get_lens_configuration_group(self):
-        return Item('lens_configuration',
-                           editor=EnumEditor(values=self.lens_configuration_names)
-                           )
+#    def get_lens_configuration_group(self):
+#        return Item('lens_configuration',
+#                    editor=EnumEditor(values=self.lens_configuration_names)
+#                    )
 
-    def get_optics_group(self):
-        csliders = self.get_control_sliders()
-        vg = VGroup(
-                      self._update_slider_group_factory(csliders),
-                      show_border=True,
-                      label='Optics'
-                      )
-
-        lens_config = self.get_lens_configuration_group()
-        if lens_config:
-            vg.content.insert(0, lens_config)
-
-        return vg
+#    def get_optics_group(self):
+#        csliders = self.get_control_items()
+#        vg = HGroup(csliders,
+#                      show_border=True,
+#                      label='Optics', springy=False
+#                      )
+#
+#        lens_config = self.get_lens_configuration_group()
+#        if lens_config:
+#            vg.content.insert(0, lens_config)
+#
+#        return vg
 
     def __control__group__(self):
         '''
@@ -453,8 +471,7 @@ class FusionsLaserManager(LaserManager):
                            HGroup(spring,
                                   Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
                                   self._button_group_factory(self.get_control_buttons(), orientation='h'),
-
-                                  springy=True
+#                                  springy=True
                                   ),
                            HGroup(
                                Item('requested_power', style='readonly',
@@ -465,39 +482,16 @@ class FusionsLaserManager(LaserManager):
                                spring
                                ),
                            show_border=True,
-                           springy=True,
+#                           springy=True,
                            label='Power'
                            )
 
         ps = self.get_power_slider()
         if ps:
-            ps.springy = True
+#            ps.springy = True
             power_grp.content.append(ps)
 
-        pulse_grp = HGroup(
-                           #spring,
-                           Item('pulse', show_label=False, style='custom'),
-                           show_border=True,
-                           springy=False,
-                           label='Pulse'
-                           )
-
-        vg = VGroup()
-
-
-        optics_grp = self.get_optics_group()
-        hg = HGroup(#spring,
-                   optics_grp,
-                  #VGroup(
-                      pulse_grp,
-                      power_grp,
-                   #   springy=True,
-                      #show_border=True
-                    #  ),
-                  springy=True
-                  )
-#        vg.content.append(self._update_slider_group_factory(csliders))
-        vg.content.append(hg)
+        vg = VGroup(power_grp)
 
         ac = self.get_additional_controls()
         if ac is not None:
@@ -596,6 +590,10 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return FiberLight(name='fiber_light')
+
+    def _optics_view_default(self):
+        return OpticsView(laser_controller=self.laser_controller)
+
 if __name__ == '__main__':
 
     d = FusionsLaserManager()

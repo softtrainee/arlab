@@ -163,30 +163,35 @@ class FusionsUVManager(FusionsLaserManager):
             self.controller.stop_triggering_laser()
             self.laser_status = ''
 
-    def show_control_view(self):
-        '''
-        '''
-        self.edit_traits(view='control_view')
+#    def show_control_view(self):
+#        '''
+#        '''
+#        self.edit_traits(view='control_view')
+#
+#    def get_control_buttons(self):
+#        '''
+#        '''
+#        return []
 
-    def get_control_buttons(self):
-        '''
-        '''
-        return []
-    def get_menus(self):
-        '''
-        '''
-        m = super(FusionsUVManager, self).get_menus()
+#    def get_menus(self):
+#        '''
+#        '''
+#        m = super(FusionsUVManager, self).get_menus()
+#
+#        m.append(('Laser', [dict(name='Control',
+#                               action='show_control_view')]))
+#        return m
 
-        m.append(('Laser', [dict(name='Control',
-                               action='show_control_view')]))
-        return m
-    def get_control_sliders(self):
-        '''
-        '''
-        s = super(FusionsUVManager, self).get_control_sliders()
-        s.pop(len(s) - 1)
-        s.append(('attenuation', 'attenuation', {}))
-        return s
+#        '''
+#        '''
+#        s = super(FusionsUVManager, self).get_control_sliders()
+#        s.pop(len(s) - 1)
+#    def get_control_items(self):
+#        s = [
+#             ('zoom', 'zoom', {}), ]
+#
+#        g = self._update_slider_group_factory(s)
+#        return self.laser_controller.control_view()
 
 #============= views ===================================
 
@@ -199,6 +204,7 @@ class FusionsUVManager(FusionsLaserManager):
         return [hg,
                 sg
                 ]
+
     def _get_control_contents(self):
         '''
         '''
@@ -268,36 +274,39 @@ class FusionsUVManager(FusionsLaserManager):
                 hg,
                 HGroup(Item('laser_status', style='readonly'))
                 ]
-    def control_view(self):
-        '''
-        '''
-        control_contents = self._get_control_contents()
-        v = View(
-               resizable=True,
-               title='UV Laser Control'
-               )
-        for c in control_contents:
 
-            v.content.append(c)
-        return v
-    def gas_view(self):
-        '''
-        '''
-        contents = self._get_gas_contents()
 
-        v = View(
-               )
-        for c in contents:
-            v.content.append(c)
-        return v
+#    def control_view(self):
+#        '''
+#        '''
+#        control_contents = self._get_control_contents()
+#        v = View(
+#               resizable=True,
+#               title='UV Laser Control'
+#               )
+#        for c in control_contents:
+#
+#            v.content.append(c)
+#        return v
+#
+#    def gas_view(self):
+#        '''
+#        '''
+#        contents = self._get_gas_contents()
+#
+#        v = View(
+#               )
+#        for c in contents:
+#            v.content.append(c)
+#        return v
 
-    def __test__group__(self):
-        '''
-        '''
-        vg = VGroup()
-        for c in self._get_gas_contents():
-            vg.content.append(c)
-        return vg
+#    def __test__group__(self):
+#        '''
+#        '''
+#        vg = VGroup()
+#        for c in self._get_gas_contents():
+#            vg.content.append(c)
+#        return vg
 
     def get_lens_configuration_group(self):
         return None

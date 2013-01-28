@@ -42,10 +42,10 @@ class FusionsActionSet(WorkbenchActionSet):
                        path=laser_path,
                        class_name='{}OpenLaserManagerAction'.format(self.action_path)
                        ),
-                Action(name='Configure Motion Controller',
-                       path=laser_path,
-                       class_name='{}OpenMotionControllerManagerAction'.format(self.action_path)
-                       ),
+#                Action(name='Configure Motion Controller',
+#                       path=laser_path,
+#                       class_name='{}OpenMotionControllerManagerAction'.format(self.action_path)
+#                       ),
                 Action(name='Power Calibration',
                        path=laser_path,
                        class_name='{}PowerCalibrationAction'.format(self.action_path)
@@ -74,11 +74,18 @@ class FusionsActionSet(WorkbenchActionSet):
 #                       path='{}/Initialize'.format(laser_path),
 #                       class_name='{}InitializeZoomAction'.format(self.action_path)
 #                       ),
-                Action(name='Motor Configure',
+#                Action(name='Motor Configure',
+#                       path='{}'.format(laser_path),
+#                       class_name='{}MotorConfigureAction'.format(self.action_path)
+#                       ),
+                Action(name='Optics',
                        path='{}'.format(laser_path),
-                       class_name='{}MotorConfigureAction'.format(self.action_path)
+                       class_name='{}OpticsAction'.format(self.action_path)
                        ),
-
+                Action(name='Pulse',
+                       path='{}'.format(laser_path),
+                       class_name='{}PulseAction'.format(self.action_path)
+                       ),
                 #===============================================================
                 # results
                 #===============================================================

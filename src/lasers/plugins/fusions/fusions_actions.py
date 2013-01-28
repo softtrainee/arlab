@@ -41,6 +41,21 @@ class LocalLaserAction(BaseLaserAction):
         if isinstance(man, PychronLaserManager) and not self.client_action:
             self.enabled = False
 
+
+class FOpticsAction(LocalLaserAction):
+    def perform(self, event):
+        manager = self._get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            open_manager(app, manager.optics_view)
+
+class FPulseAction(LocalLaserAction):
+    def perform(self, event):
+        manager = self._get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            open_manager(app, manager.pulse)
+
 class FOpenLaserManagerAction(LocalLaserAction):
     accelerator = 'Ctrl+L'
     def perform(self, event):

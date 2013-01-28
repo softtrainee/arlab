@@ -197,7 +197,7 @@ class StageManager(Manager):
 #        print x_range             
 #        self.canvas.set_mapper_limits('x', x_range)
 #        self.canvas.set_mapper_limits('y', y_range)
-        
+
     def finish_loading(self):
         self.update_axes()
 
@@ -754,7 +754,7 @@ class StageManager(Manager):
 
         if p:
             self.canvas.save_points(p)
-            
+
 #===============================================================================
 # factories
 #===============================================================================
@@ -783,16 +783,16 @@ class StageManager(Manager):
         '''
         w = 640 / 2.0 / 23.2
         h = 0.75 * w
-       
+
         l = LaserTrayCanvas(parent=self,
                                padding=[30, 5, 5, 30],
                                map=self._stage_map,
-                               x_range=(self.stage_controller.xaxes_min,
-                                        self.stage_controller.xaxes_max),
-                              
-                               y_range=(self.stage_controller.yaxes_min,
-                                        self.stage_controller.yaxes_max),
-                              
+#                               x_range=(self.stage_controller.xaxes_min,
+#                                        self.stage_controller.xaxes_max),
+#                              
+#                               y_range=(self.stage_controller.yaxes_min,
+#                                        self.stage_controller.yaxes_max),
+
                                view_x_range=[-w, w],
                                view_y_range=[-h, h],
                                )
