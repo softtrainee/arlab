@@ -27,19 +27,11 @@ from fusions_logic_board import FusionsLogicBoard
 class FusionsUVLogicBoard(FusionsLogicBoard):
     '''
     '''
+    _test_comms = False #dont test comms on startup. UV doesn't really have logic board only kerr motor controllers
     def _enable_laser(self):
         '''
         '''
-        interlocks = self.check_interlocks()
-        if not interlocks:
-            return True
-        else:
-            self._disable_laser()
-            msg = 'Cannot fire. Interlocks enabled '
-            self.warning(msg)
-            for i in interlocks:
-                self.warning(i)
-            return msg + ','.join(interlocks)
+        return True
 
     def _disable_laser(self):
         '''

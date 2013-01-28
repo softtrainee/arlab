@@ -116,7 +116,7 @@ class ATLLaserControlUnit(CoreDevice):
     def laser_on(self):
         '''
         '''
-        cmd = self._build_command(11, 0)
+        cmd = self._build_command(11, 1)
         self._send_command(cmd)
 
         self._enabled = True
@@ -124,7 +124,7 @@ class ATLLaserControlUnit(CoreDevice):
     def laser_off(self):
         '''
         '''
-        cmd = self._build_command(11, 1)
+        cmd = self._build_command(11, 0)
         self._send_command(cmd)
         self._enabled = False
 
@@ -145,7 +145,7 @@ class ATLLaserControlUnit(CoreDevice):
     def laser_stop(self):
         self.stop_update_timer()
 
-        cmd = self._build_command(11, 3)
+        cmd = self._build_command(11, 1)
         self._send_command(cmd)
 
 

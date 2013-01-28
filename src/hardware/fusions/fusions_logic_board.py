@@ -61,6 +61,7 @@ class FusionsLogicBoard(CoreDevice):
     internal_meter_response = Float
 
     motors = List
+    _test_comms = True
 
     def initialize(self, *args, **kw):
         '''
@@ -70,9 +71,9 @@ class FusionsLogicBoard(CoreDevice):
 
         #test communciations with board issue warning if 
         #no handle or response is none
-
-        resp = True if self.ask(';LB.VER') else False
-
+        resp = True
+        if self._test_comms:
+            resp = True if self.ask(';LB.VER') else False
 
 #        resp = self._disable_laser_()
         if self._communicator.handle is None or resp is not True:
