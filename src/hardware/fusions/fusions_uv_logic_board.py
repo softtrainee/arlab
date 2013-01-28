@@ -17,23 +17,39 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Instance, DelegatesTo
-
-
+#from traits.api import Instance, DelegatesTo
 #============= standard library imports ========================
-import os
+#import os
 #============= local library imports  ==========================
 from fusions_logic_board import FusionsLogicBoard
-from src.hardware.kerr.kerr_motor import KerrMotor
+#from src.hardware.kerr.kerr_motor import KerrMotor
 
 class FusionsUVLogicBoard(FusionsLogicBoard):
     '''
     '''
-    attenuator_motor = Instance(KerrMotor, ())
-    attenuation = DelegatesTo('attenuator_motor', prefix='data_position')
-    attenuationmin = DelegatesTo('attenuator_motor', prefix='min')
-    attenuationmax = DelegatesTo('attenuator_motor', prefix='max')
-    update_attenuation = DelegatesTo('attenuator_motor', prefix='update_position')
+    def _enable_laser(self):
+        '''
+        '''
+        interlocks = self.check_interlocks()
+        if not interlocks:
+            return True
+        else:
+            self._disable_laser()
+            msg = 'Cannot fire. Interlocks enabled '
+            self.warning(msg)
+            for i in interlocks:
+                self.warning(i)
+            return msg + ','.join(interlocks)
+
+    def _disable_laser(self):
+        '''
+        '''
+        return True
+#    attenuator_motor = Instance(KerrMotor, ())
+#    attenuation = DelegatesTo('attenuator_motor', prefix='data_position')
+#    attenuationmin = DelegatesTo('attenuator_motor', prefix='min')
+#    attenuationmax = DelegatesTo('attenuator_motor', prefix='max')
+#    update_attenuation = DelegatesTo('attenuator_motor', prefix='update_position')
 
 #    def load_additional_args(self, config):
 #        '''

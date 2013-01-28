@@ -34,51 +34,57 @@ ANSWER_ADDR = '0002'
 class ATLLaserControlUnit(CoreDevice):
     '''
     '''
-    _enabled = Bool(False)
-    triggered = Bool(False)
-
-    energy = Float(0)
-    energymin = Constant(0.0)
-    energymax = Constant(15.0)
-    update_energy = Float
-
-    hv = Float(11)
-    hvmin = Constant(11.0)
-    hvmax = Constant(16.0)
-    update_hv = Float(11)
-
-    reprate = Float(100)
-    repratemin = Constant(100.0)
-    repratemax = Constant(300.0)
-    update_reprate = Float(100)
-
-    trigger_modes = ['External I',
-                      'External II',
-                      'Internal'
-                      ]
-    trigger_mode = Str('External I')
-    stablization_modes = ['High Voltage', 'Energy']
-    stablization_mode = Str('High Voltage')
-
-    stop_at_low_e = Bool
-
-    cathode = Float(0.0)
-    reservoir = Float(0.0)
-    missing_pulses = Int(0)
-    halogen_filter = Float(0.0)
-
-    laser_head = Float(0.0)
-    laser_headmin = Constant(0.0)
-    laser_headmax = Constant(7900.0)
-
-    burst = Bool
-    nburst = Int(enter_set=True, auto_set=False)
-    cburst = Int
+    energy_readback = Float
+    _timer = None
+#    _enabled = Bool(False)
+#    triggered = Bool(False)
+#
+#    energy = Float(0)
+#    energymin = Constant(0.0)
+#    energymax = Constant(15.0)
+#    update_energy = Float
+#
+#    hv = Float(11)
+#    hvmin = Constant(11.0)
+#    hvmax = Constant(16.0)
+#    update_hv = Float(11)
+#
+#    reprate = Float(100)
+#    repratemin = Constant(100.0)
+#    repratemax = Constant(300.0)
+#    update_reprate = Float(100)
+#
+#    trigger_modes = ['External I',
+#                      'External II',
+#                      'Internal'
+#                      ]
+#    trigger_mode = Str('External I')
+#    stablization_modes = ['High Voltage', 'Energy']
+#    stablization_mode = Str('High Voltage')
+#
+#    stop_at_low_e = Bool
+#
+#    cathode = Float(0.0)
+#    reservoir = Float(0.0)
+#    missing_pulses = Int(0)
+#    halogen_filter = Float(0.0)
+#
+#    laser_head = Float(0.0)
+#    laser_headmin = Constant(0.0)
+#    laser_headmax = Constant(7900.0)
+#
+#    burst = Bool
+#    nburst = Int(enter_set=True, auto_set=False)
+#    cburst = Int
 
     def start_update_timer(self):
         '''
         '''
-        self.timer = Timer(1000, self._update_parameters)
+        self._timer = Timer(1000, self._update_parameters)
+
+    def stop_update_timer(self):
+        if self._timer:
+            self._timer.Stop()
 
     def set_energy(self, v):
         '''
@@ -95,17 +101,17 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         pass
 
-    def trigger_laser(self):
-        '''
-        '''
-        self.start_update_timer()
-
-        self.triggered = True
-
-    def stop_triggering_laser(self):
-        '''
-        '''
-        self.triggered = False
+#    def trigger_laser(self):
+#        '''
+#        '''
+#        self.start_update_timer()
+#
+#        self.triggered = True
+#
+#    def stop_triggering_laser(self):
+#        '''
+#        '''
+#        self.triggered = False
 
     def laser_on(self):
         '''
@@ -131,38 +137,47 @@ class ATLLaserControlUnit(CoreDevice):
     def laser_run(self):
         '''
         '''
+        self.start_update_timer()
+
         cmd = self._build_command(11, 3)
         self._send_command(cmd)
 
+    def laser_stop(self):
+        self.stop_update_timer()
+
+        cmd = self._build_command(11, 3)
+        self._send_command(cmd)
+
+
     def _update_parameters(self):
-        '''
-        '''
+#        '''
+#        '''
         formatter = lambda x:x / 10.0
 #        read and set energy and pressure as one block
-        self._update_parameter_list([('energy', formatter), 'laser_head'], 8, 2)
-#        read and set frequency and hv as one block
-        self._update_parameter_list(['reprate', ('hv', formatter)], 1001, 2)
+        self._update_parameter_list([('energy_readback', formatter)], 8, 1)
+##        read and set frequency and hv as one block
+#        self._update_parameter_list(['reprate', ('hv', formatter)], 1001, 2)
 
 #        read and set gas action
 
-    def _anytrait_changed(self, name, value):
-        '''
-
-        '''
-        if name in ['energy', 'reprate', 'hv']:
-            f = getattr(self, 'set_%s' % name)
-            self.info('setting %s %s' % (name, value))
-            f(value)
-
-            if self.simulation:
-                setattr(self, 'update_%s' % name, value)
+#    def _anytrait_changed(self, name, value):
+#        '''
+#
+#        '''
+#        if name in ['energy', 'reprate', 'hv']:
+#            f = getattr(self, 'set_%s' % name)
+#            self.info('setting %s %s' % (name, value))
+#            f(value)
+#
+#            if self.simulation:
+#                setattr(self, 'update_%s' % name, value)
 
     def _set_answer_parameters(self, start_addr_value, answer_len):
         '''
         '''
 
-        answer_len = '%04X' % answer_len
-        start_addr_value = '%04X' % start_addr_value
+        answer_len = '{:04x}'.format(answer_len)
+        start_addr_value = '{:04x}'.format(start_addr_value)
 
         values = [start_addr_value, answer_len]
         cmd = self._build_command(ANSWER_ADDR, values)
@@ -176,10 +191,10 @@ class ATLLaserControlUnit(CoreDevice):
         '''
 
         if isinstance(start_addr, int):
-            start_addr = '%04X' % start_addr
+            start_addr = '{:04x}'.format(start_addr)
 
         if isinstance(values, int):
-            values = ['%04X' % values]
+            values = ('{:04x}'.format(values),)
 
         cmd = start_addr + ''.join(values)
         cmd += ETX
@@ -264,18 +279,17 @@ class ATLLaserControlUnit(CoreDevice):
             
         '''
         resp = self._send_query(s, l)
-
-        args = self._parse_parameter_answers(resp, s, l)
-        kw = {}
-        for n, a in zip(names, args):
-
-            v = int(a, 16)
-            if isinstance(n, tuple):
-                v = n[1](v)
-                n = n[0]
-
-            kw[n] = v
-        self.trait_set(**kw)
+        if resp is not None:
+            args = self._parse_parameter_answers(resp, s, l)
+    #        kw = dict()
+            for n, a in zip(names, args):
+                v = int(a, 16)
+                if isinstance(n, tuple):
+                    v = n[1](v)
+                    n = n[0]
+                self.trait_set(n=v)
+#            kw[n] = v
+#        self.trait_set(**kw)
 
 
 if __name__ == '__main__':

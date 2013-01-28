@@ -641,7 +641,7 @@ class StageManager(Manager):
             return
 
         v = str(v)
-        if self.hole_thread is None and v != self._hole:
+        if self.hole_thread is None:
 #            v = str(v)
             pos = self._stage_map.get_hole_pos(v)
             if pos is not None:

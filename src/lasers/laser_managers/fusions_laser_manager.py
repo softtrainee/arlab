@@ -269,34 +269,34 @@ class FusionsLaserManager(LaserManager):
 
         super(FusionsLaserManager, self).kill(**kw)
 
-    def load_lens_configurations(self):
-        for config_name in ['gaussian', 'homogenizer']:
-            config = self.get_configuration(name=config_name)
-            if config:
-                self.info('loading lens configuration {}'.format(config_name))
-                self.lens_configuration_names.append(config_name)
-
-                offset = tuple(map(int, self.config_get(config, 'General', 'offset', default='0,0').split(',')))
-
-                bd = self.config_get(config, 'General', 'beam', cast='float')
-                user_enabled = self.config_get(config, 'General', 'user_enabled', cast='boolean', default=True)
-                self.lens_configuration_dict[config_name] = (bd, offset, user_enabled)
-
-        self.set_lens_configuration('gaussian')
-
-    def set_lens_configuration(self, name=None):
-        if name is None:
-            name = self.lens_configuration
-
-        try:
-            bd, offset, enabled = self.lens_configuration_dict[name]
-        except KeyError:
-            return
-
-        self.stage_manager.canvas.crosshairs_offset = offset
-
-        self.set_beam_diameter(bd, force=True)
-        self.beam_enabled = enabled
+#    def load_lens_configurations(self):
+#        for config_name in ['gaussian', 'homogenizer']:
+#            config = self.get_configuration(name=config_name)
+#            if config:
+#                self.info('loading lens configuration {}'.format(config_name))
+#                self.lens_configuration_names.append(config_name)
+#
+#                offset = tuple(map(int, self.config_get(config, 'General', 'offset', default='0,0').split(',')))
+#
+#                bd = self.config_get(config, 'General', 'beam', cast='float')
+#                user_enabled = self.config_get(config, 'General', 'user_enabled', cast='boolean', default=True)
+#                self.lens_configuration_dict[config_name] = (bd, offset, user_enabled)
+#
+#        self.set_lens_configuration('gaussian')
+#
+#    def set_lens_configuration(self, name=None):
+#        if name is None:
+#            name = self.lens_configuration
+#
+#        try:
+#            bd, offset, enabled = self.lens_configuration_dict[name]
+#        except KeyError:
+#            return
+#
+#        self.stage_manager.canvas.crosshairs_offset = offset
+#
+#        self.set_beam_diameter(bd, force=True)
+#        self.beam_enabled = enabled
 
     def finish_loading(self):
         '''
@@ -305,7 +305,7 @@ class FusionsLaserManager(LaserManager):
 #            self.fiber_light._cdevice = self.subsystem.get_module('FiberLightModule')
 
         super(FusionsLaserManager, self).finish_loading()
-        self.load_lens_configurations()
+#        self.load_lens_configurations()
 
     @on_trait_change('pointer')
     def pointer_ononff(self):
@@ -463,16 +463,18 @@ class FusionsLaserManager(LaserManager):
 #            vg.content.insert(0, lens_config)
 #
 #        return vg
+    def get_control_button_group(self):
+        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
+#                                  springy=True
+                    )
+        return grp
 
-    def __control__group__(self):
+    def get_control_group(self):
         '''
         '''
         power_grp = VGroup(
-                           HGroup(spring,
-                                  Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-                                  self._button_group_factory(self.get_control_buttons(), orientation='h'),
-#                                  springy=True
-                                  ),
+                           self.get_control_button_group(),
                            HGroup(
                                Item('requested_power', style='readonly',
                                     format_str='%0.2f',
@@ -539,10 +541,10 @@ class FusionsLaserManager(LaserManager):
 #            mv = getattr(sm, m)
 #        return mv
 
-    def _lens_configuration_changed(self):
-
-        t = Thread(target=self.set_lens_configuration)
-        t.start()
+#    def _lens_configuration_changed(self):
+#
+#        t = Thread(target=self.set_lens_configuration)
+#        t.start()
 
     def _get_pointer_label(self):
         '''
