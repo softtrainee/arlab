@@ -502,8 +502,6 @@ class Manager(Viewable, RPCable):
                                     *args, **kw)
     def _slider_factory(self, name, prefix, mode='slider', ** kw):
         '''
-        
-
         '''
         return Item(name, editor=RangeEditor(mode=mode,
                                             low_name='%smin' % prefix,
@@ -523,7 +521,7 @@ class Manager(Viewable, RPCable):
         r = self._slider_factory(name, prefix, **kw)
         vg.content.append(r)
 
-        ur = self._slider_factory('update_%s' % name, name, **dict(show_label=False, enabled_when='0'))
+        ur = self._slider_factory('update_%s' % name, name, show_label=False, enabled_when='0')
 
         vg.content.append(ur)
 

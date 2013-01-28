@@ -22,7 +22,8 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
     FOpenPatternAction, FNewPatternAction, LocalLaserAction, FMotorConfigureAction, \
-    FExecutePatternAction, FConfigureBrightnessMeterAction
+    FExecutePatternAction, FConfigureBrightnessMeterAction, FPulseAction, \
+    FOpticsAction
     #FInitializeZoomAction, FInitializeBeamAction, \
 
 #============= standard library imports ========================
@@ -53,6 +54,12 @@ class ConfigureWatlowAction(DiodeMixin, LocalLaserAction):
 #===============================================================================
 # fusions action
 #===============================================================================
+
+class OpticsAction(DiodeMixin, FOpticsAction):
+    pass
+
+class PulseAction(DiodeMixin, FPulseAction):
+    pass
 
 class OpenLaserManagerAction(DiodeMixin, FOpenLaserManagerAction):
     pass

@@ -21,7 +21,7 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
     FOpenPatternAction, FNewPatternAction, FMotorConfigureAction, \
-    FExecutePatternAction
+    FExecutePatternAction, FOpticsAction, FPulseAction
     #FInitializeZoomAction, FInitializeBeamAction, \
 
 #============= standard library imports ========================
@@ -33,6 +33,11 @@ class UVMixin(object):
 #===============================================================================
 # fusions action
 #===============================================================================
+
+class OpticsAction(UVMixin, FOpticsAction):
+    pass
+class PulseAction(UVMixin, FPulseAction):
+    pass
 
 class OpenLaserManagerAction(UVMixin, FOpenLaserManagerAction):
     pass

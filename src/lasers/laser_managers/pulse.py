@@ -116,12 +116,12 @@ class Pulse(HasTraits):
                                             show_label=False,
                                             enabled_when='object.enabled'
                                             )),
-
                  Item('duration'),
-               Item('wait_control', show_label=False, style='custom'),
-#               kind='live',
-               handler=PulseHandler()
-               )
+                 Item('wait_control', show_label=False, style='custom'),
+                 id='pulse',
+                 title='Pulse',
+                 handler=PulseHandler()
+                 )
         return v
 
 

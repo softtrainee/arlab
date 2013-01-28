@@ -22,7 +22,7 @@ see Photon Machines Logic Board Command Set for additional information
 #=============enthought library imports=======================
 from traits.api import  Instance, DelegatesTo, Str, Float, List
 #from traitsui.api import Item, VGroup, RangeEditor
-from traitsui.api import Item, ListEditor, InstanceEditor, Group
+from traitsui.api import Item, ListEditor, InstanceEditor, Group, View
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
@@ -423,14 +423,15 @@ class FusionsLogicBoard(CoreDevice):
 
     def get_control_group(self):
         return Group(Item('motors', style='custom',
-                    editor=ListEditor(mutable=False,
+                          editor=ListEditor(mutable=False,
                                       style='custom',
                                       editor=InstanceEditor(view='control_view')),
 
-                    show_label=False
-                    ))
+                                      show_label=False)
+                     )
 
-#        
+
+
 #        be = RangeEditor(low_name='beammin',
 #                       high_name='beammax'
 #                       )

@@ -99,9 +99,9 @@ class SynradCO2Manager(LaserManager):
 
         #vg.content.append(Item('light_intensity', enabled_when = 'fiber_light.state'))
 
-        csliders = self.get_control_sliders()
-        if csliders:
-            vg.content.append(self._update_slider_group_factory(csliders))
+        citems = self.get_control_items()
+        if citems:
+            vg.content.append(citems)
 
         ac = self.get_additional_controls()
         if ac:
