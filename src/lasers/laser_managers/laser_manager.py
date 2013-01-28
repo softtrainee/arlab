@@ -276,8 +276,11 @@ class LaserManager(BaseLaserManager):
 #===============================================================================
 # views
 #===============================================================================
-    def __stage__group__(self):
+    def get_stage_group(self):
         return Item('stage_manager', height=0.70, style='custom', show_label=False)
+
+    def get_control_group(self):
+        return VGroup()
 
     def get_unique_view_id(self):
         return 'pychron.{}'.format(self.__class__.__name__.lower())
@@ -303,11 +306,13 @@ class LaserManager(BaseLaserManager):
         '''
         '''
 
-        vg = VGroup()
+        vg = VGroup(self.get_control_group(),
+                    self.get_stage_group()
+                    )
 
-        hooks = [h for h in dir(self) if '__group__' in h]
-        for h in hooks:
-            vg.content.append(getattr(self, h)())
+#        hooks = [h for h in dir(self) if '__group__' in h]
+#        for h in hooks:
+#            vg.content.append(getattr(self, h)())
 
         return View(
                     vg,

@@ -57,7 +57,7 @@ class Axis(ConfigLoadable):
     nominal_velocity = Float
     nominal_acceleration = Float
     nominal_deceleration = Float
-    
+
     sign = CInt(1)
     def _get_velocity(self):
         return self._velocity
@@ -132,8 +132,9 @@ class Axis(ConfigLoadable):
             path = os.path.join(path, '{}axis.cfg'.format(self.name))
 
         cp = self.get_configuration(path)
+        if cp:
+            params = [item for s in cp.sections() for item in cp.items(s)]
 
-        return [item for s in cp.sections() for item in cp.items(s)]
 #        for ai in a:
 #            print ai
 #
