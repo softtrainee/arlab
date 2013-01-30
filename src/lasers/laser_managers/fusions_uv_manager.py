@@ -26,6 +26,7 @@ from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_uv_logic_board import FusionsUVLogicBoard
 from src.hardware.fusions.atl_laser_control_unit import ATLLaserControlUnit
 from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
+from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 
 #============= local library imports  ==========================
 
@@ -48,6 +49,7 @@ class FusionsUVManager(FusionsLaserManager):
     firing = Bool
     single_shot = Bool
 
+    gas_handler_manager = Instance(UVGasHandlerManager)
 #    laseronoff = Event
 #    laseronoff_label = Property(depends_on='_enabled')
 #    _enabled = DelegatesTo('controller')
@@ -192,6 +194,10 @@ class FusionsUVManager(FusionsLaserManager):
                                    configuration_dir_name='uv',
                                    )
 
+    def _gas_handler_manager_default(self):
+        uv = UVGasHandlerManager(controller=self.controller)
+        uv.bootstrap()
+        return uv
 #    def _shot_history_default(self):
 #        '''
 #        '''

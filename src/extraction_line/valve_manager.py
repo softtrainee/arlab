@@ -64,6 +64,8 @@ class ValveManager(Manager):
     systems = None
     valve_groups = None
 
+    use_explanation = True
+
     def show_valve_properties(self, name):
         v = self.get_valve_by_name(name)
         if v is not None:
@@ -110,7 +112,7 @@ class ValveManager(Manager):
         #self._load_sections_from_file(setup_file)
     def _save_soft_lock_states(self):
 
-        p = os.path.join(paths.hidden_dir, 'soft_lock_state')
+        p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
         self.info('saving soft lock state to {}'.format(p))
         with open(p, 'wb') as f:
             obj = dict([(k, v.software_lock) for k, v in self.valves.iteritems()])
@@ -175,7 +177,7 @@ class ValveManager(Manager):
                 func(k, save=False)
 
         else:
-            p = os.path.join(paths.hidden_dir, 'soft_lock_state')
+            p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
             if os.path.isfile(p):
                 self.info('loading soft lock state from {}'.format(p))
 
@@ -590,7 +592,8 @@ class ValveManager(Manager):
         self.info('loading valve definitions file  {}'.format(path))
         def factory(v):
             name, hv = self._valve_factory(v)
-            self._load_explanation_valve(hv)
+            if self.use_explanation:
+                self._load_explanation_valve(hv)
             self.valves[name] = hv
             return hv
 

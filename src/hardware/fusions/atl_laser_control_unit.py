@@ -149,6 +149,22 @@ class ATLLaserControlUnit(CoreDevice):
         self._send_command(cmd)
 
 
+#===============================================================================
+# gas handling
+#===============================================================================
+    def start_auto_gas_exchange(self):
+
+        cmd = self._build_command(14, 11)
+        self._send_command(cmd)
+    def get_gas_status(self):
+        self._send_query(13, 1)
+    def open_valve(self, addr):
+        self.info('open valve {}'.format(addr))
+        cmd = STX
+        self._send_command(cmd)
+    def close_valve(self, addr):
+        self.info('close valve {}'.format(addr))
+
     def _update_parameters(self):
 #        '''
 #        '''
@@ -176,8 +192,8 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         '''
 
-        answer_len = '{:04x}'.format(answer_len)
         start_addr_value = '{:04x}'.format(start_addr_value)
+        answer_len = '{:04x}'.format(answer_len)
 
         values = [start_addr_value, answer_len]
         cmd = self._build_command(ANSWER_ADDR, values)

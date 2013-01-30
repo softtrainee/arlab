@@ -21,7 +21,8 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
     FOpenPatternAction, FNewPatternAction, FMotorConfigureAction, \
-    FExecutePatternAction, FOpticsAction, FPulseAction
+    FExecutePatternAction, FOpticsAction, FPulseAction, BaseLaserAction
+from src.envisage.core.action_helper import open_manager
     #FInitializeZoomAction, FInitializeBeamAction, \
 
 #============= standard library imports ========================
@@ -30,6 +31,15 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
 class UVMixin(object):
     manager_name = 'fusions_uv'
 
+#===============================================================================
+# uv actions
+#===============================================================================
+class OpenGasHandlingAction(UVMixin, BaseLaserAction):
+    accelerator = 'Cntrl+1'
+    def perform(self, event):
+        man = self._get_manager(event)
+
+        open_manager(event.window.application, man.gas_handler_manager)
 #===============================================================================
 # fusions action
 #===============================================================================
