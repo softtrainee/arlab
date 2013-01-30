@@ -65,9 +65,9 @@ class SerialCommunicator(Communicator):
 
     read_delay = None
     read_terminator = None
-    write_terminator=None
-    clear_output=False
-    
+    write_terminator = None
+    clear_output = False
+
     def reset(self):
         handle = self.handle
         try:
@@ -163,10 +163,12 @@ class SerialCommunicator(Communicator):
             #self._lock.release()
             return r
 
-    def ask(self, cmd, is_hex=False, verbose=True, delay=None, 
+    def ask(self, cmd, is_hex=False, verbose=True, delay=None,
             replace=None, remove_eol=True, info=None, nbytes=8,
             handshake_only=False,
-            handshake=None):
+            handshake=None,
+            read_terminator=None
+            ):
         '''
             
         '''
@@ -175,15 +177,20 @@ class SerialCommunicator(Communicator):
             if verbose:
                 self.info('no handle    {}'.format(cmd.strip()))
             return
-        
+
         with self._lock:
             if self.clear_output:
                 self.handle.flushInput()
                 self.handle.flushOutput()
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
-            re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes,
-                            handshake=handshake, handshake_only=handshake_only)
+            if is_hex:
+                re = self._read_hex(nbytes=nbytes, delay=delay)
+            elif handshake is not None:
+                re = self._read_handshake(handshake, handshake_only, delay)
+            else:
+                re = self._read(delay=delay,
+                                terminator=read_terminator)
         #print re, len(re)
         re = self.process_response(re, replace, remove_eol)
 
@@ -361,39 +368,63 @@ class SerialCommunicator(Communicator):
 #            time.sleep(50e-9)
             write(cmd)
 
-    def _read(self, is_hex=False, nbytes=8, timeout=1, delay=None,
-              handshake=None, handshake_only=False):  
-        func = (lambda: self._get_nbytes(nbytes)) \
-                if is_hex else lambda: self._get_isline(self.read_terminator)
-                    
-        if delay is not None:
-            time.sleep(delay / 1000.)
+    def _read_hex(self, nbytes=8, timeout=1, delay=None):
+        func = lambda:self._get_nbytes(nbytes)
+        self._read_loop(func, delay, timeout)
 
-        elif self.read_delay:
-            time.sleep(self.read_delay / 1000.)
 
-        r = None
-        st = time.time()
 
-        while time.time() - st < timeout:
-            if handshake is not None:
-                ack,r=self._check_handshake(handshake)
-                if handshake_only and ack:
-                    r=handshake[0]
-                    break
-                elif ack and r is not None:
-                    break
-            else:  
-                try:
-                    r, isline = func()
-                    if isline:
-                        break
-                except (ValueError, TypeError):
-                    import traceback
-                    traceback.print_exc()
-                time.sleep(0.001)
-                
-        return r
+    def _read_handshake(self, handshake, handshake_only, timeout=1, delay=None):
+        def hfunc():
+            terminated = False
+            ack, r = self._check_handshake(handshake)
+            if handshake_only and ack:
+                r = handshake[0]
+                terminated = True
+            elif ack and r is not None:
+                terminated = True
+            return r, terminated
+
+        return self._read_loop(hfunc, delay, timeout)
+
+    def _read(self, timeout=1, delay=None,
+              terminator=None):
+#        func = (lambda: self._get_nbytes(nbytes)) \
+#                if is_hex else lambda: self._get_isterminated(self.read_terminator)
+        if terminator is None:
+            terminator = self.read_terminator
+
+        func = lambda: self._get_isterminated(terminator)
+
+        return self._read_loop(func, delay, timeout)
+#        if delay is not None:
+#            time.sleep(delay / 1000.)
+#
+#        elif self.read_delay:
+#            time.sleep(self.read_delay / 1000.)
+#
+#        r = None
+#        st = time.time()
+#
+#        while time.time() - st < timeout:
+#            if handshake is not None:
+#                ack, r = self._check_handshake(handshake)
+#                if handshake_only and ack:
+#                    r = handshake[0]
+#                    break
+#                elif ack and r is not None:
+#                    break
+#            else:
+#                try:
+#                    r, isline = func()
+#                    if isline:
+#                        break
+#                except (ValueError, TypeError):
+#                    import traceback
+#                    traceback.print_exc()
+#                time.sleep(0.001)
+
+#        return r
 
     def _get_nbytes(self, nbytes=8):
         '''
@@ -415,29 +446,65 @@ class SerialCommunicator(Communicator):
             tt += d
 
         return r, tt < timeout
-    
+
     def _check_handshake(self, handshake_chrs):
-        ack,nak=handshake_chrs
+        ack, nak = handshake_chrs
         inw = self.handle.inWaiting()
         r = self.handle.read(inw)
         if r:
-            return ack==r[0], r[1:]
+            return ack == r[0], r[1:]
         return False, None
-    
-    def _get_isline(self, terminator=None):
+
+    def _get_isterminated(self, terminator=None):
+        r = None
+        terminated = False
         try:
             inw = self.handle.inWaiting()
             r = self.handle.read(inw)
 #            print 'inw',inw,r
             if terminator is None:
-                t1 = '\n'
-                t2 = '\r'
-                return r, r.endswith(t1) or r.endswith(t2) if r is not None else False
-            else:
-                return r, r.endswith(terminator) if r is not None else False
+                terminator = ('\n', '\r')
+
+            if not isinstance(terminator, (list, tuple)):
+                terminator = (terminator,)
+
+            if r:
+                for ti in terminator:
+                    if r.endswith(ti):
+                        terminated = True
+                        break
+#                terminated = r[-1] in terminator
+
+#                t1 = '\n'
+#                t2 = '\r'
+#                return r, r.endswith(t1) or r.endswith(t2) if r is not None else False
+#            else:
+#                return r, r.endswith(terminator) if r is not None else False
 
         except (OSError, IOError), e:
             self.warning(e)
+
+        return r, terminated
+    def _read_loop(self, func, delay, timeout):
+        if delay is not None:
+            time.sleep(delay / 1000.)
+
+        elif self.read_delay:
+            time.sleep(self.read_delay / 1000.)
+
+        r = None
+        st = time.time()
+        while time.time() - st < timeout:
+            try:
+                r, isterminated = func()
+                if isterminated:
+                    break
+            except (ValueError, TypeError):
+                import traceback
+                traceback.print_exc()
+            time.sleep(0.001)
+
+        return r
 #    def _read(self, is_hex=False, time_out=1, delay=None):
 #        '''
 #            use the serial handle to read available bytes from the serial buffer
