@@ -222,8 +222,7 @@ class ATLLaserControlUnit(CoreDevice):
 
         '''
         self._start_message()
-
-        self.ask(cmd)
+        self.ask(cmd, read_terminator=DLE + '1')
 
         self._end_message()
 
@@ -231,13 +230,13 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         '''
         cmd = 'A' + ENQ
-        self.ask(cmd)
+        self.ask(cmd, read_terminator=DLE + '0')
 
     def _end_message(self):
         '''
         '''
         cmd = EOT
-        self.ask(cmd)
+        self.tell(cmd)
 
     def _parse_parameter_answers(self, resp, rstartaddr, answer_len):
         '''
