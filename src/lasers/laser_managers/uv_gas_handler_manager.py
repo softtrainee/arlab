@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Button
+from traits.api import HasTraits, Instance, Any, Button, DelegatesTo
 from traitsui.api import View, Item, TableEditor, HGroup
 from src.viewable import Viewable
 from enable.component_editor import ComponentEditor
@@ -35,6 +35,8 @@ class UVGasHandlerManager(ValveManager):
 
     auto_gas_exchange = Button
 
+    energy_readback=DelegatesTo('controller')
+    pressure_readback=DelegatesTo('controller')
     def set_software_lock(self, name, lock):
         if lock:
             self.lock(name)
@@ -63,7 +65,12 @@ class UVGasHandlerManager(ValveManager):
 
     def _auto_gas_exchange(self):
         self.info('Starting auto gas exchange')
-        self.controller.start_auto_gas_exchange()
+        
+        self.controller.start_update_timer()
+#        if not self.confirmation_dialog('Are both gas cylinders closed'):
+#            return
+#        self.controller.do_auto_vac()
+        #self.controller.do_auto_gas_exchange()
 #===============================================================================
 # handlers
 #===============================================================================
@@ -78,8 +85,12 @@ class UVGasHandlerManager(ValveManager):
 
     def traits_view(self):
         ctrl_grp = HGroup(Item('auto_gas_exchange', show_label=False))
+        info_grp=HGroup(Item('energy_readback', width=50,style='readonly'),
+                        Item('pressure_readback',width=50, style='readonly')
+                        )
         v = View(
                  ctrl_grp,
+                 info_grp,
                  Item('canvas',
                       show_label=False,
                       editor=ComponentEditor(),

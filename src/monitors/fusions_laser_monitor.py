@@ -123,8 +123,7 @@ class FusionsLaserMonitor(LaserMonitor):
 
     setpoint = property(fget=_get_setpoint, fset=_set_setpoint)
 
-    def update_imb(self, *args, **kw):
-        pass
+    
 
 
 

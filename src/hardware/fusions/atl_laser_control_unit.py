@@ -23,11 +23,12 @@ from pyface.timer.api import Timer
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.checksum_helper import computeBCC
+import time
 STX = chr(2)
 ETX = chr(3)
 EOT = chr(4)
 ENQ = chr(5)
-DLE = chr(10)
+DLE = chr(16)
 ANSWER_ADDR = '0002'
 
 
@@ -35,6 +36,7 @@ class ATLLaserControlUnit(CoreDevice):
     '''
     '''
     energy_readback = Float
+    pressure_readback=Float
     _timer = None
 #    _enabled = Bool(False)
 #    triggered = Bool(False)
@@ -80,6 +82,7 @@ class ATLLaserControlUnit(CoreDevice):
     def start_update_timer(self):
         '''
         '''
+        self.stop_update_timer()
         self._timer = Timer(1000, self._update_parameters)
 
     def stop_update_timer(self):
@@ -116,9 +119,10 @@ class ATLLaserControlUnit(CoreDevice):
     def laser_on(self):
         '''
         '''
+#        self.start_update_timer()
         cmd = self._build_command(11, 1)
         self._send_command(cmd)
-
+#        self.ask('A'+ENQ)
         self._enabled = True
 
     def laser_off(self):
@@ -152,25 +156,75 @@ class ATLLaserControlUnit(CoreDevice):
 #===============================================================================
 # gas handling
 #===============================================================================
+    def do_auto_vac(self):
+#        self.start_auto_vac()
+        #wait until idle
+        while 1:
+            time.sleep(0.5)
+            if self.is_idle():
+                break
+            
+    def start_auto_vac(self):
+        cmd = self._build_command(14, 11)
+        self._send_command(cmd)
+        
     def start_auto_gas_exchange(self):
 
         cmd = self._build_command(14, 11)
         self._send_command(cmd)
+
+    def set_to_idle(self):
+        cmd = self._build_command(14, 11)
+        self._send_command(cmd)
+    
+    def is_idle(self):
+        status=self.get_gas_status()
+        if status is not None:
+            istatus=int(status, 16)
+            return istatus==0
+        #print 'is idle',status, len(status)
+           
     def get_gas_status(self):
-        self._send_query(13, 1)
+        r=self._send_query(13, 1)
+        return r
+        
     def open_valve(self, addr):
         self.info('open valve {}'.format(addr))
         cmd = STX
         self._send_command(cmd)
+        
     def close_valve(self, addr):
         self.info('close valve {}'.format(addr))
-
+    
+    def _clean_response(self, r):
+        handshake=r[:4]
+        if handshake=='a'+DLE+'0'+STX:
+            chksum=computeBCC(r[4:-1])
+            if chr(chksum)==r[-1]:
+                return r[8:-2]
+            
+    def _parse_response(self,resp, l):
+        
+        if len(resp)==l*4:
+            return [int(resp[i:i+4], 16) for i in range(0, len(resp)-3, 4)]
+                
+        
     def _update_parameters(self):
 #        '''
 #        '''
-        formatter = lambda x:x / 10.0
-#        read and set energy and pressure as one block
-        self._update_parameter_list([('energy_readback', formatter)], 8, 1)
+        #energy and pressure_readback
+        vs=self._send_query(8, 2, verbose=False)
+#        vs=self._send_query(30, 2, verbose=False)
+        if vs is not None:
+            vs=self._parse_response(vs, 2)
+            if vs is not None:
+                self.energy_readback=vs[0]/10.
+                self.pressure_readback=vs[1]
+                
+        
+#        formatter = lambda x:x / 10.0
+#        read and set energy and pressure_readback as one block
+#        self._update_parameter_list([('energy_readback', formatter)], 8, 1)
 ##        read and set frequency and hv as one block
 #        self._update_parameter_list(['reprate', ('hv', formatter)], 1001, 2)
 
@@ -188,17 +242,17 @@ class ATLLaserControlUnit(CoreDevice):
 #            if self.simulation:
 #                setattr(self, 'update_%s' % name, value)
 
-    def _set_answer_parameters(self, start_addr_value, answer_len):
+    def _set_answer_parameters(self, start_addr_value, answer_len, verbose=True):
         '''
         '''
 
-        start_addr_value = '{:04x}'.format(start_addr_value)
-        answer_len = '{:04x}'.format(answer_len)
+        answer_len = '{:04X}'.format(answer_len)
+        start_addr_value = '{:04X}'.format(start_addr_value)
 
         values = [start_addr_value, answer_len]
         cmd = self._build_command(ANSWER_ADDR, values)
 
-        self._send_command(cmd)
+        self._send_command(cmd,verbose=verbose)
 
 
     def _build_command(self, start_addr, values):
@@ -207,102 +261,104 @@ class ATLLaserControlUnit(CoreDevice):
         '''
 
         if isinstance(start_addr, int):
-            start_addr = '{:04x}'.format(start_addr)
+            start_addr = '{:04X}'.format(start_addr)
 
         if isinstance(values, int):
-            values = ('{:04x}'.format(values),)
+            values = ('{:04X}'.format(values),)
 
         cmd = start_addr + ''.join(values)
         cmd += ETX
         BCC = computeBCC(cmd)
 
-        cmd = STX + cmd + BCC
+        cmd = STX + cmd + chr(BCC)
 
         return cmd
 
-    def _send_query(self, s, l):
+    def _send_query(self, s, l, verbose=True):
         '''
 
         '''
 
-        self._set_answer_parameters(s, l)
+        self._set_answer_parameters(s, l,verbose=verbose)
+        
+        #=self.ask('A'+ENQ, nchars=(l+1)*4+6)
+#        self._start_message()
+        n=(l+1)*4+6
+        cmd='a'+ENQ
+#        print 'n',n
+        r=self.ask(cmd, nchars=n, verbose=verbose)
+#        r = self.read(nchars=n)
+        self.tell(DLE + '1',verbose=verbose)
+        self._end_message(verbose=verbose)
+        return self._clean_response(r)
 
-        self._start_message()
-        r = self.read()
-        self.tell(DLE + '1')
-        self._end_message()
-        return r
-
-    def _send_command(self, cmd):
+    def _send_command(self, cmd, verbose=True):
         '''
-
         '''
-        self._start_message()
-        self.ask(cmd, read_terminator=DLE + '1')
+        self._start_message(verbose=verbose)
+        self.ask(cmd, read_terminator=DLE + '1', verbose=verbose)
+        self._end_message(verbose=verbose)
 
-        self._end_message()
-
-    def _start_message(self):
+    def _start_message(self, verbose=True):
         '''
         '''
         cmd = 'A' + ENQ
-        self.ask(cmd, read_terminator=DLE + '0')
+        self.ask(cmd, read_terminator=DLE + '0', verbose=verbose)
 
-    def _end_message(self):
+    def _end_message(self,verbose=True):
         '''
         '''
         cmd = EOT
-        self.tell(cmd)
+        self.tell(cmd,verbose=verbose)
 
-    def _parse_parameter_answers(self, resp, rstartaddr, answer_len):
-        '''
-            
-        '''
-        #split at stx
-        rargs = resp.split(STX)
-        r, chk = rargs[1].split(ETX)
+#    def _parse_parameter_answers(self, resp, rstartaddr, answer_len):
+#        '''
+#        '''
+#        #split at stx
+#        rargs = resp.split(STX)
+#        r, chk = rargs[1].split(ETX)
+#
+#        #verify checksum
+#        bcc = computeBCC(r + ETX)
+#        if int(bcc, 16) != int(chk, 16):
+#            return
+#
+#        #r example
+#        #0005006500000000
+#        #startaddr, startaddrvalue, ... ,nstartaddr_value
+#
+#        #remove startaddr and make sure its the one we requested
+#        startaddr = int(r[:4], 16)
+#        if rstartaddr != startaddr:
+#            return
+#
+#        #trim off start addr
+#        r = r[4:]
+#        #ensure len of answers correct
+#        if answer_len != len(r) / 4:
+#            return
+#
+#        args = ()
+#        for i in range(0, len(r), 4):
+#            val = r[i:i + 4]
+#            args += (val,)
+#
+#        return args
 
-        #verify checksum
-        bcc = computeBCC(r + ETX)
-        if int(bcc, 16) != int(chk, 16):
-            return
-
-        #r example
-        #0005006500000000
-        #startaddr, startaddrvalue, ... ,nstartaddr_value
-
-        #remove startaddr and make sure its the one we requested
-        startaddr = int(r[:4], 16)
-        if rstartaddr != startaddr:
-            return
-
-        #trim off start addr
-        r = r[4:]
-        #ensure len of answers correct
-        if answer_len != len(r) / 4:
-            return
-
-        args = ()
-        for i in range(0, len(r), 4):
-            val = r[i:i + 4]
-            args += (val,)
-
-        return args
-
-    def _update_parameter_list(self, names, s, l):
-        '''
-            
-        '''
-        resp = self._send_query(s, l)
-        if resp is not None:
-            args = self._parse_parameter_answers(resp, s, l)
-    #        kw = dict()
-            for n, a in zip(names, args):
-                v = int(a, 16)
-                if isinstance(n, tuple):
-                    v = n[1](v)
-                    n = n[0]
-                self.trait_set(n=v)
+#    def _update_parameter_list(self, names, s, l):
+#        '''
+#            
+#        '''
+#        resp = self._send_query(s, l)
+#        if resp is not None:
+#            args = self._parse_parameter_answers(resp, s, l)
+#    #        kw = dict()
+#            for n, a in zip(names, args):
+#                v = int(a, 16)
+#                if isinstance(n, tuple):
+#                    v = n[1](v)
+#                    n = n[0]
+#                self.trait_set(n=v)
 #            kw[n] = v
 #        self.trait_set(**kw)
 

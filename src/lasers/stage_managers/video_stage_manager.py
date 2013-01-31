@@ -40,6 +40,7 @@ from src.canvas.canvas2D.camera import Camera
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
 from src.machine_vision.autocenter_manager import AutocenterManager
+from src.machine_vision.mosaic_manager import MosaicManager
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -77,10 +78,11 @@ class VideoStageManager(StageManager):
 
     autocenter_button = Button('AutoCenter')
     configure_autocenter_button = Button('Configure')
-
+    
+    mosaic_manager=Instance(MosaicManager)
     autofocus_manager = Instance(AutofocusManager)
     autocenter_manager = Instance(AutocenterManager)
-
+    
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
 
@@ -596,7 +598,15 @@ class VideoStageManager(StageManager):
                                     parent=self,
                                     application=self.application
                                     )
-
+    def _mosaic_manager_default(self):
+        return MosaicManager(
+                             video=self.video,
+                                    stage_controller=self.stage_controller,
+                                    laser_manager=self.parent,
+                                    parent=self,
+                                    application=self.application
+                             )
+    
     def _autofocus_manager_default(self):
         return AutofocusManager(video=self.video,
                                 laser_manager=self.parent,

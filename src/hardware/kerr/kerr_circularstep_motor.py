@@ -109,7 +109,18 @@ class KerrCircularStepMotor(KerrStepMotor):
         cmds = [(addr, '1707', 100, 'Stop motor'), #leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-
+        
+        #start moving
+        self._set_motor_position_(1000)
+        
+        #poll proximity switch
+        while 1:
+            time.sleep(0.05)
+            if not self._get_proximity_limit():
+                break
+        cmds = [(addr, '1707', 100, 'Stop motor'), #leave amp on
+                (addr, '00', 100, 'Reset Position')]
+        self._execute_hex_commands(cmds)
         #define homing options
         #stop abruptly on home signal
         home_control_byte = self._load_home_control_byte()
@@ -135,9 +146,10 @@ class KerrCircularStepMotor(KerrStepMotor):
         cb = '00001000'
         inb = self.read_status(cb, verbose=False)
         inb = inb[2:-2]
-        #resp_byte consists of input_byte
-        ba = make_bitarray(int(inb, 16))#, self._hexstr_to_float(rb)
-        return ba
+        if inb:
+            #resp_byte consists of input_byte
+            ba = make_bitarray(int(inb, 16))#, self._hexstr_to_float(rb)
+            return ba
 
     def _get_proximity_limit(self):
         ba = self._read_limits()

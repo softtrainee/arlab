@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from envisage.ui.action.action import Action
+from envisage.ui.action.api import Action
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -35,15 +35,19 @@ class FusionsUvActionSet(FusionsActionSet):
 #        results_path = 'MenuBar/Results/{}'.format(self.name)
 
         actions = [Action(name='Gas Handling',
-                       path=laser_path,
-                       class_name='{}OpenGasHandlingAction'.format(self.action_path))
+                          path=laser_path,
+                          class_name='{}OpenGasHandlingAction'.format(self.action_path)),
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
 #                       ),
 #                Action(name='Configure Watlow',
 #                       path='MenuBar/Lasers/{}'.format(self.name),
 #                       class_name='{}ConfigureWatlowAction'.format(self.action_path)
 #                       ),
-                ]
+                   Action(name='Collect',
+                       path='MenuBar/Lasers/{}/Mosaic'.format(self.name),
+                       class_name='{}MosaicCollectAction'.format(self.action_path)
+                       )
+                   ]
 
         return super(FusionsUvActionSet, self)._actions_default() + actions
 

@@ -52,5 +52,4 @@ class LaserMonitor(Monitor):
             self.warning('Max duration {} (min) exceeded'.format(self.max_duration))
             manager.emergency_shutoff(reason='Max duration exceeded')
 
-
 #============= EOF ====================================

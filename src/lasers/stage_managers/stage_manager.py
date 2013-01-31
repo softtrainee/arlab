@@ -549,11 +549,11 @@ class StageManager(Manager):
 #                                 ),
 #                           label='Canvas'),
 
-                     Group(Item('motion_controller_manager', editor=InstanceEditor(view='configure_view'),
-                                 style='custom', show_label=False),
-                           Item('motion_profiler', style='custom', show_label=False),
-                           label='Motion'
-                           ),
+#                     Group(Item('motion_controller_manager', editor=InstanceEditor(view='configure_view'),
+#                                 style='custom', show_label=False),
+#                           Item('motion_profiler', style='custom', show_label=False),
+#                           label='Motion'
+#                           ),
 
                      Group(
                            self._button_factory('program_points', 'program_points_label'),

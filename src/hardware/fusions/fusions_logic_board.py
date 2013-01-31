@@ -39,19 +39,19 @@ class FusionsLogicBoard(CoreDevice):
 
     motor_microcontroller = Instance(KerrMicrocontroller)
 
-    beam_motor = Instance(KerrMotor, ())
-    beam = DelegatesTo('beam_motor', prefix='data_position')
-    beammin = DelegatesTo('beam_motor', prefix='min')
-    beammax = DelegatesTo('beam_motor', prefix='max')
-    beam_enabled = DelegatesTo('beam_motor', prefix='enabled')
-    update_beam = DelegatesTo('beam_motor', prefix='update_position')
-
-    zoom_motor = Instance(KerrMotor, ())
-    zoom = DelegatesTo('zoom_motor', prefix='data_position')
-    zoommin = DelegatesTo('zoom_motor', prefix='min')
-    zoommax = DelegatesTo('zoom_motor', prefix='max')
-    zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
-    update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
+#    beam_motor = Instance(KerrMotor, ())
+#    beam = DelegatesTo('beam_motor', prefix='data_position')
+#    beammin = DelegatesTo('beam_motor', prefix='min')
+#    beammax = DelegatesTo('beam_motor', prefix='max')
+#    beam_enabled = DelegatesTo('beam_motor', prefix='enabled')
+#    update_beam = DelegatesTo('beam_motor', prefix='update_position')
+#
+#    zoom_motor = Instance(KerrMotor, ())
+#    zoom = DelegatesTo('zoom_motor', prefix='data_position')
+#    zoommin = DelegatesTo('zoom_motor', prefix='min')
+#    zoommax = DelegatesTo('zoom_motor', prefix='max')
+#    zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
+#    update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
 #    configure = Button
 
@@ -108,10 +108,9 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
 
-        self.prefix = self.config_get(config, 'General', 'prefix')
-        if self.prefix is None:
-            return False
-
+        prefix= self.config_get(config, 'General', 'prefix')
+        if prefix is not None:
+            self.prefix=prefix        
 
         for option in config.options('Motors'):
             v = config.get('Motors', option)

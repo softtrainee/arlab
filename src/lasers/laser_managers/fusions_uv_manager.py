@@ -26,6 +26,8 @@ from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_uv_logic_board import FusionsUVLogicBoard
 from src.hardware.fusions.atl_laser_control_unit import ATLLaserControlUnit
 from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
+from src.monitors.fusions_uv_laser_monitor import FusionsUVLaserMonitor
+from src.machine_vision.mosaic_manager import MosaicManager
 from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 
 #============= local library imports  ==========================
@@ -38,9 +40,11 @@ class FusionsUVManager(FusionsLaserManager):
 #    attenuationmin = DelegatesTo('laser_controller')
 #    attenuationmax = DelegatesTo('laser_controller')
 #    update_attenuation = DelegatesTo('laser_controller')
-
-    controller = Instance(ATLLaserControlUnit)
-
+    monitor_name = 'uv_laser_monitor'
+    monitor_klass = FusionsUVLaserMonitor
+    
+    atl_controller = Instance(ATLLaserControlUnit)
+    
     single_shot = Button('Single Shot')
     laser_status = Str
 
@@ -49,47 +53,47 @@ class FusionsUVManager(FusionsLaserManager):
     firing = Bool
     single_shot = Bool
 
-    gas_handler_manager = Instance(UVGasHandlerManager)
+    gas_handler = Instance(UVGasHandlerManager)
 #    laseronoff = Event
 #    laseronoff_label = Property(depends_on='_enabled')
-#    _enabled = DelegatesTo('controller')
+#    _enabled = DelegatesTo('atl_controller')
 #    fire_label = Property(depends_on='triggered')
-#    triggered = DelegatesTo('controller')
+#    triggered = DelegatesTo('atl_controller')
 
-#    energy = DelegatesTo('controller')
-#    energymin = DelegatesTo('controller')
-#    energymax = DelegatesTo('controller')
-    energy_readback = DelegatesTo('controller')
+#    energy = DelegatesTo('atl_controller')
+#    energymin = DelegatesTo('atl_controller')
+#    energymax = DelegatesTo('atl_controller')
+    energy_readback = DelegatesTo('atl_controller')
 #
-#    hv = DelegatesTo('controller')
-#    hvmin = DelegatesTo('controller')
-#    hvmax = DelegatesTo('controller')
-#    update_hv = DelegatesTo('controller')
+#    hv = DelegatesTo('atl_controller')
+#    hvmin = DelegatesTo('atl_controller')
+#    hvmax = DelegatesTo('atl_controller')
+#    update_hv = DelegatesTo('atl_controller')
 #
-#    reprate = DelegatesTo('controller')
-#    repratemin = DelegatesTo('controller')
-#    repratemax = DelegatesTo('controller')
-#    update_reprate = DelegatesTo('controller')
+#    reprate = DelegatesTo('atl_controller')
+#    repratemin = DelegatesTo('atl_controller')
+#    repratemax = DelegatesTo('atl_controller')
+#    update_reprate = DelegatesTo('atl_controller')
 #
-#    trigger_modes = DelegatesTo('controller')
-#    trigger_mode = DelegatesTo('controller')#Str('External I')
+#    trigger_modes = DelegatesTo('atl_controller')
+#    trigger_mode = DelegatesTo('atl_controller')#Str('External I')
 #
-#    stablization_modes = DelegatesTo('controller')
-#    stablization_mode = DelegatesTo('controller')#Str('High Voltage')
-#    stop_at_low_e = DelegatesTo('controller')
+#    stablization_modes = DelegatesTo('atl_controller')
+#    stablization_mode = DelegatesTo('atl_controller')#Str('High Voltage')
+#    stop_at_low_e = DelegatesTo('atl_controller')
 #
-#    cathode = DelegatesTo('controller')
-#    reservoir = DelegatesTo('controller')
-#    missing_pulses = DelegatesTo('controller')
-#    halogen_filter = DelegatesTo('controller')
+#    cathode = DelegatesTo('atl_controller')
+#    reservoir = DelegatesTo('atl_controller')
+#    missing_pulses = DelegatesTo('atl_controller')
+#    halogen_filter = DelegatesTo('atl_controller')
 #
-#    laser_head = DelegatesTo('controller')
-#    laser_headmin = DelegatesTo('controller')
-#    laser_headmax = DelegatesTo('controller')
+#    laser_head = DelegatesTo('atl_controller')
+#    laser_headmin = DelegatesTo('atl_controller')
+#    laser_headmax = DelegatesTo('atl_controller')
 #
-#    burst = DelegatesTo('controller')
-#    nburst = DelegatesTo('controller')
-#    cburst = DelegatesTo('controller')
+#    burst = DelegatesTo('atl_controller')
+#    nburst = DelegatesTo('atl_controller')
+#    cburst = DelegatesTo('atl_controller')
 #
 #    shot_history = Instance(LaserShotHistory)
 #
@@ -113,7 +117,7 @@ class FusionsUVManager(FusionsLaserManager):
             resp = True
 
         if resp:
-            self.controller.laser_on()
+            self.atl_controller.laser_on()
 
         return resp
 
@@ -122,7 +126,7 @@ class FusionsUVManager(FusionsLaserManager):
         if self.laser_controller.simulation:
             resp = True
         if resp:
-            self.controller.laser_off()
+            self.atl_controller.laser_off()
         return resp
 #===============================================================================
 # handlers
@@ -131,13 +135,13 @@ class FusionsUVManager(FusionsLaserManager):
         if self.firing:
             self.info('stopping laser')
             self.firing = False
-            self.controller.laser_stop()
+            self.atl_controller.laser_stop()
         else:
             self.info('firing laser')
             if self.single_shot:
-                self.controller.laser_single_shot()
+                self.atl_controller.laser_single_shot()
             else:
-                self.controller.laser_run()
+                self.atl_controller.laser_run()
                 self.firing = True
 
 #===============================================================================
@@ -162,6 +166,7 @@ class FusionsUVManager(FusionsLaserManager):
 #===============================================================================
 # defaults
 #===============================================================================
+    
     def _stage_manager_default(self):
         '''
         '''
@@ -187,16 +192,16 @@ class FusionsUVManager(FusionsLaserManager):
         return FusionsUVLogicBoard(name='laser_controller',
                                    configuration_dir_name='uv')
 
-    def _controller_default(self):
+    def _atl_controller_default(self):
         '''
         '''
-        return ATLLaserControlUnit(name='atl_laser_control',
+        return ATLLaserControlUnit(name='atl_controller',
                                    configuration_dir_name='uv',
                                    )
 
-    def _gas_handler_manager_default(self):
-        uv = UVGasHandlerManager(controller=self.controller)
-        uv.bootstrap()
+    def _gas_handler_default(self):
+        uv = UVGasHandlerManager(controller=self.atl_controller)
+#        uv.bootstrap()
         return uv
 #    def _shot_history_default(self):
 #        '''
@@ -249,21 +254,21 @@ class FusionsUVManager(FusionsLaserManager):
 #        '''
 #        '''
 #        if not self._enabled:
-#            self.controller.laser_on()
+#            self.atl_controller.laser_on()
 #            self.laser_status = 'Laser ON'
 #        else:
-#            self.controller.laser_off()
+#            self.atl_controller.laser_off()
 #            self.laser_status = 'Laser OFF'
 #
 #    def _fire_fired(self):
 #        '''
 #        '''
 #        if not self.triggered:
-#            self.controller.trigger_laser()
+#            self.atl_controller.trigger_laser()
 #            self.laser_status = 'Laser Triggered'
 #            self.shot_history.add_shot()
 #        else:
-#            self.controller.stop_triggering_laser()
+#            self.atl_controller.stop_triggering_laser()
 #            self.laser_status = ''
 
 #    def show_control_view(self):

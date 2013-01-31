@@ -30,7 +30,8 @@ def find_matches(image_names, root):
     n = len(image_names)
     for i, im in enumerate(image_names):
         resultname = os.path.join(root, '{}.sift'.format(im))
-        sift.process_image(os.path.join(root, '{}.png'.format(im)), resultname)
+        if not os.path.isfile(resultname):
+            sift.process_image(os.path.join(root, '{}.png'.format(im)), resultname)
         l[i], d[i] = sift.read_features_from_file(resultname)
 
     matches = {}
@@ -41,13 +42,13 @@ def find_matches(image_names, root):
 def convert_points(matches, l, j):
     ndx = matches[j].nonzero()[0]
     fp = homography.make_homog(l[j + 1][ndx, :2].T)
-    ndx2 = [int(matches[j, i]) for i in ndx]
+    ndx2 = [int(matches[j][i]) for i in ndx]
     tp = homography.make_homog(l[j][ndx2, :2].T)
 
     return fp, tp
 
 def open_image(root, name):
-    return array(Image.open(os.path.join(root, name)))
+    return array(Image.open(os.path.join(root,'{}.png'.format(name))))
 
 def hor_stitch(root, image_names, result_name='result'):
     matches, l, d = find_matches(image_names, root)

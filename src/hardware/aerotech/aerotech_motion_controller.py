@@ -73,10 +73,20 @@ class AerotechMotionController(MotionController):
             ny = self._sign_correct(ny, 'y', ratio=False)
 
         self.timer = self.timer_factory()
+        x=self.axes['x']
+        y=self.axes['y']
+        xv=x.velocity
+        yv=y.velocity
+        
+        if abs(nx)>1:
+            xv=xv*0.5
+        if abs(nx)>1:
+            yv=yv*0.5
+            
         if self.axes.keys().index('y') == 0:
-            cmd = 'ILI X{} Y{}'.format(ny, nx)
+            cmd = 'ILI X{} Y{} XF{} YF{}'.format(ny, nx, xv, yv)
         else:
-            cmd = 'ILI X{} Y{}'.format(nx, ny)
+            cmd = 'ILI X{} Y{} XF{} YF{}'.format(nx, ny, xv, yv)
 
         self.ask(cmd, handshake_only=True)
         if block:
