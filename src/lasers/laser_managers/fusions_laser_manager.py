@@ -369,6 +369,9 @@ class FusionsLaserManager(LaserManager):
 
     def set_motor(self, *args, **kw):
         self.laser_controller.set_motor(*args, **kw)
+    
+    def get_motor(self,name):
+        return next((mi for mi in self.laser_controller.motors if mi.name==name),None)
 #===============================================================================
 # pyscript interface
 #===============================================================================

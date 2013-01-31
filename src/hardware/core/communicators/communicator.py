@@ -70,26 +70,17 @@ class Communicator(ConfigLoadable):
         #substitute replace[0] for replace[1]
         if isinstance(replace, tuple):
             re=re.replace(replace[0], replace[1])
-#            ree = ''
-#            for ri in re:
-#                rii = ri
-#                if ri == replace[0]:
-#                    rii = replace[1]
-#                ree += rii
-#            re = ree
-        ors=[ord(ri) for ri in re]
-        re=''.join([str(ri if ri<32 else chr(ri)) for ri in ors])
-#        for ri in re:
-#            if ord(ri)<32:
-#                str(ri)
-#        
-#        print re
+#        ors=[ord(ri) for ri in re]
+#        re=''.join([str(ri if ri<32 else chr(ri)) for ri in ors])
+        re=self._prep_str(re)
         return re
 
     def _prep_str(self, s):
         '''
         '''
         ns = ''
+        if s is None:
+            s=''
         for c in s:
             oc = ord(c)
             if not 0x20 <= oc <= 0x7E:

@@ -25,11 +25,17 @@ def computeBCC(data_str):
         returns a two char ASCII string
     '''
     bcc = 0
+    
     for d in data_str:
-        d = ord(d)
-        bcc = bcc ^ d
-
-    return '%02X' % bcc
+#        print d
+#        d = ord(d)
+#        bcc = bcc ^ ord(d)
+        bcc = bcc ^ ord(d)
+#    print bcc
+    bcc = bcc & 127
+#    print bcc
+    return bcc
+#    return '%02X' % bcc
 
 
 def __generate_crc16_table():
@@ -90,4 +96,12 @@ def checkCRC(data, check):
     @param check The CRC to validate
     '''
     return computeCRC(data) == check
+
+if __name__ == '__main__':
+#    s=chr(2)+'000200050007'+chr(3)
+    s='000200050007'+chr(3)
+    s='000B0001'+chr(3)
+    s='000204B0001'+chr(3)
+   # s='000b0003'
+    print chr(computeBCC(s))
 #============= EOF ====================================

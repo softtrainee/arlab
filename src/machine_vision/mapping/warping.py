@@ -40,7 +40,7 @@ def horizontal_panorama(H, fromim, toim, padding=2400, delta=2400):
     Create horizontal panorama by blending two images
     using a homography H (preferably estimated using RANSAC).
     The result is an image with the same height as toim. 
-    ÕpaddingÕ specifies number of fill pixels and ÕdeltaÕ additional translation.
+    padding specifies number of fill pixels and delta additional translation.
     '''
 
     is_color = len(fromim.shape) == 3
@@ -54,21 +54,28 @@ def horizontal_panorama(H, fromim, toim, padding=2400, delta=2400):
             fromim_t = zeros((toim.shape[0], toim.shape[1] + padding, toim.shape[2]))
             for col in range(3):
                 fromim_t[:, :, col] = ndimage.geometric_transform(fromim[:, :, col],
-                                                                  transf, size
+                                                                  transf, 
+#                                                                  output_shape=size
                                                                   )
         else:
             toim_t = hstack((toim, zeros((toim.shape[0], padding))))
-            fromim_t = ndimage.geometric_transform(fromim, transf, size)
+            fromim_t = ndimage.geometric_transform(fromim, transf, 
+#                                                   output_shape=size
+                                                   )
     else:
         if is_color:
             toim_t = hstack((zeros((toim.shape[0], padding, 3)), toim))
             fromim_t = zeros((toim.shape[0], toim.shape[1] + padding, toim.shape[2]))
             for col in range(3):
                 fromim_t[:, :, col] = ndimage.geometric_transform(fromim[:, :, col],
-                                                                  transf, size)
+                                                                  transf, 
+#                                                                  output_shape=size
+                                                                  )
         else:
             toim_t = hstack((zeros((toim.shape[0], padding)), toim))
-            fromim_t = ndimage.geometric_transform(fromim, transf, size)
+            fromim_t = ndimage.geometric_transform(fromim, transf, 
+#                                                   output_shape=size
+                                                   )
 
     if is_color:
         alpha = ((fromim_t[:, :, 0] * fromim_t[:, :, 1] * fromim_t[:, :, 2]) > 0)

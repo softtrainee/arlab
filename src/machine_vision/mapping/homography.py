@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from numpy import vstack, ones, mean, max, std, diag, dot, zeros, concatenate, sqrt
+from numpy import vstack, ones, mean, max, std, diag, dot, zeros, concatenate, sqrt, sum
 from numpy import linalg
 #============= local library imports  ==========================
 

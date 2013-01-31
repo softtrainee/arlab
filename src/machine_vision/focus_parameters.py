@@ -84,6 +84,7 @@ class FocusParameters(HasTraits):
                Item('operator'),
 #               Item('discrete'),
                Item('step_scalar', visible_when='discrete'),
+               Item('zoom'),
                Group(
                      Item('velocity_scalar1'),
                      Item('negative_window'),
