@@ -337,6 +337,7 @@ class ResultAdapter(TabularAdapter):
              ]
     age_text=Property
     age_error_text=Property
+    
     def _float_fmt(self,v, n):
         return '{{:0.{}f}}'.format(n).format(v)
     
@@ -462,13 +463,12 @@ class AgeCalculator(HasTraits, ExcelMixin):
             idx_37err=header.index('Ar37_err')
             idx_36=header.index('Ar36')
             idx_36err=header.index('Ar36_err')
-            signals=[
-                         (row[idx_40],row[idx_40err]),
-                         (row[idx_39],row[idx_39err]),
-                         (row[idx_38],row[idx_38err]),
-                         (row[idx_37],row[idx_37err]),
-                         (row[idx_36],row[idx_36err]),
-                         ]
+            signals=[(row[idx_40],row[idx_40err]),
+                     (row[idx_39],row[idx_39err]),
+                     (row[idx_38],row[idx_38err]),
+                     (row[idx_37],row[idx_37err]),
+                     (row[idx_36],row[idx_36err])]
+            
         else:
             signals=[(0,0),(0,0),(0,0),(0,0),(0,0)]
         return signals
@@ -496,5 +496,5 @@ class AgeCalculator(HasTraits, ExcelMixin):
         
 if __name__ == '__main__':
     ag=AgeCalculator()
-    ag.path='/Users/argonlab2/Sandbox/age_calculator_template.xls'
+#    ag.path='/Users/argonlab2/Sandbox/age_calculator_template.xls'
     ag.configure_traits()
