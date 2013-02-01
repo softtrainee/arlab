@@ -179,7 +179,7 @@ class MassSpecDatabaseImporter(Loggable):
 #                                     password='DBArgon',
 #                                     name='massspecdata_isotopedb'
                                      )
-        db.connect()
+#        db.connect()
 
         return db
 

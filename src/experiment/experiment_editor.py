@@ -32,14 +32,14 @@ class ExperimentEditor(ExperimentManager, Saveable):
 #===============================================================================
 # persistence
 #===============================================================================
-    def load_experiment_set(self, *args, **kw):
+    def load_experiment_set(self, saveable=False,*args, **kw):
         r = super(ExperimentEditor, self).load_experiment_set(*args, **kw)
 
         #loading the experiment set will set dirty =True 
         #change back to false. not really dirty
 #        if r:
 #            self.experiment_set.dirty = False
-        self.save_enabled = False
+        self.save_enabled = saveable
         return r
 
     def save(self):
@@ -54,7 +54,7 @@ class ExperimentEditor(ExperimentManager, Saveable):
         self.save_enabled = True
 
     def save_experiment_sets(self):
-        self._dump_experiment_sets(self.path)
+        self._dump_experiment_sets(self.experiment_set.path)
         self.save_enabled = False
 
     def _dump_experiment_sets(self, p):

@@ -19,6 +19,7 @@
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
 from src.processing.processing_manager import ProcessingManager
+from src.processing.age_calculator import AgeCalculator
 
 class ProcessingPlugin(CorePlugin):
     def _service_offers_default(self):
@@ -29,7 +30,12 @@ class ProcessingPlugin(CorePlugin):
                           factory=self._factory
                           )
 
-        return [so]
+        so1 = self.service_offer_factory(
+                          protocol=AgeCalculator,
+                          factory=AgeCalculator
+                          )
+
+        return [so, so1]
 
     def _factory(self, *args, **kw):
         '''

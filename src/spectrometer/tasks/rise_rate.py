@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Any, Button, Bool
+from traits.api import Float, Any, Button, Bool, Event
 from traitsui.api import View, Item, spring, ButtonEditor, HGroup
 #============= standard library imports ========================
 from numpy import polyfit, linspace
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
-
 
 class RiseRate(SpectrometerTask):
     result_fit = Float
@@ -29,17 +28,16 @@ class RiseRate(SpectrometerTask):
     graph = Any
     clear_button = Button('Clear')
     calculated = Bool
-
+    
     def _clear_button_fired(self):
         self.calculated = False
 
         self.graph.plots[0].overlays.pop()
         self.graph.plots[0].overlays.pop()
         self.graph.redraw()
-
+   
     def _execute(self):
         self.result = 0
-
         self._starttime = self.graph.get_data()[-1]
         self._start_intensity = self._get_intensity()
 #        print self._starttime
@@ -86,7 +84,7 @@ class RiseRate(SpectrometerTask):
                       label='Rise Rate linear fit  (fA/min)'),
                   HGroup(spring,
                          Item('clear_button', show_label=False, enabled_when='calculated'),
-                         Item('execute',
+                         Item('execute_button',
                               enabled_when='not calculated',
                               editor=ButtonEditor(label_value='execute_label'),
                         show_label=False))

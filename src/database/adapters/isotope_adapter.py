@@ -785,12 +785,11 @@ class IsotopeAdapter(DatabaseAdapter):
         if isinstance(txt, dict):
             txt = repr(frozenset(txt.items()))
 
-        ha = self._hash_factory()
-        ha.update(txt)
+        ha = self._hash_factory(txt)
         return ha.hexdigest()
 
-    def _hash_factory(self):
-        return hashlib.new('md5')
+    def _hash_factory(self,text):
+        return hashlib.md5(text)
 
     def _build_query_and(self, table, name, jtable, attr, q=None):
         '''
