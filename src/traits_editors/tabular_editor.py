@@ -20,17 +20,18 @@ from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
 
 #============= standard library imports ========================
+import wx
 #============= local library imports  ==========================
 
 class _TabularEditor(wxTabularEditor):
     drop_target = Any
-#    def init(self, parent):
-#        wxTabularEditor.init(self, parent)
-#        control = self.control
+    def init(self, parent):
+        wxTabularEditor.init(self, parent)
+        control = self.control
 
-#        control.Bind(wx.EVT_KEY_DOWN, self._on_key)
+        control.Bind(wx.EVT_KEY_DOWN, self._on_key)
 #
-#        self.sync_value(self.factory.drop_target, 'drop_target', 'from')
+#        self.sync_value(self.factory.copy_selection, 'copy_selection', 'to')
 #
 #        self.control.SetDropTarget(PythonDropTarget(self.drop_target))
 
@@ -56,8 +57,19 @@ class _TabularEditor(wxTabularEditor):
 #    def _key_down(self, event):
     def _on_key(self, event):
         key = event.GetKeyCode()
-        print event, key
-        print event.CmdDown()
+#        print event, key
+#        print event.CmdDown()
+        if event.CmdDown() and key == 67:
+#            self.copy_selection = self.selected
+                if self.multi_selected:
+                    sel = self.multi_selected
+                elif self.selected:
+                    sel = self.selected
+                if sel and wx.TheClipboard.Open():
+                    dataObj = wx.TextDataObject()
+                    dataObj.SetText('\n'.join([si.to_string() for si in sel]))
+                    wx.TheClipboard.SetData(dataObj)
+                    wx.TheClipboard.Close()
 #        print event.GetModifiers()
 
 #        super(_TabularEditor, self)._key_down(event)

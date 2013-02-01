@@ -50,10 +50,10 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from globals import globalv
 from src.constants import NULL_STR
 from uncertainties import ufloat
-from src.database.records.arar_age import ArArAge
 from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from pyface.timer.do_later import do_later
+from src.processing.arar_age import ArArAge
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
