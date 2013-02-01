@@ -26,7 +26,7 @@ from threading import Thread
 
 class SpectrometerTask(Loggable):
     spectrometer = Any
-    execute = Event
+    execute_button = Event
     execute_label = Property(depends_on='_alive')
     _alive = Bool
 
@@ -41,7 +41,7 @@ class SpectrometerTask(Loggable):
     def stop(self):
         self._alive = False
 
-    def _execute_fired(self):
+    def _execute_button_fired(self):
         if self.isAlive():
             self.stop()
             self._end()

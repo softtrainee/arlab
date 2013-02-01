@@ -53,10 +53,11 @@ class ReadoutView(HasTraits):
     spectrometer = Any
     refresh = Button
     def load(self, config):
-        for section in config.sections():
-            rd = Readout(name=section,
-                         spectrometer=self.spectrometer)
-            self.readouts.append(rd)
+        if config is not None:
+            for section in config.sections():
+                rd = Readout(name=section,
+                             spectrometer=self.spectrometer)
+                self.readouts.append(rd)
 
     def _refresh_fired(self):
         for rd in self.readouts:

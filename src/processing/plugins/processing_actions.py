@@ -16,6 +16,7 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
+from src.envisage.core.action_helper import open_manager
 #from src.envisage.core.action_helper import open_manager
 #from globals import globalv
 #============= standard library imports ========================
@@ -23,13 +24,18 @@ from pyface.action.api import Action
 #============= local library imports  ==========================
 #EXPERIMENT_MANAGER_PROTOCOL = 
 
-
+class AgeCalculator(Action):
+    accelerator='Ctrl+='
+    def perform(self,event):
+        app = event.window.application
+        manager = app.get_service('src.processing.age_calculator.AgeCalculator')
+        open_manager(app, manager)
+        
 class ProcessingAction(Action):
     def _get_manager(self, event):
         app = event.window.application
         manager = app.get_service('src.processing.processing_manager.ProcessingManager')
         return manager
-
 #===============================================================================
 # find 
 #===============================================================================

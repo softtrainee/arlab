@@ -104,10 +104,12 @@ class ProcessingActionSet(WorkbenchActionSet):
                Action(name='Open Projects',
                       path=PATH,
                       class_name='{}:ProjectViewAction'.format(BASE)
-                      )
+                      ),
 
-
-
+                Action(name='Age Calculator',
+                       path=PATH,
+                       class_name='{}:AgeCalculator'.format(BASE)
+                       )
 
 
 #               Action(name='New Workspace...',

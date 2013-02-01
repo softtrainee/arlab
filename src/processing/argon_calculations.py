@@ -42,8 +42,8 @@ def calculate_flux(rad40, k39, age):
         age = ufloat(age)
 #    age = (1 / constants.lambdak) * umath.log(1 + JR)
     r = rad40 / k39
-    from src.processing.constants import constants
-    j = (umath.exp(age * constants().lambdak) - 1) / r
+    from src.processing.constants import Constants
+    j = (umath.exp(age * Constants().lambdak) - 1) / r
     return j.nominal_value, j.std_dev()
 #    return j
 
@@ -73,7 +73,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        abundant_sensitivity=0,
                        a37decayfactor=None,
                        a39decayfactor=None,
-                       include_decay_error=False
+                       include_decay_error=False, 
+                       constants=None
                        ):
     '''
         signals: measured uncorrected isotope intensities, tuple of value,error pairs
@@ -117,8 +118,10 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             v = ufloat(v)
         return v
 
-    #lazy load constants
-    from src.processing.constants import constants
+    if constants is None:
+        #lazy load constants
+        from src.processing.constants import Constants
+        constants = Constants()
 
 #    if isinstance(signals[0], tuple):
     s40, s39, s38, s37, s36 = map(to_ufloat, signals)
@@ -168,19 +171,18 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     n36 = s36 - abundant_sensitivity * (s37 + 0)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
-    const = constants()
 
     #calculate decay factors
     if a37decayfactor is None:
         try:
-            dc = const.lambda_Ar37.nominal_value
+            dc = constants.lambda_Ar37.nominal_value
             a37decayfactor = calculate_decay_factor(dc, chronology_segments)
         except ZeroDivisionError:
             a37decayfactor = 1
 
     if a39decayfactor is None:
         try:
-            dc = const.lambda_Ar39.nominal_value
+            dc = constants.lambda_Ar39.nominal_value
             a39decayfactor = calculate_decay_factor(dc, chronology_segments)
         except ZeroDivisionError:
             a39decayfactor = 1
@@ -210,10 +212,10 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         
         iteratively calculate atm36
     '''
-    m = cl3638 * const.lambda_Cl36.nominal_value * decay_time
+    m = cl3638 * constants.lambda_Cl36.nominal_value * decay_time
     atm36 = ufloat((0, 1e-20))
     for _ in range(5):
-        ar38atm = const.atm3836.nominal_value * atm36
+        ar38atm = constants.atm3836.nominal_value * atm36
         cl38 = s38 - ar38atm - k38 - ca38
         cl36 = cl38 * m
         atm36 = s36 - ca36 - cl36
@@ -225,7 +227,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #    print pc
 #    print pc.get('constants')
 #    print pc.node_names()
-    atm40 = atm36 * const.atm4036.nominal_value
+    atm40 = atm36 * constants.atm4036.nominal_value
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
@@ -234,13 +236,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     try:
         R = ar40rad / k39
         #dont include error in decay constant
-        age = age_equation(j, R, include_decay_error=include_decay_error)
+        age = age_equation(j, R, include_decay_error=include_decay_error, constants=constants)
 #        age = age_equation(j, R)
         age_with_jerr = deepcopy(age)
 
         #dont include error in decay constant
         j.set_std_dev(0)
-        age = age_equation(j, R, include_decay_error=include_decay_error)
+        age = age_equation(j, R, include_decay_error=include_decay_error,constants=constants)
 #        age = age_equation(j, R)
         age_wo_jerr = deepcopy(age)
 
@@ -275,18 +277,19 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                   )
     return result
 
-def age_equation(j, R, scalar=1, include_decay_error=False):
+def age_equation(j, R, scalar=1, include_decay_error=False, constants=None):
     if isinstance(j, (tuple, str)):
         j = ufloat(j)
     if isinstance(R, (tuple, str)):
         R = ufloat(R)
-    from src.processing.constants import constants
-    con = constants()
-#    print con.lambda_k, 'dec'
+    if constants is None:
+        from src.processing.constants import Constants
+        constants = Constants()
+#    print constants.lambda_k, 'dec'
     if include_decay_error:
-        age = (1 / con.lambda_k) * umath.log(1 + j * R) / float(scalar)
+        age = (1 / constants.lambda_k) * umath.log(1 + j * R) / float(scalar)
     else:
-        age = (1 / con.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
+        age = (1 / constants.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
     return age
 #def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                       j, irradinfo,

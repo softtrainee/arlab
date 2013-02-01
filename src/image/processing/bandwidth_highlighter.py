@@ -44,67 +44,72 @@ class Band(HasTraits):
         v=View(HGroup(Item('use',show_label=False,),Item('center'), Item('threshold'),Item('color', style='custom',show_label=False)))
         return v
     
-class BandwidthImager(HasTraits):
-    use_threshold = Bool(False)
-    low = Int(120, enter_set=True, auto_set=False)
-    high = Int(150, enter_set=True, auto_set=False)
-    contrast_low = Int(2, enter_set=True, auto_set=False)
-    contrast_high = Int(98, enter_set=True, auto_set=False)
-    histogram_equalize = Bool(False)
+class BandwidthHighlighter(HasTraits):
+#    use_threshold = Bool(False)
+#    low = Int(120, enter_set=True, auto_set=False)
+#    high = Int(150, enter_set=True, auto_set=False)
+#    contrast_low = Int(2, enter_set=True, auto_set=False)
+#    contrast_high = Int(98, enter_set=True, auto_set=False)
+#    histogram_equalize = Bool(False)
     container = Instance(HPlotContainer)
     plot = Instance(Component)
-    oplot = Instance(Component)
-    highlight = Int(enter_set=True, auto_set=False)
-    highlight_threshold = Int(enter_set=True, auto_set=False)
-
-    area = Float
+#    oplot = Instance(Component)
+#    highlight = Int(enter_set=True, auto_set=False)
+#    highlight_threshold = Int(enter_set=True, auto_set=False)
+#
+#    area = Float
     colormap_name_1 = Str('gray')
-    colormap_name_2 = Str('gray')
-    save_button = Button('Save')
-    save_mode = Enum('both', 'orig', 'thresh')
-    path = File
+#    colormap_name_2 = Str('gray')
+#    save_button = Button('Save')
+#    save_mode = Enum('both', 'orig', 'thresh')
+    path = Str
 #    save_both = Bool
 #    save_orig = Bool
 #    save_thresh = Bool
 
 #    calc_area_button = Button
-    calc_area_value = Int(auto_set=False, enter_set=True)
-    calc_area_threshold = Int(4, auto_set=False, enter_set=True)
-    contrast_equalize = Bool(False)
-    
+#    calc_area_value = Int(auto_set=False, enter_set=True)
+#    calc_area_threshold = Int(4, auto_set=False, enter_set=True)
+#    contrast_equalize = Bool(False)
+    add_band=Button('Add band')
     highlight_bands=List(Band)
-
-    @on_trait_change('highlight+')
-    def _highlight_changed(self):
-        im = Image.open(self.path)
-        ndim = array(im.convert('L'))
-        im = array(im.convert('RGB'))
-
-        low = self.highlight - self.highlight_threshold
-        high = self.highlight + self.highlight_threshold
-        mask = where((ndim > low) & (ndim < high))
-
-        im[mask] = [255, 0, 0]
-#        im = Image.fromarray(im)
-
-        plot = self.oplot
-
-        imgplot = plot.plots['plot0'][0]
-        tools = imgplot.tools
-        overlays = imgplot.overlays
-
-        plot.delplot('plot0')
-        plot.data.set_data('img', im)
-        img_plot = plot.img_plot('img')[0]
-
-        for ti in tools:
-            ti.component = img_plot
-        for oi in overlays:
-            oi.component = img_plot
-
-        img_plot.tools = tools
-        img_plot.overlays = overlays
-        plot.request_redraw()
+    def update_path(self, new):
+        self.path=new
+    
+    def _add_band_fired(self):
+        self.highlight_bands.append(Band())
+        
+#    @on_trait_change('highlight+')
+#    def _highlight_changed(self):
+#        im = Image.open(self.path)
+#        ndim = array(im.convert('L'))
+#        im = array(im.convert('RGB'))
+#
+#        low = self.highlight - self.highlight_threshold
+#        high = self.highlight + self.highlight_threshold
+#        mask = where((ndim > low) & (ndim < high))
+#
+#        im[mask] = [255, 0, 0]
+##        im = Image.fromarray(im)
+#
+#        plot = self.oplot
+#
+#        imgplot = plot.plots['plot0'][0]
+#        tools = imgplot.tools
+#        overlays = imgplot.overlays
+#
+#        plot.delplot('plot0')
+#        plot.data.set_data('img', im)
+#        img_plot = plot.img_plot('img')[0]
+#
+#        for ti in tools:
+#            ti.component = img_plot
+#        for oi in overlays:
+#            oi.component = img_plot
+#
+#        img_plot.tools = tools
+#        img_plot.overlays = overlays
+#        plot.request_redraw()
 
 #    def _histogram_equalize_changed(self):
 #        if not (self.oplot and self.plot):
@@ -152,7 +157,7 @@ class BandwidthImager(HasTraits):
     def _path_changed(self):
         self._load_image(self.path)
         
-    @on_trait_change('highlight_bands:[center,threshold,color]')
+    @on_trait_change('highlight_bands:[center,threshold,color, use]')
     def _refresh_highlight_bands(self,obj,name, old, new):
         if self.path:
             plot=self.oplot
@@ -169,58 +174,69 @@ class BandwidthImager(HasTraits):
 #                    print band.color[:3]
                     rgb_arr[mask] = band.color[:3]
             
+            imgplot = plot.plots['plot0'][0]
+            tools = imgplot.tools
+            overlays = imgplot.overlays
+    
             plot.delplot('plot0')
             plot.data.set_data('img', rgb_arr)
             img_plot = plot.img_plot('img', colormap=color_map_name_dict[self.colormap_name_1])[0]
+            
+            for ti in tools+overlays:
+                ti.component = img_plot
+    
+            img_plot.tools = tools
+            img_plot.overlays = overlays
+            
             plot.request_redraw()
         
-    @on_trait_change('calc_area+')
-    def _calc_area(self):
-        self.trait_set(low=self.calc_area_value - self.calc_area_threshold,
-                       high=self.calc_area_value + self.calc_area_threshold,
-                       trait_change_notify=False)
-        self._refresh()
-
-    def _save_button_fired(self):
-        dlg = FileDialog(action='save as')
-        if dlg.open() == OK:
-            path = dlg.path
-            if self.save_mode == 'orig':
-                p = self.oplot
-            elif self.save_mode == 'thresh':
-                p = self.plot
-            else:
-                p = self.container
-
-            self.render_pdf(p, path)
-
-    def render_pdf(self, obj, path):
-        from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-
-        if not path.endswith('.pdf'):
-            path += '.pdf'
-        gc = PdfPlotGraphicsContext(filename=path)
-#        opad = obj.padding_bottom
-#        obj.padding_bottom = 60
-        obj.do_layout(force=True)
-        gc.render_component(obj, valign='center')
-
-        gc.gc.drawString(600, 5, 'area:{:0.3f}% low={} high={}'.format(self.area, self.low, self.high))
-
-        gc.save()
-#        obj.padding_bottom = opad
-
-    def render_pic(self, obj, path):
-        from chaco.plot_graphics_context import PlotGraphicsContext
-
-        gc = PlotGraphicsContext((int(obj.outer_width), int(obj.outer_height)))
-#            obj.use_backbuffer = False
-        gc.render_component(obj)
-#            obj.use_backbuffer = True
-        if not path.endswith('.png'):
-            path += '.png'
-        gc.save(path)
-
+#    @on_trait_change('calc_area+')
+#    def _calc_area(self):
+#        self.trait_set(low=self.calc_area_value - self.calc_area_threshold,
+#                       high=self.calc_area_value + self.calc_area_threshold,
+#                       trait_change_notify=False)
+#        self._refresh()
+#
+#    def _save_button_fired(self):
+#        dlg = FileDialog(action='save as')
+#        if dlg.open() == OK:
+#            path = dlg.path
+#            if self.save_mode == 'orig':
+#                p = self.oplot
+#            elif self.save_mode == 'thresh':
+#                p = self.plot
+#            else:
+#                p = self.container
+#
+#            self.render_pdf(p, path)
+#
+#    def render_pdf(self, obj, path):
+#        from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+#
+#        if not path.endswith('.pdf'):
+#            path += '.pdf'
+#        gc = PdfPlotGraphicsContext(filename=path)
+##        opad = obj.padding_bottom
+##        obj.padding_bottom = 60
+#        obj.do_layout(force=True)
+#        gc.render_component(obj, valign='center')
+#
+#        gc.gc.drawString(600, 5, 'area:{:0.3f}% low={} high={}'.format(self.area, self.low, self.high))
+#
+#        gc.save()
+##        obj.padding_bottom = opad
+#
+#    def render_pic(self, obj, path):
+#        from chaco.plot_graphics_context import PlotGraphicsContext
+#
+#        gc = PlotGraphicsContext((int(obj.outer_width), int(obj.outer_height)))
+##            obj.use_backbuffer = False
+#        gc.render_component(obj)
+##            obj.use_backbuffer = True
+#        if not path.endswith('.png'):
+#            path += '.png'
+#        gc.save(path)
+#
     def _load_image(self, path):
         self.container = self._container_factory()
         im = Image.open(path)
@@ -273,73 +289,74 @@ class BandwidthImager(HasTraits):
                                         bgcolor="white", border_visible=True)
 
         img_plot.overlays.append(overlay)
-
+#
     def add_tools(self, img_plot):
         zoom = ZoomTool(component=img_plot, tool_mode="box", always_on=False)
         pan = PanTool(component=img_plot, restrict_to_data=True)
         img_plot.tools.append(pan)
 
         img_plot.overlays.append(zoom)
-
-    @on_trait_change('low,high, use_threshold')
-    def _refresh(self):
-        if self.use_threshold:
-            pd = self.plot.data
-
-            low = self.low
-            high = self.high
-            if self.histogram_equalize:
-                ndim = self._hdim
-            else:
-                ndim = self._ndim
-
-            tim = zeros_like(ndim)
-            mask = where((ndim > low) & (ndim < high))
-            tim[mask] = 255
-
-            self.area = (sum(tim) / (ndim.shape[0] * ndim.shape[1])) / 255.
-
-            pd.set_data('img', tim)
-            self.plot.request_redraw()
-
-    def _colormap_name_1_changed(self):
-        cmap = color_map_name_dict[self.colormap_name_1]
-        plot = self.oplot.plots['plot0'][0]
-        tools = plot.tools
-        overlays = plot.overlays
-
-        self.oplot.delplot('plot0')
-
-        im = Image.open(self.path)
-        ndim = array(im.convert('L'))
-        self.oplot.data.set_data('img', ndim)
-        img_plot = self.oplot.img_plot('img', colormap=cmap)[0]
-
-        for ti in tools:
-            ti.component = img_plot
-        for oi in overlays:
-            oi.component = img_plot
-
-        img_plot.tools = tools
-        img_plot.overlays = overlays
+#
+#    @on_trait_change('low,high, use_threshold')
+#    def _refresh(self):
+#        if self.use_threshold:
+#            pd = self.plot.data
+#
+#            low = self.low
+#            high = self.high
+#            if self.histogram_equalize:
+#                ndim = self._hdim
+#            else:
+#                ndim = self._ndim
+#
+#            tim = zeros_like(ndim)
+#            mask = where((ndim > low) & (ndim < high))
+#            tim[mask] = 255
+#
+#            self.area = (sum(tim) / (ndim.shape[0] * ndim.shape[1])) / 255.
+#
+#            pd.set_data('img', tim)
+#            self.plot.request_redraw()
+#
+#    def _colormap_name_1_changed(self):
+#        cmap = color_map_name_dict[self.colormap_name_1]
+#        plot = self.oplot.plots['plot0'][0]
+#        tools = plot.tools
+#        overlays = plot.overlays
+#
+#        self.oplot.delplot('plot0')
+#
+#        im = Image.open(self.path)
+#        ndim = array(im.convert('L'))
+#        self.oplot.data.set_data('img', ndim)
+#        img_plot = self.oplot.img_plot('img', colormap=cmap)[0]
+#
+#        for ti in tools:
+#            ti.component = img_plot
+#        for oi in overlays:
+#            oi.component = img_plot
+#
+#        img_plot.tools = tools
+#        img_plot.overlays = overlays
+##        self.add_inspector(img_plot)
+##        self.add_tools(img_plot)
+#
+#        self.oplot.request_redraw()
+#
+#    def _colormap_name_2_changed(self):
+#        cmap = color_map_name_dict[self.colormap_name_2]
+##        self.plot.colormap = cmp
+#        self.plot.delplot('plot0')
+#        img_plot = self.plot.img_plot('img', colormap=cmap)[0]
 #        self.add_inspector(img_plot)
-#        self.add_tools(img_plot)
-
-        self.oplot.request_redraw()
-
-    def _colormap_name_2_changed(self):
-        cmap = color_map_name_dict[self.colormap_name_2]
-#        self.plot.colormap = cmp
-        self.plot.delplot('plot0')
-        img_plot = self.plot.img_plot('img', colormap=cmap)[0]
-        self.add_inspector(img_plot)
-        self.plot.request_redraw()
+#        self.plot.request_redraw()
     
     def _highlight_bands_default(self):
         return [Band(color='red'), Band(color='green'), Band(color='blue')]
     
     def traits_view(self):
-        ctrl_grp=VGroup(Item('path', show_label=False),
+        ctrl_grp=VGroup(
+                        HGroup(Item('add_band', show_label=False)),
                         Item('highlight_bands',editor=ListEditor(mutable=False,
                                                                  style='custom',editor=InstanceEditor()))
                         )
@@ -348,7 +365,7 @@ class BandwidthImager(HasTraits):
                Item('container', show_label=False,
                        editor=ComponentEditor()),
 #
-                 title='Color Inspector',
+#                 title='Color Inspector',
                  resizable=True,
                  height=800,
                  width=900

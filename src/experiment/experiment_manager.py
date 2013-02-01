@@ -386,7 +386,7 @@ class ExperimentManager(Manager):
 #===============================================================================
 # persistence
 #===============================================================================
-    def load_experiment_set(self, path=None, edit=True):
+    def load_experiment_set(self, path=None, edit=True, saveable=False):
 #        self.bind_preferences()
         #make sure we have a database connection
         if not self.test_connections():

@@ -38,7 +38,7 @@ def get_constant(name, v, e):
 #    print name, v, e
     return ufloat((float(v), float(e)))
 
-class constants(object):
+class Constants(object):
     age_units = 'Ma'
     def __init__(self):
         #lambda_epsilon = ufloat((5.81e-11,
