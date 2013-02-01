@@ -33,7 +33,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        abundant_sensitivity=0,
                        a37decayfactor=None,
                        a39decayfactor=None,
-                       include_decay_error=False, 
+                       include_decay_error=False,
                        constants=None
                        ):
     '''
@@ -202,7 +202,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
         #dont include error in decay constant
         j.set_std_dev(0)
-        age = age_equation(j, R, include_decay_error=include_decay_error,constants=constants)
+        age = age_equation(j, R, include_decay_error=include_decay_error, constants=constants)
 #        age = age_equation(j, R)
         age_wo_jerr = deepcopy(age)
 
@@ -259,7 +259,7 @@ class ExcelMixin(object):
 class Constants(ExcelMixin):
     age_units = 'Ma'
     def __init__(self, sheet):
-        self.sheet=sheet
+        self.sheet = sheet
         #lambda_epsilon = ufloat((5.81e-11,
         #                                    0))
         #lambda_beta = ufloat((4.962e-10,
@@ -292,95 +292,95 @@ class Constants(ExcelMixin):
         #atm4038 = ufloat((1575, 2))
         self.atm3638 = self.atm4038 / self.atm4036
         self.atm3836 = self.atm4036 / self.atm4038
-        
+
     def _get_constant(self, name, value, error):
-        sheet=self.sheet
-        header=self._make_row(sheet, 0)
-        idx=header.index(name)
-        idx_err=header.index('{}_err'.format(name))
+        sheet = self.sheet
+        header = self._make_row(sheet, 0)
+        idx = header.index(name)
+        idx_err = header.index('{}_err'.format(name))
         try:
-            value=sheet.cell(1,idx).value
-        except Exception,e:
+            value = sheet.cell(1, idx).value
+        except Exception, e:
             print e
 
         try:
-            error=sheet.cell(1,idx_err).value
+            error = sheet.cell(1, idx_err).value
         except Exception, e:
             print e
-        
+
 #        print type(value)
         return ufloat((value, error))
-        
-        
-class Isotope(HasTraits):
-    value=Float
-    error=Float
-    uvalue=Property
-    name=Str
-    @cached_property
-    def _get_uvalue(self):
-        return ufloat((self.value, self.error))
-    
-    def traits_view(self):
-        v=View(HGroup(Label(self.name), Item('value'), Item('error')))
-        return v
-    
+
+
+#class Isotope(HasTraits):
+#    value = Float
+#    error = Float
+#    uvalue = Property
+#    name = Str
+#    @cached_property
+#    def _get_uvalue(self):
+#        return ufloat((self.value, self.error))
+#
+#    def traits_view(self):
+#        v = View(HGroup(Label(self.name), Item('value'), Item('error')))
+#        return v
+
 class Result(HasTraits):
-    age=Any
-    identifier=Str
-    
+    age = Any
+    identifier = Str
+
 class ResultAdapter(TabularAdapter):
-    columns=[
+    columns = [
              ('Identifier', 'identifier'),
              ('Age', 'age'),
              ('Error', 'age_error'),
              ]
-    age_text=Property
-    age_error_text=Property
-    
-    def _float_fmt(self,v, n):
+    age_text = Property
+    age_error_text = Property
+
+    def _float_fmt(self, v, n):
         return '{{:0.{}f}}'.format(n).format(v)
-    
+
     def _get_value(self, attr):
-        v=getattr(self.item, attr)
+        v = getattr(self.item, attr)
         return self._float_fmt(v.nominal_value, 5)
-    
+
     def _get_error(self, attr):
-        v=getattr(self.item, attr)
+        v = getattr(self.item, attr)
         return self._float_fmt(v.std_dev(), 6)
-    
+
     def _get_age_text(self):
         return self._get_value('age')
-    
+
     def _get_age_error_text(self):
         return self._get_error('age')
-    
-class AgeCalculator(HasTraits, ExcelMixin):
-    calc_button=Button
-    results=List
-    path=File
-    def _load_irrad_info_from_file(self, sheet):
-        ir_header=self._make_row(sheet, 0)
 
-        idx_k4039=ir_header.index('k4039')
-        idx_k4039err=ir_header.index('k4039_err')
-        idx_k3839=ir_header.index('k3839')
-        idx_k3839err=ir_header.index('k3839_err')
-        idx_k3739=ir_header.index('k3839')
-        idx_k3739err=ir_header.index('k3839_err')
-        
-        idx_ca3937=ir_header.index('ca3937')
-        idx_ca3937err=ir_header.index('ca3937_err')
-        idx_ca3837=ir_header.index('ca3837')
-        idx_ca3837err=ir_header.index('ca3837_err')
-        idx_ca3637=ir_header.index('ca3637')
-        idx_ca3637err=ir_header.index('ca3637_err')
-        
-        idx_cl3638=ir_header.index('cl3638')
-        idx_cl3638err=ir_header.index('cl3638_err')
-        
-        row=self._make_row(sheet, 1, cast=float)
-        irrad_info=[(row[idx_k4039], row[idx_k4039err]),
+class AgeCalculator(HasTraits, ExcelMixin):
+    calc_button = Button
+    results = List
+    path = File
+    def _load_irrad_info_from_file(self, sheet):
+        ir_header = self._make_row(sheet, 0)
+
+        idx_k4039 = ir_header.index('k4039')
+        idx_k4039err = ir_header.index('k4039_err')
+        idx_k3839 = ir_header.index('k3839')
+        idx_k3839err = ir_header.index('k3839_err')
+        idx_k3739 = ir_header.index('k3839')
+        idx_k3739err = ir_header.index('k3839_err')
+
+        idx_ca3937 = ir_header.index('ca3937')
+        idx_ca3937err = ir_header.index('ca3937_err')
+        idx_ca3837 = ir_header.index('ca3837')
+        idx_ca3837err = ir_header.index('ca3837_err')
+        idx_ca3637 = ir_header.index('ca3637')
+        idx_ca3637err = ir_header.index('ca3637_err')
+
+        idx_cl3638 = ir_header.index('cl3638')
+        idx_cl3638err = ir_header.index('cl3638_err')
+
+        row = self._make_row(sheet, 1, cast=float)
+        irrad_info = [(row[idx_k4039], row[idx_k4039err]),
                                (row[idx_k3839], row[idx_k3839err]),
                                (row[idx_k3739], row[idx_k3739err]),
                                (row[idx_ca3937], row[idx_ca3937err]),
@@ -388,113 +388,116 @@ class AgeCalculator(HasTraits, ExcelMixin):
                                (row[idx_ca3637], row[idx_ca3637err]),
                                (row[idx_cl3638], row[idx_cl3638err])
                                ]
-                       
-        return irrad_info+[[], 1]
-        
+
+        return irrad_info + [[], 1]
+
     def _calc_from_file(self, path):
-        self.results=[]
-        
-        workbook=xlrd.open_workbook(path)
-        ir_s=workbook.sheet_by_name('irradiation')
-        irrad_info=self._load_irrad_info_from_file(ir_s)
-        
-        i_s=workbook.sheet_by_name('intensities')
-        header=self._make_row(i_s, 0)
-        
-        try:
-            bl_s=workbook.sheet_by_name('blanks')
-            bl_header=self._make_row(bl_s, 0)
-        except xlrd.XLRDError:
-            bl_s=None
-            bl_header=None
-        try:
-            bg_s=workbook.sheet_by_name('backgrounds')
-            bg_header=self._make_row(bg_s, 0)
-        except xlrd.XLRDError:
-            bg_header=None
-            bg_s=None
-            
-        try:
-            bs_s=workbook.sheet_by_name('baselines')
-            bs_header=self._make_row(bs_s, 0)
-        except xlrd.XLRDError:
-            bs_header=None
-            bs_s=None        
+        self.results = []
 
-        idx_j=header.index('j')
-        idx_jerr=header.index('j_err')        
-        idx_ic=header.index('ic')
-        idx_ic_err=header.index('ic_err')
+        workbook = xlrd.open_workbook(path)
+        ir_s = workbook.sheet_by_name('irradiation')
+        irrad_info = self._load_irrad_info_from_file(ir_s)
 
-        c_s=workbook.sheet_by_name('constants') 
-        constants_obj=Constants(c_s)
-        
-        for ri in range(1,i_s.nrows):
-            signals=self._load_signals(header, i_s,ri)
-            blanks=self._load_signals(bl_header,bl_s,ri)
-            baselines=self._load_signals(bs_header,bs_s,ri)
-            backgrounds=self._load_signals(bg_header,bg_s,ri)
-            
-            row=self._make_row(i_s, ri)
-            idn=row[0]
-            j=map(float,(row[idx_j],row[idx_jerr]))
-            ic=map(float, (row[idx_ic],row[idx_ic_err]))
-            arar_result=calculate_arar_age(signals, baselines, blanks, backgrounds, j, irrad_info, 
-                                           a37decayfactor=1,a39decayfactor=1,
-                                           ic=ic, 
+        i_s = workbook.sheet_by_name('intensities')
+        header = self._make_row(i_s, 0)
+
+        try:
+            bl_s = workbook.sheet_by_name('blanks')
+            bl_header = self._make_row(bl_s, 0)
+        except xlrd.XLRDError:
+            bl_s = None
+            bl_header = None
+        try:
+            bg_s = workbook.sheet_by_name('backgrounds')
+            bg_header = self._make_row(bg_s, 0)
+        except xlrd.XLRDError:
+            bg_header = None
+            bg_s = None
+
+        try:
+            bs_s = workbook.sheet_by_name('baselines')
+            bs_header = self._make_row(bs_s, 0)
+        except xlrd.XLRDError:
+            bs_header = None
+            bs_s = None
+
+        idx_j = header.index('j')
+        idx_jerr = header.index('j_err')
+        idx_ic = header.index('ic')
+        idx_ic_err = header.index('ic_err')
+
+        c_s = workbook.sheet_by_name('constants')
+        constants_obj = Constants(c_s)
+
+        for ri in range(1, i_s.nrows):
+            signals = self._load_signals(header, i_s, ri)
+            blanks = self._load_signals(bl_header, bl_s, ri)
+            baselines = self._load_signals(bs_header, bs_s, ri)
+            backgrounds = self._load_signals(bg_header, bg_s, ri)
+
+            row = self._make_row(i_s, ri)
+            idn = row[0]
+            j = map(float, (row[idx_j], row[idx_jerr]))
+            ic = map(float, (row[idx_ic], row[idx_ic_err]))
+            arar_result = calculate_arar_age(signals, baselines, blanks, backgrounds, j, irrad_info,
+                                           a37decayfactor=1, a39decayfactor=1,
+                                           ic=ic,
                                            constants=constants_obj)
-            
+
             self.results.append(Result(identifier=idn,
-                                       age=arar_result['age']/1e6))
+                                       age=arar_result['age'] / 1e6))
 
     def _load_signals(self, header, sheet, ri):
         if sheet is not None:
-            row=self._make_row(sheet, ri)
-            idn=row[0]
-            row=[idn]+map(float, row[1:])
-    
-            idx_40=header.index('Ar40')
-            idx_40err=header.index('Ar40_err')
-            idx_39=header.index('Ar39')
-            idx_39err=header.index('Ar39_err')
-            idx_38=header.index('Ar38')
-            idx_38err=header.index('Ar38_err')
-            idx_37=header.index('Ar37')
-            idx_37err=header.index('Ar37_err')
-            idx_36=header.index('Ar36')
-            idx_36err=header.index('Ar36_err')
-            signals=[(row[idx_40],row[idx_40err]),
-                     (row[idx_39],row[idx_39err]),
-                     (row[idx_38],row[idx_38err]),
-                     (row[idx_37],row[idx_37err]),
-                     (row[idx_36],row[idx_36err])]
-            
+            row = self._make_row(sheet, ri)
+            idn = row[0]
+            row = [idn] + map(float, row[1:])
+
+            idx_40 = header.index('Ar40')
+            idx_40err = header.index('Ar40_err')
+            idx_39 = header.index('Ar39')
+            idx_39err = header.index('Ar39_err')
+            idx_38 = header.index('Ar38')
+            idx_38err = header.index('Ar38_err')
+            idx_37 = header.index('Ar37')
+            idx_37err = header.index('Ar37_err')
+            idx_36 = header.index('Ar36')
+            idx_36err = header.index('Ar36_err')
+            signals = [(row[idx_40], row[idx_40err]),
+                     (row[idx_39], row[idx_39err]),
+                     (row[idx_38], row[idx_38err]),
+                     (row[idx_37], row[idx_37err]),
+                     (row[idx_36], row[idx_36err])]
+
         else:
-            signals=[(0,0),(0,0),(0,0),(0,0),(0,0)]
+            signals = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
         return signals
-         
+
     def _calc_button_fired(self):
-        path=self.path
+        path = self.path
         self._calc_from_file(path)
-         
+
     def traits_view(self):
-        v=View(
-               HGroup(Item('path',springy=True, show_label=False),
-                      Item('calc_button', enabled_when='path',show_label=False)),
+        v = View(
+               HGroup(Item('path', springy=True, show_label=False),
+                      Item('calc_button', enabled_when='path', show_label=False)),
                Item('results', editor=TabularEditor(adapter=ResultAdapter(),
                                                     editable=False
                                                     ),
-                    
-                    show_label=False,style='custom'),
+
+                    show_label=False, style='custom'),
                title='Age Calculator',
                width=500,
                height=300,
                )
         return v
-    
-        
-        
+
+
+
 if __name__ == '__main__':
-    ag=AgeCalculator()
-#    ag.path='/Users/argonlab2/Sandbox/age_calculator_template.xls'
+    ag = AgeCalculator()
+    import os
+    p = os.path.join(os.path.dirname(__file__), 'src', 'processing', 'data', 'age_calculator_template.xls')
+#    ag.path = '/Users/ross/Sandbox/age_calculator_template.xls'
+    ag.path = p
     ag.configure_traits()

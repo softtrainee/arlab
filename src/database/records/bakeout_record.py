@@ -29,6 +29,9 @@ class BakeoutRecord(SQLiteRecord):
     export_button = DelegatesTo('viewer')
     window_width = 800
     window_height = 0.85
+    def create(self, dbrecord):
+        self._dbrecord = dbrecord
+
     def load_graph(self, *args, **kw):
         self.viewer = BakeoutGraphViewer(title=self.title)
         self.viewer.load(self.path)

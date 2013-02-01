@@ -32,7 +32,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
     gen_MassSpectrometerTable, gen_AnalysisTypeTable
 
 from src.database.core.base_results_adapter import BaseResultsAdapter
-from src.database.records.isotope_record import IsotopeRecord
+from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.database.core.query import  IsotopeQuery
 
 class IsotopeResultsAdapter(BaseResultsAdapter):
@@ -40,9 +40,9 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
 #               ('ID', 'rid'),
                ('Labnumber', 'labnumber'),
                ('Aliquot', 'aliquot'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime'),
-               ('Irradiation', 'irradiation'),
+               ('Analysis Time', 'timestamp'),
+#               ('Time', 'runtime'),
+               ('Irradiation', 'irradiation_info'),
                ('Mass Spec.', 'mass_spectrometer'),
                ('Type', 'analysis_type')
 #               ('Irradiation', 'irradiation_level')
@@ -51,25 +51,25 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
 #    rid_width = Int(50)
     labnumber_width = Int(90)
     aliquot_width = Int(90)
-    rundate_width = Int(90)
-    runtime_width = Int(90)
-    aliquot_text = Property
-    irradiation_text = Property
+    rundate_width = Int(120)
+#    runtime_width = Int(90)
+#    aliquot_text = Property
+#    irradiation_text = Property
 #    irradiation_level_text = Property
 
-    def _get_irradiation_text(self):
-        if self.item.irradiation:
-            return '{}{} {}'.format(self.item.irradiation.name,
-                                self.item.irradiation_level.name,
-                                self.item.irradiation_position.position
-                                )
-        else:
-            return ''
+#    def _get_irradiation_text(self):
+#        if self.item.irradiation:
+#            return '{}{} {}'.format(self.item.irradiation.name,
+#                                self.item.irradiation_level.name,
+#                                self.item.irradiation_position.position
+#                                )
+#        else:
+#            return ''
 
-    def _get_aliquot_text(self, trait, item):
-        a = self.item.aliquot
-        s = self.item.step
-        return '{}{}'.format(a, s)
+#    def _get_aliquot_text(self, trait, item):
+#        a = self.item.aliquot
+#        s = self.item.step
+#        return '{}{}'.format(a, s)
 #        return '1'
 #    width = Int(50)
 
@@ -78,7 +78,9 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #    orm_path = 'src.database.orms.isotope_orm'
 
     query_table = meas_AnalysisTable
+    record_view_klass = IsotopeRecordView
     record_klass = IsotopeRecord
+#    record_klass = DummyIsotopeRecord
     query_klass = IsotopeQuery
     tabular_adapter = IsotopeResultsAdapter
 #    multi_graphable = Bool(True)
@@ -118,6 +120,13 @@ class IsotopeAnalysisSelector(DatabaseSelector):
               'Analysis Type':([meas_MeasurementTable, gen_AnalysisTypeTable], gen_AnalysisTypeTable.name)
 
               }
+
+    def _record_factory(self, idn):
+        dbr = self.db.get_analysis_uuid(idn.lab_id)
+        d = self.record_klass(_dbrecord=dbr)
+        return d
+
+
     def _get_selector_records(self, queries=None, limit=None, **kw):
         sess = self.db.get_session()
         q = sess.query(meas_AnalysisTable)

@@ -48,8 +48,8 @@ class DatabaseRecord(Saveable):
     window_height = None
     selector = Any
 
-    loadable = Property(depends_on='_loadable')
-    _loadable = Bool(True)
+#    loadable = Property(depends_on='_loadable')
+#    _loadable = Bool(True)
     record_id = Property
 
     resizable = True
@@ -58,6 +58,9 @@ class DatabaseRecord(Saveable):
     graph_id = Int
 
     close_event = Event
+    def to_string(self):
+        return str(self.record_id)
+
     @classmethod
     def make_timestamp(cls, rd, rt):
         timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))

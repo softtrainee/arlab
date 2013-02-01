@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool, Str
+    Event, Bool, Str, Instance
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
@@ -25,6 +25,7 @@ from src.processing.argon_calculations import calculate_arar_age
 from src.processing.signal import Signal
 from src.constants import AGE_SCALARS
 from apptools.preferences.preference_binding import bind_preference
+from src.processing.arar_constants import ArArConstants
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
@@ -90,9 +91,26 @@ class ArArAge(HasTraits):
     moles_K39 = AgeProperty()
 
     ic_factor = Property
+
+    arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
         bind_preference(self, 'age_units', 'pychron.experiment.general_age.age_units')
+        bind_preference(self.arar_constants, 'lambda_b_v', 'pychron.experiment.constants.lambda_b')
+        bind_preference(self.arar_constants, 'lambda_b_e', 'pychron.experiment.constants.lambda_b_error')
+        bind_preference(self.arar_constants, 'lambda_e_v', 'pychron.experiment.constants.lambda_e')
+        bind_preference(self.arar_constants, 'lambda_e_e', 'pychron.experiment.constants.lambda_e_error')
+        bind_preference(self.arar_constants, 'lambda_Cl36_v', 'pychron.experiment.constants.lambda_Cl36')
+        bind_preference(self.arar_constants, 'lambda_Cl36_e', 'pychron.experiment.constants.lambda_Cl36_error')
+        bind_preference(self.arar_constants, 'lambda_Ar37_v', 'pychron.experiment.constants.lambda_Ar37')
+        bind_preference(self.arar_constants, 'lambda_Ar37_e', 'pychron.experiment.constants.lambda_Ar37_error')
+        bind_preference(self.arar_constants, 'lambda_Ar39_v', 'pychron.experiment.constants.lambda_Ar39')
+        bind_preference(self.arar_constants, 'lambda_Ar39_e', 'pychron.experiment.constants.lambda_Ar39_error')
+
+        bind_preference(self.arar_constants, 'atm4036_v', 'pychron.experiment.constants.Ar40_Ar36_atm')
+        bind_preference(self.arar_constants, 'atm_4036_e', 'pychron.experiment.constants.Ar40_Ar36_atm_error')
+        bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
+        bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
 
     def _calculate_kca(self):
         result = self.arar_result
@@ -194,7 +212,9 @@ class ArArAge(HasTraits):
         ab = self.abundant_sensitivity
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
                                     j, irrad, abundant_sensitivity=ab, ic=self.ic_factor,
-                                    include_decay_error=include_decay_error)
+                                    include_decay_error=include_decay_error,
+                                    arar_constants=self.arar_constants
+                                    )
 
         if result:
             self.arar_result = result

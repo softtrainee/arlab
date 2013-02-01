@@ -109,12 +109,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     style = Enum('normal', 'panel', 'simple', 'single')
 
     verbose = False
-    def onKeyDown(self, evt):
-        import wx
-        print evt
-        if evt.GetKeyCode() == wx.WXK_RETURN:
-            print 'ffoasdf'
-        evt.Skip()
+#    def onKeyDown(self, evt):
+#        import wx
+#        print evt
+#        if evt.GetKeyCode() == wx.WXK_RETURN:
+#            print 'ffoasdf'
+#        evt.Skip()
 
     def _selected_changed(self):
         if self.selected:
@@ -219,15 +219,18 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if not append:
             self.records = []
 
-        self._load_records(dbs, load)
+        self._load_records(dbs)
 #        self._sort_columns(self.records)
 
         self.scroll_to_row = len(self.records)
 
-    def _load_records(self, records, load):
+    def _load_records(self, records):
         if records:
-            self.records.extend([self._result_factory(di, load) for di in records])
-
+            import time
+            st = time.time()
+#            print [self._record_view_factory(di) for di in records]
+            self.records.extend([self._record_view_factory(di) for di in records])
+            print time.time() - st
 
 #    def _changed(self, new):
 #        db = self.db
@@ -248,69 +251,80 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             records = self.selected
 
         if records is not None:
+            self._open_individual(records[0])
 
-            if self.multi_select_graph:
-                self._open_multiple(records)
-            else:
-                self._open_individual(records)
+#            if self.multi_select_graph:
+#                self._open_multiple(records)
+#            else:
+#                self._open_individual(records)
 
-    def _open_multiple(self, s):
-        graph = None
-        xoffset = 0
-        for si in s:
-            if not si.loadable:
-                continue
+#    def _open_multiple(self, s):
+#        graph = None
+#        xoffset = 0
+#        for si in s:
+#            if not si.loadable:
+#                continue
+#
+#            if graph is None:
+#                graph = si._graph_factory(klass=TimeSeriesGraph)
+#                graph.new_plot(xtitle='Time',
+#                               ytitle='Signal')
+#
+#            xoffset += si.load_graph(graph=graph, xoffset=xoffset)
+#
+#        wid = '.'.join([str(si.rid) for si in s])
+#        did = ', '.join([str(si.rid) for si in s])
+#        graph.window_title = '{} {}'.format(si.title_str, did)
+#
+#        info = graph.edit_traits()
+#
+#        self._open_window(wid, info)
 
-            if graph is None:
-                graph = si._graph_factory(klass=TimeSeriesGraph)
-                graph.new_plot(xtitle='Time',
-                               ytitle='Signal')
 
-            xoffset += si.load_graph(graph=graph, xoffset=xoffset)
+    def _open_individual(self, si):
+        si = self._record_factory(si)
+#        if not isinstance(s, (list, tuple)):
+#            s = (s,)
 
-        wid = '.'.join([str(si.rid) for si in s])
-        did = ', '.join([str(si.rid) for si in s])
-        graph.window_title = '{} {}'.format(si.title_str, did)
+#        for si in s:
+#        if isinstance(si, str):
+#            di = self.db.get_analysis_uuid(si)
+#            si = self._record_factory(di, False)
+#        else:
+#            si.selector = self
 
-        info = graph.edit_traits()
+        if not si.initialize():
+            return
 
-        self._open_window(wid, info)
+        sid = si.record_id
+#
+#            if sid in self.opened_windows:
+#                c = self.opened_windows[sid].control
+#                if c is not None:
+#                    do_later(c.Raise)
+#            else:
+        try:
+            si.load_graph()
+            si.window_x = self.wx
+            si.window_y = self.wy
+            def do(si, sid):
+                info = si.edit_traits()
+                self._open_window(sid, info)
 
-    def _open_individual(self, s):
-        if not isinstance(s, (list, tuple)):
-            s = (s,)
+            do_later(do, si, sid)
 
-        for si in s:
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+            self.warning(e)
 
-            if isinstance(si, str):
-                di = self.db.get_analysis_uuid(si)
-                si = self._result_factory(di, False)
-            else:
-                si.selector = self
+    def _record_view_factory(self, dbrecord):
+        d = self.record_view_klass()
 
-            if not si.initialize():
-                continue
+        d.create(dbrecord)
 
-            sid = si.record_id
-            if sid in self.opened_windows:
-                c = self.opened_windows[sid].control
-                if c is not None:
-                    do_later(c.Raise)
-            else:
-                try:
-                    si.load_graph()
-                    si.window_x = self.wx
-                    si.window_y = self.wy
-                    def do(si, sid):
-                        info = si.edit_traits()
-                        self._open_window(sid, info)
+        return d
 
-                    do_later(do, si, sid)
-
-                except Exception, e:
-                    import traceback
-                    traceback.print_exc()
-                    self.warning(e)
 
     def _open_window(self, wid, ui):
         self.opened_windows[wid] = ui
@@ -376,16 +390,19 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         q.trait_set(trait_change_notify=False, **kw)
         return q
 
-    def _result_factory(self, di, load, **kw):
-        d = self.record_klass(_dbrecord=di,
-                                 selector=self,
-                                 **kw)
-        if load:
-            d.load()
+    def _record_factory(self, di):
+        pass
+#        d = self.record_klass(_dbrecord=di,
+#                                 selector=self,
+#                                 **kw)
 
-#        d.on_trait_change(self._changed, 'changed')
-        d.on_trait_change(self._record_closed, 'close_event')
-        return d
+#        d = self.record_view_klass(labnumber=str(di.labnumber.labnumber))
+#        if load:
+#            d.load()
+#
+##        d.on_trait_change(self._changed, 'changed')
+#        d.on_trait_change(self._record_closed, 'close_event')
+#        return d
 #===============================================================================
 # views
 #===============================================================================

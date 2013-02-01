@@ -39,12 +39,13 @@ from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.deprecate import deprecated
 from src.constants import NULL_STR
 from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
-from src.database.records.arar_age import ArArAge
+
 import time
 from src.database.isotope_analysis.script_summary import MeasurementSummary, \
     ExtractionSummary, ExperimentSummary
 from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 from src.database.isotope_analysis.notes_summary import NotesSummary
+from src.processing.arar_age import ArArAge
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -67,6 +68,29 @@ class EditableGraph(HasTraits):
 
         return v
 
+class IsotopeRecordView(HasTraits):
+    def create(self, dbrecord):
+        self.labnumber = str(dbrecord.labnumber.labnumber)
+        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
+        self.timestamp = dbrecord.analysis_timestamp
+
+        irp = dbrecord.labnumber.irradiation_position
+        if irp is not None:
+            irl = irp.level
+            ir = irl.irradiation
+            self.irradiation_info = '{}{} {}'.format(ir.name, irl.name, irp.position)
+        else:
+            self.irradiation_info = ''
+#        self.mass_spectrometer = ''
+#        self.analysis_type = ''
+        meas = dbrecord.measurement
+        self.mass_spectrometer = meas.mass_spectrometer.name.lower()
+        self.analysis_type = meas.analysis_type.name
+
+        self.uuid = dbrecord.uuid
+
+    def to_string(self):
+        return '{} {} {} {}'.format(self.labnumber, self.aliquot, self.timestamp, self.uuid)
 
 class IsotopeRecord(DatabaseRecord, ArArAge):
     title_str = 'Analysis'
@@ -209,6 +233,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     def closed(self, isok):
         self.selected = None
+        self.close_event = True
 
 #===============================================================================
 # database record

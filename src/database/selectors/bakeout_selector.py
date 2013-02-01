@@ -34,9 +34,13 @@ class BakeoutDBSelector(DatabaseSelector):
 
     query_table = BakeoutTable
     record_klass = BakeoutRecord
+    record_view_klass = BakeoutRecord
     query_klass = BakeoutQuery
     tabular_adapter = BakeoutTabularAdapter
     lookup = {'Run Date':([], BakeoutTable.timestamp), }
+
+    def _record_factory(self, idn):
+        return idn
 
     def _get_selector_records(self, queries=None, limit=None, **kw):
         sess = self.db.get_session()
