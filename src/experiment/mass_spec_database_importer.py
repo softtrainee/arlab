@@ -239,6 +239,8 @@ class MassSpecDatabaseImporter(Loggable):
 
         self.create_import_session(spectrometer, tray)
 
+        db = self.db
+
         trid = rid.lower()
         if trid.startswith('b'):
             runtype = 'Blank'
@@ -246,19 +248,30 @@ class MassSpecDatabaseImporter(Loggable):
         elif trid.startswith('a'):
             runtype = 'Air'
             irradpos = -2
+        elif trid.startswith('c'): 
+            runtype = 'Unknown'
+            if spectrometer.lower()=='obama':
+                rid='4318'
+                irradpos='4318'
+            else:
+                rid='4319'
+                irradpos='4319'
         else:
             runtype = 'Unknown'
 
-        db = self.db
         #=======================================================================
         # add analysis
         #=======================================================================
-
         #get the sample_id
         sample_id = 0
-        db_irradpos = db.get_irradiation_position(irradpos)
-        if db_irradpos:
-            sample_id = db_irradpos.SampleID
+        if runtype =='Air':
+            sample=db.get_sample('Air')
+            if sample:
+                sample_id=sample.SampleID
+        else:
+            db_irradpos = db.get_irradiation_position(irradpos)
+            if db_irradpos:
+                sample_id = db_irradpos.SampleID
 
         #add runscript
         rs = db.add_runscript(runscript_name, runscript_text)
@@ -278,7 +291,6 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=first_stage_delay,
                                    SecondStageDly=second_stage_delay,
                                    )
-        print analysis
         analysis.SampleLoadingID = self.sample_loading_id
         analysis.LoginSessionID = self.login_session_id
         analysis.RunScriptID = rs.RunScriptID

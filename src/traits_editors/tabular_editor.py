@@ -72,8 +72,9 @@ class _TabularEditor(wxTabularEditor):
                     wx.TheClipboard.Close()
 
 #        print event.GetModifiers()
-
-#        super(_TabularEditor, self)._key_down(event)
+        else:
+            super(_TabularEditor, self)._key_down(event)
+        
     def _begin_drag(self, event):
         print event
 #        adapter = self.adapter

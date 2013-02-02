@@ -19,6 +19,7 @@
 from threading import Thread
 import time
 import os
+from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 
 class FileListener(object):
@@ -64,7 +65,8 @@ class FileListener(object):
         while self._alive:
             time.sleep(1 / self._freq)
             if self._check():
-                self._callback()
+                do_later(self._callback)
+#                self._callback()
                 self._otime = self.otime
 
     def _check(self):
