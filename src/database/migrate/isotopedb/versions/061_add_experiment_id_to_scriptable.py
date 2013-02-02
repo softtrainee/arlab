@@ -9,7 +9,10 @@ def upgrade(migrate_engine):
     t = Table('meas_ExtractionTable', meta, autoload=True)
     c = Column('experiment_blob_id', Integer)
     tt = Table('meas_ScriptTable', meta, autoload=True)
-    c.create(t)
+    try:
+        c.create(t)
+    except:
+        pass
     t.c.experiment_blob.drop()
 
     fk = ForeignKeyConstraint([t.c.experiment_blob_id], [tt.c.id])

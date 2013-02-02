@@ -35,8 +35,8 @@ class AnalysesChangeableItemsTable(Base):
     Disc = Column(Float, default=1)
     DiscEr = Column(Float, default=0)
     History = Column(String, default='')
-    StatusReason = Column(Integer, default=1)
-    StatusLevel = Column(Integer, default=1)
+    StatusReason = Column(Integer, default=0)
+    StatusLevel = Column(Integer, default=0)
     SignalNormalizationFactor = Column(Float, default=1)
     PreferencesSetID = Column(Integer, ForeignKey('PreferencesTable.PreferencesSetID'))
 
