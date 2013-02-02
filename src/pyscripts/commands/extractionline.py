@@ -47,41 +47,80 @@ class IsClosed(ValveCommand):
 2. is_closed(description="Bone to Turbo")
 '''
 
-
-
-class Release(Command):
+class NameCommand(Command):
     name = Str
     def _get_view(self):
         return Item('name', width=300)
 
     def _to_string(self):
         return self._keyword('name', self.name)
-#        return self._quote(self.name)
 
-class Acquire(Command):
-    name = Str
-    def _get_view(self):
-        return Item('name', width=300)
+class Release(NameCommand):
+    description = ''
+    example = ''
 
-    def _to_string(self):
-        return self._quote(self.name)
-
+class Acquire(NameCommand):
+    description = 'Acquire a resource'
+    example = '''acquire('foo')'''
 
 class MoveToPosition(Command):
-    position = Int
+    position = Str
     def _get_view(self):
         return Item('position')
 
     def _to_string(self):
         return '{}'.format(self.position)
 
+class ExecutePattern(Command):
+    description = 'Execute a pattern'
+    example = 'execute_pattern("diamond")'
 
-class HeatSample(Command):
+class ValueCommand(Command):
     value = Float
     def _get_view(self):
         return Item('value')
 
     def _to_string(self):
         return '{}'.format(self.value)
+
+class Extract(ValueCommand):
+    description = 'Set extraction device to specified value'
+    example = ''
+class EndExtract(Command):
+    description = ''
+    example = ''
+class SetTray(Command):
+    description = ''
+    example = ''
+class SetResource(Command):
+    description = ''
+    example = ''
+
+
+class SetPositionCommand(ValueCommand):
+
+class SetX(SetPositionCommand):
+    pass
+class SetY(SetPositionCommand):
+    pass
+class SetZ(SetPositionCommand):
+    pass
+
+class SetXy(Command):
+    xvalue = Float
+    yvalue = Float
+    def _get_view(self):
+        return Item('xvalue', 'yvalue')
+
+    def _to_string(self):
+        return '{},{}'.format(self.xvalue, self.yvalue)
+
+#class HeatSample(Command):
+#    value = Float
+#    def _get_view(self):
+#        return Item('value')
+#
+#    def _to_string(self):
+#        return '{}'.format(self.value)
 
 #============= EOF =============================================

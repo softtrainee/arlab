@@ -25,7 +25,7 @@ import shelve
 from src.paths import paths
 from src.database.core.database_selector import ColumnSorterMixin
 from src.processing.search.previous_selection import PreviousSelection
-from src.database.records.isotope_record import IsotopeRecord
+from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.processing.analysis import Marker
 from src.helpers.color_generators import colornames
 import hashlib
@@ -120,12 +120,12 @@ class SelectedView(ColumnSorterMixin):
         def make_name(rec):
             s = rec[0]
             e = rec[-1]
-            return '{} - {}'.format(s.record_id, e.record_id)
+            return '{} - {}'.format(s.uuid, e.uuid)
 
         def make_hash(rec):
             md5 = hashlib.md5()
             for r in rec:
-                md5.update('{}{}{}'.format(r.record_id, r.group_id, r.graph_id))
+                md5.update('{}{}{}'.format(r.uuid, r.group_id, r.graph_id))
             return md5.hexdigest()
 
         d = self._open_shelve()
@@ -233,10 +233,12 @@ class SelectedView(ColumnSorterMixin):
         if self.previous_selection:
             db = self.selector.db
             def func(pi):
-                iso = IsotopeRecord(_dbrecord=db.get_analysis_record(pi.record_id),
+                iso = IsotopeRecordView(
                               graph_id=pi.graph_id,
                               group_id=pi.group_id
                               )
+                dbrecord = db.get_analysis_uuid(pi.uuid),
+                iso.create(dbrecord)
                 return iso
 
             ps = [func(si) for si in self.previous_selection.analysis_ids]

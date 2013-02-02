@@ -19,12 +19,15 @@ from traits.api import  Any, Bool, Float, List
 #=============standard library imports ========================
 from threading import Thread, Lock, Event
 import time
+#from numpy import array, hsplit, array_split, asarray, transpose, hstack, rot90, swapaxes
+#from matplotlib import cm
 #=============local library imports ===========================
 from src.image.image import Image
 from cvwrapper import get_capture_device, query_frame, write_frame, \
     new_video_writer, grayspace, get_nframes, \
     set_frame_index, get_fps, set_video_pos, crop
 from globals import globalv
+
 
 class Video(Image):
     '''
@@ -119,8 +122,18 @@ class Video(Image):
                     self.source_frame = query_frame(cap, frame=self.source_frame)
                     return self.source_frame
 
-    def get_image_data(self, **kw):
+    def get_image_data(self, cmap=None, **kw):
         return self.get_frame(**kw).ndarray
+##        print arr.shape
+#        if cmap is not None:
+#            _, _, colors = transpose(arr)
+#            cmap = cm.get_cmap(cmap)
+#            arr = cmap(colors) * 255
+#            arr = asarray(arr, dtype='uint8')
+#            arr = swapaxes(arr, 0, 1)
+#
+#        return arr
+
 
 #        if not self._last_get:
 #            self._frame = self.get_frame(**kw).ndarray

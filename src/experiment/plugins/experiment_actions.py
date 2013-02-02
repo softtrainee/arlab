@@ -39,6 +39,20 @@ class ExperimentAction(Action):
         app = event.window.application
         return app.get_service(name)
 
+#===============================================================================
+# scripts
+#===============================================================================
+class OpenScriptAction(ExperimentAction):
+    def perform(self, event):
+        script_editor = self._get_service(event, 'src.pyscripts.pyscript_editor.PyScriptManager')
+        if script_editor.open_script():
+            open_manager(event.window.application, script_editor)
+
+class NewScriptAction(ExperimentAction):
+    def perform(self, event):
+        script_editor = self._get_service(event, 'src.pyscripts.pyscript_editor.PyScriptManager')
+#        if script_editor.open_script():
+        open_manager(event.window.application, script_editor)
 
 class ExecuteProcedureAction(ExperimentAction):
     def perform(self, event):

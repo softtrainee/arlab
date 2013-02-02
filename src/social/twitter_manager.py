@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import HasTraits, Instance, Str, Password
 from traitsui.api import View, Item
@@ -65,6 +63,7 @@ class Crediential(HasTraits):
                'password',
                )
         return v
+
 class TwitterManager(Manager):
     tapi = None
     credientials = Instance(Crediential, ())

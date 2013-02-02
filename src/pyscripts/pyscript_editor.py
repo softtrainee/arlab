@@ -52,14 +52,9 @@ class ScriptHandler(SaveableHandler):
 
 
 class PyScriptManager(Manager):
-    show_kind = Bool(False)
+#    show_kind = Bool(False)
     kind = Enum('ExtractionLine', 'Bakeout', 'Measurement')
-    body = String('''def main():
-    sleep(10)
-    ramp(100,10)
-    setpoint(150,4)
-    ramp(0,-75)
-''')
+    body = String
 
     save_enabled = Bool(False)
 
@@ -205,6 +200,9 @@ class PyScriptManager(Manager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _kind_changed(self):
+        self.load_commands()
+
     def _body_changed(self):
         if self._original_body:
             if self.body == self._original_body:
@@ -273,13 +271,15 @@ class PyScriptManager(Manager):
                             ),
                        )
 
-        editor = VGroup(HGroup(spring, 'kind', visible_when='show_kind'),
+        editor = VGroup(
                         Item('body', editor=PyScriptCodeEditor(),
                              show_label=False),
                         help_grp
                         )
 
-        command_grp = VGroup(self._get_commands_group('script_commands', self.kind))
+        command_grp = VGroup(
+                             Item('kind'),
+                             self._get_commands_group('script_commands', 'Commands'))
 
         v = View(VGroup(
                     HGroup(

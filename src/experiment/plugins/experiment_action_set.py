@@ -77,10 +77,19 @@ class ExperimentActionSet(WorkbenchActionSet):
                        class_name='{}:LabnumberEntryAction'.format(BASE)
                        ),
              ]
+    def _script_actions(self):
+        return [
+                Action(name='New...',
+                       path=PATH + '/Scripts',
+                       class_name='{}:NewScriptAction'.format(BASE)),
+                Action(name='Open...',
+                       path=PATH + '/Scripts',
+                       class_name='{}:OpenScriptAction'.format(BASE)),
+                ]
 
     def _actions_default(self):
         acs = self._main_actions()
-
+        acs.extend(self._script_actions())
 #        di = os.path.join(paths.scripts_dir, 'procedures')
 #        ss = []
 #        es = []

@@ -146,7 +146,7 @@ class ExperimentManager(Manager):
 
         self._update_aliquots()
 
-    def check_for_mods(self):
+    def check_for_file_mods(self):
         path = self.experiment_set.path
         if path:
             with open(path, 'r') as f:
@@ -157,7 +157,7 @@ class ExperimentManager(Manager):
         fl = FileListener(
                           path,
                           callback=self._reload_from_disk,
-                          check=self.check_for_mods
+                          check=self.check_for_file_mods
                           )
         self.filelistener = fl
 
@@ -261,7 +261,7 @@ class ExperimentManager(Manager):
                 tis.append(l)
             ts.append(''.join(tis))
             self._experiment_hash = hashlib.sha1(a).hexdigest()
-            self._text=a
+            self._text = a
             return ts
 
     def _get_all_automated_runs(self):
@@ -285,6 +285,10 @@ class ExperimentManager(Manager):
         aoffs = dict()
         for arun in ans:
             arunid = arun.labnumber
+            if arun.skip:
+                arun.aliquot = 0
+                continue
+
             if arun.extract_group:
                 if not arun.extract_group == extract_group:
                     if arunid in aoffs:
@@ -304,18 +308,18 @@ class ExperimentManager(Manager):
 
                 ln = db.get_labnumber(arunid)
                 if ln is not None:
-                    an=ln.analyses[-1]
-                    if an.aliquot!=arun.aliquot:
-                        st=0
+                    an = ln.analyses[-1]
+                    if an.aliquot != arun.aliquot:
+                        st = 0
                     else:
                         try:
                             st = an.step
-                            st = list(ALPHAS).index(st)+1
+                            st = list(ALPHAS).index(st) + 1
                         except (IndexError, ValueError):
                             st = 0
                 else:
                     st = stdict[arunid] if arunid in stdict else 0
-                    
+
                 arun._step = st + c
                 idcnt_dict[arunid] = c
                 stdict[arunid] = st
@@ -335,8 +339,12 @@ class ExperimentManager(Manager):
         idcnt_dict = dict()
         stdict = dict()
         for arun in ans:
+            if arun.skip:
+                continue
+
             arunid = arun.labnumber
             c = 1
+#            print arunid, idcnt_dict.keys()
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
                 if not arun.extract_group:
@@ -357,13 +365,11 @@ class ExperimentManager(Manager):
 #                    st = stdict[arunid]
 #                else:
 #                    st = 0
+
             arun.aliquot = st + c
 #            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
-
-#        for arun in ans:
-#            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot
 
     def _update_dirty(self):
         pass

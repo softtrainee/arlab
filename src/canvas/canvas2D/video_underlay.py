@@ -31,7 +31,6 @@ class VideoUnderlay(AbstractOverlay):
 #    swap_rb = True
 #    mirror = False
 #    flip = False
-
     def overlay(self, component, gc, *args, **kw):
         '''
 

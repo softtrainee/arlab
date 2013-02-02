@@ -40,6 +40,7 @@ class ExperimentSet(BaseSchedule):
     selected_runs = List(AutomatedRun)
     extract_schedule = Instance(ExtractSchedule, ())
     stats = Instance(ExperimentStats, ())
+    cleaned_automated_runs = Property(depends_on='automated_runs[]')
 
     sample_map = Any
     db = Any
@@ -159,7 +160,8 @@ class ExperimentSet(BaseSchedule):
         self.current_run.truncate(style)
 
     def new_runs_generator(self, last_ran=None):
-        runs = [ai for ai in self.automated_runs if ai.executable]
+#        runs = [ai for ai in self.automated_runs if ai.executable and not ai.skip]
+        runs = [ai for ai in self.cleaned_automated_runs]
 
         n = len(runs)
         rgen = (r for r in runs)
@@ -172,11 +174,19 @@ class ExperimentSet(BaseSchedule):
                 #for graphic clarity load the finished runs back in
                 cached = self._cached_runs[:startid]
 
+                cnts = {}
                 for ai in self.automated_runs:
+                    if ai.skip:
+                        continue
                     crun = next((r for r in cached if r.labnumber == ai.labnumber and ai.aliquot == 0), None)
                     if crun is not None:
                         ai.state = crun.state
-                        ai.aliquot = crun.aliquot
+                        cnt = 0
+                        if ai.labnumber in cnts:
+                            cnt = cnts[ai.labnumber] + 1
+
+                        ai.aliquot = crun.aliquot + cnt
+                        cnts[ai.labnumber] = cnt
 #                        print 'setting ', crun.aliquot
 
                 newruns = runs[startid:]
@@ -513,7 +523,10 @@ post_measurement_script, post_equilibration_script''')
         else:
             self.dirty = False
 
-#    @on_trait_change('automated_runs:dirty')
+#    @on_trait_change('automated_runs:')
+#    def _update_skip(self):
+#        self.update_aliquots_needed = True
+
 #    def _update_dirty(self, dirty):
 #        if dirty:
 #            self.dirty = dirty
@@ -652,6 +665,9 @@ post_measurement_script, post_equilibration_script''')
                 b = True
 
         return self._ok_to_add or b
+
+    def _get_cleaned_automated_runs(self):
+        return [ci for ci in self.automated_runs if ci.executable and not ci.skip]
 
 #===============================================================================
 # factories

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Either, Int, Float, Any, Str, List
-from traitsui.api import View, Item, TableEditor
+from traitsui.api import View, Item, TableEditor, Controller
 from traitsui.api import Handler
 from pyface.timer.do_later import do_after
 #============= standard library imports ========================
@@ -25,6 +25,7 @@ from pyface.timer.do_later import do_after
 from src.loggable import Loggable
 
 
+#class ViewableHandler(Controller):
 class ViewableHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
