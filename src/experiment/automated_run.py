@@ -178,6 +178,32 @@ class AutomatedRun(Loggable):
 
     _total_counts = 0
 
+    skip = Bool
+    def assemble_report(self):
+        signal_string = ''
+        signals = self.get_corrected_signals()
+        for ai in self._active_detectors:
+            det = ai.name
+            iso = ai.isotope
+            v = signals[iso]
+            signal_string += '{} {} {}\n'.format(det, iso, v)
+
+#        signal_string = '\n'.join(['{} {}'.format(k, v) for k, v in self.signals.iteritems()])
+        age = ''
+        if self.arar_age:
+            age = self.arar_age.age
+        age_string = 'age={}'.format(age)
+
+
+        return '''runid={} timestamp={} {}
+anaylsis_type={}        
+#===============================================================================
+# signals
+#===============================================================================
+{}
+{}
+'''.format(self.runid, self._rundate, self._runtime, self.analysis_type,
+           signal_string, age_string)
     def add_termination(self, attr, comp, value, start_count, frequency):
         '''
             attr must be an attribute of arar_age
@@ -1050,7 +1076,7 @@ class AutomatedRun(Loggable):
         d = get_datetime()
         self._timestamp = d
         self._runtime = d.time()
-#        self._rundate = d.date()
+        self._rundate = d.date()
         self.info('Analysis started at {}'.format(self._runtime))
 
     def _post_extraction_save(self):
@@ -1337,7 +1363,7 @@ class AutomatedRun(Loggable):
                 #add isotope result
                 db.add_isotope_result(dbiso,
                                       dbhist,
-                                      signal_=s.value, signal_err=s.error,
+                                      signal_=float(s.value), signal_err=float(s.error),
                                       )
 
             db.flush()
@@ -1839,6 +1865,7 @@ class AutomatedRun(Loggable):
 
     def simple_view(self):
         ext_grp = VGroup(HGroup(Spring(springy=False, width=33),
+
                          HGroup(Item('labnumber', style='readonly'),
                                 Item('aliquot'),
                                 Item('step')
@@ -1852,8 +1879,10 @@ class AutomatedRun(Loggable):
                          Item('duration', label='Duration'),
                          )
         pos_grp = self._get_position_group()
-        v = View(VGroup(ext_grp,
+        v = View(Item('skip'),
+                 VGroup(ext_grp,
                         pos_grp,
+                        enabled_when='not skip'
                         )
                 )
         return v

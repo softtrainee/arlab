@@ -542,7 +542,15 @@ Use 'g' to separate groups''', title='Select a DataFile'):
     def _get_analyses(self, use_db_or_path):
         if isinstance(use_db_or_path, bool):
             ps = self.selector_manager
-            ans = [Analysis(isotope_record=ri.clone_traits()) for ri in ps.selected_records if not isinstance(ri, Marker)]
+            db = self.db
+            def factory(pi):
+                rec = IsotopeRecord(_dbrecord=db.get_analysis_uuid(pi.uuid),
+                                    graph_id=pi.graph_id,
+                                    group_id=pi.group_id)
+                return Analysis(isotope_record=rec)
+
+            ans = [factory(ri) for ri in ps.selected_records
+                                if not isinstance(ri, Marker)]
         else:
             ans = self._parse_data_file(use_db_or_path)
             if isinstance(ans, str):

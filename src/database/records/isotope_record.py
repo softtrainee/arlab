@@ -69,9 +69,13 @@ class EditableGraph(HasTraits):
         return v
 
 class IsotopeRecordView(HasTraits):
+    group_id = 0
+    graph_id = 0
     def create(self, dbrecord):
         self.labnumber = str(dbrecord.labnumber.labnumber)
-        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
+        self.aliquot = dbrecord.aliquot
+        self.step = dbrecord.step
+#        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
         self.timestamp = dbrecord.analysis_timestamp
 
         irp = dbrecord.labnumber.irradiation_position

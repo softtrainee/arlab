@@ -96,10 +96,10 @@ class ProcessingActionSet(WorkbenchActionSet):
                       path=PATH,
                       class_name='{}:CalculateFluxAction'.format(BASE)
                       ),
-               Action(name='View Analysis Table',
-                      path=PATH,
-                      class_name='{}:ViewAnalysisTableAction'.format(BASE)
-                      ),
+#               Action(name='View Analysis Table',
+#                      path=PATH,
+#                      class_name='{}:ViewAnalysisTableAction'.format(BASE)
+#                      ),
 
                Action(name='Open Projects',
                       path=PATH,

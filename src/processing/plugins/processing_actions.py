@@ -25,12 +25,12 @@ from src.envisage.core.action_helper import open_manager
 #EXPERIMENT_MANAGER_PROTOCOL = 
 
 class AgeCalculator(Action):
-    accelerator='Ctrl+='
-    def perform(self,event):
+    accelerator = 'Ctrl+='
+    def perform(self, event):
         app = event.window.application
         manager = app.get_service('src.processing.age_calculator.AgeCalculator')
         open_manager(app, manager)
-        
+
 class ProcessingAction(Action):
     def _get_manager(self, event):
         app = event.window.application
@@ -72,11 +72,11 @@ class ExportPDFFigureAction(ProcessingAction):
         man = self._get_manager(event)
         man.export_figure(kind='pdf')
 
-class ViewAnalysisTableAction(ProcessingAction):
-    accelerator = 'Ctrl+t'
-    def perform(self, event):
-        man = self._get_manager(event)
-        man.open_table()
+#class ViewAnalysisTableAction(ProcessingAction):
+#    accelerator = 'Ctrl+t'
+#    def perform(self, event):
+#        man = self._get_manager(event)
+#        man.open_table()
 #===============================================================================
 # display
 #===============================================================================

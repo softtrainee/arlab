@@ -20,7 +20,7 @@ from traits.api import HasTraits, List, Str, Int, Long
 #============= local library imports  ==========================
 
 class TempAnalysis(HasTraits):
-    record_id = Long
+    uuid = Str
     group_id = Int
     graph_id = Int
 
@@ -33,7 +33,7 @@ class PreviousSelection(HasTraits):
 
         ps = []
         for ai in records:
-            ps.append(TempAnalysis(record_id=ai._dbrecord.id,
+            ps.append(TempAnalysis(uuid=ai.uuid,
                                    group_id=ai.group_id,
                                    graph_id=ai.graph_id
                                    ))

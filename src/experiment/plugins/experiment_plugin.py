@@ -23,6 +23,7 @@ from src.envisage.core.core_plugin import CorePlugin
 from src.helpers.parsers.initialization_parser import InitializationParser
 from src.experiment.experiment_executor import ExperimentExecutor
 from src.experiment.experiment_editor import ExperimentEditor
+from src.pyscripts.pyscript_editor import PyScriptManager
 
 
 class ExperimentPlugin(CorePlugin):
@@ -49,6 +50,12 @@ class ExperimentPlugin(CorePlugin):
                           factory=self._factory2
                           )
 
+        so3 = self.service_offer_factory(
+                          protocol=PyScriptManager,
+#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
+                          factory=PyScriptManager
+                          )
+
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
 #                           factory='src.experiments.process_view.ProcessView'
 #                           )
@@ -56,7 +63,7 @@ class ExperimentPlugin(CorePlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so2]
-        return [so, so1, so2]
+        return [so, so1, so2, so3]
 
     def _factory(self, *args, **kw):
         '''

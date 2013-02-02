@@ -70,6 +70,7 @@ class _TabularEditor(wxTabularEditor):
                     dataObj.SetText('\n'.join([si.to_string() for si in sel]))
                     wx.TheClipboard.SetData(dataObj)
                     wx.TheClipboard.Close()
+
 #        print event.GetModifiers()
 
 #        super(_TabularEditor, self)._key_down(event)

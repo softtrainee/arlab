@@ -41,13 +41,13 @@ class ExperimentStats(Loggable):
 
     def calculate_duration(self, runs=None):
         if runs is None:
-            runs = self.experiment_set.automated_runs
+            runs = self.experiment_set.cleaned_automated_runs
         dur = self._calculate_duration(runs)
         self._total_time = dur
         return dur
 
     def calculate_etf(self):
-        runs = self.experiment_set.automated_runs
+        runs = self.experiment_set.cleaned_automated_runs
         dur = self._calculate_duration(runs)
         self._total_time = dur
         self.etf = self.format_duration(dur)
@@ -120,7 +120,7 @@ class StatsGroup(ExperimentStats):
 
         runs = [ai
                 for ei in self.experiment_sets
-                    for ai in ei.automated_runs]
+                    for ai in ei.cleaned_automated_runs]
         ni = len(runs)
         self.nruns = ni
         tt = sum([ei.stats.calculate_duration()
@@ -138,9 +138,9 @@ class StatsGroup(ExperimentStats):
         '''
         tt = 0
         for ei in self.experiment_sets:
-            if sel in ei.automated_runs:
-                si = ei.automated_runs.index(sel)
-                tt += ei.stats.calculate_duration(ei.automated_runs[:si + 1])
+            if sel in ei.cleaned_automated_runs:
+                si = ei.cleaned_automated_runs.index(sel)
+                tt += ei.stats.calculate_duration(ei.cleaned_automated_runs[:si + 1])
                 break
             else:
                 tt += ei.stats.calculate_duration()

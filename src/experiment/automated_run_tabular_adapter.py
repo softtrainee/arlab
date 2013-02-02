@@ -37,7 +37,7 @@ def get_name(func):
 class AutomatedRunAdapter(TabularAdapter):
     state_width = Int(20)
     aliquot_width = Int(50)
-    
+
     sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
@@ -85,8 +85,14 @@ class AutomatedRunAdapter(TabularAdapter):
 
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]
+        color = 'white'
         if not item.executable:
-            return 'red'
+            color = 'red'
+        elif item.skip:
+            color = '#33CCFF' #light blue
+        elif item.state == 'success':
+            color = '#66FF33' #light green
+        return color
 
     def _columns_default(self):
         return self._columns_factory()

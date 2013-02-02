@@ -101,6 +101,8 @@ class ExperimentExecutor(ExperimentManager):
     measuring = DelegatesTo('experiment_set')
     stats = Instance(StatsGroup, ())
 
+    new_run_gen_needed = False
+
     def isAlive(self):
         return self._alive
 
@@ -211,8 +213,9 @@ class ExperimentExecutor(ExperimentManager):
             #check for blank before starting the thread
             exp = self.experiment_sets[0]
             if self._has_preceeding_blank_or_background(exp):
-                #start the extraction line manager's valve state monitor
-                self.extraction_line_manager.start_status_monitor()
+                if self.extraction_line_manager:
+                    #start the extraction line manager's valve state monitor
+                    self.extraction_line_manager.start_status_monitor()
 
                 t = Thread(target=self._execute_experiment_sets)
                 t.start()
@@ -306,6 +309,9 @@ class ExperimentExecutor(ExperimentManager):
             time.sleep(0.5)
             self.delay_between_runs_readback -= 0.5
         self.delaying_between_runs = False
+#    def check_for_mods(self):
+#        if self.experiment_set.new_run_gen_needed:
+#            return True
 
     def _execute_automated_runs(self, iexp, exp):
 
@@ -330,17 +336,12 @@ class ExperimentExecutor(ExperimentManager):
 #                self.editing_signal.wait()
 
             #check for mods
-            if self.check_for_mods():
+            if self.check_for_file_mods():
+                self._reload_from_disk()
                 cnt = 0
                 self.info('the experiment set was modified')
-                #load the exp and get an new rgen
-#                tt = self._extract_experiment_text(exp.path, iexp)
-#                exp.load_automated_runs(text=tt)
-#                ts = self._parse_experiment_file(exp.path)
-#                for ti, ei in zip(self.experiment_sets, ts):
-#                    ei.load_automated_runs(text=ti)
-                self._reload_from_disk()
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
+                force_delay = True
 
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
@@ -349,28 +350,31 @@ class ExperimentExecutor(ExperimentManager):
                 delay = exp.delay_between_analyses
                 self._delay(delay)
 
-
             try:
-                t, run = self._launch_run(rgen, cnt)
-            except StopIteration, e:
-                print 'stop', e
+                runargs = self._launch_run(rgen, cnt)
+            except StopIteration:
                 break
 
-            self._last_ran = run
-
-            if run.overlap:
-                self.info('overlaping')
-                run.wait_for_overlap()
-            else:
-                t.join()
-
-            if self.isAlive() and run.analysis_type.startswith('blank'):
-                pb = run.get_corrected_signals()
-                if pb is not None:
-                    self._prev_blanks = pb
-
             cnt += 1
-            totalcnt += 1
+            if runargs:
+                t, run = runargs
+                self._last_ran = run
+
+                if run.overlap:
+                    self.info('overlaping')
+                    run.wait_for_overlap()
+                else:
+                    t.join()
+
+                if self.isAlive():
+                    totalcnt += 1
+                    if run.analysis_type.startswith('blank'):
+                        pb = run.get_corrected_signals()
+                        if pb is not None:
+                            self._prev_blanks = pb
+
+                self._report_execution_state(run)
+
             if self.end_at_run_completion:
                 break
 
@@ -380,13 +384,32 @@ class ExperimentExecutor(ExperimentManager):
                 experiment set will restart at last successful run
             '''
             self._last_ran = None
-            run.state = 'fail'
+            if run:
+                run.state = 'fail'
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
 
         self._end_runs()
-        self.info('Set{}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
+        if run:
+            self.info('Set{}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
+
         return totalcnt
+
+    def _report_execution_state(self, run):
+        if self.err_message:
+            msg = self.err_message
+        else:
+            msg = 'Success'
+
+        man = self.application.get_service('src.social.twitter_manager.TwitterManager')
+        if man is not None:
+            man.post('{} {}'.format(msg, run.runid))
+
+        man = self.application.get_service('src.social.email_manager.EmailManager')
+        if man is not None:
+            msg = '{}\n{}'.format(msg, run.assemble_report())
+            print msg
+#            man.broadcast(msg)
 
     def _launch_run(self, runsgen, cnt):
 #        repo = self.repository
@@ -394,6 +417,9 @@ class ExperimentExecutor(ExperimentManager):
         runner = self.pyscript_runner
 
         run = runsgen.next()
+        if run.skip:
+            return
+
         self._setup_automated_run(cnt, run, dm, runner)
 #        self._setup_automated_run(cnt, run, repo, dm, runner)
 
@@ -568,6 +594,9 @@ class ExperimentExecutor(ExperimentManager):
             info = ae.edit_traits(kind='livemodal')
             if info.result:
                 ae.commit_changes(selected)
+                self._update_aliquots()
+                self.stats.calculate()
+                self.new_run_gen_needed = True
 #===============================================================================
 # handlers
 #===============================================================================

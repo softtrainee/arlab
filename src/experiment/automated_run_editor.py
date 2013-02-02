@@ -33,9 +33,13 @@ class AutomatedRunEditor(ScriptEditable):
             for si in SCRIPT_KEYS:
                 self._update_run_script(ri, si)
 
+            ri.skip = self.run.skip
+
+
     def _run_changed(self):
         run = self.run
         self.mass_spectrometer = run.mass_spectrometer
+
         for si in SCRIPT_KEYS:
             sname = '{}_script'.format(si)
             sc = getattr(run, sname)

@@ -361,11 +361,11 @@ class PyScript(Loggable):
         self.info('doing EXIT')
         self.cancel()
 
-    @verbose_skip
-    @command_register
-    def wait(self, evt):
-        if evt is not None:
-            evt.wait()
+#    @verbose_skip
+#    @command_register
+#    def wait(self, evt):
+#        if evt is not None:
+#            evt.wait()
 
     @command_register
     def complete_interval(self):
