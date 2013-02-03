@@ -76,7 +76,7 @@ class PlotPanel(Viewable):
             for iso, reg in zip(self.isotopes, new):
                 try:
                     vv = reg.predict(0)
-                    ee = abs(reg.predict_error(0))
+                    ee = reg.predict_error(0)
                     if self.isbaseline:
                         self.baselines[iso] = u = ufloat((vv, ee))
                         if arar_age:
@@ -192,9 +192,15 @@ class PlotPanel(Viewable):
                     bl = self.baselines[l]
                 except KeyError:
                     pass
-                rr = (ru - bu) / (rl - bl)
+                try:
+                    rr = (ru - bu) / (rl - bl)
+                except ZeroDivisionError:
+                    rr=ufloat((0,0))
             else:
-                rr = ru / rl
+                try:
+                    rr = ru / rl
+                except ZeroDivisionError:
+                    rr=ufloat((0,0))
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \

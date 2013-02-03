@@ -102,6 +102,9 @@ class AnalysisSummary(Summary):
         m = 'Baseline Corrected Signals          Fully Corrected Signals'
         self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
         widths = [5, 12, 10, 5, 12, 10]
+
+        #refresh arar_result
+        self.record.calculate_age()
         for i, iso in enumerate(isos):
             self._make_corrected_signals(n, i, iso, widths, underline_width)
 
@@ -182,7 +185,8 @@ class AnalysisSummary(Summary):
         s1 = intercept - base
         sv1 = self.floatfmt(s1.nominal_value)
         bse1 = self.make_error(s1.nominal_value, s1.std_dev())
-
+        
+        
         arar = self.record.arar_result
         s2 = None
         if arar:
@@ -190,7 +194,7 @@ class AnalysisSummary(Summary):
             if iso in arar:
                 s2 = arar[iso]
 
-        if not s2 is None:
+        if s2 is not None:
             sv2 = self.floatfmt(s2.nominal_value)
             bse2 = self.make_error(s2.nominal_value, s2.std_dev())
         else:

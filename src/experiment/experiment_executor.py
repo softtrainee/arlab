@@ -369,7 +369,7 @@ class ExperimentExecutor(ExperimentManager):
                 if self.isAlive():
                     totalcnt += 1
                     if run.analysis_type.startswith('blank'):
-                        pb = run.get_corrected_signals()
+                        pb = run.get_baseline_corrected_signals()
                         if pb is not None:
                             self._prev_blanks = pb
 
@@ -481,7 +481,7 @@ class ExperimentExecutor(ExperimentManager):
         types = ['air', 'unknown', 'cocktail']
         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
         #get first air, unknown or cocktail
-        aruns = self.experiment_set.automated_runs
+        aruns = self.experiment_set.cleaned_automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types), None)
 
