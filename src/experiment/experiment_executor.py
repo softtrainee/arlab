@@ -407,9 +407,10 @@ class ExperimentExecutor(ExperimentManager):
 
         man = self.application.get_service('src.social.email_manager.EmailManager')
         if man is not None:
-            msg = '{}\n{}'.format(msg, run.assemble_report())
-            print msg
-#            man.broadcast(msg)
+            if msg=='Success':
+                msg = '{}\n{}'.format(msg, run.assemble_report())
+                print msg
+#                            man.broadcast(msg)
 
     def _launch_run(self, runsgen, cnt):
 #        repo = self.repository
