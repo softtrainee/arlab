@@ -287,11 +287,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #            s = (s,)
 
 #        for si in s:
-#        if isinstance(si, str):
-#            di = self.db.get_analysis_uuid(si)
-#            si = self._record_factory(di, False)
-#        else:
-#            si.selector = self
+        if isinstance(si, str):
+            si = self._record_factory(si)
+        else:
+            si.selector = self
 
         if not si.initialize():
             return
