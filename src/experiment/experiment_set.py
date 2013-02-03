@@ -667,7 +667,7 @@ post_measurement_script, post_equilibration_script''')
         return self._ok_to_add or b
 
     def _get_cleaned_automated_runs(self):
-        return [ci for ci in self.automated_runs if ci.executable and not ci.skip]
+        return [ci for ci in self.automated_runs if not ci.skip]
 
 #===============================================================================
 # factories
