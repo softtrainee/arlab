@@ -122,7 +122,11 @@ class IsotopeAnalysisSelector(DatabaseSelector):
               }
 
     def _record_factory(self, idn):
-        dbr = self.db.get_analysis_uuid(idn.uuid)
+        if isinstance(idn, str):
+            uuid=idn
+        else:
+            uuid=idn.uuid
+        dbr = self.db.get_analysis_uuid(uuid)
         d = self.record_klass(_dbrecord=dbr)
         return d
 
