@@ -244,6 +244,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        obj.on_trait_change(self._changed, '_changed', remove=True)
 
     def open_record(self, records):
+        if not isinstance(records, (list, tuple)):
+            records=[records]
+            
         self._open_selected(records)
 
     def _open_selected(self, records=None):

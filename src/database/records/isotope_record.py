@@ -71,6 +71,9 @@ class EditableGraph(HasTraits):
 class IsotopeRecordView(HasTraits):
     group_id = 0
     graph_id = 0
+    mass_spectrometer=''
+    analysis_type=''
+    
     def create(self, dbrecord):
         self.labnumber = str(dbrecord.labnumber.labnumber)
         self.aliquot = dbrecord.aliquot
@@ -88,8 +91,9 @@ class IsotopeRecordView(HasTraits):
 #        self.mass_spectrometer = ''
 #        self.analysis_type = ''
         meas = dbrecord.measurement
-        self.mass_spectrometer = meas.mass_spectrometer.name.lower()
-        self.analysis_type = meas.analysis_type.name
+        if meas is not None:
+            self.mass_spectrometer = meas.mass_spectrometer.name.lower()
+            self.analysis_type = meas.analysis_type.name
 
         self.uuid = dbrecord.uuid
 

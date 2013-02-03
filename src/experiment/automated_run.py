@@ -53,6 +53,7 @@ from uncertainties import ufloat
 from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from pyface.timer.do_later import do_later
+from pyface.timer.api import do_after
 from src.processing.arar_age import ArArAge
 
 class AutomatedRun(Loggable):
@@ -177,11 +178,12 @@ class AutomatedRun(Loggable):
     action_conditions = List
 
     _total_counts = 0
-
+    _processed_signals_dict=None
+    
     skip = Bool
     def assemble_report(self):
         signal_string = ''
-        signals = self.get_corrected_signals()
+        signals = self.get_baseline_corrected_signals()
         for ai in self._active_detectors:
             det = ai.name
             iso = ai.isotope
@@ -241,14 +243,23 @@ anaylsis_type={}
     def clear_actions(self):
         self.action_conditions = []
 
-    def get_corrected_signals(self):
-        d = dict()
-        pp = self.plot_panel
-        if pp:
-            for ki, si in pp.signals.iteritems():
-                bi = pp.baselines[ki]
-                d[ki] = si - bi
+    def get_baseline_corrected_signals(self):
+        if self._processed_signals_dict is not None:
+            d = dict()
+            signals=self._processed_signals_dict
+            for iso, _, kind in self._save_isotopes:
+                if kind=='signal':
+                    si=signals['{}signal'.format(iso)]
+                    bi=signals['{}baseline'.format(iso)]
+                    d[iso] = si - bi
             return d
+            
+#        pp = self.plot_panel
+##        if pp:
+#            for ki, si in pp.signals.iteritems():
+#                bi = pp.baselines[ki]
+#                d[ki] = si - bi
+#            return d
 
     def to_string_attrs(self, attr):
         def get_attr(attrname):
@@ -531,6 +542,7 @@ anaylsis_type={}
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
                                 check_conditions)
+            
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
         else:
             isotopes = [di.isotope for di in self._active_detectors]
@@ -984,7 +996,7 @@ anaylsis_type={}
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
-
+        
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1062,7 +1074,7 @@ anaylsis_type={}
 #                graph.suppress_regression = False
 #            graph._update_graph()
             data_write_hook(x, keys, signals)
-            do_later(graph._update_graph)
+            do_after(100,graph._update_graph)
 
         return True
 
@@ -1170,7 +1182,7 @@ anaylsis_type={}
             #do preliminary processing of data
             #returns signals dict and peak_center table
             ss, pc = self._preliminary_processing(cp)
-
+            self._processed_signals_dict=ss
             #add selected history
             _sh = db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
@@ -1205,6 +1217,9 @@ anaylsis_type={}
         for fit, (iso, detname) in zip(self.fits, signals):
             tab = dm.get_table(detname, '/signal/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
+#            if iso=='Ar40':
+#                print 'prelim signal,',len(x), x[0], x[-1]
+                
             s = Signal(xs=x, ys=y, fit=fit)
             rsignals['{}signal'.format(iso)] = s
 

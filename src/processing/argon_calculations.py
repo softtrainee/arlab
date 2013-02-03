@@ -251,7 +251,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         age_wo_jerr = deepcopy(age)
 
     except (ZeroDivisionError, ValueError), e:
-        print e
         age = ufloat((0, 0))
         age_wo_jerr = ufloat((0, 0))
 
