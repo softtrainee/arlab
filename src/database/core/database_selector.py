@@ -245,8 +245,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def open_record(self, records):
         if not isinstance(records, (list, tuple)):
-            records=[records]
-            
+            records = [records]
+
         self._open_selected(records)
 
     def _open_selected(self, records=None):
@@ -364,12 +364,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _load_hook(self):
         pass
 
-
 #===============================================================================
 # handlers
 #===============================================================================
     def _dclicked_changed(self):
-        self._open_selected()
+        if self.dclicked:
+            self._open_selected()
 
     def _open_button_fired(self):
         self._open_selected()

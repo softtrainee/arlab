@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+from traits.api import Callable
 #============= enthought library imports =======================
 from traitsui.wx.enum_editor import SimpleEditor
 from traitsui.editors.enum_editor \
@@ -56,13 +56,12 @@ class _BoundEnumEditor(SimpleEditor):
     def update_object(self, event):
         super(_BoundEnumEditor, self).update_object(event)
         if self._bind:
-            for fi in self.object.analyzer.fits:
-                fi.fit = self.value
+            if self.factory.do_binding is not None:
+                self.factory.do_binding(self.value)
 
         self._bind = False
 
     def onKeyDown(self, event):
-#        print event.GetKeyCode()
         if event.CmdDown():
             self._bind = True
 #        else:
@@ -72,6 +71,7 @@ class _BoundEnumEditor(SimpleEditor):
 
 class BoundEnumEditor(ToolkitEditorFactory):
     evaluate = lambda x: x
+    do_binding = Callable
     def _get_custom_editor_class(self):
         return _BoundEnumEditor
 

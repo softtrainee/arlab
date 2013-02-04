@@ -109,6 +109,10 @@ class ProcessingActionSet(WorkbenchActionSet):
                 Action(name='Age Calculator',
                        path=PATH,
                        class_name='{}:AgeCalculator'.format(BASE)
+                       ),
+                Action(name='Fit Isotopes',
+                       path=PATH,
+                       class_name='{}:FitIsotopesAction'.format(BASE)
                        )
 
 

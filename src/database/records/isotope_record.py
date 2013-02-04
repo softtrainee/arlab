@@ -71,9 +71,9 @@ class EditableGraph(HasTraits):
 class IsotopeRecordView(HasTraits):
     group_id = 0
     graph_id = 0
-    mass_spectrometer=''
-    analysis_type=''
-    
+    mass_spectrometer = ''
+    analysis_type = ''
+
     def create(self, dbrecord):
         self.labnumber = str(dbrecord.labnumber.labnumber)
         self.aliquot = dbrecord.aliquot
@@ -96,6 +96,7 @@ class IsotopeRecordView(HasTraits):
             self.analysis_type = meas.analysis_type.name
 
         self.uuid = dbrecord.uuid
+        self.record_id = '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
     def to_string(self):
         return '{} {} {} {}'.format(self.labnumber, self.aliquot, self.timestamp, self.uuid)
@@ -222,11 +223,29 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         db.commit()
 
+
+
     def set_status(self, status):
         self.dbrecord.status = status
 
 #    def _age_dirty_changed(self):
 #        print 'asfdasfd'
+    def fit_isotope(self, name, fit, kind):
+        if kind == 'baseline':
+            name = '{}bs'.format(name)
+
+
+        si = self.signals[name]
+        if len(si.xs) < 1:
+            data = self._get_peak_time_data(kind, names=[name])
+            _det, _iso, _fit, (x, y) = data[name]
+            si.xs = x
+            si.ys = y
+
+        si.fit = fit
+
+        return float(si.value), float(si.error)
+
 #===============================================================================
 # viewable
 #===============================================================================
@@ -428,7 +447,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 name = iso.molecular_weight.name
                 self._signals['{}{}'.format(name, key)] = s
 
-    def _get_peak_time_data(self, group):
+    def _get_peak_time_data(self, group, names=None):
         #load from file
 #        dm = self.selector.data_manager
 #        if not dm.open_data(self.path):
@@ -443,6 +462,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         data = dict()
         for iso in self._dbrecord.isotopes:
             if iso.kind != group:
+                continue
+
+            if names and not iso.molecular_weight.name in names:
                 continue
 
             s = iso.signals[-1]

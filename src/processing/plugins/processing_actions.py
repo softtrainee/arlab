@@ -36,6 +36,12 @@ class ProcessingAction(Action):
         app = event.window.application
         manager = app.get_service('src.processing.processing_manager.ProcessingManager')
         return manager
+
+class FitIsotopesAction(ProcessingAction):
+    def perform(self, event):
+        man = self._get_manager(event)
+        man.fit_isotopes()
+
 #===============================================================================
 # find 
 #===============================================================================
