@@ -123,7 +123,9 @@ class Video(Image):
                     return self.source_frame
 
     def get_image_data(self, cmap=None, **kw):
-        return self.get_frame(**kw).ndarray
+        frame=self.get_frame(**kw)
+        if frame is not None:
+            return frame.ndarray 
 ##        print arr.shape
 #        if cmap is not None:
 #            _, _, colors = transpose(arr)

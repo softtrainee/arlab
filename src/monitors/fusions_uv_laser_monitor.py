@@ -36,9 +36,14 @@ class MonitorSeries(HasTraits):
 class FusionsUVLaserMonitor(LaserMonitor):
     '''
     '''
-    max_temp = Float(800)
-    max_tempmin = Int(0)
-    max_tempmax = Int(800)
+    def _fcheck_parameters(self):
+        man=self.manager
+        man.update_parameters()
+        
+#        man.get_laser_status()
+#    max_temp = Float(800)
+#    max_tempmin = Int(0)
+#    max_tempmax = Int(800)
 #    update_max_temp = Property(depends_on = '_update_max_temp')
 #    _update_max_temp = Float(0)
 

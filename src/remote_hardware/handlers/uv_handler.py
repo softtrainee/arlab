@@ -14,33 +14,22 @@
 # limitations under the License.
 #===============================================================================
 
+
+
 #============= enthought library imports =======================
-from traits.api import Instance
-from chaco.api import AbstractOverlay
+#from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
+#from traitsui.api import View, Item, Group, HGroup, VGroup
+
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.image.video import Video
-
-class VideoUnderlay(AbstractOverlay):
-    '''
-    '''
-    video = Instance(Video)
-#    use_backbuffer = True
-    use_backbuffer = False
-#    swap_rb = True
-#    mirror = False
-#    flip = False
-    def overlay(self, component, gc, *args, **kw):
-        '''
-
-        '''
-        with gc:
-            gc.clip_to_rect(component.x, component.y,
-                        component.width, component.height)
-            img=self.video.get_image_data()
-            if img is not None:
-                gc.draw_image()
+from laser_handler import LaserHandler
 
 
+class UvHandler(LaserHandler):
+    manager_name = 'fusions_uv'
+
+
+
+#============= views ===================================
 #============= EOF ====================================

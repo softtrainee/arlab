@@ -273,6 +273,7 @@ class CommandProcessor(ConfigLoadable):
                                     'Diode',
                                     'Synrad',
                                     'CO2',
+                                    'UV',
                                     'Hardware',
                                     'test']:
                 self.warning('Invalid request type ' + request_type)

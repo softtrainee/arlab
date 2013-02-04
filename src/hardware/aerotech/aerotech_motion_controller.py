@@ -55,7 +55,11 @@ class AerotechMotionController(MotionController):
         '''
         self.axes_factory()
         return True
-
+    
+    def xy_swapped(self):
+        if self.axes.has_key('y'):
+            return self.axes.keys().index('y') == 0
+        
     def linear_move(self, x, y, sign_correct=True, block=False, **kw):
         errx = self._validate(x, 'x', cur=self._x_position)
         erry = self._validate(y, 'y', cur=self._y_position)
@@ -83,7 +87,7 @@ class AerotechMotionController(MotionController):
         if abs(nx)>1:
             yv=yv*0.5
             
-        if self.axes.keys().index('y') == 0:
+        if self.xy_swapped():
             cmd = 'ILI X{} Y{} XF{} YF{}'.format(ny, nx, xv, yv)
         else:
             cmd = 'ILI X{} Y{} XF{} YF{}'.format(nx, ny, xv, yv)
@@ -148,7 +152,8 @@ class AerotechMotionController(MotionController):
     def _get_axis_name(self, axis):
 #        print self.axes.keys(),self.axes.keys().index('y')
         if axis in ('x', 'y'):
-            if self.axes.keys().index('y') == 0:
+            if self.xy_swapped():
+#            if self.axes.keys().index('y') == 0:
                 if axis == 'y':
                     axis = 'x'
                 else:
