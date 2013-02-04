@@ -39,17 +39,17 @@ class Signal(HasTraits):
     xs = Array
     ys = Array
 #    es = Array
-    fit = None
+    fit = Str
     filter_outliers = False
     filter_outlier_iterations = Int(1)
     filter_outlier_std_devs = Int(2)
 #    dirty = Event
     uvalue = Property(depends='value, error, _value, _error')
-    value = Property(depends_on='_value')
-    error = Property(depends_on='_error')
+    value = Property(depends_on='_value,fit')
+    error = Property(depends_on='_error,fit')
     _value = Float
     _error = Float
-    regressor = Property(depends_on='xs,ys')
+    regressor = Property(depends_on='xs,ys,fit')
 
     def set_blob(self, blob):
         xs, ys = zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])

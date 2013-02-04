@@ -53,6 +53,7 @@ from src.paths import paths
 import csv
 from src.helpers.filetools import str_to_bool
 from src.processing.manual_entry_manager import ManualEntryManager
+from src.processing.fit_manager import FitManager
 
 
 class ProcessingManager(DatabaseManager, BaseAnalysisManager):
@@ -81,7 +82,72 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             self.open_view(pv)
             pv.on_trait_change(self._open_sample_ideogram, 'update_selected_sample')
 
+    def fit_isotopes(self):
+        db = self.db
+        if db.connect():
+            fm = FitManager()
+            fm.load_fits()
+            info = fm.edit_traits(kind='livemodal')
+            if info.result:
+                if self._gather_data('database'):
+                    ans = self._get_analyses()
+                    for ai in ans:
+                        phist = ai.dbrecord.selected_histories.selected_fits
+                        hist = self._add_fit_history(ai.dbrecord)
 
+                        nfits = fm.get_fits()
+                        for fi in nfits:
+                            name = fi.name
+                            kind = 'signal'
+                            if 'baseline' in name:
+                                name = name.split(' ')[0]
+                                kind = 'baseline'
+
+                            dbiso = self._add_fit(ai, hist, name, fi.fit, kind)
+                            self.info('setting analysis {} {} isotope result'.format(ai.record_id, name))
+
+                            #compute new intercept value
+                            v, e = ai.fit_isotope(name, fi.fit, kind)
+                            dbresult = db.add_isotope_result(dbiso, hist, signal_=v, signal_err=e)
+
+                        #copy from previous
+                        nfitnames = [fi.name for fi in nfits]
+                        def exists(na, ki):
+                            if ki == 'baseline':
+                                na = '{} baseline'.format(na)
+                            return na in nfitnames
+
+                        for pfit in phist.fits:
+                            name = pfit.isotope.molecular_weight.name
+                            kind = pfit.isotope.kind
+
+                            if not exists(name, kind):
+                                self.info('copying {} {} from previous'.format(name, kind))
+                                dbiso = self._add_fit(ai, hist, name, pfit.fit, kind)
+
+                                self.info('setting analysis {} {}  {} isotope result'.format(ai.record_id, name, kind))
+                                dbresult = next((ri for ri in phist.results
+                                                      if ri.isotope.molecular_weight.name == name and \
+                                                            ri.isotope.kind == kind), None)
+                                if dbresult is not None:
+                                    db.add_isotope_result(dbiso, hist, signal_=dbresult.signal_,
+                                                          signal_err=dbresult.signal_err)
+                if fm.save_changes:
+                    self.db.commit()
+
+    def _add_fit(self, record, history, name, fit, kind):
+        self.info('setting analysis {} {} {}'.format(record.record_id, name, fit))
+        db = self.db
+        dbiso = next((iso for iso in record.dbrecord.isotopes
+                              if iso.molecular_weight.name == name and iso.kind == kind), None)
+
+        db.add_fit(history, dbiso, fit=fit)
+        return dbiso
+
+    def _add_fit_history(self, dbrecord):
+        db = self.db
+        history = db.add_fit_history(dbrecord, user=db.save_username)
+        return history
 #===============================================================================
 # flux
 #===============================================================================
@@ -104,6 +170,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     def open_search(self):
         if self.db.connect():
             ps = self.search_manager
+            ps.selected = None
     #        ps.selector.load_recent()
             ps.selector.load_last(n=20)
             self.open_view(ps)
@@ -539,7 +606,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
 #            self._set_window_xy(g)
 #            self.open_view(g)
 
-    def _get_analyses(self, use_db_or_path):
+    def _get_analyses(self, use_db_or_path=True):
         if isinstance(use_db_or_path, bool):
             ps = self.selector_manager
             db = self.db

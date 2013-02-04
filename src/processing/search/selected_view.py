@@ -120,7 +120,7 @@ class SelectedView(ColumnSorterMixin):
         def make_name(rec):
             s = rec[0]
             e = rec[-1]
-            return '{} - {}'.format(s.uuid, e.uuid)
+            return '{} - {}'.format(s.record_id, e.record_id)
 
         def make_hash(rec):
             md5 = hashlib.md5()
@@ -237,7 +237,7 @@ class SelectedView(ColumnSorterMixin):
                               graph_id=pi.graph_id,
                               group_id=pi.group_id
                               )
-                dbrecord = db.get_analysis_uuid(pi.uuid),
+                dbrecord = db.get_analysis_uuid(pi.uuid)
                 iso.create(dbrecord)
                 return iso
 
