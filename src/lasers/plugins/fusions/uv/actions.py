@@ -39,7 +39,7 @@ class MosaicCollectAction(UVMixin, BaseLaserAction):
 # uv actions
 #===============================================================================
 class OpenGasHandlingAction(UVMixin, BaseLaserAction):
-    accelerator = 'Cntrl+1'
+    accelerator = 'Ctrl+1'
     def perform(self, event):
         man = self._get_manager(event)
 

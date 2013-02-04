@@ -164,7 +164,14 @@ class StageManager(Manager):
             sm = StageMap(file_path=path)
             sm.load_correction_file()
             self._stage_maps.append(sm)
-
+        
+        #load user points as stage map
+        for di in os.listdir(paths.user_points_dir):
+            if di.endswith('.txt'):
+                path=os.path.join(paths.user_points_dir,di)
+                sm = StageMap(file_path=path)
+                self._stage_maps.append(sm)
+                
         #load the saved stage map
         sp = self._get_stage_map_by_name(self._load_previous_stage_map())
         if sp is not None:
@@ -301,7 +308,8 @@ class StageManager(Manager):
     def get_uncalibrated_xy(self):
 
         pos = (self.stage_controller._x_position, self.stage_controller._y_position)
-        if self.stage_controller.axes['x'].id == 2:
+        if self.stage_controller.xy_swapped():
+#        if self.stage_controller.axes['x'].id == 2:
             pos = pos[1], pos[0]
 
         canvas = self.canvas
@@ -742,10 +750,7 @@ class StageManager(Manager):
             self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
 
     def _load_points_fired(self):
-        p = self.open_file_dialog(default_directory=os.path.join(paths.setup_dir,
-                                                                 'tray_maps',
-                                                                 'user_points')
-                                  )
+        p = self.open_file_dialog(default_directory=paths.user_points_dir)
         if p:
             self.canvas.load_points_file(p)
 
@@ -753,7 +758,22 @@ class StageManager(Manager):
         p = self.save_file_dialog(default_directory=paths.user_points_dir)
 
         if p:
-            self.canvas.save_points(p)
+            if not p.endswith('.txt'):
+                p='{}.txt'.format(p)
+                
+            with open(p, 'w') as f:
+                f.write('{},{}\n'.format(0.1,'circle'))
+                f.write('\n') #valid holes
+                f.write('\n') #calibration holes
+                pts=self.canvas.get_points()
+                for _vid,x,y in pts:
+                    f.write('{}\n'.format(x,y))
+                    
+            sm=StageMap(file_path=p)
+            self._stage_maps.append(sm)
+                
+
+#            self.canvas.save_points(p)
 
 #===============================================================================
 # factories

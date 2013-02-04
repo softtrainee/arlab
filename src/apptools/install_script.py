@@ -194,7 +194,7 @@ class RemoteHardwareServerTemplate(InstallTemplate):
     name = 'remote_hardware_server'
     prefix = 'remote_hardware_server'
     def _install(self, ins, src_dir):
-        ins.include_pkgs = ['remote_hardware', 'messaging'] + self.default_pkgs
+        ins.include_pkgs = ['remote_hardware', 'messaging','envisage'] + self.default_pkgs
         ins.include_mods = [
                           'managers/remote_hardware_server_manager',
                           ] + self.default_mods

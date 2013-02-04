@@ -37,7 +37,7 @@ class ATLLaserControlUnit(CoreDevice):
     '''
     energy_readback = Float
     pressure_readback=Float
-    _timer = None
+#    _timer = None
 #    _enabled = Bool(False)
 #    triggered = Bool(False)
 #
@@ -79,30 +79,16 @@ class ATLLaserControlUnit(CoreDevice):
 #    nburst = Int(enter_set=True, auto_set=False)
 #    cburst = Int
 
-    def start_update_timer(self):
-        '''
-        '''
-        self.stop_update_timer()
-        self._timer = Timer(1000, self._update_parameters)
-
-    def stop_update_timer(self):
-        if self._timer:
-            self._timer.Stop()
-
-    def set_energy(self, v):
-        '''
-        '''
-        pass
-
-    def set_reprate(self, v):
-        '''
-        '''
-        pass
-
-    def set_hv(self, v):
-        '''
-        '''
-        pass
+#    def start_update_timer(self):
+#        '''
+#        '''
+#        self.stop_update_timer()
+#        self._timer = Timer(1000, self._update_parameters)
+#        self._timer.Start()
+#        
+#    def stop_update_timer(self):
+#        if self._timer:
+#            self._timer.Stop()
 
 #    def trigger_laser(self):
 #        '''
@@ -141,34 +127,52 @@ class ATLLaserControlUnit(CoreDevice):
     def laser_run(self):
         '''
         '''
-        self.start_update_timer()
+        #self.start_update_timer()
 
         cmd = self._build_command(11, 3)
         self._send_command(cmd)
 
     def laser_stop(self):
-        self.stop_update_timer()
+#        self.stop_update_timer()
 
         cmd = self._build_command(11, 1)
         self._send_command(cmd)
-
-
+        
+    def get_laser_status(self):
+        r=self._send_query(11, 1)
+        return r  
 #===============================================================================
 # gas handling
 #===============================================================================
     def do_auto_vac(self):
 #        self.start_auto_vac()
         #wait until idle
+        self.wait_for_idle()
+#        self.wait_for_gwr()
+        
+    def do_auto_gas_exchange(self):
+#        self.start_auto_gas_exchange()
+        self.wait_for_idle()
+#        self.wait_for_gwr()
+        
+    def wait_for_idle(self):
         while 1:
-            time.sleep(0.5)
+            time.sleep(0.75)
             if self.is_idle():
                 break
             
+    def wait_for_gwr(self):
+        while 1:
+            time.sleep(0.75)
+            if self.waiting_for_gas_request():
+                break
+         
     def start_auto_vac(self):
         cmd = self._build_command(14, 11)
         self._send_command(cmd)
         
     def start_auto_gas_exchange(self):
+
         cmd = self._build_command(14, 11)
         self._send_command(cmd)
 
@@ -176,40 +180,43 @@ class ATLLaserControlUnit(CoreDevice):
         cmd = self._build_command(14, 11)
         self._send_command(cmd)
     
+    def waiting_for_gas_request(self, verbose=False):
+        rq=self.get_gas_wait_request(verbose=verbose)
+        print rq
+        if rq is not None:
+            return rq[0]==1
+        
     def is_idle(self):
         status=self.get_gas_status()
         if status is not None:
             istatus=int(status, 16)
             return istatus==0
-        #print 'is idle',status, len(status)
-           
+
+    def get_pressure(self, verbose=False):
+        vs=self._send_query(9, 1, verbose=verbose)
+        if vs is not None:
+            vs=self._parse_response(vs, 1)
+            if vs is not None:
+                self.pressure_readback=vs[0]/1000. 
+    
     def get_gas_status(self):
         r=self._send_query(13, 1)
         return r
+
+    def get_gas_wait_request(self, verbose=True):
+        r=self._send_query(27, 1, verbose=verbose)
+        return self._parse_response(r, 1)
         
+    
     def open_valve(self, addr):
         self.info('open valve {}'.format(addr))
-
         
     def close_valve(self, addr):
         self.info('close valve {}'.format(addr))
     
-    def _clean_response(self, r):
-        handshake=r[:4]
-        if handshake=='a'+DLE+'0'+STX:
-            chksum=computeBCC(r[4:-1])
-            if chr(chksum)==r[-1]:
-                return r[8:-2]
-            
-    def _parse_response(self,resp, l):
-        
-        if len(resp)==l*4:
-            return [int(resp[i:i+4], 16) for i in range(0, len(resp)-3, 4)]
-                
-        
-    def _update_parameters(self):
-#        '''
-#        '''
+    def update_parameters(self):
+        '''
+        '''
         #energy and pressure_readback
         vs=self._send_query(8, 2, verbose=False)
 #        vs=self._send_query(30, 2, verbose=False)
@@ -308,7 +315,19 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         cmd = EOT
         self.tell(cmd,verbose=verbose)
-
+        
+    def _clean_response(self, r):
+        handshake=r[:4]
+        if handshake=='a'+DLE+'0'+STX:
+            chksum=computeBCC(r[4:-1])
+            if chr(chksum)==r[-1]:
+                return r[8:-2]
+            
+    def _parse_response(self,resp, l):
+        
+        if resp is not None and len(resp)==l*4:
+            return [int(resp[i:i+4], 16) for i in range(0, len(resp)-3, 4)]
+       
 #    def _parse_parameter_answers(self, resp, rstartaddr, answer_len):
 #        '''
 #        '''

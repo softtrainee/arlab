@@ -147,15 +147,25 @@ class LaserTrayCanvas(MapCanvas):
                 self.point_counter += 1
 
         self.request_redraw()
-
-    def save_points(self, p):
-        lines = []
+    
+    def get_points(self):
+        pts=[]
         for _k, v in self.markupcontainer.iteritems():
             if isinstance(v, PointIndicator):
-                lines.append(','.join(map(str, (v.identifier, v.x, v.y))))
-
-        with open(p, 'w') as f:
-            f.write('\n'.join(lines))
+                
+                pts.append((v.identifier, v.x, v.y))
+                
+#                lines.append(','.join(map(str, )))
+        pts=sorted(pts, key=lambda x: x[0])
+        return pts
+#    def save_points(self, p):
+#        lines = []
+#        for _k, v in self.markupcontainer.iteritems():
+#            if isinstance(v, PointIndicator):
+#                lines.append(','.join(map(str, (v.identifier, v.x, v.y))))
+#
+#        with open(p, 'w') as f:
+#            f.write('\n'.join(lines))
 
 #    def config_view(self):
 #        v = View(

@@ -196,7 +196,11 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         '''
         self.joystick.disable_laser()
-
+    
+    def xy_swapped(self):
+        if self.axes.has_key('x'):
+            return self.axes['x'].id==2
+        
     def get_xy(self):
 
         v = self.ask('1TP?;2TP?', verbose=False)
