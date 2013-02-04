@@ -40,7 +40,7 @@ class VideoUnderlay(AbstractOverlay):
                         component.width, component.height)
             img=self.video.get_image_data()
             if img is not None:
-                gc.draw_image()
+                gc.draw_image(img)
 
 
 #============= EOF ====================================
