@@ -121,7 +121,7 @@ class SerialCommunicator(Communicator):
             self.stopbits = getattr(serial, 'STOPBITS_%s' % stopbits.upper())
 
         self.set_attribute(config, 'read_delay', 'Communications', 'read_delay',
-                           cast='float', optional=True, default=0.05
+                           cast='float', optional=True, default=25
                            )
 
         self.set_attribute(config, 'read_terminator', 'Communications', 'terminator',
