@@ -67,10 +67,15 @@ class KerrStepMotor(KerrMotor):
         #load discrete positions
         section='Discrete Positions'
         if config.has_section(section):
+            off=self.config_get(config, section, 'offset', cast='int', default=0)
+            
             for i, option in enumerate(config.options(section)):
-                value=config.get(section,option)
+                if option=='offset':
+                    continue
+                
+                value=config.getint(section,option)
                 option=option.replace('_', ' ').capitalize()
-                self.discrete_positions[value] = '{:02n}:{}'.format(i+1,option)
+                self.discrete_positions[str(value+off)] = '{:02n}:{}'.format(i+1,option)
                 
     def _discrete_position_changed(self):
         if self.discrete_position:
@@ -106,12 +111,13 @@ class KerrStepMotor(KerrMotor):
 
         cmd = '56'
         obbyte=self._assemble_options_byte()
+#        print obbyte
         op = (int(obbyte, 2), 2)#'00001011'
         mps = (1, 2)
         rcl = (self.run_current, 2)
         hcl = (self.hold_current, 2)
         tl = (0, 2)
-
+#        print self.run_current,self.hold_current
         hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
         bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
         return ''.join(bs)
@@ -140,7 +146,7 @@ class KerrStepMotor(KerrMotor):
         v = '{:02x}'.format(int(self.home_velocity))
         a = '{:02x}'.format(int(self.home_acceleration))
         
-        print control, v,a
+#        print control, v,a
 #        v = self._float_to_hexstr(self.home_velocity)
 #        a = self._float_to_hexstr(self.home_acceleration)
         move_cmd = ''.join((cmd, control, v, a))
@@ -177,7 +183,7 @@ class KerrStepMotor(KerrMotor):
         position = self._float_to_hexstr(pos)
         v = '{:02x}'.format(int(self.velocity))
         a = '{:02x}'.format(int(self.acceleration))
-
+#        print self.velocity, self.acceleration
         cmd = ''.join((cmd, control, position, v, a))
         cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
 

@@ -183,7 +183,7 @@ class SerialCommunicator(Communicator):
 
         with self._lock:
             if self.clear_output:
-#                self.handle.flushInput()
+                self.handle.flushInput()
                 self.handle.flushOutput()
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
@@ -263,6 +263,7 @@ class SerialCommunicator(Communicator):
                     self.handle = serial.Serial(**args)
                     try_connect = False
                     self.simulation = False
+                    
 
                 except serial.serialutil.SerialException:
                     try_connect = False
@@ -270,7 +271,6 @@ class SerialCommunicator(Communicator):
             self._find_handle(args, **kw)
 
         connected = True if self.handle is not None else False
-
         return connected
 
     def _find_handle(self, args, **kw):
@@ -452,6 +452,7 @@ class SerialCommunicator(Communicator):
 #            c = inw
         c = min(inw, nchars - len(r))
         r += ''.join(map('{:02X}'.format, map(ord, handle.read(c))))
+#        print len(r), nchars
 #            d = 1 / 1000.
 #            time.sleep(d)
 #            tt += d
@@ -464,6 +465,7 @@ class SerialCommunicator(Communicator):
         inw = handle.inWaiting()
         c = min(inw, nchars - len(r))
         r += handle.read(c)
+#        print r, len(r), nchars
         #print 'get n',len(r),nchars, self._prep_str(r),len(r)==nchars
         return r, len(r) == nchars
 
@@ -480,7 +482,7 @@ class SerialCommunicator(Communicator):
         try:
             inw = self.handle.inWaiting()
             r += self.handle.read(inw)
-#            print 'inw',inw,r
+#            print 'inw',inw,r, terminator
             if terminator is None:
                 terminator = ('\n', '\r')
 
@@ -503,7 +505,6 @@ class SerialCommunicator(Communicator):
 
         except (OSError, IOError), e:
             self.warning(e)
-
         return r, terminated
 
     def _read_loop(self, func, delay, timeout=1):

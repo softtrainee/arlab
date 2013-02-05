@@ -132,6 +132,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         self._set_motor_position_(1000)
 
         #wait until home signal is set.
+        #wait max of 2 sec
         while 1:
             time.sleep(0.05)
             lim = self._read_limits()
@@ -144,7 +145,7 @@ class KerrCircularStepMotor(KerrStepMotor):
 
     def _read_limits(self):
         cb = '00001000'
-        inb = self.read_status(cb, verbose=False)
+        inb = self.read_status(cb, verbose=True)
         inb = inb[2:-2]
         if inb:
             #resp_byte consists of input_byte

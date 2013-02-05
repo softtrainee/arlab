@@ -101,7 +101,11 @@ class ATLLaserControlUnit(CoreDevice):
 #        '''
 #        '''
 #        self.triggered = False
-
+    def initialize(self, *args, **kw):
+        r=super(ATLLaserControlUnit,self).initialize(self, *args, **kw)
+        self._communicator.write_terminator=None
+        return r
+    
     def laser_on(self):
         '''
         '''
