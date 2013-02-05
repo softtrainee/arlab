@@ -443,7 +443,7 @@ class StageMap(Loggable):
         lines = parse_file(self.file_path)
         if not lines:
             return
-
+        
         #line 0 shape, dimension
         shape, dimension = lines[0].split(',')
         self.g_shape = shape

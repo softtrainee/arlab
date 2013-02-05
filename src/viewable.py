@@ -102,5 +102,17 @@ class Viewable(Loggable):
                     *args,
                     **kw
                     )
+        
+    def _window_width_default(self):
+        return 500
+
+    def _window_height_default(self):
+        return 500
+    def _window_x_default(self):
+        return 0.5
+    
+    def _window_y_default(self):
+        return 0.5
+    
 
 #============= EOF =============================================

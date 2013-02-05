@@ -28,12 +28,12 @@ from threading import Thread
 
 class PatternExecutor(Patternable):
     controller = Any
-    show_patterning = Bool(True)
+    show_patterning = Bool(False)
     _alive = Bool(False)
-    def start(self, show=True):
+    
+    def start(self, show=False):
         self._alive = True
-        if show is None:
-            show = self.show_patterning
+        
         if show:
             self.show_pattern()
 
@@ -53,7 +53,8 @@ class PatternExecutor(Patternable):
             graph.add_datum((x, y), series=2)
 
             graph.redraw()
-
+    
+            
     def load_pattern(self, name_or_pickle):
         '''
             look for name_or_pickle in local pattern dir
@@ -96,6 +97,7 @@ class PatternExecutor(Patternable):
             self.controller.stop()
 
         if self.pattern:
+            self.controller.linear_move(self.pattern.cx, self.pattern.cy)
             self.pattern.close_ui()
             self.info('Pattern {} stopped'.format(self.pattern_name))
 
@@ -107,6 +109,8 @@ class PatternExecutor(Patternable):
             self.pattern.close_ui()
 
     def show_pattern(self):
+        self.pattern.window_x=50
+        self.pattern.window_y=50
         self.open_view(self.pattern, view='graph_view')
 
     def execute(self, block=False):
@@ -114,7 +118,7 @@ class PatternExecutor(Patternable):
             if block is true wait for patterning to finish
             before returning
         '''
-        self.start()
+        self.start(show=self.show_patterning)
 
         t = Thread(target=self._execute)
         t.start()
@@ -122,20 +126,22 @@ class PatternExecutor(Patternable):
         if block:
             t.join()
 
-        self.finish()
+            self.finish()
 
     def _execute(self):
         pat = self.pattern
         if pat:
             self.info('starting pattern {}'.format(pat.name))
+            pat.cx, pat.cy = self.controller._x_position, self.controller._y_position
             for ni in range(pat.niterations):
                 if not self.isPatterning():
                     break
 
                 self.info('doing pattern iteration {}'.format(ni))
                 self._execute_iteration()
-                time.sleep(0.1)
+#                time.sleep(0.1)
 
+            self.controller.linear_move(pat.cx, pat.cy)
             self.pattern.close_ui()
             self.info('finished pattern')
 
@@ -143,7 +149,7 @@ class PatternExecutor(Patternable):
         controller = self.controller
         pattern = self.pattern
         if controller is not None:
-            pattern.cx, pattern.cy = controller._x_position, controller._y_position
+            
             kind = pattern.kind
             if kind == 'ArcPattern':
                 self._execute_arc(controller, pattern)

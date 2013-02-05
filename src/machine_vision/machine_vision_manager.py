@@ -93,8 +93,10 @@ class MachineVisionManager(Manager):
 
         hd.parent = self
         if self.laser_manager is not None:
-            z = self.laser_manager.zoom
-            hd.pxpermm = self._calc_pxpermm_by_zoom(z)
+            motor=self.laser_manager.get_motor('zoom')
+            if motor is not None:
+                z = motor.data_position
+                hd.pxpermm = self._calc_pxpermm_by_zoom(z)
 
         hd.name = name
         return hd
