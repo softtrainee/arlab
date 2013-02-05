@@ -496,7 +496,7 @@ class HoleDetector(Detector):
 
     def _get_filter_target_area(self):
         holedim = self.holedim
-        miholedim = 0.5 * holedim
+        miholedim = 0.9 * holedim
         maholedim = 1.25 * holedim
         mi = miholedim ** 2 * 3.1415
         ma = maholedim ** 2 * 3.1415

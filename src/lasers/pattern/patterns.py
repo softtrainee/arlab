@@ -84,7 +84,7 @@ class OverlapOverlay(AbstractOverlay):
 
 
 class Pattern(Viewable):
-
+    
     graph = Instance(Graph, (), transient=True)
     cx = Float(transient=True)
     cy = Float(transient=True)
@@ -100,8 +100,8 @@ class Pattern(Viewable):
 #    image_width = 640
 #    image_height = 480
 
-    xbounds = (-2, 2)
-    ybounds = (-2, 2)
+    xbounds = (-3, 3)
+    ybounds = (-3, 3)
 #    pxpermm = None
 
     velocity = Float(1)

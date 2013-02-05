@@ -245,15 +245,17 @@ class LaserHandler(BaseRemoteHardwareHandler):
         if name is None:
             err = InvalidArgumentsErrorCode('DoJog', name)
         else:
-            err = manager.stage_manager.pattern_manager.execute_pattern(name)
+            
+#            err = manager.stage_manager.pattern_manager.execute_pattern(name)
+            err = manager.execute_pattern(name)
         return self.error_response(err)
 
     def AbortJog(self, manager, *args):
-        err = manager.stage_manager.pattern_manager.stop_pattern()
+        err = manager.stop_pattern()
         return self.error_response(err)
 
     def IsJogging(self, manager, *args):
-        err = manager.stage_manager.pattern_manager.isAlive()
+        err = manager.isPatterning()
 
         # returns "True" or "False"
         return self.error_response(str(err))
@@ -270,8 +272,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
             return 'OK - beam disabled'
 
     def GetBeamDiameter(self, manager, *args):
-        return manager.beam
-
+        motor=manager.get_motor('beam')
+        pos='No Beam Motor'
+        if motor:
+            pos=motor.data_position
+        return pos
+    
     def SetZoom(self, manager, data, *args):
         try:
             zoom = float(data)
@@ -282,7 +288,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return 'OK'
 
     def GetZoom(self, manager, *args):
-        return manager.zoom
+        motor=manager.get_motor('zoom')
+        pos='No Zoom Motor'
+        if motor:
+            pos=motor.data_position
+        return pos
+    
 
     def SetMotor(self, manager, name, data, *args):
         try:

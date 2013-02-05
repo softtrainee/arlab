@@ -355,11 +355,13 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         result = False
-        if self.beam_enabled or force:
-            self.set_motor('beam', bd, **kw)
-            result = True
-        else:
-            self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
+        motor=self.get_motor('beam')
+        if motor is not None:
+            if motor.enabled or force:
+                self.set_motor('beam', bd, **kw)
+                result = True
+            else:
+                self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
         return result
 
     def set_zoom(self, z, **kw):

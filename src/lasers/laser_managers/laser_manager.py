@@ -62,7 +62,6 @@ class BaseLaserManager(Manager):
     def stop_pattern(self):
         if self.pattern_executor:
             self.pattern_executor.stop()
-            self.pattern_executor = None
 
     def isPatterning(self):
         if self.pattern_executor:
@@ -72,7 +71,11 @@ class BaseLaserManager(Manager):
         return self.pattern_executor
 
     def _pattern_executor_default(self):
-        pm = PatternExecutor(application=self.application)
+        controller=None
+        if self.stage_manager:
+            controller=self.stage_manager.stage_controller
+            
+        pm = PatternExecutor(application=self.application, controller=controller)
         return pm
 
     def move_to_position(self, pos, *args, **kw):
@@ -142,10 +145,10 @@ class LaserManager(BaseLaserManager):
 #===============================================================================
 # patterning
 #===============================================================================
-    def _pattern_executor_factory(self):
-        pm = self.pattern_executor
-        pm.controller = self.stage_manager.stage_controller
-        return pm
+#    def _pattern_executor_factory(self):
+#        pm = self.pattern_executor
+#        pm.controller = self.stage_manager.stage_controller
+#        return pm
 
     def get_pattern_names(self):
         return self.get_file_list(paths.pattern_dir, extension='.lp')
