@@ -168,7 +168,7 @@ class AerotechMotionController(MotionController):
         if pos is not None:
             pos = float(pos)
             pos = self._sign_correct(pos, axis)
-            setattr(self, '_{}_position'.format(axis), pos)
+#            setattr(self, '_{}_position'.format(axis), pos)
         else:
             pos = 0
 

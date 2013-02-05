@@ -255,8 +255,8 @@ class KerrMotor(KerrDevice):
         cb = '13{}'.format(cb)
         cmd = self._build_command(addr, cb)
         status_byte = self.ask(cmd, is_hex=True,
-#                                delay=100,
-                                nbytes=2,
+                                delay=100,
+                                nbytes=3,
                                 verbose=verbose,
                                 info='get status byte')
         return status_byte

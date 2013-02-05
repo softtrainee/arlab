@@ -44,7 +44,7 @@ class FusionsUVManager(FusionsLaserManager):
     monitor_klass = FusionsUVLaserMonitor
     
     atl_controller = Instance(ATLLaserControlUnit)
-    
+    simulation = DelegatesTo('atl_controller')
     single_shot = Button('Single Shot')
     laser_status = Str
 
@@ -64,6 +64,7 @@ class FusionsUVManager(FusionsLaserManager):
 #    energymin = DelegatesTo('atl_controller')
 #    energymax = DelegatesTo('atl_controller')
     energy_readback = DelegatesTo('atl_controller')
+    pressure_readback = DelegatesTo('atl_controller')
 #
 #    hv = DelegatesTo('atl_controller')
 #    hvmin = DelegatesTo('atl_controller')
@@ -111,6 +112,10 @@ class FusionsUVManager(FusionsLaserManager):
 #    request_power = 0
 #    request_powermin = 0
 #    request_powermax = 100
+    def update_parameters(self):
+        if self.atl_controller is not None:
+            self.atl_controller.update_parameters()
+            
     def _enable_hook(self):
         resp = self.laser_controller._enable_laser()
         if self.laser_controller.simulation:
@@ -157,6 +162,8 @@ class FusionsUVManager(FusionsLaserManager):
                       HGroup(self._button_factory('fire_button', 'fire_label'),
                              Item('single_shot'),
                              Item('energy_readback', label='Energy (mJ)', style='readonly', format_str='%0.2f'),
+                             Item('pressure_readback', label='Pressure (mbar)', 
+                                  style='readonly', width=100,format_str='%0.1f'),
                              spring,
                              enabled_when='object.enabled'
                              ),

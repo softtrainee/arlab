@@ -151,9 +151,9 @@ class LaserManager(BaseLaserManager):
         return self.get_file_list(paths.pattern_dir, extension='.lp')
 
     def enable_laser(self):
-
         self.info('enable laser')
         enabled = self._enable_hook()
+        print 'ffff', enabled, self.simulation
 
         if self.simulation:
             self.enabled = True
@@ -166,6 +166,7 @@ class LaserManager(BaseLaserManager):
 
             self.enabled = True
             self.monitor = self.monitor_factory()
+            print self.monitor
             if self.monitor.monitor():
                 self.enabled_led.state = 'green'
             else:
@@ -184,14 +185,14 @@ class LaserManager(BaseLaserManager):
 
     def disable_laser(self):
         self.info('disable laser')
-
+        #stop the laser monitor 
+        #if the laser is not firing is there any reason to be running the monitor?        
+        if self.monitor is not None:
+            self.monitor.stop()
+        
         enabled = self._disable_hook()
 
         self.enabled = False
-        #stop the laser monitor 
-        #if the laser is not firing is there any reason to be running the monitor?
-        if self.monitor is not None:
-            self.monitor.stop()
 
         self.enabled_led.state = 'red'
         self._requested_power = 0
