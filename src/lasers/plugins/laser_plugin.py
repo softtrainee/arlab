@@ -55,7 +55,10 @@ class LaserPlugin(CorePlugin):
         mode = plugin.get('mode')
 
         if mode == 'client':
-            klass = 'PychronLaserManager'
+            klass=plugin.get('klass')
+            if klass is not None:
+                klass = 'PychronLaserManager'
+                
             pkg = 'src.lasers.laser_managers.pychron_laser_manager'
             try:
                 tag = plugin.find('communications')

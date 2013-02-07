@@ -17,9 +17,10 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Instance, Enum, Bool, Button, Str, DelegatesTo, Event, Property
+from traits.api import Instance, Enum, Bool, Button, Str, DelegatesTo, Event, Property,\
+    Int
 from traitsui.api import View, Item, Group, HGroup, VGroup, Label, \
-    EnumEditor, spring
+    EnumEditor, spring, ButtonEditor
 
 #============= standard library imports ========================
 from fusions_laser_manager import FusionsLaserManager
@@ -29,6 +30,11 @@ from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
 from src.monitors.fusions_uv_laser_monitor import FusionsUVLaserMonitor
 from src.machine_vision.mosaic_manager import MosaicManager
 from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
+from src.lasers.stage_managers.stage_map import UVStageMap
+import time
+from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
+import os
+from src.paths import paths
 
 #============= local library imports  ==========================
 
@@ -51,7 +57,8 @@ class FusionsUVManager(FusionsLaserManager):
     fire_button = Event
     fire_label = Property(depends_on='firing')
     firing = Bool
-    single_shot = Bool
+    mode=Enum('Burst','Continuous', 'Single')
+#    single_shot = Bool 
 
     gas_handler = Instance(UVGasHandlerManager)
 #    laseronoff = Event
@@ -65,53 +72,19 @@ class FusionsUVManager(FusionsLaserManager):
 #    energymax = DelegatesTo('atl_controller')
     energy_readback = DelegatesTo('atl_controller')
     pressure_readback = DelegatesTo('atl_controller')
-#
-#    hv = DelegatesTo('atl_controller')
-#    hvmin = DelegatesTo('atl_controller')
-#    hvmax = DelegatesTo('atl_controller')
-#    update_hv = DelegatesTo('atl_controller')
-#
-#    reprate = DelegatesTo('atl_controller')
-#    repratemin = DelegatesTo('atl_controller')
-#    repratemax = DelegatesTo('atl_controller')
-#    update_reprate = DelegatesTo('atl_controller')
-#
-#    trigger_modes = DelegatesTo('atl_controller')
-#    trigger_mode = DelegatesTo('atl_controller')#Str('External I')
-#
-#    stablization_modes = DelegatesTo('atl_controller')
-#    stablization_mode = DelegatesTo('atl_controller')#Str('High Voltage')
-#    stop_at_low_e = DelegatesTo('atl_controller')
-#
-#    cathode = DelegatesTo('atl_controller')
-#    reservoir = DelegatesTo('atl_controller')
-#    missing_pulses = DelegatesTo('atl_controller')
-#    halogen_filter = DelegatesTo('atl_controller')
-#
-#    laser_head = DelegatesTo('atl_controller')
-#    laser_headmin = DelegatesTo('atl_controller')
-#    laser_headmax = DelegatesTo('atl_controller')
-#
-#    burst = DelegatesTo('atl_controller')
-#    nburst = DelegatesTo('atl_controller')
-#    cburst = DelegatesTo('atl_controller')
-#
-#    shot_history = Instance(LaserShotHistory)
-#
-#    auto = Event
-#    auto_label = Property(depends_on='gas_handling_state')
-#    auto_led = Bool
-#
-#    mirror = Event
-#    mirror_label = Property(depends_on='gas_handling_state')
-#    mirror_led = Bool
-#
-#    gas_handling_state = Enum('none', 'auto', 'mirror')
-#
-#
-#    request_power = 0
-#    request_powermin = 0
-#    request_powermax = 100
+    burst_readback=DelegatesTo('atl_controller')
+    status_readback=DelegatesTo('atl_controller')
+    action_readback=DelegatesTo('atl_controller')
+    
+    burst_shot=Int(enter_set=True, auto_set=False)
+    
+    laser_script_executor=Instance(LaserScriptExecutor)
+    execute_button=DelegatesTo('laser_script_executor')
+    execute_label=DelegatesTo('laser_script_executor')
+    
+#    def goto_named_position(self,pos):
+#        pass
+    
     def update_parameters(self):
         if self.atl_controller is not None:
             self.atl_controller.update_parameters()
@@ -123,19 +96,27 @@ class FusionsUVManager(FusionsLaserManager):
 
         if resp:
             self.atl_controller.laser_on()
-
+        
         return resp
 
     def _disable_hook(self):
+        #pause for the monitor to stop
+        time.sleep(0.25)
+        
         resp = self.laser_controller._disable_laser()
         if self.laser_controller.simulation:
             resp = True
         if resp:
             self.atl_controller.laser_off()
+        self.status_readback=''
+        self.action_readback=''
+        self.firing=False
         return resp
+             
 #===============================================================================
 # handlers
 #===============================================================================
+        
     def _fire_button_fired(self):
         if self.firing:
             self.info('stopping laser')
@@ -143,12 +124,24 @@ class FusionsUVManager(FusionsLaserManager):
             self.atl_controller.laser_stop()
         else:
             self.info('firing laser')
-            if self.single_shot:
+            if self.mode=='Single':
                 self.atl_controller.laser_single_shot()
+#            elif self.mode=='Burst':
+#                self.atl_controller.laser_burst()
+#                self.firing = True
             else:
-                self.atl_controller.laser_run()
+                self.atl_controller.laser_run()                    
                 self.firing = True
-
+                
+    def _burst_shot_changed(self):
+        if self.burst_shot:
+            self.atl_controller.set_nburst(self.burst_shot)
+    
+    def _mode_changed(self):
+        if self.mode=='Burst':
+            self.atl_controller.set_burst_mode(True)
+        else:
+            self.atl_controller.set_burst_mode(False)
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -159,8 +152,16 @@ class FusionsUVManager(FusionsLaserManager):
 #===============================================================================
     def get_control_group(self):
         return VGroup(self.get_control_button_group(),
+                      self._button_factory('execute_button', 'execute_label', align='left'),
+#                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
+                      HGroup(
+                             Item('action_readback',width=100,style='readonly',label='Action'),
+                             Item('status_readback',style='readonly',label='Status'),
+                             ),
                       HGroup(self._button_factory('fire_button', 'fire_label'),
-                             Item('single_shot'),
+                             Item('mode', show_label=False),
+                             Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
+                             Item('burst_readback', label='Burst Rem.',width=100, style='readonly'),
                              Item('energy_readback', label='Energy (mJ)', style='readonly', format_str='%0.2f'),
                              Item('pressure_readback', label='Pressure (mbar)', 
                                   style='readonly', width=100,format_str='%0.1f'),
@@ -179,7 +180,8 @@ class FusionsUVManager(FusionsLaserManager):
         '''
         args = dict(name='stage',
                             configuration_dir_name='uv',
-                             stage_controller_class='Aerotech'
+                             stage_controller_class='Aerotech',
+                             stage_map_klass=UVStageMap
                              )
 
 #        if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
@@ -210,6 +212,11 @@ class FusionsUVManager(FusionsLaserManager):
         uv = UVGasHandlerManager(controller=self.atl_controller)
 #        uv.bootstrap()
         return uv
+    def _mode_default(self):
+        return 'Burst'
+    
+    def _laser_script_executor_default(self):
+        return LaserScriptExecutor(laser_manager=self)
 #    def _shot_history_default(self):
 #        '''
 #        '''

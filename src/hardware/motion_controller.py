@@ -122,6 +122,7 @@ class MotionController(CoreDevice):
 #            x = self.get_current_position('x')
 #            y = self.get_current_position('y')
             self.timer.Stop()
+            self.parent.canvas.clear_desired_position()
 #        else:
         x = self.get_current_position('x')
         y = self.get_current_position('y')
