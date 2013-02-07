@@ -60,7 +60,7 @@ class AerotechMotionController(MotionController):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
         
-    def linear_move(self, x, y, sign_correct=True, block=False, **kw):
+    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None,**kw):
         errx = self._validate(x, 'x', cur=self._x_position)
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
@@ -79,8 +79,12 @@ class AerotechMotionController(MotionController):
         self.timer = self.timer_factory()
         x=self.axes['x']
         y=self.axes['y']
-        xv=x.velocity
-        yv=y.velocity
+        
+        if velocity is not None:
+            xv=yv=velocity
+        else:
+            xv=x.velocity
+            yv=y.velocity
         
         if abs(nx)>1:
             xv=xv*0.5

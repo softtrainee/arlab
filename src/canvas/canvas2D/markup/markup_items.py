@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property
+from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
 #============= standard library imports ========================
@@ -588,14 +588,16 @@ class Label(MarkupItem):
         gc.show_text(self.text)
 
 class Indicator(MarkupItem):
+    hline_length=0.5
+    vline_length=0.5
     def __init__(self, x, y, *args, **kw):
         super(Indicator, self).__init__(x, y, *args, **kw)
-        w = 0.5
+        w = self.hline_length
         self.hline = Line(Point(x - w, y, **kw),
-                          Point(x + w, y, **kw))
-        h = 0.5
+                          Point(x + w, y, **kw), **kw)
+        h = self.vline_length
         self.vline = Line(Point(x, y - h, **kw),
-                          Point(x, y + h, **kw))
+                          Point(x, y + h, **kw), **kw)
 
     def _render_(self, *args, **kw):
         self.hline.render(*args, **kw)
@@ -615,7 +617,8 @@ class PointIndicator(Indicator):
         self.circle = Circle(self.x, self.y, *args, **kw)
         if self.identifier:
             self.label = Label(self.x, self.y,
-                               text=str(int(self.identifier[5:]) + 1),
+                               text=self.identifier,
+#                               text=str(int(self.identifier[5:]) + 1),
                                 *args, **kw)
     def set_canvas(self, canvas):
         super(PointIndicator, self).set_canvas(canvas)
@@ -662,4 +665,33 @@ class Dot(MarkupItem):
         gc.arc(x, y, self.radius, 0, 360)
         gc.fill_path()
 
+class PolyLine(MarkupItem):
+    points=List
+    lines=List
+    identifier=Str
+#    start_point=None
+    def __init__(self,x,y, identifier='',**kw):
+        super(PolyLine,self).__init__(x,y, **kw)
+#        self.start_point=PointIndicator(x,y, **kw)
+        self.identifier=identifier
+        self.points.append(PointIndicator(x,y,identifier=identifier,**kw))
+        
+    def add_point(self,x,y, point_color=(1,0,0), line_color=(1,0,0)):
+        p2=Dot(x,y, canvas=self.canvas, default_color=point_color)
+        
+        p1=self.points[-1]        
+        self.lines.append(Line(p1,p2,default_color=line_color))
+        self.points.append(p2)
+        
+    def _render_(self,gc):
+#        self.start_point.render(gc)
+        for pt in self.points:
+            pt.render(gc)
+            
+        for l in self.lines:
+            l.render(gc)
+            
+class VelocityPolyLine(PolyLine):
+    velocity_segments=List
+    
 #============= EOF ====================================

@@ -15,8 +15,8 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
-    Enum, Int
+from traits.api import  HasTraits, Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
+    Enum, Int, Str, List
 from traitsui.api import View, Item, VGroup
 from chaco.api import AbstractOverlay
 
@@ -24,9 +24,31 @@ from chaco.api import AbstractOverlay
 import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
-from src.canvas.canvas2D.markup.markup_items import PointIndicator
+from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine,\
+    VelocityPolyLine
 
 from kiva import constants
+
+#class Point(HasTraits):
+#    x=Float
+#    y=Float
+#    identifier=Str
+
+class PointOverlay(AbstractOverlay):
+    def overlay(self, component, gc, *args, **kw):
+        with gc:
+            gc.clip_to_rect(component.x, component.y, component.width, component.height)
+            for pt in self.component.points:
+                pt.render(gc)
+                            
+class LineOverlay(AbstractOverlay):
+    def overlay(self, component, gc, *args, **kw):
+        with gc:
+            gc.clip_to_rect(component.x, component.y, component.width, component.height)
+            for li in self.component.lines:
+                li.render(gc)
+
+              
 class BoundsOverlay(AbstractOverlay):
     def overlay(self, component, gc, *args, **kw):
         gc.save_state()
@@ -82,7 +104,10 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_offset = Tuple(0, 0)
 #    _jog_moving = False
     show_bounds_rect = Bool(True)
-
+    points=List
+    new_line=True
+    lines=List
+    
     def __init__(self, *args, **kw):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
         self._add_bounds_rect()
@@ -105,59 +130,116 @@ class LaserTrayCanvas(MapCanvas):
             del o
 
         self.request_redraw()
-
+    
+    def remove_point_overlay(self):
+        for o in self.overlays[:]:
+            if isinstance(o, PointOverlay):
+                self.overlays.remove(o)
+                
+    def remove_line_overlay(self):
+        for o in self.overlays[:]:
+            if isinstance(o, LineOverlay):
+                self.overlays.remove(o)
+                
+    def add_point_overlay(self):
+        po=PointOverlay(component=self)
+        self.overlays.append(po)
+    
+    def add_line_overlay(self):
+        po=LineOverlay(component=self)
+        self.overlays.append(po)
+        
     def point_exists(self, x, y, tol=1e-5):
-        for p in self.markupcontainer.itervalues():
-            if isinstance(p, PointIndicator):
-                if abs(p.x - x) < tol and abs(p.y - y) < tol:
-                    #point already in the markup dict
-                    return p
+        for p in self.points:
+#        for p in self.markupcontainer.itervalues():
+#            if isinstance(p, PointIndicator):
+            if abs(p.x - x) < tol and abs(p.y - y) < tol:
+                #point already in the markup dict
+                return p
 
-    def new_point(self):
+    def new_line_point(self, xy=None,line_color=(1,0,0), point_color=(1,0,0),velocity=None,**kw):
+        if xy is None:
+            xy=self._stage_position
+        
+        if self.new_line:
+            kw['identifier']=str(len(self.lines)+1)
+            kw['canvas']=self
+            
+            line=VelocityPolyLine(*xy,
+                          default_color=point_color,
+                          **kw
+                          )
+            self.new_line=False
+            
+            self.lines.append(line)
+        else:
+            line=self.lines[-1]
+            line.velocity_segments.append(velocity)
+            line.add_point(*xy,
+                           line_color=line_color,
+                           point_color=point_color)        
+#        pid='point{}'.format(len(line))
+#        p=PointIndicator(*self._stage_position,
+#                identifier=pid,
+#                canvas=self,
+#                **kw
+#                )
+        
+        
+    def new_point(self,xy=None,**kw):
         if self.point_exists(*self._stage_position):
             return
-
-        pid = 'point{}'.format(self.point_counter)
-        p = PointIndicator(*self._stage_position, identifier=pid, canvas=self)
-        self.markupcontainer[pid] = p
-        self.point_counter += 1
+        
+        if xy is None:
+            xy=self._stage_position
+            
+        p=PointIndicator(*xy,
+                identifier=str(len(self.points)+1),
+                canvas=self,
+                **kw
+                )
+        
+        self.points.append(p)
+#        p = PointIndicator(*self._stage_position, identifier=pid, canvas=self)
+#        self.markupcontainer[pid] = p
+#        self.point_counter += 1
         self.request_redraw()
         return p
-
-    def clear_points(self):
-        popkeys = []
-        self.point_counter = 0
-        for k, v in self.markupcontainer.iteritems():
-            if isinstance(v, PointIndicator):
-                popkeys.append(k)
-        for p in popkeys:
-            self.markupcontainer.pop(p)
-        self.request_redraw()
-
-    def load_points_file(self, p):
-        self.point_counter = 0
-        with open(p, 'r') as f:
-            for line in f:
-                identifier, x, y = line.split(',')
-                pt = self.point_exists(float(x), float(y))
-                if pt is not None:
-                    self.markupcontainer.pop(pt.identifier)
-
-                self.markupcontainer[identifier] = PointIndicator(float(x), float(y), identifier=identifier, canvas=self)
-                self.point_counter += 1
-
-        self.request_redraw()
-    
-    def get_points(self):
-        pts=[]
-        for _k, v in self.markupcontainer.iteritems():
-            if isinstance(v, PointIndicator):
-                
-                pts.append((v.identifier, v.x, v.y))
-                
-#                lines.append(','.join(map(str, )))
-        pts=sorted(pts, key=lambda x: x[0])
-        return pts
+#
+#    def clear_points(self):
+#        popkeys = []
+#        self.point_counter = 0
+#        for k, v in self.markupcontainer.iteritems():
+#            if isinstance(v, PointIndicator):
+#                popkeys.append(k)
+#        for p in popkeys:
+#            self.markupcontainer.pop(p)
+#        self.request_redraw()
+#
+#    def load_points_file(self, p):
+#        self.point_counter = 0
+#        with open(p, 'r') as f:
+#            for line in f:
+#                identifier, x, y = line.split(',')
+#                pt = self.point_exists(float(x), float(y))
+#                if pt is not None:
+#                    self.markupcontainer.pop(pt.identifier)
+#
+#                self.markupcontainer[identifier] = PointIndicator(float(x), float(y), identifier=identifier, canvas=self)
+#                self.point_counter += 1
+#
+#        self.request_redraw()
+#    
+#    def get_points(self):
+#        pts=[]
+#        for _k, v in self.markupcontainer.iteritems():
+#            if isinstance(v, PointIndicator):
+#                
+#                pts.append((v.identifier, v.x, v.y))
+#                
+##                lines.append(','.join(map(str, )))
+#        pts=sorted(pts, key=lambda x: x[0])
+#        return pts
 #    def save_points(self, p):
 #        lines = []
 #        for _k, v in self.markupcontainer.iteritems():
@@ -329,7 +411,11 @@ class LaserTrayCanvas(MapCanvas):
         if not self._desired_position is None:
             x, y = self.map_screen([self._desired_position])[0]
             return x, y
-
+    
+    def clear_desired_position(self):
+        self._desired_position = None
+        self.request_redraw()
+        
     def set_desired_position(self, x, y):
         '''
         '''

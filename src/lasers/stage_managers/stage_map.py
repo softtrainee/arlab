@@ -497,6 +497,19 @@ class StageMap(Loggable):
                  title=self.name
                  )
         return v
+    
+
+import yaml  
+class UVStageMap(StageMap):
+    def load(self):
+        with open(self.file_path, 'r') as fp:
+            d=yaml.load(fp.read())
+            self.points=d['points']
+            self.lines=d['lines']
+            
+            
+            
+            
 #============= EOF =============================================
 #        cspacing = spacing
 #        for i, e in enumerate(self.sample_holes[1:]):

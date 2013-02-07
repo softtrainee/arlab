@@ -29,7 +29,8 @@ from laser_handler import LaserHandler
 class UvHandler(LaserHandler):
     manager_name = 'fusions_uv'
 
-
-
+    def GoToNamedPosition(self,manager, pos,*args):
+        result=manager.goto_named_position(pos)
+        return result
 #============= views ===================================
 #============= EOF ====================================

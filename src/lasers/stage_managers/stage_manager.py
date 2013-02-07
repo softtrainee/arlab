@@ -33,6 +33,7 @@ from src.hardware.motion_controller import MotionController
 from src.paths import paths
 import pickle
 from src.lasers.stage_managers.stage_visualizer import StageVisualizer
+from src.lasers.stage_managers.points_programmer import PointsProgrammer
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -48,20 +49,19 @@ class StageManager(Manager):
     '''
     '''
     stage_controller_class = String('Newport')
+    
     stage_controller = Instance(MotionController)
-
+    points_programmer=Instance(PointsProgrammer)
     motion_controller_manager = Instance(MotionControllerManager)
+    canvas = Instance(LaserTrayCanvas)
+    _stage_map = Instance(StageMap)
 
     simulation = DelegatesTo('stage_controller')
-
+    stage_map_klass=StageMap
     stage_map = Property(depends_on='_stage_map')
     stage_maps = Property(depends_on='_stage_maps')
 
-    _stage_map = Instance(StageMap)
     _stage_maps = None
-
-    canvas = Instance(LaserTrayCanvas)
-
     #===========================================================================
     # buttons
     #===========================================================================
@@ -79,12 +79,13 @@ class StageManager(Manager):
                     ('stop_button', 'stop_label', None)
                       ])
 
-    program_points = Event
-    program_points_label = Property(depends_on='canvas.markup')
-    load_points = Button
-    save_points = Button
-    clear_points = Button
-    accept_point = Button
+#    program_points = Event
+#    program_points_label = Property(depends_on='canvas.markup')
+#    load_points = Button
+#    save_points = Button
+#    clear_points = Button
+#    
+#    accept_point = Button
     back_button = Button
 
 #    pattern_manager = Instance(PatternManager)
@@ -95,9 +96,9 @@ class StageManager(Manager):
     hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
     _hole = String
 
-    point_thread = None
-    point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
-    _point = Int
+#    point_thread = None
+#    point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
+#    _point = Int
 
     canvas_editor_klass = LaserComponentEditor
 
@@ -169,7 +170,7 @@ class StageManager(Manager):
         for di in os.listdir(paths.user_points_dir):
             if di.endswith('.txt'):
                 path=os.path.join(paths.user_points_dir,di)
-                sm = StageMap(file_path=path)
+                sm = self.stage_map_klass(file_path=path)
                 self._stage_maps.append(sm)
                 
         #load the saved stage map
@@ -239,10 +240,15 @@ class StageManager(Manager):
 
         self.stage_controller.linear_move(*pos, **kw)
 
-
     def move_to_hole(self, hole, **kw):
         self._move_to_hole(hole, **kw)
-
+    
+    def move_to_point(self, pt):
+        self._move_to_point(pt)
+    
+    def move_polyline(self, line):
+        self._move_polyline(line)
+        
     def set_x(self, value, **kw):
         return self.stage_controller.single_axis_move('x', value, **kw)
 
@@ -358,6 +364,7 @@ class StageManager(Manager):
             return next((si for si in smap.sample_holes
                             if _filter(si, x, y)
                       ), None)
+    
     def _load_previous_stage_map(self):
         p = os.path.join(paths.hidden_dir, 'stage_map')
 
@@ -422,6 +429,13 @@ class StageManager(Manager):
         sm = self._stage_map
         return sm.get_hole(key)
 
+    def _move_polyline(self, line):
+        for pi in line.points:
+            self.linear_move(pi.x, pi.y, update_hole=False, 
+                                   use_calibration=False,
+                                   block=True)
+            
+            
     def _move_to_point(self, pt):
         pos = pt.x, pt.y
         self.info('Move to point {}'.format(pt.identifier))
@@ -513,7 +527,7 @@ class StageManager(Manager):
 #===============================================================================
 
     def _hole__group__(self):
-        g = Group(HGroup(Item('hole'), Item('point'), spring))
+        g = Group(HGroup(Item('hole'), spring))
         return g
 
     def _button__group__(self):
@@ -563,13 +577,16 @@ class StageManager(Manager):
 #                           label='Motion'
 #                           ),
 
-                     Group(
-                           self._button_factory('program_points', 'program_points_label'),
-                            Item('accept_point', show_label=False),
-                            Item('load_points', show_label=False),
-                            Item('save_points', show_label=False),
-                            Item('clear_points', show_label=False),
-                           label='Points'),
+#                     Group(
+#                            self._button_factory('program_points', 'program_points_label'),
+#                            Item('accept_point', show_label=False),
+#                            Item('load_points', show_label=False),
+#                            Item('save_points', show_label=False),
+#                            Item('clear_points', show_label=False),
+#                            label='Points'),
+                     Item('points_programmer',
+                          label='Points',
+                          show_label=False, style='custom'),
                      Item('tray_calibration_manager',
                           label='Calibration',
                            show_label=False, style='custom'),
@@ -628,11 +645,13 @@ class StageManager(Manager):
         return 'Program Points' if not self.canvas.markup else 'End Program'
 
     def _validate_hole(self, v):
+        nv=None
         try:
-            nv = int(v)
+            if v is not '':
+                nv = int(v)
+            
         except TypeError:
             self.warning('invalid hole {}'.format(v))
-            nv = None
 
         return nv
 
@@ -730,50 +749,50 @@ class StageManager(Manager):
 #        self.do_pattern('testpattern')
         self.do_pattern('pattern003')
 
-    def _clear_points_fired(self):
-        self.canvas.clear_points()
-        self._point = 0
-
-    def _program_points_fired(self):
-        if not self.canvas.markup:
-            self.canvas.tool_state = 'point'
-        else:
-            self.canvas.tool_state = 'select'
-            if self.canvas.selected_element:
-                self.canvas.selected_element.set_state(False)
-                self.canvas.request_redraw()
-        self.canvas.markup = not self.canvas.markup
-
-    def _accept_point_fired(self):
-        npt = self.canvas.new_point()
-        if npt:
-            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
-
-    def _load_points_fired(self):
-        p = self.open_file_dialog(default_directory=paths.user_points_dir)
-        if p:
-            self.canvas.load_points_file(p)
-
-    def _save_points_fired(self):
-        p = self.save_file_dialog(default_directory=paths.user_points_dir)
-
-        if p:
-            if not p.endswith('.txt'):
-                p='{}.txt'.format(p)
-                
-            with open(p, 'w') as f:
-                f.write('{},{}\n'.format(0.1,'circle'))
-                f.write('\n') #valid holes
-                f.write('\n') #calibration holes
-                pts=self.canvas.get_points()
-                for _vid,x,y in pts:
-                    f.write('{}\n'.format(x,y))
-                    
-            sm=StageMap(file_path=p)
-            self._stage_maps.append(sm)
-                
-
-#            self.canvas.save_points(p)
+#    def _clear_points_fired(self):
+#        self.canvas.clear_points()
+#        self._point = 0
+#
+#    def _program_points_fired(self):
+#        if not self.canvas.markup:
+#            self.canvas.tool_state = 'point'
+#        else:
+#            self.canvas.tool_state = 'select'
+#            if self.canvas.selected_element:
+#                self.canvas.selected_element.set_state(False)
+#                self.canvas.request_redraw()
+#        self.canvas.markup = not self.canvas.markup
+#
+#    def _accept_point_fired(self):
+#        npt = self.canvas.new_point()
+#        if npt:
+#            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
+#
+#    def _load_points_fired(self):
+#        p = self.open_file_dialog(default_directory=paths.user_points_dir)
+#        if p:
+#            self.canvas.load_points_file(p)
+#
+#    def _save_points_fired(self):
+#        p = self.save_file_dialog(default_directory=paths.user_points_dir)
+#
+#        if p:
+#            if not p.endswith('.txt'):
+#                p='{}.txt'.format(p)
+#                
+#            with open(p, 'w') as f:
+#                f.write('{},{}\n'.format(0.1,'circle'))
+#                f.write('\n') #valid holes
+#                f.write('\n') #calibration holes
+#                pts=self.canvas.get_points()
+#                for _vid,x,y in pts:
+#                    f.write('{}\n'.format(x,y))
+#                    
+#            sm=StageMap(file_path=p)
+#            self._stage_maps.append(sm)
+#                
+#
+##            self.canvas.save_points(p)
 
 #===============================================================================
 # factories
@@ -862,6 +881,15 @@ class StageManager(Manager):
                             )
         self.canvas.on_trait_change(v.update_calibration, 'calibration_item.[rotation, center]')
         return v
+    
+    def _points_programmer_default(self):
+        pp=PointsProgrammer(canvas=self.canvas,
+                            _stage_maps=self._stage_maps,
+                            stage_map_klass=self.stage_map_klass
+                            )
+        pp.on_trait_change(self.move_to_point, 'point')
+        pp.on_trait_change(self.move_polyline, 'line')
+        return pp
 #===============================================================================
 # mass spec hacks
 #===============================================================================

@@ -156,7 +156,6 @@ class LaserManager(BaseLaserManager):
     def enable_laser(self):
         self.info('enable laser')
         enabled = self._enable_hook()
-        print 'ffff', enabled, self.simulation
 
         if self.simulation:
             self.enabled = True
@@ -169,7 +168,6 @@ class LaserManager(BaseLaserManager):
 
             self.enabled = True
             self.monitor = self.monitor_factory()
-            print self.monitor
             if self.monitor.monitor():
                 self.enabled_led.state = 'green'
             else:
@@ -192,7 +190,7 @@ class LaserManager(BaseLaserManager):
         #if the laser is not firing is there any reason to be running the monitor?        
         if self.monitor is not None:
             self.monitor.stop()
-        
+            
         enabled = self._disable_hook()
 
         self.enabled = False
