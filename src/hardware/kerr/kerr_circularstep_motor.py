@@ -111,7 +111,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         self._execute_hex_commands(cmds)
         
         #start moving
-        self._set_motor_position_(1000)
+        self._set_motor_position_(100)
         
         #poll proximity switch
         while 1:
@@ -129,7 +129,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         self._execute_hex_commands(cmds)
 
         #start moving
-        self._set_motor_position_(1000)
+        self._set_motor_position_(100)
 
         #wait until home signal is set.
         #wait max of 2 sec
@@ -172,7 +172,7 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         return int('00011000', 2)
 
-    
+
 
 #============= EOF =============================================
 #            

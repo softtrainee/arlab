@@ -189,7 +189,7 @@ class KerrStepMotor(KerrMotor):
 
         self._execute_hex_command(cmd)
 
-    def _load_trajectory_controlbyte(self):
+    def _load_trajectory_controlbyte(self, reverse=False):
         '''
            control byte
                 7 6 5 4 3 2 1 0
@@ -205,7 +205,11 @@ class KerrStepMotor(KerrMotor):
             7=start motion now
             
         '''
-        return '{:02x}'.format(int('10000111', 2))
+        cb='10000111'
+        if reverse:
+            cb=cb[:4]+'1'+cb[-3:]
+        print reverse, cb
+        return '{:02x}'.format(int(cb, 2))
 
 #    def _get_velocity(self):
 #        speed = self._velocity #in um/sec
