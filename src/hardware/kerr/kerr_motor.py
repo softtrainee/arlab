@@ -43,7 +43,7 @@ class KerrMotor(KerrDevice):
     home_delay = Float
     home_velocity = Float
     home_acceleration = Float
-    home_position = Float(0.01)
+    home_position = Float(0)
     min = Float(0)
     max = Float(100)
     steps = Float(137500)

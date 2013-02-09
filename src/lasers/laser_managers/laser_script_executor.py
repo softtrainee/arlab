@@ -56,19 +56,36 @@ class LaserScriptExecutor(Loggable):
         with open(name, 'r') as fp:
             d=yaml.load(fp.read())
             
-#            motor=lm.get_motor(d['motor'])
-            
+            motor=d['motor']
+            if motor=='z':
+                def motor_iteration(p):
+                    sm.set_z(p, block=True)
+                    
+            else:
+                motor=lm.get_motor(motor)
+                def motor_iteration(p):
+                    motor.trait_set(data_position=p)
+                    motor.block(4)
+                
             sx,sy=d['start']
             xstep=d['xstep']
             ystep=d['ystep']
-            ny=d['y_nsteps']
-            nx=d['x_nsteps']
+#            ny=d['y_nsteps']
+#            nx=d['x_nsteps']
+            ncols=d['ncols']
             ms=d['motor_start']
+            me=d['motor_stop']
             mstep=d['motor_step']
+
+            n=(abs(ms-me)+1)/mstep
+            
+            nx=ncols
+            ny=int(n/int(ncols))
+            
             nb=d['nburst']
             v=d['velocity']
 #            atl.set_nburst(nb)
-#            sm.linear_move(sx,sy,block=True)
+
             for r in range(ny):
                 if self._cancel:
                     break
@@ -84,16 +101,20 @@ class LaserScriptExecutor(Loggable):
                     if self._cancel:
                         break
 
+                    motor_iteration(dp)
 #                    motor.data_position=dp
 #                    motor.block(4)
                     if self._cancel:
                         break
 #                    
-#                    atl.laser_run()
-                    time.sleep(3)
-#                    atl.laser_stop()
+                    time.sleep(0.5)
+                    atl.laser_run()
+                    time.sleep(4)
+                    atl.laser_stop()
             else:
                 self.info('LaserScript truncated at row={}, col={}'.format(r,c))
+                
+            self._executing=False
             self.info('LaserScript finished'.format(name))
             
 if __name__ == '__main__':
