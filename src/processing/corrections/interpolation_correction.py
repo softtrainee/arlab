@@ -52,8 +52,9 @@ class InterpolationCorrection(HasTraits):
     analyses = List
     kind = Str
     analysis_type = Str
-    signal_key = Str
-    signal_klass = Any
+    isotope_name = Str
+#    signal_key = Str
+    isotope_klass = Any
     graph = Instance(InterpolationGraph)
     fits = List(RegressionCorrection)
     dirty = Event
@@ -125,7 +126,9 @@ class InterpolationCorrection(HasTraits):
                 g.set_series_visiblity(False, series='upper CI0', plotid=plotid)
                 g.set_series_visiblity(False, series='lower CI0', plotid=plotid)
 
-                self.sync_analyses(ys, es, '{}{}'.format(obj.name, self.signal_key))
+#                self.sync_analyses(ys, es, '{}{}'.format(obj.name, self.signal_key))
+                self.sync_analyses(ys, es, obj.name)
+
             g.redraw()
 
     def refresh(self):
@@ -165,7 +168,7 @@ class InterpolationCorrection(HasTraits):
 
     def add_plot(self, key, fit, plotid):
         graph = self.graph
-        k = '{}{}'.format(key, self.signal_key)
+#        k = '{}{}'.format(key, self.signal_key)
         ps = self.predictors
         axs = [ai.timestamp for ai in self.analyses]
 
@@ -219,17 +222,20 @@ class InterpolationCorrection(HasTraits):
             axs = self.normalize(axs, min(axs))
             ays = []
             aes = []
-            k = '{}{}'.format(key, self.signal_key)
+#            k = '{}{}'.format(key, self.signal_key)
             for ai in self.analyses:
-                if ai.signals.has_key(k):
-                    ays.append(ai.signals[k].value)
-                    aes.append(ai.signals[k].error)
+                if ai.isotopes.has_key(key):
+                    ays.append(ai.isotopes[key].value)
+                    aes.append(ai.isotopes[key].error)
+#                if ai.signals.has_key(k):
+#                    ays.append(ai.signals[k].value)
+#                    aes.append(ai.signals[k].error)
                 else:
                     ays.append(0)
                     aes.append(0)
 
         #sync the analysis' signals
-        self.sync_analyses(ays, aes, k)
+#        self.sync_analyses(ays, aes, key)
 
         #display the predicted values
         ss, _ = graph.new_series(axs,
@@ -260,16 +266,36 @@ class InterpolationCorrection(HasTraits):
 
     def sync_analyses(self, ays, aes, k):
         for yi, ei, ai in zip(ays, aes, self.analyses):
-            if k in ai.signals:
-                sig = ai.signals[k]
+#            if k in ai.signals:
+#                sig = ai.signals[k]
+#                sig.value = yi
+#                sig.error = ei
+#            else:
+#                sig = self.isotope_klass(value=yi, error=ei)
+#                ai.signals[k] = sig
+            if k in ai.isotopes:
+                sig = ai.isotopes[k]
+
+                if self.isotope_name == 'blank':
+                    sig = sig.blank
+                elif self.isotope_name == 'background':
+                    sig = sig.background
+
                 sig.value = yi
                 sig.error = ei
             else:
-                sig = self.signal_klass(value=yi, error=ei)
-                ai.signals[k] = sig
+                sig = self.isotope_klass(value=yi, error=ei)
+                if self.isotope_name == 'blank':
+                    ai.isotopes[k].blank = sig
+                elif self.isotope_name == 'background':
+                    ai.isotopes[k].background = sig
+
 
     def _get_predictor_value(self, pi, key):
-        return pi.get_corrected_intercept(key)
+        return pi.isotopes[key]
+
+
+#        return pi.get_corrected_intercept(key)
 
     def _predictor_factory(self, predictor):
         if not isinstance(predictor, Analysis):

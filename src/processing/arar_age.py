@@ -22,7 +22,6 @@ import datetime
 from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
-from src.processing.signal import Signal
 from src.constants import AGE_SCALARS
 from apptools.preferences.preference_binding import bind_preference
 from src.processing.arar_constants import ArArConstants
@@ -69,8 +68,10 @@ class ArArAge(HasTraits):
     irradiation_position = Property
     production_ratios = Property
 
-    signals = AgeProperty()
-    _signals = Dict
+#    signals = AgeProperty()
+#    _signals = Dict
+    isotopes = Dict
+    isotope_keys = Property
 
     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
     age_error = AgeProperty()
@@ -170,32 +171,37 @@ class ArArAge(HasTraits):
             self.include_irradiation_error = include_irradiation_error
 
 
-        signals = self.signals
+#        signals = self.signals
 
-        nsignals = dict()
-        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-        for iso in keys:
-            for k in ['', 'bs', 'bl', 'bg']:
-                isok = iso + k
-                if not signals.has_key(isok):
-                    nsignals[isok] = (0, 0)
-                else:
-                    nsignals[isok] = signals[isok]
+#        nsignals = dict()
+#        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+#        for iso in keys:
+#            for k in ['', 'bs', 'bl', 'bg']:
+#                isok = iso + k
+#                if not signals.has_key(isok):
+#                    nsignals[isok] = (0, 0)
+#                else:
+#                    nsignals[isok] = signals[isok]
+#
+#        def sigs(name):
+#            ss = []
+#            for iso in map('{{}}{}'.format(name).format, keys):
+#                sig = nsignals[iso]
+#                if isinstance(sig, Signal):
+#                    sig = sig.value, sig.error
+#                ss.append(sig)
+#            return ss
 
-        def sigs(name):
-            ss = []
-            for iso in map('{{}}{}'.format(name).format, keys):
-                sig = nsignals[iso]
-                if isinstance(sig, Signal):
-                    sig = sig.value, sig.error
-                ss.append(sig)
-            return ss
+#        fsignals = sigs('')
+##        print fsignals[0]
+#        bssignals = sigs('bs')
+#        blsignals = sigs('bl')
+#        bksignals = sigs('bg')
 
-        fsignals = sigs('')
-#        print fsignals[0]
-        bssignals = sigs('bs')
-        blsignals = sigs('bl')
-        bksignals = sigs('bg')
+        fsignals = self._make_signals()
+        bssignals = self._make_signals(kind='baseline')
+        blsignals = self._make_signals(kind='blank')
+        bksignals = self._make_signals(kind='background')
 
         j = self.j
         if not include_j_error:
@@ -210,6 +216,7 @@ class ArArAge(HasTraits):
             irrad = nirrad
 
         ab = self.abundant_sensitivity
+
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
                                     j, irrad, abundant_sensitivity=ab, ic=self.ic_factor,
                                     include_decay_error=include_decay_error,
@@ -224,9 +231,15 @@ class ArArAge(HasTraits):
 #            age = ai.nominal_value
 #            err = ai.std_dev()
 #            return age, err
+    def _make_signals(self, kind=None):
+        def func(k):
+            iso = self.isotopes[k]
+            if kind:
+                iso = getattr(iso, kind)
+            return iso.value, iso.error
 
-    def _load_signals(self):
-        pass
+        return [func(ki)
+                    for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']]
 
 #===============================================================================
 # property get/set
@@ -265,12 +278,12 @@ class ArArAge(HasTraits):
         except KeyError:
             return 1
 
-    @cached_property
-    def _get_signals(self):
-#        if not self._signals:
-        self._load_signals()
-
-        return self._signals
+#    @cached_property
+#    def _get_signals(self):
+##        if not self._signals:
+##        self._load_signals()
+#
+#        return self._signals
 
     @cached_property
     def _get_age(self):

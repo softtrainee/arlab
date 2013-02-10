@@ -443,7 +443,7 @@ class StageMap(Loggable):
         lines = parse_file(self.file_path)
         if not lines:
             return
-        
+
         #line 0 shape, dimension
         shape, dimension = lines[0].split(',')
         self.g_shape = shape
@@ -497,19 +497,31 @@ class StageMap(Loggable):
                  title=self.name
                  )
         return v
-    
 
-import yaml  
+
+import yaml
 class UVStageMap(StageMap):
     def load(self):
         with open(self.file_path, 'r') as fp:
-            d=yaml.load(fp.read())
-            self.points=d['points']
-            self.lines=d['lines']
-            
-            
-            
-            
+            d = yaml.load(fp.read())
+            self.points = d['points']
+            self.lines = d['lines']
+
+    def get_point(self, name):
+        pos = None
+        if name.startswith('p'):
+            v = int(name[1:])
+            pos = self.points[v - 1]
+        return pos
+
+    def get_line(self, name):
+        pos = None
+        if name.startswith('l'):
+            v = int(name[1:])
+            pos = self.lines[v - 1]
+        return pos
+
+
 #============= EOF =============================================
 #        cspacing = spacing
 #        for i, e in enumerate(self.sample_holes[1:]):

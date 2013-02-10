@@ -77,14 +77,22 @@ class PlotPanel(Viewable):
                 try:
                     vv = reg.predict(0)
                     ee = reg.predict_error(0)
+                    u = ufloat((vv, ee))
                     if self.isbaseline:
-                        self.baselines[iso] = u = ufloat((vv, ee))
+                        self.baselines[iso] = u
                         if arar_age:
-                            arar_age.signals['{}bs'.format(iso)] = u
+                            base = arar_age.isotopes[iso].baseline
+                            base.value = vv
+                            base.error = ee
+
+#                            arar_age.signals['{}bs'.format(iso)] = u
                     else:
-                        self.signals[iso] = u = ufloat((vv, ee))
+                        self.signals[iso] = u
                         if arar_age:
-                            arar_age.signals[iso] = u
+                            sig = arar_age.isotopes[iso]
+                            sig.value = vv
+                            sig.error = ee
+#                            arar_age.signals[iso] = u
 
                 except TypeError, e:
                     print e
@@ -195,12 +203,12 @@ class PlotPanel(Viewable):
                 try:
                     rr = (ru - bu) / (rl - bl)
                 except ZeroDivisionError:
-                    rr=ufloat((0,0))
+                    rr = ufloat((0, 0))
             else:
                 try:
                     rr = ru / rl
                 except ZeroDivisionError:
-                    rr=ufloat((0,0))
+                    rr = ufloat((0, 0))
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \

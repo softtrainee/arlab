@@ -43,7 +43,7 @@ from src.experiment.identifier import convert_identifier, get_analysis_type, \
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
-from src.processing.signal import Signal
+#from src.processing.signal import Signal
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 
@@ -55,6 +55,7 @@ from src.experiment.automated_run_condition import TruncationCondition, \
 from pyface.timer.do_later import do_later
 from pyface.timer.api import do_after
 from src.processing.arar_age import ArArAge
+from src.database.records.isotope import IsotopicMeasurement
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
@@ -178,8 +179,8 @@ class AutomatedRun(Loggable):
     action_conditions = List
 
     _total_counts = 0
-    _processed_signals_dict=None
-    
+    _processed_signals_dict = None
+
     skip = Bool
     def assemble_report(self):
         signal_string = ''
@@ -246,14 +247,14 @@ anaylsis_type={}
     def get_baseline_corrected_signals(self):
         if self._processed_signals_dict is not None:
             d = dict()
-            signals=self._processed_signals_dict
+            signals = self._processed_signals_dict
             for iso, _, kind in self._save_isotopes:
-                if kind=='signal':
-                    si=signals['{}signal'.format(iso)]
-                    bi=signals['{}baseline'.format(iso)]
+                if kind == 'signal':
+                    si = signals['{}signal'.format(iso)]
+                    bi = signals['{}baseline'.format(iso)]
                     d[iso] = si - bi
             return d
-            
+
 #        pp = self.plot_panel
 ##        if pp:
 #            for ki, si in pp.signals.iteritems():
@@ -542,7 +543,7 @@ anaylsis_type={}
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
                                 check_conditions)
-            
+
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
         else:
             isotopes = [di.isotope for di in self._active_detectors]
@@ -634,9 +635,12 @@ anaylsis_type={}
         #sync the arar_age object's signals
         if self.analysis_type == 'unknown':
             for iso, v in blanks.iteritems():
-                self.arar_age.signals['{}bl'.format(iso)] = v
+                self.arar.isotopes[iso].set_uvalue(v)
+#                self.arar_age.signals['{}bl'.format(iso)] = v
+
             for iso, v in baselines.iteritems():
-                self.arar_age.signals['{}bs'.format(iso)] = v
+                self.arar.isotopes[iso].baseline.set_uvalue(v)
+#                self.arar_age.signals['{}bs'.format(iso)] = v
 
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
@@ -996,7 +1000,7 @@ anaylsis_type={}
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
-        
+
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1074,7 +1078,7 @@ anaylsis_type={}
 #                graph.suppress_regression = False
 #            graph._update_graph()
             data_write_hook(x, keys, signals)
-            do_after(100,graph._update_graph)
+            do_after(100, graph._update_graph)
 
         return True
 
@@ -1182,7 +1186,7 @@ anaylsis_type={}
             #do preliminary processing of data
             #returns signals dict and peak_center table
             ss, pc = self._preliminary_processing(cp)
-            self._processed_signals_dict=ss
+            self._processed_signals_dict = ss
             #add selected history
             _sh = db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
@@ -1219,22 +1223,22 @@ anaylsis_type={}
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
 #            if iso=='Ar40':
 #                print 'prelim signal,',len(x), x[0], x[-1]
-                
-            s = Signal(xs=x, ys=y, fit=fit)
+
+            s = IsotopicMeasurement(xs=x, ys=y, fit=fit)
             rsignals['{}signal'.format(iso)] = s
 
         self.baseline_fits = ['average_SEM', ] * len(baselines)
         for fit, (iso, detname) in zip(self.baseline_fits, baselines):
             tab = dm.get_table(detname, '/baseline/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
-            bs = Signal(xs=x, ys=y, fit=fit)
+            bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
 
             rsignals['{}baseline'.format(iso)] = bs
 
         for (iso, detname) in sniffs:
             tab = dm.get_table(detname, '/sniff/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
-            sn = Signal(xs=x, ys=y)
+            sn = IsotopicMeasurement(xs=x, ys=y)
             rsignals['{}sniff'.format(iso)] = sn
 
         peak_center = dm.get_table('peak_center', '/')

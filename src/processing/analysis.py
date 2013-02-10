@@ -87,21 +87,21 @@ class Analysis(Loggable):
         else:
             self.warning('could not compute age for {}'.format(self.rid))
 
-    def get_corrected_intercept(self, key):
-        '''
-            return signal corrected for baseline background and blank only
-        '''
-        sigs = self.signals
-        s = sigs[key]
-        for ki in ['bs', 'bg', 'bl']:
-            kk = '{}{}'.format(key, ki)
-            if kk in sigs:
-                v = sigs[kk]
-            else:
-                v = 0
-            s -= v
-
-        return s
+#    def get_corrected_intercept(self, key):
+#        '''
+#            return signal corrected for baseline background and blank only
+#        '''
+#        sigs = self.signals
+#        s = sigs[key]
+#        for ki in ['bs', 'bg', 'bl']:
+#            kk = '{}{}'.format(key, ki)
+#            if kk in sigs:
+#                v = sigs[kk]
+#            else:
+#                v = 0
+#            s -= v
+#
+#        return s
 
     def _analysis_factory(self, dbr):
         klass = self.__class__

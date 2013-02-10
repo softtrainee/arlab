@@ -32,16 +32,16 @@ EOT = chr(4)
 ENQ = chr(5)
 DLE = chr(16)
 ANSWER_ADDR = '0002'
-STATUS=['Powering On', 'Laser Off', 'Turning On', 'Laser On']
-ACTION=['Turn Off', 'Turn on', 'Single Shot', 'Run','Firing']
+STATUS = ['Powering On', 'Laser Off', 'Turning On', 'Laser On']
+ACTION = ['Turn Off', 'Turn on', 'Single Shot', 'Run', 'Firing']
 class ATLLaserControlUnit(CoreDevice):
     '''
     '''
     energy_readback = Float
-    pressure_readback=Float
-    burst_readback=Int
-    status_readback=Str
-    action_readback=Str
+    pressure_readback = Float
+    burst_readback = Int
+    status_readback = Str
+    action_readback = Str
 #    _timer = None
 #    _enabled = Bool(False)
 #    triggered = Bool(False)
@@ -106,14 +106,15 @@ class ATLLaserControlUnit(CoreDevice):
 #        '''
 #        '''
 #        self.triggered = False
+    def __init__(self, *args, **kw):
+        super(ATLLaserControlUnit, self).__init__(*args, **kw)
+        self._lock = Lock()
+
     def initialize(self, *args, **kw):
-        r=super(ATLLaserControlUnit,self).initialize(self, *args, **kw)
-        self._communicator.write_terminator=None
-        
-        self._lock=Lock()
-        
+        r = super(ATLLaserControlUnit, self).initialize(self, *args, **kw)
+        self._communicator.write_terminator = None
         return r
-    
+
 #    def laser_burst(self, n):
         #get process status
         #if not burst mode set to burst mode
@@ -125,65 +126,65 @@ class ATLLaserControlUnit(CoreDevice):
 #        time.sleep(0.05)
 ##        #set number of bursts
 #        self.set_nburst(n)
-        
+
         #run laser
 #        cmd = self._build_command(11, 3)
 #        self._send_command(cmd)
-    
-    def set_nburst(self,n, save=True):
-        v=make_bitarray(n, width=32)
-        h=v[:16]
-        l=v[16:]
-        
-        l=int(l,2)
-        h=int(h,2)
-        cmd=self._build_command(22, (l,h))
+
+    def set_nburst(self, n, save=True):
+        v = make_bitarray(n, width=32)
+        h = v[:16]
+        l = v[16:]
+
+        l = int(l, 2)
+        h = int(h, 2)
+        cmd = self._build_command(22, (l, h))
         self._send_command(cmd)
-                
-        cmd=self._build_command(1004, (l,h))
+
+        cmd = self._build_command(1004, (l, h))
         self._send_command(cmd)
-        
+
         if save:
-            cmd=self._build_command(37, 1)
+            cmd = self._build_command(37, 1)
             self._send_command(cmd)
-        
-        self.burst_readback=self.get_nburst()
-        
-    def get_nburst(self,verbose=True):
-        v=0
-        resp=self._send_query(22, 2, verbose=verbose)
-        if resp is not None and len(resp)==8:
-            high=resp[4:]
-            low=resp[:4]
-            high=make_bitarray(int(high,16), width=16)
-            low=make_bitarray(int(low,16), width=16)
-            v=int(high+low,2)
-            
+
+        self.burst_readback = self.get_nburst()
+
+    def get_nburst(self, verbose=True):
+        v = 0
+        resp = self._send_query(22, 2, verbose=verbose)
+        if resp is not None and len(resp) == 8:
+            high = resp[4:]
+            low = resp[:4]
+            high = make_bitarray(int(high, 16), width=16)
+            low = make_bitarray(int(low, 16), width=16)
+            v = int(high + low, 2)
+
         return v
 #        return int(high+low, 2)
-        
+
     def is_burst_mode(self, ps=None):
-        bit=4
+        bit = 4
         if ps is None:
-            ps=self.get_process_status()
-            return int(ps[16-(bit+1)])
-        
+            ps = self.get_process_status()
+            return int(ps[16 - (bit + 1)])
+
     def get_process_status(self):
-        ps='0000000000000000'
-        r=self._send_query(1000,1)
+        ps = '0000000000000000'
+        r = self._send_query(1000, 1)
         if r is not None:
-            r=int(r,16)
-            ps=make_bitarray(r,width=16)
+            r = int(r, 16)
+            ps = make_bitarray(r, width=16)
         return ps
-    
+
     def set_burst_mode(self, mode, ps=None):
         if ps is None:
-            ps=self.get_process_status()
-            
-        nps=ps[:16-4]+str(int(mode))+ps[-4:]
-        cmd=self._build_command(1000, int(nps,2))
+            ps = self.get_process_status()
+
+        nps = ps[:16 - 4] + str(int(mode)) + ps[-4:]
+        cmd = self._build_command(1000, int(nps, 2))
         self._send_command(cmd)
-        
+
     def laser_on(self):
         '''
         '''
@@ -213,7 +214,7 @@ class ATLLaserControlUnit(CoreDevice):
 #        ps=self.get_process_status()
 #        if self.is_burst_mode(ps):
 #            self.set_burst_mode(False, ps)
-            
+
         cmd = self._build_command(11, 3)
         self._send_command(cmd)
 
@@ -222,10 +223,10 @@ class ATLLaserControlUnit(CoreDevice):
 
         cmd = self._build_command(11, 1)
         self._send_command(cmd)
-        
+
     def get_laser_status(self, verbose=True):
-        r=self._send_query(11, 1, verbose=verbose)        
-        return self._parse_response(r, 1)[0]  
+        r = self._send_query(11, 1, verbose=verbose)
+        return self._parse_response(r, 1)[0]
 #===============================================================================
 # gas handling
 #===============================================================================
@@ -234,28 +235,28 @@ class ATLLaserControlUnit(CoreDevice):
         #wait until idle
         self.wait_for_idle()
 #        self.wait_for_gwr()
-        
+
     def do_auto_gas_exchange(self):
 #        self.start_auto_gas_exchange()
         self.wait_for_idle()
 #        self.wait_for_gwr()
-        
+
     def wait_for_idle(self):
         while 1:
             time.sleep(0.75)
             if self.is_idle():
                 break
-            
+
     def wait_for_gwr(self):
         while 1:
             time.sleep(0.75)
             if self.waiting_for_gas_request():
                 break
-         
+
     def start_auto_vac(self):
         cmd = self._build_command(14, 11)
         self._send_command(cmd)
-        
+
     def start_auto_gas_exchange(self):
 
         cmd = self._build_command(14, 11)
@@ -264,66 +265,66 @@ class ATLLaserControlUnit(CoreDevice):
     def set_to_idle(self):
         cmd = self._build_command(14, 11)
         self._send_command(cmd)
-    
+
     def waiting_for_gas_request(self, verbose=False):
-        rq=self.get_gas_wait_request(verbose=verbose)
+        rq = self.get_gas_wait_request(verbose=verbose)
         print rq
         if rq is not None:
-            return rq[0]==1
-        
+            return rq[0] == 1
+
     def is_idle(self):
-        status=self.get_gas_status()
+        status = self.get_gas_status()
         if status is not None:
-            istatus=int(status, 16)
-            return istatus==0
+            istatus = int(status, 16)
+            return istatus == 0
 
     def get_pressure(self, verbose=False):
-        vs=self._send_query(9, 1, verbose=verbose)
+        vs = self._send_query(9, 1, verbose=verbose)
         if vs is not None:
-            vs=self._parse_response(vs, 1)
+            vs = self._parse_response(vs, 1)
             if vs is not None:
-                self.pressure_readback=vs[0]/1000. 
-    
+                self.pressure_readback = vs[0] / 1000.
+
     def get_gas_status(self):
-        r=self._send_query(13, 1)
+        r = self._send_query(13, 1)
         return r
 
     def get_gas_wait_request(self, verbose=True):
-        r=self._send_query(27, 1, verbose=verbose)
+        r = self._send_query(27, 1, verbose=verbose)
         return self._parse_response(r, 1)
-        
-    
+
+
     def open_valve(self, addr):
         self.info('open valve {}'.format(addr))
-        
+
     def close_valve(self, addr):
         self.info('close valve {}'.format(addr))
-    
+
     def update_parameters(self):
         '''
         '''
         #energy and pressure_readback
-        vs=self._send_query(8, 4, verbose=False)
+        vs = self._send_query(8, 4, verbose=False)
 #        vs=self._send_query(30, 2, verbose=False)
         if vs is not None:
 #            print vs
-            vs=self._parse_response(vs, 4)
-            if vs is not None:            
-                self.energy_readback=vs[0]/10.
-                self.pressure_readback=vs[1]
-                self.status_readback=STATUS[vs[2]]
-                self.action_readback=ACTION[vs[3]]
-                
+            vs = self._parse_response(vs, 4)
+            if vs is not None:
+                self.energy_readback = vs[0] / 10.
+                self.pressure_readback = vs[1]
+                self.status_readback = STATUS[vs[2]]
+                self.action_readback = ACTION[vs[3]]
+
         time.sleep(0.1)
 #        vs=self._send_query(12, 1, verbose=False)
 #        if vs is not None:
 #            vs=self._parse_response(vs, 1)   
 #            print vs
 #        print self.get_process_status()
-        self.burst_readback=self.get_nburst(verbose=False)
+        self.burst_readback = self.get_nburst(verbose=False)
 #        s=self.get_laser_status(verbose=False)
 #        if s<=3:
-        
+
 #        vs=self._send_query(6, 2, verbose=False)
 ##        vs=self._send_query(30, 2, verbose=False)
 #        if vs is not None:
@@ -351,7 +352,7 @@ class ATLLaserControlUnit(CoreDevice):
 #                setattr(self, 'update_%s' % name, value)
 
     def _set_answer_parameters(self, start_addr_value, answer_len,
-                                verbose=True, ):
+                                verbose=True,):
         '''
         '''
 
@@ -361,7 +362,7 @@ class ATLLaserControlUnit(CoreDevice):
         values = [start_addr_value, answer_len]
         cmd = self._build_command(ANSWER_ADDR, values)
 
-        self._send_command(cmd,verbose=verbose)
+        self._send_command(cmd, verbose=verbose)
 
 
     def _build_command(self, start_addr, values):
@@ -373,11 +374,11 @@ class ATLLaserControlUnit(CoreDevice):
             start_addr = '{:04X}'.format(start_addr)
 
         if isinstance(values, int):
-            values=(values,)
+            values = (values,)
 #            values = ('{:04X}'.format(values),)
-        
-        values=map('{:04X}'.format, values)
-        
+
+        values = map('{:04X}'.format, values)
+
         cmd = start_addr + ''.join(values)
         cmd += ETX
         BCC = computeBCC(cmd)
@@ -390,20 +391,20 @@ class ATLLaserControlUnit(CoreDevice):
         '''
 
         '''
-        
-        self._set_answer_parameters(s, l,verbose=verbose)
-            
+
+        self._set_answer_parameters(s, l, verbose=verbose)
+
         with self._lock:
-            cmd = self._build_command(ANSWER_ADDR, (s,l))
-            self._send_command(cmd,verbose=verbose, lock=False)
-            
+            cmd = self._build_command(ANSWER_ADDR, (s, l))
+            self._send_command(cmd, verbose=verbose, lock=False)
+
             #=self.ask('A'+ENQ, nchars=(l+1)*4+6)
     #        self._start_message()
-            n=(l+1)*4+6
-            cmd='a'+ENQ
-            r=self.ask(cmd, nchars=n, verbose=verbose)
+            n = (l + 1) * 4 + 6
+            cmd = 'a' + ENQ
+            r = self.ask(cmd, nchars=n, verbose=verbose)
     #        r = self.read(nchars=n)
-            self.tell(DLE + '1',verbose=verbose)
+            self.tell(DLE + '1', verbose=verbose)
             self._end_message(verbose=verbose)
             return self._clean_response(r)
 
@@ -412,42 +413,42 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         if lock:
             self._lock.acquire()
-        
+
         self._start_message(verbose=verbose)
         self.ask(cmd, read_terminator=DLE + '1', verbose=verbose)
         self._end_message(verbose=verbose)
 
         if lock:
             self._lock.release()
-        
+
     def _start_message(self, verbose=True):
         '''
         '''
         cmd = 'A' + ENQ
         self.ask(cmd, read_terminator=DLE + '0', verbose=verbose)
 
-    def _end_message(self,verbose=True):
+    def _end_message(self, verbose=True):
         '''
         '''
         cmd = EOT
-        self.tell(cmd,verbose=verbose)
-        
+        self.tell(cmd, verbose=verbose)
+
     def _clean_response(self, r):
 #        print len(r)
-        handshake=r[:4]
+        handshake = r[:4]
 #        print handshake,handshake=='a'+DLE+'0'+STX
-        if handshake=='a'+DLE+'0'+STX:
-            
-            chksum=computeBCC(r[4:-1])
+        if handshake == 'a' + DLE + '0' + STX:
+
+            chksum = computeBCC(r[4:-1])
 #            print chksum, r[-1], chr(chksum)
-            if chr(chksum)==r[-1]:
+            if chr(chksum) == r[-1]:
                 return r[8:-2]
-            
-    def _parse_response(self,resp, l):
+
+    def _parse_response(self, resp, l):
 #        print resp, l, len(resp)==l*4
-        if resp is not None and len(resp)==l*4:
-            return [int(resp[i:i+4], 16) for i in range(0, len(resp)-3, 4)]
-       
+        if resp is not None and len(resp) == l * 4:
+            return [int(resp[i:i + 4], 16) for i in range(0, len(resp) - 3, 4)]
+
 #    def _parse_parameter_answers(self, resp, rstartaddr, answer_len):
 #        '''
 #        '''

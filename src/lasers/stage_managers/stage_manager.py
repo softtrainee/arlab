@@ -49,15 +49,15 @@ class StageManager(Manager):
     '''
     '''
     stage_controller_class = String('Newport')
-    
+
     stage_controller = Instance(MotionController)
-    points_programmer=Instance(PointsProgrammer)
+    points_programmer = Instance(PointsProgrammer)
     motion_controller_manager = Instance(MotionControllerManager)
     canvas = Instance(LaserTrayCanvas)
     _stage_map = Instance(StageMap)
 
     simulation = DelegatesTo('stage_controller')
-    stage_map_klass=StageMap
+    stage_map_klass = StageMap
     stage_map = Property(depends_on='_stage_map')
     stage_maps = Property(depends_on='_stage_maps')
 
@@ -165,14 +165,14 @@ class StageManager(Manager):
             sm = StageMap(file_path=path)
             sm.load_correction_file()
             self._stage_maps.append(sm)
-        
+
         #load user points as stage map
         for di in os.listdir(paths.user_points_dir):
-            if di.endswith('.txt'):
-                path=os.path.join(paths.user_points_dir,di)
+            if di.endswith('.yaml'):
+                path = os.path.join(paths.user_points_dir, di)
                 sm = self.stage_map_klass(file_path=path)
                 self._stage_maps.append(sm)
-                
+
         #load the saved stage map
         sp = self._get_stage_map_by_name(self._load_previous_stage_map())
         if sp is not None:
@@ -242,13 +242,13 @@ class StageManager(Manager):
 
     def move_to_hole(self, hole, **kw):
         self._move_to_hole(hole, **kw)
-    
+
     def move_to_point(self, pt):
         self._move_to_point(pt)
-    
+
     def move_polyline(self, line):
         self._move_polyline(line)
-        
+
     def set_x(self, value, **kw):
         return self.stage_controller.single_axis_move('x', value, **kw)
 
@@ -364,7 +364,7 @@ class StageManager(Manager):
             return next((si for si in smap.sample_holes
                             if _filter(si, x, y)
                       ), None)
-    
+
     def _load_previous_stage_map(self):
         p = os.path.join(paths.hidden_dir, 'stage_map')
 
@@ -431,11 +431,11 @@ class StageManager(Manager):
 
     def _move_polyline(self, line):
         for pi in line.points:
-            self.linear_move(pi.x, pi.y, update_hole=False, 
+            self.linear_move(pi.x, pi.y, update_hole=False,
                                    use_calibration=False,
                                    block=True)
-            
-            
+
+
     def _move_to_point(self, pt):
         pos = pt.x, pt.y
         self.info('Move to point {}'.format(pt.identifier))
@@ -645,11 +645,11 @@ class StageManager(Manager):
         return 'Program Points' if not self.canvas.markup else 'End Program'
 
     def _validate_hole(self, v):
-        nv=None
+        nv = None
         try:
             if v is not '':
                 nv = int(v)
-            
+
         except TypeError:
             self.warning('invalid hole {}'.format(v))
 
@@ -881,9 +881,9 @@ class StageManager(Manager):
                             )
         self.canvas.on_trait_change(v.update_calibration, 'calibration_item.[rotation, center]')
         return v
-    
+
     def _points_programmer_default(self):
-        pp=PointsProgrammer(canvas=self.canvas,
+        pp = PointsProgrammer(canvas=self.canvas,
                             _stage_maps=self._stage_maps,
                             stage_map_klass=self.stage_map_klass
                             )

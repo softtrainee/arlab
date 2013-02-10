@@ -27,13 +27,15 @@ import re
 from src.processing.analysis import Analysis
 from src.helpers.traitsui_shortcuts import listeditor
 
-from src.processing.signal import Blank, Background, Signal
+#from src.processing.signal import Blank, Background, Signal
 from src.processing.corrections.fixed_value_correction import FixedValueCorrection
 from src.processing.corrections.interpolation_correction import InterpolationCorrection, \
     DetectorIntercalibrationInterpolationCorrection
 #from src.viewable import Viewable
 from src.saveable import Saveable
 from traitsui.tabular_adapter import TabularAdapter
+from src.processing.isotope import Isotope
+
 
 class GroupedAnalysisAdapter(TabularAdapter):
     columns = [
@@ -76,8 +78,10 @@ class CorrectionsManager(Saveable):
         subclass needs to set the following values
     '''
     correction_name = None
-    signal_klass = Signal
-    signal_key = None
+    isotope_klass = Isotope
+
+#    signal_key = None
+    isotope_name = 'isotope'
     analysis_type = None
 
     def close(self, isok):
@@ -91,11 +95,13 @@ class CorrectionsManager(Saveable):
     def apply_correction(self):
         if self.use_fixed_values:
             for ai in self.analyses:
-                history = self._add_history(ai)
-
+                history = None
                 for fi in self.fixed_values:
-                    if not fi.use_value:
+                    if not fi.use:
                         continue
+
+                    if history is None:
+                        history = self._add_history(ai)
 
                     self._apply_fixed_correction(ai, history, fi.name, fi.value, fi.error)
         else:
@@ -126,8 +132,8 @@ class CorrectionsManager(Saveable):
             #load a fit series
             self.interpolation_correction = self.interpolation_correction_klass(analyses=self.analyses,
                                                                     kind=self.correction_name,
-                                                                    signal_key=self.signal_key,
-                                                                    signal_klass=self.signal_klass,
+                                                                    isotope_klass=self.isotope_klass,
+                                                                    isotope_name=self.isotope_name,
                                                                     analysis_type=self.analysis_type,
                                                                     db=self.db,
                                                                     )
@@ -174,7 +180,11 @@ class CorrectionsManager(Saveable):
         db = self.db
         func = getattr(db, 'add_{}'.format(self.correction_name))
         func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
-        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+#        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+#        ss=ai.isotopes
+
+        ss = self._get_isotope_value(ai, si.name)
+
         item = func(history, isotope=si.name,
                     user_value=ss.value,
                     user_error=ss.error,
@@ -285,9 +295,11 @@ class CorrectionsManager(Saveable):
 #                  )
 
     def _update_value(self, analysis, isotope, value, error):
-        b = self.signal_klass(_value=value, _error=error)
-        key = '{}{}'.format(isotope, self.signal_key)
-        analysis.dbrecord.signals[key] = b
+#        b = Isotope(_value=value, _error=error)
+#        key = '{}{}'.format(isotope, self.signal_key)
+        func = getattr(analysis, 'set_{}'.format(self.isotope_name))
+        func(isotope, value, error)
+#        analysis.isotopes[key] = b
 
     def _load_fixed_values(self):
         keys = self._get_isotope_names()
@@ -351,27 +363,45 @@ class CorrectionsManager(Saveable):
 
 class BlankCorrectionsManager(CorrectionsManager):
     correction_name = 'blanks'
-    signal_key = 'bl'
-    signal_klass = Blank
+#    signal_key = 'bl'
+#    signal_klass = Blank
+    isotope_name = 'blank'
     analysis_type = 'blank'
     title = 'Set Blanks'
+    def _get_isotope_value(self, an, name):
+        if an.isotopes.has_key(name):
+            iso = an.isotopes[name]
+            return iso.blank
 
 class BackgroundCorrectionsManager(CorrectionsManager):
     correction_name = 'backgrounds'
-    signal_key = 'bg'
-    signal_klass = Background
+#    signal_key = 'bg'
+#    signal_klass = Background
+    isotope_name = 'background'
+
     title = 'Set Backgrounds'
     analysis_type = 'background'
+    def _get_isotope_value(self, an, name):
+        if an.isotopes.has_key(name):
+            iso = an.isotopes[name]
+            return iso.background
 
 class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
     title = 'Set Detector Intercalibration'
     correction_name = 'detector_intercalibration'
     analysis_type = 'air'
-    signal_key = ''
+
+
     interpolation_correction_klass = DetectorIntercalibrationInterpolationCorrection
     def _load_fixed_values(self):
         if not self.fixed_values:
             self.fixed_values = [FixedValueCorrection(name='ICFactor')]
+
+    def _apply_fixed_correction(self, analysis, history, isotope, value, error):
+        db = self.db
+        func = getattr(db, 'add_{}'.format(self.correction_name))
+        func(history, 'CDD', user_value=value, user_error=error)
+        self._update_value(analysis, isotope, value, error)
 
     def _apply_fixed_value_correction(self, phistory, history, si):
         if phistory:
