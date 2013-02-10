@@ -251,6 +251,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         low = plot.index_range.low
         high = plot.index_range.high
+
         fx = linspace(low, high, 200)
         if fit in [1, 2, 3]:
             if len(y) < fit + 1:
@@ -265,6 +266,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         fy = r.predict(fx)
         ci = r.calculate_ci(fx)
+
         if ci is not None:
             ly, uy = ci
         else:
@@ -274,7 +276,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             line.regressor = r
 
         self.regressors.append(r)
-
+#        print fx, fy
         return fx, fy, ly, uy
 
     def _least_square_regress(self, x, y, ox, oy, fx, index,
@@ -292,6 +294,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _mean_regress(self, x, y, ox, oy, fx, index,
                       fit, fod, apply_filter):
+
         r = MeanRegressor(xs=x, ys=y, fit=fit)
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
@@ -380,7 +383,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        elif isinstance(f, tuple):
 #            #f == fitfunc, errfunc
 #            return f
-
         return f
 
 #    def _apply_filter(self, filt, xs, ys):
@@ -530,6 +532,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
                                                **kw)
         line = plot.plot(names, **rd)[0]
+        if self.regressors:
+            line.regressor = self.regressors[-1]
+
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
 

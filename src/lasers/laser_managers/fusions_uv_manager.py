@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Instance, Enum, Bool, Button, Str, DelegatesTo, Event, Property,\
+from traits.api import Instance, Enum, Bool, Button, Str, DelegatesTo, Event, Property, \
     Int
 from traitsui.api import View, Item, Group, HGroup, VGroup, Label, \
     EnumEditor, spring, ButtonEditor
@@ -48,7 +48,7 @@ class FusionsUVManager(FusionsLaserManager):
 #    update_attenuation = DelegatesTo('laser_controller')
     monitor_name = 'uv_laser_monitor'
     monitor_klass = FusionsUVLaserMonitor
-    
+
     atl_controller = Instance(ATLLaserControlUnit)
     simulation = DelegatesTo('atl_controller')
     single_shot = Button('Single Shot')
@@ -57,7 +57,7 @@ class FusionsUVManager(FusionsLaserManager):
     fire_button = Event
     fire_label = Property(depends_on='firing')
     firing = Bool
-    mode=Enum('Burst','Continuous', 'Single')
+    mode = Enum('Burst', 'Continuous', 'Single')
 #    single_shot = Bool 
 
     gas_handler = Instance(UVGasHandlerManager)
@@ -72,23 +72,106 @@ class FusionsUVManager(FusionsLaserManager):
 #    energymax = DelegatesTo('atl_controller')
     energy_readback = DelegatesTo('atl_controller')
     pressure_readback = DelegatesTo('atl_controller')
-    burst_readback=DelegatesTo('atl_controller')
-    status_readback=DelegatesTo('atl_controller')
-    action_readback=DelegatesTo('atl_controller')
-    
-    burst_shot=Int(enter_set=True, auto_set=False)
-    
-    laser_script_executor=Instance(LaserScriptExecutor)
-    execute_button=DelegatesTo('laser_script_executor')
-    execute_label=DelegatesTo('laser_script_executor')
-    
-#    def goto_named_position(self,pos):
-#        pass
-    
+    burst_readback = DelegatesTo('atl_controller')
+    status_readback = DelegatesTo('atl_controller')
+    action_readback = DelegatesTo('atl_controller')
+
+    burst_shot = Int(enter_set=True, auto_set=False)
+
+    laser_script_executor = Instance(LaserScriptExecutor)
+    execute_button = DelegatesTo('laser_script_executor')
+    execute_label = DelegatesTo('laser_script_executor')
+
+    def goto_point(self, pos):
+        sm = self.stage_manager.stage_map
+        pt = sm.get_point(pos)
+        self.stage_manager.linear_move(pt.x, pt.y, block=False)
+
+    def trace_path(self, pathname, callback=None):
+        def step_func(sman, x, y):
+            sman.linear_move(x, y, block=True)
+            self.single_burst()
+
+        sm = self.stage_manager.stage_map
+        line = sm.get_line(pathname)
+        points = line.points
+        pt = points[0]
+
+        tol = 0.001
+        L = 1
+
+        x1, y1 = pt.x, pt.y
+        #move to first point
+        step_func(x1, y1)
+
+        for pi in points[1:]:
+            x2, y2 = pi.x, pi.y
+            #step along line until cp >=pi
+            while 1:
+                x1, y1 = self._calc_point_along_line(x1, y1, x2, y2, L)
+                step_func(x1, y1)
+
+                if abs(pi.x - x1) < tol and abs(pi.y - y1) < tol:
+                    break
+
     def update_parameters(self):
         if self.atl_controller is not None:
             self.atl_controller.update_parameters()
+
+    def _calc_point_along_line(self, x1, y1, x2, y2, L):
+        '''
+            calculate pt (x,y) that is L units from x1, x2
             
+            if calculated pt is past endpoint use endpoint
+            
+            
+                        * x2,y2
+                      /  
+                    /
+              L--- * x,y
+              |  /
+              *
+            x1,y1
+            
+            L**2=(x-x1)**2+(y-y1)**2
+            y=m*x+b
+            
+            0=(x-x1)**2+(m*x+b-y1)**2-L**2
+            
+            solve for x
+        '''
+        run = (x2 - x1)
+
+        if run:
+            from scipy.optimize import fsolve
+            m = (y2 - y1) / float(run)
+            b = y2 - m * x2
+            f = lambda x: (x - x1) ** 2 + (m * x + b - y1) ** 2 - L ** 2
+
+            #initial guess x 1/2 between x1 and x2
+            x = fsolve(f, x1 + (x2 - x1) / 2.)[0]
+            y = m * x + b
+
+        else:
+            x = x1
+            if y2 > y1:
+                y = y1 + L
+            else:
+                y = y1 - L
+
+        lx, hx = min(x1, x2), max(x1, x2)
+        ly, hy = min(y1, y2), max(y1, y2)
+        if  not lx <= x <= hx or not ly <= y <= hy:
+            x, y = x2, y2
+
+        return x, y
+
+    def single_burst(self, delay=4):
+        atl = self.atl_controller
+        atl.laser_on()
+        time.sleep(delay)
+        atl.laser_off()
+
     def _enable_hook(self):
         resp = self.laser_controller._enable_laser()
         if self.laser_controller.simulation:
@@ -96,27 +179,27 @@ class FusionsUVManager(FusionsLaserManager):
 
         if resp:
             self.atl_controller.laser_on()
-        
+
         return resp
 
     def _disable_hook(self):
         #pause for the monitor to stop
         time.sleep(0.25)
-        
+
         resp = self.laser_controller._disable_laser()
         if self.laser_controller.simulation:
             resp = True
         if resp:
             self.atl_controller.laser_off()
-        self.status_readback=''
-        self.action_readback=''
-        self.firing=False
+        self.status_readback = ''
+        self.action_readback = ''
+        self.firing = False
         return resp
-             
+
 #===============================================================================
 # handlers
 #===============================================================================
-        
+
     def _fire_button_fired(self):
         if self.firing:
             self.info('stopping laser')
@@ -124,21 +207,21 @@ class FusionsUVManager(FusionsLaserManager):
             self.atl_controller.laser_stop()
         else:
             self.info('firing laser')
-            if self.mode=='Single':
+            if self.mode == 'Single':
                 self.atl_controller.laser_single_shot()
 #            elif self.mode=='Burst':
 #                self.atl_controller.laser_burst()
 #                self.firing = True
             else:
-                self.atl_controller.laser_run()                    
+                self.atl_controller.laser_run()
                 self.firing = True
-                
+
     def _burst_shot_changed(self):
         if self.burst_shot:
             self.atl_controller.set_nburst(self.burst_shot)
-    
+
     def _mode_changed(self):
-        if self.mode=='Burst':
+        if self.mode == 'Burst':
             self.atl_controller.set_burst_mode(True)
         else:
             self.atl_controller.set_burst_mode(False)
@@ -155,16 +238,16 @@ class FusionsUVManager(FusionsLaserManager):
                       self._button_factory('execute_button', 'execute_label', align='left'),
 #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
                       HGroup(
-                             Item('action_readback',width=100,style='readonly',label='Action'),
-                             Item('status_readback',style='readonly',label='Status'),
+                             Item('action_readback', width=100, style='readonly', label='Action'),
+                             Item('status_readback', style='readonly', label='Status'),
                              ),
                       HGroup(self._button_factory('fire_button', 'fire_label'),
                              Item('mode', show_label=False),
                              Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
-                             Item('burst_readback', label='Burst Rem.',width=100, style='readonly'),
+                             Item('burst_readback', label='Burst Rem.', width=100, style='readonly'),
                              Item('energy_readback', label='Energy (mJ)', style='readonly', format_str='%0.2f'),
-                             Item('pressure_readback', label='Pressure (mbar)', 
-                                  style='readonly', width=100,format_str='%0.1f'),
+                             Item('pressure_readback', label='Pressure (mbar)',
+                                  style='readonly', width=100, format_str='%0.1f'),
                              spring,
                              enabled_when='object.enabled'
                              ),
@@ -174,7 +257,7 @@ class FusionsUVManager(FusionsLaserManager):
 #===============================================================================
 # defaults
 #===============================================================================
-    
+
     def _stage_manager_default(self):
         '''
         '''
@@ -214,7 +297,7 @@ class FusionsUVManager(FusionsLaserManager):
         return uv
     def _mode_default(self):
         return 'Burst'
-    
+
     def _laser_script_executor_default(self):
         return LaserScriptExecutor(laser_manager=self)
 #    def _shot_history_default(self):

@@ -32,11 +32,12 @@ class AnalysisSummary(Summary):
 
     def _build_summary(self):
         record = self.record
+#        isos = record.isotope_keys
+#        isos = []
 
-        isos = record.isotope_keys
-        isos = list(reversed(isos))
-        if not isos:
-            isos = []
+#        isos = list(reversed(isos))
+#        if not isos:
+#            isos = []
 
         #add header
         columns = [('Det.', 0),
@@ -88,15 +89,17 @@ class AnalysisSummary(Summary):
         else:
             ss = NULL_STR
 
+        ic, ic_e = record.ic_factor
+        ics = '{} {}{}'.format(ic, PLUSMINUS, self.make_error(ic, ic_e))
+        self._make_keyword('IC', ics, new_line=True)
         self._make_keyword('Sensitivity', ss, new_line=True)
-
         #added header
         self.add_text(header, underline=True, bold=True)
 
-        #add isotopes
-        n = len(isos) - 1
-        for i, iso in enumerate(isos):
-            self._make_signals(n, i, iso, widths)
+        keys = record.isotope_keys
+        for k in keys:
+            iso = record.isotopes[k]
+            self._make_isotope(iso, widths, last_line=i == n)
 
         #add corrected signals
         m = 'Baseline Corrected Signals          Fully Corrected Signals'
@@ -105,8 +108,13 @@ class AnalysisSummary(Summary):
 
         #refresh arar_result
         self.record.calculate_age()
-        for i, iso in enumerate(isos):
-            self._make_corrected_signals(n, i, iso, widths, underline_width)
+
+        keys = record.isotope_keys
+        for k in keys:
+            self._make_corrected_signals(k, widths, underline_width, last_line=i == n)
+
+#        for i, iso in enumerate(isos):
+#            self._make_corrected_signals(n, i, iso, widths, underline_width)
 
         #add corrected values
         m = 'Corrected Values'
@@ -177,16 +185,11 @@ class AnalysisSummary(Summary):
                    underline=underline)
         self.add_text(msg, size=11, underline=underline)
 
-    def _make_corrected_signals(self, n, i, iso, widths, lh):
-        sigs = self.record.signals
-        intercept = sigs[iso]
-        base = sigs['{}bs'.format(iso)]
-
-        s1 = intercept - base
+    def _make_corrected_signals(self, iso, widths, lh, last_line=False):
+        s1 = self.record.isotopes[iso].baseline_corrected_value()
         sv1 = self.floatfmt(s1.nominal_value)
         bse1 = self.make_error(s1.nominal_value, s1.std_dev())
-        
-        
+
         arar = self.record.arar_result
         s2 = None
         if arar:
@@ -205,25 +208,22 @@ class AnalysisSummary(Summary):
                 ' ',
                 sv2, bse2]
         msg = ''.join([self.fixed_width(m, w) for m, w in zip(msgs, widths[1:])])
-        if i == n:
+        if last_line:
             lh = lh + widths[0] - 2
             msg = '{{:<{}s}}\n'.format(lh).format(msg)
 
         self.add_text(self.fixed_width(iso, widths[0]), bold=True,
                   new_line=False,
-                  underline=i == n)
-        self.add_text(msg, size=11, underline=i == n)
+                  underline=last_line)
+        self.add_text(msg, size=11, underline=last_line)
 
-    def _make_signals(self, n, i, iso, widths):
-        sg = self.record.signal_graph
-        pi = n - i
-        det = sg.plots[pi].detector
-
-        fit = sg.get_fit(pi) if sg else ' '
-        sv, se = self._get_signal(iso)
-        bv, be = self._get_signal('{}bs'.format(iso))
-        blv, ble = self._get_signal('{}bl'.format(iso))
-
+    def _make_isotope(self, iso, widths, last_line=False):
+        name = iso.name
+        det = iso.detector
+        fit = iso.fit
+        sv, se = iso.value, iso.error
+        bv, be = iso.baseline.value, iso.baseline.error
+        blv, ble = iso.blank.value, iso.blank.error
         msgs = [
                 self.floatfmt(sv),
                 self.make_error(sv, se),
@@ -235,18 +235,52 @@ class AnalysisSummary(Summary):
                 ]
 
         msg = ''.join([self.fixed_width(m, w) for m, w in zip(msgs, widths[2:])])
-        if i == n:
+        if last_line:
             msg += '\n'
 
         self.add_text(self.fixed_width(det, 5),
                    bold=True,
                   new_line=False,
-                  underline=i == n)
-        self.add_text(self.fixed_width(iso, 6),
+                  underline=last_line)
+        self.add_text(self.fixed_width(name, 6),
                    bold=True,
                   new_line=False,
-                  underline=i == n)
-        self.add_text(msg, size=11, underline=i == n)
+                  underline=last_line)
+        self.add_text(msg, size=11, underline=last_line)
+
+#    def _make_signals(self, n, i, iso, widths):
+#        sg = self.record.signal_graph
+#        pi = n - i
+#
+#        det = sg.plots[pi].detector
+#        fit = sg.get_fit(pi) if sg else ' '
+#        sv, se = self._get_signal(iso)
+#        bv, be = self._get_signal('{}bs'.format(iso))
+#        blv, ble = self._get_signal('{}bl'.format(iso))
+#
+#        msgs = [
+#                self.floatfmt(sv),
+#                self.make_error(sv, se),
+#                fit[0].upper(),
+#                self.floatfmt(bv),
+#                self.make_error(bv, be),
+#                self.floatfmt(blv),
+#                self.make_error(blv, ble)
+#                ]
+#
+#        msg = ''.join([self.fixed_width(m, w) for m, w in zip(msgs, widths[2:])])
+#        if i == n:
+#            msg += '\n'
+#
+#        self.add_text(self.fixed_width(det, 5),
+#                   bold=True,
+#                  new_line=False,
+#                  underline=i == n)
+#        self.add_text(self.fixed_width(iso, 6),
+#                   bold=True,
+#                  new_line=False,
+#                  underline=i == n)
+#        self.add_text(msg, size=11, underline=i == n)
 
     def _get_histories(self):
         histories = []
@@ -254,16 +288,6 @@ class AnalysisSummary(Summary):
             histories = [hi.create_date for hi in self.record.dbrecord.arar_histories]
 
         return ['Collection'] + histories
-
-    def _get_signal(self, iso):
-        signals = self.record.signals
-        try:
-            sig = signals[iso].uvalue
-            v = sig.nominal_value
-            e = sig.std_dev()
-        except KeyError:
-            v, e = 0, 0
-        return v, e
 
     def traits_view(self):
         v = View(HGroup(Item('selected_history', show_label=False,

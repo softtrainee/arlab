@@ -83,6 +83,9 @@ class DatabaseRecord(Saveable):
 
     def initialize(self):
         return True
+
+    def load_graph(self):
+        pass
 #        dm = self.selector.data_manager
 #        try:
 #            l = dm.open_data(self._get_path(), caller='_get_loadable {}'.format(self))

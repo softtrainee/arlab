@@ -341,8 +341,8 @@ class ExperimentExecutor(ExperimentManager):
                 cnt = 0
                 self.info('the experiment set was modified')
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
-                force_delay=True
-                
+                force_delay = True
+
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
                                         not cnt == 0):
@@ -407,7 +407,7 @@ class ExperimentExecutor(ExperimentManager):
 
         man = self.application.get_service('src.social.email_manager.EmailManager')
         if man is not None:
-            if msg=='Success':
+            if msg == 'Success':
                 msg = '{}\n{}'.format(msg, run.assemble_report())
                 print msg
 #                            man.broadcast(msg)
@@ -468,9 +468,10 @@ class ExperimentExecutor(ExperimentManager):
         if info.result:
             dbr = sel.selected
             if dbr:
-                dbr=sel._record_factory(dbr)
+                dbr = sel._record_factory(dbr)
                 dbr.load()
                 self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
+
                 self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
                 return True
 

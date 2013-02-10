@@ -544,11 +544,14 @@ post_measurement_script, post_equilibration_script''')
         arun.irrad_level = ''
 
         if labnumber:
-            if isinstance(convert_identifier(labnumber), int):
-                self._ok_to_add = True
-                arun.sample = convert_labnumber(convert_identifier(labnumber))
-                self._load_default_scripts()
-                return
+
+            #convert labnumber (a, bg, or 10034 etc)
+            labnumber = convert_identifier(labnumber)
+#            if isinstance(convert_identifier(labnumber), int):
+#                self._ok_to_add = True
+##                arun.sample = convert_labnumber(convert_identifier(labnumber))
+#                self._load_default_scripts()
+#                return
 
             ln = db.get_labnumber(labnumber)
             if ln:

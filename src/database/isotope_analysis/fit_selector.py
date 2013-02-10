@@ -23,42 +23,57 @@ import re
 from analysis_parameters import AnalysisParameters
 from src.constants import PLUSMINUS
 
-
 class FitSelector(HasTraits):
     analysis = Any
     graph = Any
     fits = List(AnalysisParameters)
     _suppress_update = False
     _plot_cache = None
+    kind = 'signal'
+
     def _analysis_changed(self):
         if self.analysis:
             if self.analysis.isotope_keys:
                 keys = list(self.analysis.isotope_keys)
-                key = lambda x: re.sub('\D', '', x)
-                keys = sorted(keys, key=key, reverse=True)
 
-                n = len(keys) - 1
-                self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
-                self._schanged(None, None, None)
+#                key = lambda x: re.sub('\D', '', x)
+#                keys = sorted(keys, key=key, reverse=True)
 
-    def _param_factory(self, n, arg):
+#                n = len(keys) - 1
+                self.fits = [self._param_factory(ki) for ki in keys]
+#                self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
+                self.refresh()
+#                self._schanged(None, None, None)
 
-        i, name = arg
-        try:
-            reg = self.graph.regressors[n - i]
-            fit = reg.fit
-            fo = self.graph.get_filter_outliers(n - i)
-#            print reg.filter_outliers
-            inte = reg.predict(0)
-            er = reg.predict_error(0)
-            if 'average' in fit:
-                ee = 'SEM' if fit.endswith('SEM') else 'SD'
+    def _param_factory(self, name):
+        iso = self.analysis.isotopes[name]
 
-                fit = u'average {}{}'.format(PLUSMINUS, ee)
+        if self.kind == 'baseline':
+            iso = iso.baseline
 
-        except IndexError, e:
-            print e
-            inte, er, fit, fo = 0, 0, '---', False
+        fit = iso.fit
+        if 'average' in fit:
+            ee = 'SEM' if fit.endswith('SEM') else 'SD'
+
+            fit = u'average {}{}'.format(PLUSMINUS, ee)
+
+        fo = iso.filter_outliers
+        inte = iso.value
+        er = iso.error
+#    def _param_factory(self, n, arg):
+
+#        i, name = arg
+#        try:
+#            reg = self.graph.regressors[n - i]
+#            fit = reg.fit
+#            fo = self.graph.get_filter_outliers(n - i)
+##            print reg.filter_outliers
+#            inte = reg.predict(0)
+#            er = reg.predict_error(0)
+
+#        except IndexError, e:
+#            print e
+#            inte, er, fit, fo = 0, 0, '---', False
 
         obj = AnalysisParameters(name=name,
                                  fit=fit,
@@ -69,28 +84,28 @@ class FitSelector(HasTraits):
         return obj
 
     @on_trait_change('fits:show')
-    def _schanged(self, obj, name, new):
-#        print obj, name, new
-#        n = len(self.fits) - 1
-#        plotid = n - self.fits.index(obj)
-#        g = self.graph
-#        ss = [a.show for a in self.fits]
-#        print self.graph
-#        for i, a in enumerate(self.fits):
-#            print a.name, a.show
-#            if a.show:
+    def refresh(self):
+        if self.graph is None:
+            return
+
         if self._plot_cache is None:
             comps = self.graph.plotcontainer.components
             self._plot_cache = comps
-#        comps = list(set(self._plot_cache + self.graph.plotcontainer.components))
-#        comps = self.graph.plotcontainer.components
+
         plots = [p for p, a in zip(self._plot_cache, reversed(self.fits)) if a.show]
+#        plots = [p for p, a in zip(self._plot_cache, self.fits) if a.show]
 
         for p, a in zip(self._plot_cache, reversed(self.fits)):
+#        for p, a in zip(self._plot_cache, self.fits):
+
             if not a.show:
                 p.visible = False
             else:
                 p.visible = True
+
+#                if not len(p.plots['data0'][0].index.get_data()):
+#                    self.analysis.set_isotope_graph_data(a.name, self.kind)
+
 #        self._plot_cache = [p for p, a in zip(comps, self.fits) if not a.show]
 
         self.graph.plotcontainer._components = plots
@@ -98,6 +113,7 @@ class FitSelector(HasTraits):
         self.graph._update_bounds(self.graph.plotcontainer.bounds, plots)
 
         for i, p in enumerate(reversed(plots)):
+#        for i, p in enumerate(plots):
             params = dict(orientation='right' if i % 2 else 'left',
                           axis_line_visible=False
                           )
@@ -121,42 +137,26 @@ class FitSelector(HasTraits):
             g.set_filter_outliers(new, plotid=plotid)
 
         vis = g.plots[plotid].visible
-#        print id(g.plots[plotid]), plotid
         g.plots[plotid].visible = True
-#        self._suppress_update = True
-        g._update_graph()
+        g.refresh()
         g.plots[plotid].visible = vis
-#        self._suppress_update = False
-#        try:
-#        print g.regressors
-#        reg = g.regressors[plotid]
-##        print reg, plotid
-#        obj._intercept = reg.predict(0)
-#        obj._error = reg.coefficient_errors[-1]
-#
-#        except IndexError:
-#            obj._intercept = 0
-#            obj._error = 0
-
-#        self.analysis.age_dirty = True
-#        self.graph.redraw()
 
     @on_trait_change('graph:graph:regression_results')
     def _update_values(self, new):
-#        print new
-#        print self._suppress_update
-#        if self._suppress_update:
-#
-#            return
-
         if new:
             n = len(self.fits) - 1
             for i, fi in enumerate(self.fits):
                 try:
                     reg = new[n - i]
                     if reg:
-                        fi._intercept = reg.predict(0)
-                        fi._error = reg.predict_error(0)
+                        fi._intercept = v = reg.predict(0)
+                        fi._error = e = reg.predict_error(0)
+
+                        iso = self.analysis.isotopes[fi.name]
+                        iso._value = v
+                        iso._error = e
+                        iso.fit = fi.fit
+
                 except IndexError:
                     pass
 

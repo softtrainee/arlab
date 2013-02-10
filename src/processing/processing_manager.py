@@ -333,7 +333,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 # private
 #===============================================================================
     def _apply_correction(self, bm):
-        if self._gather_data():
+        if self._gather_data('database'):
 
             ans = self._get_analyses()
             bm.analyses = ans

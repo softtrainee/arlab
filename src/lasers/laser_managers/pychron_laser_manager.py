@@ -139,8 +139,8 @@ class PychronLaserManager(BaseLaserManager):
 #===============================================================================
 # 
 #===============================================================================
-    
-    
+
+
     def _move_to_position(self, pos):
         cmd = 'GoToHole {}'.format(pos)
         if isinstance(pos, tuple):
@@ -235,14 +235,22 @@ class PychronLaserManager(BaseLaserManager):
 
 class PychronUVLaserManager(PychronLaserManager):
     def _move_to_position(self, pos):
+        cmd = None
         if isinstance(pos, str):
-            if pos[0] in ('p','l'):
-                cmd='GoToNamedPosition {}'.format(pos)
-                self.info('sending {}'.format(cmd))
-                self._ask(cmd)
-        
-                time.sleep(0.5)
-                return self._block()
-        return super(PychronUVLaserManager, self)._move_to_position(pos)
-        
+            if pos.startswith('p'):
+                cmd = 'GoToPoint'
+            elif pos.startswith('l'):
+                pass
+
+        if cmd:
+            cmd = '{} {}'.format(cmd, pos)
+            self.info('sending {}'.format(cmd))
+            self._ask(cmd)
+            time.sleep(0.5)
+            return self._block()
+
+#        else:
+#
+#            return super(PychronUVLaserManager, self)._move_to_position(pos)
+
 #============= EOF =============================================
