@@ -24,6 +24,11 @@ from src.processing.corrections.correction import Correction
 class FixedValueCorrection(Correction):
     value = Float
     error = Float
+    def _value_changed(self):
+        self.use = True
+    def _error_changed(self):
+        self.use = True
+
     def traits_view(self):
         v = View(HGroup(
                         Item('name', style='readonly', show_label=False),

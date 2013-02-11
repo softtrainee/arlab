@@ -107,6 +107,16 @@ class FusionsLaserManager(LaserManager):
 
     dbname = ''
 
+#===============================================================================
+#   IExtractionDevice interface
+#===============================================================================
+    def extract(self, power):
+        self.enable_laser()
+        self.set_laser_power(power)
+
+    def end_extract(self):
+        self.disable_laser()
+
     def open_motor_configure(self):
         self.laser_controller.open_motor_configure()
 
@@ -355,7 +365,7 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         result = False
-        motor=self.get_motor('beam')
+        motor = self.get_motor('beam')
         if motor is not None:
             if motor.enabled or force:
                 self.set_motor('beam', bd, **kw)
@@ -371,9 +381,9 @@ class FusionsLaserManager(LaserManager):
 
     def set_motor(self, *args, **kw):
         self.laser_controller.set_motor(*args, **kw)
-    
-    def get_motor(self,name):
-        return next((mi for mi in self.laser_controller.motors if mi.name==name),None)
+
+    def get_motor(self, name):
+        return next((mi for mi in self.laser_controller.motors if mi.name == name), None)
 #===============================================================================
 # pyscript interface
 #===============================================================================

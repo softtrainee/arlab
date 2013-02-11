@@ -234,13 +234,20 @@ class PychronLaserManager(BaseLaserManager):
         return self._communicator.ask(cmd, **kw)
 
 class PychronUVLaserManager(PychronLaserManager):
+    def trace_path(self, value, name):
+        cmd = 'TracePath {} {}'.format(value, name)
+        self.info('sending {}'.format(cmd))
+        self._ask(cmd)
+        return self._block(cmd='IsTracing')
+
+    def drill_point(self, value, name):
+        pass
+
     def _move_to_position(self, pos):
-        cmd = None
+        cmd = 'GoToPoint'
         if isinstance(pos, str):
-            if pos.startswith('p'):
-                cmd = 'GoToPoint'
-            elif pos.startswith('l'):
-                pass
+            if pos[0] in ['p', 'l', 'd']:
+                cmd = 'GoToNamedPosition'
 
         if cmd:
             cmd = '{} {}'.format(cmd, pos)

@@ -291,18 +291,20 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 r.set_fit(fit)
                 i.baseline = r
 
-        self._make_signal_graph()
-        self._make_baseline_graph()
-
         peakcenter = self._get_peakcenter()
         if peakcenter:
-            self.categories.insert(-1, 'peak center')
-#            self.categories.append('peak center')
+#            self.categories.insert(-1, 'peak center')
+            self.categories.append('peak center')
             graph = self._make_peak_center_graph(*peakcenter)
             self.peak_center_graph = graph
 
         blanks = self._get_blanks()
         if blanks:
+            for bi in blanks:
+                for ba in bi.blanks:
+                    r = Blank(dbrecord=ba, name=ba.isotope)
+                    self.isotopes[ba.isotope].blank = r
+
             if 'blanks' not in self.categories:
 #                self.categories.append(-1, 'blanks')
                 self.categories.append('blanks')
@@ -373,6 +375,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         return d
 
+    def get_corrected_value(self, key):
+        return self.isotopes[key].get_corrected_value()
 #===============================================================================
 # handlers
 #===============================================================================
@@ -407,6 +411,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 item = self.notes_summary
             else:
                 name = '{}_graph'.format(selected)
+                getattr(self, '_make_{}'.format(name))()
                 item = getattr(self, name)
 
             self.display_item = item
@@ -481,7 +486,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #                print isotope, key
 #                self._signals['{}{}'.format(isotope, key)] = s
 
-    def _make_signal_graph(self):
+    def _make_signal_graph(self, refresh=True):
         graph = self.signal_graph
         if graph is None:
             g = self._make_stacked_graph('signal')
@@ -489,7 +494,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             fs = self.analysis_summary.fit_selector
             self.signal_graph = EditableGraph(graph=g, fit_selector=self.analysis_summary.fit_selector)
             fs.graph = self.signal_graph
-            fs.refresh()
+            if refresh:
+                fs.refresh()
 #
     def _make_baseline_graph(self):
         graph = self.baseline_graph
@@ -512,7 +518,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             klass = StackedGraph
 
         graph = self._graph_factory(klass, width=self.item_width)
-#        graph.suppress_regression = True
         gkw = dict(padding=[50, 50, 5, 50],
                    fill_padding=True
                    )
@@ -557,6 +562,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                              **skw)
 
             i += 1
+
+        graph.set_x_limits(min=0)
+        graph.refresh()
 
         return graph
 

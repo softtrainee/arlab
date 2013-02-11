@@ -34,11 +34,13 @@ from src.paths import paths
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
+from src.lasers.laser_managers.extraction_device import IExtractionDevice
 
-class ILaserManager(Interface):
-    def move_to_position(self, pos):
+class ILaserManager(IExtractionDevice):
+    def trace_path(self, *args, **kw):
         pass
-
+    def drill_point(self, *args, **kw):
+        pass
 class BaseLaserManager(Manager):
     implements(ILaserManager)
     pattern_executor = Instance(PatternExecutor)
@@ -71,10 +73,10 @@ class BaseLaserManager(Manager):
         return self.pattern_executor
 
     def _pattern_executor_default(self):
-        controller=None
+        controller = None
         if self.stage_manager:
-            controller=self.stage_manager.stage_controller
-            
+            controller = self.stage_manager.stage_controller
+
         pm = PatternExecutor(application=self.application, controller=controller)
         return pm
 
@@ -85,6 +87,10 @@ class BaseLaserManager(Manager):
         for pi in pos:
             self._move_to_position(pi)
 
+    def trace_path(self, *args, **kw):
+        pass
+    def drill_point(self, *args, **kw):
+        pass
 class LaserManager(BaseLaserManager):
     '''
         Base class for a GUI representation of a laser device
@@ -190,7 +196,7 @@ class LaserManager(BaseLaserManager):
         #if the laser is not firing is there any reason to be running the monitor?        
         if self.monitor is not None:
             self.monitor.stop()
-            
+
         enabled = self._disable_hook()
 
         self.enabled = False

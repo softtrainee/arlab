@@ -18,7 +18,7 @@
 from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
      Event, Float, Instance, Bool, cached_property, Dict
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group, spring, Spring
-#from pyface.timer.do_later import do_later
+from pyface.timer.api import do_after
 #============= standard library imports ========================
 import os
 import time
@@ -28,10 +28,11 @@ import yaml
 import struct
 import uuid
 from threading import Thread, Event as TEvent
-#from threading import Event as TEvent
+from uncertainties import ufloat
 #============= local library imports  ==========================
+from globals import globalv
+
 from src.loggable import Loggable
-#from src.experiment.extract_schedule import ExtractStep
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
@@ -43,20 +44,13 @@ from src.experiment.identifier import convert_identifier, get_analysis_type, \
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
-#from src.processing.signal import Signal
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-
-from globals import globalv
 from src.constants import NULL_STR
-from uncertainties import ufloat
 from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
-from pyface.timer.do_later import do_later
-from pyface.timer.api import do_after
 from src.processing.arar_age import ArArAge
-from src.database.records.isotope import IsotopicMeasurement
-
+from src.processing.isotope import IsotopicMeasurement
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
     extraction_line_manager = Any

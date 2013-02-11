@@ -18,7 +18,6 @@
 from traits.api import HasTraits, List, Any, on_trait_change
 from traitsui.api import View, Item, ListEditor, InstanceEditor, Group
 #============= standard library imports ========================
-import re
 #============= local library imports  ==========================
 from analysis_parameters import AnalysisParameters
 from src.constants import PLUSMINUS
@@ -35,15 +34,8 @@ class FitSelector(HasTraits):
         if self.analysis:
             if self.analysis.isotope_keys:
                 keys = list(self.analysis.isotope_keys)
-
-#                key = lambda x: re.sub('\D', '', x)
-#                keys = sorted(keys, key=key, reverse=True)
-
-#                n = len(keys) - 1
                 self.fits = [self._param_factory(ki) for ki in keys]
-#                self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
-                self.refresh()
-#                self._schanged(None, None, None)
+
 
     def _param_factory(self, name):
         iso = self.analysis.isotopes[name]
@@ -60,20 +52,6 @@ class FitSelector(HasTraits):
         fo = iso.filter_outliers
         inte = iso.value
         er = iso.error
-#    def _param_factory(self, n, arg):
-
-#        i, name = arg
-#        try:
-#            reg = self.graph.regressors[n - i]
-#            fit = reg.fit
-#            fo = self.graph.get_filter_outliers(n - i)
-##            print reg.filter_outliers
-#            inte = reg.predict(0)
-#            er = reg.predict_error(0)
-
-#        except IndexError, e:
-#            print e
-#            inte, er, fit, fo = 0, 0, '---', False
 
         obj = AnalysisParameters(name=name,
                                  fit=fit,
@@ -86,6 +64,7 @@ class FitSelector(HasTraits):
     @on_trait_change('fits:show')
     def refresh(self):
         if self.graph is None:
+            getattr(self.analysis, '_make_{}_graph'.format(self.kind))()
             return
 
         if self._plot_cache is None:
