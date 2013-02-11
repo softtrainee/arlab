@@ -224,6 +224,7 @@ class AnalysisSummary(Summary):
         sv, se = iso.value, iso.error
         bv, be = iso.baseline.value, iso.baseline.error
         blv, ble = iso.blank.value, iso.blank.error
+        print blv, ble
         msgs = [
                 self.floatfmt(sv),
                 self.make_error(sv, se),

@@ -336,6 +336,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         if self._gather_data('database'):
 
             ans = self._get_analyses()
+            self._load_analyses(ans)
             bm.analyses = ans
             self.open_view(bm)
 
@@ -433,7 +434,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #===============================================================================
 # 
 #===============================================================================
-    def _gather_data(self, data_type):
+    def _gather_data(self, data_type='database'):
         '''
             open a data selector view
             

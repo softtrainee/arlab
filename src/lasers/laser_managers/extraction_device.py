@@ -15,24 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.progress_dialog import MProgressDialog
+from traits.api import Interface
 
-class BaseAnalysisManager(HasTraits):
-    def _load_analyses(self, ans):
-        progress = self._open_progress(len(ans))
-        for ai in ans:
-            msg = 'loading {}'.format(ai.record_id)
-            progress.change_message(msg)
-            ai.initialize()
-#            ai.load_age()
-            progress.increment()
-
-    def _open_progress(self, n):
-        pd = MProgressDialog(max=n, size=(550, 15))
-        pd.open()
-        pd.center()
-        return pd
+class IExtractionDevice(Interface):
+    def extract(self, *args, **kw):
+        pass
+    def end_extract(self, *args, **kw):
+        pass
+    def move_to_position(self, *args, **kw):
+        pass
 #============= EOF =============================================

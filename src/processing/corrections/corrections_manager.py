@@ -176,24 +176,24 @@ class CorrectionsManager(Saveable):
                       user_error=ue
                       )
 
-    def _apply_set_correction(self, history, ai, si):
-        db = self.db
-        func = getattr(db, 'add_{}'.format(self.correction_name))
-        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
-#        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
-#        ss=ai.isotopes
-
-        ss = self._get_isotope_value(ai, si.name)
-
-        item = func(history, isotope=si.name,
-                    user_value=ss.value,
-                    user_error=ss.error,
-#                                use_set=True, 
-                    fit=si.fit)
-        ps = self.interpolation_correction.predictors
-        if ps:
-            for pi in ps:
-                func2(item, pi.dbrecord)
+#    def _apply_set_correction(self, history, ai, si):
+#        db = self.db
+#        func = getattr(db, 'add_{}'.format(self.correction_name))
+#        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
+##        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+##        ss=ai.isotopes
+#
+#        ss = self._get_isotope_value(ai, si.name)
+#
+#        item = func(history, isotope=si.name,
+#                    user_value=ss.value,
+#                    user_error=ss.error,
+##                                use_set=True, 
+#                    fit=si.fit)
+#        ps = self.interpolation_correction.predictors
+#        if ps:
+#            for pi in ps:
+#                func2(item, pi.dbrecord)
 
     @cached_property
     def _get_all_analyses(self):
@@ -373,6 +373,18 @@ class BlankCorrectionsManager(CorrectionsManager):
             iso = an.isotopes[name]
             return iso.blank
 
+    def _apply_correction(self, history, ai, si):
+        ss = ai.isotopes[si.name]
+        item = self.db.add_blanks(history,
+                    isotope=si.name,
+                    user_value=float(ss.blank.value),
+                    user_error=float(ss.blank.error),
+                    fit=si.fit)
+        ps = self.interpolation_correction.predictors
+        if ps:
+            for pi in ps:
+                self.db.add_blanks_set(item, pi.dbrecord)
+
 class BackgroundCorrectionsManager(CorrectionsManager):
     correction_name = 'backgrounds'
 #    signal_key = 'bg'
@@ -385,6 +397,8 @@ class BackgroundCorrectionsManager(CorrectionsManager):
         if an.isotopes.has_key(name):
             iso = an.isotopes[name]
             return iso.background
+
+
 
 class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
     title = 'Set Detector Intercalibration'
@@ -419,7 +433,7 @@ class DetectorIntercalibrationCorrectionsManager(CorrectionsManager):
                       )
 
     def _apply_correction(self, history, ai, si):
-        ss = ai.signals[si.name]
+        ss = ai.isotopes[si.name]
         item = self.db.add_detector_intercalibration(history, 'CDD',
                     user_value=float(ss.value),
                     user_error=float(ss.error),

@@ -33,6 +33,7 @@ class IsotopicMeasurement(HasTraits):
     mass = Float
     detector = Str
 
+    uvalue = Property(depends='value, error, _value, _error')
     value = Property(depends_on='_value,fit')
     error = Property(depends_on='_error,fit')
     _value = Float
@@ -69,9 +70,6 @@ class IsotopicMeasurement(HasTraits):
     def set_uvalue(self, v):
         self._value = v.nominal_value
         self._error = v.std_dev()
-
-    def uvalue(self):
-        return ufloat((self.value, self.error))
 
     def _mean_regressor_factory(self):
         reg = MeanRegressor(xs=self.xs, ys=self.ys)
@@ -130,14 +128,49 @@ class IsotopicMeasurement(HasTraits):
 
         return reg
 
+    @cached_property
+    def _get_uvalue(self):
+        return ufloat((self.value, self.error))
+#===============================================================================
+# arthmetic
+#===============================================================================
+    def __add__(self, a):
+        return self.uvalue + a
+    def __radd__(self, a):
+        return self.__add__(a)
+
+    def __mul__(self, a):
+        return self.uvalue * a
+    def __rmul__(self, a):
+        return self.__mul__(a)
+
+    def __sub__(self, a):
+        return self.uvalue - a
+    def __rsub__(self, a):
+#        return self.uvalue - a
+        return a - self.uvalue
+
+    def __div__(self, a):
+        return self.uvalue / a
+    def __rdiv__(self, a):
+#        return self.uvalue / a
+        return a / self.uvalue
+
+class CorrectionIsotopicMeasurement(IsotopicMeasurement):
+    def __init__(self, *args, **kw):
+        super(IsotopicMeasurement, self).__init__(*args, **kw)
+        if self.dbrecord:
+            self._value = self.dbrecord.user_value
+            self._error = self.dbrecord.user_error
+
+class Background(CorrectionIsotopicMeasurement):
+    pass
+
+class Blank(CorrectionIsotopicMeasurement):
+    pass
+
 class Baseline(IsotopicMeasurement):
     _kind = 'baseline'
-
-class Background(IsotopicMeasurement):
-    pass
-
-class Blank(IsotopicMeasurement):
-    pass
 
 class Isotope(IsotopicMeasurement):
     _kind = 'signal'
@@ -146,8 +179,8 @@ class Isotope(IsotopicMeasurement):
     blank = Instance(Blank, ())
     background = Instance(Background, ())
     def baseline_corrected_value(self):
-        return self.uvalue() - self.baseline.uvalue()
+        return self.uvalue - self.baseline.uvalue
 
     def get_corrected_value(self):
-        return self.uvalue() - self.baseline.uvalue() - self.blank.uvalue() - self.background.uvalue()
+        return self.uvalue - self.baseline.uvalue - self.blank.uvalue - self.background.uvalue
 #============= EOF =============================================

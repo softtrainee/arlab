@@ -20,7 +20,8 @@ import time
 from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import verbose_skip, makeRegistry
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.laser_manager import IExtractionDevice
+from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.pyscripts.valve_pyscript import ValvePyScript
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
@@ -109,7 +110,8 @@ class ExtractionLinePyScript(ValvePyScript):
             kw['velocity'] = value
 
         success = self._manager_action([('set_{}'.format(name), (value,), kw)],
-                                       protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
+                                       protocol=IExtractionDevice,
+#                                       protocol='src.lasers.laser_managers.laser_manager.IExtractionDevice',
                                        name=self.extract_device)
         if not success:
             self.info('{} move to position failed'.format(self.extract_device))
@@ -127,8 +129,8 @@ class ExtractionLinePyScript(ValvePyScript):
             self.info('{} move to position {}'.format(self.extract_device, position))
             success = self._manager_action([('move_to_position', (position,), {})
                                             ],
-                                          protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
-    #                                      protocol=ILaserManager,
+#                                          protocol='src.lasers.laser_managers.laser_manager.IExtractionDevice',
+                                          protocol=IExtractionDevice,
                                           name=self.extract_device
                                           )
             if not success:
@@ -150,7 +152,7 @@ class ExtractionLinePyScript(ValvePyScript):
         #set block=True to wait for pattern completion
         self._manager_action([('execute_pattern', pattern, {'block':block})],
                              name=self.extract_device,
-                              protocol=ILaserManager)
+                              protocol=IExtractionDevice)
 
         return time.time() - st
 
@@ -163,10 +165,53 @@ class ExtractionLinePyScript(ValvePyScript):
         self.info('set tray to {}'.format(tray))
         result = self._manager_action([('set_stage_map', (tray), {})
                                         ],
-                                      protocol=ILaserManager,
+                                      protocol=IExtractionDevice,
                                       name=self.extract_device
                                       )
         return result
+
+    @verbose_skip
+    @command_register
+    def moving_extract(self, value='', name=''):
+        if name == '':
+            name = self.position
+        if value == '':
+            value = self.extract_value
+
+        self.move_to_position(name)
+
+        if name.startswith('p'):
+            self.extract(value)
+        elif name.startswith('l'):
+            self.trace_path(value, name)
+        elif name.startswith('d'):
+            self.drill_point(value, name)
+
+    @verbose_skip
+    @command_register
+    def drill_point(self, value='', name=''):
+        if name == '':
+            name = self.position
+
+        if value == '':
+            value = self.extract_value
+
+        self._manager_action([('drill_point', (value, name,), {})],
+                             protocol=IExtractionDevice,
+                             name=self.extract_device)
+
+    @verbose_skip
+    @command_register
+    def trace_path(self, value='', name=''):
+        if name == '':
+            name = self.position
+
+        if value == '':
+            value = self.extract_value
+
+        self._manager_action([('trace_path', (value, name,), {})],
+                             protocol=IExtractionDevice,
+                             name=self.extract_device)
 
     @verbose_skip
     @command_register
@@ -175,18 +220,15 @@ class ExtractionLinePyScript(ValvePyScript):
             power = self.extract_value
 
         self.info('extract sample to power {}'.format(power))
-        self._manager_action([('enable_laser', (), {}),
-                                       ('set_laser_power', (power,), {})
-                                       ],
-                                      protocol=ILaserManager,
-                                      name=self.extract_device
-                             )
+        self._manager_action([('extract', (power,), {})],
+                             protocol=IExtractionDevice,
+                             name=self.extract_device)
 
     @verbose_skip
     @command_register
     def end_extract(self):
-        self._manager_action([('disable_laser', (), {})],
-                             protocol=ILaserManager,
+        self._manager_action([('end_extract', (), {})],
+                             protocol=IExtractionDevice,
                              name=self.extract_device
                              )
 
@@ -208,7 +250,7 @@ class ExtractionLinePyScript(ValvePyScript):
         dur = abs(dT / rate)
 
         if not self._manager_action([('enable_laser', (), {})],
-                             protocol=ILaserManager,
+                             protocol=IExtractionDevice,
                              name=self.extract_device)[0]:
             return
 
@@ -223,7 +265,7 @@ class ExtractionLinePyScript(ValvePyScript):
                 break
             self.info('ramp step {} of {}. setpoint={}'.format(i + 1, n, si))
             self._manager_action([('set_laser_power', (si,), {})],
-                             protocol=ILaserManager,
+                             protocol=IExtractionDevice,
                              name=self.extract_device
                              )
             for _ in xrange(int(period / check_period)):

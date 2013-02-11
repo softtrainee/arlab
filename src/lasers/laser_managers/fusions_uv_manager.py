@@ -82,12 +82,35 @@ class FusionsUVManager(FusionsLaserManager):
     execute_button = DelegatesTo('laser_script_executor')
     execute_label = DelegatesTo('laser_script_executor')
 
+    _is_tracing = False
+    _cancel_tracing = False
+
+    def goto_named_position(self, pos):
+        sm = self.stage_manager.stage_map
+        if pos.startswith('p'):
+            pt = sm.get_point(pos)
+        elif pos.startswith('l'):
+            line = sm.get_line(pos)
+            pt = line.points[0]
+
+        self.stage_manager.linear_move(pt.x, pt.y, block=False)
+
     def goto_point(self, pos):
         sm = self.stage_manager.stage_map
         pt = sm.get_point(pos)
         self.stage_manager.linear_move(pt.x, pt.y, block=False)
 
-    def trace_path(self, pathname, callback=None):
+    def drill_point(self, value, name):
+        pass
+
+    def isTracing(self):
+        return self._is_tracing
+
+    def stop_trace(self):
+        self._cancel_tracing = True
+
+    def trace_path(self, value, pathname):
+
         def step_func(sman, x, y):
             sman.linear_move(x, y, block=True)
             self.single_burst()
@@ -103,21 +126,33 @@ class FusionsUVManager(FusionsLaserManager):
         x1, y1 = pt.x, pt.y
         #move to first point
         step_func(x1, y1)
-
+        self._is_tracing = True
+        self._cancel_tracing = False
         for pi in points[1:]:
             x2, y2 = pi.x, pi.y
             #step along line until cp >=pi
-            while 1:
+            while not self._cancel_tracing:
                 x1, y1 = self._calc_point_along_line(x1, y1, x2, y2, L)
                 step_func(x1, y1)
 
                 if abs(pi.x - x1) < tol and abs(pi.y - y1) < tol:
                     break
 
+        self._is_tracing = False
+
     def update_parameters(self):
         if self.atl_controller is not None:
             self.atl_controller.update_parameters()
 
+    def single_burst(self, delay=4):
+        atl = self.atl_controller
+        atl.laser_on()
+        time.sleep(delay)
+        atl.laser_off()
+
+#===============================================================================
+# private
+#===============================================================================
     def _calc_point_along_line(self, x1, y1, x2, y2, L):
         '''
             calculate pt (x,y) that is L units from x1, x2
@@ -165,13 +200,6 @@ class FusionsUVManager(FusionsLaserManager):
             x, y = x2, y2
 
         return x, y
-
-    def single_burst(self, delay=4):
-        atl = self.atl_controller
-        atl.laser_on()
-        time.sleep(delay)
-        atl.laser_off()
-
     def _enable_hook(self):
         resp = self.laser_controller._enable_laser()
         if self.laser_controller.simulation:

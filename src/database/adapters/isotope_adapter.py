@@ -33,8 +33,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
     proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, proc_SelectedHistoriesTable, \
-    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable
-    #proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
+    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
+    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
 
 #irrad_
 from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, irrad_ChronologyTable, irrad_LevelTable, \
@@ -788,7 +788,7 @@ class IsotopeAdapter(DatabaseAdapter):
         ha = self._hash_factory(txt)
         return ha.hexdigest()
 
-    def _hash_factory(self,text):
+    def _hash_factory(self, text):
         return hashlib.md5(text)
 
     def _build_query_and(self, table, name, jtable, attr, q=None):
