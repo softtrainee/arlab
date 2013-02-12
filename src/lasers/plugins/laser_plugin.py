@@ -56,7 +56,7 @@ class LaserPlugin(CorePlugin):
 
         if mode == 'client':
             klass=plugin.get('klass')
-            if klass is not None:
+            if klass is None:
                 klass = 'PychronLaserManager'
                 
             pkg = 'src.lasers.laser_managers.pychron_laser_manager'

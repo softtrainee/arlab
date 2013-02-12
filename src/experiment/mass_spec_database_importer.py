@@ -358,7 +358,7 @@ class MassSpecDatabaseImporter(Loggable):
             #mass spec also doesnt propograte baseline errors
 
             if runtype == 'Blank':
-                ublank = intercept
+                ublank = intercept-baseline
 
             db.add_isotope_result(db_iso, self.data_reduction_session_id,
 #                                      ufloat((i, ierr)),

@@ -25,8 +25,7 @@ from apptools.preferences.ui.preferences_page import PreferencesPage
 class SpectrometerPreferencesPage(PreferencesPage):
     name = 'Spectrometer'
     preferences_path = 'spectrometer'
-    abundant_sensitivity = Float
     def traits_view(self):
-        v = View(Item('abundant_sensitivity'))
+        v = View()
         return v
 #============= EOF =============================================

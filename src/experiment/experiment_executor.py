@@ -234,6 +234,7 @@ class ExperimentExecutor(ExperimentManager):
 
         if exp.extract_device != NULL_STR:
             extract_device = exp.extract_device.replace(' ', '_').lower()
+            print self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
             if not self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device)):
                 if not globalv.experiment_debug:
                     nonfound.append(extract_device)
@@ -528,11 +529,11 @@ class ExperimentExecutor(ExperimentManager):
         else:
             arun.measurement_script.syntax_checked = True
 
-        if not arun.post_measurement_script:
-            self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
-            return
-        else:
-            arun.post_measurement_script.syntax_checked = True
+#        if not arun.post_measurement_script:
+#            self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
+#            return
+#        else:
+#            arun.post_measurement_script.syntax_checked = True
 
         if not isAlive():
             return
@@ -559,10 +560,11 @@ class ExperimentExecutor(ExperimentManager):
 
         if not isAlive():
             return
-
-        if not arun.do_post_measurement():
-            if not arun.state == 'truncate':
-                self._alive = False
+        
+        if arun.post_measurement_script:
+            if not arun.do_post_measurement():
+                if not arun.state == 'truncate':
+                    self._alive = False
 
         arun.finish()
         self.increment_nruns_finished()
@@ -603,7 +605,12 @@ class ExperimentExecutor(ExperimentManager):
 #===============================================================================
 # handlers
 #===============================================================================
-
+    def _experiment_set_changed(self):
+        if self.experiment_set:
+            nonfound = self._check_for_managers(self.experiment_set)
+            if nonfound:
+                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+                
     def _resume_button_fired(self):
         self.resume_runs = True
 

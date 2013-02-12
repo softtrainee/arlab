@@ -133,9 +133,13 @@ class BaseSchedule(ScriptEditable):
                 pass
 
             sc = self._remove_file_extension(sc)
-            if sk == 'extraction' and key.lower() in ['u', 'bu']:
-                if self.extract_device != NULL_STR:
-                    sc = self.extract_device.split(' ')[1].lower()
+            if key.lower() in ['u','bu'] and self.extract_device != NULL_STR:
+                e=self.extract_device.split(' ')[1].lower()
+                if sk == 'extraction':
+                    sc = e
+                elif sk=='post_equilibration':
+                    sc='pump_{}'.format(e)
+                
             if not sc in getattr(self, '{}_scripts'.format(sk)):
                 sc = NULL_STR
 #            print setter, sk, sc
@@ -217,12 +221,16 @@ class BaseSchedule(ScriptEditable):
 
         #load strings
         for attr in ['labnumber',
-                     'measurement', 'extraction', 'post_measurement',
+                     'measurement', 'extraction', 
+                     'post_measurement',
                      'post_equilibration',
                      'pattern',
                      'position'
                      ]:
-            params[attr] = args[header.index(attr)]
+            try:
+                params[attr] = args[header.index(attr)]
+            except IndexError, e:
+                print 'base schedule _run_parser ', e
 
         #load booleans
         for attr in ['autocenter', 'disable_between_positions']:
@@ -258,13 +266,18 @@ class BaseSchedule(ScriptEditable):
         params['extract_units'] = extract_units
 
         def make_script_name(n):
-            na = args[header.index(n)]
-            if na.startswith('_'):
-                if meta:
-                    na = meta['mass_spectrometer'] + na
-
-            if na and not na.endswith('.py'):
-                na = na + '.py'
+            try:
+                na = args[header.index(n)]
+                if na.startswith('_'):
+                    if meta:
+                        na = meta['mass_spectrometer'] + na
+        
+                if na and not na.endswith('.py'):
+                    na = na + '.py'
+            except IndexError,e:
+                print 'base schedule make_script_name ', e
+                na=NULL_STR
+                
             return na
 
         params['configuration'] = cls._build_configuration(make_script_name)

@@ -31,7 +31,7 @@ SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
                        )
 #        sn = ['Blank_air', 'Blank_cocktail', 'Blank_unknown',
 #              'Background', 'Air', 'Cocktail']
-SPECIAL_IDS = {1:'Blank_air', 2:'Blank_cocktail', 3:'Blank_unknown',
+SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
                4:'Background', 5:'Air', 6:'Cocktail'
                }
 
@@ -93,6 +93,7 @@ def convert_identifier(identifier):
     if identifier in ANALYSIS_MAPPING:
         sname = ANALYSIS_MAPPING[identifier]
         identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
+        
     return identifier
 
 def get_analysis_type(idn):
