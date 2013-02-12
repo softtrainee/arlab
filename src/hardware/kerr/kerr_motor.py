@@ -464,7 +464,7 @@ class KerrMotor(KerrDevice):
             self._set_motor_position_(npos, hysteresis)
 
             if not self.parent.simulation:
-                self.timer = Timer(250, self._update_position)
+                self.timer = Timer(750, self._update_position)
             else:
                 self.update_position = self._data_position
 

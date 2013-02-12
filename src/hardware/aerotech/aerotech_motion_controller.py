@@ -113,6 +113,7 @@ class AerotechMotionController(MotionController):
         name = axis.name.upper()
         cp = self.get_current_position(key)
         if self._validate(value, nkey, cp) is not None:
+            setattr(self, '_{}_position'.format(key), value)
             nv = value - cp
 
             nv = self._sign_correct(nv, key, ratio=False)
