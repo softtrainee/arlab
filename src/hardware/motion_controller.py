@@ -25,6 +25,7 @@ import os
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
+import time
 
 
 UPDATE_MS = 150
@@ -119,10 +120,9 @@ class MotionController(CoreDevice):
         '''
         '''
         if not self._moving_():
-#            x = self.get_current_position('x')
-#            y = self.get_current_position('y')
             self.timer.Stop()
             self.parent.canvas.clear_desired_position()
+            time.sleep(0.1)
 #        else:
         x = self.get_current_position('x')
         y = self.get_current_position('y')

@@ -110,16 +110,16 @@ class PointsProgrammer(Manager):
 
     def _accept_point_fired(self):
         ptargs = dict(radius=0.05, vline_length=0.1, hline_length=0.1)
-
-        if self.mode == 'line':
-            self.canvas.new_line_point(point_color=self.point_color,
-                                       line_color=self.point_color,
-                                       velocity=self.trace_velocity,
-                                       **ptargs)
-        else:
-            npt = self.canvas.new_point(default_color=self.point_color,
-                                        **ptargs)
-            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
+        if not self.canvas.point_exists():
+            if self.mode == 'line':
+                self.canvas.new_line_point(point_color=self.point_color,
+                                           line_color=self.point_color,
+                                           velocity=self.trace_velocity,
+                                           **ptargs)
+            else:
+                npt = self.canvas.new_point(default_color=self.point_color,
+                                            **ptargs)
+                self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
 
     def _load_points_fired(self):
         p = self.open_file_dialog(default_directory=paths.user_points_dir)
@@ -238,11 +238,14 @@ class PointsProgrammer(Manager):
                              Item('program_points', show_label=False,
                                   editor=ButtonEditor(label_value='program_points_label')),
         #                elf._button_factory('program_points', 'program_points_label'),
-                             Item('accept_point', show_label=False),
-                             Item('load_points', show_label=False),
-                             Item('save_points', show_label=False),
-                             HGroup(Item('clear'), Item('clear_mode'), show_labels=False),
-                             Item('finish', show_label=False, enabled_when='mode=="line" and object.is_programming'),
+                             VGroup(
+                                 Item('accept_point', show_label=False),
+                                 Item('load_points', show_label=False),
+                                 Item('save_points', show_label=False),
+                                 HGroup(Item('clear'), Item('clear_mode'), show_labels=False),
+                                 Item('finish', show_label=False, enabled_when='mode=="line" and object.is_programming'),
+                                 enabled_when='object.is_programming'
+                                 ),
         #                     label='Points'
                              )
                       )

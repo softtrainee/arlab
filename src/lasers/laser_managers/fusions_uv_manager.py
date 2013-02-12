@@ -81,12 +81,14 @@ class FusionsUVManager(FusionsLaserManager):
     laser_script_executor = Instance(LaserScriptExecutor)
     execute_button = DelegatesTo('laser_script_executor')
     execute_label = DelegatesTo('laser_script_executor')
+    names=DelegatesTo('laser_script_executor')
+    
 
     _is_tracing = False
     _cancel_tracing = False
 
     def goto_named_position(self, pos):
-        sm = self.stage_manager.stage_map
+        sm = self.stage_manager._stage_map
         if pos.startswith('p'):
             pt = sm.get_point(pos)
         elif pos.startswith('l'):
@@ -96,10 +98,17 @@ class FusionsUVManager(FusionsLaserManager):
         self.stage_manager.linear_move(pt.x, pt.y, block=False)
 
     def goto_point(self, pos):
-        sm = self.stage_manager.stage_map
+        sm = self.stage_manager._stage_map
         pt = sm.get_point(pos)
-        self.stage_manager.linear_move(pt.x, pt.y, block=False)
-
+        if pt:
+            x,y=pt['xy']
+            self.info('goto point {}'.format(pos, x,y))
+            self.stage_manager.linear_move(x,y, block=False)
+            result=True
+        else:
+            result='Invalid point'
+        return result
+    
     def drill_point(self, value, name):
         pass
 
@@ -115,7 +124,7 @@ class FusionsUVManager(FusionsLaserManager):
             sman.linear_move(x, y, block=True)
             self.single_burst()
 
-        sm = self.stage_manager.stage_map
+        sm = self.stage_manager._stage_map
         line = sm.get_line(pathname)
         points = line.points
         pt = points[0]
@@ -146,9 +155,9 @@ class FusionsUVManager(FusionsLaserManager):
 
     def single_burst(self, delay=4):
         atl = self.atl_controller
-        atl.laser_on()
+        atl.laser_run()
         time.sleep(delay)
-        atl.laser_off()
+        atl.laser_stop()
 
 #===============================================================================
 # private
@@ -263,7 +272,10 @@ class FusionsUVManager(FusionsLaserManager):
 #===============================================================================
     def get_control_group(self):
         return VGroup(self.get_control_button_group(),
-                      self._button_factory('execute_button', 'execute_label', align='left'),
+                      HGroup(self._button_factory('execute_button', 'execute_label'),
+                             Item('names', show_label=False),
+                             spring
+                             ),
 #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
                       HGroup(
                              Item('action_readback', width=100, style='readonly', label='Action'),

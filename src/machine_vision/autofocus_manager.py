@@ -294,8 +294,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         if controller.timer:
             while controller.timer.IsRunning() and not self._evt_autofocusing.isSet():
                 src = self._load_source()
-                x = controller.get_current_position('z')
-                
+                x=controller.z_progress                
                 y = self._calculate_focus_measure(src, operator, roi)
                 self.graph.add_datum((x, y), series=series, do_after=1)
 

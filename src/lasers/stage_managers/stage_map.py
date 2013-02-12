@@ -508,10 +508,13 @@ class UVStageMap(StageMap):
             self.lines = d['lines']
 
     def get_point(self, name):
-        pos = None
         if name.startswith('p'):
             v = int(name[1:])
-            pos = self.points[v - 1]
+        else:
+            v = int(name)
+            
+        pos = self.points[v - 1]
+            
         return pos
 
     def get_line(self, name):

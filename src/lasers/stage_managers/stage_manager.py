@@ -61,7 +61,7 @@ class StageManager(Manager):
     stage_map = Property(depends_on='_stage_map')
     stage_maps = Property(depends_on='_stage_maps')
 
-    _stage_maps = None
+    _stage_maps = List
     #===========================================================================
     # buttons
     #===========================================================================
