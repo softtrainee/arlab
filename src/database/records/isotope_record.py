@@ -291,6 +291,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 r.set_fit(fit)
                 i.baseline = r
 
+        self._make_signal_graph()
+        self._make_baseline_graph()
+        
         peakcenter = self._get_peakcenter()
         if peakcenter:
 #            self.categories.insert(-1, 'peak center')
@@ -411,7 +414,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 item = self.notes_summary
             else:
                 name = '{}_graph'.format(selected)
-                getattr(self, '_make_{}'.format(name))()
                 item = getattr(self, name)
 
             self.display_item = item
@@ -421,8 +423,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _apply_history_change(self, new):
         self.changed = True
 
-#    def _unpack_blob(self, blob, endianness='>'):
-#        return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+    def _unpack_blob(self, blob, endianness='>'):
+        return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
 #    def _load_histories(self):
 #

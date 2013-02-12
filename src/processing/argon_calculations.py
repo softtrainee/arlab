@@ -164,6 +164,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     #apply intercalibration factor to corrected 36
     s36 *= ic
 
+    print abundant_sensitivity
     #correct for abundant sensitivity
     #assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundant_sensitivity * (0 + s39)

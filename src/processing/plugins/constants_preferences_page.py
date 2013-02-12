@@ -41,6 +41,8 @@ class ConstantsPreferencesPage(PreferencesPage):
     lambda_Ar37_error = Float(0)
     lambda_Ar39 = Float(7.068e-6)
     lambda_Ar39_error = Float(0)
+    abundant_sensitivity=Float(0)
+    
     def traits_view(self):
         ratios = VGroup(
                         HGroup(Spring(springy=False, width=125),
@@ -87,7 +89,9 @@ class ConstantsPreferencesPage(PreferencesPage):
                         show_border=True,
                         label='Decay'
                         )
-
-        v = View(ratios, decay)
+        spectrometer=VGroup(
+                            Item('abundant_sensitivity'),
+                            label='Spectrometer', show_border=True)
+        v = View(ratios, decay, spectrometer)
         return v
 #============= EOF =============================================

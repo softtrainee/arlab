@@ -86,13 +86,14 @@ class ScriptEditable(Saveable):
         if run.state == 'not run':
             ssname = '{}_script'.format(sname)
             name = getattr(self, ssname)
-            name = self._add_mass_spectromter_name(name)
-            if run.configuration:
-                run.configuration[ssname] = os.path.join(paths.scripts_dir,
-                                                            sname,
-                                                            name
-                                                            )
-                setattr(run, '{}_dirty'.format(ssname), True)
+            if name:
+                name = self._add_mass_spectromter_name(name)
+                if run.configuration:
+                    run.configuration[ssname] = os.path.join(paths.scripts_dir,
+                                                                sname,
+                                                                name
+                                                                )
+                    setattr(run, '{}_dirty'.format(ssname), True)
 #===============================================================================
 # property get/set
 #===============================================================================

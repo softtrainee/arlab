@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool, Str, Instance
+    Event, Bool, Str, Instance, Float
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
@@ -55,7 +55,7 @@ class ArArAge(HasTraits):
     Ar36_39 = AgeProperty()
 
     j = AgeProperty()
-    abundant_sensitivity = Property
+    abundant_sensitivity = Float
     sensitivity = Property
     sensitivity_multiplier = Property
 
@@ -112,7 +112,10 @@ class ArArAge(HasTraits):
         bind_preference(self.arar_constants, 'atm_4036_e', 'pychron.experiment.constants.Ar40_Ar36_atm_error')
         bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
         bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
-
+    
+#        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
+        bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+        
     def _calculate_kca(self):
         result = self.arar_result
         if result:
@@ -376,9 +379,9 @@ class ArArAge(HasTraits):
 
         return prs
 
-    @cached_property
-    def _get_abundant_sensitivity(self):
-        return 3e-6
+#    @cached_property
+#    def _get_abundant_sensitivity(self):
+#        return 3e-6
 
     def _set_labnumber_record(self, v):
         self._labnumber_record = v

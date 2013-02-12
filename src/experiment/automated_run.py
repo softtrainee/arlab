@@ -51,6 +51,7 @@ from src.experiment.automated_run_condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
+
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
     extraction_line_manager = Any
@@ -419,6 +420,9 @@ anaylsis_type={}
             return False
 
     def do_post_measurement(self):
+        if not self.post_equilibration_script:
+            return 
+        
         if not self._alive and not self._truncate_signal:
             return
 
@@ -537,7 +541,7 @@ anaylsis_type={}
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
                                 check_conditions)
-
+            
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
         else:
             isotopes = [di.isotope for di in self._active_detectors]
@@ -629,7 +633,7 @@ anaylsis_type={}
         #sync the arar_age object's signals
         if self.analysis_type == 'unknown':
             for iso, v in blanks.iteritems():
-                self.arar.isotopes[iso].set_uvalue(v)
+                self.arar.isotopes[iso].blank.set_uvalue(v)
 #                self.arar_age.signals['{}bl'.format(iso)] = v
 
             for iso, v in baselines.iteritems():
@@ -994,7 +998,7 @@ anaylsis_type={}
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
-
+        
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1416,7 +1420,22 @@ anaylsis_type={}
             else:
                 blanks.append(ufloat((0, 0)))
 
-        intercepts = [self.plot_panel.signals, self.plot_panel.baselines]
+#        signals=self._processed_signals_dict
+        sig_ints=dict()
+        base_ints=dict()
+#        for k,v in self._processed_signals_dict:
+        psignals=self._processed_signals_dict
+        for iso, _, kind in self._save_isotopes:
+            if kind=='signal':
+                si=psignals['{}signal'.format(iso)]
+                bi=psignals['{}baseline'.format(iso)]
+                
+                sig_ints[iso]=si.uvalue
+                base_ints[iso]=bi.uvalue
+            
+        intercepts=[sig_ints, base_ints]
+#        intercepts = [self.plot_panel.signals, self.plot_panel.baselines]
+        
         fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
                 dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
 
@@ -1514,6 +1533,7 @@ anaylsis_type={}
 
         if NULL_STR in fname:
             return
+        
         fname = fname if fname.endswith('.py') else fname + '.py'
 
         if fname in self.scripts:

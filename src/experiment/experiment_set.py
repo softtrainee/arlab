@@ -655,7 +655,7 @@ post_measurement_script, post_equilibration_script''')
         return ts
 
     def _get_extract_devices(self):
-        return [NULL_STR, 'Fusions CO2', 'Fusions Diode']
+        return [NULL_STR, 'Fusions CO2', 'Fusions Diode', 'Fusions UV']
 
     @cached_property
     def _get_schedule_blocks(self):
