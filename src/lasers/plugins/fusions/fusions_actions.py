@@ -56,7 +56,7 @@ class FPulseAction(LocalLaserAction):
             app = self.window.application
             open_manager(app, manager.pulse)
 
-class FOpenLaserManagerAction(LocalLaserAction):
+class FOpenLaserManagerAction(BaseLaserAction):
     accelerator = 'Ctrl+L'
     def perform(self, event):
         manager = self._get_manager(event)

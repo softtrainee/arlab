@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import CInt, Str, on_trait_change
+from traits.api import CInt, Str, on_trait_change, Button, Float
+from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import time
@@ -53,6 +54,11 @@ class PychronLaserManager(BaseLaserManager):
     host = Str
 
     _cancel_blocking = False
+
+    position = Str(enter_set=True, auto_set=False)
+    x = Float
+    y = Float
+    z = Float
 
     def bind_preferences(self, pref_id):
         pass
@@ -233,7 +239,34 @@ class PychronLaserManager(BaseLaserManager):
     def _ask(self, cmd, **kw):
         return self._communicator.ask(cmd, **kw)
 
+    def _enable_fired(self):
+        if self.enabled:
+            resp = self._ask('Enable')
+            self.enabled = False
+        else:
+            resp = self._ask('Disable')
+            self.enabled = True
+
+    def traits_view(self):
+        v = View(self.get_control_button_group(),
+                 Item('position'),
+                 Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
+                 title='Laser Manager'
+                 )
+        return v
+
 class PychronUVLaserManager(PychronLaserManager):
+#===============================================================================
+#    hy
+#===============================================================================
+    def _position_changed(self):
+        if self.position is not None:
+            self._move_to_position(self.position)
+#===============================================================================
+# 
+#===============================================================================
     def trace_path(self, value, name):
         cmd = 'TracePath {} {}'.format(value, name)
         self.info('sending {}'.format(cmd))
@@ -245,7 +278,7 @@ class PychronUVLaserManager(PychronLaserManager):
 
     def _move_to_position(self, pos):
         cmd = 'GoToPoint'
-        if isinstance(pos, str):
+        if isinstance(pos, (str, unicode)):
             if pos[0] in ['p', 'l', 'd']:
                 cmd = 'GoToNamedPosition'
 

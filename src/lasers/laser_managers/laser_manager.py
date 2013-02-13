@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, Float, \
     on_trait_change, Interface, implements
-from traitsui.api import View, Item, VGroup
+from traitsui.api import View, Item, VGroup, HGroup, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -35,6 +35,7 @@ from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.extraction_device import IExtractionDevice
+from src.led.led_editor import LEDEditor
 
 class ILaserManager(IExtractionDevice):
     def trace_path(self, *args, **kw):
@@ -45,6 +46,11 @@ class BaseLaserManager(Manager):
     implements(ILaserManager)
     pattern_executor = Instance(PatternExecutor)
     use_video = Bool(False)
+
+    enable = Event
+    enable_label = Property(depends_on='enabled')
+    enabled_led = Instance(LED, ())
+    enabled = Bool(False)
 
     def new_pattern_maker(self):
         pm = PatternMakerView()
@@ -91,15 +97,37 @@ class BaseLaserManager(Manager):
         pass
     def drill_point(self, *args, **kw):
         pass
+
+    def get_control_button_group(self):
+        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
+#                                  springy=True
+                    )
+        return grp
+
+    def get_control_buttons(self):
+        return [('enable', 'enable_label', None)]
+
+    def _get_enable_label(self):
+        '''
+        '''
+        return 'DISABLE' if self.enabled else 'ENABLE'
+
+    def _enabled_changed(self):
+        if self.enabled:
+            self.enabled_led.state = 'green'
+        else:
+            self.enabled_led.state = 'red'
+
 class LaserManager(BaseLaserManager):
     '''
         Base class for a GUI representation of a laser device
     '''
 
-    enable = Event
-    enable_label = Property(depends_on='enabled')
-    enabled_led = Instance(LED, ())
-    enabled = Bool(False)
+#    enable = Event
+#    enable_label = Property(depends_on='enabled')
+#    enabled_led = Instance(LED, ())
+#    enabled = Bool(False)
 
 #    graph_manager = Instance(GraphManager, ())
     stage_manager = Instance(StageManager)
@@ -165,7 +193,7 @@ class LaserManager(BaseLaserManager):
 
         if self.simulation:
             self.enabled = True
-            self.enabled_led.state = 'green'
+#            self.enabled_led.state = 'green'
             return True
 
         if isinstance(enabled, bool) and enabled:
@@ -174,9 +202,10 @@ class LaserManager(BaseLaserManager):
 
             self.enabled = True
             self.monitor = self.monitor_factory()
-            if self.monitor.monitor():
-                self.enabled_led.state = 'green'
-            else:
+            if not self.monitor.monitor():
+#                self.enabled_led.state = 'green'
+#                self.enabled_led.state = 'green'
+#            else:
                 self.disable_laser()
                 self.warning_dialog('Monitor could not be started. Laser disabled')
         else:
@@ -201,7 +230,7 @@ class LaserManager(BaseLaserManager):
 
         self.enabled = False
 
-        self.enabled_led.state = 'red'
+#        self.enabled_led.state = 'red'
         self._requested_power = 0
 
         return enabled
@@ -454,10 +483,7 @@ class LaserManager(BaseLaserManager):
     def _get_requested_power(self):
         return self._requested_power
 
-    def _get_enable_label(self):
-        '''
-        '''
-        return 'DISABLE' if self.enabled else 'ENABLE'
+
 
 #===============================================================================
 # factories
