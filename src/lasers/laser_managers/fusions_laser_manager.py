@@ -478,12 +478,12 @@ class FusionsLaserManager(LaserManager):
 #            vg.content.insert(0, lens_config)
 #
 #        return vg
-    def get_control_button_group(self):
-        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
-#                                  springy=True
-                    )
-        return grp
+#    def get_control_button_group(self):
+#        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+#                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
+##                                  springy=True
+#                    )
+#        return grp
 
     def get_control_group(self):
         '''
