@@ -42,7 +42,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     calibration_style = Enum('MassSpec', 'pychron-auto')
     scaling = Range(1.0, 2.0, 1)
 
-    use_autocenter = Bool(True)
+    use_autocenter = Bool(False)
     crosshairs_offset = Tuple(0, 0)
     crosshairs_offset_color = Color('blue')
 
