@@ -93,6 +93,9 @@ class BakeoutController(WatlowEZZone):
     state_button = Event
     state_label = Property(depends_on='active')
 
+    state_enabled = Property(depends_on='ok_to_run, _state_enabled')
+    _state_enabled = Bool
+
     ok_to_run = Property
     execute_dirty = Event
     user_cancel = Bool
@@ -102,7 +105,7 @@ class BakeoutController(WatlowEZZone):
     _check_temp_enabled = True
     _check_temp_minutes = 2
     _check_temp_threshold = 40
-    _check_start_minutes=5
+    _check_start_minutes = 5
 #    (depends_on='_ok_to_run')
 #    _ok_to_run = Bool(False)
 
@@ -294,6 +297,7 @@ Add {}'.format(sd)):
             self.setpoint = 0
             self._duration = 0
             self.active = False
+            self.state_enabled = False
 #            self.process_value = 0
 
 #    def complex_query(self, **kw):
@@ -443,6 +447,12 @@ Add {}'.format(sd)):
             value = self._duration
 
         return value
+
+    def _set_state_enabled(self, s):
+        self._state_enabled = s
+
+    def _get_state_enabled(self):
+        return self.ok_to_run and self._state_enabled
 #===============================================================================
 # defaults
 #===============================================================================
@@ -454,7 +464,7 @@ Add {}'.format(sd)):
         '''
         state_item = Item('state_button', editor=ButtonEditor(label_value='state_label'),
                           show_label=False,
-                          enabled_when='ok_to_run'
+                          enabled_when='state_enabled'
                         )
         show_label = False
         if self.name.endswith('1'):

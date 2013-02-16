@@ -642,6 +642,7 @@ class BakeoutManager(Manager):
             for c in self._get_controllers():
                 if c.ok_to_run:
                     c.run()
+                c.state_enabled = True
 #                    self._training_controllers.append(c.name)
 #                    states.append(True)
 #===============================================================================
