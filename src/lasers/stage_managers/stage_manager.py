@@ -261,7 +261,7 @@ class StageManager(Manager):
     def set_xy(self, x, y, **kw):
         hole = self._get_hole_by_position(x, y)
         if hole:
-            self.hole = int(hole.id)
+            self._set_hole(hole.id)
         else:
             return self.linear_move(x, y, **kw)
 
@@ -669,19 +669,24 @@ class StageManager(Manager):
             return
 
         v = str(v)
-        if self.hole_thread is None:
+
+
+        if self.hole_thread is not None:
+            self.stage_controller.stop()
+
+#        if self.hole_thread is None:
 #            v = str(v)
-            pos = self._stage_map.get_hole_pos(v)
-            if pos is not None:
-                self.visualizer.set_current_hole(v)
-                self._hole = v
-                self.hole_thread = Thread(name='stage.move_to_hole',
-                                          target=self._move_to_hole, args=(v,))
-                self.hole_thread.start()
-            else:
-                err = 'Invalid hole {}'.format(v)
-                self.warning(err)
-                return  err
+        pos = self._stage_map.get_hole_pos(v)
+        if pos is not None:
+            self.visualizer.set_current_hole(v)
+            self._hole = v
+            self.hole_thread = Thread(name='stage.move_to_hole',
+                                      target=self._move_to_hole, args=(v,))
+            self.hole_thread.start()
+        else:
+            err = 'Invalid hole {}'.format(v)
+            self.warning(err)
+            return  err
 
     def _get_hole(self):
         return self._hole
