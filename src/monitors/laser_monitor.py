@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float
+from traits.api import Float, Int
 
 #============= standard library imports ========================
 import time
@@ -30,6 +30,10 @@ class LaserMonitor(Monitor):
     max_duration = Float(60) # in minutes
     gntries = 0
 
+    #if max_duration_period is 10 check the max_duration every 10th cycle.
+    max_duration_period = Int(10)
+    _md_cnt = 0
+
     def _load_hook(self, config):
         '''
         '''
@@ -37,19 +41,33 @@ class LaserMonitor(Monitor):
         self.set_attribute(config, 'max_duration',
                            'General', 'max_duration', cast='float', optional=True)
 
-        return True
+        self.set_attribute(config, 'max_duration_period',
+                           'General', 'max_duration_period', cast='float', optional=True)
 
+        return True
 
     def _fcheck_duration(self):
         '''
         '''
+        if self.cnt % self.max_duration_period == 0:
+            self._check_duration()
+
+        self._md_cnt += 1
+        if self._md_cnt > 100:
+            self._md_cnt = 1
+
+    def _check_duration(self, verbose=True):
+        '''
+        '''
         #check max duration
         manager = self.manager
-        self.info('Check lasing duration')
+        if verbose:
+            self.info('Check lasing duration')
 
         #max duration in mins convert to secs for comparison
         if time.time() - self.start_time > self.max_duration * 60.0:
             self.warning('Max duration {} (min) exceeded'.format(self.max_duration))
             manager.emergency_shutoff(reason='Max duration exceeded')
+
 
 #============= EOF ====================================
