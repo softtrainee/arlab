@@ -73,16 +73,16 @@ class VideoStageManager(StageManager):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
 
-    use_autocenter = Bool(True)
-    use_auto_center_interpolation = Bool(True)
+    use_autocenter = Bool
+    use_auto_center_interpolation = Bool(False)
 
     autocenter_button = Button('AutoCenter')
     configure_autocenter_button = Button('Configure')
-    
-    mosaic_manager=Instance(MosaicManager)
+
+    mosaic_manager = Instance(MosaicManager)
     autofocus_manager = Instance(AutofocusManager)
     autocenter_manager = Instance(AutocenterManager)
-    
+
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
 
@@ -606,7 +606,7 @@ class VideoStageManager(StageManager):
                                     parent=self,
                                     application=self.application
                              )
-    
+
     def _autofocus_manager_default(self):
         return AutofocusManager(video=self.video,
                                 laser_manager=self.parent,
