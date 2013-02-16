@@ -476,7 +476,8 @@ class StageManager(Manager):
 
             self.info('Move complete')
             self.update_axes(update_hole=False)
-            self.hole_thread = None
+
+        self.hole_thread = None
 
     def _move_to_hole_hook(self, *args):
         pass

@@ -62,10 +62,9 @@ class BaseLaserManager(Manager):
         self.open_view(pm)
 
     def execute_pattern(self, name=None, block=False):
-        pm = self._pattern_executor_factory()
+        pm = self.pattern_executor
         if pm.load_pattern(name):
             pm.execute(block)
-            self.pattern_executor = pm
 
     def stop_pattern(self):
         if self.pattern_executor:
@@ -74,9 +73,6 @@ class BaseLaserManager(Manager):
     def isPatterning(self):
         if self.pattern_executor:
             return self.pattern_executor.isPatterning()
-
-    def _pattern_executor_factory(self):
-        return self.pattern_executor
 
     def _pattern_executor_default(self):
         controller = None

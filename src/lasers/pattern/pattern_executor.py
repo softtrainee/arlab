@@ -27,13 +27,17 @@ from threading import Thread
 
 
 class PatternExecutor(Patternable):
+    '''
+         a pattern is only good for one execution.
+         self.pattern needs to be reset after stop or finish using load_pattern(name_or_pickle)
+    '''
     controller = Any
     show_patterning = Bool(False)
     _alive = Bool(False)
-    
+
     def start(self, show=False):
         self._alive = True
-        
+
         if show:
             self.show_pattern()
 
@@ -43,6 +47,7 @@ class PatternExecutor(Patternable):
     def finish(self):
         self._alive = False
         self.close_pattern()
+        self.pattern = None
 
     def set_current_position(self, x, y, z):
         if self.isPatterning():
@@ -53,8 +58,7 @@ class PatternExecutor(Patternable):
             graph.add_datum((x, y), series=2)
 
             graph.redraw()
-    
-            
+
     def load_pattern(self, name_or_pickle):
         '''
             look for name_or_pickle in local pattern dir
@@ -77,6 +81,7 @@ class PatternExecutor(Patternable):
             fp = cStringIO.StringIO()
             fp.write(name_or_pickle)
 
+        #self._load_pattern sets self.pattern
         pattern = self._load_pattern(fp, path)
         self.on_trait_change(self.stop, 'canceled')
         return pattern
@@ -101,6 +106,9 @@ class PatternExecutor(Patternable):
             self.pattern.close_ui()
             self.info('Pattern {} stopped'.format(self.pattern_name))
 
+            #prevent future stops (AbortJogs from massspec) from executing
+            self.pattern = None
+
     def isPatterning(self):
         return self._alive
 
@@ -109,8 +117,8 @@ class PatternExecutor(Patternable):
             self.pattern.close_ui()
 
     def show_pattern(self):
-        self.pattern.window_x=50
-        self.pattern.window_y=50
+        self.pattern.window_x = 50
+        self.pattern.window_y = 50
         self.open_view(self.pattern, view='graph_view')
 
     def execute(self, block=False):
@@ -149,7 +157,7 @@ class PatternExecutor(Patternable):
         controller = self.controller
         pattern = self.pattern
         if controller is not None:
-            
+
             kind = pattern.kind
             if kind == 'ArcPattern':
                 self._execute_arc(controller, pattern)
