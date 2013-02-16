@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Float, Event, \
      Property, Bool, on_trait_change
-from traitsui.api import View, Item, Handler, HGroup, ButtonEditor, spring
+from traitsui.api import View, Item, Handler, HGroup, ButtonEditor, spring, Label
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -42,6 +42,7 @@ class Pulse(HasTraits):
     wait_control = Instance(WaitDialog, transient=True)
     manager = Any(transient=True)
     power = Float(1.1, auto_set=False, enter_set=True)
+    units = Property
 
     pulse_button = Event
     pulse_label = Property(depends_on='pulsing')
@@ -100,6 +101,9 @@ class Pulse(HasTraits):
     def _get_pulse_label(self):
         return 'Fire' if not self.pulsing else 'Stop'
 
+    def _get_units(self):
+        return self.manager.units
+
     def _pulse_button_fired(self):
         if self.pulsing:
             self.pulsing = False
@@ -111,7 +115,7 @@ class Pulse(HasTraits):
 
     def traits_view(self):
         v = View(
-                 HGroup(Item('power'), spring, Item('pulse_button',
+                 HGroup(Item('power'), Label('units'), spring, Item('pulse_button',
                                             editor=ButtonEditor(label_value='pulse_label'),
                                             show_label=False,
                                             enabled_when='object.enabled'

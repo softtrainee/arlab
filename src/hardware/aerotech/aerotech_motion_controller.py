@@ -61,6 +61,9 @@ class AerotechMotionController(MotionController):
             return self.axes.keys().index('y') == 0
 
     def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, **kw):
+        '''
+            unidex 511 5-55 Linear
+        '''
         errx = self._validate(x, 'x', cur=self._x_position)
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
@@ -107,6 +110,7 @@ class AerotechMotionController(MotionController):
 
     def single_axis_move(self, key, value, block=False):
         '''
+            unidex 511 5-50 Index
         '''
         nkey = self._get_axis_name(key)
         axis = self.axes[nkey]
@@ -141,6 +145,9 @@ class AerotechMotionController(MotionController):
 #        return self._parse_response(resp)
 
     def _moving_(self):
+        '''
+            unidex 511 6-12 Serial Pol
+        '''
         cmd = 'Q'
         sb = self.ask(cmd, verbose=False)
         if sb is not None:
@@ -148,18 +155,10 @@ class AerotechMotionController(MotionController):
             b = make_bitarray(int(sb))
             return int(b[2])
 
-    def _get_axis_name(self, axis):
-#        print self.axes.keys(),self.axes.keys().index('y')
-        if axis in ('x', 'y'):
-            if self.xy_swapped():
-#            if self.axes.keys().index('y') == 0:
-                if axis == 'y':
-                    axis = 'x'
-                else:
-                    axis = 'y'
-        return axis
-
     def get_current_position(self, axis, verbose=False):
+        '''
+            unidex 511 6-11 Axis Positions
+        '''
         naxis = self._get_axis_name(axis)
 
         cmd = 'P{}'.format(naxis)
@@ -175,6 +174,7 @@ class AerotechMotionController(MotionController):
 
     def enable(self, axes=None):
         '''
+            unidex 511 5-39 Enable
         '''
 
         cmd = 'IEN'
@@ -200,6 +200,9 @@ class AerotechMotionController(MotionController):
 #        #resp=self.ask(cmd)
 #        #return self._parse_response(resp)
     def define_home(self, axes=None):
+        '''
+            unidex 511 5-83 Software
+        '''
         cmd = 'ISO HOME'
         axes = self._get_axes_name_list(axes)
 
@@ -208,12 +211,13 @@ class AerotechMotionController(MotionController):
 
     def home(self, axes=None):
         '''
+            unidex 511 5-48 home
         '''
         cmd = 'IHO'
         axes = self._get_axes_name_list(axes)
 
         cmd = '{} {}'.format(cmd, axes)
-        resp = self.ask(cmd, handshake_only=True)
+        self.ask(cmd, handshake_only=True)
         time.sleep(1)
         self.block()
         time.sleep(1)
@@ -221,109 +225,13 @@ class AerotechMotionController(MotionController):
         self.block()
         self.define_home()
 
-#
-#    def get_current_position(self, key):
-#        '''
-#
-#        '''
-#        cmd = 'P'
-#        axis = self.axes[key]
-#        rtype = 4  # absolute command posisiton
-#        axis = '%s%i' % (axis.name, rtype)
-#        cmd = self._build_command(cmd, axis, remote=False)
-#        r = self.ask(cmd)
-#
-#        return r
-#
-#    def set_parameter(self, pid, value):
-#        '''
-#
-#        '''
-#        cmd = 'WP%i,%s' % (pid, value) + EOS
-#        r = self.ask(cmd)
-#        self._ensure_ack(r)
-#
-#    def save_parameters(self):
-#        '''
-#        '''
-#        cmd = 'SP'
-#        r = self.ask(cmd)
-#        self._ensure_ack(r)
-#
-#    def _ensure_ack(self, r):
-#        '''
-#
-#        '''
-#        r = r.strip()
-#        if not r == ACK:
-#            w = r
-#            if r == NAK:
-#                w = 'NAK'
-#
-#            self.warning('%s' % w)
-#
-#    def _build_command(self, cmd, axes, values=None, remote=True):
-#        '''
-#        '''
-#
-#        if values is None:
-#            parameters = axes
-#        else:
-#            parameters = ' '.join(['{}{}'.format(*pi) for pi in zip(axes, values)])
-#
-#        if cmd.startswith('P'):
-#            args = (cmd, parameters, EOS)
-#            cmd = ''.join(args)
-#        else:
-#            args = (cmd, parameters, EOS)
-#            cmd = '{} {}{}' % args
-#
-#        if remote:
-#            cmd = EIC + cmd
-#        return cmd
-#
-#    def _moving_(self):
-#        '''
-#        '''
-##        n='5'
-##        status=self._get_status(n)
-##
-##
-##        status=[s for s in status]
-##        status.reverse()        
-##        #1 not in position
-##        #0 in position
-##        return status[4] or status[5] or status[6]
-##    
-#        pass
-#
-#    def _get_status(self, n):
-#        '''
-#
-#        '''
-#        cmd = 'PS'
-#
-#        cmd = self._build_command(cmd, n, remote=False)
-#        r = self.ask(cmd)
-#        if self.simulation:
-#            r = '4'
-#
-#        return self._parse_status(r)
-#
-#    def _parse_status(self, r):
-#        '''
-#
-#        '''
-#
-#        r = self._parse_response(r)
-#        return make_bitarray(int(r), width=32)
-#
-#    def _parse_response(self, resp):
-#        '''
-#
-#        '''
-#        if resp is not None:
-#            return resp.strip()
+    def stop(self):
+        '''
+            unidex 511 5-13 Abort
+        '''
+        cmd = 'IAB'
+        self.ask(cmd, handshake_only=True)
+
     def ask(self, cmd, **kw):
         return super(AerotechMotionController, self).ask(cmd, handshake=[ACK, NAK], **kw)
 
@@ -334,6 +242,16 @@ class AerotechMotionController(MotionController):
         p = a.load(path)
         return a
 
+    def _get_axis_name(self, axis):
+#        print self.axes.keys(),self.axes.keys().index('y')
+        if axis in ('x', 'y'):
+            if self.xy_swapped():
+#            if self.axes.keys().index('y') == 0:
+                if axis == 'y':
+                    axis = 'x'
+                else:
+                    axis = 'y'
+        return axis
 #if __name__ == '__main__':
 #    amc = Aero
 

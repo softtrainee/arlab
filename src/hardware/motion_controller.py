@@ -91,7 +91,7 @@ class MotionController(CoreDevice):
         if func is None:
             func = self._inprogress_update
         self._not_moving_count = 0
-        return Timer(250, func)
+        return Timer(150, func)
 
     def _z_inprogress_update(self):
         '''

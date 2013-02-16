@@ -145,9 +145,11 @@ class LaserManager(BaseLaserManager):
     pulse = Instance(Pulse)
 
     requested_power = Property(Float, depends_on='_requested_power')
+    units = Property(depends_on='use_calibrated_power')
     _requested_power = Float
     _calibrated_power = None
     use_calibrated_power = Bool(True)
+
 #    internal_meter_response = DelegatesTo('laser_controller')
 
     _power_calibration = None

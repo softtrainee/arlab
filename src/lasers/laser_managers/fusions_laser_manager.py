@@ -55,7 +55,6 @@ class FusionsLaserManager(LaserManager):
     '''
     '''
 
-    units = Property(depends_on='use_calibrated_power')
     laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
     optics_view = Instance(OpticsView)
