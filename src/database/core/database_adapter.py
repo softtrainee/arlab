@@ -1,0 +1,442 @@
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#=============enthought library imports=======================
+from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cached_property
+#=============standard library imports ========================
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.exc import SQLAlchemyError
+import os
+#=============local library imports  ==========================
+
+from src.loggable import Loggable
+from src.database.core.base_orm import MigrateVersionTable
+from src.deprecate import deprecated
+ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
+
+
+#def create_url(kind, user, hostname, db, password=None):
+
+#    if kind == 'mysql':
+#        if password is not None:
+#            url = 'mysql://{}:{}@{}/{}?connect_timeout=3'.format(user, password, hostname, db)
+#        else:
+#            url = 'mysql://{}@{}/{}?connect_timeout=3'.format(user, hostname, db)
+#    else:
+#        url = 'sqlite:///{}'.format(db)
+#
+#    return url
+
+
+class DatabaseAdapter(Loggable):
+    '''
+    '''
+    sess = None
+
+    connected = Bool(False)
+    kind = Str#('mysql')
+    username = Str#('root')
+    host = Str#('localhost')
+#    name = Str#('massspecdata_local')
+    password = Password#('Argon')
+
+    selector_klass = Any
+
+    session_factory = None
+
+    application = Any
+
+    test_func = 'get_migrate_version'
+
+    selector = Any
+
+    #name used when writing to database
+    save_username = Str
+    connection_parameters_changed = Bool
+
+    url = Property(depends_on='connection_parameters_changed')
+
+    @property
+    def enabled(self):
+        return self.kind in ['mysql', 'sqlite']
+
+    @on_trait_change('username,host,password,name')
+    def reset_connection(self, obj, name, old, new):
+        self.connection_parameters_changed = True
+
+    def isConnected(self):
+        return self.connected
+
+    def reset(self):
+        self.info('clearing current session. uncommitted changes will be deleted')
+        if self.sess:
+            self.sess.close()
+            self.sess = None
+
+    def connect(self, test=True, force=False):
+        '''
+        '''
+        if self.connection_parameters_changed:
+            force = True
+#        print not self.isConnected() or force, self.connection_parameters_changed
+        if not self.isConnected() or force:
+            self.connected = True if self.kind == 'sqlite' else False
+            if self.enabled:
+                url = self.url
+                if url is not None:
+                    self.info('connecting to database {}'.format(url))
+                    engine = create_engine(url)
+                    self.session_factory = sessionmaker(bind=engine)
+                    if test:
+                        self.connected = self._test_db_connection()
+                    else:
+                        self.connected = True
+
+                    if self.connected:
+                        self.info('connected to db')
+                        self.initialize_database()
+                    else:
+                        self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user={} \
+host={}'.format(self.name, self.username, self.host))
+
+        self.connection_parameters_changed = False
+        return self.connected
+
+    def new_session(self):
+        sess = scoped_session(self.session_factory)
+        sess.autoflush = False
+        return sess
+
+    def initialize_database(self):
+        pass
+
+    def get_session(self):
+        '''
+        '''
+        if self.sess is None:
+            if self.session_factory is not None:
+                self.sess = self.new_session()
+            else:
+                self.warning_dialog('Not connected to the database {}'.format(self.name))
+
+        return self.sess
+
+    def expire(self):
+        if self.sess is not None:
+            self.sess.expire_all()
+
+    def delete(self, item):
+        if self.sess is not None:
+            self.sess.delete(item)
+
+    def commit(self):
+        if self.sess is not None:
+            self.sess.commit()
+
+    def flush(self):
+        if self.sess is not None:
+            self.sess.flush()
+
+    def rollback(self):
+        if self.sess is not None:
+            self.sess.rollback()
+
+    def close(self):
+        if self.sess is not None:
+            self.sess.close()
+            self.sess = None
+
+    def get_migrate_version(self):
+        sess = self.get_session()
+        q = sess.query(MigrateVersionTable)
+        mv = q.one()
+        self.close()
+        return mv
+
+    def get_results(self, tablename, **kw):
+        tables = self._get_tables()
+        table = tables[tablename]
+        sess = self.get_session()
+        q = sess.query(table)
+        if kw:
+
+            for k, (cp, val) in kw.iteritems():
+
+                d = getattr(table, k)
+                func = getattr(d, cp)
+                q = q.filter(func(val))
+
+        return q.all()
+
+    @cached_property
+    def _get_url(self):
+        kind = self.kind
+        password = self.password
+        user = self.username
+        host = self.host
+        name = self.name
+        if kind == 'mysql':
+            #add support for different mysql drivers
+            driver = self._import_mysql_driver()
+            if driver is None:
+                return
+
+            if password is not None:
+                url = 'mysql+{}://{}:{}@{}/{}?connect_timeout=3'.format(driver, user, password, host, name)
+            else:
+                url = 'mysql+{}://{}@{}/{}?connect_timeout=3'.format(driver, user, host, name)
+        else:
+            url = 'sqlite:///{}'.format(name)
+
+        return url
+
+    def _import_mysql_driver(self):
+        try:
+            '''
+                pymysql
+                https://github.com/petehunt/PyMySQL/
+            '''
+            import pymysql
+            driver = 'pymysql'
+        except ImportError:
+            try:
+                import _mysql
+                driver = 'mysqldb'
+            except ImportError:
+                self.warning_dialog('A mysql driver was not found. Install PyMySQL or MySQL-python')
+                return
+
+        self.info('using {}'.format(driver))
+        return driver
+
+    def _test_db_connection(self):
+        try:
+            connected = False
+            if self.test_func is not None:
+                self.sess = None
+                self.get_session()
+#                sess = self.session_factory()
+                self.info('testing database connection')
+                getattr(self, self.test_func)()
+                connected = True
+
+        except Exception, e:
+            print e
+
+            self.warning('connection failed to {}'.format(self.url))
+            connected = False
+
+        finally:
+            if self.sess is not None:
+                self.info('closing test session')
+                self.sess.close()
+
+        return connected
+
+    @deprecated
+    def _get_query(self, klass, join_table=None, filter_str=None, *args, **clause):
+        sess = self.get_session()
+        q = sess.query(klass)
+
+        if join_table is not None:
+            q = q.join(join_table)
+
+        if filter_str:
+            q = q.filter(filter_str)
+        else:
+            q = q.filter_by(**clause)
+        return q
+
+    def _get_tables(self):
+        pass
+
+    def _add_item(self, obj):
+        sess = self.get_session()
+        sess.add(obj)
+
+    def _add_unique(self, item, attr, name):
+        #test if already exists 
+        nitem = getattr(self, 'get_{}'.format(attr))(name)
+        if nitem is None: #or isinstance(nitem, (str, unicode)):
+            self.info('adding {}= {}'.format(attr, name))
+            self._add_item(item)
+            nitem = item
+#            self.info('{}= {} already exists'.format(attr, name))
+        return nitem
+
+
+    def _get_path_keywords(self, path, args):
+        n = os.path.basename(path)
+        r = os.path.dirname(path)
+        args['root'] = r
+        args['filename'] = n
+        return args
+
+    def _retrieve_items(self, table,
+                        joins=None,
+                        filters=None,
+                        limit=None, order=None):
+        sess = self.get_session()
+        if sess is not None:
+            q = sess.query(table)
+
+            if joins:
+                for ji in joins:
+                    if ji != table:
+                        q = q.join(ji)
+
+            if filters:
+                for fi in filters:
+                    q = q.filter(fi)
+            if order:
+                q = q.order_by(order)
+
+            if limit:
+                q = q.limit(limit)
+            return q.all()
+
+    def _retrieve_first(self, table, value, key='name', order_by=None):
+        if not isinstance(value, (str, int, unicode, long, float)):
+            return value
+        sess = self.get_session()
+        if sess is None:
+            return
+        print table, value, key
+        q = sess.query(table)
+        q = q.filter(getattr(table, key) == value)
+        try:
+            if order_by is not None:
+                q = q.order_by(order_by)
+            return q.first()
+        except SQLAlchemyError, e:
+            print e
+            return
+
+
+    def _retrieve_item(self, table, value, key='name'):
+        if not isinstance(value, (str, int, unicode, long, float)):
+            return value
+
+        sess = self.get_session()
+        if sess is None:
+            return
+
+        q = sess.query(table)
+        q = q.filter(getattr(table, key) == value)
+
+        try:
+            return q.one()
+        except SQLAlchemyError, e:
+#            print 'get_one, e1', e
+            try:
+                q = q.order_by(table.id.desc())
+                return q.limit(1).all()[-1]
+            except (SQLAlchemyError, IndexError, AttributeError), e:
+                pass
+    #            print 'get_one, e2', e
+
+
+
+    @deprecated
+    def _get_items(self, table, gtables,
+                   join_table=None, filter_str=None,
+                   limit=None,
+                   order=None,
+                   key=None
+                   ):
+
+        if isinstance(join_table, str):
+            join_table = gtables[join_table]
+
+        q = self._get_query(table, join_table=join_table,
+                             filter_str=filter_str)
+        if order:
+            for o in order \
+                    if isinstance(order, list) else [order]:
+                q = q.order_by(o)
+
+        if limit:
+            q = q.limit(limit)
+
+        #reorder based on id
+        if order:
+            q = q.from_self()
+            q = q.order_by(table.id)
+
+        res = q.all()
+        if key:
+            return [getattr(ri, key) for ri in res]
+        return res
+
+
+
+    def _selector_default(self):
+        return self._selector_factory()
+
+#    def open_selector(self):
+#        s = self._selector_factory()
+#        if s:
+#            s.edit_traits()
+#            self.
+
+    def selector_factory(self, **kw):
+        self.selector = self._selector_factory(**kw)
+        return self.selector
+
+#    def new_selector(self, **kw):
+#        if self.selector_klass:
+#            s = self.selector_klass(_db=self, **kw)
+#            return s
+
+    def _selector_factory(self, **kw):
+        if self.selector_klass:
+            s = self.selector_klass(db=self, **kw)
+#            s.load_recent()
+            return s
+
+#    def _get(self, table, query_dict, func='one'):
+#        sess = self.get_session()
+#        q = sess.query(table)
+#        f = q.filter_by(**query_dict)
+#        return getattr(f, func)()
+
+#    def _get_one(self, table, query_dict):
+#        sess = self.get_session()
+#        q = sess.query(table)
+#        f = q.filter_by(**query_dict)
+#        try:
+#            return f.one()
+#        except Exception, e:
+#            print 'get_one', e
+#
+#    def _get_all(self, query_args):
+#        sess = self.get_session()
+#        p = sess.query(*query_args).all()
+#        return p
+
+class PathDatabaseAdapter(DatabaseAdapter):
+    path_table = None
+    def add_path(self, rec, path, **kw):
+        if self.path_table is None:
+            raise NotImplementedError
+        kw = self._get_path_keywords(path, kw)
+        p = self.path_table(**kw)
+        rec.path = p
+        return p
+
+#============= EOF =============================================
+
