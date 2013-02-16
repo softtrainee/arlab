@@ -55,12 +55,12 @@ class AerotechMotionController(MotionController):
         '''
         self.axes_factory()
         return True
-    
+
     def xy_swapped(self):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
-        
-    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None,**kw):
+
+    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, **kw):
         errx = self._validate(x, 'x', cur=self._x_position)
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
@@ -77,20 +77,20 @@ class AerotechMotionController(MotionController):
             ny = self._sign_correct(ny, 'y', ratio=False)
 
         self.timer = self.timer_factory()
-        x=self.axes['x']
-        y=self.axes['y']
-        
+        x = self.axes['x']
+        y = self.axes['y']
+
         if velocity is not None:
-            xv=yv=velocity
+            xv = yv = velocity
         else:
-            xv=x.velocity
-            yv=y.velocity
-        
-        if abs(nx)>1:
-            xv=xv*0.5
-        if abs(nx)>1:
-            yv=yv*0.5
-            
+            xv = x.velocity
+            yv = y.velocity
+
+        if abs(nx) > 1:
+            xv = xv * 0.5
+        if abs(nx) > 1:
+            yv = yv * 0.5
+
         if self.xy_swapped():
             cmd = 'ILI X{} Y{} XF{} YF{}'.format(ny, nx, xv, yv)
         else:
@@ -139,12 +139,6 @@ class AerotechMotionController(MotionController):
 #        cmd = self._build_command(cmd, axes, values=values)
 #        resp = self.ask(cmd)
 #        return self._parse_response(resp)
-    def block(self, axis=None):
-        time.sleep(0.25)
-#        for i in range(100):
-#            self._moving()
-        while self._moving_():
-            time.sleep(0.5)
 
     def _moving_(self):
         cmd = 'Q'

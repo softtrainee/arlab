@@ -196,11 +196,11 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         '''
         self.joystick.disable_laser()
-    
+
     def xy_swapped(self):
         if self.axes.has_key('x'):
-            return self.axes['x'].id==2
-        
+            return self.axes['x'].id == 2
+
     def get_xy(self):
 
         v = self.ask('1TP?;2TP?', verbose=False)
@@ -509,9 +509,6 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self.tell(c)
                 if block:
                     self._block_()
-
-    def block(self, *args, **kw):
-        self._block_(*args, **kw)
 
     def block_group(self, n=10):
         cmd = '1HQ%i' % n
@@ -842,11 +839,14 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if event is not None:
             event.clear()
 
-#        time.sleep(0.05)
+        if self.timer:
+            #timer is calling self._moving_
+            func = lambda: self.timer.isRunning()
+        else:
+            func = lambda: self._moving_(axis=axis)
 
-        while self._moving_(axis=axis):
-            # is the sleep necessary and ehat period 
-            time.sleep(0.35)
+        while func():
+            time.sleep(0.25)
 
         if event is not None:
             event.set()

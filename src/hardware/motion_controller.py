@@ -28,9 +28,6 @@ from src.hardware.core.motion.motion_profiler import MotionProfiler
 import time
 
 
-UPDATE_MS = 150
-
-
 class MotionController(CoreDevice):
     '''
     '''
@@ -94,17 +91,17 @@ class MotionController(CoreDevice):
         if func is None:
             func = self._inprogress_update
         self._not_moving_count = 0
-        return Timer(UPDATE_MS, func)
+        return Timer(250, func)
 
     def _z_inprogress_update(self):
         '''
         '''
         if not self._moving_():
             self.timer.Stop()
-        
+
         z = self.get_current_position('z')
         self.z_progress = z
-        
+
 #        if self._moving_():
 #            z = self.get_current_position('z')
 #            if z is not None:
@@ -192,7 +189,7 @@ class MotionController(CoreDevice):
     def set_z(self, v, **kw):
         self.single_axis_move('z', v, **kw)
         self._z_position = v
-        self.axes['z'].position=v
+        self.axes['z'].position = v
 
     def _set_z(self, v):
         '''
@@ -206,7 +203,7 @@ class MotionController(CoreDevice):
         if v is not None:
             self.single_axis_move('x', v)
             self._x_position = v
-            self.axes['x'].position=v
+            self.axes['x'].position = v
 
     def _set_y(self, v):
         '''
@@ -215,7 +212,7 @@ class MotionController(CoreDevice):
         if v is not None:
             self.single_axis_move('y', v)
             self._y_position = v
-            self.axes['y'].position=v
+            self.axes['y'].position = v
 
     def get_current_position(self, *args, **kw):
         '''
@@ -260,10 +257,11 @@ class MotionController(CoreDevice):
         pass
 
     def block(self, *args, **kw):
-        pass
+        self._block_(*args, **kw)
+
     def linear_move(self, *args, **kw):
         pass
-    def set_home_position(self,*args, **kw):
+    def set_home_position(self, *args, **kw):
         pass
     def axes_factory(self, config=None):
         if config is None:
@@ -324,7 +322,7 @@ class MotionController(CoreDevice):
         '''
         '''
         return self.axes['z'].positive_limit if self.axes.has_key('z') else 0
-    
+
     def _sign_correct(self, val, key, ratio=True):
         '''
         '''
@@ -333,6 +331,24 @@ class MotionController(CoreDevice):
         if ratio:
             r = axis.drive_ratio
 #            self.info('using drive ratio {}={}'.format(key, r))
-        
+
         return val * axis.sign * r
+
+    def _block_(self, axis=None, event=None):
+        '''
+        '''
+        if event is not None:
+            event.clear()
+
+        if self.timer:
+            #timer is calling self._moving_
+            func = lambda: self.timer.isRunning()
+        else:
+            func = lambda: self._moving_(axis=axis)
+
+        while func():
+            time.sleep(0.25)
+
+        if event is not None:
+            event.set()
 #============= EOF ====================================
