@@ -626,10 +626,13 @@ class StageManager(Manager):
     def _set_stage_map(self, v):
         s = self._get_stage_map_by_name(v)
         if s is not None:
+            self.info('setting stage map to {}'.format(v))
+            self._stage_map = s
+
             self.canvas.set_map(s)
             self.tray_calibration_manager.load_calibration(stage_map=s.name)
-            self._stage_map = s
-            self.info('setting stage map to {}'.format(v))
+            self.points_programmer.load_stage_map(s)
+
             return True
         else:
             return False
