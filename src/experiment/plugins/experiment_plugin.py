@@ -24,6 +24,7 @@ from src.helpers.parsers.initialization_parser import InitializationParser
 from src.experiment.experiment_executor import ExperimentExecutor
 from src.experiment.experiment_editor import ExperimentEditor
 from src.pyscripts.pyscript_editor import PyScriptManager
+from src.experiment.signal_calculator import SignalCalculator
 
 
 class ExperimentPlugin(CorePlugin):
@@ -37,23 +38,29 @@ class ExperimentPlugin(CorePlugin):
         '''
         so = self.service_offer_factory(
                           protocol=ExperimentManager,
-                          factory=self._factory
+                          factory=self._manager_factory
                           )
         so1 = self.service_offer_factory(
                           protocol=ExperimentExecutor,
 #                          protocol='src.experiments.experiments_manager.ExperimentsManager',
-                          factory=self._factory1
+                          factory=self._executor_factory
                           )
         so2 = self.service_offer_factory(
                           protocol=ExperimentEditor,
 #                          protocol='src.experiments.experiments_manager.ExperimentsManager',
-                          factory=self._factory2
+                          factory=self._editor_factory
                           )
 
         so3 = self.service_offer_factory(
                           protocol=PyScriptManager,
 #                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=PyScriptManager
+                          )
+
+        so4 = self.service_offer_factory(
+                          protocol=SignalCalculator,
+#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
+                          factory=self._signal_calculator_factory
                           )
 
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
@@ -63,14 +70,14 @@ class ExperimentPlugin(CorePlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so2]
-        return [so, so1, so2, so3]
+        return [so, so1, so2, so3, so4]
 
-    def _factory(self, *args, **kw):
+    def _manager_factory(self, *args, **kw):
         '''
         '''
         return ExperimentManager(application=self.application)
 
-    def _factory1(self, *args, **kw):
+    def _executor_factory(self, *args, **kw):
         '''
 
         '''
@@ -94,6 +101,9 @@ class ExperimentPlugin(CorePlugin):
                                  mode=mode
                                  )
 
-    def _factory2(self, *args, **kw):
+    def _editor_factory(self, *args, **kw):
         return ExperimentEditor(application=self.application)
+
+    def _signal_calculator_factory(self, *args, **kw):
+        return SignalCalculator()
 #============= EOF ====================================

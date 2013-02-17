@@ -75,6 +75,10 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     figures = List
 
     _window_count = 0
+    def database_plot(self):
+        if self.db.connect():
+            db = DatabasePlotter()
+            self.open_view(db)
 
     def open_project_view(self):
         if self.db.connect():

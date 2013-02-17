@@ -96,46 +96,6 @@ class OpenExperimentSetAction(ExperimentAction):
 #        if manager.load_experiment_set(set_names=True):
         if manager.load_experiment_set(saveable=True):
             open_manager(event.window.application, manager)
-#class EnableableAction(Action):
-#
-#    dirty_traitname = 'dirty'
-#    def __init__(self, *args, **kw):
-#        super(EnableableAction, self).__init__(*args, **kw)
-#        em = self.window.workbench.application.get_service(EXPERIMENT_MANAGER_PROTOCOL)
-#        em.on_trait_change(self._update_enabled, self.dirty_traitname)
-#        self.enabled = False
-#
-#    def _update_enabled(self, new):
-#        if isinstance(new, bool):
-#            self.enabled = new
-#        else:
-#            self.enabled = new is not None
-#
-#
-#class SaveExperimentSetAction(EnableableAction):
-#    '''
-#    '''
-#    description = 'Save experiment set'
-#    name = 'Save Experiment Set'
-#
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = _get_manager(event)
-#        manager.save_experiment_set()
-#
-#class SaveAsExperimentSetAction(Action):
-##class SaveAsExperimentSetAction(EnableableAction):
-#    '''
-#    '''
-#    description = 'Save as experiment set'
-#    name = 'Save As Experiment Set'
-#
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = _get_manager(event)
-#        manager.save_as_experiment_set()
 
 
 class OpenRecentTableAction(ExperimentAction):
@@ -147,29 +107,6 @@ class OpenRecentTableAction(ExperimentAction):
         manager = self._get_manager(event)
         manager.open_recent()
 
-class MakePlotSeriesAction(ExperimentAction):
-    description = 'Plot series of analysis'
-    name = 'Plot Series'
-    accelerator = 'Ctrl+P'
-    def perform(self, event):
-        manager = self._get_manager(event)
-        manager.plot_series()
-#class RecallAnalysisAction(Action):
-#    '''
-#    '''
-#    description = 'Recall an Analysis'
-#    name = 'Recall Analysis'
-#    accelerator = 'Ctrl+R'
-#
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = _get_manager(event)
-##        app = event.window.application
-##        man = app.get_service('src.experiment.recall_manager.RecallManager')
-#        manager.open_recent()
-
-
 #===============================================================================
 # database actions
 #===============================================================================
@@ -179,6 +116,11 @@ class LabnumberEntryAction(ExperimentAction):
         manager = self._get_manager(event)
         lne = manager._labnumber_entry_factory()
         open_manager(event.window.application, lne)
+
+class SignalCalculatorAction(ExperimentAction):
+    def perform(self, event):
+        obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
+        open_manager(event.window.application, obj)
 
 #class AddProjectAction(Action):
 #    def perform(self, event):

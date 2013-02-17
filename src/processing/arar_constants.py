@@ -50,6 +50,10 @@ class ArArConstants(HasTraits):
 
     atm3836 = Property(depends_on='atm4038_v,atm4038_e,atm4036_v,atm4036_e')
 
+    abundance_40K = 0.000117
+    mK = 39.0983
+    mO = 15.9994
+
     def _get_atm3836(self):
         return self.atm4036 / self.atm4038
 

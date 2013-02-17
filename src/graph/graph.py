@@ -1016,7 +1016,8 @@ class Graph(Loggable, ContextMenuMixin):
                        bgcolor='white',
                      #spacing = spacing,
                      #padding=25,
-                     padding=[40, 10, 60, 10],
+                     padding=5,
+#                     padding=[40, 10, 60, 10],
                      fill_padding=True,
                      use_backbuffer=True
                      )
