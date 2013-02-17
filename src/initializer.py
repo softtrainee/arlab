@@ -26,6 +26,8 @@ from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
 from src.progress_dialog import MProgressDialog
+import os
+from globals import globalv
 
 
 class Initializer(Loggable):
@@ -179,6 +181,10 @@ class Initializer(Loggable):
             mp = parser._tree.find('plugins/{}'.format(name))
 
         if mp is not None:
+            if not globalv.ignore_required:
+                if not self._check_required(mp):
+                    return False
+
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)
             flags = parser.get_flags(mp)
@@ -258,21 +264,42 @@ class Initializer(Loggable):
                 self.debug('trouble creating manager {}'.format(mi))
                 break
 
+
+
+
             if self.application is not None:
 
                 # register this manager as a service
                 man.application = self.application
-                i = self.application.register_service(type(man), man)
+                self.application.register_service(type(man), man)
 
-#
-#            #HACK
-#            MAP = dict(diode = 'FusionsDiode',
-#                     co2 = 'FusionsCO2'
-#                     )
             d = dict(name=mi, device_dir=device_dir, manager=man,
                      plugin_name=manager.name)
 
             self.add_initialization(d)
+
+    def _check_required(self, subtree):
+        #check the subtree has all required devices enabled
+        devs = self.parser.get_devices(subtree, all=True, element=True)
+        for di in devs:
+            required = True
+            req = self.parser.get_parameter(di, 'required')
+            if req:
+                required = req.strip().lower() == 'true'
+
+            enabled = di.get('enabled').lower() == 'true'
+
+#            print enabled, di.text.strip(), required
+            if required and not enabled:
+                name = di.text.strip().upper()
+                msg = '''Device {} is REQUIRED but is not ENABLED.
+                
+Do you want to quit to enable {} in the Initialization File?'''.format(name, name)
+                result = self.confirmation_dialog(msg, title='Quit Pychron')
+                if result:
+                    os._exit(0)
+
+        return True
 
     def load_devices(
         self,
@@ -295,10 +322,12 @@ class Initializer(Loggable):
                 continue
 
             dev = None
-            st = time.time()
             pdev = self.parser.get_device(name, device, plugin_name,
                     element=True)
-            dev_class = pdev.get('klass')
+
+            dev_class = pdev.find('klass')
+            if dev_class:
+                dev_class = dev_class.text.strip()
             try:
 
                 dev = getattr(manager, device)

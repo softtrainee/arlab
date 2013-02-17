@@ -52,16 +52,18 @@ class LaserPlugin(CorePlugin):
 
         ip = InitializationParser()
         plugin = ip.get_plugin(self.klass[1].replace('Manager', ''), category='hardware')
-        mode = plugin.get('mode')
+#        mode = plugin.get('mode')
+        mode = ip.get_parameter(plugin, 'mode')
 
         if mode == 'client':
-            klass=plugin.get('klass')
+            klass = ip.get_parameter(plugin, 'klass')
             if klass is None:
                 klass = 'PychronLaserManager'
-                
+
             pkg = 'src.lasers.laser_managers.pychron_laser_manager'
             try:
-                tag = plugin.find('communications')
+                tag = ip.get_parameter(plugin, 'communications', element=True)
+#                tag = plugin.find('communications')
                 params = dict()
                 for attr in ['host', 'port', 'kind']:
                     try:
