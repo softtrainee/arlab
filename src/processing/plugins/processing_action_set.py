@@ -113,7 +113,11 @@ class ProcessingActionSet(WorkbenchActionSet):
                 Action(name='Fit Isotopes',
                        path=PATH,
                        class_name='{}:FitIsotopesAction'.format(BASE)
-                       )
+                       ),
+               Action(name='Database Plot',
+                      path=PATH,
+                      class_name='{}:DatabasePlotAction'.format(BASE)
+                      )
 
 
 #               Action(name='New Workspace...',

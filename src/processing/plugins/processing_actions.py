@@ -148,71 +148,6 @@ class ProjectViewAction(ProcessingAction):
     def perform(self, event):
         man = self._get_manager(event)
         man.open_project_view()
-#class NewFigureAction(ProcessingAction):
-#    accelerator = 'Ctrl+k'
-#    def perform(self, event):
-#        man = self._get_manager(event)
-#
-#
-#        nf = man.new_figure()
-#        if nf:
-#            open_manager(event.window.application, nf)
-#
-#class NewWorkspaceAction(ProcessingAction):
-#    def perform(self, event):
-#        man = self._get_manager(event)
-#
-#        man.new_workspace()
-##        open_manager(event.window.application, nf)
-#
-#class OpenWorkspaceAction(ProcessingAction):
-#    def perform(self, event):
-#        man = self._get_manager(event)
-#
-#        man.open_workspace()
-##        open_manager(event.window.application, nf)
-
-
-#
-#    dirty_traitname = 'dirty'
-#    def __init__(self, *args, **kw):
-#        super(EnableableAction, self).__init__(*args, **kw)
-#        em = self.window.workbench.application.get_service(EXPERIMENT_MANAGER_PROTOCOL)
-#        em.on_trait_change(self._update_enabled, self.dirty_traitname)
-#        self.enabled = False
-#
-#    def _update_enabled(self, new):
-#        if isinstance(new, bool):
-#            self.enabled = new
-#        else:
-#            self.enabled = new is not None
-#
-#
-#class SaveExperimentSetAction(EnableableAction):
-#    '''
-#    '''
-#    description = 'Save experiment set'
-#    name = 'Save Experiment Set'
-#
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-#        manager.save_experiment_set()
-#
-#class SaveAsExperimentSetAction(ProcessingAction):
-##class SaveAsExperimentSetAction(EnableableAction):
-#    '''
-#    '''
-#    description = 'Save as experiment set'
-#    name = 'Save As Experiment Set'
-#
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-#        manager.save_as_experiment_set()
-
 
 class OpenRecentTableAction(ProcessingAction):
     description = 'Open the Recent Analysis Table'
@@ -223,65 +158,10 @@ class OpenRecentTableAction(ProcessingAction):
         manager = self._get_manager(event)
         manager.open_recent()
 
-#class RecallAnalysisAction(ProcessingAction):
-#    '''
-#    '''
-#    description = 'Recall an Analysis'
-#    name = 'Recall Analysis'
-#    accelerator = 'Ctrl+R'
-#
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-##        app = event.window.application
-##        man = app.get_service('src.experiment.recall_manager.RecallManager')
-#        manager.open_recent()
 
-
-#===============================================================================
-# database actions
-#===============================================================================
-#class LabnumberEntryAction(ProcessingAction):
-#    def perform(self, event):
-#        manager = self._get_manager(event)
-#        lne = manager._labnumber_entry_factory()
-#        open_manager(event.window.application, lne)
-
-#class AddProjectAction(ProcessingAction):
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-#
-#
-#class AddSampleProjectAction(ProcessingAction):
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-#
-#
-#class AddMaterialAction(ProcessingAction):
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-#
-#
-#class IrradiationChronologyAction(ProcessingAction):
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-#
-#
-#class IrradiationProductAction(ProcessingAction):
-#    def perform(self, event):
-#        '''
-#        '''
-#        manager = self._get_manager(event)
-
-
+class DatabasePlotAction(ProcessingAction):
+    def perform(self, event):
+        manager = self._get_manager(event)
+        manager.database_plot()
 
 #============= EOF ====================================
