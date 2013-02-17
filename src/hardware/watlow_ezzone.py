@@ -255,7 +255,7 @@ class WatlowEZZone(CoreDevice):
 
         pid_attrs = ['_Ph_', '_Pc_', '_I_', '_D_']
         self.info('read pid parameters')
-        pid_vals = self.read(1890, nregisters=8, response_type='float')
+        pid_vals = self.read(1890, nregisters=8, nbytes=21, response_type='float')
         if pid_vals:
             for pa, pv in zip(pid_attrs, pid_vals):
                 setattr(self, pa, pv)
@@ -263,8 +263,8 @@ class WatlowEZZone(CoreDevice):
         self.info('read input/output scaling')
         if not self.simulation:
             try:
-                osl, osh = self.read(736, nregisters=4)
-                isl, ish = self.read(388, nregisters=4)
+                osl, osh = self.read(736, nregisters=4, nbytes=13)
+                isl, ish = self.read(388, nregisters=4, nbytes=13)
 
                 self._output_scale_low = osl
                 self._output_scale_high = osh
