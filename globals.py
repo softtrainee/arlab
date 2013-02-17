@@ -42,7 +42,7 @@ class Globals(object):
 #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
     video_test_path = '/Users/ross/Sandbox/watershed_test2.jpg'
     video_test_path = '/Users/ross/Sandbox/snapshot002.jpg'
-    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
+#    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
     show_autocenter_debug_image = False
 #    show_autocenter_debug_image = True
 
