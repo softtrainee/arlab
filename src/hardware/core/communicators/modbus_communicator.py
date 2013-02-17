@@ -64,7 +64,7 @@ class ModbusCommunicator(SerialCommunicator):
         '''
         '''
         if response_type == 'int':
-            kw['nbytes'] = 6
+            kw['nbytes'] = 7
 
         return self.read_holding_register(register,
                                           nregisters, response_type, **kw)

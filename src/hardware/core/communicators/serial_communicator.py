@@ -263,7 +263,7 @@ class SerialCommunicator(Communicator):
                     self.handle = serial.Serial(**args)
                     try_connect = False
                     self.simulation = False
-                    
+
 
                 except serial.serialutil.SerialException:
                     try_connect = False
@@ -384,7 +384,8 @@ class SerialCommunicator(Communicator):
         return self._read_loop(func, delay, timeout)
 
     def _read_hex(self, nbytes=8, timeout=1, delay=None):
-        func = lambda r:self._get_nbytes(nbytes * 2, r)
+#        print nbytes
+        func = lambda r: self._get_nbytes(nbytes * 2, r)
         return self._read_loop(func, delay, timeout)
 
     def _read_handshake(self, handshake, handshake_only, timeout=1, delay=None):
@@ -456,7 +457,7 @@ class SerialCommunicator(Communicator):
 #            d = 1 / 1000.
 #            time.sleep(d)
 #            tt += d
-        return r, len(r) == nchars
+        return r, len(r) >= nchars
 
     def _get_nchars(self, nchars, r):
         '''
@@ -467,7 +468,7 @@ class SerialCommunicator(Communicator):
         r += handle.read(c)
 #        print r, len(r), nchars
         #print 'get n',len(r),nchars, self._prep_str(r),len(r)==nchars
-        return r, len(r) == nchars
+        return r, len(r) >= nchars
 
     def _check_handshake(self, handshake_chrs):
         ack, nak = handshake_chrs
@@ -517,7 +518,9 @@ class SerialCommunicator(Communicator):
 
         r = ''
         st = time.time()
-        while time.time() - st < timeout:
+
+        ct = time.time()
+        while ct - st < timeout:
             #print func
             try:
                 r, isterminated = func(r)
@@ -527,6 +530,10 @@ class SerialCommunicator(Communicator):
                 import traceback
                 traceback.print_exc()
             time.sleep(0.005)
+            ct = time.time()
+
+        if ct - st > timeout:
+            self.info('timed out. {}s'.format(timeout))
 
         return r
 #    def _read(self, is_hex=False, time_out=1, delay=None):
