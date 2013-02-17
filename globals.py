@@ -36,7 +36,7 @@ class Globals(object):
     ignore_chiller_unavailable = True
 
     video_test = False
-    video_test = True
+#    video_test = True
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
 #    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
 #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
