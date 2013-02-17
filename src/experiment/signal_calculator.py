@@ -108,14 +108,12 @@ class SignalCalculator(HasTraits):
     def _kind_changed(self):
         if self.kind == 'weight':
             self.secondary_plot.visible = False
-#            self.secondary_plot.y_axis.visible = False
         else:
             self.secondary_plot.visible = True
-#            self.secondary_plot.y_axis.visible = True
 
         self._calculate()
 
-    @on_trait_change('weight_index:+,volume_index:+,sensitivity, k2o, age')
+    @on_trait_change('weight_index:+, volume_index:+, sensitivity, k2o, age')
     def _calculate(self):
         '''
             calculate signal size for n mg of sample with m k2o of age p 

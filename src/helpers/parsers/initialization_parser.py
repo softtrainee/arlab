@@ -111,6 +111,11 @@ class InitializationParser(XMLParser):
         root = tree.getroot()
         return [t.tag for t in list(root)]
 
+    def get_parameter(self, subtree, name, all=True, **kw):
+        pa = self._get_paramaters(subtree, name, all=all, **kw)
+        if pa:
+            return pa[0]
+
     def enable_manager(self, name, parent):
         plugin = self.get_plugin(parent)
         man = next((m for m in plugin.findall('manager') if m.text.strip() == name), None)

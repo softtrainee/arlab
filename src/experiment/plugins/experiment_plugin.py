@@ -84,15 +84,12 @@ class ExperimentPlugin(CorePlugin):
 
         ip = InitializationParser()
         plugin = ip.get_plugin('Experiment', category='general')
-        mode = plugin.get('mode')
+#        mode = plugin.get('mode')
+        mode = ip.get_parameter(plugin, 'mode')
+
         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
         p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
-#        p4 = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
-#        lm = self.application.get_service(p4)
-#        if lm is None:
-#            p4 = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
-#            lm = self.application.get_service(p4)
 
         return ExperimentExecutor(application=self.application,
                                  extraction_line_manager=self.application.get_service(p1),
