@@ -121,45 +121,41 @@ class PointsProgrammer(Manager):
                                             **ptargs)
                 self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
 
+    def load_stage_map(self, sm):
+        if not (hasattr(sm, 'lines') and hasattr(sm, 'points')):
+            return
+
+        canvas = self.canvas
+        canvas.remove_point_overlay()
+        canvas.remove_line_overlay()
+        canvas.add_point_overlay()
+        canvas.add_line_overlay()
+        canvas.lines = []
+        canvas.points = []
+
+        ptargs = dict(radius=0.05, vline_length=0.1, hline_length=0.1)
+        for li in sm.lines:
+            canvas.new_line = True
+            for si in li:
+                canvas.new_line_point(xy=si['xy'],
+                                      point_color=self.point_color,
+                                       line_color=self.point_color,
+                                       velocity=si['velocity'],
+                                       **ptargs)
+            canvas.new_line = True
+
+        for pi in sm.points:
+            canvas.new_point(xy=pi['xy'],
+                             default_color=self.point_color,
+                                    **ptargs)
+
+        canvas.invalidate_and_redraw()
+
     def _load_points_fired(self):
         p = self.open_file_dialog(default_directory=paths.user_points_dir)
         if p:
-
             sm = self.stage_map_klass(file_path=p)
-
-            canvas = self.canvas
-            canvas.remove_point_overlay()
-            canvas.remove_line_overlay()
-            canvas.add_point_overlay()
-            canvas.add_line_overlay()
-            canvas.lines = []
-            canvas.points = []
-
-            ptargs = dict(radius=0.05, vline_length=0.1, hline_length=0.1)
-            for li in sm.lines:
-                canvas.new_line = True
-                for si in li:
-#                xy1=li['p1']
-#                xy2=li['p2']
-#                v=li['velocity']
-                    canvas.new_line_point(xy=si['xy'],
-                                          point_color=self.point_color,
-                                           line_color=self.point_color,
-                                           velocity=si['velocity'],
-                                           **ptargs)
-#                canvas.new_line_point(xy=xy2,
-#                                      point_color=self.point_color,
-#                                       line_color=self.point_color,
-#                                       velocity=v,
-#                                       **ptargs)
-                canvas.new_line = True
-
-            for pi in sm.points:
-                canvas.new_point(xy=pi['xy'],
-                                 default_color=self.point_color,
-                                        **ptargs)
-
-            canvas.invalidate_and_redraw()
+            self.load_stage_map(sm)
             self.is_programming = True
 
 #            self.canvas.load_points_file(p)
