@@ -1,3 +1,77 @@
+
+#===============================================================================
+# Copyright 2012 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#============= enthought library imports =======================
+from traits.api import HasTraits, Str, Float, Bool
+#from traitsui.api import View, Item
+from src.monitors.monitor import Monitor
+#============= standard library imports ========================
+#============= local library imports  ==========================
+
+class VacuumSection(HasTraits):
+    gauge_controller = Str
+    gauge_name = Str
+    valve = Str
+    pressure_trip = Float
+    pressure_reset = Float
+    tripped = Bool
+
+class SystemMonitor(Monitor):
+    def _load_hook(self, config):
+        for section in config.sections():
+            if section.startswith('VacuumSection'):
+                g = self.config_get(config, section, 'gauge')
+                if '.' in g:
+                    gc, gn = g.split('.')
+                else:
+                    self.warning_dialog('Invalid Gauge identifier {}. Should be <GaugeController>.<GaugeName> e.g. Bone.IG'.format(g))
+                    continue
+
+                ds = self.config_get(config, section, 'disable_valves', default='')
+                ds = ds.split(',')
+                p = self.config_get(config, section, 'pressure_trip', cast='float', default=10)
+                r = self.config_get(config, section, 'pressure_reset', cast='float', default=1e-10)
+                if r > p:
+                    self.warning_dialog('Invalid pressure_reset {}. Pressure_reset must be less than pressure_trip {}'.format(r, p))
+                    continue
+
+                a = VacuumSection(name=section,
+                                  gauge_controller=gc,
+                                  gauge_name=gn,
+                                  disable_valves=ds,
+                                  pressure_trip=p, pressure_reset=r)
+                self.analytical_sections.append(a)
+
+    def _fcheck_analytical_pressure(self):
+        man = self.manager
+        for section in self.analytical_sections:
+            p = man.get_pressure(section.gauge_controller, section.gauge_name)
+            if p > section.pressure_trip:
+                for vi in section.disable_valves:
+                    man.disable_valve(vi)
+                section.tripped = True
+            elif section.tripped:
+                if p < section.pressure_reset:
+                    for vi in section.disable_valves:
+                        man.disable_valve(vi)
+                    section.tripped = False
+
+#============= EOF =============================================
+
 #===============================================================================
 # Copyright 2011 Jake Ross
 # 

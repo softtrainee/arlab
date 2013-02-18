@@ -790,7 +790,7 @@ class ExperimentExecutor(ExperimentManager):
         else:
             mon = AutomatedRunMonitor()
 
-        mon.configuration_dir_name = paths.monitors_dir
+#        mon.configuration_dir_name = paths.monitors_dir
         mon.load()
         return mon
 

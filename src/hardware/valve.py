@@ -58,6 +58,8 @@ class HardwareValve(Loggable):
     query_state = Bool(True)
     description = Str
 
+    enabled = Bool(True)
+
     def __init__(self, name, *args, **kw):
         '''
      
@@ -95,7 +97,7 @@ class HardwareValve(Loggable):
 
     def set_open(self, mode='normal'):
         self.info('open mode={}'.format(mode))
-        current_state=copy(self.state)
+        current_state = copy(self.state)
         state_change = False
         success = True
         if self.software_lock:
@@ -111,7 +113,7 @@ class HardwareValve(Loggable):
 
     def set_closed(self, mode='normal'):
         self.info('close mode={}'.format(mode))
-        current_state=copy(self.state)
+        current_state = copy(self.state)
         state_change = False
         success = True
         if self.software_lock:
@@ -124,7 +126,7 @@ class HardwareValve(Loggable):
                 if current_state == True:
                     state_change = True
                 self.state = False
-    
+
         return success, state_change
 
     def _software_locked(self):

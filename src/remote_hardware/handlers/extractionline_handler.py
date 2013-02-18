@@ -279,8 +279,8 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         '''
         '''
         p = None
-        if manager.gauge_manager:
-            p = manager.gauge_manager.get_pressure(controller, gauge)
+        if manager:
+            p = manager.get_pressure(controller, gauge)
 
         if p is None:
             p = InvalidGaugeErrorCode(controller, gauge)
