@@ -84,10 +84,6 @@ class AerotechMotionController(MotionController):
             nx = self._sign_correct(nx, 'x', ratio=False)
             ny = self._sign_correct(ny, 'y', ratio=False)
 
-        if self.timer:
-            self.timer.Stop()
-
-        self.timer = self.timer_factory()
         x = self.axes['x']
         y = self.axes['y']
 
@@ -101,13 +97,14 @@ class AerotechMotionController(MotionController):
 #            xv=xv*0.5
 #        if abs(nx)>1:
 #            yv=yv*0.5
-            
+        
         if self.xy_swapped():
             cmd = 'ILI X{} Y{} F{}'.format(ny, nx, xv)
         else:
             cmd = 'ILI X{} Y{} F{}'.format(nx, ny, xv)
-
+        
         self.ask(cmd, handshake_only=True)
+        self.timer = self.timer_factory()
         if block:
             self.block()
 
@@ -177,7 +174,7 @@ class AerotechMotionController(MotionController):
 #        resp = self.ask(cmd)
 #        return self._parse_response(resp)
 
-    def _moving_(self):
+    def _moving_(self, *args, **kw):
         '''
             unidex 511 6-12 Serial Pol
         '''
