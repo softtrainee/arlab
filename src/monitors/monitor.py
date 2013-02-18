@@ -24,6 +24,7 @@ import time
 #from src.managers.manager import Manager
 from src.config_loadable import ConfigLoadable
 from pyface.message_dialog import warning
+from src.paths import paths
 
 class Monitor(ConfigLoadable):
     '''
@@ -33,6 +34,7 @@ class Monitor(ConfigLoadable):
     _monitoring = False
     _invalid_checks = None
     _stop_signal = None
+    configuration_dir_name = paths.monitors_dir
 
     def is_monitoring(self):
         return self._monitoring

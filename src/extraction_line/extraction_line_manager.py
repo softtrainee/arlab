@@ -16,6 +16,7 @@
 #=============enthought library imports=======================
 from traits.api import  Instance
 from traitsui.api import View, Item, VSplit
+from pyface.timer.do_later import do_later
 #=============standard library imports ========================
 import os
 import time
@@ -25,11 +26,11 @@ import pickle
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 from src.paths import paths
-from view_controller import ViewController
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_editor import PyScriptManager
-from pyface.timer.do_later import do_later
+from src.monitors.system_monitor import SystemMonitor
 
+from view_controller import ViewController
 #from src.managers.multruns_report_manager import MultrunsReportManager
 
 #Macro = None
@@ -63,6 +64,7 @@ class ExtractionLineManager(Manager):
     runscript = None
 
     pyscript_editor = Instance(PyScriptManager)
+    monitor = Instance(SystemMonitor)
 
     learner = None
     mode = 'normal'
@@ -121,7 +123,12 @@ class ExtractionLineManager(Manager):
     def finish_loading(self):
         '''
         '''
-        pass
+        if self.mode != 'client':
+            self.monitor = SystemMonitor(manager=self,
+                                         name='system_monitor'
+                                         )
+            self.monitor.monitor()
+
 #        if self.gauge_manager is not None:
 #            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
 #    def close(self, isok):
@@ -134,6 +141,9 @@ class ExtractionLineManager(Manager):
 
         if self.gauge_manager:
             self.gauge_manager.stop_scans()
+
+        if self.monitor:
+            self.monitor.stop()
         return True
 
     def opened(self):
@@ -311,6 +321,27 @@ class ExtractionLineManager(Manager):
             return self.valve_manager.get_valve_by_name(name)
 
 #    def open_valve(self, name, description=None, address=None, mode='remote', **kw):
+    def get_pressure(self, controller, name):
+        if self.gauge_manager:
+            return self.gauge_manager.get_pressure(controller, name)
+
+    def disable_valve(self, description):
+        self._enable_valve(description, False)
+
+    def enable_valve(self, description):
+        self._enable_valve(description, True)
+
+    def _enable_valve(self, description, state):
+        if self.valve_manager:
+            valve = self.valve_manager.get_valve_by_description(description)
+            if valve is None:
+                valve = self.valve_manager.get_valve_by_name(description)
+
+            if valve is not None:
+                if not state:
+                    self.close_valve(valve.name)
+
+                valve.enabled = state
 
 
     def open_valve(self, name, ** kw):

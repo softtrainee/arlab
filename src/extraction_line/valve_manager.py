@@ -523,19 +523,22 @@ class ValveManager(Manager):
 
         result = None
         if v is not None:
-            act = getattr(v, action)
+            if not v.enabled:
+                self.warning_dialog('{} {} not enabled'.format(v.name, v.description))
+            else:
+                act = getattr(v, action)
 
-            result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
-            if isinstance(result, bool):#else its an error message
-                if result:
-                    ve = self.get_evalve_by_name(name)
-                    ve.state = True if action == 'open' else False
+                result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
+                if isinstance(result, bool):#else its an error message
+                    if result:
+                        ve = self.get_evalve_by_name(name)
+                        ve.state = True if action == 'open' else False
 
-#                update the section state
-#                for s in self.sections:
-#                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
+    #                update the section state
+    #                for s in self.sections:
+    #                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
 
-                #result = True
+                    #result = True
 
         else:
             self.warning('Valve {} not available'.format(vid))
