@@ -26,11 +26,12 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
     PreferencesTable, DatabaseVersionTable, FittypeTable, \
     BaselinesChangeableItemsTable, SampleLoadingTable, MachineTable, \
-    AnalysisPositionTable, LoginSessionTable, RunScriptTable
+    AnalysisPositionTable, LoginSessionTable, RunScriptTable, \
+    IrradiationChronologyTable, IrradiationLevelTable
 from src.database.core.database_adapter import DatabaseAdapter
 
 from src.database.core.functions import delete_one, get_first
-from sqlalchemy.sql.expression import func
+from sqlalchemy.sql.expression import func, distinct
 
 from src.database.selectors.massspec_selector import MassSpecSelector
 import binascii
@@ -39,6 +40,45 @@ import binascii
 class MassSpecDatabaseAdapter(DatabaseAdapter):
     selector_klass = MassSpecSelector
     test_func = 'get_database_version'
+
+    def get_irradiation_positions(self, name, level):
+        sess = self.get_session()
+        q = sess.query(IrradiationPositionTable)
+        q = q.filter(IrradiationPositionTable.IrradiationLevel == '{}{}'.format(name, level))
+        return q.all()
+
+    def get_production_ratio_by_irradname(self, name):
+        sess = self.get_session()
+        q = sess.query(IrradiationLevelTable)
+        q = q.filter(IrradiationLevelTable.IrradBaseID == name)
+        irrad = q.all()
+        if irrad:
+            return irrad[-1].production
+
+    def get_levels_by_irradname(self, name):
+        sess = self.get_session()
+        q = sess.query(IrradiationLevelTable)
+        q = q.filter(IrradiationLevelTable.IrradBaseID == name)
+        return q.all()
+
+    def get_chronology_by_irradname(self, name):
+        sess = self.get_session()
+        q = sess.query(IrradiationChronologyTable)
+        q = q.filter(IrradiationChronologyTable.IrradBaseID == name)
+        q = q.order_by(IrradiationChronologyTable.EndTime.asc())
+        return q.all()
+
+#    def get_run_ids(self, filter_str=None):
+#        sess = self.get_session()
+#        q = sess.query(distinct(IrradiationPositionTable.IrradPosition))
+#        if filter_str is not None:
+#            q = q.filter(IrradiationPositionTable.IrradPosition == filter_str)
+#        return q.all()
+
+    def get_irradiation_names(self):
+        sess = self.get_session()
+        q = sess.query(distinct(IrradiationLevelTable.IrradBaseID))
+        return q.all()
 
     def get_analyses(self, **kw):
         return self._get_items(AnalysesTable, globals(), **kw)

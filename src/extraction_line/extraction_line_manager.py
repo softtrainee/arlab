@@ -15,7 +15,7 @@
 #===============================================================================
 #=============enthought library imports=======================
 from traits.api import  Instance
-from traitsui.api import View, Item
+from traitsui.api import View, Item, VSplit
 #=============standard library imports ========================
 import os
 import time
@@ -50,8 +50,8 @@ class ExtractionLineManager(Manager):
 
     valve_manager = Instance(Manager)
     gauge_manager = Instance(Manager)
-    environmental_manager = Instance(Manager)
-    device_stream_manager = Instance(Manager)
+#    environmental_manager = Instance(Manager)
+#    device_stream_manager = Instance(Manager)
 
     multruns_report_manager = Instance(Manager)
 #    multruns_report_manager = Instance(MultrunsReportManager)
@@ -67,10 +67,10 @@ class ExtractionLineManager(Manager):
     learner = None
     mode = 'normal'
     _update_status_flag = None
-    _monitoring_valve_status=False
-    _valve_state_frequency=3
-    _valve_lock_frequency=10
-    
+    _monitoring_valve_status = False
+    _valve_state_frequency = 3
+    _valve_lock_frequency = 10
+
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -126,7 +126,11 @@ class ExtractionLineManager(Manager):
 #        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
     def closed(self, ok):
         self.info('stopping status monitor')
-        self._update_status_flag.set()
+        if self._update_status_flag:
+            self._update_status_flag.set()
+
+        if self.gauge_manager:
+            self.gauge_manager.stop_scans()
         return True
 
     def opened(self):
@@ -142,26 +146,29 @@ class ExtractionLineManager(Manager):
 
         if self.mode == 'client':
             self.start_status_monitor()
+        else:
+            if self.gauge_manager:
+                self.gauge_manager.start_scans()
 
     def start_status_monitor(self):
         def func():
-            self._monitoring_valve_status=True
-            cnt=0
-            state_freq=self._valve_state_frequency
-            lock_freq=self._valve_lock_frequency
+            self._monitoring_valve_status = True
+            cnt = 0
+            state_freq = self._valve_state_frequency
+            lock_freq = self._valve_lock_frequency
             while not self._update_status_flag.isSet():
                 time.sleep(1)
-                if cnt%state_freq==0:
+                if cnt % state_freq == 0:
                     self.valve_manager.load_valve_states()
-                if cnt%lock_freq==0:                
+                if cnt % lock_freq == 0:
                     self.valve_manager.load_valve_lock_states()
-                
-                cnt+=1
-                if cnt>100:
-                    cnt=0
+
+                cnt += 1
+                if cnt > 100:
+                    cnt = 0
 
             self.info('status monitor stopped')
-            self._monitoring_valve_status=False
+            self._monitoring_valve_status = False
 
         if self._update_status_flag is None:
             self._update_status_flag = Event()
@@ -315,7 +322,7 @@ class ExtractionLineManager(Manager):
 
     def _open_close_valve(self, name, action,
                           description=None, address=None, mode='remote', **kw):
-        vm=self.valve_manager
+        vm = self.valve_manager
         if vm is not None:
             if address:
                 name = vm.get_name_by_address(address)
@@ -448,9 +455,18 @@ class ExtractionLineManager(Manager):
     def traits_view(self):
         '''
         '''
-        v = View(Item('canvas',
-                      style='custom',
-                      show_label=False),
+        v = View(
+                 VSplit(
+                         Item('gauge_manager',
+                              style='custom', show_label=False,
+                              height=0.2,
+                              springy=False,
+                              ),
+                         Item('canvas',
+                              style='custom',
+                              show_label=False,
+                              height=0.8)
+                        ),
                handler=self.handler_klass,
                title='Extraction Line Manager',
                resizable=True,
@@ -481,6 +497,10 @@ class ExtractionLineManager(Manager):
     def _valve_manager_default(self):
         from src.extraction_line.valve_manager import ValveManager
         return ValveManager(extraction_line_manager=self)
+
+    def _gauge_manager_default(self):
+        from src.extraction_line.gauge_manager import GaugeManager
+        return GaugeManager()
 
     def _explanation_default(self):
 #        '''

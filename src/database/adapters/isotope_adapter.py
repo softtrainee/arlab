@@ -266,6 +266,7 @@ class IsotopeAdapter(DatabaseAdapter):
                                     production=production,
                                     chronology=chronology)
         self._add_item(ir)
+        return ir
 #        return self._add_unique(ir, 'irradiation', name)
 
     def add_irradiation_holder(self, name , **kw):
@@ -298,7 +299,7 @@ class IsotopeAdapter(DatabaseAdapter):
         self._add_item(ch)
         return ch
 
-    def add_irradiation_level(self, name, irradiation, holder, z):
+    def add_irradiation_level(self, name, irradiation, holder, z=0):
         irradiation = self.get_irradiation(irradiation)
         holder = self.get_irradiation_holder(holder)
 
@@ -508,7 +509,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_labnumber(self, labnumber,
 #                      aliquot, 
-                      sample=None, **kw):
+                      sample=None, irradiation=None, **kw):
         ln = self.get_labnumber(labnumber)
         if ln is None:
             ln = gen_LabTable(labnumber=labnumber,

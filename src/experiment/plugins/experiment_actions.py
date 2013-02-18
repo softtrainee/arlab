@@ -122,6 +122,12 @@ class SignalCalculatorAction(ExperimentAction):
         obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
         open_manager(event.window.application, obj)
 
+class OpenImportManagerAction(ExperimentAction):
+    accelerator = 'Ctrl+i'
+    def perform(self, event):
+        obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
+        open_manager(event.window.application, obj)
+
 #class AddProjectAction(Action):
 #    def perform(self, event):
 #        '''

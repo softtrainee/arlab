@@ -365,7 +365,7 @@ class KerrMotor(KerrDevice):
         position = self._float_to_hexstr(pos)
         v = self._float_to_hexstr(self.velocity)
         a = self._float_to_hexstr(self.acceleration)
-        print cmd, control, position, v, a
+#        print cmd, control, position, v, a
         cmd = ''.join((cmd, control, position, v, a))
         cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
 
