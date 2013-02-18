@@ -258,7 +258,12 @@ class MotionController(CoreDevice):
 
     def block(self, *args, **kw):
         self._block_(*args, **kw)
-
+    def enqueue_move(self, *args, **kw):
+        pass
+    def set_smooth_transitions(self, *args, **kw):
+        pass
+    def set_program_mode(self, *args, **kw):
+        pass
     def linear_move(self, *args, **kw):
         pass
     def set_home_position(self, *args, **kw):
@@ -347,7 +352,7 @@ class MotionController(CoreDevice):
             func = lambda: self._moving_(axis=axis)
 
         while func():
-            time.sleep(0.25)
+            time.sleep(0.15)
 
         if event is not None:
             event.set()
