@@ -17,19 +17,41 @@
 
 
 #=============enthought library imports=======================
-from traitsui.api import View
+from traits.api import List, HasTraits, Str, Float
+from traitsui.api import View, Item, ListEditor, InstanceEditor, HGroup
+
 from src.managers.manager import Manager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+#class Gauge(HasTraits):
+#    name = Str
+#    pressure = Float
+#    def traits_view(self):
+#        v = View(HGroup(Item('name', show_label=False, style='readonly'),
+#                         Item('pressure', format_str='%0.2e', show_label=False, style='readonly')))
+#        return v
+
 class GaugeManager(Manager):
+#    gauges = List
 #    def finish_loading(self, *args, **kw):
+#        for di in self.devices:
+#            if hasattr(di, 'gauges'):
+#                self.gauges.extend(di.gauges)
+
+#    def finish_loading(self, *args, **kw):
+#        self.load_gauges()
 #        print 'load gm', args, kw
 #        
 #        for k, v in self.traits().items():
 #            if 'gauge_controller' in k:
 #                print v
-#                
+
+    def stop_scans(self):
+        for k in self.devices:
+            if k.is_scanable:
+                k.stop_scan()
+
     def start_scans(self):
         for k in self.devices:
             if k.is_scanable:
@@ -37,9 +59,17 @@ class GaugeManager(Manager):
 #            if 'gauge_controller' in k:
 #                print v
 #                v.start_scan()
-#                       
+##                       
     def traits_view(self):
-        v = View()
+
+        v = View(Item('devices', style='custom',
+                      show_label=False,
+                      editor=ListEditor(mutable=False,
+                                        columns=len(self.devices),
+                                        style='custom',
+                                        editor=InstanceEditor(view='gauge_view'))),
+                 height= -100
+                 )
         return v
 #    controllers = List(GaugeControllers)
 if __name__ == '__main__':

@@ -233,6 +233,10 @@ class IrradiationProductionTable(Base):
 
     P36Cl38Cl = Column(Float)
     P36Cl38ClEr = Column(Float)
+    CaOverKMultiplier = Column(Float)
+    CaOverKMultiplierEr = Column(Float)
+    ClOverKMultiplier = Column(Float)
+    ClOverKMultiplierEr = Column(Float)
 
     Label = Column(String(80))
     levels = relationship('IrradiationLevelTable', backref='production')

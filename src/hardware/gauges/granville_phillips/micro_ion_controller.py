@@ -17,18 +17,55 @@
 
 
 #=============enthought library imports=======================
+from traits.api import List, Str, HasTraits, Float
+from traitsui.api import View, HGroup, Item, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 from numpy import random, char
 
 #=============local library imports  ==========================
 CRLF = chr(13)
 from src.hardware.core.core_device import CoreDevice
+
+class Gauge(HasTraits):
+    name = Str
+    pressure = Float
+    def traits_view(self):
+        v = View(HGroup(Item('name', show_label=False, style='readonly',
+                             width= -50,
+                             ),
+                         Item('pressure', format_str='%0.2e', show_label=False, style='readonly')))
+        return v
+
 class MicroIonController(CoreDevice):
     scan_func = 'get_pressures'
     address = '01'
+    gauges = List
+    display_name = Str
+    def gauge_view(self):
+        v = View(
+                 Group(
+                     Item('gauges', style='custom',
+                          show_label=False,
+                          editor=ListEditor(mutable=False,
+                                            style='custom',
+                                        editor=InstanceEditor())),
+                       show_border=True,
+                       label=self.display_name
+                       ),
+#                 height= -100
+                 )
+        return v
 
     def load_additional_args(self, config, *args, **kw):
         self.address = self.config_get(config, 'General', 'address', optional=False)
+        self.display_name = self.config_get(config, 'General', 'name', default=self.name)
+
+        ns = self.config_get(config, 'Gauges', 'names')
+        if ns:
+            for ni in ns.split(','):
+                print ni
+                self.gauges.append(Gauge(name=ni.strip()))
+
         return True
 
     def graph_builder(self, g):
@@ -42,10 +79,24 @@ class MicroIonController(CoreDevice):
         g.new_series()
         g.set_series_label('CG2', series=2)
 
-    def get_pressures(self):
-        b = self.get_convectron_b_pressure()
-        a = self.get_convectron_a_pressure()
-        ig = self.get_ion_pressure()
+    def get_gauge(self, name):
+        return next((gi for gi in self.gauges if gi.name == name), None)
+
+    def _set_gauge_pressure(self, name, v):
+        g = self.get_gauge(name)
+        if g is not None:
+            g.pressure = v
+
+    def get_pressures(self, verbose=False):
+        b = self.get_convectron_b_pressure(verbose=verbose)
+        self._set_gauge_pressure('CG2', b)
+
+        a = self.get_convectron_a_pressure(verbose=verbose)
+        self._set_gauge_pressure('CG1', a)
+
+        ig = self.get_ion_pressure(verbose=verbose)
+        self._set_gauge_pressure('IG', ig)
+
 
         return ig, a, b
         #return self.get_convectron_a_pressure()
@@ -65,17 +116,17 @@ class MicroIonController(CoreDevice):
         r = self._parse_response(r)
         return r
 
-    def get_ion_pressure(self):
+    def get_ion_pressure(self, **kw):
         name = 'IG'
-        return self._get_pressure(name)
+        return self._get_pressure(name, **kw)
 
-    def get_convectron_a_pressure(self):
+    def get_convectron_a_pressure(self, **kw):
         name = 'CG1'
-        return self._get_pressure(name)
+        return self._get_pressure(name, **kw)
 
-    def get_convectron_b_pressure(self):
+    def get_convectron_b_pressure(self, **kw):
         name = 'CG2'
-        return self._get_pressure(name)
+        return self._get_pressure(name, **kw)
 
     def set_ion_gauge_state(self, state):
         key = 'IG1'

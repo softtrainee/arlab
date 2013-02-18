@@ -326,8 +326,9 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
                     element=True)
 
             dev_class = pdev.find('klass')
-            if dev_class:
+            if dev_class is not None:
                 dev_class = dev_class.text.strip()
+
             try:
 
                 dev = getattr(manager, device)
@@ -338,7 +339,7 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
                 dev = manager.create_device(device, dev_class=dev_class)
 
             if dev is None:
-                self.warning('No device for %s' % device)
+                self.warning('No device for {}'.format(device))
                 break
 
             self.info('loading {}'.format(dev.name))

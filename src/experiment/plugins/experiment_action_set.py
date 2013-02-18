@@ -79,6 +79,10 @@ class ExperimentActionSet(WorkbenchActionSet):
                 Action(name='Signal Calculator',
                        path=PATH + '/Utilities',
                        class_name='{}:SignalCalculatorAction'.format(BASE)
+                       ),
+                Action(name='Import...',
+                       path=PATH + '/Utilities',
+                       class_name='{}:OpenImportManagerAction'.format(BASE)
                        )
              ]
     def _script_actions(self):
