@@ -280,6 +280,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     arar_histories = relationship('proc_ArArHistoryTable', backref='analysis')
     figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
     notes = relationship('proc_NotesTable', backref='analysis')
+    monitors = relationship('meas_MonitorTable', backref='analysis')
 
 class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')
@@ -364,6 +365,18 @@ class meas_ScriptTable(Base, NameMixin):
     experiments = relationship('meas_ExtractionTable',
                                primaryjoin='meas_ExtractionTable.script_id==meas_ScriptTable.id',
                                backref='experiment')
+
+class meas_MonitorTable(Base, BaseMixin):
+    xydata = Column(BLOB)
+
+    parameter = stringcolumn()
+    criterion = stringcolumn()
+    comparator = stringcolumn()
+    action = stringcolumn()
+    tripped = Column(Boolean)
+
+    analysis_id = foreignkey('meas_AnalysisTable')
+
 #===============================================================================
 # irradiation
 #===============================================================================

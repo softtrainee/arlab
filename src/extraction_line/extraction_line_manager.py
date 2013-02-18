@@ -84,9 +84,7 @@ class ExtractionLineManager(Manager):
     def _create_manager(self, klass, manager, params, **kw):
         gdict = globals()
         if klass in gdict:
-
             class_factory = gdict[klass]
-
         else:
             #try a lazy load of the required module
             if 'fusions' in manager:
@@ -98,6 +96,9 @@ class ExtractionLineManager(Manager):
                 package = 'src.managers.{}'.format(manager)
 
             class_factory = self.get_manager_factory(package, klass)
+            if class_factory is None:
+                package = 'src.extraction_line.{}'.format(manager)
+                class_factory = self.get_manager_factory(package, klass)
 
         if class_factory:
 #            params['application'] = self.application
@@ -110,6 +111,8 @@ class ExtractionLineManager(Manager):
                 self.trait_set(**{manager:m})
             else:
                 self.add_trait(manager, m)
+
+            print self.gauge_manager
 
             #m.exit_on_close = False
 
@@ -461,6 +464,7 @@ class ExtractionLineManager(Manager):
                               style='custom', show_label=False,
                               height=0.2,
                               springy=False,
+                              defined_when='gauge_manager'
                               ),
                          Item('canvas',
                               style='custom',
@@ -498,9 +502,9 @@ class ExtractionLineManager(Manager):
         from src.extraction_line.valve_manager import ValveManager
         return ValveManager(extraction_line_manager=self)
 
-    def _gauge_manager_default(self):
-        from src.extraction_line.gauge_manager import GaugeManager
-        return GaugeManager()
+#    def _gauge_manager_default(self):
+#        from src.extraction_line.gauge_manager import GaugeManager
+#        return GaugeManager()
 
     def _explanation_default(self):
 #        '''

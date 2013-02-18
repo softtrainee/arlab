@@ -45,6 +45,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTa
     meas_MeasurementTable
 from src.constants import NULL_STR
 from src.experiment.automated_run_editor import AutomatedRunEditor
+from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
+    RemoteAutomatedRunMonitor
 
 #@todo: display total time in iso format 
 
@@ -416,13 +418,13 @@ class ExperimentExecutor(ExperimentManager):
     def _launch_run(self, runsgen, cnt):
 #        repo = self.repository
         dm = self.data_manager
-        runner = self.pyscript_runner
+#        runner = self.pyscript_runner
 
         run = runsgen.next()
         if run.skip:
             return
 
-        self._setup_automated_run(cnt, run, dm, runner)
+        self._setup_automated_run(cnt, run, dm)
 #        self._setup_automated_run(cnt, run, repo, dm, runner)
 
         run.pre_extraction_save()
@@ -434,7 +436,8 @@ class ExperimentExecutor(ExperimentManager):
         return ta, run
 
 #    def _setup_automated_run(self, i, arun, repo, dm, runner):
-    def _setup_automated_run(self, i, arun, dm, runner):
+    def _setup_automated_run(self, i, arun, dm):
+
         exp = self.experiment_set
         exp.current_run = arun
 
@@ -447,11 +450,16 @@ class ExperimentExecutor(ExperimentManager):
         arun.data_manager = dm
         arun.db = self.db
         arun.massspec_importer = self.massspec_importer
-        arun.runner = runner
+        arun.runner = self.pyscript_runner
+
         arun.integration_time = 1.04
 #        arun.repository = repo
         arun.info_display = self.info_display
         arun.username = self.username
+
+        mon = self._monitor_factory()
+        mon.automated_run = arun
+        arun.monitor = mon
 
     def _get_blank(self, kind):
         db = self.db
@@ -514,7 +522,9 @@ class ExperimentExecutor(ExperimentManager):
             else:
                 return True
 
-        arun.start()
+        if arun.start():
+            self.err_message = 'Monitor failed to start'
+            return
 
         #bootstrap the extraction script and measurement script
         if not arun.extraction_script:
@@ -560,7 +570,7 @@ class ExperimentExecutor(ExperimentManager):
 
         if not isAlive():
             return
-        
+
         if arun.post_measurement_script:
             if not arun.do_post_measurement():
                 if not arun.state == 'truncate':
@@ -610,7 +620,7 @@ class ExperimentExecutor(ExperimentManager):
             nonfound = self._check_for_managers(self.experiment_set)
             if nonfound:
                 self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
-                
+
     def _resume_button_fired(self):
         self.resume_runs = True
 
@@ -756,11 +766,39 @@ class ExperimentExecutor(ExperimentManager):
 
         return s
 
+    def _monitor_factory(self):
+        if self.mode == 'client':
+            ip = InitializationParser()
+            exp = ip.get_plugin('Experiment', category='general')
+            monitor = exp.find('monitor')
+            host, port, kind = None, None, None
+
+            if monitor is not None:
+                comms = monitor.find('communications')
+                host = comms.find('host')
+                port = comms.find('port')
+                kind = comms.find('kind')
+
+            if host is not None:
+                host = host.text #if host else 'localhost'
+            if port is not None:
+                port = int(port.text) #if port else 1061
+            if kind is not None:
+                kind = kind.text
+
+            mon = RemoteAutomatedRunMonitor(host, port, kind, name=monitor.text.strip())
+        else:
+            mon = AutomatedRunMonitor()
+
+        mon.configuration_dir_name = paths.monitors_dir
+        mon.load()
+        return mon
+
     def _pyscript_runner_default(self):
         if self.mode == 'client':
 #            em = self.extraction_line_manager
             ip = InitializationParser()
-            elm = ip.get_plugin('ExtractionLine', category='hardware')
+            elm = ip.get_plugin('Experiment', category='general')
             runner = elm.find('runner')
             host, port, kind = None, None, None
 

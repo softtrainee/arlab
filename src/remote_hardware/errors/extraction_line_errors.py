@@ -155,6 +155,14 @@ class ValveActuationErrorCode(ErrorCode):
         self.msg = self.msg.format(name, action)
         super(ValveActuationErrorCode, self).__init__(*args, **kw)
 
+@generate_code
+class InvalidGaugeErrorCode(ErrorCode):
+    msg = '{} {} not available'
+
+    def __init__(self, controller, gauge, *args, **kw):
+        self.msg = self.msg.format(controller, gauge)
+        super(InvalidGaugeErrorCode, self).__init__(*args, **kw)
+
 #@generate_code
 #class HMACSecurityErrorCode(ErrorCode):
 #    msg = 'Computer {} was not authenticated. Invalid HMAC certificate'

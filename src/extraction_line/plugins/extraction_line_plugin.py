@@ -58,7 +58,8 @@ class ExtractionLinePlugin(CorePlugin):
         ip = InitializationParser()
         try:
             plugin = ip.get_plugin('Experiment', category='general')
-            mode = plugin.get('mode')
+            mode = ip.get_parameter(plugin, 'mode')
+#            mode = plugin.get('mode')
         except AttributeError:
             #no epxeriment plugin defined
             mode = 'normal'
