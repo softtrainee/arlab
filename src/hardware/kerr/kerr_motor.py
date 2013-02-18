@@ -25,6 +25,7 @@ import binascii
 #=============local library imports  ==========================
 from kerr_device import KerrDevice
 from src.hardware.core.data_helper import make_bitarray
+import time
 
 SIGN = ['negative', 'positive']
 
@@ -243,6 +244,7 @@ class KerrMotor(KerrDevice):
                     break
                 else:
                     pos_buffer.pop(0)
+            time.sleep(0.05)
 
         if fail_cnt > 5:
             self.warning('Problem Communicating')
@@ -464,7 +466,7 @@ class KerrMotor(KerrDevice):
             self._set_motor_position_(npos, hysteresis)
 
             if not self.parent.simulation:
-                self.timer = Timer(750, self._update_position)
+                self.timer = Timer(250, self._update_position)
             else:
                 self.update_position = self._data_position
 

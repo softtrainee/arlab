@@ -49,7 +49,7 @@ class LaserMonitor(Monitor):
     def _fcheck_duration(self):
         '''
         '''
-        if self.cnt % self.max_duration_period == 0:
+        if self._md_cnt % self.max_duration_period == 0:
             self._check_duration()
 
         self._md_cnt += 1

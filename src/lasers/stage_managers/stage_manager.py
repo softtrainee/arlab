@@ -93,6 +93,7 @@ class StageManager(Manager):
     stop_label = String('Stop')
 
     hole_thread = None
+    point_thread = None
     hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
     _hole = String
 
@@ -179,6 +180,7 @@ class StageManager(Manager):
             sm = sp
 
         self._stage_map = sm
+        self.points_programmer.load_stage_map(sm)
 
         #load the calibration file
         #should have calibration files for each stage map
@@ -244,7 +246,13 @@ class StageManager(Manager):
         self._move_to_hole(hole, **kw)
 
     def move_to_point(self, pt):
-        self._move_to_point(pt)
+        if self.point_thread is not None:
+            self.stage_controller.stop()
+        
+        self.point_thread = Thread(name='stage.move_to_point',
+                                      target=self._move_to_point, args=(pt,))
+        self.point_thread.start()
+#        self._move_to_point(pt)
 
     def move_polyline(self, line):
         self._move_polyline(line)
@@ -651,7 +659,7 @@ class StageManager(Manager):
     def _validate_hole(self, v):
         nv = None
         try:
-            if v is not '':
+            if v.strip():
                 nv = int(v)
 
         except TypeError:
@@ -672,8 +680,7 @@ class StageManager(Manager):
             return
 
         v = str(v)
-
-
+        
         if self.hole_thread is not None:
             self.stage_controller.stop()
 
