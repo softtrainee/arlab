@@ -105,7 +105,7 @@ class FusionsLaserManager(LaserManager):
     chiller = Any
 
     dbname = ''
-
+    
 #===============================================================================
 #   IExtractionDevice interface
 #===============================================================================
@@ -506,9 +506,12 @@ class FusionsLaserManager(LaserManager):
         if ps:
 #            ps.springy = True
             power_grp.content.append(ps)
-
+            
+        pulse_grp=Item('pulse', style='custom',show_label=False)
+        power_grp=HGroup(power_grp, pulse_grp)
+            
         vg = VGroup(power_grp)
-
+        
         ac = self.get_additional_controls()
         if ac is not None:
             vg = HGroup(vg, ac)
