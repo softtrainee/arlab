@@ -55,7 +55,7 @@ class AerotechMotionController(MotionController):
         '''
         self.axes_factory()
         return True
-
+    
     def xy_swapped(self):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
@@ -94,14 +94,14 @@ class AerotechMotionController(MotionController):
         if velocity is not None:
             xv = yv = velocity
         else:
-            xv = x.velocity
-            yv = y.velocity
-
-        if abs(nx) > 1:
-            xv = xv * 0.5
-        if abs(nx) > 1:
-            yv = yv * 0.5
-
+            xv=x.velocity
+#            yv=y.velocity
+        
+#        if abs(nx)>1:
+#            xv=xv*0.5
+#        if abs(nx)>1:
+#            yv=yv*0.5
+            
         if self.xy_swapped():
             cmd = 'ILI X{} Y{} F{}'.format(ny, nx, xv)
         else:

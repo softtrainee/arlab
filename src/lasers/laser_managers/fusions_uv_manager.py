@@ -176,6 +176,32 @@ class FusionsUVManager(FusionsLaserManager):
 
         self._is_tracing = False
 
+    def fire_laser(self,action):
+        atl = self.atl_controller
+        if atl.isEnabled():
+            if action=='burst':
+                atl.set_burst_mode(True)
+                atl.laser_run()
+            elif action=='continuous':
+                atl.set_burst_mode(False)
+                atl.laser_run()
+            else:
+                atl.laser_stop()
+                        
+            return True
+        else:
+            return 'laser not on'
+    
+    def set_nburst(self,n):
+        self.atl_controller.set_nburst(n, save=False)
+        return True
+    
+    def get_nburst(self):
+        return self.atl_controller.get_nburst()
+    
+    def get_burst_mode(self):
+        return self.atl_controller.is_burst_mode()
+         
     def update_parameters(self):
         if self.atl_controller is not None:
             self.atl_controller.update_parameters()

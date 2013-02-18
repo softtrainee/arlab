@@ -61,7 +61,6 @@ class LaserScriptExecutor(Loggable):
         with open(name, 'r') as fp:
             def shot(delay=3):
                 if not self._cancel:
-                    time.sleep(0.5)
                     lm.single_burst(delay=delay)
 
             d = yaml.load(fp.read())
@@ -72,10 +71,23 @@ class LaserScriptExecutor(Loggable):
                     sm.set_z(p, block=True)
                     shot()
             elif device == 'laser':
+                if self.names=='trench':
+                    atl.set_burst_mode(False)
+                else:
+                    atl.set_burst_mode(True)
+                
                 def iteration(p):
-                    atl.set_nburst(p, save=False)
-                    delay = 2 + p / 100.
-                    shot(delay=delay)
+                    if self.names=='trench':
+                        if p==0:
+                            atl.laser_run()
+                        else:
+                            atl.laser_stop()
+                        
+                    else:
+                        if self.names=='burst':
+                            atl.set_nburst(p, save=False)
+                      
+                        shot()
             else:
                 motor = lm.get_motor(device)
                 def iteration(p):
@@ -120,10 +132,15 @@ class LaserScriptExecutor(Loggable):
                     else:
                         if dp < me:
                             break
-
-                    x, y = sx + c * xstep, sy + r * ystep
-
-                    sm.linear_move(x, y, velocity=v, block=True)
+                        
+                    x,y=sx+c*xstep, sy+r*ystep
+                    
+                    #move at normal speed to first pos
+                    if r==0 and c==0:
+                        sm.linear_move(x,y,block=True)
+                    else:
+                        sm.linear_move(x,y, velocity=v,block=True)
+                                                
                     if self._cancel:
                         break
 
