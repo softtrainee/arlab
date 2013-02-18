@@ -114,6 +114,9 @@ class ATLLaserControlUnit(CoreDevice):
         r = super(ATLLaserControlUnit, self).initialize(self, *args, **kw)
         self._communicator.write_terminator = None
         return r
+    
+    def isEnabled(self):
+        return self._enabled
 
 #    def laser_burst(self, n):
         #get process status
@@ -138,17 +141,18 @@ class ATLLaserControlUnit(CoreDevice):
 
         l = int(l, 2)
         h = int(h, 2)
-        cmd = self._build_command(22, (l, h))
-        self._send_command(cmd)
-
-        cmd = self._build_command(1004, (l, h))
-        self._send_command(cmd)
-
-        if save:
-            cmd = self._build_command(37, 1)
-            self._send_command(cmd)
-
-        self.burst_readback = self.get_nburst()
+        with self._lock:
+            cmd = self._build_command(22, (l, h))
+            self._send_command(cmd, lock=False)
+            
+            cmd = self._build_command(1004, (l, h))
+            self._send_command(cmd,lock=False)
+    
+            if save:
+                cmd = self._build_command(37, 1)
+                self._send_command(cmd,lock=False)
+    
+#        self.burst_readback = self.get_nburst()
 
     def get_nburst(self, verbose=True):
         v = 0
@@ -159,6 +163,7 @@ class ATLLaserControlUnit(CoreDevice):
             high = make_bitarray(int(high, 16), width=16)
             low = make_bitarray(int(low, 16), width=16)
             v = int(high + low, 2)
+            self.burst_readback=v
 
         return v
 #        return int(high+low, 2)
@@ -321,7 +326,7 @@ class ATLLaserControlUnit(CoreDevice):
 #            vs=self._parse_response(vs, 1)   
 #            print vs
 #        print self.get_process_status()
-        self.burst_readback = self.get_nburst(verbose=False)
+        self.get_nburst(verbose=False)
 #        s=self.get_laser_status(verbose=False)
 #        if s<=3:
 

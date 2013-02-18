@@ -49,6 +49,18 @@ class UvHandler(LaserHandler):
         result = manager.stop_trace()
         return result
 
-
+    def Fire(self, manager, mode, *args):
+        result=manager.fire_laser(mode)
+        return result
+    
+    def SetNBurst(self, manager, n, *args):
+        result=manager.set_nburst(n)
+        return result
+    
+    def GetNBurst(self, manager,*args):
+        return manager.get_nburst()
+    
+    def GetBurstMode(self, manager, *args):
+        return manager.get_burst_mode()
 #============= views ===================================
 #============= EOF ====================================

@@ -157,7 +157,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             d = float(value)
         except (ValueError, TypeError), err:
             return InvalidArgumentsErrorCode('Set{}'.format(axis.upper()), err)
-
+        
         err = manager.stage_manager.single_axis_move(axis, d)
         return self.error_response(err)
 
@@ -181,9 +181,13 @@ class LaserHandler(BaseRemoteHardwareHandler):
         else:
             x, y = smanager.get_uncalibrated_xy()
 
+        if smanager.stage_controller.xy_swapped:
+            pos=y,x,z
+        else:
+            pos=x,y,z
 #        print smanager.temp_position, not smanager.moving(), x, y
-        result = ','.join(['{:0.5f}' .format(i) for i in (x, y, z)])
-
+        result = ','.join(['{:0.5f}' .format(i) for i in pos])
+              
         return result
 
     def GetDriveMoving(self, manager, *args):
