@@ -173,6 +173,13 @@ class ExtractionLinePyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def moving_extract(self, value='', name=''):
+        '''
+            p=Point
+            l=Trace path in continuous mode
+            s=Trace path in step mode
+            d=Drill point
+        '''
+
         if name == '':
             name = self.position
         if value == '':
@@ -184,6 +191,8 @@ class ExtractionLinePyScript(ValvePyScript):
             self.extract(value)
         elif name.startswith('l'):
             self.trace_path(value, name)
+        elif name.startswith('s'):
+            self.trace_path(value, name, kind='step')
         elif name.startswith('d'):
             self.drill_point(value, name)
 
@@ -202,14 +211,14 @@ class ExtractionLinePyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def trace_path(self, value='', name=''):
+    def trace_path(self, value='', name='', kind='continuous'):
         if name == '':
             name = self.position
 
         if value == '':
             value = self.extract_value
 
-        self._manager_action([('trace_path', (value, name,), {})],
+        self._manager_action([('trace_path', (value, name, kind), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)
 

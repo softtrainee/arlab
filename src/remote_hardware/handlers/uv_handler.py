@@ -37,8 +37,8 @@ class UvHandler(LaserHandler):
         result = manager.goto_point(pos)
         return result
 
-    def TracePath(self, manager, value, pathname, *args):
-        result = manager.trace_path(value, pathname)
+    def TracePath(self, manager, value, pathname, kind, *args):
+        result = manager.trace_path(value, pathname, kind)
         return result
 
     def IsTracing(self, manager, *args):

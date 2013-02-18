@@ -81,8 +81,7 @@ class FusionsUVManager(FusionsLaserManager):
     laser_script_executor = Instance(LaserScriptExecutor)
     execute_button = DelegatesTo('laser_script_executor')
     execute_label = DelegatesTo('laser_script_executor')
-    names=DelegatesTo('laser_script_executor')
-    
+    names = DelegatesTo('laser_script_executor')
 
     _is_tracing = False
     _cancel_tracing = False
@@ -101,14 +100,14 @@ class FusionsUVManager(FusionsLaserManager):
         sm = self.stage_manager._stage_map
         pt = sm.get_point(pos)
         if pt:
-            x,y=pt['xy']
-            self.info('goto point {}'.format(pos, x,y))
-            self.stage_manager.linear_move(x,y, block=False)
-            result=True
+            x, y = pt['xy']
+            self.info('goto point {}'.format(pos, x, y))
+            self.stage_manager.linear_move(x, y, block=False)
+            result = True
         else:
-            result='Invalid point'
+            result = 'Invalid point'
         return result
-    
+
     def drill_point(self, value, name):
         pass
 
@@ -118,14 +117,42 @@ class FusionsUVManager(FusionsLaserManager):
     def stop_trace(self):
         self._cancel_tracing = True
 
-    def trace_path(self, value, pathname):
+    def trace_path(self, value, pathname, kind):
+        if kind == 'continuous':
+            self._continuous_trace_path(value, pathname)
+        else:
+            self._step_trace_path(value, pathname)
 
-        def step_func(sman, x, y):
-            sman.linear_move(x, y, block=True)
+    def _continuous_trace_path(self, value, path):
+        sm = self.stage_manager._stage_map
+        line = sm.get_line(path)
+        points = line.points
+        pt = points[0]
+        self.stage_manager.linear_move(pt.x, pt.y, block=True)
+        atl = self.atl_controller
+        controller = self.stage_manager.stage_controller
+
+        controller.set_smooth_transitions(True)
+        controller.set_program_mode('absolute')
+
+        atl.laser_run()
+        for pi in points[1:]:
+            controller.linear_move(pi.x, pi.y, mode='absolute')
+
+        controller.block()
+        atl.laser_stop()
+
+        controller.set_program_mode('relative')
+        controller.set_smooth_transitions(False)
+
+
+    def _step_trace_path(self, value, path):
+        def step_func(x, y):
+            self.stage_manager.linear_move(x, y, block=True)
             self.single_burst()
 
         sm = self.stage_manager._stage_map
-        line = sm.get_line(pathname)
+        line = sm.get_line(path)
         points = line.points
         pt = points[0]
 

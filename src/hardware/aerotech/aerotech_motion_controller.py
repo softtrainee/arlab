@@ -60,7 +60,7 @@ class AerotechMotionController(MotionController):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
 
-    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, **kw):
+    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, mode='relative', **kw):
         '''
             unidex 511 5-55 Linear
         '''
@@ -72,12 +72,20 @@ class AerotechMotionController(MotionController):
         self.parent.canvas.set_desired_position(x, y)
         self._x_position = x
         self._y_position = y
+        if mode == 'absolute':
+            px, py = 0, 0
+        else:
+            px = self.get_current_position('x')
+            py = self.get_current_position('y')
 
-        nx = x - self.get_current_position('x')
-        ny = y - self.get_current_position('y')
+        nx = x - px
+        ny = y - py
         if sign_correct:
             nx = self._sign_correct(nx, 'x', ratio=False)
             ny = self._sign_correct(ny, 'y', ratio=False)
+
+        if self.timer:
+            self.timer.Stop()
 
         self.timer = self.timer_factory()
         x = self.axes['x']
@@ -95,9 +103,9 @@ class AerotechMotionController(MotionController):
             yv = yv * 0.5
 
         if self.xy_swapped():
-            cmd = 'ILI X{} Y{} XF{} YF{}'.format(ny, nx, xv, yv)
+            cmd = 'ILI X{} Y{} F{}'.format(ny, nx, xv)
         else:
-            cmd = 'ILI X{} Y{} XF{} YF{}'.format(nx, ny, xv, yv)
+            cmd = 'ILI X{} Y{} F{}'.format(nx, ny, xv)
 
         self.ask(cmd, handshake_only=True)
         if block:
@@ -133,7 +141,32 @@ class AerotechMotionController(MotionController):
 
             if block:
                 self.block()
-#
+
+    def enqueue_move(self, x, y, v):
+        if self.xy_swapped():
+            cmd = 'LI X{} Y{} F{}'.format(y, x, v)
+        else:
+            cmd = 'LI X{} Y{} F{}'.format(x, y, v)
+        self.ask(cmd, handshake_only=True)
+
+    def set_program_mode(self, mode):
+        '''
+            using metric units
+        '''
+        cmd = 'PR ME'
+        v = 'AB' if mode == 'absolute' else 'IN'
+        cmd = '{} {}'.format(cmd, v)
+        self.ask(cmd)
+
+    def set_smooth_transitions(self, smooth):
+        '''
+            unidex 511 5-57 Velocity mode
+        '''
+
+        cmd = 'VE'
+        v = 'ON' if smooth else 'OFF'
+        cmd = '{} {}'.format(cmd, v)
+        self.ask(cmd, handshake_only=True)
 #    def _relative_move(self, axes, values):
 #        '''
 #        '''

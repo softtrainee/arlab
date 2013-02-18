@@ -267,8 +267,8 @@ class PychronUVLaserManager(PychronLaserManager):
 #===============================================================================
 # 
 #===============================================================================
-    def trace_path(self, value, name):
-        cmd = 'TracePath {} {}'.format(value, name)
+    def trace_path(self, value, name, kind):
+        cmd = 'TracePath {} {} {}'.format(value, name, kind)
         self.info('sending {}'.format(cmd))
         self._ask(cmd)
         return self._block(cmd='IsTracing')
