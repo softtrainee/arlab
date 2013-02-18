@@ -46,6 +46,12 @@ class GaugeManager(Manager):
 #        for k, v in self.traits().items():
 #            if 'gauge_controller' in k:
 #                print v
+    def get_pressure(self, controller, name):
+        dev = next((di for di in self.devices if di.name == controller), None)
+        if dev is not None:
+            gauge = dev.get_gauge(name)
+            if gauge is not None:
+                return gauge.pressure
 
     def stop_scans(self):
         for k in self.devices:

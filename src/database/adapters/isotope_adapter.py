@@ -28,7 +28,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable, proc_FigureTable, \
     proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable, \
-    proc_NotesTable
+    proc_NotesTable, meas_MonitorTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
@@ -118,6 +118,14 @@ class IsotopeAdapter(DatabaseAdapter):
             self._add_item(item)
 
         return item
+
+    def add_monitor(self, analysis, **kw):
+        dbm = meas_MonitorTable(**kw)
+        analysis = self.get_analysis(analysis)
+        if analysis:
+            analysis.monitors.append(dbm)
+
+        return dbm
 
     def add_analysis_position(self, extraction, pos, **kw):
         try:

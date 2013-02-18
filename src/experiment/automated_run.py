@@ -65,6 +65,7 @@ class AutomatedRun(Loggable):
     repository = Instance(Repository)
 
     runner = Any
+    monitor = Any
     plot_panel = Any
     peak_plot_panel = Any
     arar_age = Instance(ArArAge)
@@ -304,6 +305,9 @@ anaylsis_type={}
         if self.coincidence_scan:
             self.coincidence_scan.graph.close()
 
+        if self.monitor:
+            self.monitor.stop()
+
     def info(self, msg, color='green', *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.info_display:
@@ -332,20 +336,24 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def start(self):
-        if self.analysis_type == 'unknown':
-            #load arar_age object for age calculation
-            self.arar_age = ArArAge()
-            ln = self.labnumber
-            ln = convert_identifier(ln)
-            ln = self.db.get_labnumber(ln)
-            self.arar_age.labnumber_record = ln
+        if self.monitor.monitor():
+            #immediately check the monitor conditions
+            if self.monitor.check():
+                if self.analysis_type == 'unknown':
+                    #load arar_age object for age calculation
+                    self.arar_age = ArArAge()
+                    ln = self.labnumber
+                    ln = convert_identifier(ln)
+                    ln = self.db.get_labnumber(ln)
+                    self.arar_age.labnumber_record = ln
 
-        self.measuring = False
-        self.update = True
-        self.overlap_evt = TEvent()
-        self.info('Start automated run {}'.format(self.name))
-        self._alive = True
-        self._total_counts = 0
+                self.measuring = False
+                self.update = True
+                self.overlap_evt = TEvent()
+                self.info('Start automated run {}'.format(self.name))
+                self._alive = True
+                self._total_counts = 0
+                return True
 
     def cancel(self):
         self._alive = False
@@ -421,8 +429,8 @@ anaylsis_type={}
 
     def do_post_measurement(self):
         if not self.post_equilibration_script:
-            return 
-        
+            return
+
         if not self._alive and not self._truncate_signal:
             return
 
@@ -541,7 +549,7 @@ anaylsis_type={}
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
                                 check_conditions)
-            
+
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
         else:
             isotopes = [di.isotope for di in self._active_detectors]
@@ -998,7 +1006,7 @@ anaylsis_type={}
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
-        
+
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1195,6 +1203,9 @@ anaylsis_type={}
             #save peak center
             self._save_peak_center(a, pc)
 
+            #save monitor
+            self._save_monitor_info(a)
+
             if globalv.experiment_savedb:
                 db.commit()
 
@@ -1387,6 +1398,16 @@ anaylsis_type={}
 
 #        if globalv.experiment_savedb:
 #            db.commit()
+    def _save_monitor_info(self, analysis):
+        for ci in self.monitor.checks:
+            xy = ci.get_xydata()
+            data = ''.join([struct.pack('>ff', x, y) for x, y in xy])
+            params = dict(name=ci.name,
+                          parameter=ci.parameter, criterion=ci.criterion,
+                          comparator=ci.comparator, tripped=ci.tripped,
+                          data=data)
+
+            self.db.add_monitor(analysis, **params)
 
     def _save_to_massspec(self):
         h = self.massspec_importer.db.host
@@ -1421,21 +1442,21 @@ anaylsis_type={}
                 blanks.append(ufloat((0, 0)))
 
 #        signals=self._processed_signals_dict
-        sig_ints=dict()
-        base_ints=dict()
+        sig_ints = dict()
+        base_ints = dict()
 #        for k,v in self._processed_signals_dict:
-        psignals=self._processed_signals_dict
+        psignals = self._processed_signals_dict
         for iso, _, kind in self._save_isotopes:
-            if kind=='signal':
-                si=psignals['{}signal'.format(iso)]
-                bi=psignals['{}baseline'.format(iso)]
-                
-                sig_ints[iso]=si.uvalue
-                base_ints[iso]=bi.uvalue
-            
-        intercepts=[sig_ints, base_ints]
+            if kind == 'signal':
+                si = psignals['{}signal'.format(iso)]
+                bi = psignals['{}baseline'.format(iso)]
+
+                sig_ints[iso] = si.uvalue
+                base_ints[iso] = bi.uvalue
+
+        intercepts = [sig_ints, base_ints]
 #        intercepts = [self.plot_panel.signals, self.plot_panel.baselines]
-        
+
         fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
                 dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
 
@@ -1533,7 +1554,7 @@ anaylsis_type={}
 
         if NULL_STR in fname:
             return
-        
+
         fname = fname if fname.endswith('.py') else fname + '.py'
 
         if fname in self.scripts:

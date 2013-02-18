@@ -83,6 +83,13 @@ class Monitor(ConfigLoadable):
         '''
         self.start_time = time.time()
 
+    def check(self):
+        return all([fi() for fi in self._get_checks()])
+
+    def _get_checks(self):
+        return [getattr(self, h) for h in dir(self)
+                     if '_fcheck' in h and h not in self._invalid_checks]
+
     def _monitor_(self, stop_signal):
         '''
         '''
@@ -98,7 +105,7 @@ class Monitor(ConfigLoadable):
             funcs = [getattr(self, h) for h in dir(self)
                      if '_fcheck' in h and h not in self._invalid_checks]
             while not stop_signal.isSet():
-                for fi in funcs:
+                for fi in self._get_checks():
                     fi()
                     if stop_signal.isSet():
                         break

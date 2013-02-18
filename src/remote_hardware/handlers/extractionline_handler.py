@@ -25,6 +25,7 @@ from src.remote_hardware.errors import  InvalidArgumentsErrorCode, InvalidValveE
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyELM
 from src.envisage.core.action_helper import open_manager
+from src.remote_hardware.errors.extraction_line_errors import InvalidGaugeErrorCode
 
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
@@ -274,4 +275,15 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         return 'OK'
 
 
+    def GetPressure(self, manager, controller, gauge):
+        '''
+        '''
+        p = None
+        if manager.gauge_manager:
+            p = manager.gauge_manager.get_pressure(controller, gauge)
+
+        if p is None:
+            p = InvalidGaugeErrorCode(controller, gauge)
+
+        return str(p)
 #============= EOF ====================================

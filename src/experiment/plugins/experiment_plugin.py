@@ -92,7 +92,6 @@ class ExperimentPlugin(CorePlugin):
         plugin = ip.get_plugin('Experiment', category='general')
 #        mode = plugin.get('mode')
         mode = ip.get_parameter(plugin, 'mode')
-
         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
         p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
