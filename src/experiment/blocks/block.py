@@ -65,7 +65,8 @@ class Block(BaseSchedule):
                 continue
 
             meta = None
-            params = cls._run_parser(header, line, meta)
+
+            params, _ = cls.parse_line(header, line, meta)
             try:
                 ln = params['labnumber']
                 if ln.lower() == 'u':
@@ -113,7 +114,7 @@ class Block(BaseSchedule):
                 header = line
                 continue
 
-            params = self._run_parser(header, line, meta)
+            params, _ = self.parse_line(header, line, meta)
             params['mass_spectrometer'] = self.mass_spectrometer
             params['extract_device'] = self.extract_device
             params['scripts'] = self.loaded_scripts

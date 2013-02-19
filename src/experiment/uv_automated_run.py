@@ -44,4 +44,25 @@ class UVAutomatedRun(AutomatedRun):
                           )
         return obj
 
+
+#    @cached_property
+#    def _get_post_measurement_script(self):
+#        self._post_measurement_script = self._load_script('post_measurement')
+#        return self._post_measurement_script
+#
+#    @cached_property
+#    def _get_post_equilibration_script(self):
+#        self._post_equilibration_script = self._load_script('post_equilibration')
+#        return self._post_equilibration_script
+#
+#    @cached_property
+#    def _get_measurement_script(self):
+#        self._measurement_script = self._load_script('measurement')
+#        return self._measurement_script
+#
+#    @cached_property
+#    def _get_extraction_script(self):
+#        self._extraction_script = self._load_script('extraction')
+#        return self._extraction_script
+
 #============= EOF =============================================

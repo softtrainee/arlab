@@ -1816,6 +1816,7 @@ anaylsis_type={}
 #    @property
     def _get_executable(self):
         a = True
+#        print self.extraction_script, self.measurement_script, self._executable
         if self.check_executable:
             a = self.extraction_script is not None and \
                         self.measurement_script is not None and \
