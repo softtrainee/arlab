@@ -23,9 +23,9 @@ from threading import Lock
 #============= local library imports  ==========================
 from src.loggable import Loggable
 
-SINGLE_ITEM_BUF = True
+#SINGLE_ITEM_BUF = True
 #SINGLE_ITEM_BUF=False
-class RS485Scheduler(Loggable):
+class CommunicationScheduler(Loggable):
     '''
     
         
@@ -39,9 +39,9 @@ class RS485Scheduler(Loggable):
 
 #    collision_delay = Float(125)
     collision_delay = Float(50)
-
+    
     def __init__(self, *args, **kw):
-        super(RS485Scheduler, self).__init__(*args, **kw)
+        super(CommunicationScheduler, self).__init__(*args, **kw)
         self._lock = Lock()
 #        self._condition = Condition()
 #        self._command_queue = Queue()

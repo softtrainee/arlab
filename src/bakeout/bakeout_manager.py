@@ -30,7 +30,7 @@ from threading import Lock
 #============= local library imports  ==========================
 from src.managers.manager import Manager, AppHandler
 from src.hardware.bakeout_controller import BakeoutController
-from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
+from src.hardware.core.communicators.scheduler import CommunicationScheduler
 from src.paths import paths
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
@@ -220,7 +220,7 @@ class BakeoutManager(Manager):
     def _load_controllers(self):
         '''
         '''
-        scheduler = RS485Scheduler()
+        scheduler = CommunicationScheduler()
         program = False
         cnt = 0
         for bc in self._get_controllers():
