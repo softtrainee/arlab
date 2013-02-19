@@ -19,7 +19,7 @@
 #========== standard library imports ==========
 
 #========== local library imports =============
-from gp_actuator import GPActuator
+from src.hardware.actuators.gp_actuator import GPActuator
 
 
 class AgilentGPActuator(GPActuator):

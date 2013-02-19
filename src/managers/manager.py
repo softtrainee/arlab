@@ -266,17 +266,19 @@ class Manager(Viewable, RPCable):
     def get_default_managers(self):
         return []
 
-    def get_manager_factory(self, package, klass):
+    def get_manager_factory(self, package, klass, warn=True):
 #        print package, klass
         class_factory = None
         try:
             m = __import__(package, globals(), locals(), [klass], -1)
             class_factory = getattr(m, klass)
         except ImportError:
-            self.warning(' Invalid manager class {} {}'.format(package, klass))
+            if warn:
+                self.warning(' Invalid manager class {} {}'.format(package, klass))
 
         except:
-            self.warning('Problem with manager class {} source'.format(klass))
+            if warn:
+                self.warning('Problem with manager class {} source'.format(klass))
 
         return class_factory
 

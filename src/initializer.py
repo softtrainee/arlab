@@ -371,7 +371,8 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
             result = od.initialize(progress=self.pd)
             if result is not True:
                 self.warning('Failed setting up communications to {}'.format(od.name))
-                od._communicator.simulation = True
+                if od._communicator:
+                    od._communicator.simulation = True
 
             elif result is None:
                 raise NotImplementedError

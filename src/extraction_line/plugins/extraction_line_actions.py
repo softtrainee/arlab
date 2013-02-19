@@ -21,29 +21,33 @@ from pyface.action.api import Action
 
 #============= local library imports  ==========================
 from src.envisage.core.action_helper import open_manager
-EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-def get_manager(window):
-    return window.application.get_service(EL_PROTOCOL)
 
-class OpenExtractionLineManager(Action):
+class ExtractionLineAction(Action):
+    def _get_manager(self, event, app=None):
+        EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+        if app is None:
+            app=event.window.application
+        return app.get_service(EL_PROTOCOL)
+    
+class OpenExtractionLineManager(ExtractionLineAction):
     description = 'Open extraction line manager'
     name = 'Open Extraction Line Manager'
     accelerator = 'Ctrl+E'
     def perform(self, event):
+        man=self._get_manager(event)
 
-        man = get_manager(event.window)
         app = self.window.application
         open_manager(app, man)
 
-class OpenExtractionLineExplanation(Action):
+class OpenExtractionLineExplanation(ExtractionLineAction):
     description = 'Open extraction line explanation'
 
     def perform(self, event):
-        man = get_manager(event.window)
+        man = self._get_manager(event)
         app = self.window.application
         open_manager(app, man.explanation)
 
-class LoadCanvasAction(Action):
+class LoadCanvasAction(ExtractionLineAction):
     '''
     '''
     description = 'load an updated canvas file'
@@ -53,21 +57,21 @@ class LoadCanvasAction(Action):
         '''
         
         '''
-        manager = get_manager(self.window)
-        manager.window = self.window
+        manager = self._get_manager(event)
+#        manager.window = self.window
         manager.load_canvas()
 
-class RefreshCanvasAction(Action):
+class RefreshCanvasAction(ExtractionLineAction):
     description = 'reload the scene graph to reflect changes made to setupfiles'
     name = 'Refresh Canvas'
 #    enabled = False
     def perform(self, event):
-        manager = get_manager(self.window)
-        manager.window = self.window
+        manager = self._get_manager(event)
+#        manager.window = self.window
         manager.reload_scene_graph()
 
 
-class OpenViewControllerAction(Action):
+class OpenViewControllerAction(ExtractionLineAction):
     description = 'Open User views'
     name = 'Open User Views'
     enabled = True
@@ -87,7 +91,7 @@ class OpenViewControllerAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_manager(event.window)
+        manager = self._get_manager(event)
         app = self.window.application
         open_manager(app, manager.view_controller, kind='livemodal',
                      parent=manager.ui.control
@@ -112,9 +116,21 @@ class OpenViewControllerAction(Action):
 #        manager.show_device_streamer()
 
 
-class OpenPyScriptEditorAction(Action):
+class OpenPyScriptEditorAction(ExtractionLineAction):
     def perform(self, event):
-        manager = get_manager(self.window)
+        manager = self._get_manager(event)
         open_manager(event.window.application, manager.pyscript_editor)
 
+
+class OpenMultiplexerAction(ExtractionLineAction):
+    def __init__(self, *args, **kw):
+        super(OpenMultiplexerAction, self).__init__(*args, **kw)
+        manager = self._get_manager(None, app=self.window.application)
+        if manager.multiplexer_manager is None:
+            self.enabled=False
+            
+    def perform(self, event):
+        manager = self._get_manager(event)
+        if manager.multiplexer_manager:
+            open_manager(self.window.application, manager.multiplexer_manager)
 #============= EOF ====================================

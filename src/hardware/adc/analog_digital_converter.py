@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
-import time
+#import time
 #=============local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 
@@ -40,99 +40,98 @@ class AnalogDigitalConverter(CoreDevice):
 #        return self.read_device(**kw)
 
             #self.stream_manager.record(r, self.name)
-'''
-Agilent requires chr(10) as its communicator terminator
-
-'''
-
-
-class AgilentADC(AnalogDigitalConverter):
-    '''
-    '''
-#    def __init__(self, *args, **kw):
-#        super(AgilentADC, self).__init__(*args, **kw)
-    address = None
-
-    def load_additional_args(self, config):
-        '''
-
-        '''
-        #super(AgilentADC, self).load_additional_args(path, setupargs)
-
-        slot = self.config_get(config, 'General', 'slot')
-        channel = self.config_get(config, 'General', 'channel', cast='int')
-
-        #self.address = setupargs[1][0]
-        tc = self.config_get(config, 'General', 'trigger_count', cast='int')
-        self.trigger_count = tc if tc is not None else 1
-        #self.trigger_count = int(setupargs[2][0])
-
-        if slot is not None and channel is not None:
-            self.address = '{}{:02n}'.format(slot, channel)
-            return True
-
-    def initialize(self, *args, **kw):
-        '''
-        '''
-
-        self._communicator.write_terminator = chr(10)
-        if self.address is not None:
-            cmds = [
-                  '*CLS',
-                  'CONF:VOLT:DC (@{})'.format(self.address),
-                  'FORM:READING:ALARM OFF',
-                  'FORM:READING:CHANNEL ON',
-                  'FORM:READING:TIME OFF',
-                  'FORM:READING:UNIT OFF',
-                  'TRIG:SOURCE TIMER',
-                  'TRIG:TIMER 0',
-                  'TRIG:COUNT {}'.format(self.trigger_count),
-                  'ROUT:SCAN (@{})'.format(self.address)
-                 ]
-
-            for c in cmds:
-                self.tell(c)
-
-            return True
-
-    def _trigger_(self):
-        '''
-        '''
-        self.ask('ABORT')
-        #time.sleep(0.05)
-        self.tell('INIT')
-        time.sleep(0.1)
-
-    def read_device(self, **kw):
-        '''
-        '''
-        #resp = super(AgilentADC, self).read_device()
-        resp = AnalogDigitalConverter.read_device(self)
-        if resp is None:
-            self._trigger_()
-            resp = self.ask('DATA:POINTS?')
-            if resp is not None:
-                n = float(resp)
-                resp = 0
-                if n > 0:
-                    resp = self.ask('DATA:REMOVE? {}'.format(float(n)))
-                    resp = self._parse_response_(resp)
-
-                #self.current_value = resp
-                self.read_voltage = resp
-        return resp
-
-    def _parse_response_(self, r):
-        '''
             
-        '''
-        if r is None:
-            return r
-
-        args = r.split(',')
-        data = args[:-1]
-
-        return sum([float(d) for d in data]) / self.trigger_count
+#'''
+#Agilent requires chr(10) as its communicator terminator
+#
+#'''
+#class AgilentADC(AnalogDigitalConverter):
+#    '''
+#    '''
+##    def __init__(self, *args, **kw):
+##        super(AgilentADC, self).__init__(*args, **kw)
+#    address = None
+#
+#    def load_additional_args(self, config):
+#        '''
+#
+#        '''
+#        #super(AgilentADC, self).load_additional_args(path, setupargs)
+#
+#        slot = self.config_get(config, 'General', 'slot')
+#        channel = self.config_get(config, 'General', 'channel', cast='int')
+#
+#        #self.address = setupargs[1][0]
+#        tc = self.config_get(config, 'General', 'trigger_count', cast='int')
+#        self.trigger_count = tc if tc is not None else 1
+#        #self.trigger_count = int(setupargs[2][0])
+#
+#        if slot is not None and channel is not None:
+#            self.address = '{}{:02n}'.format(slot, channel)
+#            return True
+#
+#    def initialize(self, *args, **kw):
+#        '''
+#        '''
+#
+#        self._communicator.write_terminator = chr(10)
+#        if self.address is not None:
+#            cmds = [
+#                  '*CLS',
+#                  'CONF:VOLT:DC (@{})'.format(self.address),
+#                  'FORM:READING:ALARM OFF',
+#                  'FORM:READING:CHANNEL ON',
+#                  'FORM:READING:TIME OFF',
+#                  'FORM:READING:UNIT OFF',
+#                  'TRIG:SOURCE TIMER',
+#                  'TRIG:TIMER 0',
+#                  'TRIG:COUNT {}'.format(self.trigger_count),
+#                  'ROUT:SCAN (@{})'.format(self.address)
+#                 ]
+#
+#            for c in cmds:
+#                self.tell(c)
+#
+#            return True
+#
+#    def _trigger_(self):
+#        '''
+#        '''
+#        self.ask('ABORT')
+#        #time.sleep(0.05)
+#        self.tell('INIT')
+#        time.sleep(0.1)
+#
+#    def read_device(self, **kw):
+#        '''
+#        '''
+#        #resp = super(AgilentADC, self).read_device()
+#        resp = AnalogDigitalConverter.read_device(self)
+#        if resp is None:
+#            self._trigger_()
+#            resp = self.ask('DATA:POINTS?')
+#            if resp is not None:
+#                n = float(resp)
+#                resp = 0
+#                if n > 0:
+#                    resp = self.ask('DATA:REMOVE? {}'.format(float(n)))
+#                    resp = self._parse_response_(resp)
+#
+#                #self.current_value = resp
+#                self.read_voltage = resp
+#        return resp
+#
+#    def _parse_response_(self, r):
+#        '''
+#            
+#        '''
+#        if r is None:
+#            return r
+#
+#        args = r.split(',')
+#        data = args[:-1]
+#
+#        return sum([float(d) for d in data]) / self.trigger_count
 
 
 class M1000(AnalogDigitalConverter):
