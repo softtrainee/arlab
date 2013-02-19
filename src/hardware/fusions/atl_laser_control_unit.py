@@ -135,6 +135,11 @@ class ATLLaserControlUnit(CoreDevice):
 #        self._send_command(cmd)
 
     def set_nburst(self, n, save=True):
+        try:
+            n=int(n)
+        except (ValueError, TypeError):
+            return 
+        
         v = make_bitarray(n, width=32)
         h = v[:16]
         l = v[16:]
