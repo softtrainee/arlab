@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, List, Str, Property, Button, Dict
+from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
+    DelegatesTo
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -27,6 +28,7 @@ from src.paths import paths
 import yaml
 from src.helpers.filetools import str_to_bool
 from src.experiment.script_editable import ScriptEditable
+from src.experiment.runs_table import RunsTable
 
 
 class RunAdapter(AutomatedRunAdapter):
@@ -55,21 +57,13 @@ class RunAdapter(AutomatedRunAdapter):
     def _set_cleanup_text(self, v):
         self._set_float('position', v)
 
-#class BaseSchedule(Saveable):
+
 class BaseSchedule(ScriptEditable):
-    automated_runs = List(AutomatedRun)
     automated_run = Instance(AutomatedRun, ())
-
+    runs_table = Instance(RunsTable, ())
+    automated_runs = DelegatesTo('runs_table')
+    selected = DelegatesTo('runs_table')
     tray = Str(NULL_STR)
-
-#    measurement_script = Str
-#    measurement_scripts = Property(depends_on='mass_spectrometer')
-#    post_measurement_script = Str
-#    post_measurement_scripts = Property(depends_on='mass_spectrometer')
-#    post_equilibration_script = Str
-#    post_equilibration_scripts = Property(depends_on='mass_spectrometer,extract_device')
-#    extraction_script = Str
-#    extraction_scripts = Property(depends_on='mass_spectrometer')
 
     loaded_scripts = Dict
 
@@ -77,7 +71,6 @@ class BaseSchedule(ScriptEditable):
     copy_button = Button('copy')
     paste_button = Button('paste')
 
-    selected = Any
     _copy_cache = Any
 
     def update_loaded_scripts(self, new):
@@ -133,13 +126,13 @@ class BaseSchedule(ScriptEditable):
                 pass
 
             sc = self._remove_file_extension(sc)
-            if key.lower() in ['u','bu'] and self.extract_device != NULL_STR:
-                e=self.extract_device.split(' ')[1].lower()
+            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
+                e = self.extract_device.split(' ')[1].lower()
                 if sk == 'extraction':
                     sc = e
-                elif sk=='post_equilibration':
-                    sc='pump_{}'.format(e)
-                
+                elif sk == 'post_equilibration':
+                    sc = 'pump_{}'.format(e)
+
             if not sc in getattr(self, '{}_scripts'.format(sk)):
                 sc = NULL_STR
 #            print setter, sk, sc
@@ -206,6 +199,10 @@ class BaseSchedule(ScriptEditable):
                   'post_equilibration_script', 'post_measurement_script',
                   'disable_between_positions']
 
+        if self.extract_device == 'Fusions UV':
+            header.append('reprate')
+            attrs.append('reprate')
+
         return header, attrs
 
     def _meta_dumper(self, fp=None):
@@ -221,7 +218,7 @@ class BaseSchedule(ScriptEditable):
 
         #load strings
         for attr in ['labnumber',
-                     'measurement', 'extraction', 
+                     'measurement', 'extraction',
                      'post_measurement',
                      'post_equilibration',
                      'pattern',
@@ -271,17 +268,34 @@ class BaseSchedule(ScriptEditable):
                 if na.startswith('_'):
                     if meta:
                         na = meta['mass_spectrometer'] + na
-        
+
                 if na and not na.endswith('.py'):
                     na = na + '.py'
-            except IndexError,e:
+            except IndexError, e:
                 print 'base schedule make_script_name ', e
-                na=NULL_STR
-                
+                na = NULL_STR
+
             return na
 
         params['configuration'] = cls._build_configuration(make_script_name)
         return params
+
+    def _run_parser_uv(self, header, line, meta, delim='\t'):
+        params = dict()
+        if not isinstance(line, list):
+            line = line.split(delim)
+
+        args = map(str.strip, line)
+        def set_int(attr):
+            try:
+                v = args[header.index(attr)]
+                params[attr] = int(v)
+            except (IndexError, ValueError, TypeError):
+                pass
+
+        set_int('reprate')
+        return params
+
 #===============================================================================
 # handlers
 #===============================================================================

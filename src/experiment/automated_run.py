@@ -98,9 +98,12 @@ class AutomatedRun(Loggable):
     extract_value = Property(depends_on='_extract_value')
     _extract_value = Float
 
-    extract_units = Property(Enum('---', 'watts', 'temp', 'percent','burst', 'continuous'),
-                           depends_on='_extract_units')
-    _extract_units = Enum('---', 'watts', 'temp', 'percent','burst', 'continuous')
+#    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
+#                           depends_on='_extract_units')
+#    _extract_units = Enum('---', 'watts', 'temp', 'percent')
+    extract_units = Str(NULL_STR)
+    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+    _default_extract_units = 'watts'
 
     extract_device = Str
 
@@ -150,6 +153,7 @@ class AutomatedRun(Loggable):
     _runtime = None
     _timestamp = None
 
+    executable = Property
     check_executable = Bool(True)
     _executable = Bool(True)
     _alive = False
@@ -352,7 +356,7 @@ anaylsis_type={}
             self._alive = True
             self._total_counts = 0
             return True
-        
+
         if self.monitor is None:
             return _start()
         elif self.monitor.monitor():
@@ -1415,7 +1419,7 @@ anaylsis_type={}
                               parameter=ci.parameter, criterion=ci.criterion,
                               comparator=ci.comparator, tripped=ci.tripped,
                               data=data)
-    
+
                 self.db.add_monitor(analysis, **params)
 
     def _save_to_massspec(self):
@@ -1676,7 +1680,7 @@ anaylsis_type={}
                               disable_between_positions=self.disable_between_positions,
                               duration=self.duration,
                               extract_value=self._extract_value,
-                              extract_units=self._extract_units,
+                              extract_units=self.extract_units,
                               cleanup=self.cleanup,
                               extract_device=hdn,
                               analysis_type=an,
@@ -1809,8 +1813,8 @@ anaylsis_type={}
     def analysis_type(self):
         return get_analysis_type(self.labnumber)
 
-    @property
-    def executable(self):
+#    @property
+    def _get_executable(self):
         a = True
         if self.check_executable:
             a = self.extraction_script is not None and \
@@ -1825,11 +1829,11 @@ anaylsis_type={}
         d = self._duration
         return d
 
-    def _get_extract_units(self):
-        return self._extract_units
-
-    def _set_extract_units(self, v):
-        self._extract_units = v
+#    def _get_extract_units(self):
+#        return self._extract_units
+#
+#    def _set_extract_units(self, v):
+#        self._extract_units = v
 
     def _get_extract_value(self):
         v = self._extract_value
@@ -1863,12 +1867,8 @@ anaylsis_type={}
             if not t:
                 self.extract_units = '---'
             elif self.extract_units == '---':
-                
-                if self.extract_device=='Fusions UV':
-                    self.extract_units = 'burst'
-                else:
-                    self.extract_units = 'watts'
-                
+                self.extract_units = self._default_extract_units
+
         else:
             self.extract_units = '---'
 
@@ -1925,33 +1925,40 @@ anaylsis_type={}
                          Item('position'),
                          Item('multiposition', label='Multi. position run'),
                          Item('endposition'),
-                         show_border=True,
+#                         show_border=True,
                          label='Position'
                      )
         return grp
 
+    def _get_supplemental_extract_group(self):
+        pass
+
     def simple_view(self):
         ext_grp = VGroup(HGroup(Spring(springy=False, width=33),
-
                          HGroup(Item('labnumber', style='readonly'),
                                 Item('aliquot'),
                                 Item('step')
                                 ),
                          Item('extract_value', label='Extract'),
                             spring,
-                            Item('extract_units',
+                            Item('extract_units', editor=EnumEditor(name='extract_units_names'),
                                  show_label=False),
                             ),
                          Item('ramp_rate', label='Ramp Rate (C/s)'),
                          Item('duration', label='Duration'),
+
                          )
+
+        extra_grp = self._get_extra_group()
         pos_grp = self._get_position_group()
-        v = View(Item('skip'),
-                 VGroup(ext_grp,
+        grp = VGroup(ext_grp,
                         pos_grp,
                         enabled_when='not skip'
                         )
-                )
+        if extra_grp:
+            grp.content.append(extra_grp)
+
+        v = View(Item('skip'), grp)
         return v
 
     def traits_view(self):
@@ -1971,10 +1978,26 @@ anaylsis_type={}
         def readonly(n, **kw):
             return Item(n, style='readonly', **kw)
 
-
         sspring = lambda width = 17:Spring(springy=False, width=width)
 
+        extract_grp = VGroup(
+                             HGroup(sspring(width=33), Item('extract_value', label='Extract'),
+                                    spring,
+                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
+                                    show_label=False),
+                                    ),
+                             Item('duration', label='Duration (s)'),
+                             Item('cleanup', label='Cleanup (s)'),
+                             Item('ramp_rate', label='Ramp Rate (C/s)'),
+                             Item('pattern', editor=EnumEditor(name='patterns')),
+                             label='Extract'
+                             )
         pos_grp = self._get_position_group()
+        extract_grp = Group(extract_grp, pos_grp, layout='tabbed')
+        sup = self._get_supplemental_extract_group()
+        if sup:
+            extract_grp.content.append(sup)
+
         v = View(
                  VGroup(
                      Group(
@@ -1985,25 +2008,12 @@ anaylsis_type={}
                                                           editor=EnumEditor(name='labnumbers'))),
                      readonly('sample'),
                      readonly('irrad_level', label='Irradiation'),
-
-                     HGroup(sspring(width=33), Item('extract_value', label='Extract'),
-                            spring,
-                            Item('extract_units',
-                                 show_label=False),
-                            ),
-                     Item('ramp_rate', label='Ramp Rate (C/s)'),
-                     Item('duration', label='Duration (s)'),
-                     Item('cleanup', label='Cleanup (s)'),
-#                     HGroup(Item('use_pattern', show_label=False),
-                            Item('pattern', editor=EnumEditor(name='patterns')),
-#                            ),
                      Item('weight'),
                      Item('comment'),
-
+                     extract_grp,
                      show_border=True,
                      label='Info'
                      ),
-                     pos_grp,
 #                     scripts,
                      )
                  )

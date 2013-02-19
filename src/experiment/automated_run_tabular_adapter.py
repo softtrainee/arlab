@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports=======================
-from traits.api import Property, Int
+from traits.api import Property, Int, Str
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
@@ -70,6 +70,8 @@ class AutomatedRunAdapter(TabularAdapter):
     overlap_text = Property
     aliquot_text = Property
 
+
+
 #    def get_can_edit(self, obj, trait, row):
 #        return self.item.state == 'not run'
 
@@ -103,14 +105,14 @@ class AutomatedRunAdapter(TabularAdapter):
 #        if self.kind == 'watts':
 #            hp =
 
-        return  [('', 'state'),
+        cols = [('', 'state'),
                  ('Labnumber', 'labnumber'),
                  ('Aliquot', 'aliquot'),
                  ('Sample', 'sample'),
                  ('Position', 'position'),
-                 ('Autocenter', 'autocenter'),
+#                 ('Autocenter', 'autocenter'),
                  ('Pattern', 'pattern'),
-                 ('Overlap', 'overlap'),
+#                 ('Overlap', 'overlap'),
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
                  ('Duration', 'duration'),
@@ -120,6 +122,8 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Post equilibration', 'post_equilibration_script'),
                  ('Post Measurement', 'post_measurement_script'),
                  ]
+
+        return cols
 
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
@@ -213,6 +217,14 @@ class AutomatedRunAdapter(TabularAdapter):
             return v
         else:
             return ''
+
+class UVAutomatedRunAdapter(AutomatedRunAdapter):
+    def _columns_factory(self):
+        cols = super(UVAutomatedRunAdapter, self)._columns_factory()
+        cols.insert(8, ('Rep. Rate', 'reprate'))
+        cols.insert(9, ('Mask', 'mask'))
+        cols.insert(10, ('Attenuator', 'attenuator'))
+        return cols
 #============= EOF =============================================
 #    @get_name
 #    def _get_extraction_script_text(self, trait, item):
