@@ -19,16 +19,16 @@ from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
     DelegatesTo
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 #============= standard library imports ========================
+import yaml
+import os
 #============= local library imports  ==========================
 from src.experiment.automated_run import AutomatedRun
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.constants import NULL_STR, SCRIPT_KEYS
-import os
 from src.paths import paths
-import yaml
-from src.helpers.filetools import str_to_bool
 from src.experiment.script_editable import ScriptEditable
 from src.experiment.runs_table import RunsTable
+from src.experiment.blocks.parser import RunParser, UVRunParser
 
 
 class RunAdapter(AutomatedRunAdapter):
@@ -72,6 +72,7 @@ class BaseSchedule(ScriptEditable):
     paste_button = Button('paste')
 
     _copy_cache = Any
+    parser = None
 
     def update_loaded_scripts(self, new):
         if new:
@@ -200,101 +201,30 @@ class BaseSchedule(ScriptEditable):
                   'disable_between_positions']
 
         if self.extract_device == 'Fusions UV':
-            header.append('reprate')
-            attrs.append('reprate')
+            header.extend(('reprate', 'mask', 'attenuator'))
+            attrs.extend(('reprate', 'mask', 'attenuator'))
+#        else:
+#            header.extend(['beam'])
+#            attrs.extend(['beam'])
 
         return header, attrs
 
     def _meta_dumper(self, fp=None):
         pass
 
-    @classmethod
-    def _run_parser(cls, header, line, meta, delim='\t'):
-        params = dict()
-        if not isinstance(line, list):
-            line = line.split(delim)
+#    @classmethod
+#    def _run_parser(cls, header, line, meta, delim='\t'):
+#        params = dict()
 
-        args = map(str.strip, line)
+    def parse_line(self, *args, **kw):
+        if self.parser is None:
+            pklass = RunParser
+            if self.extract_device == 'Fusions UV':
+                pklass = UVRunParser
+            parser = pklass()
+            self.parser = parser
 
-        #load strings
-        for attr in ['labnumber',
-                     'measurement', 'extraction',
-                     'post_measurement',
-                     'post_equilibration',
-                     'pattern',
-                     'position'
-                     ]:
-            try:
-                params[attr] = args[header.index(attr)]
-            except IndexError, e:
-                print 'base schedule _run_parser ', e
-
-        #load booleans
-        for attr in ['autocenter', 'disable_between_positions']:
-            try:
-                param = args[header.index(attr)]
-                if param.strip():
-                    bo = str_to_bool(param)
-                    if bo is not None:
-                        params[attr] = bo
-                    else:
-                        params[attr] = False
-            except (IndexError, ValueError):
-                params[attr] = False
-
-        #load numbers
-        for attr in ['duration', 'overlap', 'cleanup',
-                     'extract_group'
-                     ]:
-            try:
-                param = args[header.index(attr)].strip()
-                if param:
-                    params[attr] = float(param)
-            except IndexError:
-                pass
-
-        #default extract_units to watts
-        extract_value = args[header.index('extract_value')]
-        extract_units = args[header.index('extract_units')]
-        if not extract_units:
-            extract_units = '---'
-
-        params['extract_value'] = extract_value
-        params['extract_units'] = extract_units
-
-        def make_script_name(n):
-            try:
-                na = args[header.index(n)]
-                if na.startswith('_'):
-                    if meta:
-                        na = meta['mass_spectrometer'] + na
-
-                if na and not na.endswith('.py'):
-                    na = na + '.py'
-            except IndexError, e:
-                print 'base schedule make_script_name ', e
-                na = NULL_STR
-
-            return na
-
-        params['configuration'] = cls._build_configuration(make_script_name)
-        return params
-
-    def _run_parser_uv(self, header, line, meta, delim='\t'):
-        params = dict()
-        if not isinstance(line, list):
-            line = line.split(delim)
-
-        args = map(str.strip, line)
-        def set_int(attr):
-            try:
-                v = args[header.index(attr)]
-                params[attr] = int(v)
-            except (IndexError, ValueError, TypeError):
-                pass
-
-        set_int('reprate')
-        return params
+        return self.parser.parse(*args, **kw)
 
 #===============================================================================
 # handlers

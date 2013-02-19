@@ -17,9 +17,9 @@
 #============= enthought library imports =======================
 from traits.api import  List, Instance, Str, Button, Any, \
     Bool, Property, Float, on_trait_change, cached_property, \
-    Event, HasTraits
+    Event
 from traitsui.api import View, Item, VGroup, HGroup, spring, \
-    EnumEditor, TabularEditor, TableEditor
+    EnumEditor
 #============= standard library imports ========================
 import os
 import yaml
@@ -28,14 +28,14 @@ from src.experiment.automated_run import AutomatedRun
 from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
 from src.experiment.stats import ExperimentStats
-from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+#from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 #from src.traits_editors.tabular_editor import myTabularEditor
-from src.experiment.identifier import convert_identifier, convert_labnumber
+from src.experiment.identifier import convert_identifier
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
+from src.experiment.blocks.parser import RunParser, UVRunParser
 from src.experiment.blocks.block import Block
 from src.experiment.runs_table import RunsTable
-
 
 
 class ExperimentSet(BaseSchedule):
@@ -289,13 +289,8 @@ class ExperimentSet(BaseSchedule):
                 continue
 
             try:
-                params = self._run_parser(header, line, meta)
-
-                if self.extract_device == 'Fusions UV':
-                    aparams = self._run_parser_uv(header, line, meta)
-                    if aparams:
-                        params.update(aparams)
-
+                params, make_script_name = self.parse_line(header, line, meta)
+                params['configuration'] = self._build_configuration(make_script_name)
                 params['mass_spectrometer'] = self.mass_spectrometer
                 params['extract_device'] = self.extract_device
                 params['db'] = self.db
@@ -600,17 +595,18 @@ post_measurement_script, post_equilibration_script''')
             self.measurement_script = NULL_STR
             self.extraction_script = NULL_STR
 
-
     def _extract_device_changed(self):
         if self.extract_device != NULL_STR:
-            if self.mass_spectrometer:
-                self._load_default_scripts()
+
+            runs = self.automated_runs
+            self.runs_table = RunsTable(extract_device=self.extract_device)
+            self.runs_table.set_runs(runs)
 
             self.automated_run = self.automated_run_factory(copy_automated_run=False)
 
-            runs = self.automated_runs[:]
-            self.runs_table = RunsTable(extract_device=self.extract_device)
-            self.runs_table.set_runs(runs)
+            if self.mass_spectrometer:
+                self._load_default_scripts()
+
 
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 

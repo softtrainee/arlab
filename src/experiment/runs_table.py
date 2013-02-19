@@ -22,6 +22,7 @@ from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter, \
     UVAutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.uv_automated_run import UVAutomatedRun
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -30,15 +31,21 @@ class RunsTable(HasTraits):
     selected = Any
     extract_device = Str
     def set_runs(self, runs):
-        print runs
         if runs:
             klass = AutomatedRun
             if self.extract_device == 'Fusions UV':
                 klass = UVAutomatedRun
 
-            print runs
             for ri in runs:
-                ri.__class__ = klass
+                if ri.__class__ != klass:
+                    nri = klass()
+                    for di in ri.traits():
+                        try:
+                            setattr(nri, di, getattr(ri, di))
+                        except Exception:
+                            pass
+
+                    ri = nri
                 self.automated_runs.append(ri)
 
     def traits_view(self):
