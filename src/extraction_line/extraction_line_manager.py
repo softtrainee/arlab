@@ -53,7 +53,7 @@ class ExtractionLineManager(Manager):
     gauge_manager = Instance(Manager)
 #    environmental_manager = Instance(Manager)
 #    device_stream_manager = Instance(Manager)
-
+    multiplexer_manager=Instance(Manager)
     multruns_report_manager = Instance(Manager)
 #    multruns_report_manager = Instance(MultrunsReportManager)
 
@@ -97,7 +97,7 @@ class ExtractionLineManager(Manager):
             else:
                 package = 'src.managers.{}'.format(manager)
 
-            class_factory = self.get_manager_factory(package, klass)
+            class_factory = self.get_manager_factory(package, klass, warn=False)
             if class_factory is None:
                 package = 'src.extraction_line.{}'.format(manager)
                 class_factory = self.get_manager_factory(package, klass)
@@ -106,15 +106,15 @@ class ExtractionLineManager(Manager):
 #            params['application'] = self.application
             m = class_factory(**params)
 
-            if manager in ['gauge_manager', 'valve_manager',
-                           'environmental_manager', 'device_stream_manager',
+            if manager in ['gauge_manager', 
+                           'valve_manager',
+                           'multiplexer_manager',
+                           #'environmental_manager', 'device_stream_manager',
                            'multruns_report_manager',
                            ]:
                 self.trait_set(**{manager:m})
             else:
                 self.add_trait(manager, m)
-
-            print self.gauge_manager
 
             #m.exit_on_close = False
 

@@ -45,6 +45,10 @@ class ExtractionLineActionSet(WorkbenchActionSet):
                       class_name='{}:RefreshCanvasAction'.format(BASE)
 #                      class_name=BASENAME.format('RefreshCanvasAction')
                       ),
+               Action(name='Multiplexer',
+                      path=PATH,
+                      class_name='{}:OpenMultiplexerAction'.format(BASE)
+                      )
 #               Action(name='Canvas Views',
 #                      path=MPATH,
 #                      class_name=BASENAME.format('OpenViewControllerAction')

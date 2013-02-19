@@ -30,7 +30,7 @@
 from src.hardware.core.abstract_device import AbstractDevice
 import time
 
-PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
+PACKAGES = dict(AgilentGPActuator='src.hardware.agilent.agilent_gp_actuator',
               ArduinoGPActuator='src.hardware.arduino.arduino_gp_actuator',
 #              ObamaArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
 #              JanArgusGPActuator='src.hardware.actuators.argus_gp_actuator',

@@ -91,14 +91,17 @@ class Viewable(Loggable):
         if self.window_y:
             kw['height'] = self.window_height
 
+        if not 'resizable' in kw:
+            kw['resizable']=True
+    
         return View(
                     handler=self.handler_klass,
 #                    x=self.window_x,
 #                    y=self.window_y,
 #                    width=self.window_width,
 #                    height=self.window_height,
-                    title=self.title,
-                    resizable=True,
+#                    title=self.title,
+#                    resizable=True,
                     *args,
                     **kw
                     )

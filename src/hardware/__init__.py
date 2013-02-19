@@ -30,11 +30,10 @@ HW_PACKAGE_MAP = {'CommandProcessor': 'src.messaging.command_processor',
              'ArgusController': 'src.hardware.argus_controller',
              'FerrupsUPS': 'src.hardware.FerrupsUPS',
              'QtegraDevice':'src.hardware.qtegra_device',
-
              'RemoteThermoRack':'src.hardware.remote.thermorack',
-             'PidController':'src.hardware.pid_controller'
-
-             'PychronLaser:src.hardware.pychron_laser'
-             'PychronMotion:src.hardware.pychron_motion'
+             'PidController':'src.hardware.pid_controller',
+             'PychronLaser':'src.hardware.pychron_laser',
+             'PychronMotion':'src.hardware.pychron_motion',
+             'AgilentMultiplexer':'src.hardware.agilent.agilent_multiplexer',
              #'ControlModule': 'src.hardware.fusions.vue_diode_control_module'
              }
