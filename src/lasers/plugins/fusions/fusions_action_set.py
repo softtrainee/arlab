@@ -82,10 +82,10 @@ class FusionsActionSet(WorkbenchActionSet):
                        path='{}'.format(laser_path),
                        class_name='{}OpticsAction'.format(self.action_path)
                        ),
-                Action(name='Pulse',
-                       path='{}'.format(laser_path),
-                       class_name='{}PulseAction'.format(self.action_path)
-                       ),
+#                Action(name='Pulse',
+#                       path='{}'.format(laser_path),
+#                       class_name='{}PulseAction'.format(self.action_path)
+#                       ),
                 #===============================================================
                 # results
                 #===============================================================
