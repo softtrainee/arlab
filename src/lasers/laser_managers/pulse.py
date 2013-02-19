@@ -115,15 +115,18 @@ class Pulse(HasTraits):
 
     def traits_view(self):
         v = View(
-                 HGroup(Item('power'), Label('units'), spring, Item('pulse_button',
-                                            editor=ButtonEditor(label_value='pulse_label'),
-                                            show_label=False,
-                                            enabled_when='object.enabled'
-                                            )),
-                 Item('duration'),
+                 HGroup(Item('power', tooltip='Hit Enter for change to take effect'),
+                        Item('units', style='readonly', show_label=False),
+                        spring,
+                        Item('pulse_button',
+                             editor=ButtonEditor(label_value='pulse_label'),
+                             show_label=False,
+                             enabled_when='object.enabled'
+                            )
+                        ),
+                 Item('duration', label='Duration (s)', tooltip='Set the laser pulse duration in seconds'),
                  Item('wait_control', show_label=False, style='custom'),
                  id='pulse',
-                 title='Pulse',
                  handler=PulseHandler()
                  )
         return v

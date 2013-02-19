@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float, Any
-from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, InstanceEditor, View
+from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, InstanceEditor, View, Group
 from pyface.timer.do_later import do_later
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
@@ -105,7 +105,7 @@ class FusionsLaserManager(LaserManager):
     chiller = Any
 
     dbname = ''
-    
+
 #===============================================================================
 #   IExtractionDevice interface
 #===============================================================================
@@ -506,12 +506,14 @@ class FusionsLaserManager(LaserManager):
         if ps:
 #            ps.springy = True
             power_grp.content.append(ps)
-            
-        pulse_grp=Item('pulse', style='custom',show_label=False)
-        power_grp=HGroup(power_grp, pulse_grp)
-            
+
+        pulse_grp = Group(Item('pulse', style='custom', show_label=False),
+                        label='Pulse', show_border=True
+                        )
+        power_grp = HGroup(power_grp, pulse_grp)
+
         vg = VGroup(power_grp)
-        
+
         ac = self.get_additional_controls()
         if ac is not None:
             vg = HGroup(vg, ac)
