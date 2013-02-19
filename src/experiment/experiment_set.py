@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import  List, Instance, Str, Button, Any, \
     Bool, Property, Float, on_trait_change, cached_property, \
-    Event
+    Event, HasTraits
 from traitsui.api import View, Item, VGroup, HGroup, spring, \
     EnumEditor, TabularEditor, TableEditor
 #============= standard library imports ========================
@@ -29,11 +29,14 @@ from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
 from src.experiment.stats import ExperimentStats
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-from src.traits_editors.tabular_editor import myTabularEditor
+#from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.identifier import convert_identifier, convert_labnumber
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
 from src.experiment.blocks.block import Block
+from src.experiment.runs_table import RunsTable
+
+
 
 class ExperimentSet(BaseSchedule):
     current_run = Instance(AutomatedRun)
@@ -288,6 +291,11 @@ class ExperimentSet(BaseSchedule):
             try:
                 params = self._run_parser(header, line, meta)
 
+                if self.extract_device == 'Fusions UV':
+                    aparams = self._run_parser_uv(header, line, meta)
+                    if aparams:
+                        params.update(aparams)
+
                 params['mass_spectrometer'] = self.mass_spectrometer
                 params['extract_device'] = self.extract_device
                 params['db'] = self.db
@@ -303,7 +311,6 @@ class ExperimentSet(BaseSchedule):
                 return
 
         aruns = self._add_frequency_runs(meta, aruns)
-
         return aruns
 
     def _add_frequency_runs(self, meta, runs):
@@ -595,8 +602,16 @@ post_measurement_script, post_equilibration_script''')
 
 
     def _extract_device_changed(self):
-        if self.mass_spectrometer:
-            self._load_default_scripts()
+        if self.extract_device != NULL_STR:
+            if self.mass_spectrometer:
+                self._load_default_scripts()
+
+            self.automated_run = self.automated_run_factory(copy_automated_run=False)
+
+            runs = self.automated_runs[:]
+            self.runs_table = RunsTable(extract_device=self.extract_device)
+            self.runs_table.set_runs(runs)
+
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
     def _selected_changed(self, new):
@@ -689,11 +704,16 @@ post_measurement_script, post_equilibration_script''')
                 if not k in kw:
                     kw[k] = getattr(pa, k)
 
-        a = AutomatedRun(
-                         scripts=self.loaded_scripts,
-                         labnumber=labnumber if labnumber else '',
-                         **kw
-                         )
+        if self.extract_device == 'Fusions UV':
+            from src.experiment.uv_automated_run import UVAutomatedRun
+            klass = UVAutomatedRun
+        else:
+            klass = AutomatedRun
+
+        a = klass(scripts=self.loaded_scripts,
+                  labnumber=labnumber if labnumber else '',
+                  **kw)
+
         if labnumber:
             ln = self.db.get_labnumber(labnumber)
 
@@ -758,19 +778,7 @@ post_measurement_script, post_equilibration_script''')
 
         analysis_table = VGroup(
                                 self._get_copy_paste_group(),
-                                Item('automated_runs', show_label=False,
-                                     editor=myTabularEditor(adapter=AutomatedRunAdapter(),
-                                                            operations=['delete',
-                                                                        'move',
-#                                                                        'edit'
-                                                                        ],
-                                                            editable=False,
-                                                            selected='selected',
-                                                            auto_update=True,
-                                                            multi_select=True,
-                                                            scroll_to_bottom=False
-                                                            ),
-                                    ),
+                                Item('runs_table', show_label=False, style='custom'),
                                 show_border=True,
                                 label='Analyses',
                                 )

@@ -16,7 +16,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Bool
+from traits.api import HasTraits, Str, Float, Bool, List
 #from traitsui.api import View, Item
 from src.monitors.monitor import Monitor
 #============= standard library imports ========================
@@ -31,6 +31,7 @@ class VacuumSection(HasTraits):
     tripped = Bool
 
 class SystemMonitor(Monitor):
+    analytical_sections = List
     def _load_hook(self, config):
         for section in config.sections():
             if section.startswith('VacuumSection'):
