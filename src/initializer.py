@@ -377,10 +377,12 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
             elif result is None:
                 raise NotImplementedError
 
+            od.application = self.application
             od.post_initialize()
 
             manager.devices.append(od)
-            od.application = self.application
+            
+            
 
 #            if od.simulation:
 #                time.sleep(0.25)
