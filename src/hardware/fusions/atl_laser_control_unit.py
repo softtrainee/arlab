@@ -26,6 +26,7 @@ from src.hardware.core.checksum_helper import computeBCC
 import time
 from src.hardware.core.data_helper import make_bitarray
 from threading import Lock
+from pyface.timer.do_later import do_later
 STX = chr(2)
 ETX = chr(3)
 EOT = chr(4)
@@ -114,7 +115,7 @@ class ATLLaserControlUnit(CoreDevice):
         r = super(ATLLaserControlUnit, self).initialize(self, *args, **kw)
         self._communicator.write_terminator = None
         return r
-    
+
     def isEnabled(self):
         return self._enabled
 
@@ -133,31 +134,42 @@ class ATLLaserControlUnit(CoreDevice):
         #run laser
 #        cmd = self._build_command(11, 3)
 #        self._send_command(cmd)
+    def set_reprate(self, n, save=True):
+        lh = self._make_integer_pair(n)
+        if lh:
+            with self._lock:
+                cmd = self._build_command(1001, lh)
+                self._send_command(cmd, lock=False)
+                if save:
+                    self._save_eeprom()
+
+    def _make_integer_pair(self, n):
+        try:
+            n = int(n)
+        except (ValueError, TypeError):
+            return
+
+        v = make_bitarray(n, width=32)
+        h, l = int(v[:16], 2), int(v[16:], 2)
+        return l, h
 
     def set_nburst(self, n, save=True):
-        try:
-            n=int(n)
-        except (ValueError, TypeError):
-            return 
-        
-        v = make_bitarray(n, width=32)
-        h = v[:16]
-        l = v[16:]
+        lh = self._make_integer_pair(n)
+        if lh:
+            with self._lock:
+                cmd = self._build_command(22, lh)
+                self._send_command(cmd, lock=False)
 
-        l = int(l, 2)
-        h = int(h, 2)
-        with self._lock:
-            cmd = self._build_command(22, (l, h))
-            self._send_command(cmd, lock=False)
-            
-            cmd = self._build_command(1004, (l, h))
-            self._send_command(cmd,lock=False)
-    
-            if save:
-                cmd = self._build_command(37, 1)
-                self._send_command(cmd,lock=False)
-    
+                cmd = self._build_command(1004, lh)
+                self._send_command(cmd, lock=False)
+
+                if save:
+                    self._save_eeprom()
+
 #        self.burst_readback = self.get_nburst()
+    def _save_eeprom(self, lock=False):
+        cmd = self._build_command(37, 1)
+        self._send_command(cmd, lock=lock)
 
     def get_nburst(self, verbose=True):
         v = 0
@@ -168,10 +180,9 @@ class ATLLaserControlUnit(CoreDevice):
             high = make_bitarray(int(high, 16), width=16)
             low = make_bitarray(int(low, 16), width=16)
             v = int(high + low, 2)
-            self.burst_readback=v
+            do_later(self.trait_set, burst_readback=v)
 
         return v
-#        return int(high+low, 2)
 
     def is_burst_mode(self, ps=None):
         bit = 4

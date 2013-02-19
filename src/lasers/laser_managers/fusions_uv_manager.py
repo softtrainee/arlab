@@ -77,6 +77,7 @@ class FusionsUVManager(FusionsLaserManager):
     action_readback = DelegatesTo('atl_controller')
 
     burst_shot = Int(enter_set=True, auto_set=False)
+    reprate = Int(enter_set=True, auto_set=False)
 
     laser_script_executor = Instance(LaserScriptExecutor)
     execute_button = DelegatesTo('laser_script_executor')
@@ -176,32 +177,36 @@ class FusionsUVManager(FusionsLaserManager):
 
         self._is_tracing = False
 
-    def fire_laser(self,action):
+    def fire_laser(self, action):
         atl = self.atl_controller
         if atl.isEnabled():
-            if action=='burst':
+            if action == 'burst':
                 atl.set_burst_mode(True)
                 atl.laser_run()
-            elif action=='continuous':
+            elif action == 'continuous':
                 atl.set_burst_mode(False)
                 atl.laser_run()
             else:
                 atl.laser_stop()
-                        
+
             return True
         else:
             return 'laser not on'
-    
-    def set_nburst(self,n):
+
+    def set_reprate(self, r):
+        self.atl_controller.set_reprate(r, save=False)
+        return True
+
+    def set_nburst(self, n):
         self.atl_controller.set_nburst(n, save=False)
         return True
-    
+
     def get_nburst(self):
         return self.atl_controller.get_nburst()
-    
+
     def get_burst_mode(self):
         return self.atl_controller.is_burst_mode()
-         
+
     def update_parameters(self):
         if self.atl_controller is not None:
             self.atl_controller.update_parameters()
@@ -308,7 +313,11 @@ class FusionsUVManager(FusionsLaserManager):
 
     def _burst_shot_changed(self):
         if self.burst_shot:
-            self.atl_controller.set_nburst(self.burst_shot)
+            self.set_nburst(self.burst_shot)
+
+    def _reprate_changed(self):
+        if self.reprate:
+            self.set_reprate()
 
     def _mode_changed(self):
         if self.mode == 'Burst':
@@ -337,6 +346,7 @@ class FusionsUVManager(FusionsLaserManager):
                       HGroup(self._button_factory('fire_button', 'fire_label'),
                              Item('mode', show_label=False),
                              Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
+                             Item('reprate', label='Rep. Rate'),
                              Item('burst_readback', label='Burst Rem.', width=100, style='readonly'),
                              Item('energy_readback', label='Energy (mJ)', style='readonly', format_str='%0.2f'),
                              Item('pressure_readback', label='Pressure (mbar)',
