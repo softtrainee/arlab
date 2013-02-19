@@ -462,7 +462,7 @@ class PyScript(Loggable):
                 self._execute()
                 if finished_callback:
                     finished_callback()
-
+            
             return self._completed
 
         if new_thread:
@@ -499,7 +499,13 @@ class PyScript(Loggable):
             code = compile(snippet, '<string>', 'exec')
             exec code in safe_dict
             safe_dict['main']()
-        except KeyError:
+        except KeyError,e:
+            print e
+            print '#============'
+            
+            for di in safe_dict.keys():
+                print di
+                
             return MainError()
 
         except Exception, e:
@@ -517,7 +523,8 @@ class PyScript(Loggable):
         self._cancel = False
         self._completed = False
         self._truncate = False
-
+#        print self.name
+#        print self.text
 #        safe_dict['isblank'] = False
         error = self.execute_snippet(self.text)
         if error:

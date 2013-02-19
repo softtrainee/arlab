@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, CInt, Str, on_trait_change, Button, Float, Property, Event, Bool, Enum
+from traits.api import Int, CInt, Str,String, on_trait_change, Button, Float, Property, Event, Bool, Enum
 from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -55,7 +55,7 @@ class PychronLaserManager(BaseLaserManager):
 
     _cancel_blocking = False
 
-    position = Str(enter_set=True, auto_set=False)
+    position = String(enter_set=True, auto_set=False)
     x=Property(depends_on='_x')
     y=Property(depends_on='_y')
     z=Property(depends_on='_z')
@@ -345,6 +345,7 @@ class PychronUVLaserManager(PychronLaserManager):
             self.firing=True
             
         self._ask('Fire {}'.format(mode))
+    
         
     def _validate_nburst(self,v):
         try:
@@ -354,6 +355,7 @@ class PychronUVLaserManager(PychronLaserManager):
         
     def _set_nburst(self, v):
         if v is not None:
+            v=int(v)
             self._ask('SetNBurst {}'.format(v))
             self._nburst=v
             
@@ -367,10 +369,19 @@ class PychronUVLaserManager(PychronLaserManager):
 #===============================================================================
     def _position_changed(self):
         if self.position is not None:
-            self._move_to_position(self.position)
+            t=Thread(target=self._move_to_position, args=(self.position))
+            t.start()
+#            self._move_to_position(self.position)
 #===============================================================================
 # 
 #===============================================================================
+    def extract(self, power):
+        self._set_nburst(power)
+        self._ask('Fire burst')
+        
+    def end_extract(self):
+        self._ask('Fire stop')
+                
     def trace_path(self, value, name, kind):
         cmd = 'TracePath {} {} {}'.format(value, name, kind)
         self.info('sending {}'.format(cmd))
@@ -381,8 +392,12 @@ class PychronUVLaserManager(PychronLaserManager):
         pass
 
     def _move_to_position(self, pos):
+            
         cmd = 'GoToPoint'
         if isinstance(pos, (str, unicode)):
+            if not pos:
+                return
+            
             if pos[0] in ['p', 'l', 'd']:
                 cmd = 'GoToNamedPosition'
 

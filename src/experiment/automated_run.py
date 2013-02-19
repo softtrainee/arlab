@@ -98,9 +98,9 @@ class AutomatedRun(Loggable):
     extract_value = Property(depends_on='_extract_value')
     _extract_value = Float
 
-    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
+    extract_units = Property(Enum('---', 'watts', 'temp', 'percent','burst', 'continuous'),
                            depends_on='_extract_units')
-    _extract_units = Enum('---', 'watts', 'temp', 'percent')
+    _extract_units = Enum('---', 'watts', 'temp', 'percent','burst', 'continuous')
 
     extract_device = Str
 
@@ -336,10 +336,8 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def start(self):
-        if self.monitor.monitor():
-            #immediately check the monitor conditions
-            if self.monitor.check():
-                if self.analysis_type == 'unknown':
+        def _start():
+            if self.analysis_type == 'unknown':
                     #load arar_age object for age calculation
                     self.arar_age = ArArAge()
                     ln = self.labnumber
@@ -347,13 +345,20 @@ anaylsis_type={}
                     ln = self.db.get_labnumber(ln)
                     self.arar_age.labnumber_record = ln
 
-                self.measuring = False
-                self.update = True
-                self.overlap_evt = TEvent()
-                self.info('Start automated run {}'.format(self.name))
-                self._alive = True
-                self._total_counts = 0
-                return True
+            self.measuring = False
+            self.update = True
+            self.overlap_evt = TEvent()
+            self.info('Start automated run {}'.format(self.name))
+            self._alive = True
+            self._total_counts = 0
+            return True
+        
+        if self.monitor is None:
+            return _start()
+        elif self.monitor.monitor():
+            #immediately check the monitor conditions
+            if self.monitor.check():
+                return _start()
 
     def cancel(self):
         self._alive = False
@@ -641,11 +646,14 @@ anaylsis_type={}
         #sync the arar_age object's signals
         if self.analysis_type == 'unknown':
             for iso, v in blanks.iteritems():
-                self.arar.isotopes[iso].blank.set_uvalue(v)
+#                print self.arar_age.isotopes.keys()
+                self.arar_age.set_blank(iso, v)
+#                self.arar_age.isotopes[iso].blank.set_uvalue(v)
 #                self.arar_age.signals['{}bl'.format(iso)] = v
 
             for iso, v in baselines.iteritems():
-                self.arar.isotopes[iso].baseline.set_uvalue(v)
+                self.arar_age.set_baseline(iso, v)
+#                self.arar_age.isotopes[iso].baseline.set_uvalue(v)
 #                self.arar_age.signals['{}bs'.format(iso)] = v
 
         if not self.spectrometer_manager:
@@ -1399,15 +1407,16 @@ anaylsis_type={}
 #        if globalv.experiment_savedb:
 #            db.commit()
     def _save_monitor_info(self, analysis):
-        for ci in self.monitor.checks:
-            xy = ci.get_xydata()
-            data = ''.join([struct.pack('>ff', x, y) for x, y in xy])
-            params = dict(name=ci.name,
-                          parameter=ci.parameter, criterion=ci.criterion,
-                          comparator=ci.comparator, tripped=ci.tripped,
-                          data=data)
-
-            self.db.add_monitor(analysis, **params)
+        if self.monitor:
+            for ci in self.monitor.checks:
+                xy = ci.get_xydata()
+                data = ''.join([struct.pack('>ff', x, y) for x, y in xy])
+                params = dict(name=ci.name,
+                              parameter=ci.parameter, criterion=ci.criterion,
+                              comparator=ci.comparator, tripped=ci.tripped,
+                              data=data)
+    
+                self.db.add_monitor(analysis, **params)
 
     def _save_to_massspec(self):
         h = self.massspec_importer.db.host
@@ -1854,8 +1863,12 @@ anaylsis_type={}
             if not t:
                 self.extract_units = '---'
             elif self.extract_units == '---':
-                self.extract_units = 'watts'
-
+                
+                if self.extract_device=='Fusions UV':
+                    self.extract_units = 'burst'
+                else:
+                    self.extract_units = 'watts'
+                
         else:
             self.extract_units = '---'
 

@@ -110,6 +110,7 @@ class StageManager(Manager):
     visualizer = Instance(StageVisualizer)
 
     temp_position = None
+    _temp_hole=None
     linear_move_history = List
 
     def __init__(self, *args, **kw):
@@ -227,7 +228,7 @@ class StageManager(Manager):
         return self.stage_controller.single_axis_move(*args, **kw)
 
     def linear_move(self, x, y, update_hole=True, use_calibration=True, **kw):
-
+        
         cpos = self.get_uncalibrated_xy()
         self.linear_move_history.append((cpos, {}))
 
@@ -680,12 +681,12 @@ class StageManager(Manager):
             return
 
         v = str(v)
-        
+            
         if self.hole_thread is not None:
             self.stage_controller.stop()
 
 #        if self.hole_thread is None:
-#            v = str(v)
+        
         pos = self._stage_map.get_hole_pos(v)
         if pos is not None:
             self.visualizer.set_current_hole(v)
