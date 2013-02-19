@@ -51,6 +51,17 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
+    
+    def enable_device(self):
+        self.enable_laser()
+        
+    def disable_device(self):
+        self.disable_laser()
+        
+    def enable_laser(self):
+        pass
+    def disable_laser(self):
+        pass
 
     def new_pattern_maker(self):
         pm = PatternMakerView()

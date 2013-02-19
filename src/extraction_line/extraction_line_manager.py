@@ -123,6 +123,7 @@ class ExtractionLineManager(Manager):
     def finish_loading(self):
         '''
         '''
+        print self.mode
         if self.mode != 'client':
             self.monitor = SystemMonitor(manager=self,
                                          name='system_monitor'

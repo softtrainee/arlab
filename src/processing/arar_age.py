@@ -25,6 +25,7 @@ from src.processing.argon_calculations import calculate_arar_age
 from src.constants import AGE_SCALARS
 from apptools.preferences.preference_binding import bind_preference
 from src.processing.arar_constants import ArArConstants
+from src.processing.isotope import Isotope
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
@@ -115,6 +116,20 @@ class ArArAge(HasTraits):
     
 #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
         bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+    
+    def set_blank(self, iso, v):
+        if not self.isotopes.has_key(iso):
+            niso=Isotope(name=iso)
+            self.isotopes[iso]=niso
+        
+        self.isotopes[iso].blank.set_uvalue(v)
+
+    def set_baseline(self, iso, v):
+        if not self.isotopes.has_key(iso):
+            niso=Isotope(name=iso)
+            self.isotopes[iso]=niso
+        
+        self.isotopes[iso].baseline.set_uvalue(v)
         
     def _calculate_kca(self):
         result = self.arar_result
@@ -146,7 +161,7 @@ class ArArAge(HasTraits):
             if prs:
                 clk = prs.Cl_K
                 clk = clk if clk else 1
-                k_cl_pr = 1 / prs.Cl_K
+                k_cl_pr = 1 / clk
 
             try:
                 return k / cl * k_cl_pr

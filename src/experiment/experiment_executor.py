@@ -236,7 +236,6 @@ class ExperimentExecutor(ExperimentManager):
 
         if exp.extract_device != NULL_STR:
             extract_device = exp.extract_device.replace(' ', '_').lower()
-            print self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
             if not self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device)):
                 if not globalv.experiment_debug:
                     nonfound.append(extract_device)
@@ -458,8 +457,9 @@ class ExperimentExecutor(ExperimentManager):
         arun.username = self.username
 
         mon = self._monitor_factory()
-        mon.automated_run = arun
-        arun.monitor = mon
+        if mon is not None:
+            mon.automated_run = arun
+            arun.monitor = mon
 
     def _get_blank(self, kind):
         db = self.db
@@ -480,8 +480,9 @@ class ExperimentExecutor(ExperimentManager):
                 dbr = sel._record_factory(dbr)
                 dbr.load()
                 self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
-
+                                
                 self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+                
                 return True
 
     def _has_preceeding_blank_or_background(self, exp):
@@ -522,7 +523,7 @@ class ExperimentExecutor(ExperimentManager):
             else:
                 return True
 
-        if arun.start():
+        if not arun.start():
             self.err_message = 'Monitor failed to start'
             return
 
@@ -554,7 +555,7 @@ class ExperimentExecutor(ExperimentManager):
 
         if not isAlive():
             return
-
+         
 #        #do_equilibration
 #        evt = arun.do_equilibration()
 #        if evt:
@@ -767,6 +768,7 @@ class ExperimentExecutor(ExperimentManager):
         return s
 
     def _monitor_factory(self):
+        mon=None
         if self.mode == 'client':
             ip = InitializationParser()
             exp = ip.get_plugin('Experiment', category='general')
@@ -779,19 +781,20 @@ class ExperimentExecutor(ExperimentManager):
                 port = comms.find('port')
                 kind = comms.find('kind')
 
-            if host is not None:
-                host = host.text #if host else 'localhost'
-            if port is not None:
-                port = int(port.text) #if port else 1061
-            if kind is not None:
-                kind = kind.text
-
-            mon = RemoteAutomatedRunMonitor(host, port, kind, name=monitor.text.strip())
+                if host is not None:
+                    host = host.text #if host else 'localhost'
+                if port is not None:
+                    port = int(port.text) #if port else 1061
+                if kind is not None:
+                    kind = kind.text
+        
+                mon = RemoteAutomatedRunMonitor(host, port, kind, name=monitor.text.strip())
         else:
             mon = AutomatedRunMonitor()
 
+        if mon is not None:
 #        mon.configuration_dir_name = paths.monitors_dir
-        mon.load()
+            mon.load()
         return mon
 
     def _pyscript_runner_default(self):

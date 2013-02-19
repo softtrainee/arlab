@@ -345,6 +345,19 @@ class ExtractionLinePyScript(ValvePyScript):
         r = self.runner.get_resource(name)
         r.set(value)
 
+    @verbose_skip
+    @command_register
+    def enable(self):
+        return self._manager_action([('enable_device', (), {})],
+                             protocol=ILaserManager,
+                             name=self.extract_device)
+    @verbose_skip
+    @command_register
+    def disable(self):
+        return self._manager_action([('disable_device', (), {})],
+                             protocol=ILaserManager,
+                             name=self.extract_device)
+
 #============= EOF ====================================
 #    @verbose_skip
 #    def _m_open(self, name=None, description=''):
