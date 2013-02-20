@@ -90,7 +90,7 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
     use_db = Bool(False)
     _auto_started = False
 
-    _scheduler=None
+    _scheduler_name=None
     
     def _communicate_hook(self, cmd, r):
         self.last_command = cmd
@@ -108,7 +108,7 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
                 if not self._load_communicator(config, comtype):
                     return False
                 
-                self.set_attribute(config, 'scheduler', 'Communications', '_scheduler')
+                self.set_attribute(config, 'scheduler', 'Communications', '_scheduler_name')
 
             self._load_hook(config)
 
@@ -181,7 +181,6 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
         self.setup_alarms()
         self.setup_scheduler()
     
-    
     def get_random_value(self, mi=0, ma=10):
         '''
             convienent method for getting a random integer between min and max
@@ -193,13 +192,17 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
         '''
         return random.randint(mi, ma)
     
-    def setup_scheduler(self, sn):
+    def setup_scheduler(self, name=None):
+        
         if self.application:
-            sc=self.application.get_service(CommunicationScheduler, 'name=="{}"'.format(sn))
-            if sc is None:
-                sc=CommunicationScheduler(name=sn)
-                self.application.register_service(type(sc), sc)
-            self.set_scheduler(sc)
+            if name is None:
+                name=self._scheduler_name
+            if name is not None:
+                sc=self.application.get_service(CommunicationScheduler, 'name=="{}"'.format(name))
+                if sc is None:
+                    sc=CommunicationScheduler(name=name)
+                    self.application.register_service(type(sc), sc)
+                self.set_scheduler(sc)
                 
     def set_scheduler(self, s):
         if self._communicator is not None:
