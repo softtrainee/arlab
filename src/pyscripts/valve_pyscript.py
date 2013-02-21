@@ -93,12 +93,12 @@ class ValvePyScript(PyScript):
     def is_closed(self, name=None, description=''):
         self.info('is {} ({}) closed?'.format(name, description))
         result = self._get_valve_state(name, description)
+        print 'is closed', result
         if result:
             return result[0] == False
 
     def _get_valve_state(self, name, description):
-        return self._manager_action([('open_valve', (name,), dict(
-                                                      mode='script',
+        return self._manager_action([('get_valve_state', (name,), dict(
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
 
