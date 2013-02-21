@@ -185,11 +185,12 @@ class AutomatedRun(Loggable):
     def assemble_report(self):
         signal_string = ''
         signals = self.get_baseline_corrected_signals()
-        for ai in self._active_detectors:
-            det = ai.name
-            iso = ai.isotope
-            v = signals[iso]
-            signal_string += '{} {} {}\n'.format(det, iso, v)
+        if signals:
+            for ai in self._active_detectors:
+                det = ai.name
+                iso = ai.isotope
+                v = signals[iso]
+                signal_string += '{} {} {}\n'.format(det, iso, v)
 
 #        signal_string = '\n'.join(['{} {}'.format(k, v) for k, v in self.signals.iteritems()])
         age = ''
