@@ -63,6 +63,7 @@ class KerrMotor(KerrDevice):
 
     _motor_position = CInt
     doing_hysteresis_correction = False
+
     def _build_gains(self):
         '''
             F6  B004 2003 F401 E803 FF 00 E803 01 01 01
@@ -175,6 +176,7 @@ class KerrMotor(KerrDevice):
                   (addr, self._build_gains(), 100, 'set gains'),
                   (addr, '1701', 100, 'turn on amp'),
                   (addr, '00', 100, 'reset position'),
+                  (addr, '0b', 100, 'clear bits')
                   ]
         self._execute_hex_commands(commands)
 
@@ -283,7 +285,7 @@ class KerrMotor(KerrDevice):
             status_byte = 'DFDF'
 
         status_register = map(int, make_bitarray(int(status_byte[:2], 16)))
-        return status_register[7]
+        return not status_register[7]
 
 #    def _check_status_byte(self, check_bit):
 #        '''
@@ -376,9 +378,12 @@ class KerrMotor(KerrDevice):
     def _update_position(self):
         '''
         '''
+
         if self._moving(verbose=False):
-#        if not self._check_status_byte(0):
             self.enabled = False
+
+#        if not self._check_status_byte(0):
+#            self.enabled = False
 
         else:
             if self.use_hysteresis and not self.doing_hysteresis_correction:
@@ -464,9 +469,9 @@ class KerrMotor(KerrDevice):
                     hysteresis = self.hysteresis_value
 
             self._set_motor_position_(npos, hysteresis)
-
             if not self.parent.simulation:
-                self.timer = Timer(250, self._update_position)
+#                time.sleep(0.250)
+                self.timer = Timer(400, self._update_position)
             else:
                 self.update_position = self._data_position
 
@@ -494,6 +499,7 @@ class KerrMotor(KerrDevice):
                          ),
                     Item('update_position', show_label=False,
                          editor=RangeEditor(mode='slider',
+                                            format='%0.3f',
                                             low_name='min',
                                             high_name='max', enabled=False),
                          ),
