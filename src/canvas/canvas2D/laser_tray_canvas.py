@@ -368,7 +368,6 @@ class LaserTrayCanvas(MapCanvas):
 #                MapCanvas.normal_mouse_move(self, event)
 #        else:
 
-        print self.valid_position(event.x, event.y)
         if self.valid_position(event.x, event.y):
             event.window.set_pointer(self.cross_pointer)
         else:
