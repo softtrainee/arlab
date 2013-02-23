@@ -381,8 +381,8 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
             od.post_initialize()
 
             manager.devices.append(od)
-            
-            
+
+
 
 #            if od.simulation:
 #                time.sleep(0.25)

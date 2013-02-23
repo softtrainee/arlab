@@ -94,8 +94,10 @@ class StageManager(Manager):
 
     hole_thread = None
     point_thread = None
-    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
-    _hole = String
+
+    hole = String(enter_set=True, auto_set=False)
+#    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
+#    _hole = String
 
 #    point_thread = None
 #    point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
@@ -233,11 +235,11 @@ class StageManager(Manager):
 
         cpos = self.get_uncalibrated_xy()
         self.linear_move_history.append((cpos, {}))
-
-        if update_hole:
-            hole = self.get_calibrated_hole(x, y)
-            if hole is not None:
-                self._hole = int(hole.id)
+        self.trait_set(hole='')#, trait_change_notify=False)
+#        if update_hole:
+#            hole = self.get_calibrated_hole(x, y)
+#            if hole is not None:
+#                self._hole = int(hole.id)
 
         pos = (x, y)
         if use_calibration:
@@ -272,7 +274,8 @@ class StageManager(Manager):
     def set_xy(self, x, y, **kw):
         hole = self._get_hole_by_position(x, y)
         if hole:
-            self._set_hole(hole.id)
+            self.move_to_hole(hole)
+#            self._set_hole(hole.id)
         else:
             return self.linear_move(x, y, **kw)
 
@@ -288,13 +291,13 @@ class StageManager(Manager):
         '''
         self.info('querying axis positions')
         self.stage_controller.update_axes()
-        if update_hole:
-            #check to see if we are at a hole         
-            hole = self.get_calibrated_hole(self.stage_controller._x_position,
-                                              self.stage_controller._y_position,
-                                              )
-            if hole is not None:
-                self._hole = str(hole.id)
+#        if update_hole:
+#            #check to see if we are at a hole         
+#            hole = self.get_calibrated_hole(self.stage_controller._x_position,
+#                                              self.stage_controller._y_position,
+#                                              )
+#            if hole is not None:
+#                self._hole = str(hole.id)
 
     def move_to_load_position(self):
         '''
@@ -375,6 +378,9 @@ class StageManager(Manager):
             return next((si for si in smap.sample_holes
                             if _filter(si, x, y)
                       ), None)
+
+    def _hole_changed(self):
+        self._set_hole(self.hole)
 
     def _load_previous_stage_map(self):
         p = os.path.join(paths.hidden_dir, 'stage_map')
@@ -700,8 +706,8 @@ class StageManager(Manager):
             self.warning(err)
             return  err
 
-    def _get_hole(self):
-        return self._hole
+#    def _get_hole(self):
+#        return self._hole
 
     def _set_point(self, v):
         if self.canvas.calibrate:
