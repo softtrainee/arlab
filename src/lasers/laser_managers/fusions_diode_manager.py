@@ -57,7 +57,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     tuning = Bool
 
     #laser_measured_power = Float
-    thermocouple_temp = Float
+#    thermocouple_temp = Float
 
 #    update_timers = List
     monitor_name = 'diode_laser_monitor'

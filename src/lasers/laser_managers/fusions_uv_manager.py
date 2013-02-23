@@ -32,9 +32,10 @@ from src.machine_vision.mosaic_manager import MosaicManager
 from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 from src.lasers.stage_managers.stage_map import UVStageMap
 import time
-from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
+#from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 import os
 from src.paths import paths
+from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
 
 #============= local library imports  ==========================
 
@@ -79,7 +80,6 @@ class FusionsUVManager(FusionsLaserManager):
     burst_shot = Int(enter_set=True, auto_set=False)
     reprate = Int(enter_set=True, auto_set=False)
 
-    laser_script_executor = Instance(LaserScriptExecutor)
     execute_button = DelegatesTo('laser_script_executor')
     execute_label = DelegatesTo('laser_script_executor')
     names = DelegatesTo('laser_script_executor')
@@ -402,7 +402,7 @@ class FusionsUVManager(FusionsLaserManager):
         return 'Burst'
 
     def _laser_script_executor_default(self):
-        return LaserScriptExecutor(laser_manager=self)
+        return UVLaserScriptExecutor(laser_manager=self)
 #    def _shot_history_default(self):
 #        '''
 #        '''

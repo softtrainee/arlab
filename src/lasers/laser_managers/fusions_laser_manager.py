@@ -70,6 +70,8 @@ class FusionsLaserManager(LaserManager):
 #    zoommin = DelegatesTo('laser_controller')
 #    zoommax = DelegatesTo('laser_controller')
 #    update_zoom = DelegatesTo('laser_controller')
+#    execute_button = DelegatesTo('laser_script_executor')
+#    execute_label = DelegatesTo('laser_script_executor')
 
     pointer = Event
     pointer_state = Bool(False)
@@ -441,7 +443,7 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return [('enable', 'enable_label', None),
-                ('record', 'record_label', None),
+#                ('record', 'record_label', None),
                 #('pointer', 'pointer_label', None),
                 #('light', 'light_label', None)
                 ]
@@ -492,11 +494,14 @@ class FusionsLaserManager(LaserManager):
                            HGroup(
                                Item('requested_power', style='readonly',
                                     format_str='%0.2f',
+                                    width=100
                                     ),
                                 spring,
                                Item('units', show_label=False, style='readonly'),
                                spring
                                ),
+                           Item('laser_script_executor', show_label=False, style='custom'),
+#                           self._button_factory('execute_button', 'execute_label'),
                            show_border=True,
 #                           springy=True,
                            label='Power'

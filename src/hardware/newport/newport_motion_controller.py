@@ -833,23 +833,23 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if block:
             self._block_(axis=block)
 
-    def _block_(self, axis=None, event=None):
-        '''
-        '''
-        if event is not None:
-            event.clear()
-
-        if self.timer:
-            #timer is calling self._moving_
-            func = lambda: self.timer.isRunning()
-        else:
-            func = lambda: self._moving_(axis=axis)
-
-        while func():
-            time.sleep(0.25)
-
-        if event is not None:
-            event.set()
+#    def _block_(self, axis=None, event=None):
+#        '''
+#        '''
+#        if event is not None:
+#            event.clear()
+#
+#        if self.timer:
+#            #timer is calling self._moving_
+#            func = lambda: self.timer.isRunning()
+#        else:
+#            func = lambda: self._moving_(axis=axis)
+#
+#        while func():
+#            time.sleep(0.25)
+#
+#        if event is not None:
+#            event.set()
 
     def _moving_(self, axis=None, verbose=False):
         '''

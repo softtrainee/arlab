@@ -68,7 +68,8 @@ class ScanableDevice(ViewableDevice):
 
         config = self.get_configuration()
         if config.has_section('Scan'):
-            if config.getboolean('Scan', 'enabled'):
+            enabled = self.config_get(config, 'Scan', 'enabled', optional=True, default=False)
+            if enabled:
                 self.is_scanable = True
                 self.set_attribute(config, 'auto_start', 'Scan', 'auto_start', cast='boolean', default=True)
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')

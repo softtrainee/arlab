@@ -110,7 +110,7 @@ class StageManager(Manager):
     visualizer = Instance(StageVisualizer)
 
     temp_position = None
-    _temp_hole=None
+    _temp_hole = None
     linear_move_history = List
 
     def __init__(self, *args, **kw):
@@ -196,11 +196,15 @@ class StageManager(Manager):
         self.canvas.set_map(sm)
         self.canvas.request_redraw()
 
+    def finish_loading(self):
+        self.initialize_stage()
+
     def initialize_stage(self):
-#        self.canvas.parent = self
         self.update_axes()
         axes = self.stage_controller.axes
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
+        self.canvas.parent = self
+
 #        x_range=(self.stage_controller.xaxes_min,
 #                self.stage_controller.xaxes_max)
 #        y_range=(self.stage_controller.yaxes_min,
@@ -209,8 +213,6 @@ class StageManager(Manager):
 #        self.canvas.set_mapper_limits('x', x_range)
 #        self.canvas.set_mapper_limits('y', y_range)
 
-    def finish_loading(self):
-        self.update_axes()
 
     def set_stage_map(self, v):
         return self._set_stage_map(v)
@@ -228,7 +230,7 @@ class StageManager(Manager):
         return self.stage_controller.single_axis_move(*args, **kw)
 
     def linear_move(self, x, y, update_hole=True, use_calibration=True, **kw):
-        
+
         cpos = self.get_uncalibrated_xy()
         self.linear_move_history.append((cpos, {}))
 
@@ -249,7 +251,7 @@ class StageManager(Manager):
     def move_to_point(self, pt):
         if self.point_thread is not None:
             self.stage_controller.stop()
-        
+
         self.point_thread = Thread(name='stage.move_to_point',
                                       target=self._move_to_point, args=(pt,))
         self.point_thread.start()
@@ -498,9 +500,9 @@ class StageManager(Manager):
 #===============================================================================
 # Views
 #===============================================================================
-    def edit_traits(self, *args, **kw):
-        self.initialize_stage()
-        return super(StageManager, self).edit_traits(*args, **kw)
+#    def edit_traits(self, *args, **kw):
+#        self.initialize_stage()
+#        return super(StageManager, self).edit_traits(*args, **kw)
 
 
     def traits_view(self):
@@ -509,7 +511,6 @@ class StageManager(Manager):
         self.initialize_stage()
 
         editor = self._canvas_editor_factory()
-
         canvas_group = VGroup(
                             # Item('test'),
                              HGroup(Item('stage_map', show_label=False,
@@ -681,12 +682,12 @@ class StageManager(Manager):
             return
 
         v = str(v)
-            
+
         if self.hole_thread is not None:
             self.stage_controller.stop()
 
 #        if self.hole_thread is None:
-        
+
         pos = self._stage_map.get_hole_pos(v)
         if pos is not None:
             self.visualizer.set_current_hole(v)

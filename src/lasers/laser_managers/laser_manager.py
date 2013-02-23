@@ -36,6 +36,7 @@ from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.led.led_editor import LEDEditor
+from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 
 class ILaserManager(IExtractionDevice):
     def trace_path(self, *args, **kw):
@@ -51,13 +52,13 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
-    
+
     def enable_device(self):
         self.enable_laser()
-        
+
     def disable_device(self):
         self.disable_laser()
-        
+
     def enable_laser(self):
         pass
     def disable_laser(self):
@@ -140,6 +141,7 @@ class LaserManager(BaseLaserManager):
     stage_manager = Instance(StageManager)
 #    pattern_executor = Instance(PatternExecutor)
     power_calibration_manager = Instance(PowerCalibrationManager)
+    laser_script_executor = Instance(LaserScriptExecutor)
 
     #use_video = Bool(False)
     record_lasing_video = Bool(False)
@@ -542,6 +544,9 @@ class LaserManager(BaseLaserManager):
                                        application=self.application
                                        )
 
+    def _laser_script_executor_default(self):
+        return LaserScriptExecutor(laser_manager=self,
+                                   name=self.name)
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('calib')

@@ -14,12 +14,17 @@
 # limitations under the License.
 #===============================================================================
 from traits.api import HasTraits, Any, Event, Property, Bool, Enum
+from traitsui.api import View, Item, ButtonEditor
 import yaml
 import time
 from threading import Thread
 from src.loggable import Loggable
 import os
 from src.paths import paths
+from src.helpers.filetools import unique_path
+from pyface.timer.do_later import do_later
+from src.graph.graph import Graph
+from src.graph.stream_graph import StreamStackedGraph
 
 class LaserScriptExecutor(Loggable):
     laser_manager = Any
@@ -27,17 +32,12 @@ class LaserScriptExecutor(Loggable):
     _cancel = False
     execute_button = Event
     execute_label = Property(depends_on='_executing')
-    names = Enum('mask', 'z', 'attenuator', 'burst')
 
     def _get_execute_label(self):
         return 'Stop' if self._executing else 'Execute'
 
     def _execute_button_fired(self):
-        n = self.names
-        if n is None:
-            n = 'mask'
-
-        name = os.path.join(paths.scripts_dir, 'uv_matrix_{}.yaml'.format(n))
+        name = os.path.join(paths.scripts_dir, '{}_scan.yaml'.format(self.name))
         self.execute(name)
 
     def execute(self, name):
@@ -49,7 +49,89 @@ class LaserScriptExecutor(Loggable):
             self._executing = True
             t = Thread(target=self._execute, args=(name,))
             t.start()
+
+    def _execute(self, name):
+
+
+        import csv
+        d = os.path.join(paths.data_dir, 'diode_scans')
+        p, _cnt = unique_path(d, 'scan', extension='csv')
+        st = None
+
+        py = self.laser_manager.pyrometer
+        tc = self.laser_manager.get_device('temperature_monitor')
+        yd = yaml.load(open(name).read())
+
+        power = yd['power']
+        duration = yd['duration']
+        power_on = yd['power_on']
+        power_off = yd['power_off']
+        period = yd['period']
+
+        g = StreamStackedGraph()
+        g.new_plot(scan_delay=1, data_limit=duration)
+        g.new_series(x=[], y=[])
+        g.new_plot(scan_delay=1, data_limit=duration)
+        g.new_series(x=[], y=[], plotid=1)
+
+        self.laser_manager.open_view(g)
+
+        time.sleep(1)
+        def gfunc(t, v1, v2):
+            g.add_datum((t, v1))
+            g.add_datum((t, v2), plotid=1)
+
+        pi = 0
+        with open(p, 'w') as fp:
+            writer = csv.writer(fp)
+            t = 0
+            ti = 0
+            while t < duration:
+                if self._cancel:
+                    break
+
+                if ti == power_on:
+                    #turn on set laser to power
+                    self.laser_manager.set_laser_power(power)
+                    pi = power
+                elif ti >= power_off and pi:
+                    self.laser_manager.set_laser_power(0)
+                    pi = 0
+
+                if st is None:
+                    st = time.time()
+
+                t = time.time() - st
+
+                py_t = py.read_temperature()
+                tc_t = tc.read_temperature()
+                do_later(gfunc, t, py_t, tc_t)
+#                do_later(g.add_datum((t, py_t, tc_t)))
+                writer.writerow((ti, pi, t, py_t, tc_t))
+                ti += 1
+
+                time.sleep(period)
+
+        if self._cancel:
+            self.laser_manager.set_laser_power(0)
+
+        self._executing = False
+
 #        self._execute(name)
+    def traits_view(self):
+        v = View(Item('execute_button', show_label=False,
+                       editor=ButtonEditor(label_value='execute_label')))
+        return v
+
+class UVLaserScriptExecutor(LaserScriptExecutor):
+    names = Enum('mask', 'z', 'attenuator', 'burst')
+    def _execute_button_fired(self):
+        n = self.names
+        if n is None:
+            n = 'mask'
+
+        name = os.path.join(paths.scripts_dir, 'uv_matrix_{}.yaml'.format(n))
+        self.execute(name)
 
     def _execute(self, name):
         self.info('starting LaserScript {}'.format(name))
@@ -71,22 +153,22 @@ class LaserScriptExecutor(Loggable):
                     sm.set_z(p, block=True)
                     shot()
             elif device == 'laser':
-                if self.names=='trench':
+                if self.names == 'trench':
                     atl.set_burst_mode(False)
                 else:
                     atl.set_burst_mode(True)
-                
+
                 def iteration(p):
-                    if self.names=='trench':
-                        if p==0:
+                    if self.names == 'trench':
+                        if p == 0:
                             atl.laser_run()
                         else:
                             atl.laser_stop()
-                        
+
                     else:
-                        if self.names=='burst':
+                        if self.names == 'burst':
                             atl.set_nburst(p, save=False)
-                      
+
                         shot()
             else:
                 motor = lm.get_motor(device)
@@ -132,15 +214,15 @@ class LaserScriptExecutor(Loggable):
                     else:
                         if dp < me:
                             break
-                        
-                    x,y=sx+c*xstep, sy+r*ystep
-                    
+
+                    x, y = sx + c * xstep, sy + r * ystep
+
                     #move at normal speed to first pos
-                    if r==0 and c==0:
-                        sm.linear_move(x,y,block=True)
+                    if r == 0 and c == 0:
+                        sm.linear_move(x, y, block=True)
                     else:
-                        sm.linear_move(x,y, velocity=v,block=True)
-                                                
+                        sm.linear_move(x, y, velocity=v, block=True)
+
                     if self._cancel:
                         break
 
