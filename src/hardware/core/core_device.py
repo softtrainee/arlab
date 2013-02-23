@@ -90,8 +90,8 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
     use_db = Bool(False)
     _auto_started = False
 
-    _scheduler_name=None
-    
+    _scheduler_name = None
+
     def _communicate_hook(self, cmd, r):
         self.last_command = cmd
         self.last_response = r if r else ''
@@ -107,8 +107,8 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
                 comtype = self.config_get(config, 'Communications', 'type')
                 if not self._load_communicator(config, comtype):
                     return False
-                
-                self.set_attribute(config, 'scheduler', 'Communications', '_scheduler_name')
+
+                self.set_attribute(config, '_scheduler_name', 'Communications', 'scheduler', optional=True)
 
             self._load_hook(config)
 
@@ -180,7 +180,7 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
         self.setup_scan()
         self.setup_alarms()
         self.setup_scheduler()
-    
+
     def get_random_value(self, mi=0, ma=10):
         '''
             convienent method for getting a random integer between min and max
@@ -191,19 +191,19 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
 
         '''
         return random.randint(mi, ma)
-    
+
     def setup_scheduler(self, name=None):
-        
+
         if self.application:
             if name is None:
-                name=self._scheduler_name
+                name = self._scheduler_name
             if name is not None:
-                sc=self.application.get_service(CommunicationScheduler, 'name=="{}"'.format(name))
+                sc = self.application.get_service(CommunicationScheduler, 'name=="{}"'.format(name))
                 if sc is None:
-                    sc=CommunicationScheduler(name=name)
+                    sc = CommunicationScheduler(name=name)
                     self.application.register_service(type(sc), sc)
                 self.set_scheduler(sc)
-                
+
     def set_scheduler(self, s):
         if self._communicator is not None:
             self._communicator.scheduler = s

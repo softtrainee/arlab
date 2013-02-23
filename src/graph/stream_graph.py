@@ -208,16 +208,18 @@ class StreamGraph(Graph):
                     if self.force_track_x_flag:
                         self.force_track_x_flag = False
                         ma = dl * sd
+
                     if not self.track_x_max:
                         ma = None
+                    else:
+                        ma = ma + pad
 
                     if not self.track_x_min:
                         mi = None
                     else:
                         mi = max(1, mi)
 
-
-                    self.set_x_limits(max=ma + pad,
+                    self.set_x_limits(max=ma,
                               min=mi,
                               plotid=plotid,
 #                              force=False

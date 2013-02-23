@@ -30,6 +30,7 @@ from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
 from src.envisage.core.action_helper import MANAGERS
 from src.saveable import SaveableHandler
+from src.hardware.core.i_core_device import ICoreDevice
 
 class MassSpecParam(object):
     _value = None
@@ -257,6 +258,9 @@ class Manager(Viewable, RPCable):
                 if hasattr(man, device_name):
                     dev = getattr(man, device_name)
                     break
+
+            if self.application:
+                dev = self.application.get_service(ICoreDevice, 'name=="{}"'.format(device_name))
 
             if dev is None:
                 self.warning('Invalid device {}'.format(device_name))

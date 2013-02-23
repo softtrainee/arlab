@@ -148,10 +148,10 @@ class LaserTrayCanvas(MapCanvas):
         po = LineOverlay(component=self)
         self.overlays.append(po)
 
-    def point_exists(self,xy=None, tol=1e-5):
+    def point_exists(self, xy=None, tol=1e-5):
         if xy is None:
-            xy=self._stage_position
-        x,y=xy
+            xy = self._stage_position
+        x, y = xy
         for p in self.points:
 #        for p in self.markupcontainer.itervalues():
 #            if isinstance(p, PointIndicator):
@@ -367,6 +367,8 @@ class LaserTrayCanvas(MapCanvas):
 #            if not event.handled:
 #                MapCanvas.normal_mouse_move(self, event)
 #        else:
+
+        print self.valid_position(event.x, event.y)
         if self.valid_position(event.x, event.y):
             event.window.set_pointer(self.cross_pointer)
         else:
