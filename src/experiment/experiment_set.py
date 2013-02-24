@@ -482,7 +482,10 @@ tray: {}
             ar.post_measurement_script_dirty = True
             ar.post_equilibration_script_dirty = True
 
-            ars.append(ar)
+            if ar.executable:
+                ars.append(ar)
+            else:
+                return
 
         kw = dict()
         if self.auto_increment:

@@ -55,10 +55,11 @@ def KlassError(Exceotion):
 
 
 class PyscriptError(Exception):
-    def __init__(self, err):
+    def __init__(self, name, err):
+        self.name = name
         self.err = err
     def __str__(self):
-        return 'Pyscript error: {}'.format(self.err)
+        return 'Pyscript error in {}: {}'.format(self.name, self.err)
 
 
 class IntervalError(Exception):
@@ -192,6 +193,7 @@ class PyScript(Loggable):
         old = self.toblob()
         with open(self.filename, 'r') as f:
             new = f.read()
+
         return old != new
 
     def toblob(self):
@@ -346,7 +348,7 @@ class PyScript(Loggable):
                 s.bootstrap()
                 err = s.test()
                 if err:
-                    raise PyscriptError(err)
+                    raise PyscriptError(self.name, err)
         else:
             if not self._cancel:
                 self.info('doing GOSUB')
@@ -462,7 +464,7 @@ class PyScript(Loggable):
                 self._execute()
                 if finished_callback:
                     finished_callback()
-            
+
             return self._completed
 
         if new_thread:
@@ -479,8 +481,9 @@ class PyScript(Loggable):
 
         if r is not None:
             self.info('invalid syntax')
-            self.warning_dialog(str(r))
-            raise PyscriptError(r)
+            ee = PyscriptError(self.filename, r)
+#            self.warning_dialog(str(ee))
+            raise ee
 #            report the traceback
 #            self.info(r)
 
@@ -499,13 +502,13 @@ class PyScript(Loggable):
             code = compile(snippet, '<string>', 'exec')
             exec code in safe_dict
             safe_dict['main']()
-        except KeyError,e:
+        except KeyError, e:
             print e
             print '#============'
-            
+
             for di in safe_dict.keys():
                 print di
-                
+
             return MainError()
 
         except Exception, e:
