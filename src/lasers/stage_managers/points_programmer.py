@@ -7,8 +7,12 @@ from src.loggable import Loggable
 import yaml
 from src.managers.manager import Manager
 
-
+'''
+    add transect programming. define two end points, define step distance. 
+    save each step as a point
+'''
 class PointsProgrammer(Manager):
+
     canvas = Any
     program_points = Event
     is_programming = Bool
@@ -22,9 +26,8 @@ class PointsProgrammer(Manager):
                     'current point', 'last point'
                     )
     accept_point = Button
-    points = List
     stage_map_klass = Any
-    mode = Enum('point', 'line')
+    mode = Enum('transect', 'point', 'line')
 
     point_color = Color('green')
 
@@ -33,6 +36,7 @@ class PointsProgrammer(Manager):
     point = Any
     line_entry = Property(Int(enter_set=True, auto_set=False))
     line = Any
+    transect_step = Float(1, enter_set=True, auto_set=False)
 
     def _set_line_entry(self, v):
         pts = self.canvas.lines
@@ -57,6 +61,12 @@ class PointsProgrammer(Manager):
         if self.point:
             p = self.point.identifier
         return p
+#===============================================================================
+# handlers
+#===============================================================================
+    def _transect_step_changed(self):
+        if self.transect_step:
+            self.canvas.set_transect_step(self.transect_step)
 
     def _clear_fired(self):
         cm = self.clear_mode
@@ -67,8 +77,7 @@ class PointsProgrammer(Manager):
                 self.canvas.points.pop(-1)
         elif cm.startswith('all'):
             if cm == 'all':
-                self.canvas.lines = []
-                self.canvas.points = []
+                self.canvas.clear_all()
             elif cm == 'all lines':
                 self.canvas.lines = []
             else:
@@ -116,6 +125,12 @@ class PointsProgrammer(Manager):
                                            line_color=self.point_color,
                                            velocity=self.trace_velocity,
                                            **ptargs)
+            if self.mode == 'transect':
+                self.canvas.new_transect_point(point_color=self.point_color,
+                                               line_color=self.point_color,
+                                               step=self.transect_step,
+                                               **ptargs
+                                               )
             else:
                 npt = self.canvas.new_point(default_color=self.point_color,
                                             **ptargs)
@@ -216,7 +231,7 @@ class PointsProgrammer(Manager):
         return 'Hide' if self.is_programming else 'Show'
 
     def _mode_default(self):
-        return 'point'
+        return 'transect'#'point'
 
     def _clear_mode_default(self):
         return 'all'
@@ -230,6 +245,7 @@ class PointsProgrammer(Manager):
 
                              Item('mode'),
                              Item('trace_velocity'),
+                             Item('transect_step'),
                              Item('point_color', show_label=False),
                              Item('program_points', show_label=False,
                                   editor=ButtonEditor(label_value='program_points_label')),

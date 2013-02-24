@@ -43,7 +43,7 @@ class MapCanvas(MarkupCanvas):
     use_valid_holes = Bool(True)
     show_indicators = Bool(True)
 
-    scaling = Float(1.0)
+    scaling = Float(10.0)
 
 
 #    def normal_key_pressed(self, event):

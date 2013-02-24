@@ -27,6 +27,8 @@ from chaco.axis import PlotAxis
 from chaco.plot_factory import create_line_plot, add_default_axes
 from src.graph.guide_overlay import GuideOverlay
 
+powerlaw = lambda pp, x: pp[0] * x ** pp[1]
+
 class Index(HasTraits):
     name = Str
     start = Float(0)
@@ -35,8 +37,31 @@ class Index(HasTraits):
     def calculate(self, age, sensitivity, k2o):
         c = ArArConstants()
         xs = np.linspace(self.start, self.end)
-        ys = [self._calculate(wi, age, sensitivity, k2o, c) for wi in xs]
-        return xs, ys, xs
+        ys = np.array([self._calculate(wi, age, sensitivity, k2o, c) for wi in xs])
+
+
+#        nxs = np.linspace(max(1e-2, 0), self.end)
+#        n40 = np.linspace(max(1, ys[0]), ys[-1])
+        n40 = ys[:]
+        if ys[0] == 0:
+            n40 = n40[1:]
+
+        r4039 = 7.78
+        n39 = n40 / r4039
+#        nys = ys[:]
+#        print nys
+#            nys = np.hstack(([1], nys[1:]))
+#        print nys
+        p = (0.0021435788651550671, -0.48505328994128016)
+        e40_scalar = 3
+        e39 = powerlaw(p, n39)
+        e40 = powerlaw(p, n40) * e40_scalar
+
+        es = (e39 ** 2 + e40 ** 2) ** 0.5
+        es = age * 1e3 * es
+#        es = 0.2 * nys ** (-0.5)
+
+        return xs, ys, es, n40
 
     def _calculate(self, w, age, sensitivity, k2o, c):
         moles_40k = w / 1000. *k2o / 100. * 1 / c.mK * (2 * c.mK) / (2 * c.mK + c.mO) * c.abundance_40K
@@ -90,7 +115,7 @@ class VolumeIndex(Index):
         ws = [to_weight(di, self.depth, self.rho) for di in xs]
 
         ys = [self._calculate(wi, age, sensitivity, k2o, c) for wi in ws]
-        return xs, ys, ws
+        return xs, ys, xs, ws
 
     def _shape_default(self):
         return 'circle'
@@ -125,13 +150,13 @@ class SignalCalculator(HasTraits):
             self.graph.set_x_title('dimension (mm)')
             attr = self.volume_index
 
-        xs, ys, yy = attr.calculate(self.age, self.sensitivity, self.k2o)
+        xs, ys, xx, yy = attr.calculate(self.age, self.sensitivity, self.k2o)
         self.graph.set_data(xs)
         self.graph.set_data(ys, axis=1)
-        self.graph.redraw()
 
+        self.secondary_plot.index.set_data(xx)
         self.secondary_plot.value.set_data(yy)
-        self.secondary_plot.index.set_data(xs)
+        self.graph.redraw()
 
     def traits_view(self):
         cntrl_grp = VGroup(
@@ -161,22 +186,34 @@ class SignalCalculator(HasTraits):
 
     def _graph_default(self):
         g = Graph(container_dict=dict(padding=5))
-        g.new_plot(xtitle='weight (mg)', ytitle='Signal (fA)',
-                   padding=[60, 60, 10, 60]
+        g.new_plot(xtitle='weight (mg)', ytitle='40Ar* (fA)',
+#                   padding=[60, 60, 60, 60]
+                   padding=60
                    )
 
         g.new_series()
 
-        fp = create_line_plot(([], []), color='black')
+        fp = create_line_plot(([], []), color='red')
         left, bottom = add_default_axes(fp)
         bottom.visible = False
         left.orientation = 'right'
         left.axis_line_visible = False
+        bottom.axis_line_visible = False
+        left.visible = False
 
-        left.title = 'Weight (mg)'
         if self.kind == 'weight':
-            fp.visible = False
-
+            bottom.visible = True
+            bottom.orientation = 'top'
+            bottom.title = 'Error (ka)'
+            bottom.tick_color = 'red'
+            bottom.tick_label_color = 'red'
+            bottom.line_color = 'red'
+            bottom.title_color = 'red'
+        else:
+            left.title = 'Weight (mg)'
+#        fp.visible = False
+#        gd = GuideOverlay(fp, value=0.01, orientation='v')
+#        fp.overlays.append(gd)
         g.plots[0].add(fp)
         self.secondary_plot = fp
 
