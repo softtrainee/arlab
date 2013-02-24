@@ -25,9 +25,10 @@ import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
 from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
-    VelocityPolyLine
+    VelocityPolyLine, Transect
 
 from kiva import constants
+from src.lasers.geometry import calc_point_along_line
 
 #class Point(HasTraits):
 #    x=Float
@@ -105,7 +106,9 @@ class LaserTrayCanvas(MapCanvas):
 #    _jog_moving = False
     show_bounds_rect = Bool(True)
     points = List
-    new_line = True
+    transects = List
+    _new_line = True
+    _new_transect = True
     lines = List
 
     def __init__(self, *args, **kw):
@@ -129,6 +132,12 @@ class LaserTrayCanvas(MapCanvas):
             self.overlays.remove(bo)
 
         self.request_redraw()
+
+    def clear_all(self):
+        self.lines = []
+        self.points = []
+        self._new_line = True
+        self._new_transect = True
 
     def remove_point_overlay(self):
         for o in self.overlays[:]:
@@ -159,11 +168,74 @@ class LaserTrayCanvas(MapCanvas):
                 #point already in the markup dict
                 return p
 
+    def set_transect_step(self, step):
+        transect = self.transects[-1]
+        for pi in transect.points:
+            self.points.remove(pi)
+
+        transect.points = []
+        self._set_transect_points(transect, step,
+#                                  line_color=pi.line_color,
+#                                  point_color=pi.point_color,
+                                  hline_length=pi.hline_length,
+                                  vline_length=pi.vline_length,
+                                  radius=pi.radius
+                                  )
+        self.request_redraw()
+
+
+    def new_transect_point(self, xy=None, step=1, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
+        if xy is None:
+            xy = self._stage_position
+
+        if self._new_transect:
+            self._new_transect = False
+#            kw['identifier'] = str(len(self.lines) + 1)
+#            kw['canvas'] = self
+            transect = Transect(xy,
+                                identifier=str(len(self.lines) + 1),
+                                canvas=self,
+                                default_color=point_color,
+                                step=step,)
+
+            self.transects.append(transect)
+        else:
+            tran = self.transects[-1]
+            tran.set_endpoint(xy)
+            self._set_transect_points(tran, step, **ptargs)
+
+    def _set_transect_points(self, tran, step, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
+        p1 = tran.start_point
+        p2 = tran.end_point
+
+        x, y = p1.x, p1.y
+        p = self.new_point((x, y), **ptargs)
+        tran.points.append(p)
+        tol = 0.1
+        while 1:
+            x, y = calc_point_along_line(x, y, p2.x, p2.y, step)
+            if abs(p2.x - x) < tol and abs(p2.y - y) < tol:
+                ptargs['use_border'] = True
+                p = self.new_point((x, y), **ptargs)
+                tran.points.append(p)
+                break
+            else:
+                ptargs['use_border'] = False
+                p = self.new_point((x, y),
+                               line_color=line_color, point_color=point_color,
+                               **ptargs)
+                tran.points.append(p)
+
+#            line.add_point(*xy,
+#                           line_color=line_color,
+#                           point_color=point_color)
+
+
     def new_line_point(self, xy=None, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
         if xy is None:
             xy = self._stage_position
 
-        if self.new_line:
+        if self._new_line:
             kw['identifier'] = str(len(self.lines) + 1)
             kw['canvas'] = self
 
@@ -171,7 +243,7 @@ class LaserTrayCanvas(MapCanvas):
                           default_color=point_color,
                           **kw
                           )
-            self.new_line = False
+            self._new_line = False
 
             self.lines.append(line)
         else:

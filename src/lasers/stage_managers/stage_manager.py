@@ -868,7 +868,7 @@ class StageManager(Manager):
 
         w = 640 * canvas.scaling / 10.0
         h = w * 0.75
-
+        print w, h
         return self.canvas_editor_klass(width=w + canvas.padding_left + canvas.padding_right,
                                           height=h + canvas.padding_top + canvas.padding_bottom
 

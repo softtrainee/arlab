@@ -23,21 +23,19 @@ from traitsui.api import View, Item, Group, HGroup, VGroup, Label, \
     EnumEditor, spring, ButtonEditor
 
 #============= standard library imports ========================
+import time
+
+#============= local library imports  ==========================
 from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_uv_logic_board import FusionsUVLogicBoard
 from src.hardware.fusions.atl_laser_control_unit import ATLLaserControlUnit
-from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
+#from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
 from src.monitors.fusions_uv_laser_monitor import FusionsUVLaserMonitor
-from src.machine_vision.mosaic_manager import MosaicManager
+#from src.machine_vision.mosaic_manager import MosaicManager
 from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 from src.lasers.stage_managers.stage_map import UVStageMap
-import time
-#from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
-import os
-from src.paths import paths
 from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
-
-#============= local library imports  ==========================
+from src.lasers.geometry import calc_point_along_line
 
 class FusionsUVManager(FusionsLaserManager):
     '''
@@ -169,7 +167,7 @@ class FusionsUVManager(FusionsLaserManager):
             x2, y2 = pi.x, pi.y
             #step along line until cp >=pi
             while not self._cancel_tracing:
-                x1, y1 = self._calc_point_along_line(x1, y1, x2, y2, L)
+                x1, y1 = calc_point_along_line(x1, y1, x2, y2, L)
                 step_func(x1, y1)
 
                 if abs(pi.x - x1) < tol and abs(pi.y - y1) < tol:
@@ -220,53 +218,6 @@ class FusionsUVManager(FusionsLaserManager):
 #===============================================================================
 # private
 #===============================================================================
-    def _calc_point_along_line(self, x1, y1, x2, y2, L):
-        '''
-            calculate pt (x,y) that is L units from x1, x2
-            
-            if calculated pt is past endpoint use endpoint
-            
-            
-                        * x2,y2
-                      /  
-                    /
-              L--- * x,y
-              |  /
-              *
-            x1,y1
-            
-            L**2=(x-x1)**2+(y-y1)**2
-            y=m*x+b
-            
-            0=(x-x1)**2+(m*x+b-y1)**2-L**2
-            
-            solve for x
-        '''
-        run = (x2 - x1)
-
-        if run:
-            from scipy.optimize import fsolve
-            m = (y2 - y1) / float(run)
-            b = y2 - m * x2
-            f = lambda x: (x - x1) ** 2 + (m * x + b - y1) ** 2 - L ** 2
-
-            #initial guess x 1/2 between x1 and x2
-            x = fsolve(f, x1 + (x2 - x1) / 2.)[0]
-            y = m * x + b
-
-        else:
-            x = x1
-            if y2 > y1:
-                y = y1 + L
-            else:
-                y = y1 - L
-
-        lx, hx = min(x1, x2), max(x1, x2)
-        ly, hy = min(y1, y2), max(y1, y2)
-        if  not lx <= x <= hx or not ly <= y <= hy:
-            x, y = x2, y2
-
-        return x, y
     def _enable_hook(self):
         resp = self.laser_controller._enable_laser()
         if self.laser_controller.simulation:

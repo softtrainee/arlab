@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List
+from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
 #============= standard library imports ========================
@@ -368,17 +368,22 @@ class Line(MarkupItem):
     screen_rotation = Float
     data_rotation = Float
     width = 1
-    def __init__(self, p1, p2, *args, **kw):
+    def __init__(self, p1=None, p2=None, *args, **kw):
 
-        if isinstance(p1, tuple):
-            p1 = Point(*p1, **kw)
-        if isinstance(p2, tuple):
-            p2 = Point(*p2, **kw)
-
-        self.start_point = p1
-        self.end_point = p2
+        self.set_startpoint(p1, **kw)
+        self.set_endpoint(p2, **kw)
 
         super(Line, self).__init__(0, 0, *args, **kw)
+
+    def set_endpoint(self, p1, **kw):
+        if isinstance(p1, tuple):
+            p1 = Point(*p1, **kw)
+        self.end_point = p1
+
+    def set_startpoint(self, p1, **kw):
+        if isinstance(p1, tuple):
+            p1 = Point(*p1, **kw)
+        self.start_point = p1
 
     def set_canvas(self, canvas):
         super(Line, self).set_canvas(canvas)
@@ -573,14 +578,15 @@ class Label(MarkupItem):
     use_border = True
 
     def _render_(self, gc):
-        x, y = self.get_xy()
-
+        ox, oy = self.get_xy()
+        loffset = 3
+        x, y = ox + loffset, oy + loffset
         if self.use_border:
             gc.set_line_width(2)
             offset = 5
-            w = gc.get_full_text_extent(self.text)[0] + 2 * offset
+            w = gc.get_full_text_extent(self.text)[0] + 2 * offset + loffset
             gc.set_stroke_color((0, 0, 0))
-            gc.rect(x - offset, y - offset, w, 18)
+            gc.rect(ox - offset, oy - offset, w, 18 + loffset)
             gc.stroke_path()
 
         gc.set_fill_color((0, 0, 0))
@@ -588,8 +594,8 @@ class Label(MarkupItem):
         gc.show_text(self.text)
 
 class Indicator(MarkupItem):
-    hline_length=0.5
-    vline_length=0.5
+    hline_length = 0.5
+    vline_length = 0.5
     def __init__(self, x, y, *args, **kw):
         super(Indicator, self).__init__(x, y, *args, **kw)
         w = self.hline_length
@@ -666,32 +672,36 @@ class Dot(MarkupItem):
         gc.fill_path()
 
 class PolyLine(MarkupItem):
-    points=List
-    lines=List
-    identifier=Str
+    points = List
+    lines = List
+    identifier = Str
 #    start_point=None
-    def __init__(self,x,y, identifier='',**kw):
-        super(PolyLine,self).__init__(x,y, **kw)
+    def __init__(self, x, y, identifier='', **kw):
+        super(PolyLine, self).__init__(x, y, **kw)
 #        self.start_point=PointIndicator(x,y, **kw)
-        self.identifier=identifier
-        self.points.append(PointIndicator(x,y,identifier=identifier,**kw))
-        
-    def add_point(self,x,y, point_color=(1,0,0), line_color=(1,0,0)):
-        p2=Dot(x,y, canvas=self.canvas, default_color=point_color)
-        
-        p1=self.points[-1]        
-        self.lines.append(Line(p1,p2,default_color=line_color))
+        self.identifier = identifier
+        self.points.append(PointIndicator(x, y, identifier=identifier, **kw))
+
+    def add_point(self, x, y, point_color=(1, 0, 0), line_color=(1, 0, 0)):
+        p2 = Dot(x, y, canvas=self.canvas, default_color=point_color)
+
+        p1 = self.points[-1]
+        self.lines.append(Line(p1, p2, default_color=line_color))
         self.points.append(p2)
-        
-    def _render_(self,gc):
+
+    def _render_(self, gc):
 #        self.start_point.render(gc)
         for pt in self.points:
             pt.render(gc)
-            
+
         for l in self.lines:
             l.render(gc)
-            
+
 class VelocityPolyLine(PolyLine):
-    velocity_segments=List
-    
+    velocity_segments = List
+
+class Transect(Line):
+    step = Float
+    points = List
+
 #============= EOF ====================================
