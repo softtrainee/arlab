@@ -1573,11 +1573,11 @@ anaylsis_type={}
 
         if fname in self.scripts:
             s = self.scripts[fname]
+#            print fname, s.check_for_modifications()
             if s.check_for_modifications():
-                self.info('script {} modified reloading'.format(fname))
+#                self.info('script {} modified reloading'.format(fname))
                 s = self._bootstrap_script(fname, name, ec)
-                if s:
-                    self.scripts[fname] = s
+                self.scripts[fname] = s
             else:
                 s = s.clone_traits()
                 s.automated_run = self
@@ -1599,20 +1599,23 @@ anaylsis_type={}
         self.info('loading script "{}"'.format(fname))
         func = getattr(self, '{}_script_factory'.format(name))
         s = func(ec)
+        self._executable = True
         if s and os.path.isfile(s.filename):
             if s.bootstrap():
                 try:
                     s.test()
                     setattr(self, '_{}_script'.format(name), s)
+
                 except Exception, e:
                     self.warning(e)
-                    self.warning_dialog('Invalid Scripta {}'.format(s.filename if s else 'None'))
+                    self.warning_dialog('Invalid Scripta {}'.format(e))
                     self._executable = False
                     setattr(self, '_{}_script'.format(name), None)
-            return s
         else:
             self._executable = False
             self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
+
+        return s
 
     def measurement_script_factory(self, ec):
         ec = self.configuration
@@ -1936,27 +1939,30 @@ anaylsis_type={}
         pass
 
     def simple_view(self):
-        ext_grp = VGroup(HGroup(Spring(springy=False, width=33),
+        ext_grp = VGroup(
+#                         HGroup(Spring(springy=False, width=33),
                          HGroup(Item('labnumber', style='readonly'),
                                 Item('aliquot'),
                                 Item('step')
                                 ),
-                         Item('extract_value', label='Extract'),
-                            spring,
-                            Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-                                 show_label=False),
-                            ),
+                         HGroup(
+                                Item('extract_value', label='Extract'),
+                                spring,
+                                Item('extract_units', editor=EnumEditor(name='extract_units_names'),
+                                     show_label=False)
+                                ),
                          Item('ramp_rate', label='Ramp Rate (C/s)'),
                          Item('duration', label='Duration'),
-
+                         label='Extract'
                          )
 
-        extra_grp = self._get_extra_group()
         pos_grp = self._get_position_group()
-        grp = VGroup(ext_grp,
-                        pos_grp,
-                        enabled_when='not skip'
-                        )
+        grp = Group(ext_grp,
+                     pos_grp,
+                     layout='tabbed',
+                     enabled_when='not skip'
+                     )
+        extra_grp = self._get_supplemental_extract_group()
         if extra_grp:
             grp.content.append(extra_grp)
 
