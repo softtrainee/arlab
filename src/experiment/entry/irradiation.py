@@ -130,15 +130,15 @@ class Irradiation(Saveable):
             chronblob = self._make_chronblob()
             if chronblob:
                 cr = db.add_irradiation_chronology(chronblob)
-
-            ir = db.add_irradiation(self.name, prn, cr)
+                ir = db.add_irradiation(self.name, prn, cr)
+                db.commit()
+                return True
 
 #            holder = db.get_irradiation_holder(self.holder)
 #            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
 #            for ni in alpha:
 #                db.add_irradiation_level(ni, ir, holder)
 
-            db.commit()
 #    def save(self):
 #
 #        db = self.db

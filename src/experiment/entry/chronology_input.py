@@ -19,6 +19,7 @@ from traits.api import HasTraits, Instance, Date, Time, List, Button
 from traitsui.api import View, Item, HGroup, VGroup, spring, Label
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.helpers.traitsui_shortcuts import listeditor
+from datetime import datetime
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Dosage(HasTraits):
@@ -26,6 +27,18 @@ class Dosage(HasTraits):
     enddate = Date
     starttime = Time
     endtime = Time
+    def _startdate_default(self):
+        return datetime.now().date()
+
+    def _starttime_default(self):
+        return datetime.now().time()
+
+    def _enddate_default(self):
+        return datetime.now().date()
+
+    def _endtime_default(self):
+        return datetime.now().time()
+
     def validate_dosage(self, prev_dose):
         if self.startdate is None:
             return 'Start date not set'

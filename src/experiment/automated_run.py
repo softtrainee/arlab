@@ -1885,6 +1885,7 @@ anaylsis_type={}
             self._state = s
 
     def _set_step(self, v):
+        v = v.upper()
         if v in ALPHAS:
             self._step = list(ALPHAS).index(v) + 1
 

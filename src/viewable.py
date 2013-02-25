@@ -43,6 +43,7 @@ class ViewableHandler(Handler):
 
 class Viewable(Loggable):
     ui = Any
+    id = None
     handler_klass = ViewableHandler
 
     window_x = Either(Int, Float)
@@ -92,8 +93,14 @@ class Viewable(Loggable):
             kw['height'] = self.window_height
 
         if not 'resizable' in kw:
-            kw['resizable']=True
-    
+            kw['resizable'] = True
+
+        if not 'title' in kw:
+            kw['title'] = self.title
+
+        if not 'id' in kw:
+            kw['id'] = self.id
+
         return View(
                     handler=self.handler_klass,
 #                    x=self.window_x,
@@ -105,7 +112,7 @@ class Viewable(Loggable):
                     *args,
                     **kw
                     )
-        
+
     def _window_width_default(self):
         return 500
 
@@ -113,9 +120,9 @@ class Viewable(Loggable):
         return 500
     def _window_x_default(self):
         return 0.5
-    
+
     def _window_y_default(self):
         return 0.5
-    
+
 
 #============= EOF =============================================

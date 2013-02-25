@@ -33,6 +33,7 @@ from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
 from pyface.timer.do_later import do_later
 from src.helpers.alphas import ALPHAS
+from src.saveable import Saveable
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -48,7 +49,7 @@ class ExperimentManagerHandler(SaveableManagerHandler):
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
-class ExperimentManager(Manager):
+class ExperimentManager(Manager, Saveable):
     handler_klass = ExperimentManagerHandler
     experiment_set = Instance(ExperimentSet)
     set_selector = Instance(SetSelector)
@@ -152,6 +153,40 @@ class ExperimentManager(Manager):
             with open(path, 'r') as f:
                 diskhash = hashlib.sha1(f.read()).hexdigest()
             return self._experiment_hash != diskhash
+
+    def save(self):
+        self.save_experiment_sets()
+
+    def save_as(self):
+        self.save_as_experiment_sets()
+
+    def save_as_experiment_sets(self):
+        p = self.save_file_dialog(default_directory=paths.experiment_dir)
+        p = self._dump_experiment_sets(p)
+        self.save_enabled = True
+
+    def save_experiment_sets(self):
+        self._dump_experiment_sets(self.experiment_set.path)
+        self.save_enabled = False
+
+    def _dump_experiment_sets(self, p):
+
+        if not p:
+            return
+        if not p.endswith('.txt'):
+            p += '.txt'
+
+        self.info('saving experiment to {}'.format(p))
+        with open(p, 'wb') as fp:
+            n = len(self.experiment_sets)
+            for i, exp in enumerate(self.experiment_sets):
+                exp.path = p
+                exp.dump(fp)
+                if i < (n - 1):
+                    fp.write('\n')
+                    fp.write('*' * 80)
+
+        return p
 
     def start_file_listener(self, path):
         fl = FileListener(
