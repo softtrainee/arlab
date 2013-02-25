@@ -215,12 +215,14 @@ class LabnumberEntry(DBEntry):
         irrad = Irradiation(db=self.db,
                             trays=self.trays
                             )
-        info = irrad.edit_traits(kind='livemodal')
-        if info.result:
-            irrad.save_to_db()
-#            self._add_irradiation(irrad)
-            self.irradiation = irrad.name
-            self.saved = True
+        while 1:
+            info = irrad.edit_traits(kind='livemodal')
+            if info.result:
+                if irrad.save_to_db():
+    #            self._add_irradiation(irrad)
+                    self.irradiation = irrad.name
+                    self.saved = True
+                    break
 
     def _edit_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,

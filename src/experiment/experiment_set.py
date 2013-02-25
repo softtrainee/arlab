@@ -581,7 +581,7 @@ post_measurement_script, post_equilibration_script''')
 #                db.add_labnumber(labnumber, 1, commit=True)
 #                self._ok_to_add = True
             else:
-                self.warning_dialog('{} does not exist'.format(labnumber))
+                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _mass_spectrometer_changed(self):
         if self.automated_run is None:
@@ -719,7 +719,7 @@ post_measurement_script, post_equilibration_script''')
             if ln is None:
                 #check to see if we have already warned for this labnumber
                 if not labnumber in self._warned_labnumbers:
-                    self.warning_dialog('Invalid labnumber {}'.format(labnumber))
+                    self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
                     self._warned_labnumbers.append(labnumber)
                 a._executable = False
             else:

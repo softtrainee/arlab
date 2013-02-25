@@ -313,7 +313,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
         irn = irradiation.name if irradiation else None
         hn = holder.name if holder else None
-        self.info('adding level {} {} to {}'.format(name, hn, irn))
+        self.info('adding level {}, holder={} to {}'.format(name, hn, irn))
 
         level = irrad_LevelTable(name=name, z=z)
         if irradiation is not None:

@@ -66,10 +66,11 @@ class MassSpecExtractor(Extractor):
             dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
             skipped = False
 
+        dest.flush()
         #add all the levels and positions for this irradiation
         self._add_levels(dest, dbirrad, name)
 
-#        dest.commit()
+        dest.commit()
         return ImportName(name=name, skipped=skipped)
 
     def _add_levels(self, dest, dbirrad, name):
@@ -88,9 +89,9 @@ class MassSpecExtractor(Extractor):
                     dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
 
                     fh = dest.add_flux_history(dbpos)
-
+                    ln.selected_flux_history = fh
                     fl = dest.add_flux(ip.J, ip.JEr)
-                    fl.history = fh
+                    fh.flux = fl
 
                     dest.flush()
 

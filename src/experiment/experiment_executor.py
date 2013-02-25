@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, DelegatesTo, Any, on_trait_change
+    Instance, Str, DelegatesTo, Any, on_trait_change, String
 from traitsui.api import View, Item, HGroup, Group, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -84,6 +84,8 @@ class ExperimentExecutor(ExperimentManager):
     right_clicked = Event
     recall_run = Button
     edit_run = Button
+    save_button = Button('Save')
+    save_as_button = Button('Save As')
     edit_enabled = Property(depends_on='selected')
     recall_enabled = Property(depends_on='selected')
 
@@ -105,10 +107,12 @@ class ExperimentExecutor(ExperimentManager):
 
     new_run_gen_needed = False
 
+    statusbar = String
     def isAlive(self):
         return self._alive
 
     def info(self, msg, *args, **kw):
+        self.statusbar = msg
         super(ExperimentManager, self).info(msg, *args, **kw)
         if self.info_display:
             self.info_display.add_text(msg, color='yellow')
@@ -480,9 +484,9 @@ class ExperimentExecutor(ExperimentManager):
                 dbr = sel._record_factory(dbr)
                 dbr.load()
                 self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
-                                
+
                 self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
-                
+
                 return True
 
     def _has_preceeding_blank_or_background(self, exp):
@@ -555,7 +559,7 @@ class ExperimentExecutor(ExperimentManager):
 
         if not isAlive():
             return
-         
+
 #        #do_equilibration
 #        evt = arun.do_equilibration()
 #        if evt:
@@ -605,6 +609,7 @@ class ExperimentExecutor(ExperimentManager):
 
     def _edit_run(self):
         selected = self.selected
+        self.save_enabled = False
         if self.edit_enabled and selected:
             ae = AutomatedRunEditor(run=selected[-1])
             info = ae.edit_traits(kind='livemodal')
@@ -613,9 +618,14 @@ class ExperimentExecutor(ExperimentManager):
                 self._update_aliquots()
                 self.stats.calculate()
                 self.new_run_gen_needed = True
+                self.save_enabled = True
 #===============================================================================
 # handlers
 #===============================================================================
+    def _save_button_fired(self):
+        self.save()
+    def _save_as_button_fired(self):
+        self.save_as()
     def _experiment_set_changed(self):
         if self.experiment_set:
             nonfound = self._check_for_managers(self.experiment_set)
@@ -717,7 +727,11 @@ class ExperimentExecutor(ExperimentManager):
                       editor=editor
                       ),
                  HGroup(Item('recall_run', enabled_when='recall_enabled'),
-                        Item('edit_run', enabled_when='edit_enabled'), show_labels=False),
+                        Item('edit_run', enabled_when='edit_enabled'),
+                        Item('save_button', enabled_when='save_enabled'),
+                        Item('save_as_button'),
+                        show_labels=False),
+                 statusbar='statusbar',
                  width=1150,
                  height=750,
                  resizable=True,
@@ -768,7 +782,7 @@ class ExperimentExecutor(ExperimentManager):
         return s
 
     def _monitor_factory(self):
-        mon=None
+        mon = None
         if self.mode == 'client':
             ip = InitializationParser()
             exp = ip.get_plugin('Experiment', category='general')
@@ -787,7 +801,7 @@ class ExperimentExecutor(ExperimentManager):
                     port = int(port.text) #if port else 1061
                 if kind is not None:
                     kind = kind.text
-        
+
                 mon = RemoteAutomatedRunMonitor(host, port, kind, name=monitor.text.strip())
         else:
             mon = AutomatedRunMonitor()

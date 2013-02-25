@@ -25,14 +25,14 @@ from src.experiment.script_editable import ScriptEditable
 from src.constants import SCRIPT_KEYS
 
 class AutomatedRunEditor(ScriptEditable):
-#    window_height = 100
-#    window_width = 200
+    id = 'automated_run_editor'
+    title = 'Edit Automated Runs'
     run = Instance(AutomatedRun)
     def commit_changes(self, runs):
         for ri in runs:
             for si in SCRIPT_KEYS:
                 self._update_run_script(ri, si)
-
+            print 'safdsd', ri.step
             ri.skip = self.run.skip
 
 
