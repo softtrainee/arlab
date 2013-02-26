@@ -191,13 +191,14 @@ class CommandProcessor(ConfigLoadable):
     def _process_data(self, sock, data):
         args = data.split('|') + [sock]
 #                            args = client, sender_addr, ptype, payload
-        if len(args) == 4:
+        if len(args):
+            args = args[-4:]
 #                        process request should be blocking
 #                        dont spawn a new thread
             self._process_request(*args)
-        else:
-            self.debug('data = {}'.format(data))
-            self.debug('too many args {}, {}'.format(len(args), args))
+#        else:
+#            self.debug('data = {}'.format(data))
+#            self.debug('too many args {}, {}'.format(len(args), args))
         return args
 
     def _dgram_listener(self):
