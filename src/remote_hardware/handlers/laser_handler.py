@@ -157,7 +157,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             d = float(value)
         except (ValueError, TypeError), err:
             return InvalidArgumentsErrorCode('Set{}'.format(axis.upper()), err)
-        
+
         err = manager.stage_manager.single_axis_move(axis, d)
         return self.error_response(err)
 
@@ -176,18 +176,18 @@ class LaserHandler(BaseRemoteHardwareHandler):
         z = smanager.get_z()
         if smanager.temp_position is not None and not smanager.moving():
             x, y = smanager.temp_position
+            pos = x, y, z
 #            smanager.temp_position = None
 
         else:
             x, y = smanager.get_uncalibrated_xy()
-
-        if smanager.stage_controller.xy_swapped:
-            pos=y,x,z
-        else:
-            pos=x,y,z
+            if smanager.stage_controller.xy_swapped:
+                pos = y, x, z
+            else:
+                pos = x, y, z
 #        print smanager.temp_position, not smanager.moving(), x, y
         result = ','.join(['{:0.5f}' .format(i) for i in pos])
-              
+
         return result
 
     def GetDriveMoving(self, manager, *args):
@@ -237,19 +237,19 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def GetJogProcedures(self, manager, *args):
         jogs = manager.get_pattern_names()
         return ','.join(jogs)
-    
-    def DoPattern(self,*args,**kw):
-        return self.DoJog(*args,**kw)
-    def AbortPattern(self,*args, **kw):
-        return self.AbortJog(*args,**kw)
-    def IsPatterning(self,*args, **kw):
+
+    def DoPattern(self, *args, **kw):
+        return self.DoJog(*args, **kw)
+    def AbortPattern(self, *args, **kw):
+        return self.AbortJog(*args, **kw)
+    def IsPatterning(self, *args, **kw):
         return self.IsJogging(*args, **kw)
-    
+
     def DoJog(self, manager, name, *args):
         if name is None:
             err = InvalidArgumentsErrorCode('DoJog', name)
         else:
-            
+
 #            err = manager.stage_manager.pattern_manager.execute_pattern(name)
             err = manager.execute_pattern(name)
         return self.error_response(err)
@@ -276,12 +276,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
             return 'OK - beam disabled'
 
     def GetBeamDiameter(self, manager, *args):
-        motor=manager.get_motor('beam')
-        pos='No Beam Motor'
+        motor = manager.get_motor('beam')
+        pos = 'No Beam Motor'
         if motor:
-            pos=motor.data_position
+            pos = motor.data_position
         return pos
-    
+
     def SetZoom(self, manager, data, *args):
         try:
             zoom = float(data)
@@ -292,12 +292,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return 'OK'
 
     def GetZoom(self, manager, *args):
-        motor=manager.get_motor('zoom')
-        pos='No Zoom Motor'
+        motor = manager.get_motor('zoom')
+        pos = 'No Zoom Motor'
         if motor:
-            pos=motor.data_position
+            pos = motor.data_position
         return pos
-    
+
 
     def SetMotor(self, manager, name, data, *args):
         try:

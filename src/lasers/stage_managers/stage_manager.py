@@ -274,7 +274,7 @@ class StageManager(Manager):
     def set_xy(self, x, y, **kw):
         hole = self._get_hole_by_position(x, y)
         if hole:
-            self.move_to_hole(hole)
+            self.move_to_hole(hole.id)
 #            self._set_hole(hole.id)
         else:
             return self.linear_move(x, y, **kw)
