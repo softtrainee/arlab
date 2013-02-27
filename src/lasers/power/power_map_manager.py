@@ -35,7 +35,7 @@ from src.lasers.power.power_mapping import PowerMapping
 from src.paths import paths
 from pyface.timer.do_later import do_later
 #from src.helpers.datetime_tools import get_datetime
-from src.database.adapters.power_map_adapter import PowerMapAdapter
+#from src.database.adapters.power_map_adapter import PowerMapAdapter
 
 #from enable.component_editor import ComponentEditor
 #class PowerMapStep(HasTraits):
@@ -194,17 +194,17 @@ class PowerMapManager(Manager):
 #        return PowerMapScript()
 #    def _canvas_default(self):
 #        return RasterCanvas()
-    def _database_default(self):
+#    def _database_default(self):
+##        db = PowerMapAdapter(
+##                             name='co2laserdb',
+##                            password='Argon'
+##                            )
 #        db = PowerMapAdapter(
-#                             name='co2laserdb',
-#                            password='Argon'
+#                            name=paths.co2laser_db,
+#                            kind='sqlite'
 #                            )
-        db = PowerMapAdapter(
-                             name=paths.co2laser_db,
-                            kind='sqlite'
-                            )
-        db.connect()
-        return db
+#        #if db.connect():
+#        return db
 
     def _save_to_db(self, path):
         db = self.database

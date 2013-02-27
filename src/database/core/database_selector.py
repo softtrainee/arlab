@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event
+from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event, \
+    on_trait_change, Str, Instance
 from traitsui.api import View, Item, \
     HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup
 from pyface.timer.do_later import do_later
@@ -30,6 +31,8 @@ from src.viewable import Viewable
 
 from traits.api import HasTraits
 from src.traits_editors.tabular_editor import myTabularEditor
+from src.database.core.base_results_adapter import BaseResultsAdapter
+from src.traits_editors.custom_label_editor import CustomLabel
 
 class ColumnSorterMixin(HasTraits):
     _sort_field = None
@@ -77,7 +80,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #    open_button = Button
 #    open_button_label = 'Open'
 
-    db = DatabaseAdapter
+    db = Instance(DatabaseAdapter)
+    tabular_adapter = BaseResultsAdapter
+    dbstring = Str
+    title = ''
 
     dclicked = Any
     selected = Any
@@ -89,9 +95,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     wx = 0.4
     wy = 0.1
     opened_windows = Dict
-    title = ''
 
-    tabular_adapter = None
     query_table = None
     record_klass = None
     query_klass = None
@@ -115,6 +119,14 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        if evt.GetKeyCode() == wx.WXK_RETURN:
 #            print 'ffoasdf'
 #        evt.Skip()
+
+    @on_trait_change('db.[name,host]')
+    def _dbstring_change(self):
+        if self.db.kind == 'mysql':
+            self.dbstring = 'Database: {} at {}'.format(self.db.name, self.db.host)
+        else:
+            self.dbstring = 'Database: {}'.format(self.db.name)
+
 
     def _selected_changed(self):
         if self.selected:
@@ -452,6 +464,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                             ),
 #                             spring, Item('limit')),
                 VGroup(
+                       CustomLabel('dbstring', font_color='red'),
                        Item('records',
                           style='custom',
                           editor=editor,
@@ -463,6 +476,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                           qgrp,
                           button_grp,
                     ),
+                 title=' ',
                  resizable=True,
                  handler=SelectorHandler
                  )

@@ -349,8 +349,24 @@ class IsotopeQuery(Query):
                 'Step'
                 ]
 
-class DeviceScanQuery(Query):
+class DateQuery(Query):
     __params__ = ['Run Date/Time', ]
+
+class DeviceScanQuery(DateQuery):
+    pass
+
+class PowerRecordQuery(DateQuery):
+    pass
+
+class PowerCalibrationQuery(DateQuery):
+    pass
+
+class PowerMapQuery(DateQuery):
+    pass
+
+class VideoQuery(DateQuery):
+    pass
+
 class BakeoutQuery(Query):
     __params__ = ['Run Date/Time',
                   'Controller'

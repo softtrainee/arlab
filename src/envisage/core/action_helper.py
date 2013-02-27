@@ -39,6 +39,6 @@ def open_protocol(app, protocol):
 
 def open_selector(db, app):
     db.application = app
-    db.connect()
-    s = db._selector_factory()
-    open_manager(app, s)
+    if db.connect():
+        s = db._selector_factory()
+        open_manager(app, s)

@@ -95,6 +95,9 @@ class DatabaseAdapter(Loggable):
 #        print not self.isConnected() or force, self.connection_parameters_changed
         if not self.isConnected() or force:
             self.connected = True if self.kind == 'sqlite' else False
+            if self.kind == 'sqlite':
+                test = False
+
             if self.enabled:
                 url = self.url
                 if url is not None:

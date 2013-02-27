@@ -133,7 +133,8 @@ class FOpenPowerCalibrationAction(LocalLaserAction):
         manager = self._get_manager(event)
         if manager is not None:
             db = manager.get_power_calibration_database()
-            open_selector(db, self.window.application)
+            if db:
+                open_selector(db, self.window.application)
 
 class FOpenPowerMapAction(LocalLaserAction):
     name = 'Open Map Result'
@@ -141,8 +142,9 @@ class FOpenPowerMapAction(LocalLaserAction):
     def perform(self, event):
         manager = self._get_manager(event)
         if manager is not None:
-            db = manager.get_power_map_manager().database
-            open_selector(db, self.window.application)
+            db = manager.get_power_map_database()
+            if db:
+                open_selector(db, self.window.application)
 
 
 class FOpenPowerRecordGraphAction(LocalLaserAction):
@@ -152,7 +154,8 @@ class FOpenPowerRecordGraphAction(LocalLaserAction):
         manager = self._get_manager(event)
         if manager is not None:
             db = manager.get_power_database()
-            open_selector(db, self.window.application)
+            if db:
+                open_selector(db, self.window.application)
 
 
 class FOpenVideoAction(LocalLaserAction):
@@ -162,7 +165,8 @@ class FOpenVideoAction(LocalLaserAction):
         manager = self._get_manager(event)
         if manager is not None:
             db = manager.stage_manager.get_video_database()
-            open_selector(db, self.window.application)
+            if db:
+                open_selector(db, self.window.application)
 
 
 class FMotorConfigureAction(LocalLaserAction):
