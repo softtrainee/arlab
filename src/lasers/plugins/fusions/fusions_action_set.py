@@ -35,7 +35,7 @@ class FusionsActionSet(WorkbenchActionSet):
     action_path = 'src.lasers.plugins.fusions.diode.actions:'
     def _actions_default(self):
         laser_path = 'MenuBar/Lasers/{}'.format(self.name)
-        results_path = 'MenuBar/Results/{}'.format(self.name)
+        results_path = '{}/Results'.format(laser_path)
 
         return [
                 Action(name='Laser Manager',

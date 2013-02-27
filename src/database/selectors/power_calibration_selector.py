@@ -25,6 +25,7 @@ from src.database.core.database_selector import DatabaseSelector
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.orms.power_calibration_orm import PowerCalibrationTable
 from src.database.core.base_db_result import DBResult
+from src.database.core.query import PowerCalibrationQuery
 
 FITDEGREE = dict(Linear=1, Parabolic=2, Cubic=3)
 class PowerCalibrationResult(DBResult):
@@ -139,9 +140,11 @@ class PowerCalibrationResult(DBResult):
 
 
 class PowerCalibrationSelector(DatabaseSelector):
-    parameter = String('PowerCalibrationTable.rundate')
+#    parameter = String('PowerCalibrationTable.rundate')
     query_table = PowerCalibrationTable
-    record_klass = PowerCalibrationResult
+    query_klass = PowerCalibrationQuery
+#    record_klass = PowerCalibrationResult
+    title = 'Power Calibration'
 
     def _get_selector_records(self, **kw):
         return self._db.get_calibration_records(**kw)

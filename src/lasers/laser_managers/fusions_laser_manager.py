@@ -106,7 +106,6 @@ class FusionsLaserManager(LaserManager):
 
     chiller = Any
 
-    dbname = ''
 
 #===============================================================================
 #   IExtractionDevice interface
@@ -590,14 +589,12 @@ class FusionsLaserManager(LaserManager):
 #                                   password='Argon')
         db = PowerAdapter(name=self.dbname,
                           kind='sqlite')
-
         return db
 
     def get_power_calibration_database(self):
 
         db = PowerCalibrationAdapter(name=self.dbname,
                                              kind='sqlite')
-#        db.connect()
         return db
 #    def _subsystem_default(self):
 #        '''

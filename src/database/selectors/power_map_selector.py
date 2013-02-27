@@ -26,6 +26,7 @@ from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.power_map_orm import PowerMapTable
 from src.database.core.base_db_result import DBResult
 from src.graph.graph3D import Graph3D
+from src.database.core.query import PowerMapQuery
 
 
 class PowerMapResult(DBResult):
@@ -124,9 +125,10 @@ class PowerMapResult(DBResult):
 class PowerMapSelector(DatabaseSelector):
     parameter = String('PowerMapTable.rundate')
 
-    record_klass = PowerMapResult
+    query_klass = PowerMapQuery
+#    record_klass = PowerMapResult
     query_table = PowerMapTable
-
+    title = 'Power Map'
 
     def _get_selector_records(self, **kw):
         return self._db.get_powermaps(**kw)

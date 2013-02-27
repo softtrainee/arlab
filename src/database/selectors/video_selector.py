@@ -30,6 +30,7 @@ from src.image.image import Image
 from src.image.video import Video
 from src.database.core.base_db_result import RIDDBResult
 from src.database.core.base_results_adapter import RIDResultsAdapter
+from src.database.core.query import VideoQuery
 
 
 class VideoResult(RIDDBResult):
@@ -187,10 +188,12 @@ class VideoResult(RIDDBResult):
         return [vtab]
 
 class VideoSelector(DatabaseSelector):
-    parameter = String('VideoTable.rundate')
+#    parameter = String('VideoTable.rundate')
     query_table = VideoTable
-    record_klass = VideoResult
-    tabular_adapter = RIDResultsAdapter
+    query_klass = VideoQuery
+    title = 'Video'
+#    record_klass = VideoResult
+#    tabular_adapter = RIDResultsAdapter
 
 
     def _get_selector_records(self, *args, **kw):

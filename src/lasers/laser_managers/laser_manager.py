@@ -37,6 +37,7 @@ from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.led.led_editor import LEDEditor
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
+from src.database.adapters.power_map_adapter import PowerMapAdapter
 
 class ILaserManager(IExtractionDevice):
     def trace_path(self, *args, **kw):
@@ -166,6 +167,9 @@ class LaserManager(BaseLaserManager):
 #    internal_meter_response = DelegatesTo('laser_controller')
 
     _power_calibration = None
+
+    dbname = ''
+
 #===============================================================================
 # public interface
 #===============================================================================
@@ -316,11 +320,15 @@ class LaserManager(BaseLaserManager):
 
     def get_power_map_manager(self):
         from src.lasers.power.power_map_manager import PowerMapManager
-
-        pm = PowerMapManager(laser_manager=self)
+        pm = PowerMapManager(laser_manager=self, database=self.get_power_map_database())
         return pm
 
-
+    def get_power_map_database(self):
+        db = PowerMapAdapter(
+                            name=self.dbname,
+                            kind='sqlite'
+                            )
+        return db
 #===============================================================================
 # views
 #===============================================================================

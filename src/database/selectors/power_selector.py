@@ -24,6 +24,7 @@ from src.database.orms.power_orm import PowerTable
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.core.base_db_result import RIDDBResult
 from src.database.core.base_results_adapter import RIDResultsAdapter
+from src.database.core.query import Query, PowerRecordQuery
 
 
 class PowerResult(RIDDBResult):
@@ -63,10 +64,12 @@ class PowerResult(RIDDBResult):
         self.data_manager = dm
 
 class PowerSelector(DatabaseSelector):
-    parameter = String('PowerTable.rundate')
+#    parameter = String('PowerTable.rundate')
     query_table = PowerTable
-    record_klass = PowerResult
-    tabular_adapter = RIDResultsAdapter
+    query_klass = PowerRecordQuery
+    title = 'Power Recording'
+#    record_klass = PowerResult
+#    tabular_adapter = RIDResultsAdapter
 
     def _get_selector_records(self, **kw):
         return self._db.get_power_records(**kw)

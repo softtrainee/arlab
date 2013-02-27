@@ -32,7 +32,6 @@ class FusionsUvActionSet(FusionsActionSet):
     action_path = 'src.lasers.plugins.fusions.uv.actions:'
     def _actions_default(self):
         laser_path = 'MenuBar/Lasers/{}'.format(self.name)
-#        results_path = 'MenuBar/Results/{}'.format(self.name)
 
         actions = [Action(name='Gas Handling',
                           path=laser_path,
