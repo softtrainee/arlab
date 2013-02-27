@@ -40,7 +40,6 @@ from src.experiment.runs_table import RunsTable
 
 class ExperimentSet(BaseSchedule):
     current_run = Instance(AutomatedRun)
-    selected_runs = List(AutomatedRun)
     extract_schedule = Instance(ExtractSchedule, ())
     stats = Instance(ExperimentStats, ())
     cleaned_automated_runs = Property(depends_on='automated_runs[]')
@@ -63,13 +62,13 @@ class ExperimentSet(BaseSchedule):
     auto_increment = Bool(False)
     update_aliquots_needed = Event
 
-#    mass_spectrometer = Str('obama')
-    mass_spectrometer = Str(NULL_STR)
+    mass_spectrometer = Str('jan')
+#    mass_spectrometer = Str(NULL_STR)
     mass_spectrometers = Property
 #    tray = Str(NULL_STR)
     trays = Property
-#    extract_device = Str('Fusions CO2')
-    extract_device = Str(NULL_STR)
+    extract_device = Str('Fusions Diode')
+#    extract_device = Str(NULL_STR)
     extract_devices = Property
 
     right_clicked = Any
@@ -88,37 +87,8 @@ class ExperimentSet(BaseSchedule):
     new_schedule_block = Button('New')
 
     def automated_run_factory(self, copy_automated_run=False, **params):
-        extraction = self.extraction_script
-        measurement = self.measurement_script
-        post_measurement = self.post_measurement_script
-        post_equilibration = self.post_equilibration_script
-
-        if not extraction:
-            extraction = self.extraction_scripts[0]
-        if not measurement:
-            measurement = self.measurement_scripts[0]
-        if not post_measurement:
-            post_measurement = self.post_measurement_scripts[0]
-        if not post_equilibration:
-            post_equilibration = self.post_equilibration_scripts[0]
-
-        names = dict(extraction=extraction,
-                           measurement=measurement,
-                           post_measurement=post_measurement,
-                           post_equilibration=post_equilibration
-                           )
-
-        def make_script_name(ni):
-            na = names[ni]
-            if na is NULL_STR:
-                return na
-            if not na.startswith(self.mass_spectrometer):
-                na = '{}_{}'.format(self.mass_spectrometer, na)
-            return na
-
-        configuration = self._build_configuration(make_script_name)
-
         arun = self.automated_run
+        configuration = self.make_configuration()
         if arun and copy_automated_run:
             params.update(dict(
                                labnumber=arun.labnumber,
@@ -399,7 +369,6 @@ class ExperimentSet(BaseSchedule):
 
         if name is not None:
             s.load(os.path.join(paths.block_dir, name))
-
         return s
 
     def _meta_dumper(self, fp=None):
@@ -441,8 +410,9 @@ tray: {}
         b = self._block_factory()
         info = b.edit_traits(kind='livemodal')
         if info.result:
-            self.schedule_block = b.name
-            self.schedule_block_added = True
+            if b.name:
+                self.schedule_block = b.name
+                self.schedule_block_added = True
 
     def _edit_schedule_block_fired(self):
         b = self._block_factory(name=self.schedule_block)
@@ -465,27 +435,10 @@ tray: {}
 #            if ar.position:
 #                position = self._auto_increment(ar.position)
 
-            def make_script_name(ni):
-                na = getattr(self, '{}_script'.format(ni))
-                if na == NULL_STR:
-                    return na
-                if not na.startswith(self.mass_spectrometer):
-                    na = '{}_{}'.format(self.mass_spectrometer, na)
-
-                if na and not na.endswith('.py'):
-                    na = na + '.py'
-                return na
-
-            ar.configuration = self._build_configuration(make_script_name)
-            ar.extraction_script_dirty = True
-            ar.measurement_script_dirty = True
-            ar.post_measurement_script_dirty = True
-            ar.post_equilibration_script_dirty = True
-
-            if ar.executable:
-                ars.append(ar)
-            else:
-                return
+#            if not self._add_new_run(ar):
+#                return
+#            else:
+            ars.append(ar)
 
         kw = dict()
         if self.auto_increment:
@@ -496,29 +449,10 @@ tray: {}
             if npos:
                 kw['position'] = npos
 
-        self.automated_run = ar.clone_traits()
-        #if analysis type is bg, b- or a overwrite a few defaults
-        if not ar.analysis_type == 'unknown':
-            kw['position'] = ''
-            kw['extract_value'] = 0
-
-        self.automated_run.trait_set(**kw)
-        self._bind_automated_run(self.automated_run)
-
+        self._add_hook(ar, **kw)
         self.update_aliquots_needed = True
-        self.automated_run._labnumber = NULL_STR
-        self.automated_run.special_labnumber = NULL_STR
 
-    @on_trait_change('''extraction_script, measurement_script,
-post_measurement_script, post_equilibration_script''')
-    def _script_changed(self, name, new):
-        name = name[:-7]
-        if self.selected_runs is not None:
-            for si in self.selected_runs:
-                self._update_run_script(si, name)
 
-        if self.automated_run is not None:
-            self._update_run_script(self.automated_run, name)
 
 
     @on_trait_change('current_run,automated_runs[]')
@@ -613,26 +547,26 @@ post_measurement_script, post_equilibration_script''')
 
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
-    def _selected_changed(self, new):
-#        print new
-        self.selected_runs = new
-        if len(new) == 1:
-            run = new[0]
-            if run.state == 'not run':
-                self.automated_run = run.clone_traits()
-                for si in SCRIPT_KEYS:
-                    try:
-                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
-                        setattr(self, '{}_script'.format(si), n)
-                    except AttributeError:
-                        pass
-
-    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
-    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
-    def _sync_selected_runs(self, name, new):
-        if self.selected_runs:
-            for si in self.selected_runs:
-                si.trait_set(**{name:new})
+#    def _selected_changed(self, new):
+##        print new
+#        self.selected_runs = new
+#        if len(new) == 1:
+#            run = new[0]
+#            if run.state == 'not run':
+#                self.automated_run = run.clone_traits()
+#                for si in SCRIPT_KEYS:
+#                    try:
+#                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
+#                        setattr(self, '{}_script'.format(si), n)
+#                    except AttributeError:
+#                        pass
+#
+#    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
+#    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+#    def _sync_selected_runs(self, name, new):
+#        if self.selected_runs:
+#            for si in self.selected_runs:
+#                si.trait_set(**{name:new})
 
 #===============================================================================
 # property get/set
@@ -790,7 +724,8 @@ post_measurement_script, post_equilibration_script''')
                           Item('edit_schedule_block',
                                enabled_when='object.schedule_block!="---"',
                                 show_label=False),
-                          Item('new_schedule_block', show_label=False)
+                          Item('new_schedule_block', show_label=False),
+#                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
                           )
         v = View(
                  HGroup(

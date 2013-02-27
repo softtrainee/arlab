@@ -88,9 +88,9 @@ class AutomatedRunAdapter(TabularAdapter):
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]
         color = 'white'
-        if not item.executable:
-            color = 'red'
-        elif item.skip:
+#        if not item.executable:
+#            color = 'red'
+        if item.skip:
             color = '#33CCFF' #light blue
         elif item.state == 'success':
             color = '#66FF33' #light green

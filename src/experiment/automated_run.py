@@ -143,6 +143,7 @@ class AutomatedRun(Loggable):
 
     extraction_script_dirty = Event
     extraction_script = Property(depends_on='extraction_script_dirty')
+#    escript = Any
     _extraction_script = Any
 
     _active_detectors = List
@@ -1579,7 +1580,10 @@ anaylsis_type={}
                 s = self._bootstrap_script(fname, name, ec)
                 self.scripts[fname] = s
             else:
-                s = s.clone_traits()
+
+#                s = s.clone_traits()
+#                print s, s.__class__
+#                s = s.__class__()
                 s.automated_run = self
                 hdn = self.extract_device.replace(' ', '_').lower()
                 an = self.analysis_type.split('_')[0]
@@ -1591,9 +1595,13 @@ anaylsis_type={}
                                 extract_device=hdn,
                                 analysis_type=an
                                 )
-            return s
+#            return s
         else:
-            return self._bootstrap_script(fname, name, ec)
+            s = self._bootstrap_script(fname, name, ec)
+
+        self.scripts[fname] = s
+#        print s
+        return s
 
     def _bootstrap_script(self, fname, name, ec):
         self.info('loading script "{}"'.format(fname))
@@ -1602,15 +1610,16 @@ anaylsis_type={}
         self._executable = True
         if s and os.path.isfile(s.filename):
             if s.bootstrap():
-                try:
-                    s.test()
-                    setattr(self, '_{}_script'.format(name), s)
-
-                except Exception, e:
-                    self.warning(e)
-                    self.warning_dialog('Invalid Scripta {}'.format(e))
-                    self._executable = False
-                    setattr(self, '_{}_script'.format(name), None)
+                s.test()
+#                try:
+#                    s.test()
+##                    setattr(self, '_{}_script'.format(name), s)
+#
+#                except Exception, e:
+#                    self.warning(e)
+#                    self.warning_dialog('Invalid Scripta {}'.format(e))
+#                    self._executable = False
+#                    setattr(self, '_{}_script'.format(name), None)
         else:
             self._executable = False
             self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
@@ -1674,6 +1683,7 @@ anaylsis_type={}
                     name=file_name,
                     runner=self.runner
                     )
+
             an = self.analysis_type.split('_')[0]
 
             '''
@@ -1822,8 +1832,8 @@ anaylsis_type={}
         a = True
 #        print self.extraction_script, self.measurement_script, self._executable
         if self.check_executable:
-            a = self.extraction_script is not None and \
-                        self.measurement_script is not None and \
+            a = self._extraction_script is not None and \
+                        self._measurement_script is not None and \
                             self._executable
         return a
 

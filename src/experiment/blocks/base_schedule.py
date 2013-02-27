@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
-    DelegatesTo
+    DelegatesTo, on_trait_change
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 #============= standard library imports ========================
 import yaml
@@ -63,6 +63,8 @@ class BaseSchedule(ScriptEditable):
     runs_table = Instance(RunsTable, ())
     automated_runs = DelegatesTo('runs_table')
     selected = DelegatesTo('runs_table')
+    selected_runs = List(AutomatedRun)
+
     tray = Str(NULL_STR)
 
     loaded_scripts = Dict
@@ -73,6 +75,79 @@ class BaseSchedule(ScriptEditable):
 
     _copy_cache = Any
     parser = None
+
+    @on_trait_change('''extraction_script, measurement_script,
+post_measurement_script, post_equilibration_script''')
+    def _script_changed(self, name, new):
+        name = name[:-7]
+        if self.selected_runs is not None:
+            for si in self.selected_runs:
+                self._update_run_script(si, name)
+
+        if self.automated_run is not None:
+            self._update_run_script(self.automated_run, name)
+
+    def _selected_changed(self, new):
+#        print new
+        self.selected_runs = new
+        if len(new) == 1:
+            run = new[0]
+            if run.state == 'not run':
+                self.automated_run = run.clone_traits()
+                for si in SCRIPT_KEYS:
+                    try:
+                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
+                        setattr(self, '{}_script'.format(si), n)
+                    except AttributeError:
+                        pass
+
+    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
+    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+    def _sync_selected_runs(self, name, new):
+        if self.selected_runs:
+            for si in self.selected_runs:
+                si.trait_set(**{name:new})
+
+    def make_configuration(self):
+        extraction = self.extraction_script
+        measurement = self.measurement_script
+        post_measurement = self.post_measurement_script
+        post_equilibration = self.post_equilibration_script
+
+        if not extraction:
+            extraction = self.extraction_scripts[0]
+        if not measurement:
+            measurement = self.measurement_scripts[0]
+        if not post_measurement:
+            post_measurement = self.post_measurement_scripts[0]
+        if not post_equilibration:
+            post_equilibration = self.post_equilibration_scripts[0]
+
+        names = dict(extraction=extraction,
+                           measurement=measurement,
+                           post_measurement=post_measurement,
+                           post_equilibration=post_equilibration
+                           )
+        def make_script_name(ni):
+            na = names[ni]
+            if na is NULL_STR:
+                return na
+            if not na.startswith(self.mass_spectrometer):
+                na = '{}_{}'.format(self.mass_spectrometer, na)
+            return na
+        return self._build_configuration(make_script_name)
+
+    def _add_hook(self, ar, **kw):
+        self.automated_run = ar.clone_traits()
+        #if analysis type is bg, b- or a overwrite a few defaults
+        if not ar.analysis_type == 'unknown':
+            kw['position'] = ''
+            kw['extract_value'] = 0
+
+        self.automated_run.trait_set(**kw)
+        self.automated_run._labnumber = NULL_STR
+        self.automated_run.special_labnumber = NULL_STR
+        self._bind_automated_run(self.automated_run)
 
     def update_loaded_scripts(self, new):
         if new:
@@ -261,11 +336,11 @@ class BaseSchedule(ScriptEditable):
                 for ni in SCRIPT_KEYS]
         return dict(args)
 
-    def _bind_automated_run(self, a):
-        a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
-        a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
-        a.on_trait_change(self.update_loaded_scripts, '_post_measurement_script')
-        a.on_trait_change(self.update_loaded_scripts, '_post_equilibration_script')
+    def _bind_automated_run(self, a, remove=False):
+        a.on_trait_change(self.update_loaded_scripts, '_measurement_script', remove=remove)
+        a.on_trait_change(self.update_loaded_scripts, '_extraction_script', remove=remove)
+        a.on_trait_change(self.update_loaded_scripts, '_post_measurement_script', remove=remove)
+        a.on_trait_change(self.update_loaded_scripts, '_post_equilibration_script', remove=remove)
 
 
 #===============================================================================
