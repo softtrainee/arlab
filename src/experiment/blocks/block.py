@@ -43,11 +43,12 @@ def line_generator(path, delim='\t'):
 
 class Block(BaseSchedule):
 
-    analysis_type = Str('bg')#Enum(ANALYSIS_MAPPING)
+    analysis_type = Str#('bg')#Enum(ANALYSIS_MAPPING)
     _path = None
     def __init__(self, *args, **kw):
         super(Block, self).__init__(*args, **kw)
-        self._load_default_scripts(key=self.analysis_type)
+        self.analysis_type = 'bg'
+#        self._load_default_scripts(key=self.analysis_type)
 
     @property
     def name(self):
@@ -143,66 +144,87 @@ class Block(BaseSchedule):
 #===============================================================================
 # handlers
 #===============================================================================
+#    def update_loaded_scripts(self, new):
+#        if new:
+#            self.loaded_scripts[new.name] = new
 
     def _analysis_type_changed(self):
-        self._load_default_scripts(key=self.analysis_type)
+        if self.analysis_type != NULL_STR:
+            self._load_default_scripts(key=self.analysis_type)
+
+            ar = self.automated_run
+            ar.configuration = self.make_configuration()
+
+#            ar.extraction_script_dirty = True
+#            ar.measurement_script_dirty = True
+#            ar.post_measurement_script_dirty = True
+#            ar.post_equilibration_script_dirty = True
+#            ar.create_scripts()
+
 
     def _add_fired(self):
-        arun = self.automated_run
-        arun.trait_set(labnumber=self.analysis_type,
-                       mass_spectrometer=self.mass_spectrometer,
-                       extraction_device=self.extract_device,
-                        scripts=self.loaded_scripts)
-        self._bind_automated_run(arun)
+#        ar = self.automated_run
+        ars = self.automated_runs
 
-        arun.configuration = dict()
-        for ki in SCRIPT_KEYS:
-            sname = '{}_script'.format(ki)
-            si = getattr(self, sname)
-            if si:
-                si = self._add_mass_spectromter_name(si)
-                arun.configuration[sname] = os.path.join(paths.scripts_dir,
-                                                      ki, si)
-            else:
-                arun.configuration[sname] = NULL_STR
-                setattr(arun, '{}_script_dirty'.format(ki), True)
-#            setattr(arun, '{}_script'.format(ki),)
-#        arun = self.automated_run.clone_traits()
-        self.automated_runs.append(arun.clone_traits())
+#        print self.automated_run.scripts
+#        self._bind_automated_run(self.automated_run, remove=True)
+
+        ar = self.automated_run.clone_traits()
+#        print ar.scripts, self.loaded_scripts
+#        ar.configuration = self.make_configuration()
+
+#        ar.extraction_script_dirty = True
+#        ar.measurement_script_dirty = True
+#        ar.post_measurement_script_dirty = True
+#        ar.post_equilibration_script_dirty = True
+#        ar.create_scripts()
+
+#        print ar.extraction_script
+        if ar.executable:
+            ars.append(ar)
+
+#        self._bind_automated_run(self.automated_run)
+#            self.automated_run = ar.clone_traits()
+#            self._add_hook(ar)
+
+
 #===============================================================================
 # views
 #===============================================================================
     def traits_view(self):
-        r = myTabularEditor(adapter=RunAdapter(),
-#                             update=update,
-#                             right_clicked='object.right_clicked',
-                             selected='object.selected',
-#                             refresh='object.refresh',
-#                             activated_row='object.activated_row',
-                             operations=['delete', 'edit'],
-                             editable=True,
-                             auto_resize=True,
-                             multi_select=True,
-                             auto_update=True,
-                             scroll_to_bottom=False
-                            )
+        new_analysis = VGroup(
+                              Item('automated_run',
+                                   show_label=False,
+                                   style='custom',
+                                   editor=InstanceEditor(view='simple_view')
+                                   ),
+                              enabled_when='mass_spectrometer and mass_spectrometer!="---"'
+                              )
 
+        analysis_table = VGroup(
+                                self._get_copy_paste_group(),
+                                Item('runs_table', show_label=False, style='custom'),
+                                show_border=True,
+                                label='Analyses',
+                                )
         script_grp = self._get_script_group()
+#        vs = {'---':NULL_STR}
+#        vs.update(ANALYSIS_MAPPING)
         lgrp = VGroup(
 
                       Item('analysis_type',
+#                           editor=EnumEditor(values=vs),
                            editor=EnumEditor(values=ANALYSIS_MAPPING),
                            show_label=False),
-                      Item('automated_run', style='custom',
-                           show_label=False,
-                           editor=InstanceEditor(view='simple_view')),
+                      new_analysis,
+#                      Item('automated_run', style='custom',
+#                           show_label=False,
+#                           editor=InstanceEditor(view='simple_view')),
                       script_grp,
                       HGroup(spring, Item('add', show_label=False))
                       )
-        rgrp = VGroup(
-                      self._get_copy_paste_group(),
-                      Item('automated_runs', show_label=False, editor=r))
-        v = View(HGroup(lgrp, rgrp),
+
+        v = View(HGroup(lgrp, analysis_table),
                  handler=self.handler_klass,
                  buttons=SaveableButtons,
                  resizable=True,
