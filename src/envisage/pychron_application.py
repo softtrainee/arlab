@@ -23,32 +23,38 @@ from pyface.image_resource import ImageResource
 import copy
 #============= local library imports  ==========================
 from src.loggable import Loggable
+import os
+from kiva.fonttools.font import Font
 
 class Pychron(WorkbenchApplication, Loggable):
 #class Pychron(TasksApplication):
     '''
     '''
     id = 'pychron'
-    name = 'Pychron'
-    beta = False
+    name = 'pyExperiment'
 
     uis = List
     def _about_dialog_default(self):
         '''
         '''
-        about_dialog = AboutDialog(parent=self.workbench.active_window.control)
+        from src.paths import paths
+        p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        about_dialog = AboutDialog(
+                                   image=ImageResource(name='about{}.png'.format(paths.version),
+                                              search_path=[p, paths.abouts]
+                                            ),
+                                   )
         return about_dialog
 
     def _splash_screen_default(self):
         from src.paths import paths
+        p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         sp = SplashScreen(
-                          image=ImageResource(name='splash.png',
-                                                search_path=[paths.pychron_src_root,
-                                                             paths.pychron_dev_src_root
-                                                             ]
-                                                ),
-                          text='buttohole'
+                          image=ImageResource(name='splash{}.png'.format(paths.version),
+                                              search_path=[p, paths.splashes]
+                                            ),
                           )
+
         return sp
 
     def exit(self):

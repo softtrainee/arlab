@@ -121,8 +121,18 @@ def install_pychron_suite():
     apps = args.applications
     for ai in apps:
         template = None
-        if ai == 'pychron':
-            template = PychronTemplate()
+        if ai.startswith('pychron'):
+#        if ai == 'pychron':
+            try:
+                _, name = ai.split('_')
+                print name
+                template = PychronTemplate()
+                template.icon_name = 'py{}_icon'.format(name)
+                template.bundle_name = 'py{}'.format(name)
+                template.version_name = name
+            except ValueError:
+                print 'Invalid pychron name. use pychron_<name>'
+
         elif ai == 'remote_hardware_server':
             template = RemoteHardwareServerTemplate()
 #        elif ai == '':
@@ -185,16 +195,17 @@ class ProcessManagerTemplate(InstallTemplate):
 class PychronTemplate(InstallTemplate):
     name = 'pychron'
     prefix = 'pychron'
-    icon_name = 'pyvalve_icon'
-    bundle_name = 'pyValve'
+    version_name = None
+#    icon_name = 'pyvalve_icon'
+#    bundle_name = 'pyValve'
     def _install(self, ins, src_dir):
-        ins.install(src_dir)
+        ins.install(src_dir, self.version_name)
 
 class RemoteHardwareServerTemplate(InstallTemplate):
     name = 'remote_hardware_server'
     prefix = 'remote_hardware_server'
     def _install(self, ins, src_dir):
-        ins.include_pkgs = ['remote_hardware', 'messaging','envisage'] + self.default_pkgs
+        ins.include_pkgs = ['remote_hardware', 'messaging', 'envisage'] + self.default_pkgs
         ins.include_mods = [
                           'managers/remote_hardware_server_manager',
                           ] + self.default_mods

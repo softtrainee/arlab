@@ -57,7 +57,7 @@ class CustomLabelEditor(BasicEditorFactory):
 class CustomLabel(UItem):
     editor = CustomLabelEditor()
     font_size = Int
-    font_color = Color
+    font_color = Color('black')
 
 
 #===============================================================================

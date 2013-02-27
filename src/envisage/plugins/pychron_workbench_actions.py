@@ -143,7 +143,8 @@ class DocumentationPageAction(Action):
     def perform(self, event):
         import webbrowser
 #        p = 'file://{}/index.html'.format(paths.doc_html_root)
-        p = 'http://129.138.12.131/~documentation/pychron/docs/_build/html/index.html'
+#        p = 'http://129.138.12.131/~documentation/pychron/docs/_build/html/index.html'
+        p = 'http://129.138.12.160'
         webbrowser.open_new(p)
 
 

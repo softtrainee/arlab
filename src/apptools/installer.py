@@ -76,7 +76,7 @@ class Installer(object):
         dst.close()
         os.unlink(src.name)
 
-    def install(self, root):
+    def install(self, root, version_name=None):
         if sys.platform == 'darwin':
             from BuildApplet import buildapplet
             print
@@ -112,7 +112,7 @@ class Installer(object):
             # copy files
             # ===================================================================
 
-            icon = os.path.join(root, 'resources', icon_file)
+            icon = os.path.join(root, 'resources', 'apps', icon_file)
             print icon
             if os.path.isfile(icon):
                 shutil.copyfile(icon, os.path.join(dist_root,
@@ -180,12 +180,21 @@ class Installer(object):
                             )
 
             #copy pngs
-            for name in map('{}.png'.format, ['splash', 'red_ball',
+            for name in map('{}.png'.format, ['red_ball',
                                               'gray_ball', 'green_ball',
                                               'orange_ball', 'yellow_ball']):
                 shutil.copyfile(os.path.join(root, 'resources', name),
                             resource_path(name)
                             )
+
+            #move splash and about into place
+            if version_name:
+                for ni, nd in (('splash', 'splashes'), ('about', 'abouts')):
+                    sname = '{}_{}.png'.format(ni, version_name)
+                    shutil.copyfile(os.path.join(root, 'resources', nd, sname),
+                                    resource_path(sname)
+                                )
+
 
 
 

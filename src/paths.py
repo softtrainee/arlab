@@ -36,10 +36,13 @@ from os import path, mkdir, getcwd
 #project_home = join(host_url, project_root)
 
 class Paths():
+    version = None
     root = None
     #pychron_src_root = None
     #doc_html_root = None
     icons = None
+    splashes = None
+    abouts = None
     #_dir suffix ensures the path is checked for existence
     root_dir = root
     stable_root = None
@@ -119,14 +122,21 @@ class Paths():
     #==============================================================================
     clovera_root = None
 
+
     def build(self, version):
+        self.version = version
+
         HOME = path.expanduser('~')
 
         home = 'Pychrondata{}'.format(version)
         join = path.join
 
         self.root = root = join(HOME, home)
-        self.icons = join('..', 'resources', 'icons')
+        self.resources = join('..', 'resources',)
+        self.icons = join(self.resources, 'icons')
+        self.splashes = join(self.resources, 'splashes')
+        self.abouts = join(self.resources, 'abouts')
+
 #        src_repo_name = 'pychron{}'.format(version)
         self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
         self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
