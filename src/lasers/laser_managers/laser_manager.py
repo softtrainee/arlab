@@ -484,11 +484,13 @@ class LaserManager(BaseLaserManager):
             if power < 0.1:
                 power = 0
             else:
-                power, coeffs = pc.get_input(power)
-                if coeffs is not None:
-                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
-                    if verbose:
-                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+                power = pc.get_input(power)
+                if verbose:
+                    self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
+#                if coeffs is not None:
+#                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
+#                    if verbose:
+#                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
         return power
 
     def _get_requested_power(self):

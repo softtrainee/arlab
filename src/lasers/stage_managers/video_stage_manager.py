@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
  Float, Bool, Event, Enum, on_trait_change
-from traitsui.api import Group, Item, HGroup
+from traitsui.api import Group, Item, HGroup, VGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
@@ -90,6 +90,8 @@ class VideoStageManager(StageManager):
     record_label = Property(depends_on='is_recording')
     is_recording = Bool
 
+    use_db = False
+
     use_video_archiver = Bool(True)
     video_archiver = Instance(Archiver)
     video_identifier = Enum(1, 2)
@@ -97,10 +99,14 @@ class VideoStageManager(StageManager):
     video_server = Instance(VideoServer)
 
     camera = Instance(Camera)
+
+    render_with_markup = Bool(False)
+
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
         bind_preference(self, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
+        bind_preference(self, 'render_with_markup', '{}.render_with_markup'.format(pref_id))
 #        bind_preference(self.pattern_manager,
 #                        'record_patterning',
 #                         '{}.record_patterning'.format(pref_id))
@@ -142,12 +148,14 @@ class VideoStageManager(StageManager):
             t.start()
         else:
             self._start_recording(**kw)
+        self.is_recording = True
 
 
     def stop_recording(self, user='remote', delay=0.1):
         '''
         '''
         def close():
+            self.is_recording = False
             self.info('stop video recording')
     #        self.stop()
             self.video.stop_recording()
@@ -181,11 +189,12 @@ class VideoStageManager(StageManager):
 #        if self.use_video_server:
 #            self.video_server.start()
 
+
     def initialize_stage(self):
         super(VideoStageManager, self).initialize_stage()
-
-        self.video.open(identifier=self.video_identifier - 1,
-                        user='underlay')
+#        print self.video_identifier - 1
+#        self.video.open(identifier=self.video_identifier - 1,
+#                        user='underlay')
 #        print self.video
         if self.video:
             self.video.open()
@@ -213,7 +222,14 @@ class VideoStageManager(StageManager):
 
         if path:
             self.info('saving snapshot {}'.format(path))
-            self.video.record_frame(path, swap_rb=False)
+            if self.render_with_markup:
+                from chaco.plot_graphics_context import PlotGraphicsContext
+                c = self.canvas
+                gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+                gc.render_component(c)
+                gc.save(path)
+            else:
+                self.video.record_frame(path, swap_rb=False)
 
     def kill(self):
         '''
@@ -262,7 +278,7 @@ class VideoStageManager(StageManager):
 
         self.info('saving recording to path {}'.format(path))
 
-        self.use_db = True
+#        self.use_db = True
         if self.use_db:
             db = self.get_video_database()
 #            db = VideoAdapter(name=co2laser_db, kind='sqlite')
@@ -410,11 +426,14 @@ class VideoStageManager(StageManager):
                                #Item('drive_xratio'),
                                #Item('drive_yratio'),
                                mv,
-                               HGroup(Item('snapshot_button', show_label=False),
-                                      Item('auto_save_snapshot')),
-                               HGroup(self._button_factory('record', 'record_label'),
-                                      #Item('auto_save_snapshot')
-                                      ),
+                               VGroup(
+                                     HGroup(Item('snapshot_button', show_label=False),
+                                            VGroup(Item('auto_save_snapshot'),
+                                             Item('render_with_markup'))),
+                                     self._button_factory('record', 'record_label'),
+                                     show_border=True,
+                                     label='Recording'
+                                     ),
                                Item('autofocus_manager', show_label=False, style='custom'),
                                #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
 #                               Item('pxpercmx'),
@@ -454,17 +473,14 @@ class VideoStageManager(StageManager):
         self.snapshot()
 
     def _record_fired(self):
-        def _rec_():
-            self.start_recording()
 #            time.sleep(4)
 #            self.stop_recording()
         if self.is_recording:
-            self.is_recording = False
+
             self.stop_recording()
         else:
-            self.is_recording = True
-            t = Thread(target=_rec_)
-            t.start()
+
+            self.start_recording()
 
     def _calculate_fired(self):
         t = Thread(target=self._calculate_camera_parameters)

@@ -18,7 +18,7 @@
 
 
 #=============enthought library imports========================
-from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str
+from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str, Any
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor, spring
 #from pyface.timer.api import Timer
 
@@ -36,6 +36,7 @@ from pyface.timer.do_later import do_later
 from src.helpers.timer import Timer
 from src.graph.plot_record import PlotRecord
 import time
+from src.hardware.meter_calibration import MeterCalibration
 sensor_map = {'62': 'off',
                     '95': 'thermocouple',
                     '104': 'volts dc',
@@ -114,6 +115,8 @@ class WatlowEZZone(CoreDevice):
                                           auto_set=False,
                                           enter_set=True),
                                     depends_on='_clsetpoint')
+    calibrated_setpoint = Float
+
     _clsetpoint = Float(0.0)
     setpointmin = Float(0.0)
     setpointmax = Float(100.0)
@@ -209,6 +212,19 @@ class WatlowEZZone(CoreDevice):
     _process_working_address = 200
     _process_memory_block = [360, 1904]
     _process_memory_len = 4
+
+    calibration = Any
+    use_calibrated_temperature = Bool(False)
+
+    def map_temperature(self, te, verbose=True):
+        if self.calibration:
+            if verbose:
+                self.info('using temperature coefficients  (e.g. ax2+bx+c) {}'.format(self.calibration.print_string()))
+            te = self.calibration.get_input(te)
+        else:
+            self.info('no calibration set')
+
+        return te
 
     def initialize(self, *args, **kw):
         '''
@@ -374,7 +390,11 @@ class WatlowEZZone(CoreDevice):
 #                for option in config.options('MemoryBlock'):
 #                    if option.startswith('block'):
 #                        self.memory_blocks.append(config.get('MemoryBlock',option))
-#                        
+
+        coeffs = self.config_get(config, 'Calibration', 'coefficients')
+        if coeffs:
+            self.calibration = MeterCalibration(coeffs)
+            self.use_calibrated_temperature = True
         return True
 
     def set_nonvolatile_save(self, yesno, **kw):
@@ -428,12 +448,15 @@ class WatlowEZZone(CoreDevice):
         except KeyError, e:
             print e
 
-    def set_closed_loop_setpoint(self, setpoint, **kw):
+    def set_closed_loop_setpoint(self, setpoint, use_calibration=False, **kw):
         '''
         '''
-
-        self.info('setting closed loop setpoint = {:0.3f}'.format(setpoint))
         self._clsetpoint = setpoint
+        if self.calibration and use_calibration:
+            setpoint = self.map_temperature(setpoint)
+
+        self.calibrated_setpoint = setpoint
+        self.info('setting closed loop setpoint = {:0.3f}'.format(setpoint))
 
         self.write(2160, setpoint, nregisters=2, **kw)
         time.sleep(0.025)
@@ -946,7 +969,7 @@ class WatlowEZZone(CoreDevice):
         '''
 
         '''
-        self.set_closed_loop_setpoint(v)
+        self.set_closed_loop_setpoint(v, use_calibration=self.use_calibrated_temperature)
 
     def _get_open_loop_setpoint(self):
         '''
@@ -1180,11 +1203,27 @@ class WatlowEZZone(CoreDevice):
         g.set_y_title('Heat Power (%)', plotid=1)
 
     def get_control_group(self):
-        closed_grp = VGroup(Item('closed_loop_setpoint',
+        closed_grp = VGroup(
+                            Item('use_calibrated_temperature',
+                                 enabled_when='calibration is not None',
+                                 label='Use Calibration'),
+                            Item('closed_loop_setpoint',
                                  label='setpoint',
                                  editor=RangeEditor(mode='slider',
-                                               low_name='setpointmin', high_name='setpointmax'),
-                                 visible_when='control_mode=="closed"'))
+                                                    format='%0.2f',
+                                                    low_name='setpointmin', high_name='setpointmax'),
+
+                                 ),
+                            Item('calibrated_setpoint',
+                                 label='calibrated setpoint',
+                                 enabled_when='0',
+                                 defined_when='calibration is not None',
+                                 editor=RangeEditor(mode='slider',
+                                                    format='%0.2f',
+                                                    low_name='setpointmin', high_name='setpointmax'),
+                                 ),
+                            visible_when='control_mode=="closed"'
+                            )
 
         open_grp = VGroup(Item('open_loop_setpoint',
                                label='setpoint',

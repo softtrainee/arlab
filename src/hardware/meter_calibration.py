@@ -66,5 +66,8 @@ class MeterCalibration(object):
             c[-1] += response
         else:
             power = response
-        return power, c
+        return power
+
+    def print_string(self):
+        return ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', self.coefficients)])
 #============= EOF =============================================

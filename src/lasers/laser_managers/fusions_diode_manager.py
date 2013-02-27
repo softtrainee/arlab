@@ -35,6 +35,7 @@ from src.monitors.fusions_diode_laser_monitor import FusionsDiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
 from threading import Timer
+from apptools.preferences.preference_binding import bind_preference
 
 
 class FusionsDiodeManager(FusionsLaserManager):
@@ -69,18 +70,24 @@ class FusionsDiodeManager(FusionsLaserManager):
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
+
     dbname = paths.diodelaser_db
     db_root = paths.diodelaser_db_root
-#    def finish_loading(self):
+
+    use_calibrated_temperature = Bool(False)
+    #    def finish_loading(self):
 #        super(FusionsDiodeManager, self).finish_loading()
 #
 #        self.pyrometer.start_scan()
 ##        self.control_module_manager.start_scan()
+    def bind_preferences(self, pref_id):
+        super(FusionsDiodeManager, self).bind_preferences(pref_id)
+        bind_preference(self, 'use_calibrated_temperature', '{}.use_calibrated_temperature'.format(pref_id))
 
-    def get_process_temperature(self):
-        '''
-        '''
-        return self.temperature_controller.get_temperature()
+#    def get_process_temperature(self):
+#        '''
+#        '''
+#        return self.temperature_controller.get_temperature()
 
     def _try(self, obj, func, kw):
         try:
@@ -146,9 +153,10 @@ class FusionsDiodeManager(FusionsLaserManager):
         self.temperature_controller.set_open_loop_setpoint(0.0)
 
     def set_laser_temperature(self, temp):
-        self._set_laser_power_hook(temp, mode='closed')
 
-    def _set_laser_power_hook(self, power, mode='open', **kw):
+        self._set_laser_power_hook(temp, mode='closed', use_calibration=self.use_calibrated_temperature)
+
+    def _set_laser_power_hook(self, power, mode='open', use_calibration=False, **kw):
         ''' 
         '''
 #        super(FusionsDiodeManager, self).set_laser_power(power)
@@ -159,7 +167,7 @@ class FusionsDiodeManager(FusionsLaserManager):
             tc.set_control_mode(mode)
 
         func = getattr(tc, 'set_{}_loop_setpoint'.format(mode))
-        func(float(power))
+        func(float(power), use_calibration=use_calibration)
 
 #    def enable_laser(self):
 #        '''

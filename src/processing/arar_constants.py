@@ -84,7 +84,8 @@ class ArArConstants(HasTraits):
         return self._get_ufloat('lambda_e')
 
     def _get_lambda_k(self):
-        return self.lambda_b + self.lambda_e
+        k = self.lambda_b + self.lambda_e
+        return ufloat((k.nominal_value, k.std_dev()))
 
 #dp = get_default_preferences()
 #scope = dp.get_scope('application')

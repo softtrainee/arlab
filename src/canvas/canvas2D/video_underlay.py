@@ -27,7 +27,7 @@ class VideoUnderlay(AbstractOverlay):
     '''
     video = Instance(Video)
 #    use_backbuffer = True
-    use_backbuffer = False
+#    use_backbuffer = False
 #    swap_rb = True
 #    mirror = False
 #    flip = False
@@ -38,7 +38,7 @@ class VideoUnderlay(AbstractOverlay):
         with gc:
             gc.clip_to_rect(component.x, component.y,
                         component.width, component.height)
-            img=self.video.get_image_data()
+            img = self.video.get_image_data()
             if img is not None:
                 gc.draw_image(img)
 

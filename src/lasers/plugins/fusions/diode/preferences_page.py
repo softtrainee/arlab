@@ -17,13 +17,8 @@
 
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits, Str, Password, Bool, Button, Enum, Float, List, on_trait_change
-#
-#from traitsui.table_column import ObjectColumn
-#from traitsui.extras.checkbox_column import CheckboxColumn
-#from src.helpers.paths import initialization_dir
-#import os
-#from ConfigParser import ConfigParser
+from traits.api import Bool
+from traitsui.api import Item
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -34,6 +29,11 @@ class FusionsDiodePreferencesPage(FusionsLaserPreferencesPage):
     preferences_path = 'pychron.fusions.diode'
     name = 'Fusions Diode'
     plugin_name = 'FusionsDiode'
+    use_calibrated_temperature = Bool(True)
+    def get_power_group(self):
+        grp = super(FusionsDiodePreferencesPage, self).get_power_group()
+        grp.content.append(Item('use_calibrated_temperature'))
+        return grp
 #    def traits_view(self):
 #        v = View('width',
 #               'height')

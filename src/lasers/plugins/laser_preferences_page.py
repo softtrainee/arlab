@@ -43,6 +43,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     scaling = Range(1.0, 2.0, 1)
 
     use_autocenter = Bool(False)
+    render_with_markup = Bool(False)
     crosshairs_offset = Tuple(0, 0)
     crosshairs_offset_color = Color('blue')
 
@@ -97,11 +98,11 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                                 label='Server'
                                 )
         videogrp = VGroup(Item('use_video'),
-                     VGroup(
+                          VGroup(
 #                         Item('video_identifier', label='ID',
 #                               enabled_when='use_video'),
                          Item('use_autocenter', label='Auto Center'),
-
+                         Item('render_with_markup', label='Render Snapshot with markup'),
                          recgrp,
                          archivergrp,
                          vservergrp,
@@ -130,9 +131,13 @@ class LaserPreferencesPage(ManagerPreferencesPage):
 
         patgrp = Group(Item('record_patterning'),
                        Item('show_patterning'), label='Pattern')
+        powergrp = self.get_power_group()
+        return [canvasgrp, videogrp, patgrp, powergrp]
+
+    def get_power_group(self):
         powergrp = Group(
                         Item('record_lasing_power'),
                         Item('use_calibrated_power'),
                          label='Power')
-        return [canvasgrp, videogrp, patgrp, powergrp]
+        return powergrp
 #============= EOF ====================================

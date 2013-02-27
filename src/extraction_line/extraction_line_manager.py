@@ -53,7 +53,7 @@ class ExtractionLineManager(Manager):
     gauge_manager = Instance(Manager)
 #    environmental_manager = Instance(Manager)
 #    device_stream_manager = Instance(Manager)
-    multiplexer_manager=Instance(Manager)
+    multiplexer_manager = Instance(Manager)
     multruns_report_manager = Instance(Manager)
 #    multruns_report_manager = Instance(MultrunsReportManager)
 
@@ -106,7 +106,7 @@ class ExtractionLineManager(Manager):
 #            params['application'] = self.application
             m = class_factory(**params)
 
-            if manager in ['gauge_manager', 
+            if manager in ['gauge_manager',
                            'valve_manager',
                            'multiplexer_manager',
                            #'environmental_manager', 'device_stream_manager',
@@ -187,6 +187,7 @@ class ExtractionLineManager(Manager):
         if self._update_status_flag is None:
             self._update_status_flag = Event()
 
+        self._update_status_flag.clear()
         if self.isMonitoringValveState():
             self.info('monitor already running')
         else:
@@ -311,7 +312,7 @@ class ExtractionLineManager(Manager):
 
     def get_valve_state(self, name=None, description=None):
         if self.valve_manager is not None:
-            if description is not None and description.strip():  
+            if description is not None and description.strip():
                 return self.valve_manager.get_state_by_description(description)
             else:
                 return self.valve_manager.get_state_by_name(name)
