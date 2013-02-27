@@ -46,7 +46,7 @@ class Video(Image):
     _prev_frame = None
     _stop_recording_event = None
     _last_get = None
-    def open(self, user=None, identifier= -1, force=False):
+    def open(self, user=None, identifier=0, force=False):
         '''
 
         '''
@@ -123,9 +123,9 @@ class Video(Image):
                     return self.source_frame
 
     def get_image_data(self, cmap=None, **kw):
-        frame=self.get_frame(**kw)
+        frame = self.get_frame(**kw)
         if frame is not None:
-            return frame.ndarray 
+            return frame.ndarray
 ##        print arr.shape
 #        if cmap is not None:
 #            _, _, colors = transpose(arr)
@@ -159,12 +159,12 @@ class Video(Image):
 
             if self.cap is not None:
                 self._recording = True
-                if self._frame is None:
-                    self.get_frame()
+#                if self._frame is None:
+                frame = self.get_frame()
 
 #                size = map(int, self._frame.size())
-                w = 200
-                h = 200
+                w = 300
+                h = 300
                 size = (w, h)
                 writer = new_video_writer(path, 1 / fps,
                                           size
@@ -174,14 +174,15 @@ class Video(Image):
 
                 stop = self._stop_recording_event.isSet
 
-                fsize = self._frame.size()
+                fsize = frame.size()
                 x = (fsize[0] - size[0]) / 2
                 y = (fsize[1] - size[1]) / 2
 
                 while not stop():
                     st = ctime()
-                    f = crop(self._frame.clone(), x, y, w, h)
-                    write_frame(writer, grayspace(f))
+                    f = crop(frame.clone(), x, y, w, h)
+#                    write_frame(writer, grayspace(f))
+                    write_frame(writer, f)
                     dur = ctime() - st
                     sleep(max(0.001, fps - dur))
 
