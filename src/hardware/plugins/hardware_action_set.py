@@ -37,7 +37,7 @@ class HardwareActionSet(WorkbenchActionSet):
                       path='MenuBar/File',
                       class_name='{}:OpenRemoteHardwareServerAction'.format(p)),
                Action(name='Device Scans...',
-                      path='MenuBar/Results',
+                      path='MenuBar/File/Results',
                       class_name='{}:OpenDeviceScansAction'.format(p)),
                Action(name='Flag Manager',
                       path='MenuBar/Tools',

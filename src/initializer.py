@@ -390,7 +390,6 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
     def load_progress(self, n):
         '''
         '''
-
         pd = MProgressDialog(max=n, size=(550, 15))
 
         pd.open()
