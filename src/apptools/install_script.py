@@ -1,19 +1,19 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#===============================================================================
+#==============================================================================
 
 import os
 import shutil
@@ -167,7 +167,8 @@ def install_pychron_suite():
             shutil.rmtree(dst, ignore_errors=True)
             shutil.copytree(data, dst)
 
-class InstallTemplate():
+
+class InstallTemplate(object):
     name = None
     prefix = None
     icon_name = None
@@ -208,6 +209,7 @@ class RemoteHardwareServerTemplate(InstallTemplate):
         ins.include_pkgs = ['remote_hardware', 'messaging', 'envisage'] + self.default_pkgs
         ins.include_mods = [
                           'managers/remote_hardware_server_manager',
+                          'hardware/core/i_core_device'
                           ] + self.default_mods
         ins.install(src_dir)
 
