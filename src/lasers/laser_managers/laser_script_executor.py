@@ -33,26 +33,33 @@ class LaserScriptExecutor(Loggable):
     _cancel = False
     execute_button = Event
     execute_label = Property(depends_on='_executing')
-
+    kind = Enum('scan', 'calibration')
+    def _kind_default(self):
+        return 'scan'
     def _get_execute_label(self):
         return 'Stop' if self._executing else 'Execute'
 
     def _execute_button_fired(self):
-#        name = os.path.join(paths.scripts_dir, '{}_scan.yaml'.format(self.name))
-        name = os.path.join(paths.scripts_dir, '{}_calibration_scan.yaml'.format(self.name))
-        self.execute(name)
+#        name = os.path.join(paths.scripts_dir, '{}_calibration_scan.yaml'.format(self.name))
+        self.execute()
 
-    def execute(self, name):
+    def execute(self):
         if self._executing:
             self._cancel = True
             self._executing = False
         else:
             self._cancel = False
             self._executing = True
-            t = Thread(target=self._execute, args=(name,))
+            if self.kind == 'scan':
+                func = self._execute_scan
+            else:
+                func = self._execute_calibration
+            t = Thread(target=func)
             t.start()
 
-    def _execute(self, name):
+    def _execute_calibration(self):
+        name = os.path.join(paths.scripts_dir, '{}_calibration_scan.yaml'.format(self.name))
+
         import csv
         d = os.path.join(paths.data_dir, 'diode_scans')
         p, _cnt = unique_path(d, 'calibration', extension='csv')
@@ -80,6 +87,7 @@ class LaserScriptExecutor(Loggable):
         end = yd['end']
         step = yd['step']
         mean_tol = yd['mean_tol']
+        std = yd['std']
         n = (end - start) / step + 1
         with open(p, 'w') as fp:
             writer = csv.writer(fp)
@@ -87,7 +95,7 @@ class LaserScriptExecutor(Loggable):
             for ti in linspace(start, end, n):
                 if self._cancel:
                     break
-                args = self._equilibrate_temp(ti, gfunc, st, mean_tol)
+                args = self._equilibrate_temp(ti, gfunc, st, mean_tol, std)
                 if args:
                     py_t, tc_t = args
                     writer.writerow((ti, py_t, tc_t))
@@ -98,7 +106,7 @@ class LaserScriptExecutor(Loggable):
         self.laser_manager.stage_manager.stop_recording()
         self._executing = False
 
-    def _equilibrate_temp(self, temp, func, st, tol):
+    def _equilibrate_temp(self, temp, func, st, tol, std):
         ''' wait until pyrometer temp equilibrated
         '''
 
@@ -107,10 +115,10 @@ class LaserScriptExecutor(Loggable):
         py = self.laser_manager.pyrometer
         tc = self.laser_manager.get_device('temperature_monitor')
 
-        std = 2
         n = 15
 
         self.laser_manager.set_laser_temperature(temp)
+        ctemp = self.laser_manager.temperature_controller.map_temperature(temp)
         while 1:
             if self._cancel:
                 break
@@ -124,15 +132,16 @@ class LaserScriptExecutor(Loggable):
             ttemps.append(tc_t)
             ns = array(temps[-n:])
             ts = array(ttemps[-n:])
-
-            if abs(ns.mean() - temp) < tol and ns.std() < std:
+            if abs(ns.mean() - ctemp) < tol and ns.std() < std:
                 break
 
             time.sleep(1)
 
         return ns.mean(), ts.mean()
 
-    def _execute1(self, name):
+    def _execute_scan(self):
+        name = os.path.join(paths.scripts_dir, '{}_scan.yaml'.format(self.name))
+
         import csv
         d = os.path.join(paths.data_dir, 'diode_scans')
         p, _cnt = unique_path(d, 'scan', extension='csv')
@@ -150,34 +159,35 @@ class LaserScriptExecutor(Loggable):
         temp = yd['temp']
 
         g = StreamStackedGraph()
-        g.new_plot(scan_delay=1, data_limit=duration)
+        g.new_plot(scan_delay=1,)
         g.new_series(x=[], y=[])
-        g.new_plot(scan_delay=1, data_limit=duration)
+        g.new_plot(scan_delay=1,)
         g.new_series(x=[], y=[], plotid=1)
 
         self.laser_manager.open_view(g)
         self.laser_manager.stage_manager.start_recording()
         time.sleep(1)
-        def gfunc(t, v1, v2):
-            g.add_datum((t, v1))
-            g.add_datum((t, v2), plotid=1)
+        def gfunc(v1, v2):
+            g.record(v1)
+            g.record(v2, plotid=1)
 
         pi = 0
         with open(p, 'w') as fp:
             writer = csv.writer(fp)
             t = 0
             ti = 0
-            while t <= duration:
+            while ti <= duration:
                 if self._cancel:
                     break
-#                print ti, power_off
+#                print ti, power_off, pi, ti >= power_off, (ti >= power_off and pi)
                 if ti == power_on:
                     #turn on set laser to power
                     if temp:
                         self.laser_manager.set_laser_temperature(temp)
+                        pi = temp
                     else:
+                        pi = power
                         self.laser_manager.set_laser_power(power)
-                    pi = power
                 elif ti >= power_off and pi:
                     print 'setting power off'
                     if temp:
@@ -193,7 +203,7 @@ class LaserScriptExecutor(Loggable):
 
                 py_t = py.read_temperature()
                 tc_t = tc.read_temperature()
-                do_later(gfunc, t, py_t, tc_t)
+                do_later(gfunc, py_t, tc_t)
 #                do_later(g.add_datum((t, py_t, tc_t)))
                 writer.writerow((ti, pi, t, py_t, tc_t))
                 ti += 1
@@ -211,7 +221,11 @@ class LaserScriptExecutor(Loggable):
 #        self._execute(name)
     def traits_view(self):
         v = View(Item('execute_button', show_label=False,
-                       editor=ButtonEditor(label_value='execute_label')))
+                       editor=ButtonEditor(label_value='execute_label'),
+
+                       ),
+                 Item('kind', show_label=False)
+                 )
         return v
 
 class UVLaserScriptExecutor(LaserScriptExecutor):
