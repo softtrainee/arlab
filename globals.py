@@ -32,9 +32,10 @@ class Globals(object):
     ipc_dgram = False
 
     ignore_initialization_warnings = False
-    ignore_connection_warnings = True
-    ignore_chiller_unavailable = True
+    ignore_connection_warnings = False
+    ignore_chiller_unavailable = False
     ignore_required = False
+    ignore_initialization_questions = False
 
     video_test = False
 #    video_test = True
@@ -73,6 +74,7 @@ class Globals(object):
                            ('ignore_connection_warnings', str_to_bool),
                            ('ignore_chiller_unavailable', str_to_bool),
                            ('ignore_required', str_to_bool),
+                           ('ignore_initialization_questions', str_to_bool),
                            ('show_infos', str_to_bool),
                            ('show_warnings', str_to_bool),
                            ('video_test', str_to_bool),

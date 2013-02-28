@@ -26,6 +26,7 @@ import binascii
 from kerr_device import KerrDevice
 from src.hardware.core.data_helper import make_bitarray
 import time
+from globals import globalv
 
 SIGN = ['negative', 'positive']
 
@@ -150,11 +151,16 @@ class KerrMotor(KerrDevice):
         self._initialize_(*args, **kw)
         self._finish_initialize()
 
-#        self._clear_bits()
+        if self.nominal_position:
+            move_to_nominal = True
+            if not globalv.ignore_initialization_questions:
 
-        #move to the home position
-        self._set_data_position(self.nominal_position)
-        self.block(4, progress=self.progress)
+                move_to_nominal = self.confirmation_dialog('Would you like to set the {} motor to its nominal pos of {}'.format(self.name.upper(), self.nominal_position))
+
+            if move_to_nominal:
+                #move to the home position
+                self._set_data_position(self.nominal_position)
+                self.block(4, progress=self.progress)
 
         #remove reference to progress
         self.progress = None

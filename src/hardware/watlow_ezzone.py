@@ -220,7 +220,7 @@ class WatlowEZZone(CoreDevice):
         if self.calibration:
             if verbose:
                 self.info('using temperature coefficients  (e.g. ax2+bx+c) {}'.format(self.calibration.print_string()))
-            te = self.calibration.get_input(te)
+            te = min(max(0, self.calibration.get_input(te)), self.setpointmax)
         else:
             self.info('no calibration set')
 
