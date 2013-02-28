@@ -69,7 +69,7 @@ class CommandRepeater(ConfigLoadable):
 
         sock = socket.socket(socket.AF_UNIX, kind)
 
-        sock.settimeout(1)
+        sock.settimeout(1.5)
         self._sock = sock
 
         #create a sync lock
@@ -205,7 +205,7 @@ class CommandRepeater(ConfigLoadable):
     def _read_(self, count=0, verbose=True):
         rd = None
         try:
-            rd = self._sock.recv(2048)
+            rd = self._sock.recv(1024)
             success = True
         except socket.error, e:
             success, rd = self._handle_socket_read_error(e, count, verbose)
