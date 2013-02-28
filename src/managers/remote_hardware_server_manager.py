@@ -73,7 +73,7 @@ class RemoteHardwareServerManager(Manager):
                  parent=self.ui.control
                  )
 
-        Timer(1000, self._check_connection)
+        Timer(3000, self._check_connection)
 
     def display_view(self):
 

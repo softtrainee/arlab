@@ -28,7 +28,7 @@ from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors import SystemLockErrorCode, \
     SecurityErrorCode
 from globals import globalv
-BUFSIZE = 2048
+BUFSIZE = 1024
 
 def end_request(fn):
     def end(obj, rtype, data, sender, sock=None):
