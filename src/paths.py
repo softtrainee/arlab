@@ -38,11 +38,13 @@ from os import path, mkdir, getcwd
 class Paths():
     version = None
     root = None
+    bundle_root=None
     #pychron_src_root = None
     #doc_html_root = None
     icons = None
     splashes = None
     abouts = None
+    sounds=None
     #_dir suffix ensures the path is checked for existence
     root_dir = root
     stable_root = None
@@ -136,7 +138,7 @@ class Paths():
         self.icons = join(self.resources, 'icons')
         self.splashes = join(self.resources, 'splashes')
         self.abouts = join(self.resources, 'abouts')
-
+        self.sounds=join(self.resources, 'sounds')
 #        src_repo_name = 'pychron{}'.format(version)
         self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
         self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
