@@ -27,8 +27,6 @@ def rpc_query(func, **kw):
 #        except socket.error:
 #            pass
         except Exception, e:
-            from traceback import print_exception
-            print_exception(e)
             print 'remote query', e
 
     return _query
