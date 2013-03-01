@@ -36,7 +36,7 @@ class Communicator(ConfigLoadable):
     simulation = Bool(True)
     write_terminator = chr(13)  # '\r'
     handle = None
-
+    scheduler=None
     def __init__(self, *args, **kw):
         '''
         '''

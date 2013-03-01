@@ -36,7 +36,7 @@ class ModbusCommunicator(SerialCommunicator):
 
     _write_func_code = '06'
 
-    scheduler = None
+#    scheduler = None
 
     def load(self, config, path):
         '''
@@ -83,12 +83,12 @@ class ModbusCommunicator(SerialCommunicator):
 
         kw['is_hex'] = True
 
-        if self.scheduler is not None:
-            resp = self.scheduler.schedule(self.ask, args=(cmd,),
-                                           kwargs=kw
-                                           )
-        else:
-            resp = self.ask(cmd, **kw)
+#        if self.scheduler is not None:
+#            resp = self.scheduler.schedule(self.ask, args=(cmd,),
+#                                           kwargs=kw
+#                                           )
+#        else:
+#            resp = self.ask(cmd, **kw)
 
         return self._parse_response(cmd, resp, response_type)
 

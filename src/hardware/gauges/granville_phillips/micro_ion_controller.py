@@ -23,7 +23,6 @@ from traitsui.api import View, HGroup, Item, ListEditor, InstanceEditor, Group
 from numpy import random, char
 
 #=============local library imports  ==========================
-CRLF = chr(13)
 from src.hardware.core.core_device import CoreDevice
 
 class Gauge(HasTraits):
@@ -85,7 +84,11 @@ class MicroIonController(CoreDevice):
     def _set_gauge_pressure(self, name, v):
         g = self.get_gauge(name)
         if g is not None:
-            g.pressure = v
+            try:
+                g.pressure = float(v)
+            except (TypeError,ValueError):
+                pass
+            
 
     def get_pressures(self, verbose=False):
         b = self.get_convectron_b_pressure(verbose=verbose)
@@ -157,7 +160,7 @@ class MicroIonController(CoreDevice):
         key = 'DS'
         cmd = self._build_command(key, name)
 
-        r = self.ask(cmd, verbose=verbose)
+        r = self.ask(cmd, verbose=False)
         r = self._parse_response(r)
         return r
 
@@ -168,9 +171,11 @@ class MicroIonController(CoreDevice):
         #see http://docs.python.org/library/string.html#formatspec
         key = '#{}{}'.format(self.address, key)
         if value is not None:
-            args = (key, value, CRLF)
+#            args = (key, value, CRLF)
+            args = (key, value)
         else:
-            args = (key, CRLF)
+#            args = (key, CRLF)
+            args = (key, )
         c = ' '.join(args)
 
         return  c

@@ -483,7 +483,7 @@ class SerialCommunicator(Communicator):
         try:
             inw = self.handle.inWaiting()
             r += self.handle.read(inw)
-#            print 'inw',inw,r, terminator
+            #print 'inw',inw,r, terminator
             if terminator is None:
                 terminator = ('\n', '\r')
 
@@ -524,6 +524,7 @@ class SerialCommunicator(Communicator):
             #print func
             try:
                 r, isterminated = func(r)
+                #print r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):
