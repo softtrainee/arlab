@@ -88,7 +88,7 @@ class ModbusCommunicator(SerialCommunicator):
 #                                           kwargs=kw
 #                                           )
 #        else:
-#            resp = self.ask(cmd, **kw)
+        resp = self.ask(cmd, **kw)
 
         return self._parse_response(cmd, resp, response_type)
 
