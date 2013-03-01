@@ -355,7 +355,7 @@ class MotionController(CoreDevice):
             #timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
             
-        time.sleep(0.1)
+        time.sleep(0.25)
         while func():
             time.sleep(0.2)
         
