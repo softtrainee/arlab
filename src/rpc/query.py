@@ -24,9 +24,11 @@ def rpc_query(func, **kw):
         handle = obj._communicator.handle
         try:
             return getattr(handle, func.__name__)(**kw)
-        except socket.error:
-            pass
-        except Exception, e :
+#        except socket.error:
+#            pass
+        except Exception, e:
+            from traceback import print_exception
+            print_exception()
             print 'remote query', e
 
     return _query

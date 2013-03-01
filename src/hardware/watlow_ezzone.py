@@ -14,11 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #=============enthought library imports========================
-from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str, Any
+from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str, Any, DelegatesTo, on_trait_change
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor, spring
 #from pyface.timer.api import Timer
 
@@ -215,12 +212,29 @@ class WatlowEZZone(CoreDevice):
 
     calibration = Any
     use_calibrated_temperature = Bool(False)
+    coeff_string = DelegatesTo('calibration')
+
+    @on_trait_change('calibration:coefficients')
+    def _coeff_string_changed(self):
+
+        config = self.get_configuration()
+        if not config.has_section('Calibration'):
+            config.add_section('Calibration')
+
+        config.set('Calibration', 'coefficients', self.calibration.dump_coeffs())
+        with open(self.config_path, 'w') as fp:
+            config.write(fp)
+
 
     def map_temperature(self, te, verbose=True):
         if self.calibration:
             if verbose:
                 self.info('using temperature coefficients  (e.g. ax2+bx+c) {}'.format(self.calibration.print_string()))
-            te = min(max(0, self.calibration.get_input(te)), self.setpointmax)
+            if abs(te) < 1e-5:
+                te = 0
+            else:
+                te = min(max(0, self.calibration.get_input(te)), self.setpointmax)
+
         else:
             self.info('no calibration set')
 
@@ -1207,6 +1221,7 @@ class WatlowEZZone(CoreDevice):
                             Item('use_calibrated_temperature',
                                  enabled_when='calibration is not None',
                                  label='Use Calibration'),
+                            Item('coeff_string', label='Cal. Coeffs'),
                             Item('closed_loop_setpoint',
                                  label='setpoint',
                                  editor=RangeEditor(mode='slider',
