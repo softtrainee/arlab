@@ -211,8 +211,29 @@ class WatlowEZZone(CoreDevice):
     _process_memory_len = 4
 
     calibration = Any
-    use_calibrated_temperature = Bool(False)
-    coeff_string = DelegatesTo('calibration')
+    use_calibrated_temperature = Property(Bool(False), depends_on='calibration, _use_calibrated_temperature')
+    _use_calibrated_temperature = Bool(False)
+    coeff_string = Property
+
+    def _get_use_calibrated_temperature(self):
+        return self._use_calibrated_temperature and self.calibration is not None
+
+    def _set_use_calibrated_temperature(self, v):
+        self._use_calibrated_temperature = v
+
+    def _get_coeff_string(self):
+        s = ''
+        if self.calibration:
+            s = self.calibration.coeff_string
+        return s
+
+    def _set_coeff_string(self, v):
+        cal = self.calibration
+        if cal is None:
+            cal = MeterCalibration()
+            self.calibration = cal
+
+        cal.coeff_string = v
 
     @on_trait_change('calibration:coefficients')
     def _coeff_string_changed(self):
@@ -1219,9 +1240,11 @@ class WatlowEZZone(CoreDevice):
     def get_control_group(self):
         closed_grp = VGroup(
                             Item('use_calibrated_temperature',
-                                 enabled_when='calibration is not None',
+                                 #enabled_when='calibration is not None',
                                  label='Use Calibration'),
-                            Item('coeff_string', label='Cal. Coeffs'),
+                            Item('coeff_string', label='Calibration Coefficients',
+                                 #enabled_when='calibration is not None'
+                                 ),
                             Item('closed_loop_setpoint',
                                  label='setpoint',
                                  editor=RangeEditor(mode='slider',
@@ -1232,7 +1255,7 @@ class WatlowEZZone(CoreDevice):
                             Item('calibrated_setpoint',
                                  label='calibrated setpoint',
                                  enabled_when='0',
-                                 defined_when='calibration is not None',
+#                                 visible_when='calibration is not None',
                                  editor=RangeEditor(mode='slider',
                                                     format='%0.2f',
                                                     low_name='setpointmin', high_name='setpointmax'),
