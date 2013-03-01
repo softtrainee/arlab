@@ -26,6 +26,7 @@ import os
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
 import time
+from pyface.timer.do_later import do_later
 
 
 class MotionController(CoreDevice):
@@ -76,11 +77,14 @@ class MotionController(CoreDevice):
             pos = self.get_current_position(a)
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
-
-        self.parent.canvas.set_stage_position(self._x_position,
-                                       self._y_position)
-
-        self.z_progress = self._z_position
+                
+        def _update():            
+            self.parent.canvas.set_stage_position(self._x_position,
+                                           self._y_position)
+    
+            self.z_progress = self._z_position
+            
+        do_later(_update)
 
     def timer_factory(self, func=None):
         '''
@@ -351,6 +355,7 @@ class MotionController(CoreDevice):
             #timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
             
+        time.sleep(0.1)
         while func():
             time.sleep(0.2)
         
