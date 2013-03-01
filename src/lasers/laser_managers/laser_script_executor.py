@@ -69,6 +69,8 @@ class LaserScriptExecutor(Loggable):
 #        tc = self.laser_manager.get_device('temperature_monitor')
 
         g = StreamStackedGraph()
+        g.clear()
+
         g.new_plot(scan_delay=1)
         g.new_series(x=[], y=[])
         g.new_plot(scan_delay=1)
@@ -77,10 +79,13 @@ class LaserScriptExecutor(Loggable):
         self.laser_manager.open_view(g)
         self.laser_manager.stage_manager.start_recording()
         time.sleep(1)
-        def gfunc(t, v1, v2):
-            g.add_datum((t, v1))
-            g.add_datum((t, v2), plotid=1)
+#        def gfunc(t, v1, v2):
+#            g.add_datum((t, v1))
+#            g.add_datum((t, v2), plotid=1)
 
+        def gfunc(v1, v2):
+            g.record(v1)
+            g.record(v2, plotid=1)
         yd = yaml.load(open(name).read())
 
         start = yd['start']
@@ -89,6 +94,11 @@ class LaserScriptExecutor(Loggable):
         mean_tol = yd['mean_tol']
         std = yd['std']
         n = (end - start) / step + 1
+#        nn = 30
+#
+#        py = self.laser_manager.pyrometer
+#        tc = self.laser_manager.get_device('temperature_monitor')
+
         with open(p, 'w') as fp:
             writer = csv.writer(fp)
             st = time.time()
@@ -111,7 +121,7 @@ class LaserScriptExecutor(Loggable):
         '''
 
         temps = []
-        ttemps = []
+#        ttemps = []
         py = self.laser_manager.pyrometer
         tc = self.laser_manager.get_device('temperature_monitor')
 
@@ -122,22 +132,42 @@ class LaserScriptExecutor(Loggable):
         while 1:
             if self._cancel:
                 break
-
-            py_t = py.read_temperature()
-            tc_t = tc.read_temperature()
-            t = time.time() - st
-            do_later(func, t, py_t, tc_t)
+            sti = time.time()
+            py_t = py.read_temperature(verbose=False)
+            tc_t = tc.read_temperature(verbose=False)
+#            t = time.time() - st
+            do_later(func, py_t, tc_t)
 
             temps.append(py_t)
-            ttemps.append(tc_t)
+#            ttemps.append(tc_t)
             ns = array(temps[-n:])
-            ts = array(ttemps[-n:])
+#            ts = array(ttemps[-n:])
             if abs(ns.mean() - ctemp) < tol and ns.std() < std:
                 break
 
-            time.sleep(1)
+            elapsed = time.time() - sti
+            time.sleep(max(0.0001, min(1, 1 - elapsed)))
 
-        return ns.mean(), ts.mean()
+        nn = 30
+        ptemps = []
+        ctemps = []
+        for _ in range(nn):
+            if self._cancel:
+                break
+
+            sti = time.time()
+
+#            t = sti - st
+            py_t = py.read_temperature(verbose=False)
+            tc_t = tc.read_temperature(verbose=False)
+            do_later(func, py_t, tc_t)
+            ptemps.append(py_t)
+            ctemps.append(tc_t)
+            elapsed = time.time() - sti
+            time.sleep(max(0.0001, min(1, 1 - elapsed)))
+
+        return array(ptemps).mean(), array(ctemps).mean()
+#        return ns.mean(), ts.mean()
 
     def _execute_scan(self):
         name = os.path.join(paths.scripts_dir, '{}_scan.yaml'.format(self.name))
@@ -201,16 +231,14 @@ class LaserScriptExecutor(Loggable):
 
                 t = time.time() - st
 
-                py_t = py.read_temperature()
-                tc_t = tc.read_temperature()
+                py_t = py.read_temperature(verbose=False)
+                tc_t = tc.read_temperature(verbose=False)
                 do_later(gfunc, py_t, tc_t)
-#                do_later(g.add_datum((t, py_t, tc_t)))
                 writer.writerow((ti, pi, t, py_t, tc_t))
                 ti += 1
 
                 time.sleep(period)
 
-#        if self._cancel:
         if temp:
             self.laser_manager.set_laser_temperature(0)
         else:
@@ -218,7 +246,6 @@ class LaserScriptExecutor(Loggable):
         self.laser_manager.stage_manager.stop_recording()
         self._executing = False
 
-#        self._execute(name)
     def traits_view(self):
         v = View(Item('execute_button', show_label=False,
                        editor=ButtonEditor(label_value='execute_label'),

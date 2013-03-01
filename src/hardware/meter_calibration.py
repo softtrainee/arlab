@@ -15,24 +15,51 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Property, List, String
 #============= standard library imports ========================
 from numpy import poly1d
 from scipy import optimize
+from src.helpers.formatting import floatfmt
 
 #============= local library imports  ==========================
 
-class MeterCalibration(object):
-    coefficients = None
+class MeterCalibration(HasTraits):
+    coeff_string = Property(String(enter_set=True, auto_set=False))
+    coefficients = List
     bounds = None
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kw):
         if args:
             coeffs = args[0]
             if isinstance(coeffs, str):
-                coeffs = map(float, coeffs.split(','))
+                coeffs = self._parse_coeff_string(coeffs)
 
             self.coefficients = coeffs
+
+        super(MeterCalibration, self).__init__(**kw)
+
+    def _parse_coeff_string(self, coeffs):
+        try:
+            return map(float, coeffs.split(','))
+        except:
+            pass
+
+    def _validate_coeff_string(self, v):
+        return self._parse_coeff_string(v)
+
+    def _set_coeff_string(self, v):
+        if v:
+            self.coefficients = v
+
+    def _get_coeff_string(self):
+        c = ''
+        if self.coefficients:
+
+            c = ', '.join(map(lambda x: floatfmt(x, 3), self.coefficients))
+        return c
+
+    def dump_coeffs(self):
+        return ','.join(map(str, self.coefficients))
 
     def get_input(self, response):
         '''
