@@ -44,7 +44,8 @@ class RemoteHardwareServerManager(Manager):
 
     def _check_connection(self):
         for ri in self.repeaters:
-            ri.test_connection(verbose=False)
+            if ri:
+                ri.test_connection(verbose=False)
 
     @on_trait_change('servers[]')
     def _servers_changed(self):
