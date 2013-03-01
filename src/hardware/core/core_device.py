@@ -134,8 +134,14 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
     def ask(self, cmd, **kw):
         '''
         '''
-        if self._communicator is not None:
-            r = self._communicator.ask(cmd, **kw)
+        comm=self._communicator
+        if comm is not None:
+            if comm.scheduler:
+                r = comm.scheduler.schedule(comm.ask, args=(cmd,),
+                                           kwargs=kw
+                                           )
+            else:
+                r = comm.ask(cmd, **kw)
             self._communicate_hook(cmd, r)
             return r
         else:
