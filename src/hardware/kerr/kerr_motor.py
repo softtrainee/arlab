@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt
-from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, Label
+from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, Label, Group
 from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -27,6 +27,7 @@ from kerr_device import KerrDevice
 from src.hardware.core.data_helper import make_bitarray
 import time
 from globals import globalv
+from src.traits_editors.custom_label_editor import CustomLabel
 
 SIGN = ['negative', 'positive']
 
@@ -64,6 +65,11 @@ class KerrMotor(KerrDevice):
 
     _motor_position = CInt
     doing_hysteresis_correction = False
+    display_name = Property
+    display_name_color = 'brown'
+
+    def _get_display_name(self):
+        return self.name.capitalize()
 
     def _build_gains(self):
         '''
@@ -497,19 +503,24 @@ class KerrMotor(KerrDevice):
             print e
 
     def control_view(self):
-        return View(Label(self.name),
-                    Item('data_position', show_label=False,
-                         editor=RangeEditor(mode='slider',
-                                            low_name='min',
-                                            high_name='max')
-                         ),
-                    Item('update_position', show_label=False,
-                         editor=RangeEditor(mode='slider',
-                                            format='%0.3f',
-                                            low_name='min',
-                                            high_name='max', enabled=False),
-                         ),
-
+        return View(
+#                    CustomLabel('display_name', font_color=self.display_name_color),
+                    Group(
+                        Item('data_position', show_label=False,
+                             editor=RangeEditor(mode='slider',
+                                                format='%0.3f',
+                                                low_name='min',
+                                                high_name='max')
+                             ),
+                        Item('update_position', show_label=False,
+                             editor=RangeEditor(mode='slider',
+                                                format='%0.3f',
+                                                low_name='min',
+                                                high_name='max', enabled=False),
+                             ),
+                          show_border=True,
+                          label=self.display_name,
+                          )
                     )
 
     def traits_view(self):

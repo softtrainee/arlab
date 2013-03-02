@@ -16,11 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import CInt, Str, Bool, Dict
-from traitsui.api import View, Item, EnumEditor, RangeEditor, Label
+from traitsui.api import View, Item, EnumEditor, RangeEditor, Label, Group
+from src.traits_editors.custom_label_editor import CustomLabel
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-SPEED_MODES={'1x':'11', '2x':'10', '4x':'01', '8x':'00'}
+SPEED_MODES = {'1x':'11', '2x':'10', '4x':'01', '8x':'00'}
 from src.hardware.kerr.kerr_motor import KerrMotor
 '''
     status byte
@@ -45,17 +46,17 @@ class KerrStepMotor(KerrMotor):
 
     run_current = CInt
     hold_current = CInt
-    speed_mode=Str('1x')
-    disable_estop=Bool
-    disable_limits=Bool
-    motor_off=Bool
-    
+    speed_mode = Str('1x')
+    disable_estop = Bool
+    disable_limits = Bool
+    motor_off = Bool
+
     discrete_position = Str
     discrete_positions = Dict
-    
+
     def load_additional_args(self, config):
         super(KerrStepMotor, self).load_additional_args(config)
-        for section, option in [('Parameters', 'run_current'), 
+        for section, option in [('Parameters', 'run_current'),
                                 ('Parameters', 'hold_current'),
                                 ]:
             self.set_attribute(config, option, section, option, optional=False, cast='int')
@@ -65,22 +66,22 @@ class KerrStepMotor(KerrMotor):
         self.set_attribute(config, 'disable_limits', 'Parameters', 'disable_limits', optional=False, cast='boolean')
         self.set_attribute(config, 'motor_off', 'Parameters', 'motor_off', optional=False, cast='boolean')
         #load discrete positions
-        section='Discrete Positions'
+        section = 'Discrete Positions'
         if config.has_section(section):
-            off=self.config_get(config, section, 'offset', cast='int', default=0)
-            
+            off = self.config_get(config, section, 'offset', cast='int', default=0)
+
             for i, option in enumerate(config.options(section)):
-                if option=='offset':
+                if option == 'offset':
                     continue
-                
-                value=config.getint(section,option)
-                option=option.replace('_', ' ').capitalize()
-                self.discrete_positions[str(value+off)] = '{:02n}:{}'.format(i+1,option)
-                
+
+                value = config.getint(section, option)
+                option = option.replace('_', ' ').capitalize()
+                self.discrete_positions[str(value + off)] = '{:02n}:{}'.format(i + 1, option)
+
     def _discrete_position_changed(self):
         if self.discrete_position:
-            self.data_position=int(self.discrete_position)  
-            
+            self.data_position = int(self.discrete_position)
+
     def _initialize_(self, *args, **kw):
         addr = self.address
         commands = [
@@ -95,22 +96,22 @@ class KerrStepMotor(KerrMotor):
         self._home_motor(*args, **kw)
 
     def _assemble_options_byte(self):
-        ob=[]
-        sbit=SPEED_MODES[self.speed_mode]
+        ob = []
+        sbit = SPEED_MODES[self.speed_mode]
         ob.append(sbit) #1,2
-        ob.append('1' if self.disable_limits else '0')  
-        ob.append('1' if self.disable_estop else '0')  
-        ob.append('1' if self.motor_off else '0')  
+        ob.append('1' if self.disable_limits else '0')
+        ob.append('1' if self.disable_estop else '0')
+        ob.append('1' if self.motor_off else '0')
         ob.append('000')
         ob.reverse()
-        
+
         return ''.join(ob)
-            
-            
+
+
     def _build_parameters(self):
 
         cmd = '56'
-        obbyte=self._assemble_options_byte()
+        obbyte = self._assemble_options_byte()
 #        print obbyte
         op = (int(obbyte, 2), 2)#'00001011'
         mps = (1, 2)
@@ -141,11 +142,11 @@ class KerrStepMotor(KerrMotor):
 #        control = 'F6' #'11110110'
 
         cmd = '34'
-        control = '{:02x}'.format(int('10010110',2))
+        control = '{:02x}'.format(int('10010110', 2))
 
         v = '{:02x}'.format(int(self.home_velocity))
         a = '{:02x}'.format(int(self.home_acceleration))
-        
+
 #        print control, v,a
 #        v = self._float_to_hexstr(self.home_velocity)
 #        a = self._float_to_hexstr(self.home_acceleration)
@@ -205,9 +206,9 @@ class KerrStepMotor(KerrMotor):
             7=start motion now
             
         '''
-        cb='10000111'
+        cb = '10000111'
         if reverse:
-            cb=cb[:4]+'1'+cb[-3:]
+            cb = cb[:4] + '1' + cb[-3:]
         print reverse, cb
         return '{:02x}'.format(int(cb, 2))
 
@@ -239,21 +240,24 @@ class KerrStepMotor(KerrMotor):
 
     def control_view(self):
         v = View(
-                 Label(self.name),
-                 Item('discrete_position', show_label=False,
-                      editor=EnumEditor(name='discrete_positions'),
-                      defined_when='discrete_positions'
-                      ),
-                 Item('data_position', show_label=False,
+                 Group(
+                     Item('discrete_position', show_label=False,
+                          editor=EnumEditor(name='discrete_positions'),
+                          defined_when='discrete_positions'
+                          ),
+                     Item('data_position', show_label=False,
+                             editor=RangeEditor(mode='slider',
+                                                low_name='min',
+                                                high_name='max')
+                             ),
+                     Item('update_position', show_label=False,
                          editor=RangeEditor(mode='slider',
                                             low_name='min',
-                                            high_name='max')
+                                            high_name='max', enabled=False),
                          ),
-                 Item('update_position', show_label=False,
-                     editor=RangeEditor(mode='slider',
-                                        low_name='min',
-                                        high_name='max', enabled=False),
-                     ),
+                       label=self.display_name,
+                       show_border=True
+                       )
 
                  )
         return v

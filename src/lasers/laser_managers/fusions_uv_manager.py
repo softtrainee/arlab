@@ -36,6 +36,7 @@ from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 from src.lasers.stage_managers.stage_map import UVStageMap
 from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
 from src.lasers.geometry import calc_point_along_line
+from src.led.led_editor import LEDEditor
 
 class FusionsUVManager(FusionsLaserManager):
     '''
@@ -284,8 +285,11 @@ class FusionsUVManager(FusionsLaserManager):
 # views
 #===============================================================================
     def get_control_group(self):
-        return VGroup(self.get_control_button_group(),
-                      HGroup(self._button_factory('execute_button', 'execute_label'),
+        cg = VGroup(
+                      HGroup(
+                             Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+                             self._button_factory('enable', 'enable_label'),
+                             self._button_factory('execute_button', 'execute_label'),
                              Item('names', show_label=False),
                              spring
                              ),
@@ -296,10 +300,16 @@ class FusionsUVManager(FusionsLaserManager):
                              ),
                       HGroup(self._button_factory('fire_button', 'fire_label'),
                              Item('mode', show_label=False),
+                             enabled_when='object.enabled'
+                             ),
+                      HGroup(
                              Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
-                             Item('reprate', label='Rep. Rate'),
-                             Item('burst_readback', label='Burst Rem.', width=100, style='readonly'),
-                             Item('energy_readback', label='Energy (mJ)', style='readonly', format_str='%0.2f'),
+                             Item('reprate', label='Rep. Rate')
+                             ),
+                      HGroup(
+                             Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
+                             Item('energy_readback', label='Energy (mJ)',
+                                  style='readonly', format_str='%0.2f'),
                              Item('pressure_readback', label='Pressure (mbar)',
                                   style='readonly', width=100, format_str='%0.1f'),
                              spring,
@@ -307,6 +317,10 @@ class FusionsUVManager(FusionsLaserManager):
                              ),
                       show_border=True,
                       label='Power')
+
+        ac = self.get_additional_group()
+        return HGroup(cg, ac)
+
 
 #===============================================================================
 # defaults
