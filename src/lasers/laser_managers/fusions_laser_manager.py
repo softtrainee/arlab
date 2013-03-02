@@ -42,7 +42,7 @@ from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManage
 from src.viewable import Viewable
 
 class OpticsView(Viewable):
-    title = 'Optics'
+#    title = 'Optics'
     laser_controller = Instance(FusionsLogicBoard)
     def traits_view(self):
         item = Item('laser_controller', show_label=False,
@@ -57,7 +57,7 @@ class FusionsLaserManager(LaserManager):
 
     laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
-    optics_view = Instance(OpticsView)
+#    optics_view = Instance(OpticsView)
 
 #    beam = DelegatesTo('laser_controller')
 #    beammin = DelegatesTo('laser_controller')
@@ -484,10 +484,7 @@ class FusionsLaserManager(LaserManager):
 ##                                  springy=True
 #                    )
 #        return grp
-
-    def get_control_group(self):
-        '''
-        '''
+    def get_power_group(self):
         power_grp = VGroup(
                            self.get_control_button_group(),
                            HGroup(
@@ -510,19 +507,40 @@ class FusionsLaserManager(LaserManager):
         if ps:
 #            ps.springy = True
             power_grp.content.append(ps)
+    def get_additional_group(self):
+        og = Group(Item('laser_controller', show_label=False,
+                    editor=InstanceEditor(view='control_view'),
+                    style='custom'),
+                   label='Optics',
+                   )
+        ac = Group(
+                   og,
+                   show_border=True,
+                   label='Additional Controls',
+                   layout='tabbed')
 
+        aclist = self.get_additional_controls()
+        if aclist is None:
+            og.label = 'Optics'
+            og.show_border = True
+            ac = og
+        else:
+            for ai in aclist:
+                ac.content.append(ai)
+        return ac
+
+    def get_control_group(self):
+        '''
+        '''
+        power_grp = self.get_power_group()
         pulse_grp = Group(Item('pulse', style='custom', show_label=False),
                         label='Pulse', show_border=True
                         )
         power_grp = HGroup(power_grp, pulse_grp)
+        ac = self.get_additional_group()
+        g = HGroup(power_grp, ac)
 
-        vg = VGroup(power_grp)
-
-        ac = self.get_additional_controls()
-        if ac is not None:
-            vg = HGroup(vg, ac)
-
-        return vg
+        return g
 
     def _record_brightness(self):
         cp = self.get_laser_brightness(verbose=False)
@@ -614,8 +632,8 @@ class FusionsLaserManager(LaserManager):
         '''
         return FiberLight(name='fiber_light')
 
-    def _optics_view_default(self):
-        return OpticsView(laser_controller=self.laser_controller)
+#    def _optics_view_default(self):
+#        return OpticsView(laser_controller=self.laser_controller)
 
 if __name__ == '__main__':
 

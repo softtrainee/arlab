@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, Float, \
     on_trait_change, Interface, implements
-from traitsui.api import View, Item, VGroup, HGroup, spring
+from traitsui.api import View, Item, VGroup, HGroup, spring, VSplit
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -350,7 +350,7 @@ class LaserManager(BaseLaserManager):
     def get_control_items(self):
         pass
 
-    def get_additional_controls(self):
+    def get_additional_controls(self, *args):
         pass
 
     def get_power_slider(self):
@@ -362,7 +362,7 @@ class LaserManager(BaseLaserManager):
         '''
         '''
 
-        vg = VGroup(self.get_control_group(),
+        vg = VSplit(self.get_control_group(),
                     self.get_stage_group()
                     )
 

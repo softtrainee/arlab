@@ -108,9 +108,9 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
 
-        prefix= self.config_get(config, 'General', 'prefix')
+        prefix = self.config_get(config, 'General', 'prefix')
         if prefix is not None:
-            self.prefix=prefix        
+            self.prefix = prefix
 
         for option in config.options('Motors'):
             v = config.get('Motors', option)
@@ -423,11 +423,13 @@ class FusionsLogicBoard(CoreDevice):
 
     def get_control_group(self):
         return Group(Item('motors', style='custom',
+                          height= -100,
                           editor=ListEditor(mutable=False,
+                                      columns=max(1, len(self.motors) / 2),
                                       style='custom',
                                       editor=InstanceEditor(view='control_view')),
 
-                                      show_label=False)
+                                      show_label=False),
                      )
 
 

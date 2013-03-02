@@ -297,8 +297,9 @@ class FusionsDiodeManager(FusionsLaserManager):
 #                      show_border = True,
 #                      label = 'Pyrometer')
     def get_additional_controls(self):
-        v = Group(
-                   VGroup(Item('temperature_controller', style='custom',
+#        v = Group(
+        gs = [
+                  VGroup(Item('temperature_controller', style='custom',
                                editor=InstanceEditor(view='control_view'),
                                show_label=False,
                                ),
@@ -320,9 +321,9 @@ class FusionsDiodeManager(FusionsLaserManager):
                   VGroup(Item('fiber_light', style='custom', show_label=False),
                          label='FiberLight'
                          ),
-                  layout='tabbed',
-                   )
-        return v
+#                  layout = 'tabbed',
+                ]
+        return gs
 
 #======================= defaults ============================
 

@@ -146,6 +146,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
         def get_floats(elem, name):
             return map(float, elem.find(name).text.split(','))
+
         def new_rectangle(elem, c, bw=3):
             key = elem.text.strip()
             x, y = get_floats(elem, 'translation')
@@ -245,13 +246,18 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                                                 name=key,
                                                 line_width=2,
                                                 default_color=(0, 0.5, 0))
+        for g in cp.get_elements('gauge'):
+            if 'gauge' in color_dict:
+                c = color_dict['gauge']
+            else:
+                c = (0.8, 0.8, 0.8)
+            new_rectangle(g, c)
 
         for i, c in enumerate(cp.get_elements('connection')):
             start = c.find('start')
             end = c.find('end')
             skey = start.text.strip()
             ekey = end.text.strip()
-
             try:
                 orient = c.get('orientation')
             except:
@@ -259,7 +265,6 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
             x = self.markupcontainer[skey].x
             y = self.markupcontainer[skey].y
-
             try:
                 ox, oy = map(float, start.get('offset').split(','))
             except:
