@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,13 +30,13 @@ from watlow_ezzone import WatlowEZZone
 from src.constants import NULL_STR
 from src.pyscripts.bakeout_pyscript import BakeoutPyScript
 
-#class BakeoutMonitor():
+# class BakeoutMonitor():
 #    pass
-#class WarningMessge(HasTraits):
+# class WarningMessge(HasTraits):
 #    message = Str
 #    def traits_view(self):
 #        v=View(HGroup(Item('image'),
-#                      
+#
 #                      )
 
 
@@ -115,7 +115,7 @@ class BakeoutController(WatlowEZZone):
             suppress the normal initialization querys
             they are not necessary for the bakeout manager currently
         '''
-        #read the current max output setting
+        # read the current max output setting
         p = self.read_high_power_scale(nbytes=7)
         if p:
             self._max_output = p
@@ -128,7 +128,7 @@ class BakeoutController(WatlowEZZone):
 
 #    def kill(self):
 #        self.led.state = 'red'
-##        if self.isAlive() and self.isActive():
+# #        if self.isAlive() and self.isActive():
 #        if self.isActive():
 #            self.info('killing')
 #            if self._active_script is not None:
@@ -192,7 +192,7 @@ Add {}'.format(sd)):
 
         self._check_buffer = []
 
-        #set led to green
+        # set led to green
         self.led.state = 'green'
         if self.script == NULL_STR:
             self._active_script = None
@@ -306,19 +306,19 @@ Add {}'.format(sd)):
 #
 #        t = self.read_process_value(1, **kw)
 #        hp = self.read_heat_power(**kw)
-#        
+#
 #        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
 #        data = None
 #        if data is not None:
 #            t = data[0]
 #            hp = data[1]
-#            
+#
 #        if self.simulation:
-##            t = 4 + self.closed_loop_setpoint
+# #            t = 4 + self.closed_loop_setpoint
 #            t = self.get_random_value() + self.closed_loop_setpoint
 #            hp = self.get_random_value()
 #            time.sleep(0.25)
-#            
+#
 #        try:
 #            self.heat_power_value = hp
 #            self.process_value = t
@@ -346,8 +346,8 @@ Add {}'.format(sd)):
                 self._duration -= (nsecs + self.cnt % nsecs) / 3600.
                 self.cnt = 0
 
-        #self.get_temperature(verbose=False)
-        #self.complex_query(verbose=False)
+        # self.get_temperature(verbose=False)
+        # self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
         if self._check_temp_enabled:
             self._check_temp()
@@ -380,7 +380,7 @@ Add {}'.format(sd)):
 #                    self.alive = False
                     self.warning('controller failed to heat average temp= {}, duration={}'.format(avgtemp, self._check_temp_minutes))
                     self.warning_dialog('Controller failed to heat. Average temp.={:0.1f} after {} minutes. Check thermocouple and heating tape'.\
-                                        format(avgtemp, self._check_temp_minutes))
+                                        format(avgtemp, self._check_temp_minutes), sound='alarm1')
 
             self._check_buffer = cb
 #===============================================================================

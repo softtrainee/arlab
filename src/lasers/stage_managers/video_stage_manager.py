@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,27 +27,26 @@ from threading import Thread, Condition, Timer
 import os
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
+from src.helpers.media import play_sound
 from src.paths import paths
-from camera_calibration_manager import CameraCalibrationManager
-#from src.machine_vision.machine_vision_manager import MachineVisionManager
 from src.machine_vision.autofocus_manager import AutofocusManager
-
 from src.helpers.archiver import Archiver
 from src.image.video_server import VideoServer
 from src.image.video import Video
 from src.canvas.canvas2D.camera import Camera
-
-from stage_manager import StageManager
-from video_component_editor import VideoComponentEditor
 from src.machine_vision.autocenter_manager import AutocenterManager
 from src.machine_vision.mosaic_manager import MosaicManager
+
+from camera_calibration_manager import CameraCalibrationManager
+from stage_manager import StageManager
+from video_component_editor import VideoComponentEditor
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
 except ImportError:
     from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas as VideoLaserTrayCanvas
 
-#from calibration_manager import CalibrationManager
+# from calibration_manager import CalibrationManager
 class VideoStageManager(StageManager):
     '''
     '''
@@ -162,10 +161,10 @@ class VideoStageManager(StageManager):
 #            time.sleep(1)
 #            self.video.close(user=user)
 
-            #clean the video directory
+            # clean the video directory
             self.clean_video_archive()
 
-            #delay briefly before deleting the capture object
+            # delay briefly before deleting the capture object
 #            t = Timer(4, self.video.close, kwargs=dict(user=user))
 #            t.start()
         if self.video._recording:
@@ -223,8 +222,7 @@ class VideoStageManager(StageManager):
         if path:
             self.info('saving snapshot {}'.format(path))
 
-            #play camera shutter sound
-            from src.helpers.media import play_sound
+            # play camera shutter sound
             play_sound('shutter.wav')
 
             if self.render_with_markup:
@@ -301,7 +299,7 @@ class VideoStageManager(StageManager):
             sm = self._stage_map
             pos, interp = self._autocenter(holenum=holenum, ntries=1)
             if pos:
-                #add an adjustment value to the stage map
+                # add an adjustment value to the stage map
                 sm.set_hole_correction(holenum, *pos)
                 sm.dump_correction_file()
 
@@ -319,7 +317,7 @@ class VideoStageManager(StageManager):
         if self.use_autocenter:
             time.sleep(0.75)
             for _t in range(max(1, ntries)):
-                #use machine vision to calculate positioning error
+                # use machine vision to calculate positioning error
                 rpos = self.autocenter_manager.locate_target(
                         self.stage_controller.x,
                         self.stage_controller.y,
@@ -391,8 +389,8 @@ class VideoStageManager(StageManager):
 
                 polygons2 = ccm.polygons
 
-                #compare polygon sets
-                #calculate pixel displacement
+                # compare polygon sets
+                # calculate pixel displacement
                 dxpx = sum([sum([(pts1.x - pts2.x)
                                 for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
                                     for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
@@ -400,11 +398,11 @@ class VideoStageManager(StageManager):
                                 for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
                                     for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
 
-                #convert pixel displacement to mm using defined mapping
+                # convert pixel displacement to mm using defined mapping
                 dxmm = dxpx / self.pxpercmx
                 dymm = dypx / self.pxpercmy
 
-                #calculate drive offset. ratio of request/actual
+                # calculate drive offset. ratio of request/actual
                 try:
                     self.drive_xratio = rdxmm / dxmm
                     self.drive_yratio = rdymm / dymm
@@ -428,8 +426,8 @@ class VideoStageManager(StageManager):
 
         g.content.append(Group(Item('camera_xcoefficients'),
                                Item('camera_ycoefficients'),
-                               #Item('drive_xratio'),
-                               #Item('drive_yratio'),
+                               # Item('drive_xratio'),
+                               # Item('drive_yratio'),
                                mv,
                                VGroup(
                                      HGroup(Item('snapshot_button', show_label=False),
@@ -440,7 +438,7 @@ class VideoStageManager(StageManager):
                                      label='Recording'
                                      ),
                                Item('autofocus_manager', show_label=False, style='custom'),
-                               #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
+                               # HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
 #                               Item('pxpercmx'),
 #                               Item('pxpercmy'),
 #                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
@@ -591,7 +589,7 @@ class VideoStageManager(StageManager):
 
         vid = self.video
         if vid:
-            #swap red blue channels True or False
+            # swap red blue channels True or False
             vid.swap_rb = camera.swap_rb
 
             vid.vflip = camera.vflip
@@ -651,7 +649,7 @@ if __name__ == '__main__':
 
     s.load()
     s.stage_controller.bootstrap()
-    #s.update_axes()
+    # s.update_axes()
 
     s.configure_traits()
 #============= EOF ====================================
@@ -680,7 +678,7 @@ if __name__ == '__main__':
 
 #    def _calibration_manager_default(self):
 #
-##        self.video.open(user = 'calibration')
+# #        self.video.open(user = 'calibration')
 #        return CalibrationManager(parent = self,
 #                                  laser_manager = self.parent,
 #                               video_manager = self.video_manager,
@@ -689,22 +687,22 @@ if __name__ == '__main__':
     #                adxs = []
     #                adys = []
     #                for p1, p2 in zip(polygons, polygons2):
-    ##                    dxs = []
-    ##                    dys = []
-    ##                    for pts1, pts2 in zip(p1.points, p2.points):
-    ##
-    ##                        dx = pts1.x - pts2.x
-    ##                        dy = pts1.y - pts2.y
-    ##                        dxs.append(dx)
-    ##                        dys.append(dy)
-    ##                    dxs = [(pts1.x - pts2.x) for pts1, pts2 in zip(p1.points, p2.points)]
-    ##                    dys = [(pts1.y - pts2.y) for pts1, pts2 in zip(p1.points, p2.points)]
-    ##                    
+    # #                    dxs = []
+    # #                    dys = []
+    # #                    for pts1, pts2 in zip(p1.points, p2.points):
+    # #
+    # #                        dx = pts1.x - pts2.x
+    # #                        dy = pts1.y - pts2.y
+    # #                        dxs.append(dx)
+    # #                        dys.append(dy)
+    # #                    dxs = [(pts1.x - pts2.x) for pts1, pts2 in zip(p1.points, p2.points)]
+    # #                    dys = [(pts1.y - pts2.y) for pts1, pts2 in zip(p1.points, p2.points)]
+    # #
     #                    adx = sum([(pts1.x - pts2.x) for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
     #                    ady = sum([(pts1.y - pts2.y) for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
     #
-    ##                    adx = sum(dxs) / len(dxs)
-    ##                    ady = sum(dys) / len(dys)
+    # #                    adx = sum(dxs) / len(dxs)
+    # #                    ady = sum(dys) / len(dys)
     #                    adxs.append(adx)
     #                    adys.append(ady)
     #                print 'xffset', sum(adxs) / len(adxs)

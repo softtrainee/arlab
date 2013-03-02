@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,10 +27,10 @@ from src.led.led import LED
 from src.lasers.stage_managers.stage_manager import StageManager
 #
 from src.monitors.laser_monitor import LaserMonitor
-#from src.managers.graph_manager import GraphManager
+# from src.managers.graph_manager import GraphManager
 from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
-#from src.hardware.meter_calibration import MeterCalibration
+# from src.hardware.meter_calibration import MeterCalibration
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
@@ -144,7 +144,7 @@ class LaserManager(BaseLaserManager):
     power_calibration_manager = Instance(PowerCalibrationManager)
     laser_script_executor = Instance(LaserScriptExecutor)
 
-    #use_video = Bool(False)
+    # use_video = Bool(False)
     record_lasing_video = Bool(False)
     record_lasing_power = Bool(False)
 
@@ -153,7 +153,7 @@ class LaserManager(BaseLaserManager):
     monitor_klass = LaserMonitor
 
     plugin_id = Str
-    #simulation_led = Instance(LED, ())
+    # simulation_led = Instance(LED, ())
 
     status_text = Str
     pulse = Instance(Pulse)
@@ -222,7 +222,7 @@ class LaserManager(BaseLaserManager):
 #                self.enabled_led.state = 'green'
 #            else:
                 self.disable_laser()
-                self.warning_dialog('Monitor could not be started. Laser disabled')
+                self.warning_dialog('Monitor could not be started. Laser disabled', sound='alarm1')
         else:
             self.warning('Could not enable laser')
 
@@ -236,8 +236,8 @@ class LaserManager(BaseLaserManager):
 
     def disable_laser(self):
         self.info('disable laser')
-        #stop the laser monitor 
-        #if the laser is not firing is there any reason to be running the monitor?        
+        # stop the laser monitor
+        # if the laser is not firing is there any reason to be running the monitor?
         if self.monitor is not None:
             self.monitor.stop()
 
@@ -288,8 +288,8 @@ class LaserManager(BaseLaserManager):
         ''' 
         '''
         if reason is not None:
-            self.warning('EMERGENCY SHUTDOWN reason: {}'.format(reason))
-
+            self.warning('EMERGENCY SHUTOFF reason: {}'.format(reason))
+            self.warning_dialog(reason, sound='alarm1', title='AUTOMATIC LASER SHUTOFF')
             from src.remote_hardware.errors.laser_errors import LaserMonitorErrorCode
             self.error_code = LaserMonitorErrorCode(reason)
 
@@ -421,7 +421,7 @@ class LaserManager(BaseLaserManager):
         except AttributeError, e:
             print e
 ##===============================================================================
-## persistence
+# # persistence
 ##===============================================================================
 #    def dump_power_calibration(self, coefficients, bounds=None, calibration_path=None):
 #
@@ -563,10 +563,10 @@ if __name__ == '__main__':
     lm = LaserManager(name='FusionsDiode')
     lm.set_laser_power(10)
 #    from src.lasers.power.power_calibration_manager import PowerCalibrationManager, PowerCalibrationObject
-#    
+#
 #    pc=PowerCalibrationObject()
 #    pc.coefficients=[0.84,-13.76]
-#    
+#
 #    pm=PowerCalibrationManager(parent=lm)
 #    pm._dump_calibration(pc)
 

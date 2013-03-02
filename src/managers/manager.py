@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -97,7 +97,7 @@ class Manager(Viewable, RPCable):
 
     _killed = False
     enable_close_after = Bool
-    close_after_minutes = Int #in minutes
+    close_after_minutes = Int  # in minutes
 
     handler_klass = ManagerHandler
     application = Any
@@ -172,7 +172,7 @@ class Manager(Viewable, RPCable):
 #            #time.sleep(0.05)
 
 #    def close(self, is_ok):
-##        print self.name, 'close', is_ok
+# #        print self.name, 'close', is_ok
 #        return True
     def close(self, *args, **kw):
         return True
@@ -198,10 +198,10 @@ class Manager(Viewable, RPCable):
 
         return not self._killed
 
-    def warning_dialog(self, msg):
-        '''
-        '''
-        warning(None, msg)
+#    def warning_dialog(self, msg):
+#        '''
+#        '''
+#        warning(None, msg)
 
     def open_file_dialog(self, **kw):
         '''
@@ -311,7 +311,7 @@ class Manager(Viewable, RPCable):
         from src.paths import paths
         cp = self._mass_spec_params
         if cp is None:
-            #open the mass spec parameters file
+            # open the mass spec parameters file
             cp = self.configparser_factory()
             cp.read(os.path.join(paths.setup_dir, 'mass_spec_params.cfg'))
         try:
@@ -319,7 +319,7 @@ class Manager(Viewable, RPCable):
             return MassSpecParam(v)
         except Exception:
             pass
-#        return 
+#        return
 
 #        return next((f for f in self.flags if f.name == name), None)
 
@@ -353,7 +353,7 @@ class Manager(Viewable, RPCable):
 #        else:
 #            self.warning('Invalid flag {}'.format(name))
 #===============================================================================
-# 
+#
 #===============================================================================
     def create_manager(self, manager, **kw):
 
