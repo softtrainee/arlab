@@ -25,7 +25,7 @@ def computeBCC(data_str):
         returns a two char ASCII string
     '''
     bcc = 0
-    
+
     for d in data_str:
 #        print d
 #        d = ord(d)
@@ -99,9 +99,9 @@ def checkCRC(data, check):
 
 if __name__ == '__main__':
 #    s=chr(2)+'000200050007'+chr(3)
-    s='000200050007'+chr(3)
-    s='000B0001'+chr(3)
-    s='000204B0001'+chr(3)
+    s = '000200050007' + chr(3)
+    s = '000B0001' + chr(3)
+    s = '000204B0001' + chr(3)
    # s='000b0003'
     print chr(computeBCC(s))
 #============= EOF ====================================

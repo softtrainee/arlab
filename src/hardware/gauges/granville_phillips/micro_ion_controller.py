@@ -86,9 +86,9 @@ class MicroIonController(CoreDevice):
         if g is not None:
             try:
                 g.pressure = float(v)
-            except (TypeError,ValueError):
+            except (TypeError, ValueError):
                 pass
-            
+
 
     def get_pressures(self, verbose=False):
         b = self.get_convectron_b_pressure(verbose=verbose)
@@ -175,7 +175,7 @@ class MicroIonController(CoreDevice):
             args = (key, value)
         else:
 #            args = (key, CRLF)
-            args = (key, )
+            args = (key,)
         c = ' '.join(args)
 
         return  c

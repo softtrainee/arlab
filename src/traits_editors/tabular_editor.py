@@ -74,7 +74,7 @@ class _TabularEditor(wxTabularEditor):
 #        print event.GetModifiers()
         else:
             super(_TabularEditor, self)._key_down(event)
-        
+
     def _begin_drag(self, event):
         print event
 #        adapter = self.adapter

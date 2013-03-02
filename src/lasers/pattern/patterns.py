@@ -84,7 +84,7 @@ class OverlapOverlay(AbstractOverlay):
 
 
 class Pattern(Viewable):
-    
+
     graph = Instance(Graph, (), transient=True)
     cx = Float(transient=True)
     cy = Float(transient=True)

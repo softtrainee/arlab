@@ -323,7 +323,7 @@ class ValveManager(Manager):
         v = self.get_valve_by_name(n)
         state = None
         if v is not None:
-            state=self._get_state_by(v)
+            state = self._get_state_by(v)
 
         return state
 
@@ -333,14 +333,14 @@ class ValveManager(Manager):
         v = self.get_valve_by_description(n)
         state = None
         if v is not None:
-            state=self._get_state_by(v)
+            state = self._get_state_by(v)
 
         return state
-    
+
     def _get_state_by(self, v):
         '''
         '''
-        state=None
+        state = None
         if self.query_valve_state and v.query_state:
             state = v.get_hardware_state()#actuator.get_channel_state(v)
 

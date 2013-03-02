@@ -51,13 +51,13 @@ class MosaicManager(MachineVisionManager):
 
         dx = self.step_mmx
         dy = self.step_mmy
-        cx=controller.get_current_position('x')
-        cy=controller.get_current_position('y')
+        cx = controller.get_current_position('x')
+        cy = controller.get_current_position('y')
         if controller is not None:
             for r in range(nrows):
                 for c in range(ncols):
                     #move to position
-                    controller.linear_move(cx+c * dx, cy+r * dy, block=True)
+                    controller.linear_move(cx + c * dx, cy + r * dy, block=True)
                     time.sleep(1)
                     #take picture
                     image_name = 'img_{:02n}{:02n}.png'.format(r, c)
@@ -95,7 +95,7 @@ class MosaicManager(MachineVisionManager):
         im.save(os.path.join(self.current_directory, 'composite.png'))
 
     def _test_fired(self):
-        t=Thread(target=self.collect_images)
+        t = Thread(target=self.collect_images)
         t.start()
 #        self.collect_images()
 #        self.generate_composite()

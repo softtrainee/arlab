@@ -512,9 +512,9 @@ class UVStageMap(StageMap):
             v = int(name[1:])
         else:
             v = int(name)
-            
+
         pos = self.points[v - 1]
-            
+
         return pos
 
     def get_line(self, name):

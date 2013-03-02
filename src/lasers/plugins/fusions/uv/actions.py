@@ -32,9 +32,9 @@ class UVMixin(object):
     manager_name = 'fusions_uv'
 class MosaicCollectAction(UVMixin, BaseLaserAction):
     def perform(self, event):
-        man=self._get_manager(event)
+        man = self._get_manager(event)
         app = self.window.application
-        open_manager(app,man.stage_manager.mosaic_manager)
+        open_manager(app, man.stage_manager.mosaic_manager)
 #===============================================================================
 # uv actions
 #===============================================================================

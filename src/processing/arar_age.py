@@ -113,24 +113,24 @@ class ArArAge(HasTraits):
         bind_preference(self.arar_constants, 'atm_4036_e', 'pychron.experiment.constants.Ar40_Ar36_atm_error')
         bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
         bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
-    
+
 #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
         bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
-    
+
     def set_blank(self, iso, v):
         if not self.isotopes.has_key(iso):
-            niso=Isotope(name=iso)
-            self.isotopes[iso]=niso
-        
+            niso = Isotope(name=iso)
+            self.isotopes[iso] = niso
+
         self.isotopes[iso].blank.set_uvalue(v)
 
     def set_baseline(self, iso, v):
         if not self.isotopes.has_key(iso):
-            niso=Isotope(name=iso)
-            self.isotopes[iso]=niso
-        
+            niso = Isotope(name=iso)
+            self.isotopes[iso] = niso
+
         self.isotopes[iso].baseline.set_uvalue(v)
-        
+
     def _calculate_kca(self):
         result = self.arar_result
         if result:

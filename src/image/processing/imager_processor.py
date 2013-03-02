@@ -17,7 +17,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, File, Instance
-from traitsui.api import View, Item,Group, VGroup, HGroup, RangeEditor, EnumEditor, spring, ListEditor, InstanceEditor
+from traitsui.api import View, Item, Group, VGroup, HGroup, RangeEditor, EnumEditor, spring, ListEditor, InstanceEditor
 
 #============= standard library imports ========================
 import sys
@@ -42,14 +42,14 @@ from enable.component_editor import ComponentEditor
 
 from chaco.tools.pan_tool import PanTool
 class Band(HasTraits):
-    center=Int(enter_set=True, auto_set=False)
-    threshold=Int(enter_set=True, auto_set=False)
-    color=Color
-    use=Bool(False)
+    center = Int(enter_set=True, auto_set=False)
+    threshold = Int(enter_set=True, auto_set=False)
+    color = Color
+    use = Bool(False)
     def traits_view(self):
-        v=View(HGroup(Item('use',show_label=False,),Item('center'), Item('threshold'),Item('color', style='custom',show_label=False)))
+        v = View(HGroup(Item('use', show_label=False,), Item('center'), Item('threshold'), Item('color', style='custom', show_label=False)))
         return v
-    
+
 class BandwidthHighlighter(HasTraits):
 
     container = Instance(HPlotContainer)
@@ -58,50 +58,50 @@ class BandwidthHighlighter(HasTraits):
     colormap_name_1 = Str('gray')
 
     path = Str
-    add_band=Button('Add band')
-    highlight_bands=List(Band)
+    add_band = Button('Add band')
+    highlight_bands = List(Band)
     def update_path(self, new):
-        self.path=new
-    
+        self.path = new
+
     def _add_band_fired(self):
         self.highlight_bands.append(Band())
-    
+
     def _path_changed(self):
         self._load_image(self.path)
-        
+
     @on_trait_change('highlight_bands:[center,threshold,color, use]')
-    def _refresh_highlight_bands(self,obj,name, old, new):
+    def _refresh_highlight_bands(self, obj, name, old, new):
         if self.path:
-            plot=self.oplot
+            plot = self.oplot
             im = Image.open(self.path)
-            rgb_arr=array(im.convert('RGB'))
+            rgb_arr = array(im.convert('RGB'))
 #            im_arr=array(im)
             gray_im = array(im.convert('L'))
             for band in self.highlight_bands:
                 if band.use:
-                    low=band.center-band.threshold
-                    high=band.center+band.threshold
-                    
+                    low = band.center - band.threshold
+                    high = band.center + band.threshold
+
                     mask = where((gray_im > low) & (gray_im < high))
 #                    print band.color[:3]
                     rgb_arr[mask] = band.color[:3]
-            
+
             imgplot = plot.plots['plot0'][0]
             tools = imgplot.tools
             overlays = imgplot.overlays
-    
+
             plot.delplot('plot0')
             plot.data.set_data('img', rgb_arr)
             img_plot = plot.img_plot('img', colormap=color_map_name_dict[self.colormap_name_1])[0]
-            
-            for ti in tools+overlays:
+
+            for ti in tools + overlays:
                 ti.component = img_plot
-    
+
             img_plot.tools = tools
             img_plot.overlays = overlays
-            
+
             plot.request_redraw()
-        
+
 #
     def _load_image(self, path):
         self.container = self._container_factory()
@@ -140,17 +140,17 @@ class BandwidthHighlighter(HasTraits):
         img_plot.tools.append(pan)
 
         img_plot.overlays.append(zoom)
-    
+
     def _highlight_bands_default(self):
         return [Band(color='red'), Band(color='green'), Band(color='blue')]
-    
+
     def traits_view(self):
-        ctrl_grp=VGroup(
+        ctrl_grp = VGroup(
                         HGroup(Item('add_band', show_label=False)),
-                        Item('highlight_bands',editor=ListEditor(mutable=False,
-                                                                 style='custom',editor=InstanceEditor()))
+                        Item('highlight_bands', editor=ListEditor(mutable=False,
+                                                                 style='custom', editor=InstanceEditor()))
                         )
-        v=View(
+        v = View(
                ctrl_grp,
                Item('container', show_label=False,
                        editor=ComponentEditor()),
@@ -171,15 +171,15 @@ class BandwidthHighlighter(HasTraits):
 
 
 class ImageProcessor(HasTraits):
-    path=File
-    
-    highlighter=Instance(BandwidthHighlighter)
+    path = File
+
+    highlighter = Instance(BandwidthHighlighter)
     def traits_view(self):
-        main_grp=Group(Item('path'))
-        highlight_bands_grp=Item('highlighter', show_label=False, style='custom')
-        v=View(
+        main_grp = Group(Item('path'))
+        highlight_bands_grp = Item('highlighter', show_label=False, style='custom')
+        v = View(
                VGroup(main_grp,
-                      Group(highlight_bands_grp, 
+                      Group(highlight_bands_grp,
                             layout='tabbed'
                             )
                      ),
@@ -188,18 +188,18 @@ class ImageProcessor(HasTraits):
                height=900
                )
         return v
-    
+
     def _highlighter_default(self):
-        h=BandwidthHighlighter(path=self.path)
+        h = BandwidthHighlighter(path=self.path)
         self.on_trait_change(h.update_path, 'path')
         return h
-    
+
 if __name__ == '__main__':
     d = ImageProcessor()
     if len(sys.argv) > 1:
         path = os.path.join(os.getcwd(), sys.argv[1])
         d.path = path
-    
+
     #d.path='/Users/argonlab2/Sandbox/R2-03 closeup_1_BSE_1 zoomed2.png'
     d.configure_traits()
 #============= EOF =============================================

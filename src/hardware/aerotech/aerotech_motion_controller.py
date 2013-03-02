@@ -55,7 +55,7 @@ class AerotechMotionController(MotionController):
         '''
         self.axes_factory()
         return True
-    
+
     def xy_swapped(self):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
@@ -90,19 +90,19 @@ class AerotechMotionController(MotionController):
         if velocity is not None:
             xv = yv = velocity
         else:
-            xv=x.velocity
+            xv = x.velocity
 #            yv=y.velocity
-        
+
 #        if abs(nx)>1:
 #            xv=xv*0.5
 #        if abs(nx)>1:
 #            yv=yv*0.5
-        
+
         if self.xy_swapped():
             cmd = 'ILI X{} Y{} F{}'.format(ny, nx, xv)
         else:
             cmd = 'ILI X{} Y{} F{}'.format(nx, ny, xv)
-        
+
         self.ask(cmd, handshake_only=True)
         self.timer = self.timer_factory()
         if block:
@@ -184,10 +184,10 @@ class AerotechMotionController(MotionController):
         #cover status bit to binstr
             b = make_bitarray(int(sb))
             return int(b[2])
-    
+
     def get_xy(self):
         return self.get_current_position('x'), self.get_current_position('y')
-    
+
     def get_current_position(self, axis, verbose=False):
         '''
             unidex 511 6-11 Axis Positions

@@ -40,7 +40,7 @@ class AnalogDigitalConverter(CoreDevice):
 #        return self.read_device(**kw)
 
             #self.stream_manager.record(r, self.name)
-            
+
 #'''
 #Agilent requires chr(10) as its communicator terminator
 #

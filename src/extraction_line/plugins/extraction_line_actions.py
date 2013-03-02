@@ -26,15 +26,15 @@ class ExtractionLineAction(Action):
     def _get_manager(self, event, app=None):
         EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
         if app is None:
-            app=event.window.application
+            app = event.window.application
         return app.get_service(EL_PROTOCOL)
-    
+
 class OpenExtractionLineManager(ExtractionLineAction):
     description = 'Open extraction line manager'
     name = 'Open Extraction Line Manager'
     accelerator = 'Ctrl+E'
     def perform(self, event):
-        man=self._get_manager(event)
+        man = self._get_manager(event)
 
         app = self.window.application
         open_manager(app, man)
@@ -127,8 +127,8 @@ class OpenMultiplexerAction(ExtractionLineAction):
         super(OpenMultiplexerAction, self).__init__(*args, **kw)
         manager = self._get_manager(None, app=self.window.application)
         if manager.multiplexer_manager is None:
-            self.enabled=False
-            
+            self.enabled = False
+
     def perform(self, event):
         manager = self._get_manager(event)
         if manager.multiplexer_manager:

@@ -36,14 +36,14 @@ import sys
 from skimage.exposure.exposure import rescale_intensity, equalize
 from chaco.tools.pan_tool import PanTool
 class Band(HasTraits):
-    center=Int(enter_set=True, auto_set=False)
-    threshold=Int(enter_set=True, auto_set=False)
-    color=Color
-    use=Bool(False)
+    center = Int(enter_set=True, auto_set=False)
+    threshold = Int(enter_set=True, auto_set=False)
+    color = Color
+    use = Bool(False)
     def traits_view(self):
-        v=View(HGroup(Item('use',show_label=False,),Item('center'), Item('threshold'),Item('color', style='custom',show_label=False)))
+        v = View(HGroup(Item('use', show_label=False,), Item('center'), Item('threshold'), Item('color', style='custom', show_label=False)))
         return v
-    
+
 class BandwidthImager(HasTraits):
     use_threshold = Bool(False)
     low = Int(120, enter_set=True, auto_set=False)
@@ -71,8 +71,8 @@ class BandwidthImager(HasTraits):
     calc_area_value = Int(auto_set=False, enter_set=True)
     calc_area_threshold = Int(4, auto_set=False, enter_set=True)
     contrast_equalize = Bool(False)
-    
-    highlight_bands=List(Band)
+
+    highlight_bands = List(Band)
 
     @on_trait_change('highlight+')
     def _highlight_changed(self):
@@ -148,32 +148,32 @@ class BandwidthImager(HasTraits):
 #                                        in_range=(p2, p98)
 #                                        )
 #        return img_rescale
-    
+
     def _path_changed(self):
         self._load_image(self.path)
-        
+
     @on_trait_change('highlight_bands:[center,threshold,color]')
-    def _refresh_highlight_bands(self,obj,name, old, new):
+    def _refresh_highlight_bands(self, obj, name, old, new):
         if self.path:
-            plot=self.oplot
+            plot = self.oplot
             im = Image.open(self.path)
-            rgb_arr=array(im.convert('RGB'))
+            rgb_arr = array(im.convert('RGB'))
 #            im_arr=array(im)
             gray_im = array(im.convert('L'))
             for band in self.highlight_bands:
                 if band.use:
-                    low=band.center-band.threshold
-                    high=band.center+band.threshold
-                    
+                    low = band.center - band.threshold
+                    high = band.center + band.threshold
+
                     mask = where((gray_im > low) & (gray_im < high))
 #                    print band.color[:3]
                     rgb_arr[mask] = band.color[:3]
-            
+
             plot.delplot('plot0')
             plot.data.set_data('img', rgb_arr)
             img_plot = plot.img_plot('img', colormap=color_map_name_dict[self.colormap_name_1])[0]
             plot.request_redraw()
-        
+
     @on_trait_change('calc_area+')
     def _calc_area(self):
         self.trait_set(low=self.calc_area_value - self.calc_area_threshold,
@@ -334,16 +334,16 @@ class BandwidthImager(HasTraits):
         img_plot = self.plot.img_plot('img', colormap=cmap)[0]
         self.add_inspector(img_plot)
         self.plot.request_redraw()
-    
+
     def _highlight_bands_default(self):
         return [Band(color='red'), Band(color='green'), Band(color='blue')]
-    
+
     def traits_view(self):
-        ctrl_grp=VGroup(Item('path', show_label=False),
-                        Item('highlight_bands',editor=ListEditor(mutable=False,
-                                                                 style='custom',editor=InstanceEditor()))
+        ctrl_grp = VGroup(Item('path', show_label=False),
+                        Item('highlight_bands', editor=ListEditor(mutable=False,
+                                                                 style='custom', editor=InstanceEditor()))
                         )
-        v=View(
+        v = View(
                ctrl_grp,
                Item('container', show_label=False,
                        editor=ComponentEditor()),
@@ -414,7 +414,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         path = os.path.join(os.getcwd(), sys.argv[1])
         d.path = path
-    
-    d.path='/Users/argonlab2/Sandbox/R2-03 closeup_1_BSE_1 zoomed2.png'
+
+    d.path = '/Users/argonlab2/Sandbox/R2-03 closeup_1_BSE_1 zoomed2.png'
     d.configure_traits()
 #============= EOF =============================================

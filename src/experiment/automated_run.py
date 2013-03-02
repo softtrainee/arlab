@@ -170,7 +170,6 @@ class AutomatedRun(Loggable):
     _alive = False
 
     peak_center = None
-#    info_display = None
     coincidence_scan = None
 
     username = None
@@ -216,7 +215,6 @@ class AutomatedRun(Loggable):
 
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
-#        print self, self.plot_panel
         self.plot_panel.baselines = baselines = self.experiment_manager._prev_baselines
         self.plot_panel.blanks = blanks = self.experiment_manager._prev_blanks
         self.plot_panel.correct_for_blank = True if (not self.analysis_type.startswith('blank') and not self.analysis_type.startswith('background')) else False

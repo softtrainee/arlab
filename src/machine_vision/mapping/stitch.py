@@ -48,7 +48,7 @@ def convert_points(matches, l, j):
     return fp, tp
 
 def open_image(root, name):
-    return array(Image.open(os.path.join(root,'{}.png'.format(name))))
+    return array(Image.open(os.path.join(root, '{}.png'.format(name))))
 
 def hor_stitch(root, image_names, result_name='result'):
     matches, l, d = find_matches(image_names, root)

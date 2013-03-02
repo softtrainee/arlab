@@ -111,8 +111,8 @@ class ScanManager(Manager):
 #            d = self.magnet.dac
             iso = self.magnet.map_dac_to_isotope()
             if not iso in self.isotopes:
-                iso=NULL_STR
-                
+                iso = NULL_STR
+
             self.trait_set(isotope=iso, trait_change_notify=False)
 
     def opened(self):
@@ -129,7 +129,7 @@ class ScanManager(Manager):
 
         #bind 
         self.on_trait_change(self._update_magnet, 'magnet:dac_changed')
-        
+
         #force position update
         self._set_position()
 

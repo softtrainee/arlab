@@ -37,7 +37,7 @@ class UVGasHandlerManager(ValveManager):
     auto_gas_exchange = Button
 
     #energy_readback=DelegatesTo('controller')
-    pressure_readback=DelegatesTo('controller')
+    pressure_readback = DelegatesTo('controller')
 #    pressure_readback=Float
     def set_software_lock(self, name, lock):
         if lock:
@@ -67,25 +67,25 @@ class UVGasHandlerManager(ValveManager):
 
     def _auto_gas_exchange(self):
         self.info('Starting auto gas exchange')
-        self._timer=Timer(1000, self._update_pressure)
+        self._timer = Timer(1000, self._update_pressure)
         self._timer.Start()
 #        self.controller.start_update_timer()
-        if not self.confirmation_dialog('Are both gas cylinders closed',title='Auto Gas Exchange'):
+        if not self.confirmation_dialog('Are both gas cylinders closed', title='Auto Gas Exchange'):
             self._timer.Stop()
             return
-        
+
         self.controller.do_auto_vac()
         if not self.confirmation_dialog('Open Premix Cylinder, set secondary pressure to 6.5 - 7.5 bar', title='Auto Gas Exchange'):
             self._timer.Stop()
             return
-        
+
         self.controller.do_auto_gas_exchange()
-        self.information_dialog('Close Premix Gas Cylinder',title='Auto Gas Exchange')
+        self.information_dialog('Close Premix Gas Cylinder', title='Auto Gas Exchange')
         self._timer.Stop()
-        
+
     def _update_pressure(self):
         self.controller.get_pressure()
-        
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -100,9 +100,9 @@ class UVGasHandlerManager(ValveManager):
 
     def traits_view(self):
         ctrl_grp = HGroup(Item('auto_gas_exchange', show_label=False))
-        info_grp=HGroup(
+        info_grp = HGroup(
                         #Item('energy_readback', width=50,style='readonly'),
-                        Item('pressure_readback',width=50, style='readonly')
+                        Item('pressure_readback', width=50, style='readonly')
                         )
         v = View(
                  ctrl_grp,

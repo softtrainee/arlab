@@ -222,11 +222,11 @@ class VideoStageManager(StageManager):
 
         if path:
             self.info('saving snapshot {}'.format(path))
-            
+
             #play camera shutter sound
             from src.helpers.media import play_sound
             play_sound('shutter.wav')
-            
+
             if self.render_with_markup:
                 from chaco.plot_graphics_context import PlotGraphicsContext
                 c = self.canvas

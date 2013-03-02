@@ -36,7 +36,7 @@ class Communicator(ConfigLoadable):
     simulation = Bool(True)
     write_terminator = chr(13)  # '\r'
     handle = None
-    scheduler=None
+    scheduler = None
     def __init__(self, *args, **kw):
         '''
         '''
@@ -69,10 +69,10 @@ class Communicator(ConfigLoadable):
 
         #substitute replace[0] for replace[1]
         if isinstance(replace, tuple):
-            re=re.replace(replace[0], replace[1])
+            re = re.replace(replace[0], replace[1])
 #        ors=[ord(ri) for ri in re]
 #        re=''.join([str(ri if ri<32 else chr(ri)) for ri in ors])
-        re=self._prep_str(re)
+        re = self._prep_str(re)
         return re
 
     def _prep_str(self, s):
@@ -80,7 +80,7 @@ class Communicator(ConfigLoadable):
         '''
         ns = ''
         if s is None:
-            s=''
+            s = ''
         for c in s:
             oc = ord(c)
             if not 0x20 <= oc <= 0x7E:

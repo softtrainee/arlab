@@ -54,12 +54,12 @@ def horizontal_panorama(H, fromim, toim, padding=2400, delta=2400):
             fromim_t = zeros((toim.shape[0], toim.shape[1] + padding, toim.shape[2]))
             for col in range(3):
                 fromim_t[:, :, col] = ndimage.geometric_transform(fromim[:, :, col],
-                                                                  transf, 
+                                                                  transf,
 #                                                                  output_shape=size
                                                                   )
         else:
             toim_t = hstack((toim, zeros((toim.shape[0], padding))))
-            fromim_t = ndimage.geometric_transform(fromim, transf, 
+            fromim_t = ndimage.geometric_transform(fromim, transf,
 #                                                   output_shape=size
                                                    )
     else:
@@ -68,12 +68,12 @@ def horizontal_panorama(H, fromim, toim, padding=2400, delta=2400):
             fromim_t = zeros((toim.shape[0], toim.shape[1] + padding, toim.shape[2]))
             for col in range(3):
                 fromim_t[:, :, col] = ndimage.geometric_transform(fromim[:, :, col],
-                                                                  transf, 
+                                                                  transf,
 #                                                                  output_shape=size
                                                                   )
         else:
             toim_t = hstack((zeros((toim.shape[0], padding)), toim))
-            fromim_t = ndimage.geometric_transform(fromim, transf, 
+            fromim_t = ndimage.geometric_transform(fromim, transf,
 #                                                   output_shape=size
                                                    )
 

@@ -170,7 +170,7 @@ class AutofocusManager(Manager):
             if zoom:
                 motor = manager.get_motor('zoom')
                 if motor:
-                    prev_zoom=motor.data_position
+                    prev_zoom = motor.data_position
                     self.info('setting zoom: {}'.format(zoom))
                     manager.set_motor('zoom', zoom, block=True)
                     time.sleep(1.5)
@@ -294,7 +294,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         if controller.timer:
             while controller.timer.IsRunning() and not self._evt_autofocusing.isSet():
                 src = self._load_source()
-                x=controller.z_progress                
+                x = controller.z_progress
                 y = self._calculate_focus_measure(src, operator, roi)
                 self.graph.add_datum((x, y), series=series, do_after=1)
 
