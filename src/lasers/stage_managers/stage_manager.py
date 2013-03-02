@@ -318,7 +318,13 @@ class StageManager(Manager):
 
 
     def moving(self, **kw):
-        return self.stage_controller._moving_(**kw)
+        
+        if self.stage_controller.timer is not None:
+            moving=self.stage_controller.timer.IsRunning()
+        else:
+            moving=self.stage_controller._moving_(**kw)
+            
+        return moving 
 
     def define_home(self, **kw):
         self.stage_controller.define_home(**kw)
@@ -330,7 +336,6 @@ class StageManager(Manager):
 
         pos = (self.stage_controller._x_position, self.stage_controller._y_position)
         if self.stage_controller.xy_swapped():
-#        if self.stage_controller.axes['x'].id == 2:
             pos = pos[1], pos[0]
 
         canvas = self.canvas
@@ -341,7 +346,13 @@ class StageManager(Manager):
                                                        ca.rotation)
 
         return pos
-
+    
+    def get_calibrated_xy(self):
+        pos = (self.stage_controller._x_position, self.stage_controller._y_position)
+        if self.stage_controller.xy_swapped():
+            pos = pos[1], pos[0]
+        return self.get_calibrated_position(pos)
+    
     def get_calibrated_position(self, pos, key=None):
         smap = self._stage_map
 

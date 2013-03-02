@@ -176,15 +176,15 @@ class LaserHandler(BaseRemoteHardwareHandler):
         z = smanager.get_z()
         if smanager.temp_position is not None and not smanager.moving():
             x, y = smanager.temp_position
-            pos = x, y, z
+#            pos = x, y, z
 #            smanager.temp_position = None
 
         else:
-            x, y = smanager.get_uncalibrated_xy()
-            if smanager.stage_controller.xy_swapped:
-                pos = y, x, z
-            else:
-                pos = x, y, z
+            x, y = smanager.get_calibrated_xy()
+#            if smanager.stage_controller.xy_swapped:
+#                pos = y, x, z
+#            else:
+        pos = x, y, z
 #        print smanager.temp_position, not smanager.moving(), x, y
         result = ','.join(['{:0.5f}' .format(i) for i in pos])
 
