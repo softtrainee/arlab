@@ -96,7 +96,8 @@ post_measurement_script, post_equilibration_script''')
                 self.automated_run = run.clone_traits()
                 for si in SCRIPT_KEYS:
                     try:
-                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
+                        n = self._clean_script_name(getattr(run.script_info, '{}_script_name'.format(si)))
+#                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
                         setattr(self, '{}_script'.format(si), n)
                     except AttributeError:
                         pass
@@ -108,36 +109,42 @@ post_measurement_script, post_equilibration_script''')
             for si in self.selected_runs:
                 si.trait_set(**{name:new})
 
-    def make_configuration(self):
-        extraction = self.extraction_script
-        measurement = self.measurement_script
-        post_measurement = self.post_measurement_script
-        post_equilibration = self.post_equilibration_script
+#    def make_configuration(self):
+#        extraction = self.extraction_script
+#        measurement = self.measurement_script
+#        post_measurement = self.post_measurement_script
+#        post_equilibration = self.post_equilibration_script
+#
+#        if not extraction:
+#            extraction = self.extraction_scripts[0]
+#        if not measurement:
+#            measurement = self.measurement_scripts[0]
+#        if not post_measurement:
+#            post_measurement = self.post_measurement_scripts[0]
+#        if not post_equilibration:
+#            post_equilibration = self.post_equilibration_scripts[0]
+#
+#        names = dict(extraction=extraction,
+#                           measurement=measurement,
+#                           post_measurement=post_measurement,
+#                           post_equilibration=post_equilibration
+#                           )
+#        def make_script_name(ni):
+#            na = names[ni]
+#            if na is NULL_STR:
+#                return na
+#            if not na.startswith(self.mass_spectrometer):
+#                na = '{}_{}'.format(self.mass_spectrometer, na)
+#            return na
+#        return self._build_configuration(make_script_name)
 
-        if not extraction:
-            extraction = self.extraction_scripts[0]
-        if not measurement:
-            measurement = self.measurement_scripts[0]
-        if not post_measurement:
-            post_measurement = self.post_measurement_scripts[0]
-        if not post_equilibration:
-            post_equilibration = self.post_equilibration_scripts[0]
-
-        names = dict(extraction=extraction,
-                           measurement=measurement,
-                           post_measurement=post_measurement,
-                           post_equilibration=post_equilibration
-                           )
-        def make_script_name(ni):
-            na = names[ni]
-            if na is NULL_STR:
-                return na
-            if not na.startswith(self.mass_spectrometer):
-                na = '{}_{}'.format(self.mass_spectrometer, na)
-            return na
-        return self._build_configuration(make_script_name)
+    def _set_script_info(self, info):
+        for sn in SCRIPT_KEYS:
+            v = getattr(self, '{}_script'.format(sn))
+            setattr(info, '{}_script_name'.format(sn), v)
 
     def _add_hook(self, ar, **kw):
+        self._set_script_info(ar.script_info)
         self.automated_run = ar.clone_traits()
         #if analysis type is bg, b- or a overwrite a few defaults
         if not ar.analysis_type == 'unknown':
@@ -328,19 +335,21 @@ post_measurement_script, post_equilibration_script''')
 #===============================================================================
 # scripts
 #===============================================================================
-    @classmethod
-    def _build_configuration(cls, make_script_name):
-        def make_path(dname, name):
-            return os.path.join(getattr(paths, '{}_dir'.format(dname)), name)
-        args = [('{}_script'.format(ni), make_path(ni, make_script_name(ni)))
-                for ni in SCRIPT_KEYS]
-        return dict(args)
+#    @classmethod
+#    def _build_configuration(cls, make_script_name):
+#        def make_path(dname, name):
+#            return os.path.join(getattr(paths, '{}_dir'.format(dname)), name)
+#        args = [('{}_script'.format(ni), make_path(ni, make_script_name(ni)))
+#                for ni in SCRIPT_KEYS]
+#        return dict(args)
 
     def _bind_automated_run(self, a, remove=False):
         a.on_trait_change(self.update_loaded_scripts, '_measurement_script', remove=remove)
         a.on_trait_change(self.update_loaded_scripts, '_extraction_script', remove=remove)
         a.on_trait_change(self.update_loaded_scripts, '_post_measurement_script', remove=remove)
         a.on_trait_change(self.update_loaded_scripts, '_post_equilibration_script', remove=remove)
+#        a.on_trait_change(self.update_loaded_scripts, 'scripts', remove=remove)
+
 
 
 #===============================================================================

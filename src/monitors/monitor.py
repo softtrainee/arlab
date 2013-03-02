@@ -45,12 +45,12 @@ class Monitor(ConfigLoadable):
             self.set_attribute(config, 'sample_delay',
                                'General', 'sample_delay', cast='float', optional=False)
 
-            self._load_hook(config)
             self._invalid_checks = []
-            return True
+            return self._load_hook(config)
+
 
     def _load_hook(self, *args):
-        pass
+        return True
 
     def stop(self):
         '''

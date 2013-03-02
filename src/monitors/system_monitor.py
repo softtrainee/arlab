@@ -56,6 +56,7 @@ class SystemMonitor(Monitor):
                                   disable_valves=ds,
                                   pressure_trip=p, pressure_reset=r)
                 self.analytical_sections.append(a)
+        return True
 
     def _fcheck_analytical_pressure(self):
         man = self.manager

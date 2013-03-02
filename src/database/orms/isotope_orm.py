@@ -366,8 +366,8 @@ class meas_ScriptTable(Base, NameMixin):
                                primaryjoin='meas_ExtractionTable.script_id==meas_ScriptTable.id',
                                backref='experiment')
 
-class meas_MonitorTable(Base, BaseMixin):
-    xydata = Column(BLOB)
+class meas_MonitorTable(Base, NameMixin):
+    data = Column(BLOB)
 
     parameter = stringcolumn()
     criterion = stringcolumn()

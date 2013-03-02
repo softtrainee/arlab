@@ -68,8 +68,11 @@ class IsotopicMeasurement(HasTraits):
             self.filter_outlier_std_devs = int(fit.filter_outlier_std_devs)
 
     def set_uvalue(self, v):
-        self._value = v.nominal_value
-        self._error = v.std_dev()
+        if isinstance(v, tuple):
+            self._value, self._error = v
+        else:
+            self._value = v.nominal_value
+            self._error = v.std_dev()
 
     def _mean_regressor_factory(self):
         reg = MeanRegressor(xs=self.xs, ys=self.ys)

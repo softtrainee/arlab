@@ -161,11 +161,20 @@ class ExperimentManager(Manager, Saveable):
         self.save_as_experiment_sets()
 
     def save_as_experiment_sets(self):
+        #test sets before saving
+        for exp in self.experiment_sets:
+            if not exp.test():
+                return
+
         p = self.save_file_dialog(default_directory=paths.experiment_dir)
-        p = self._dump_experiment_sets(p)
-        self.save_enabled = True
+        if p:
+            p = self._dump_experiment_sets(p)
+            self.save_enabled = True
 
     def save_experiment_sets(self):
+        for exp in self.experiment_sets:
+            if not exp.test():
+                return
         self._dump_experiment_sets(self.experiment_set.path)
         self.save_enabled = False
 
@@ -175,6 +184,8 @@ class ExperimentManager(Manager, Saveable):
             return
         if not p.endswith('.txt'):
             p += '.txt'
+
+
 
         self.info('saving experiment to {}'.format(p))
         with open(p, 'wb') as fp:

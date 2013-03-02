@@ -8,8 +8,10 @@ def upgrade(migrate_engine):
     meta = MetaData(bind=migrate_engine)
     t = Table('meas_MonitorTable', meta,
               Column('id', Integer, primary_key=True),
+
               Column('analysis_id', Integer),
-              Column('xydata', BLOB),
+              Column('data', BLOB),
+              Column('name', String(80)),
               Column('parameter', String(40)),
               Column('criterion', String(40)),
               Column('comparator', String(40)),

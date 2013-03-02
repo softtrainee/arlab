@@ -23,7 +23,8 @@ from traitsui.api import View, Item, InstanceEditor, HGroup, VGroup, \
 from src.experiment.blocks.base_schedule import BaseSchedule, RunAdapter
 from src.experiment.automated_run import AutomatedRun
 from src.traits_editors.tabular_editor import myTabularEditor
-from src.experiment.identifier import ANALYSIS_MAPPING
+from src.experiment.identifier import ANALYSIS_MAPPING, convert_special_name, \
+    convert_identifier
 
 import os
 from pyface.file_dialog import FileDialog
@@ -144,16 +145,14 @@ class Block(BaseSchedule):
 #===============================================================================
 # handlers
 #===============================================================================
-#    def update_loaded_scripts(self, new):
-#        if new:
-#            self.loaded_scripts[new.name] = new
 
     def _analysis_type_changed(self):
         if self.analysis_type != NULL_STR:
+            ar = self.automated_run
+            ar._labnumber = self.analysis_type#convert_identifier(self.analysis_type)
             self._load_default_scripts(key=self.analysis_type)
 
-            ar = self.automated_run
-            ar.configuration = self.make_configuration()
+#            ar.configuration = self.make_configuration()
 
 #            ar.extraction_script_dirty = True
 #            ar.measurement_script_dirty = True
@@ -185,7 +184,8 @@ class Block(BaseSchedule):
 
 #        self._bind_automated_run(self.automated_run)
 #            self.automated_run = ar.clone_traits()
-#            self._add_hook(ar)
+        self._set_script_info(ar.script_info)
+#        self._add_hook(ar)
 
 
 #===============================================================================

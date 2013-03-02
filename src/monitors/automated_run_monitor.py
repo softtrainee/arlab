@@ -18,7 +18,7 @@
 from traits.api import HasTraits, List, Str, Property, Any, Array, Bool
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import hstack, array
+from numpy import vstack, hstack, array
 #============= local library imports  ==========================
 from src.monitors.monitor import Monitor
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
@@ -55,11 +55,12 @@ class Check(HasTraits):
     def check_condition(self, v):
         '''
         '''
+
         vs = (time.time(), v)
-        if self.data is None:
+        if not len(self.data):
             self.data = array([vs])
         else:
-            self.data = hstack((self.data, vs))
+            self.data = vstack((self.data, vs))
         compf = getattr(v, self.comparator)
         cr = float(self.criterion)
         r = compf(cr)
@@ -70,8 +71,6 @@ class Check(HasTraits):
         return r
 
 
-
-
 class AutomatedRunMonitor(Monitor):
     checks = List
     automated_run = Any
@@ -79,15 +78,22 @@ class AutomatedRunMonitor(Monitor):
         for section in config.sections():
             if section.startswith('Check'):
                 pa = self.config_get(config, section, 'parameter')
-                cr = self.config_get(config, section, 'criterion')
-                co = self.config_get(config, section, 'comparator')
-                ch = Check(name=section,
-                           parameter=pa,
-                           criterion=cr,
-                           comparator=co,
 
-                           )
-                self.checks.append(ch)
+                if 'Pressure' in pa and not ',' in pa:
+                    self.warning_dialog('Invalid Pressure Parameter in AutomatedRunMonitor, need to specify name, e.g. Pressure, <gauge_name>')
+                    return
+                else:
+                    cr = self.config_get(config, section, 'criterion')
+                    co = self.config_get(config, section, 'comparator')
+                    ch = Check(name=section,
+                               parameter=pa,
+                               criterion=cr,
+                               comparator=co,
+
+                               )
+                    self.checks.append(ch)
+
+        return True
 
     def _fcheck_conditions(self):
         ok = True
@@ -95,8 +101,8 @@ class AutomatedRunMonitor(Monitor):
             v = 0
             pa = ci.parameter
             if pa.startswith('Pressure'):
-                pa, name = pa.split(',')
-                v = self.get_pressure(name)
+                pa, controller, name = pa.split(',')
+                v = self.get_pressure(controller, name)
 
             if ci.check_condition(v):
                 if self.automated_run:
@@ -109,8 +115,10 @@ class AutomatedRunMonitor(Monitor):
 
         return ok
 
-    def get_pressure(self, name):
-        return
+    def get_pressure(self, controller, name):
+        elm = self.automated_run.extraction_line_manager
+        p = elm.get_pressure(controller, name)
+        return p
 
 class RemoteAutomatedRunMonitor(AutomatedRunMonitor):
     handle = None
@@ -121,8 +129,13 @@ class RemoteAutomatedRunMonitor(AutomatedRunMonitor):
         self.handle.port = port
         self.handle.kind = kind
 
-    def get_pressure(self, name):
-        cmd = 'GetPressure {}'.format(name)
-        return self.handle.ask(cmd)
+    def get_pressure(self, controller, name):
+        cmd = 'GetPressure {}, {}'.format(controller, name)
+        p = self.handle.ask(cmd)
+        try:
+            p = float(p)
+        except (ValueError, TypeError):
+            p = 1.0
+        return p
 
 #============= EOF =============================================
