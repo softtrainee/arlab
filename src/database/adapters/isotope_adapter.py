@@ -269,13 +269,11 @@ class IsotopeAdapter(DatabaseAdapter):
         production = self.get_irradiation_production(production)
         chronology = self.get_irradiation_chronology(chronology)
 
-        #print production, chronology
         ir = irrad_IrradiationTable(name=name,
                                     production=production,
                                     chronology=chronology)
         self._add_item(ir)
         return ir
-#        return self._add_unique(ir, 'irradiation', name)
 
     def add_irradiation_holder(self, name , **kw):
         ih = irrad_HolderTable(name=name, **kw)

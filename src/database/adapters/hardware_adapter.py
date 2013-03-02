@@ -56,43 +56,8 @@ class HardwareAdapter(PathDatabaseAdapter):
         return b
 #
     def add_device(self, name, unique=True, **kw):
-
-#        kw['name'] = name
         c = DeviceTable(name=name, **kw)
         return self._add_unique(c, 'name', name)
-#        if unique:
-#            sess = self.get_session()
-#            q = sess.query(DeviceTable).filter(DeviceTable.name == name)
-#            add_item = not bool(q.count())
-#            if not add_item:
-#                c = q.one()
-#        else:
-#            add_item = True
-#
-#        if add_item:
-#            self._add_item(c)
-
-#        return c
-
-
-#    @delete_one
-#    def delete_device(self, name):
-#        sess = self.get_session()
-#        q = sess.query(DeviceTable).filter(DeviceTable.name == name)
-#        try:
-#            dev = q.one()
-#
-#            sess.delete(dev)
-#            if commit:
-#                sess.commit()
-#
-#        except Exception, e:
-#            print e
-#        return DeviceTable
-
-#    @delete_one
-#    def delete_scan(self, sid):
-#        return ScanTable, 'id'
 
 
 if __name__ == '__main__':

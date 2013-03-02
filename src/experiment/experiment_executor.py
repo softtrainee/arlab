@@ -43,7 +43,7 @@ from src.lasers.laser_managers.laser_manager import ILaserManager
 from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
-from src.constants import NULL_STR
+from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.automated_run_editor import AutomatedRunEditor
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
@@ -111,11 +111,13 @@ class ExperimentExecutor(ExperimentManager):
     def isAlive(self):
         return self._alive
 
-    def info(self, msg, *args, **kw):
+    def info(self, msg, log=True, *args, **kw):
         self.statusbar = msg
-        super(ExperimentManager, self).info(msg, *args, **kw)
         if self.info_display:
             self.info_display.add_text(msg, color='yellow')
+
+        if log:
+            super(ExperimentManager, self).info(msg, *args, **kw)
 
     def bind_preferences(self):
         super(ExperimentExecutor, self).bind_preferences()
@@ -268,6 +270,13 @@ class ExperimentExecutor(ExperimentManager):
             self.info('experiment canceled because could not find managers {}'.format(nonfound))
             self._alive = False
             return
+        else:
+            mon = self._monitor_factory()
+            if not mon:
+                self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
+                self.info('experiment canceled because automated_run_monitor is not setup properly')
+                self._alive = False
+                return
 
         self.pyscript_runner.connect()
 
@@ -415,8 +424,7 @@ class ExperimentExecutor(ExperimentManager):
         if man is not None:
             if msg == 'Success':
                 msg = '{}\n{}'.format(msg, run.assemble_report())
-                print msg
-#                            man.broadcast(msg)
+#                man.broadcast(msg)
 
     def _launch_run(self, runsgen, cnt):
 #        repo = self.repository
@@ -458,6 +466,7 @@ class ExperimentExecutor(ExperimentManager):
         arun.integration_time = 1.04
 #        arun.repository = repo
         arun.info_display = self.info_display
+
         arun.username = self.username
 
         mon = self._monitor_factory()
@@ -519,6 +528,12 @@ class ExperimentExecutor(ExperimentManager):
 
         return True
 
+    def _sync_scripts(self, arun):
+        for si in SCRIPT_KEYS:
+            s = getattr(arun, '{}_script'.format(si))
+            if s:
+                s.automated_run = arun
+
     def _do_automated_run(self, arun):
         def isAlive():
             if not self.isAlive():
@@ -531,15 +546,19 @@ class ExperimentExecutor(ExperimentManager):
             self.err_message = 'Monitor failed to start'
             return
 
+        #set the scripts automated run to arun
+        self._sync_scripts(arun)
+
         #bootstrap the extraction script and measurement script
         if not arun.extraction_script:
-            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
+            self.err_message = 'Invalid runscript {}'.format(arun.script_info.extraction_script_name)
+#            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
             return
         else:
             arun.extraction_script.syntax_checked = True
 
         if not arun.measurement_script:
-            self.err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
+            self.err_message = 'Invalid measurement_script {}'.format(arun.script_info.measurement_script_name)
             return
         else:
             arun.measurement_script.syntax_checked = True
@@ -626,11 +645,12 @@ class ExperimentExecutor(ExperimentManager):
         self.save()
     def _save_as_button_fired(self):
         self.save_as()
-    def _experiment_set_changed(self):
-        if self.experiment_set:
-            nonfound = self._check_for_managers(self.experiment_set)
-            if nonfound:
-                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+
+#    def _experiment_set_changed(self):
+#        if self.experiment_set:
+#            nonfound = self._check_for_managers(self.experiment_set)
+#            if nonfound:
+#                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
 
     def _resume_button_fired(self):
         self.resume_runs = True
@@ -808,8 +828,8 @@ class ExperimentExecutor(ExperimentManager):
 
         if mon is not None:
 #        mon.configuration_dir_name = paths.monitors_dir
-            mon.load()
-        return mon
+            if mon.load():
+                return mon
 
     def _pyscript_runner_default(self):
         if self.mode == 'client':

@@ -27,7 +27,11 @@ class InfoInspector(BaseTool):
 
     def normal_mouse_move(self, event):
         xy = event.x, event.y
-        pos = self.component.hittest(xy)
+        try:
+            pos = self.component.hittest(xy)
+        except IndexError:
+            return
+
         if isinstance(pos, tuple):
             self.current_position = pos
             self.current_screen = xy

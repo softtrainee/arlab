@@ -27,6 +27,17 @@ class RunParser(object):
 
         args = map(str.strip, line)
 
+        script_info = dict()
+        #load scripts
+        for attr in ['measurement', 'extraction',
+                     'post_measurement',
+                     'post_equilibration',
+                     ]:
+            try:
+                script_info[attr] = args[header.index(attr)]
+            except IndexError, e:
+                print 'base schedule _run_parser ', e
+
         #load strings
         for attr in ['labnumber',
                      'measurement', 'extraction',
@@ -73,22 +84,22 @@ class RunParser(object):
         params['extract_value'] = extract_value
         params['extract_units'] = extract_units
 
-        def make_script_name(n):
-            try:
-                na = args[header.index(n)]
-                if na.startswith('_'):
-                    if meta:
-                        na = meta['mass_spectrometer'] + na
+#        def make_script_name(n):
+#            try:
+#                na = args[header.index(n)]
+#                if na.startswith('_'):
+#                    if meta:
+#                        na = meta['mass_spectrometer'] + na
+#
+#                if na and not na.endswith('.py'):
+#                    na = na + '.py'
+#            except IndexError, e:
+#                print 'base schedule make_script_name ', e
+#                na = NULL_STR
+#
+#            return na
 
-                if na and not na.endswith('.py'):
-                    na = na + '.py'
-            except IndexError, e:
-                print 'base schedule make_script_name ', e
-                na = NULL_STR
-
-            return na
-
-        return params, make_script_name
+        return script_info, params#, make_script_name
 
 
 class UVRunParser(RunParser):

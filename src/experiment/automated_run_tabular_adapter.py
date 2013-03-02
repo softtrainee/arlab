@@ -69,6 +69,7 @@ class AutomatedRunAdapter(TabularAdapter):
     autocenter_text = Property
     overlap_text = Property
     aliquot_text = Property
+    sample_text = Property
 
 
 
@@ -88,8 +89,8 @@ class AutomatedRunAdapter(TabularAdapter):
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]
         color = 'white'
-#        if not item.executable:
-#            color = 'red'
+        if not item.executable:
+            color = 'red'
         if item.skip:
             color = '#33CCFF' #light blue
         elif item.state == 'success':
@@ -124,6 +125,9 @@ class AutomatedRunAdapter(TabularAdapter):
                  ]
 
         return cols
+
+    def _get_sample_text(self):
+        return self.item.run_info.sample
 
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
@@ -193,13 +197,10 @@ class AutomatedRunAdapter(TabularAdapter):
 #
     def _get_script_name(self, script):
         name = ''
-        script = getattr(self.item, '{}_script'.format(script))
+        script_name = getattr(self.item.script_info, '{}_script_name'.format(script))
         if script:
-            name, _ext = os.path.splitext(script.name)
-
-            if '_' in name:
-                ns = name.split('_')
-                name = '_'.join(ns[1:])
+            name, _ext = os.path.splitext(script_name)
+            name = name.replace(self.item.mass_spectrometer, '')
 
         return name
 

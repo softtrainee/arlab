@@ -236,7 +236,6 @@ class MassSpecDatabaseImporter(Loggable):
                      runscript_name,
                      runscript_text
                      ):
-
         self.create_import_session(spectrometer, tray)
 
         db = self.db
@@ -248,14 +247,14 @@ class MassSpecDatabaseImporter(Loggable):
         elif trid.startswith('a'):
             runtype = 'Air'
             irradpos = -2
-        elif trid.startswith('c'): 
+        elif trid.startswith('c'):
             runtype = 'Unknown'
-            if spectrometer.lower()=='obama':
-                rid='4318'
-                irradpos='4318'
+            if spectrometer.lower() == 'obama':
+                rid = '4318'
+                irradpos = '4318'
             else:
-                rid='4319'
-                irradpos='4319'
+                rid = '4319'
+                irradpos = '4319'
         else:
             runtype = 'Unknown'
 
@@ -264,10 +263,10 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         #get the sample_id
         sample_id = 0
-        if runtype =='Air':
-            sample=db.get_sample('Air')
+        if runtype == 'Air':
+            sample = db.get_sample('Air')
             if sample:
-                sample_id=sample.SampleID
+                sample_id = sample.SampleID
         else:
             db_irradpos = db.get_irradiation_position(irradpos)
             if db_irradpos:
@@ -358,7 +357,7 @@ class MassSpecDatabaseImporter(Loggable):
             #mass spec also doesnt propograte baseline errors
 
             if runtype == 'Blank':
-                ublank = intercept-baseline
+                ublank = intercept - baseline
 
             db.add_isotope_result(db_iso, self.data_reduction_session_id,
 #                                      ufloat((i, ierr)),

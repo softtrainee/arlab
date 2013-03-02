@@ -422,13 +422,12 @@ class PyScript(Loggable):
         try:
             if self.info_display:
                 if self.info_color:
-                    self.info_display.add_text(message, color=self.info_color)
+                    self.info_display.info(message, color=self.info_color, log=False)
                 else:
-                    self.info_display.add_text(message)
+                    self.info_display.info(message, log=False)
 
         except AttributeError:
             pass
-#            do_later(self.info_display.add_text, message)
 
     @command_register
     def sleep(self, duration=0, message=None):
@@ -513,7 +512,7 @@ class PyScript(Loggable):
 
         except Exception, e:
             import traceback
-            traceback.print_exc()
+#            traceback.print_exc()
 #            self.warning_dialog(str(e))
             return e
 #            return  traceback.format_exc()

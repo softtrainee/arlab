@@ -318,7 +318,7 @@ host={}'.format(self.name, self.username, self.host))
         sess = self.get_session()
         if sess is None:
             return
-        print table, value, key
+
         q = sess.query(table)
         q = q.filter(getattr(table, key) == value)
         try:

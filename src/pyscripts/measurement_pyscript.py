@@ -32,37 +32,6 @@ estimated_duration_ff = 1.35
 
 
 
-from traits.api import HasTraits, Button, Dict
-from traitsui.api import View
-class AutomatedRun(HasTraits):
-    test = Button
-    traits_view = View('test')
-    signals = Dict
-    def _test_fired(self):
-        m = MeasurementPyScript(root=os.path.join(paths.scripts_dir, 'measurement'),
-                            name='measureTest.py',
-                            automated_run=self
-                            )
-        m.bootstrap()
-    #    print m._text
-        m.execute()
-
-    def do_sniff(self, ncounts, *args, **kw):
-        keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
-        for i in range(ncounts):
-            vals = [random.random() for _ in range(len(keys))]
-            self.signals = dict(zip(keys, vals))
-            time.sleep(0.1)
-
-    def set_spectrometer_parameter(self, *args, **kw):
-        pass
-    def set_magnet_position(self, *args, **kw):
-        pass
-    def activate_detectors(self, *args, **kw):
-        pass
-    def do_data_collection(self, *args, **kw):
-        pass
-
 command_register = makeRegistry()
 
 class MeasurementPyScript(ValvePyScript):
@@ -76,12 +45,7 @@ class MeasurementPyScript(ValvePyScript):
 
     _detectors = None
     _use_abbreviated_counts = False
-#    def __init__(self, *args, **kw):
-#        super(MeasurementPyScript, self).__init__(*args, **kw)
-#        self._detectors = dict([(k, Detector(k, m, 0)) for k, m in
-#                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
-#                                  [40, 39, 38, 37, 36, 35])
-#                              ])
+
     def get_command_register(self):
         cs = super(MeasurementPyScript, self).get_command_register()
         return cs + command_register.commands.items()
@@ -94,33 +58,7 @@ class MeasurementPyScript(ValvePyScript):
     def get_script_commands(self):
         cmds = super(MeasurementPyScript, self).get_script_commands()
 
-        cmds += [
-#                 'baselines', 'position', 'set_time_zero', 'peak_center',
-#                 'activate_detectors', 'multicollect', 'regress', 'sniff',
-#                 'peak_hop',
-#                 'coincidence',
-#                 'equilibrate',
-#                 'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
-#                 'set_extraction_lens', 'set_deflection',
-#                 'set_cdd_operating_voltage',
-#                 'set_source_parameters',
-#                 'set_source_optics',
-#
-#                 'set_ncounts',
-#                 'add_termination',
-#                 'add_truncation',
-#                 'add_action',
-#                 'clear_conditions',
-#                 'clear_terminations',
-#                 'clear_truncations',
-#                 'clear_actions',
-#
-#                 'get_intensity',
-
-#                 'extraction_gosub'
-                 ]
-
-
+        cmds += []
         return cmds
 
     def get_variables(self):
@@ -142,7 +80,7 @@ class MeasurementPyScript(ValvePyScript):
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
             return
         self.ncounts = ncounts
-        if not self._automated_run_call('do_sniff', ncounts,
+        if not self._automated_run_call('py_sniff', ncounts,
                            self._time_zero,
                            series=self._series_count):
 
@@ -157,7 +95,7 @@ class MeasurementPyScript(ValvePyScript):
             return
 
         self.ncounts = ncounts
-        if not self._automated_run_call('do_data_collection', ncounts, self._time_zero,
+        if not self._automated_run_call('py_data_collection', ncounts, self._time_zero,
                       series=self._series_count):
             self.cancel()
 
@@ -183,7 +121,7 @@ class MeasurementPyScript(ValvePyScript):
             ncounts *= 0.25
 
         self.ncounts = ncounts
-        if not self._automated_run_call('do_baselines', ncounts, self._time_zero,
+        if not self._automated_run_call('py_baselines', ncounts, self._time_zero,
                                mass,
                                detector,
                                settling_time=settling_time,
@@ -200,7 +138,7 @@ class MeasurementPyScript(ValvePyScript):
             self._estimated_duration += (cycles * integrations * estimated_duration_ff)
             return
 
-        self._automated_run_call('do_peak_hop', detector, isotopes,
+        self._automated_run_call('py_peak_hop', detector, isotopes,
                                     cycles,
                                     integrations,
                                     self._time_zero,
@@ -213,7 +151,7 @@ class MeasurementPyScript(ValvePyScript):
         if calc_time:
             self._estimated_duration += 45
             return
-        self._automated_run_call('do_peak_center', detector=detector, isotope=isotope)
+        self._automated_run_call('py_peak_center', detector=detector, isotope=isotope)
 
     @verbose_skip
     @command_register
@@ -227,7 +165,7 @@ class MeasurementPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def equilibrate(self, eqtime=20, inlet=None, outlet=None, do_post_equilibration=True):
-        evt = self._automated_run_call('do_equilibration', eqtime=eqtime,
+        evt = self._automated_run_call('py_equilibration', eqtime=eqtime,
                                         inlet=inlet,
                                         outlet=outlet,
                                         do_post_equilibration=do_post_equilibration
@@ -244,7 +182,7 @@ class MeasurementPyScript(ValvePyScript):
         if not fits:
             fits = 'linear'
 
-        self._automated_run_call('set_regress_fits', fits)
+        self._automated_run_call('py_set_regress_fits', fits)
 
     @verbose_skip
     @command_register
@@ -252,7 +190,7 @@ class MeasurementPyScript(ValvePyScript):
 
         if dets:
             self._detectors = dict()
-            self._automated_run_call('activate_detectors', list(dets))
+            self._automated_run_call('py_activate_detectors', list(dets))
             for di in list(dets):
                 self._detectors[di] = 0
 
@@ -265,12 +203,12 @@ class MeasurementPyScript(ValvePyScript):
             position_magnet('Ar40', detector='AX') #Ar40 will be converted to 39.962 use mole weight dict
             
         '''
-        self._automated_run_call('set_position', pos, detector, dac=dac)
+        self._automated_run_call('py_position_magnet', pos, detector, dac=dac)
 
     @verbose_skip
     @command_register
     def coincidence(self):
-        self._automated_run_call('do_coincidence_scan')
+        self._automated_run_call('py_coincidence_scan')
 
 #===============================================================================
 # 
@@ -285,7 +223,7 @@ class MeasurementPyScript(ValvePyScript):
         return func(*args, **kw)
 
     def _set_spectrometer_parameter(self, *args, **kw):
-        self._automated_run_call('set_spectrometer_parameter', *args, **kw)
+        self._automated_run_call('py_set_spectrometer_parameter', *args, **kw)
 
 #===============================================================================
 # set commands
@@ -293,34 +231,34 @@ class MeasurementPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def clear_conditions(self):
-        self._automated_run_call('clear_conditions')
+        self._automated_run_call('py_clear_conditions')
 
     @verbose_skip
     @command_register
     def clear_terminations(self):
-        self._automated_run_call('clear_terminations')
+        self._automated_run_call('py_clear_terminations')
 
     @verbose_skip
     @command_register
     def clear_truncations(self):
-        self._automated_run_call('clear_truncations')
+        self._automated_run_call('py_clear_truncations')
 
     @verbose_skip
     @command_register
     def clear_actions(self):
-        self._automated_run_call('clear_actions')
+        self._automated_run_call('py_clear_actions')
 
     @verbose_skip
     @command_register
     def add_termination(self, attr, comp, value, start_count=0, frequency=10):
-        self._automated_run_call('add_termination', attr, comp, value,
+        self._automated_run_call('py_add_termination', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency
                                  )
     @verbose_skip
     @command_register
     def add_truncation(self, attr, comp, value, start_count=0, frequency=10):
-        self._automated_run_call('add_truncation', attr, comp, value,
+        self._automated_run_call('py_add_truncation', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency
                                  )
@@ -334,7 +272,7 @@ class MeasurementPyScript(ValvePyScript):
             if isinstance(action, str):
                 self.execute_snippet(action)
 
-        self._automated_run_call('add_action', attr, comp, value,
+        self._automated_run_call('py_add_action', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency,
                                  action=action,
@@ -452,11 +390,6 @@ class MeasurementPyScript(ValvePyScript):
     def truncated(self):
         return self._automated_run_call(lambda:self.automated_run.truncated)
 
-#    def _get_detectors(self):
-#        return self._detectors
-#
-#    detectors = property(fget=_get_detectors)
-
 #===============================================================================
 # handler
 #===============================================================================
@@ -478,6 +411,36 @@ if __name__ == '__main__':
     d.configure_traits()
 
 #============= EOF =============================================
+#from traits.api import HasTraits, Button, Dict
+#from traitsui.api import View
+#class AutomatedRun(HasTraits):
+#    test = Button
+#    traits_view = View('test')
+#    signals = Dict
+#    def _test_fired(self):
+#        m = MeasurementPyScript(root=os.path.join(paths.scripts_dir, 'measurement'),
+#                            name='measureTest.py',
+#                            automated_run=self
+#                            )
+#        m.bootstrap()
+#    #    print m._text
+#        m.execute()
+#
+#    def do_sniff(self, ncounts, *args, **kw):
+#        keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+#        for i in range(ncounts):
+#            vals = [random.random() for _ in range(len(keys))]
+#            self.signals = dict(zip(keys, vals))
+#            time.sleep(0.1)
+#
+#    def set_spectrometer_parameter(self, *args, **kw):
+#        pass
+#    def set_magnet_position(self, *args, **kw):
+#        pass
+#    def activate_detectors(self, *args, **kw):
+#        pass
+#    def do_data_collection(self, *args, **kw):
+#        pass
 #class Detector(object):
 #    name = None
 #    mass = None
