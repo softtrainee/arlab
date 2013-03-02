@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,15 +17,18 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
-#from src.envisage.core.action_helper import open_manager
-#from globals import globalv
+from pyface.image_resource import ImageResource
+from src.paths import paths
+# from src.envisage.core.action_helper import open_manager
+# from globals import globalv
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#EXPERIMENT_MANAGER_PROTOCOL = 
+# EXPERIMENT_MANAGER_PROTOCOL =
 
 class AgeCalculator(Action):
     accelerator = 'Ctrl+='
+
     def perform(self, event):
         app = event.window.application
         manager = app.get_service('src.processing.age_calculator.AgeCalculator')
@@ -43,7 +46,7 @@ class FitIsotopesAction(ProcessingAction):
         man.fit_isotopes()
 
 #===============================================================================
-# find 
+# find
 #===============================================================================
 class OpenSelectorAction(ProcessingAction):
     accelerator = 'Ctrl+f'
@@ -78,7 +81,7 @@ class ExportPDFFigureAction(ProcessingAction):
         man = self._get_manager(event)
         man.export_figure(kind='pdf')
 
-#class ViewAnalysisTableAction(ProcessingAction):
+# class ViewAnalysisTableAction(ProcessingAction):
 #    accelerator = 'Ctrl+t'
 #    def perform(self, event):
 #        man = self._get_manager(event)
@@ -88,17 +91,31 @@ class ExportPDFFigureAction(ProcessingAction):
 #===============================================================================
 class NewSeriesAction(ProcessingAction):
     accelerator = 'Ctrl+k'
+    def _image_default(self):
+        im = ImageResource('series.gif',
+                           search_path=[paths.icons, ])
+        return im
     def perform(self, event):
         man = self._get_manager(event)
         man.new_series()
 
 class NewIdeogramAction(ProcessingAction):
     accelerator = 'Ctrl+j'
+    def _image_default(self):
+        im = ImageResource('ideogram.gif',
+                           search_path=[paths.icons, ])
+        return im
+
     def perform(self, event):
         man = self._get_manager(event)
         man.new_ideogram()
 
 class NewSpectrumAction(ProcessingAction):
+    def _image_default(self):
+        im = ImageResource('spectrum.gif',
+                           search_path=[paths.icons, ])
+        return im
+
     accelerator = 'Ctrl+u'
     def perform(self, event):
         man = self._get_manager(event)
@@ -106,6 +123,10 @@ class NewSpectrumAction(ProcessingAction):
 
 class NewInverseIsochronAction(ProcessingAction):
     accelerator = 'Ctrl+i'
+    def _image_default(self):
+        im = ImageResource('isochron.gif',
+                           search_path=[paths.icons, ])
+        return im
     def perform(self, event):
         man = self._get_manager(event)
         man.new_isochron()
@@ -141,7 +162,7 @@ class ApplyDetectorIntercalibrationAction(ProcessingAction):
         man.apply_detector_intercalibration_correction()
 
 #===============================================================================
-# 
+#
 #===============================================================================
 class ProjectViewAction(ProcessingAction):
     accelerator = 'Ctrl+p'

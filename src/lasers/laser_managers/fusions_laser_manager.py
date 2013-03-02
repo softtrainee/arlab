@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
-#from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
+# from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
 from src.progress_dialog import MProgressDialog
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
@@ -64,7 +64,7 @@ class FusionsLaserManager(LaserManager):
 #    beammax = DelegatesTo('laser_controller')
 #    update_beam = DelegatesTo('laser_controller')
 #    beam_enabled = DelegatesTo('laser_controller')
-##    beam_enabled = Bool(True)
+# #    beam_enabled = Bool(True)
 #
 #    zoom = DelegatesTo('laser_controller')
 #    zoommin = DelegatesTo('laser_controller')
@@ -183,7 +183,7 @@ class FusionsLaserManager(LaserManager):
         self.info('start {} recording for {}'.format(m, rid))
         self._current_rid = rid
 
-        #zoom in for recording
+        # zoom in for recording
         self._previous_zoom = self.zoom
         self.set_zoom(self.recording_zoom, block=True)
 
@@ -210,8 +210,8 @@ class FusionsLaserManager(LaserManager):
         if self.brightness_timer is not None and self.brightness_timer.isAlive():
             self.brightness_timer.Stop()
 
-        #before starting the timer collect quick baseline
-        #default is 5 counts @ 25 ms per count
+        # before starting the timer collect quick baseline
+        # default is 5 counts @ 25 ms per count
         if self._get_record_brightness():
             self.collect_baseline_brightness()
             self.brightness_timer = Timer(175, self._record_brightness)
@@ -443,19 +443,19 @@ class FusionsLaserManager(LaserManager):
         '''
         return [('enable', 'enable_label', None),
 #                ('record', 'record_label', None),
-                #('pointer', 'pointer_label', None),
-                #('light', 'light_label', None)
+                # ('pointer', 'pointer_label', None),
+                # ('light', 'light_label', None)
                 ]
 
 #    def get_control_items(self):
 #        '''
 #        '''
-##        return Item('laser_controller', show_label=False,
-##                    editor=InstanceEditor(view='control_view'),
-##                    style='custom',
-##                    springy=False, height= -100)
+# #        return Item('laser_controller', show_label=False,
+# #                    editor=InstanceEditor(view='control_view'),
+# #                    style='custom',
+# #                    springy=False, height= -100)
 #
-##        return self.laser_controller.get_control_group()
+# #        return self.laser_controller.get_control_group()
 #        s = [('zoom', 'zoom', {}),
 #            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
 #            ]
@@ -481,7 +481,7 @@ class FusionsLaserManager(LaserManager):
 #    def get_control_button_group(self):
 #        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
 #                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
-##                                  springy=True
+# #                                  springy=True
 #                    )
 #        return grp
     def get_power_group(self):
@@ -507,6 +507,8 @@ class FusionsLaserManager(LaserManager):
         if ps:
 #            ps.springy = True
             power_grp.content.append(ps)
+        return power_grp
+
     def get_additional_group(self):
         og = Group(Item('laser_controller', show_label=False,
                     editor=InstanceEditor(view='control_view'),
@@ -661,8 +663,8 @@ if __name__ == '__main__':
 #        pp = os.path.join(paths.scripts_dir, 'laserscripts', 'power_scans')
 #        pscan = PowerScanScript(manager = self, source_dir = pp)
 
-        #pscan.start()
-        #pscan.open()
+        # pscan.start()
+        # pscan.open()
 #    def traits_view(self):
 #        '''
 #        '''
@@ -721,7 +723,7 @@ if __name__ == '__main__':
 
 #    def show_laser_control(self):
 #        self.edit_traits()
-#    
+#
 #    def show_stage_manager(self):
 #        '''
 #        '''
@@ -742,7 +744,7 @@ if __name__ == '__main__':
 
 #    def show_preferences(self):
 #        preferences.edit_traits()
-#def get_menus(self):
+# def get_menus(self):
 #        '''
 #        '''
 #        return [('File', [dict(name = 'Preferences', action = 'show_preferences',),
@@ -761,24 +763,24 @@ if __name__ == '__main__':
 #                          # dict(name = 'Video', action = 'show_video')
 #                           ]),
 # #               ('Streams', [dict(name = 'Streams...', action = 'show_streams'),
-##                            dict(name = 'Stop', action = 'stop_streams', enabled_when = 'streaming'),
-##                            #dict(name = 'Save Graph ...', action = '_save_graph', enabled_when = 'dirty')
-##                            ]),
+# #                            dict(name = 'Stop', action = 'stop_streams', enabled_when = 'streaming'),
+# #                            #dict(name = 'Save Graph ...', action = '_save_graph', enabled_when = 'dirty')
+# #                            ]),
 #
 #
 #                self.get_calibration_menu()
 #
 #                ]
-##    def get_calibration_menu(self):
-##        '''
-##        '''
-##        return ('Calibration', [
-##                               dict(name = 'Power Map', action = 'launch_power_map'),
-##                               dict(name = 'Beam Scan', action = 'launch_beam_scan')
-###                               dict(name = 'Power Scan', action = 'launch_power_scan'),
-###                               dict(name = 'Laser Pulse', action = 'launch_laser_pulse')
-##                                  ]
-##                                )
+# #    def get_calibration_menu(self):
+# #        '''
+# #        '''
+# #        return ('Calibration', [
+# #                               dict(name = 'Power Map', action = 'launch_power_map'),
+# #                               dict(name = 'Beam Scan', action = 'launch_beam_scan')
+# ##                               dict(name = 'Power Scan', action = 'launch_power_scan'),
+# ##                               dict(name = 'Laser Pulse', action = 'launch_laser_pulse')
+# #                                  ]
+# #                                )
 
 #    def control_group(self):
 #        cg = VGroup(

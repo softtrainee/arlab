@@ -1,13 +1,13 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,14 +18,14 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
-from pyface.message_dialog import warning, information
-from pyface.api import confirm
-from pyface.wx.dialog import confirmation
+from pyface.message_dialog import information, warning as nonmodal_warning
+# from pyface.api import confirm
+from pyface.wx.dialog import confirmation, warning
 
 #============= standard library imports ========================
-import wx
+# import wx
 #============= local library imports  ==========================
-#from src.helpers.logger_setup import add_console
+# from src.helpers.logger_setup import add_console
 from globals import globalv
 from src.helpers.color_generators import colorname_generator
 from src.helpers.logger_setup import new_logger, NAME_WIDTH
@@ -66,13 +66,20 @@ class Loggable(HasTraits):
             c = color_name_gen.next()
         self.logcolor = c
 
-    def warning_dialog(self, msg):
-        warning(None, msg)
+    def warning_dialog(self, msg, sound=None, title=None):
+        if sound:
+            from src.helpers.media import loop_sound
+            evt = loop_sound('alarm1')
+            warning(None, msg, title=title)
+            evt.set()
+        else:
+            nonmodal_warning(None, msg, title=title)
 
     def confirmation_dialog(self, msg, title=None):
         result = confirmation(None, msg, title=title)
-        #NO==5104, YES==5103
+        # NO==5104, YES==5103
         return result == 5103
+
 
     def information_dialog(self, msg, title=None):
         if title is None:
