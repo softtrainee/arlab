@@ -29,52 +29,52 @@ Agilent requires chr(10) as its communicator terminator
 
 '''
 class Channel(HasTraits):
-    address=Str
-    name=Str
-    value=Float
-    process_value=Property(depends_on='value')
-    coefficients=Tuple
-    kind=Str('DC')
+    address = Str
+    name = Str
+    value = Float
+    process_value = Property(depends_on='value')
+    coefficients = Tuple
+    kind = Str('DC')
     def traits_view(self):
-        v=View(HGroup(Item('name', show_label=False, style='readonly', width=200),
-                      Item('address',show_label=False, style='readonly', width=75), 
+        v = View(HGroup(Item('name', show_label=False, style='readonly', width=200),
+                      Item('address', show_label=False, style='readonly', width=75),
                       Item('value', show_label=False, style='readonly', width=100),
-                      Item('process_value', show_label=False, style='readonly',width=100)))
+                      Item('process_value', show_label=False, style='readonly', width=100)))
         return v
-    
+
     def _get_process_value(self):
-        value=self.value
+        value = self.value
         if self.coefficients:
-            value=polyval(self.coefficients, value)
+            value = polyval(self.coefficients, value)
         return value
-        
+
 class AgilentMultiplexer(AgilentUnit):
-    channels=List
-    scan_func='channel_scan'
+    channels = List
+    scan_func = 'channel_scan'
     def load_additional_args(self, config):
         super(AgilentMultiplexer, self).load_additional_args(config)
         #load channels
         for section in config.sections():
             if section.startswith('Channel'):
-                kind=self.config_get(config, section, 'kind', default='DC')
-                name=self.config_get(config, section, 'name', default='')
-                
-                cs=self.config_get(config, section, 'coefficients', default='1,0')
+                kind = self.config_get(config, section, 'kind', default='DC')
+                name = self.config_get(config, section, 'name', default='')
+
+                cs = self.config_get(config, section, 'coefficients', default='1,0')
                 try:
-                    cs=map(float, cs.split(','))
+                    cs = map(float, cs.split(','))
                 except ValueError:
                     self.warning('invalid coefficients for {}. {}'.format(section, cs))
-                    cs=1,0
-                    
-                ch=Channel(address='{}{:02n}'.format(self.slot, int(section[7:])),
+                    cs = 1, 0
+
+                ch = Channel(address='{}{:02n}'.format(self.slot, int(section[7:])),
                            kind=kind,
                            name=name,
                            coefficients=cs
                            )
                 self.channels.append(ch)
-                
+
         return True
-    
+
     def initialize(self, *args, **kw):
         '''
         '''
@@ -95,41 +95,41 @@ class AgilentMultiplexer(AgilentUnit):
 
         for c in cmds:
             self.tell(c)
-            
+
         #configure channels
         #configure volt changes
-        chs=self._get_dc_channels()    
-        c='CONF:VOLT:DC {}'.format(self._make_scan_list(chs))
-        self.tell(c)    
-                
+        chs = self._get_dc_channels()
+        c = 'CONF:VOLT:DC {}'.format(self._make_scan_list(chs))
+        self.tell(c)
+
         return True
-    
+
     def _get_dc_channels(self):
-        return [ci for ci in self.channels if ci.kind=='DC']
-    
+        return [ci for ci in self.channels if ci.kind == 'DC']
+
     def _make_scan_list(self, channels=None):
         if channels is None:
-            channels=self.channels
+            channels = self.channels
         return '(@{})'.format(','.join([ci.address for ci in channels]))
-    
+
     def channel_scan(self, **kw):
         self._trigger()
         if self._wait():
             for ci in self.channels:
-                v=self.ask('DATA:REMOVE? 1', verbose=False)
+                v = self.ask('DATA:REMOVE? 1', verbose=False)
                 if v is None:
-                    v=self.get_random_value()
-                ci.value=float(v)
-                    
+                    v = self.get_random_value()
+                ci.value = float(v)
+
                 if not self._wait():
                     break
-                
+
             return True
 
     def traits_view(self):
-        v=View(Item('channels', show_label=False, editor=ListEditor(mutable=False, editor=InstanceEditor(), style='custom')))
-        return v 
-                
+        v = View(Item('channels', show_label=False, editor=ListEditor(mutable=False, editor=InstanceEditor(), style='custom')))
+        return v
+
 class AgilentSingleADC(AgilentUnit):
     '''
     '''
@@ -142,10 +142,10 @@ class AgilentSingleADC(AgilentUnit):
 
         '''
         super(AgilentSingleADC, self).load_additional_args(config)
-        
-        
+
+
         channel = self.config_get(config, 'General', 'channel', cast='int')
-        
+
         if self.slot is not None and channel is not None:
             self.address = '{}{:02n}'.format(self.slot, channel)
             return True
@@ -173,7 +173,7 @@ class AgilentSingleADC(AgilentUnit):
                 self.tell(c)
 
             return True
-        
+
     def read_device(self, **kw):
         '''
         '''
@@ -196,7 +196,7 @@ class AgilentSingleADC(AgilentUnit):
         '''
         if r is None:
             return r
-        
+
         return float(r)
 #        args = r.split(',')
 #        data = args[:-1]

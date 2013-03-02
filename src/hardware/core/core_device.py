@@ -134,7 +134,7 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
     def ask(self, cmd, **kw):
         '''
         '''
-        comm=self._communicator
+        comm = self._communicator
         if comm is not None:
             if comm.scheduler:
                 r = comm.scheduler.schedule(comm.ask, args=(cmd,),

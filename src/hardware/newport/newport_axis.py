@@ -155,7 +155,7 @@ class NewportAxis(Axis):
 
     loadposition = Float
 
-    
+
 
     kind = Property(depends_on='_kind')
     _kind = Int

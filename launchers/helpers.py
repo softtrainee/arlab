@@ -28,8 +28,8 @@ def build_version(ver, set_path=False):
     #can now use src. 
     #build the global path structure
     from src.paths import paths
-    
-    paths.bundle_root=os.path.dirname(__file__)
+
+    paths.bundle_root = os.path.dirname(__file__)
     paths.build(ver)
 
     #build globals

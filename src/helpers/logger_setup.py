@@ -30,8 +30,8 @@ from filetools import unique_path
 #from pyface.timer.do_later import do_later
 import shutil
 
-gFORMAT = '%(name)-12s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'
-
+NAME_WIDTH = 40
+gFORMAT = '%(name)-{}s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'.format(NAME_WIDTH)
 gLEVEL = logging.DEBUG
 
 #LOGGER_LIST = []
@@ -187,7 +187,7 @@ def logging_setup(name, **kw):
 #    return logger
 
 def new_logger(name):
-    name = '{:<{}}'.format(name, 30)
+    name = '{:<{}}'.format(name, NAME_WIDTH)
     l = logging.getLogger(name)
     l.setLevel(gLEVEL)
 

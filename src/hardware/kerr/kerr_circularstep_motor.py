@@ -41,9 +41,9 @@ from src.hardware.core.data_helper import make_bitarray
 class KerrCircularStepMotor(KerrStepMotor):
     min = CInt
     max = CInt
-    
-        
-       
+
+
+
 #            pos = self.discrete_positions[self.discrete_position]
 #            self._set_motor_position_(int(self.discrete_position))
 
@@ -88,7 +88,7 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         cmd = '34'
 #        control = 'F6' #'11110110'
-        control = '{:02x}'.format(int('10010110',2))
+        control = '{:02x}'.format(int('10010110', 2))
 #        v = self._float_to_hexstr(self.home_velocity)
 #        a = self._float_to_hexstr(self.home_acceleration)
         v = '{:02x}'.format(int(self.home_velocity))
@@ -109,10 +109,10 @@ class KerrCircularStepMotor(KerrStepMotor):
         cmds = [(addr, '1707', 100, 'Stop motor'), #leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-        
+
         #start moving
         self._set_motor_position_(100)
-        
+
         #poll proximity switch
         while 1:
             time.sleep(0.05)

@@ -50,16 +50,16 @@ class UvHandler(LaserHandler):
         return result
 
     def Fire(self, manager, mode, *args):
-        result=manager.fire_laser(mode)
+        result = manager.fire_laser(mode)
         return result
-    
+
     def SetNBurst(self, manager, n, *args):
-        result=manager.set_nburst(n)
+        result = manager.set_nburst(n)
         return result
-    
-    def GetNBurst(self, manager,*args):
+
+    def GetNBurst(self, manager, *args):
         return manager.get_nburst()
-    
+
     def GetBurstMode(self, manager, *args):
         return manager.get_burst_mode()
 #============= views ===================================

@@ -77,14 +77,14 @@ class MotionController(CoreDevice):
             pos = self.get_current_position(a)
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
-                
+
 #        def _update():     
 #        print self._x_position, self._y_position       
         self.parent.canvas.set_stage_position(self._x_position,
                                               self._y_position)
 
         self.z_progress = self._z_position
-        
+
 #        do_later(_update)
 
     def timer_factory(self, func=None):
@@ -97,7 +97,7 @@ class MotionController(CoreDevice):
             func = self._inprogress_update
         self._not_moving_count = 0
         return Timer(250, func)
-        
+
 
     def _z_inprogress_update(self):
         '''
@@ -122,7 +122,7 @@ class MotionController(CoreDevice):
     def _inprogress_update(self):
         '''
         '''
-        
+
         if not self._moving_():
             self.timer.Stop()
             self.parent.canvas.clear_desired_position()
@@ -221,10 +221,10 @@ class MotionController(CoreDevice):
             self.single_axis_move('y', v)
             self._y_position = v
             self.axes['y'].position = v
-    
+
     def get_xy(self):
-        return 0,0
-    
+        return 0, 0
+
     def get_current_position(self, *args, **kw):
         '''
 
@@ -360,11 +360,11 @@ class MotionController(CoreDevice):
         if self.timer is not None:
             #timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
-            
+
         time.sleep(0.25)
         while func():
             time.sleep(0.2)
-        
+
         if event is not None:
             event.set()
 #============= EOF ====================================

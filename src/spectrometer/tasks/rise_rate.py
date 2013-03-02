@@ -28,14 +28,14 @@ class RiseRate(SpectrometerTask):
     graph = Any
     clear_button = Button('Clear')
     calculated = Bool
-    
+
     def _clear_button_fired(self):
         self.calculated = False
 
         self.graph.plots[0].overlays.pop()
         self.graph.plots[0].overlays.pop()
         self.graph.redraw()
-   
+
     def _execute(self):
         self.result = 0
         self._starttime = self.graph.get_data()[-1]

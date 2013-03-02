@@ -18,15 +18,14 @@ from pyglet import media
 from src.paths import paths
 
 def play_sound(name):
-    snd=load_sound(name)
+    snd = load_sound(name)
     if snd:
         snd.play()
-        
+
 def load_sound(name):
-    sp=os.path.join(paths.bundle_root,'sounds',name)
+    sp = os.path.join(paths.bundle_root, 'sounds', name)
     if not os.path.isfile(sp):
-        sp=os.path.join(paths.sounds,name)
-    
+        sp = os.path.join(paths.sounds, name)
+
     if os.path.isfile(sp):
         return media.load(sp, streaming=False)
-    

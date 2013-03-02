@@ -28,7 +28,7 @@ import wx
 #from src.helpers.logger_setup import add_console
 from globals import globalv
 from src.helpers.color_generators import colorname_generator
-from src.helpers.logger_setup import new_logger
+from src.helpers.logger_setup import new_logger, NAME_WIDTH
 
 color_name_gen = colorname_generator()
 
@@ -94,11 +94,7 @@ class Loggable(HasTraits):
                     if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
                         do_later(gWarningDisplay.edit_traits)
 
-#                func = gWarningDisplay.add_text
-#                args = ('{:<30s} -- {}'.format(self.logger.name.strip(),
-#                        msg),)
-#                do_later(func, args)
-                gWarningDisplay.add_text('{:<50s} -- {}'.format(self.logger.name.strip(), msg))
+                gWarningDisplay.add_text('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(), msg))
 
             if decorate:
                 msg = '****** {}'.format(msg)
@@ -115,15 +111,9 @@ class Loggable(HasTraits):
                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
                         do_later(gLoggerDisplay.edit_traits)
 
-                args = ('{:<50s} -- {}'.format(self.logger.name.strip(),
+                args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
                         msg))
-#                kw = dict(color=self.logcolor)
-#                gLoggerDisplay.add_text(args, **kw)
                 gLoggerDisplay.add_text(args)
-
-
-#                wx.CallAfter(gLoggerDisplay.add_text, args, **kw)
-#                do_later(gLoggerDisplay.add_text, args, **kw)
 
             if decorate:
                 msg = '====== {}'.format(msg)
@@ -139,10 +129,6 @@ class Loggable(HasTraits):
         '''
         '''
 
-#        if self.logger is not None:
-#            if decorate:
-#                msg = '++++++ {}'.format(msg)
-#            self.logger.debug(msg)
         if decorate:
             msg = '++++++ {}'.format(msg)
 
@@ -155,9 +141,4 @@ class Loggable(HasTraits):
         func = getattr(self.logger, func)
         func(msg)
 
-#        t = threading.currentThread()
-#        if t.name is not 'MainThread':
-#            do_later(func, msg)
-#        else:
-#            func(msg)
 #============= EOF =============================================

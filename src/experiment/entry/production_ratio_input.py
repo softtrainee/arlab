@@ -77,14 +77,14 @@ class ProductionRatioInput(Saveable):
         ekeys = ['{}_err'.format(ki) for ki in keys]
         values = [getattr(self, ki).value for ki in keys]
         errors = [getattr(self, ki).error for ki in keys]
-        ks=[ki.capitalize() for ki in keys+ekeys]
+        ks = [ki.capitalize() for ki in keys + ekeys]
         params = dict(zip(ks, values + errors))
-        
-        params['Ca_K']=self.Ca_K.value
-        params['Ca_K_err']=self.Ca_K.error
-        params['Cl_K']=self.Cl_K.value
-        params['Cl_K_err']=self.Cl_K.error
-    
+
+        params['Ca_K'] = self.Ca_K.value
+        params['Ca_K_err'] = self.Ca_K.error
+        params['Cl_K'] = self.Cl_K.value
+        params['Cl_K_err'] = self.Cl_K.error
+
         ip = db.get_irradiation_production(self.name)
         if ip:
             for k, v in params.iteritems():

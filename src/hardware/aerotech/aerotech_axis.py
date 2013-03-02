@@ -40,14 +40,14 @@ class AerotechAxis(Axis):
 #            if key in ['sign']:
 #                value = int(value)
             setattr(self, key, value)
-            
+
     def _validate_velocity(self, v):
         return self._validate_float(v)
-    
+
     def _set_velocity(self, v):
         self.nominal_velocity = v
         self.trait_set(_velocity=v, trait_change_notify=False)
-        
+
     def load_parameters(self):
 
         #homing and limts 4.7

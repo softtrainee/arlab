@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, CInt, Str,String, on_trait_change, Button, Float, Property, Event, Bool, Enum
+from traits.api import Int, CInt, Str, String, on_trait_change, Button, Float, Property, Event, Bool, Enum
 from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -56,20 +56,20 @@ class PychronLaserManager(BaseLaserManager):
     _cancel_blocking = False
 
     position = String(enter_set=True, auto_set=False)
-    x=Property(depends_on='_x')
-    y=Property(depends_on='_y')
-    z=Property(depends_on='_z')
+    x = Property(depends_on='_x')
+    y = Property(depends_on='_y')
+    z = Property(depends_on='_z')
     _x = Float
     _y = Float
     _z = Float
-    connected=Bool
-    test_connection=Button('Test Connection')
-    
+    connected = Bool
+    test_connection = Button('Test Connection')
+
     def _test_connection_fired(self):
-        self.connected=self._communicator.open()
+        self.connected = self._communicator.open()
         if self.connected:
             self.opened()
-            
+
     def bind_preferences(self, pref_id):
         pass
 
@@ -79,22 +79,22 @@ class PychronLaserManager(BaseLaserManager):
 
         self._communicator = ec = EthernetCommunicator(host=host,
                                                        port=port)
-        r=ec.open()
+        r = ec.open()
         if r:
-            self.connected=True
+            self.connected = True
         return r
-        
+
     def opened(self):
         self.update_position()
         self._opened_hook()
-    
+
     def _opened_hook(self):
         pass
- 
+
     def update_position(self):
-        self.trait_set(**dict(zip(('_x','_y','_z'),
+        self.trait_set(**dict(zip(('_x', '_y', '_z'),
                                   self.get_position())))
-        
+
 #===============================================================================
 # patterning
 #===============================================================================
@@ -179,7 +179,7 @@ class PychronLaserManager(BaseLaserManager):
         self.info('sending {}'.format(cmd))
         self._ask(cmd)
         time.sleep(0.5)
-        r=self._block()
+        r = self._block()
         self.update_position()
         return r
 
@@ -203,7 +203,7 @@ class PychronLaserManager(BaseLaserManager):
                 return x, y, z
             except Exception, e:
                 print 'pychron laser manager get_position', e
-                return 0,0,0
+                return 0, 0, 0
 
         if self._communicator.simulation:
             return 0, 0, 0
@@ -284,84 +284,84 @@ class PychronLaserManager(BaseLaserManager):
                  handler=self.handler_klass
                  )
         return v
-    
-    def _set_x(self,v):
+
+    def _set_x(self, v):
         self._ask('SetX {}'.format(v))
         self.update_position()
 #        self._x=v
-        
-    def _set_y(self,v):
+
+    def _set_y(self, v):
         self._ask('SetY {}'.format(v))
         self.update_position()
 #        self._y=v
-        
-    def _set_z(self,v):
+
+    def _set_z(self, v):
         self._ask('SetZ {}'.format(v))
         self.update_position()
 #        self._z=v
-    
+
     def _get_x(self):
         return self._x
     def _get_y(self):
         return self._y
     def _get_z(self):
         return self._z
-    
-    
+
+
 class PychronUVLaserManager(PychronLaserManager):
-    fire=Event
-    fire_label=Property(depends_on='firing')
-    firing=Bool
-    mode=Enum('Burst','Continuous')
-    nburst=Property(depends_on='_nburst')
-    _nburst=Int
-        
+    fire = Event
+    fire_label = Property(depends_on='firing')
+    firing = Bool
+    mode = Enum('Burst', 'Continuous')
+    nburst = Property(depends_on='_nburst')
+    _nburst = Int
+
     def _get_int(self, resp):
-        r=0
+        r = 0
         if resp is not None:
             try:
-                r=int(resp)
+                r = int(resp)
             except (ValueError, TypeError):
                 pass
         return r
-    
+
     def _opened_hook(self):
-        nb=self._ask('GetNBurst')    
-        self._nburst=self._get_int(nb)
-            
-        mb=self._ask('GetBurstMode')
+        nb = self._ask('GetNBurst')
+        self._nburst = self._get_int(nb)
+
+        mb = self._ask('GetBurstMode')
         if mb is not None:
-            self.mode='Burst' if mb=='1' else 'Continuous'
-            
+            self.mode = 'Burst' if mb == '1' else 'Continuous'
+
     def _fire_fired(self):
         if self.firing:
-            mode='stop'
-            self.firing=False
+            mode = 'stop'
+            self.firing = False
         else:
-            if self.mode=='Continuous':
-                mode='continuous'
+            if self.mode == 'Continuous':
+                mode = 'continuous'
             else:
-                mode='burst'
-            self.firing=True
-            
+                mode = 'burst'
+            self.firing = True
+
         self._ask('Fire {}'.format(mode))
-    
-        
-    def _validate_nburst(self,v):
+
+
+    def _validate_nburst(self, v):
         try:
             return int(v)
         except (ValueError, TypeError):
             pass
-        
+
     def _set_nburst(self, v):
         if v is not None:
-            v=int(v)
+            v = int(v)
             self._ask('SetNBurst {}'.format(v))
-            self._nburst=v
-            
+            self._nburst = v
+
     def _get_nburst(self):
         return self._nburst
-       
+
     def _get_fire_label(self):
         return 'Stop' if self.firing else 'Fire'
 #===============================================================================
@@ -369,7 +369,7 @@ class PychronUVLaserManager(PychronLaserManager):
 #===============================================================================
     def _position_changed(self):
         if self.position is not None:
-            t=Thread(target=self._move_to_position, args=(self.position))
+            t = Thread(target=self._move_to_position, args=(self.position))
             t.start()
 #            self._move_to_position(self.position)
 #===============================================================================
@@ -378,10 +378,10 @@ class PychronUVLaserManager(PychronLaserManager):
     def extract(self, power):
         self._set_nburst(power)
         self._ask('Fire burst')
-        
+
     def end_extract(self):
         self._ask('Fire stop')
-                
+
     def trace_path(self, value, name, kind):
         cmd = 'TracePath {} {} {}'.format(value, name, kind)
         self.info('sending {}'.format(cmd))
@@ -392,12 +392,12 @@ class PychronUVLaserManager(PychronLaserManager):
         pass
 
     def _move_to_position(self, pos):
-            
+
         cmd = 'GoToPoint'
         if isinstance(pos, (str, unicode)):
             if not pos:
                 return
-            
+
             if pos[0] in ['p', 'l', 'd']:
                 cmd = 'GoToNamedPosition'
 
@@ -406,10 +406,10 @@ class PychronUVLaserManager(PychronLaserManager):
             self.info('sending {}'.format(cmd))
             self._ask(cmd)
             time.sleep(0.5)
-            r=self._block()
+            r = self._block()
             self.update_position()
             return r
-        
+
     def traits_view(self):
         v = View(Item('test_connection', show_label=False),
                  VGroup(

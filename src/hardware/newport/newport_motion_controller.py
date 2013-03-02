@@ -234,7 +234,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             axis = ax.name
 
         cmd = self._build_query('TP', xx=aid)
-        f = self.ask(cmd,verbose=False)
+        f = self.ask(cmd, verbose=False)
         if f != 'simulation' and f is not None:
             try:
                 f = float(f)
@@ -838,7 +838,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             for c in com.split(';'):
                 self.tell(c)
                 time.sleep(0.1)
-        
+
         if block:
             self._block_(axis=block)
 

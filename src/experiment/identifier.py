@@ -93,7 +93,7 @@ def convert_identifier(identifier):
     if identifier in ANALYSIS_MAPPING:
         sname = ANALYSIS_MAPPING[identifier]
         identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
-        
+
     return identifier
 
 def get_analysis_type(idn):

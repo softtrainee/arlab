@@ -20,34 +20,34 @@ from src.hardware.core.core_device import CoreDevice
 
 
 class MultiplexerManager(Manager):
-    controller=Instance(CoreDevice)
-    hname=Str('Name')
-    haddress=Str('Address')
-    hvalue=Str('Value')
-    hprocessvalue=Str('ProcessValue')
-    title='Multiplexer'
-    window_width=500
-    window_height=500
+    controller = Instance(CoreDevice)
+    hname = Str('Name')
+    haddress = Str('Address')
+    hvalue = Str('Value')
+    hprocessvalue = Str('ProcessValue')
+    title = 'Multiplexer'
+    window_width = 500
+    window_height = 500
     def opened(self):
         self.controller.start_scan()
-        
+
     def closed(self, isok):
         self.controller.stop_scan()
         return isok
-        
+
     def finish_loading(self):
         if self.devices:
-            self.controller=self.devices[0]
+            self.controller = self.devices[0]
 
     def traits_view(self):
-        v=self.view_factory(
+        v = self.view_factory(
                HGroup(
-                      Item('hname', show_label=False, style='readonly',width=200), 
-                      Item('haddress', show_label=False, style='readonly',width=75),
-                      Item('hvalue', show_label=False, style='readonly',width=100),
-                      Item('hprocessvalue', show_label=False, style='readonly',width=100)
+                      Item('hname', show_label=False, style='readonly', width=200),
+                      Item('haddress', show_label=False, style='readonly', width=75),
+                      Item('hvalue', show_label=False, style='readonly', width=100),
+                      Item('hprocessvalue', show_label=False, style='readonly', width=100)
                       ),
                Item('controller', style='custom', show_label=False),
                )
-        
+
         return v

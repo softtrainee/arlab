@@ -39,7 +39,7 @@ class CommunicationScheduler(Loggable):
 
 #    collision_delay = Float(125)
     collision_delay = Float(50)
-    
+
     def __init__(self, *args, **kw):
         super(CommunicationScheduler, self).__init__(*args, **kw)
         self._lock = Lock()

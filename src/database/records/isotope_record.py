@@ -293,7 +293,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
         self._make_signal_graph()
         self._make_baseline_graph()
-        
+
         peakcenter = self._get_peakcenter()
         if peakcenter:
 #            self.categories.insert(-1, 'peak center')
