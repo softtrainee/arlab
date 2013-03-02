@@ -202,13 +202,22 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if self.axes.has_key('x'):
             return self.axes['x'].id == 2
 
-    def get_xy(self):
-
-        v = self.ask('1TP?;2TP?', verbose=False)
-        if v is None:
-            return 0, 0
-
-        return map(float, v.split('\n'))
+#    def get_xy(self):
+#        
+#        xax=self.axes['x']
+#        yax=self.axes['y']
+#        
+#        
+##        v = self.ask('1TP?;2TP?', verbose=False)
+#        v = self.ask('{}TP?;{}TP?'.format(xax.id, yax.id), verbose=False)
+#        if v is None:
+#            return 0, 0
+#        
+#        v=map(float, v.split('\n'))
+#        
+#        x = self._sign_correct(v[0], 'x', ratio=False) / xax.drive_ratio
+#        y = self._sign_correct(v[1], 'y', ratio=False) / yax.drive_ratio
+#        return x,y
 
     def get_current_position(self, aid):
         ''' 
@@ -225,10 +234,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             axis = ax.name
 
         cmd = self._build_query('TP', xx=aid)
-        f = self.ask(cmd,
-                     verbose=False
-                     )
-
+        f = self.ask(cmd,verbose=False)
         if f != 'simulation' and f is not None:
             try:
                 f = float(f)
@@ -347,8 +353,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
         tol = 0.001 #should be set to the motion controllers resolution 
         if d > tol:
             kw['displacement'] = d
-            do_later(self.parent.canvas.set_desired_position, x,y)
-#            self.parent.canvas.set_desired_position(x, y)
+#            do_later(self.parent.canvas.set_desired_position, x,y)
+#            time.sleep(0.075)
+            self.parent.canvas.set_desired_position(x, y)
             self._x_position = x
             self._y_position = y
 

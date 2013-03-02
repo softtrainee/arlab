@@ -184,7 +184,10 @@ class AerotechMotionController(MotionController):
         #cover status bit to binstr
             b = make_bitarray(int(sb))
             return int(b[2])
-
+    
+    def get_xy(self):
+        return self.get_current_position('x'), self.get_current_position('y')
+    
     def get_current_position(self, axis, verbose=False):
         '''
             unidex 511 6-11 Axis Positions
