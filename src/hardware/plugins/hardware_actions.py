@@ -90,7 +90,6 @@ class OpenFlagManagerAction(Action):
         super(OpenFlagManagerAction, self).__init__(*args, **kw)
         fm = self.window.application.get_service('src.hardware.flag_manager.FlagManager')
         self.enabled = False
-        print fm.flags, fm.timed_flags
         if fm and (fm.flags or fm.timed_flags):
             self.enabled = True
 

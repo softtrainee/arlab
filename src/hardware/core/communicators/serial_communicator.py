@@ -490,7 +490,7 @@ class SerialCommunicator(Communicator):
             if not isinstance(terminator, (list, tuple)):
                 terminator = (terminator,)
 
-            if r is not None:
+            if r and r.strip():
                 for ti in terminator:
   #                    print ' '.join(map(str,[ord(t) for t in ti])),' '.join(map(str,[ord(t) for t in r]))
                     if r.endswith(ti):
@@ -524,7 +524,7 @@ class SerialCommunicator(Communicator):
             #print func
             try:
                 r, isterminated = func(r)
-                #print r, isterminated
+#                print r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):
