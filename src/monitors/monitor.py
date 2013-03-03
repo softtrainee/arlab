@@ -41,6 +41,7 @@ class Monitor(ConfigLoadable):
 
     def load(self):
         config = self.get_configuration()
+        print self, config
         if config:
             self.set_attribute(config, 'sample_delay',
                                'General', 'sample_delay', cast='float', optional=False)

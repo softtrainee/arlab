@@ -242,15 +242,19 @@ class Magnet(SpectrometerDevice):
             ys = self.mftable[1]
 
             dac = polyval(polyfit(xs, ys, 2), mass)
-
-
             return dac
 
-    def map_dac_to_isotope(self, dac=None):
+    def map_dac_to_isotope(self, dac=None, det=None):
         if dac is None:
             dac = self._dac
+        if det is None:
+            det=self.detector
+            
+        if det:
+            dac=self.spectrometer.uncorrect_dac(det, dac)
+            
         m = self.map_dac_to_mass(dac)
-        return next((k for k, v in MOLECULAR_WEIGHTS.iteritems() if abs(v - m) < 0.01), None)
+        return next((k for k, v in MOLECULAR_WEIGHTS.iteritems() if abs(v - m) < 0.001), None)
 #    def __dac_changed(self):
 #        m = self.map_dac_to_mass(self._dac)
 ##        print 'get mass', m, type(m), nan, type(nan)

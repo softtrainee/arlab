@@ -36,7 +36,7 @@ command_register = makeRegistry()
 
 class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
-
+    info_color='red'
     def get_command_register(self):
         cm = super(ExtractionLinePyScript, self).get_command_register()
         return command_register.commands.items() + cm

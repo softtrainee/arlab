@@ -66,7 +66,7 @@ class Loggable(HasTraits):
             c = color_name_gen.next()
         self.logcolor = c
 
-    def warning_dialog(self, msg, sound=None, title=None):
+    def warning_dialog(self, msg, sound=None, title=''):
         if sound:
             from src.helpers.media import loop_sound
             evt = loop_sound('alarm1')
@@ -75,7 +75,7 @@ class Loggable(HasTraits):
         else:
             nonmodal_warning(None, msg, title=title)
 
-    def confirmation_dialog(self, msg, title=None):
+    def confirmation_dialog(self, msg, title=''):
         result = confirmation(None, msg, title=title)
         # NO==5104, YES==5103
         return result == 5103
