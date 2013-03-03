@@ -31,6 +31,7 @@ from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
+from src.constants import NULL_STR
 #from src.graph.graph import Graph
 #from src.graph.regression_graph import RegressionGraph
 #from src.paths import paths
@@ -181,14 +182,16 @@ class Spectrometer(SpectrometerDevice):
 
 
     def update_isotopes(self, isotope, detector):
-        det = self.get_detector(detector)
-        det.isotope = isotope
-        index = self.detectors.index(det)
-
-        nmass = int(isotope[2:])
-        for i, di in enumerate(self.detectors):
-            mass = nmass - (i - index)
-            di.isotope = 'Ar{}'.format(mass)
+        
+        if isotope !=NULL_STR:
+            det = self.get_detector(detector)
+            det.isotope = isotope
+            index = self.detectors.index(det)
+    
+            nmass = int(isotope[2:])
+            for i, di in enumerate(self.detectors):
+                mass = nmass - (i - index)
+                di.isotope = 'Ar{}'.format(mass)
 
 
 #===============================================================================
@@ -349,6 +352,13 @@ class Spectrometer(SpectrometerDevice):
 
 #        #correct for hv
         dac *= self.get_hv_correction(current=True)
+        return dac
+    
+    def uncorrect_dac(self,det, dac):
+        dac/=self.get_hv_correction()
+        dev=det.get_deflection_correction()
+        dac-=dev
+        dac/=det.relative_position
         return dac
 #===============================================================================
 # defaults

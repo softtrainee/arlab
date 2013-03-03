@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str, \
-     on_trait_change, Bool, Int, Button, Event
+     on_trait_change, Bool, Int, Button, Event, String, cached_property
 from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
      ListEditor, InstanceEditor, EnumEditor
 from traits.api import HasTraits, Range, Float
@@ -74,7 +74,7 @@ class ScanManager(Manager):
     source = DelegatesTo('spectrometer')
     scanner = Instance(MagnetScan)
     rise_rate = Instance(RiseRate)
-    isotope = Str
+    isotope = String
     isotopes = Property
 
     graph_scale = Enum('linear', 'log')
@@ -165,7 +165,7 @@ class ScanManager(Manager):
             det = self.detector
             if not det:
                 det = self.detectors[0]
-
+            
             d = dict(isotope=iso,
                      detector=det.name)
 
@@ -184,8 +184,8 @@ class ScanManager(Manager):
                 ]
 
     def close(self, isok):
-        self._stop_timer()
         self.dump_settings()
+        self._stop_timer()
 
         #clear our graph settings so on reopen events will fire
         del self.graph_scale
@@ -250,12 +250,11 @@ class ScanManager(Manager):
 # handlers
 #===============================================================================
     def _set_position(self):
-        if self.isotope and self.detector:
-
-
+        if self.isotope and self.isotope!=NULL_STR \
+            and self.detector:
+            
             self.info('set position {} on {}'.format(self.isotope, self.detector))
             self.ion_optics_manager.position(self.isotope, self.detector.name)
-
 
     def _isotope_changed(self):
         if self.isotope != NULL_STR:
@@ -440,6 +439,7 @@ class ScanManager(Manager):
 #===============================================================================
 # property get/set
 #===============================================================================
+    @cached_property
     def _get_isotopes(self):
         molweights = self.spectrometer.molecular_weights
         return [NULL_STR] + sorted(molweights.keys(), key=lambda x: int(x[2:]))

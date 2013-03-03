@@ -690,7 +690,7 @@ anaylsis_type={}
             return False
 
     def do_post_measurement(self):
-        if not self.post_equilibration_script:
+        if not self.post_measurement_script:
             return
 
         if not self._alive and not self._truncate_signal:

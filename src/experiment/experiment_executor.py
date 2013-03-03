@@ -111,10 +111,12 @@ class ExperimentExecutor(ExperimentManager):
     def isAlive(self):
         return self._alive
 
-    def info(self, msg, log=True, *args, **kw):
+    def info(self, msg, log=True,color=None, *args, **kw):
         self.statusbar = msg
         if self.info_display:
-            self.info_display.add_text(msg, color='yellow')
+            if color is None:
+                color='yellow'
+            self.info_display.add_text(msg, color=color)
 
         if log:
             super(ExperimentManager, self).info(msg, *args, **kw)
@@ -271,8 +273,8 @@ class ExperimentExecutor(ExperimentManager):
             self._alive = False
             return
         else:
-            mon = self._monitor_factory()
-            if not mon:
+            mon,isok = self._monitor_factory()
+            if mon and not isok:
                 self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
                 self.info('experiment canceled because automated_run_monitor is not setup properly')
                 self._alive = False
@@ -469,7 +471,7 @@ class ExperimentExecutor(ExperimentManager):
 
         arun.username = self.username
 
-        mon = self._monitor_factory()
+        mon, _ = self._monitor_factory()
         if mon is not None:
             mon.automated_run = arun
             arun.monitor = mon
@@ -594,7 +596,8 @@ class ExperimentExecutor(ExperimentManager):
 
         if not isAlive():
             return
-
+        
+        print arun.post_measurement_script
         if arun.post_measurement_script:
             if not arun.do_post_measurement():
                 if not arun.state == 'truncate':
@@ -802,7 +805,8 @@ class ExperimentExecutor(ExperimentManager):
         return s
 
     def _monitor_factory(self):
-        mon = None
+        mon = None 
+        isok=True
         if self.mode == 'client':
             ip = InitializationParser()
             exp = ip.get_plugin('Experiment', category='general')
@@ -825,12 +829,12 @@ class ExperimentExecutor(ExperimentManager):
                 mon = RemoteAutomatedRunMonitor(host, port, kind, name=monitor.text.strip())
         else:
             mon = AutomatedRunMonitor()
-
+        
         if mon is not None:
 #        mon.configuration_dir_name = paths.monitors_dir
-            if mon.load():
-                return mon
-
+            isok=mon.load()
+                
+        return mon, isok
     def _pyscript_runner_default(self):
         if self.mode == 'client':
 #            em = self.extraction_line_manager

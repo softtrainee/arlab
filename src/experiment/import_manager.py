@@ -34,10 +34,10 @@ class Extractor(Loggable):
         pass
 
 class MassSpecExtractor(Extractor):
-    database = Str('massspecdata_local')
-    username = Str('root')
-    password = Password('Argon')
-    host = Str('localhost')
+    database = Str('massspecdata')
+    username = Str('massspec')
+    password = Password('DBArgon')
+    host = Str('129.138.12.131')
     connect_button = Button('Connect')
     db = Instance(MassSpecDatabaseAdapter, ())
     def _connect_button_fired(self):

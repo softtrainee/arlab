@@ -110,5 +110,5 @@ class ExperimentPlugin(CorePlugin):
         return SignalCalculator()
 
     def _import_manager_factory(self):
-        return ImportManager()
+        return ImportManager(application=self.application)
 #============= EOF ====================================

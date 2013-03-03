@@ -330,7 +330,7 @@ class PyScript(Loggable):
 
         if not klass:
             raise KlassError(klassname)
-
+        
         s = klass(root=root,
 #                          path=p,
                           name=name,
@@ -338,7 +338,7 @@ class PyScript(Loggable):
                           manager=self.manager,
                           parent_script=self,
                           _ctx=self._ctx,
-                          ** kw
+                          **kw
                           )
 #        s.bootstrap()
 
@@ -420,14 +420,14 @@ class PyScript(Loggable):
         self.info(message)
 
         try:
-            if self.info_display:
+            if self.manager:
                 if self.info_color:
-                    self.info_display.info(message, color=self.info_color, log=False)
+                    self.manager.info(message, color=self.info_color, log=False)
                 else:
-                    self.info_display.info(message, log=False)
+                    self.manager.info(message, log=False)
 
-        except AttributeError:
-            pass
+        except AttributeError,e:
+            print 'm_info',e
 
     @command_register
     def sleep(self, duration=0, message=None):

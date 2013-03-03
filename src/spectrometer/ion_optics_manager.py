@@ -24,6 +24,7 @@ from src.spectrometer.tasks.peak_center import PeakCenter
 from threading import Thread
 from pyface.timer.do_later import do_later
 from src.spectrometer.detector import Detector
+from src.constants import NULL_STR
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -54,9 +55,9 @@ class IonOpticsManager(Manager):
         return molweights[isotope_key]
 
     def position(self, pos, detector, use_dac=False):
-
-
-
+        if pos==NULL_STR:
+            return
+        
         spec = self.spectrometer
         mag = spec.magnet
 
