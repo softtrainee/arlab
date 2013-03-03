@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import verbose_skip, makeRegistry
 from src.lasers.laser_managers.laser_manager import ILaserManager
-#from src.lasers.laser_managers.extraction_device import ILaserManager
+# from src.lasers.laser_managers.extraction_device import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
@@ -36,50 +36,66 @@ command_register = makeRegistry()
 
 class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
-    info_color='red'
+    info_color = 'red'
     def get_command_register(self):
         cm = super(ExtractionLinePyScript, self).get_command_register()
         return command_register.commands.items() + cm
 
     def _post_execute_hook(self):
-        #remove ourselves from the script runner
+        # remove ourselves from the script runner
         if self.runner:
             self.runner.scripts.remove(self)
 
     def _cancel_hook(self):
         if self._resource_flag:
             self._resource_flag.clear()
+
+    def set_default_context(self):
+        '''
+            provide default values for all the properties exposed in the script
+        '''
+        self.setup_context(analysis_type='',
+                           position='',
+                           pattern='',
+                           extract_device='',
+                           extract_value=0,
+                           extract_units='',
+                           tray='',
+                           ramp_rate='',
+                           duration=0,
+                           cleanup=0,
+                           )
 #===============================================================================
 # properties
 #===============================================================================
-    @property
-    def pattern(self):
-        return self.get_context()['pattern']
-
-    @property
-    def analysis_type(self):
-        return self.get_context()['analysis_type']
-
-    @property
-    def extract_device(self):
-        return self.get_context()['extract_device']
-
-    @property
-    def tray(self):
-        return self.get_context()['tray']
-
-    @property
-    def position(self):
-        '''
-            if position is 0 return None 
-        '''
-        pos = self.get_context()['position']
-        if pos:
-            return pos
-
-    @property
-    def extract_value(self):
-        return self.get_context()['extract_value']
+#    @property
+#    def pattern(self):
+#        return self.get_context()['pattern']
+#
+#    @property
+#    def analysis_type(self):
+#        return self.get_context()['analysis_type']
+#
+#    @property
+#    def extract_device(self):
+#        return self.get_context()['extract_device']
+#
+#    @property
+#    def tray(self):
+#        return self.get_context()['tray']
+#
+#    @property
+#    def position(self):
+#        '''
+#            if position is 0 return None
+#        '''
+#        pos = self.get_context()['position']
+#        if pos:
+#            return pos
+#
+#    @property
+#    def extract_value(self):
+#        return self.get_context()['extract_value']
 #===============================================================================
 # commands
 #===============================================================================
@@ -149,7 +165,7 @@ class ExtractionLinePyScript(ValvePyScript):
             pattern = self.pattern
 
         st = time.time()
-        #set block=True to wait for pattern completion
+        # set block=True to wait for pattern completion
         self._manager_action([('execute_pattern', pattern, {'block':block})],
                              name=self.extract_device,
                               protocol=ILaserManager)
@@ -320,7 +336,7 @@ class ExtractionLinePyScript(ValvePyScript):
             while resp != criterion:
                 time.sleep(1)
 
-                #only verbose every 10s
+                # only verbose every 10s
                 resp = r.read(verbose=cnt % 10 == 0)
                 if resp is None:
                     continue

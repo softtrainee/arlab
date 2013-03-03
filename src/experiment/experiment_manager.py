@@ -509,6 +509,7 @@ class ExperimentManager(Manager, Saveable):
     def _experiment_set_factory(self, **kw):
         exp = ExperimentSet(
                              db=self.db,
+                             application=self.application,
                              **kw)
         exp.on_trait_change(self._update_aliquots, 'update_aliquots_needed')
 #        exp.on_trait_change(self._update_dirty, 'dirty')

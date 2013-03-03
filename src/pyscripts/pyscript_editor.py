@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -137,6 +137,7 @@ class PyScriptManager(Manager):
         ps.text = self.body
 
         ps.bootstrap(load=False)
+
         try:
             err = ps.test()
         except Exception, err:
@@ -296,7 +297,7 @@ class PyScriptManager(Manager):
                           Action(name='Save As', action='save_as')
                           ],
                  width=700,
-                 height=575,
+                 height=850,
                  handler=ScriptHandler,
                  title=self.title
                  )
@@ -344,8 +345,8 @@ if __name__ == '__main__':
 #        self.script.cancel()
 #
 #    def execute_script(self, path=None):
-##        open_manager(self.application,
-##                     self.runner)
+# #        open_manager(self.application,
+# #                     self.runner)
 #
 #        ps = self._pyscript_factory(self.kind, runner=self.runner)
 #        load = False

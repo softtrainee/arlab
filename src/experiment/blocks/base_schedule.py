@@ -145,7 +145,7 @@ post_measurement_script, post_equilibration_script''')
     def _set_script_info(self, info):
         for sn in SCRIPT_KEYS:
             v = getattr(self, '{}_script'.format(sn))
-            setattr(info, '{}_script_name'.format(sn), v)
+            setattr(info, '{}_script_name'.format(sn), v.name)
 
     def _add_hook(self, ar, **kw):
         self._set_script_info(ar.script_info)
@@ -175,7 +175,10 @@ post_measurement_script, post_equilibration_script''')
             key = self.automated_run.labnumber
 
         if setter is None:
-            setter = lambda ski, sci:setattr(self, '{}_script'.format(ski), sci)
+#            def setter(ski, sci):
+#                v = getattr(self, '{}_script'.format(ski))
+
+            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
 
         # open the yaml config file
 #        import yaml
@@ -220,7 +223,9 @@ post_measurement_script, post_equilibration_script''')
                 elif sk == 'post_equilibration':
                     sc = 'pump_{}'.format(e)
 
-            if not sc in getattr(self, '{}_scripts'.format(sk)):
+            script = getattr(self, '{}_script'.format(sk))
+            if not sc in script.names:
+#            if not sc in getattr(self, '{}_scripts'.format(sk)):
                 sc = NULL_STR
 #            print setter, sk, sc
             setter(sk, sc)

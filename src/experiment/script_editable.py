@@ -15,49 +15,54 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property
-from traitsui.api import View, Item, VGroup, EnumEditor
+from traits.api import HasTraits, Str, Property, List, Button, Instance, Any, cached_property
+from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, spring, Label
 from src.saveable import Saveable
 import os
 from src.paths import paths
 from src.constants import NULL_STR
+from src.pyscripts.pyscript_editor import PyScriptManager
+from src.loggable import Loggable
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class Script(Loggable):
+    application = Any
+    label = Str
+    name = Str
+    mass_spectrometer = Str
+    names = Property(depends_on='mass_spectrometer')
+    edit = Button
+    kind = 'ExtractionLine'
 
-class ScriptEditable(Saveable):
-    mass_spectrometer = Str(NULL_STR)
-    extract_device = Str(NULL_STR)
+    def _edit_fired(self):
+        p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
+                                                                                  self.name))
+        editor = PyScriptManager(kind=self.kind, application=self.application)
+        editor.open_script(p)
+        editor.open_view(editor)
 
-    measurement_script = Str
-    measurement_scripts = Property(depends_on='mass_spectrometer')
-    post_measurement_script = Str
-    post_measurement_scripts = Property(depends_on='mass_spectrometer')
-    post_equilibration_script = Str
-    post_equilibration_scripts = Property(depends_on='mass_spectrometer,extract_device')
-    extraction_script = Str
-    extraction_scripts = Property(depends_on='mass_spectrometer')
+    def traits_view(self):
+        return View(HGroup(
+                           Label(self.label),
+                           spring,
+                           Item('name',
+                                show_label=False,
+                                width= -150,
+                                editor=EnumEditor(name='names')),
+                           Item('edit',
+                                enabled_when='name and name!="---"',
+                                show_label=False)
+                           )
+                    )
 
-    def _load_script_names(self, name):
-        p = os.path.join(paths.scripts_dir, name)
-#        print 'fff', name, p
-        if os.path.isdir(p):
-            prep = lambda x:x
-    #        prep = lambda x: os.path.split(x)[0]
-
-            return [prep(s)
-                    for s in os.listdir(p)
-                        if not s.startswith('.') and s.endswith('.py')
-                        ]
-        else:
-            self.warning_dialog('{} script directory does not exist!'.format(p))
-
-    def _get_scripts(self, es):
-        if self.mass_spectrometer != '---':
-            k = '{}_'.format(self.mass_spectrometer)
-            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
-
-        es = [NULL_STR] + es
-        return es
+#    def _get_scripts(self, es):
+# #        if self.mass_spectrometer != '---':
+#        es = [self._clean_script_name(ei) for ei in es]
+# #            k = '{}_'.format(self.mass_spectrometer)
+# #            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
+#
+#        es = [NULL_STR] + es
+#        return es
 
     def _clean_script_name(self, name):
         name = self._remove_mass_spectrometer_name(name)
@@ -77,6 +82,81 @@ class ScriptEditable(Saveable):
             name = name.replace('{}_'.format(self.mass_spectrometer), '')
         return name
 
+    def _load_script_names(self):
+        d = self.label.lower().replace(' ', '_')
+        p = os.path.join(paths.scripts_dir, d)
+#        print 'fff', name, p
+        if os.path.isdir(p):
+            return [s for s in os.listdir(p)
+                        if not s.startswith('.') and s.endswith('.py')]
+        else:
+            self.warning_dialog('{} script directory does not exist!'.format(p))
+
+    @cached_property
+    def _get_names(self):
+        names = [NULL_STR]
+        ms = self._load_script_names()
+        if ms:
+            names.extend([self._clean_script_name(ei) for ei in ms])
+
+        return names
+
+class ScriptEditable(Saveable):
+    application = Any
+    mass_spectrometer = Str(NULL_STR)
+    extract_device = Str(NULL_STR)
+
+    extraction_script = Instance(Script)
+    measurement_script = Instance(Script)
+    post_measurement_script = Instance(Script)
+    post_equilibration_script = Instance(Script)
+
+    def _remove_file_extension(self, name, ext='.py'):
+        if name is NULL_STR:
+            return NULL_STR
+
+        if name.endswith('.py'):
+            name = name[:-3]
+
+        return name
+
+    def _remove_mass_spectrometer_name(self, name):
+        if self.mass_spectrometer:
+            name = name.replace('{}_'.format(self.mass_spectrometer), '')
+        return name
+
+    def _script_factory(self, label, name, kind='ExtractionLine'):
+        return Script(label=label,
+#                      names=getattr(self, '{}_scripts'.format(name)),
+                      application=self.application,
+                      mass_spectrometer=self.mass_spectrometer,
+                      kind=kind
+                      )
+
+    def _extraction_script_default(self):
+        return self._script_factory('Extraction', 'extraction')
+
+    def _measurement_script_default(self):
+        return self._script_factory('Measurement', 'measurement', kind='Measurement')
+
+    def _post_measurement_script_default(self):
+        return self._script_factory('Post Measurement', 'post_measurement')
+
+    def _post_equilibration_script_default(self):
+        return self._script_factory('Post Equilibration', 'post_equilibration')
+
+    def clear_script_names(self):
+        self.measurement_script.name = NULL_STR
+        self.extraction_script.name = NULL_STR
+        self.post_measurement_script.name = NULL_STR
+        self.post_equilibration_script.name = NULL_STR
+
+    def set_scripts_mass_spectrometer(self):
+        self.extraction_script.mass_spectrometer = self.mass_spectrometer
+        self.measurement_script.mass_spectrometer = self.mass_spectrometer
+        self.post_measurement_script.mass_spectrometer = self.mass_spectrometer
+        self.post_equilibration_script.mass_spectrometer = self.mass_spectrometer
+
     def _add_mass_spectromter_name(self, name):
         if self.mass_spectrometer:
             name = '{}_{}'.format(self.mass_spectrometer, name)
@@ -92,40 +172,12 @@ class ScriptEditable(Saveable):
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_extraction_scripts(self):
-        ms = self._load_script_names('extraction')
-        ms = self._get_scripts(ms)
-        return ms
-
-    def _get_measurement_scripts(self):
-        ms = self._load_script_names('measurement')
-        ms = self._get_scripts(ms)
-        return ms
-
-    def _get_post_measurement_scripts(self):
-        ms = self._load_script_names('post_measurement')
-        ms = self._get_scripts(ms)
-        return ms
-
-    def _get_post_equilibration_scripts(self):
-        ms = self._load_script_names('post_equilibration')
-        ms = self._get_scripts(ms)
-        return ms
-
     def _get_script_group(self):
         script_grp = VGroup(
-                        Item('extraction_script',
-                             label='Extraction',
-                             editor=EnumEditor(name='extraction_scripts')),
-                        Item('measurement_script',
-                             label='Measurement',
-                             editor=EnumEditor(name='measurement_scripts')),
-                        Item('post_equilibration_script',
-                             label='Post Equilibration',
-                             editor=EnumEditor(name='post_equilibration_scripts')),
-                        Item('post_measurement_script',
-                             label='Post Measurement',
-                             editor=EnumEditor(name='post_measurement_scripts')),
+                        Item('extraction_script', style='custom', show_label=False),
+                        Item('measurement_script', style='custom', show_label=False),
+                        Item('post_equilibration_script', style='custom', show_label=False),
+                        Item('post_measurement_script', style='custom', show_label=False),
                         show_border=True,
                         label='Scripts'
                         )

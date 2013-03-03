@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -137,7 +137,7 @@ def makeRegistry():
     registry = {}
     def registrar(func):
         registry[func.__name__] = func.__name__
-        return func # normally a decorator returns a wrapped function, 
+        return func  # normally a decorator returns a wrapped function,
                     # but here we return func unmodified, after registering it
     registrar.commands = registry
     return registrar
@@ -201,6 +201,9 @@ class PyScript(Loggable):
 
     def get_estimated_duration(self):
         return self._estimated_duration
+
+    def set_default_context(self):
+        pass
 
     def setup_context(self, **kw):
         self._ctx.update(kw)
@@ -273,12 +276,15 @@ class PyScript(Loggable):
     def bootstrap(self, load=True, **kw):
         self._interval_flag = Event()
         self._interval_stack = Queue()
+        self.set_default_context()
 
         if self.root and self.name and load:
 #            p = os.path.join(self.root, self.name)
 #            self.syntax_checked = False
             with open(self.filename, 'r') as f:
                 self.text = f.read()
+
+
             return True
 
 #===============================================================================
@@ -330,7 +336,7 @@ class PyScript(Loggable):
 
         if not klass:
             raise KlassError(klassname)
-        
+
         s = klass(root=root,
 #                          path=p,
                           name=name,
@@ -385,7 +391,7 @@ class PyScript(Loggable):
             return
 
         self.info('COMPLETE INTERVAL waiting for begin interval completion')
-        #wait until _interval_flag is set
+        # wait until _interval_flag is set
         while not self._interval_flag.isSet():
             if self._cancel:
                 break
@@ -426,8 +432,8 @@ class PyScript(Loggable):
                 else:
                     self.manager.info(message, log=False)
 
-        except AttributeError,e:
-            print 'm_info',e
+        except AttributeError, e:
+            print 'm_info', e
 
     @command_register
     def sleep(self, duration=0, message=None):
@@ -637,10 +643,10 @@ class PyScript(Loggable):
         return os.path.join(self.root, self.name)
     @property
     def state(self):
-        #states
-        #0=running
-        #1=canceled
-        #2=completed
+        # states
+        # 0=running
+        # 1=canceled
+        # 2=completed
         if self._cancel:
             return '1'
 
