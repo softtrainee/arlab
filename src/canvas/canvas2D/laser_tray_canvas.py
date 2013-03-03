@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,13 +15,13 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  HasTraits, Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
-    Enum, Int, Str, List
-from traitsui.api import View, Item, VGroup
+from traits.api import Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
+    Enum, List
+# from traitsui.api import View, Item, VGroup
 from chaco.api import AbstractOverlay
 
 #=============standard library imports ========================
-import math
+# import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
 from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
@@ -30,7 +30,7 @@ from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
 from kiva import constants
 from src.lasers.geometry import calc_point_along_line
 
-#class Point(HasTraits):
+# class Point(HasTraits):
 #    x=Float
 #    y=Float
 #    identifier=Str
@@ -165,7 +165,7 @@ class LaserTrayCanvas(MapCanvas):
 #        for p in self.markupcontainer.itervalues():
 #            if isinstance(p, PointIndicator):
             if abs(p.x - x) < tol and abs(p.y - y) < tol:
-                #point already in the markup dict
+                # point already in the markup dict
                 return p
 
     def set_transect_step(self, step):
@@ -300,15 +300,15 @@ class LaserTrayCanvas(MapCanvas):
 #                self.point_counter += 1
 #
 #        self.request_redraw()
-#    
+#
 #    def get_points(self):
 #        pts=[]
 #        for _k, v in self.markupcontainer.iteritems():
 #            if isinstance(v, PointIndicator):
-#                
+#
 #                pts.append((v.identifier, v.x, v.y))
-#                
-##                lines.append(','.join(map(str, )))
+#
+# #                lines.append(','.join(map(str, )))
 #        pts=sorted(pts, key=lambda x: x[0])
 #        return pts
 #    def save_points(self, p):
@@ -329,32 +329,20 @@ class LaserTrayCanvas(MapCanvas):
 #               Item('show_desired_position'),
 #               Item('desired_position_color', show_label=False,
 #                    enabled_when='1'
-##                    enabled_when='object.show_desired_position'
+# #                    enabled_when='object.show_desired_position'
 #                    ),
 #               Item('show_laser_position'),
 #               Item('crosshairs_kind',
-##                    enabled_when='object.show_laser_position'
+# #                    enabled_when='object.show_laser_position'
 #                    ),
-##               Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
-##               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind=="UserRadius"'),
+# #               Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
+# #               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind=="UserRadius"'),
 #               Item('crosshairs_offset'),
-##               Item('crosshairs_offset_color', show_label=False, enabled_when='object.crosshairs_offset!=(0,0)'),
+# #               Item('crosshairs_offset_color', show_label=False, enabled_when='object.crosshairs_offset!=(0,0)'),
 #               ))
 #        return v
 
-    def end_key(self, event):
-        pass
-#        c = event.GetKeyCode()
-#        if c == 314: #left
-#            self.parent.stop(ax_key = 'x')
-#        elif c == 315: #up
-#            self.parent.stop(ax_key = 'y')
-#        elif c == 316: #right
-#            self.parent.stop(ax_key = 'x')
-#        elif c == 317: #down
-#            self.parent.stop(ax_key = 'y')
-#
-#        self._jog_moving = False
+
 
     def _get_current_position(self):
 
@@ -409,23 +397,27 @@ class LaserTrayCanvas(MapCanvas):
 #        enable_mouse_wheel_zoom = False
 #        if enable_mouse_wheel_zoom:
 #            inc = event.mouse_wheel
-##            self.parent.parent.laser_controller.set_zoom(inc, relative=True)
+# #            self.parent.parent.laser_controller.set_zoom(inc, relative=True)
 #            self.parent.parent.laser_controller.set_motor('zoom', inc, relative=True)
-##            self.parent.parent.logic_board.set_zoom(inc, relative=True)
+# #            self.parent.parent.logic_board.set_zoom(inc, relative=True)
 #            event.handled = True
+    def normal_key_pressed(self, event):
+        c = event.character
+        if c in ['Left', 'Right', 'Up', 'Down']:
+            self.parent.relative_move(c)
+            event.handled = True
 
-#    def normal_key_pressed(self, event):
-#        '''
-#
-#        '''
-#        char = event.character
-#        if self.tool_state == 'center_point':
-#            if char == 'a':
-#                self.parent.set_center_point()
-#        elif self.tool_state == 'end_point':
-#            if char == 'a':
-#                self.parent.set_end_point()
-#        event.handled = True
+    def normal_key_up(self, event):
+        '''
+             this method is not called by the normal interactor dispatcher like for "normal_key_pressed"
+             LaserComponentEditor calls when wx.EVT_KEY_UP is fired. therefore event is not an Enable event
+             but a wx.Event
+        '''
+        c = event.GetKeyCode()
+        if c in (314, 316):  # left, right
+            self.parent.stop(ax_key='x')
+        elif c in (315, 317):  # up, down
+            self.parent.stop(ax_key='y')
 
     def normal_mouse_move(self, event):
         '''
@@ -524,12 +516,12 @@ class LaserTrayCanvas(MapCanvas):
         '''
         '''
         if self.show_desired_position and self.desired_position is not None:
-            #draw the place you want the laser to be
+            # draw the place you want the laser to be
             self._draw_crosshairs(gc, self.desired_position, color=self.desired_position_color, kind=2)
 
         if self.show_laser_position:
-            #draw where the laser is
-            #laser indicator is always the center of the screen
+            # draw where the laser is
+            # laser indicator is always the center of the screen
             pos = (self.x + (self.x2 - self.x) / 2.0  , self.y + (self.y2 - self.y) / 2.0)
 
 #            #add the offset
@@ -574,26 +566,7 @@ class LaserTrayCanvas(MapCanvas):
             gc.move_to(mx, my + r)
             gc.line_to(mx, self.y2)
             gc.stroke_path()
-#        gc.move_to(self.x, my)
-#        gc.line_to(self.x2, my)
-#
-#        gc.move_to(mx, self.y2)
-#        gc.line_to(mx, self.y)
 
-
-        #draw circle
-#        gc.set_fill_color((0, 0, 0, 0))
-#        r = 10
-#        print mx, my, r
-#        gc.arc(mx, my, r, 0, math.radians(360))
-#        gc.stroke_path()
-#        gc.draw_path()
-
-        #draw center
-#
-#        ls(gc, (mx - b, my), (mx + b, my))
-#        ls(gc, (mx, my - b), (mx, my + b))
-#        gc.set_stroke_color((1, 1, 0, 1))
         b = 4
         gc.move_to(mx - b, my)
         gc.line_to(mx + b, my)
@@ -603,7 +576,7 @@ class LaserTrayCanvas(MapCanvas):
 
         gc.restore_state()
 #===============================================================================
-#             
+#
 #           1 |
 #             |
 #        0---- m,m  -----2
@@ -620,10 +593,10 @@ class LaserTrayCanvas(MapCanvas):
 #
 #        beam_radius = 0
 #        if kind in [1, 5]:
-##            args = self.map_screen([(0, 0), (0, self.beam_radius + 0.5),
-##                                    (0, 0), (self.beam_radius + 0.5, 0)
-##                                    ])
-##            beam_radius = abs(args[0][1] - args[1][1])
+# #            args = self.map_screen([(0, 0), (0, self.beam_radius + 0.5),
+# #                                    (0, 0), (self.beam_radius + 0.5, 0)
+# #                                    ])
+# #            beam_radius = abs(args[0][1] - args[1][1])
 #            beam_radius = self._get_wh(self.beam_radius, 0)[0]
 #
 #        elif kind == 2:
@@ -660,7 +633,7 @@ class LaserTrayCanvas(MapCanvas):
 #                gc.line_to(*p2)
 #                gc.close_path()
 #                gc.draw_path()
-##                gc.stroke_path()
+# #                gc.stroke_path()
 #
 #        if kind in [1, 4, 5]:
 #            gc.set_fill_color((0, 0, 0, 0))
@@ -680,163 +653,4 @@ class LaserTrayCanvas(MapCanvas):
 
 
 #========================EOF============================
-#    def _draw_current_position(self, gc):
-#        gc.save_state()
-#
-#        gc.set_text_position(self.x + 50, self.y + 18)
-#        gc.show_text('{:0.2f},{:0.2f}'.format(*self.cur_pos))
-#        gc.restore_state()
 
-#    def _get_desired_position(self):
-#        '''
-#        '''
-#        try:
-#            r = self.map_screen([self._desired_position])[0]
-#        except:
-#            r = None
-#        return r
-
-
-        #self.map = LaserTrayMap(configuration_dir_path = self.configuration_dir)
-#        self.component_groups = [self.map]
-        #self.cur_pos = (0, 0)
-        #self.center_pos = (0, 0)
-#        self.old_center_pos = (0, 0)
-
-        #self.next_state_key=KeySpec('Right','Shift')
-        #self.previous_state_key=KeySpec('Left','Shift')
-        #z=ZoomTool(component=self,always_on=False,)
-        #self.overlays.append(z)
-        #self.tools.append(PanTool(self))
-#    def normal_key_pressed(self,event):
-#        
-#        self._history_handle_key(event)
-#        
-#    def set_moving_position(self,x,y):
-#        self.moving_position=[x,y]
-#        
-#    def set_current_position(self, x, y):
-#        '''
-#            @type x: C{str}
-#            @param x:
-#
-#            @type y: C{str}
-#            @param y:
-#        '''
-#        if x == 'simulation' or y == 'simulation':
-#            x = 0.5
-#            y = 0.5
-#        self.last_data_pos = (x, y)
-#    def _draw_targeter(self, gc, xy):
-#        '''
-#            @type gc: C{str}
-#            @param gc:
-#
-#            @type xy: C{str}
-#            @param xy:
-#        '''
-#        x = xy[0]
-#        y = xy[1]
-#        gc.save_state()
-#        gc.set_stroke_color((1, 0, 0))
-#        gc.begin_path()
-#        gc.arc(x, y, 5, 0, 360)
-#        gc.draw_path()
-#
-#        gc.restore_state()      
-#    def set_desired_position(self, x, y):
-#        '''
-#            @type x: C{str}
-#            @param x:
-#
-#            @type y: C{str}
-#            @param y:
-#        '''
-#
-#        self._desired_position = (x, y)
-#        if self.show_desired_position:
-#
-#
-#            #adjust the view range
-#            self.adjust_limits('x', x)
-#            self.adjust_limits('y', y)
-#
-#
-#            self.request_redraw()
-#    def _next_state_pressed(self):
-#        '''
-#        '''
-#        self.update_current_position()
-#        x, y = self._current_state()
-#        self.parent.linear_move_to(xaxis = x, yaxis = y)
-#
-#    def _prev_state_pressed(self):
-#        '''
-#        '''
-#        self.update_current_position()
-#        x, y = self._current_state()
-#        self.parent.linear_move_to(xaxis = x, yaxis = y)
-#    def _draw_map(self, gc):
-#        '''
-#            @type gc: C{str}
-#            @param gc:
-#        '''
-#        comps = self.map.explanable_items
-#        shape = self.map.sample_hole_shape
-#        size = self.map.sample_hole_size
-#        gc.save_state()
-#
-#
-#        #cp=np.matrix([[self.stage_center_position[0]],
-#        #              [self.stage_center_position[1]]])
-#        #cp_n=np.matrix([[-self.stage_center_position[0]],
-#        #              [-self.stage_center_position[1]]])
-#
-#        #r=np.matrix([[math.cos(a),math.sin(a)],
-#        #            [-math.sin(a),math.cos(a)]])
-#        for c in comps:
-#            c = comps[c]
-#
-#            #tp=np.matrix([[c.x],[c.y]])
-#            #ni=r*tp+cp
-#
-#            #x=ni.item(0)
-#            #y=ni.item(1)
-#            x = c.x + self.stage_center_position[0]
-#            y = c.y + self.stage_center_position[1]
-#
-#            x, y = self.map_screen([(x, y)])[0]
-#
-#            self._draw_sample_hole(gc, x, y, size, shape)
-#
-#
-#        gc.restore_state()
-#    def _draw_scale(self, gc, units = 'inches'):
-#        '''
-#            @type gc: C{str}
-#            @param gc:
-#
-#            @type units: C{str}
-#            @param units:
-#        '''
-#        gc.save_state()
-#        gc.set_fill_color((0, 0, 0))
-#
-#
-#        s = 0.5
-#        scale_length_px = s / self.map.x_axis_throw * self.width
-#
-#        ox = self.x
-#        oy = self.y
-#        gc.rect(ox + 10, oy + 10, scale_length_px, 5)
-#        gc.set_text_position(ox + 50, oy + 18)
-#
-#        #s=scale_length_px/self.view_bounds[2]*self.map.x_axis_throw
-#        if units == 'microns':
-#            un = u'\u03BC'.join(' m')
-#        elif units == 'inches':
-#            un = 'in'
-#
-#        gc.show_text('%0.3f %s' % (s, un))
-#        gc.draw_path()
-#        gc.restore_state()

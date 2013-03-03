@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,9 +40,9 @@ from src.managers.motion_controller_managers.motion_controller_manager \
 from tray_calibration_manager import TrayCalibrationManager
 from stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
-#from pattern.pattern_manager import PatternManager
+# from pattern.pattern_manager import PatternManager
 from stage_map import StageMap
-#from affine import AffineTransform
+# from affine import AffineTransform
 
 
 class StageManager(Manager):
@@ -84,7 +84,7 @@ class StageManager(Manager):
 #    load_points = Button
 #    save_points = Button
 #    clear_points = Button
-#    
+#
 #    accept_point = Button
     back_button = Button
 
@@ -115,6 +115,7 @@ class StageManager(Manager):
     _temp_hole = None
     linear_move_history = List
 
+    keyboard_focus = Event
     def __init__(self, *args, **kw):
         '''
 
@@ -122,6 +123,9 @@ class StageManager(Manager):
         super(StageManager, self).__init__(*args, **kw)
 #        self.add_output('Welcome')
         self.stage_controller = self._stage_controller_factory()
+
+    def opened(self):
+        self.keyboard_focus = True
 
     def get_video_database(self):
         from src.database.adapters.video_adapter import VideoAdapter
@@ -162,7 +166,7 @@ class StageManager(Manager):
     def load(self):
         self._stage_maps = []
         config = self.get_configuration()
-        #load the stage maps
+        # load the stage maps
         mapfiles = self.config_get(config, 'General', 'mapfiles')
         for mapfile in mapfiles.split(','):
             path = os.path.join(paths.map_dir, mapfile.strip())
@@ -170,14 +174,14 @@ class StageManager(Manager):
             sm.load_correction_file()
             self._stage_maps.append(sm)
 
-        #load user points as stage map
+        # load user points as stage map
         for di in os.listdir(paths.user_points_dir):
             if di.endswith('.yaml'):
                 path = os.path.join(paths.user_points_dir, di)
                 sm = self.stage_map_klass(file_path=path)
                 self._stage_maps.append(sm)
 
-        #load the saved stage map
+        # load the saved stage map
         sp = self._get_stage_map_by_name(self._load_previous_stage_map())
         if sp is not None:
             sm = sp
@@ -185,14 +189,14 @@ class StageManager(Manager):
         self._stage_map = sm
         self.points_programmer.load_stage_map(sm)
 
-        #load the calibration file
-        #should have calibration files for each stage map
+        # load the calibration file
+        # should have calibration files for each stage map
         self.tray_calibration_manager.load_calibration()
 
-        #load the points file
-        #self.canvas.load_points_file(self.points_file)
+        # load the points file
+        # self.canvas.load_points_file(self.points_file)
 
-        #load defaults
+        # load defaults
         self._default_z = self.config_get(config, 'Defaults', 'z', default=13, cast='float')
 
         self.canvas.set_map(sm)
@@ -207,11 +211,12 @@ class StageManager(Manager):
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
         self.canvas.parent = self
 
+
 #        x_range=(self.stage_controller.xaxes_min,
 #                self.stage_controller.xaxes_max)
 #        y_range=(self.stage_controller.yaxes_min,
 #                self.stage_controller.yaxes_max)
-#        print x_range             
+#        print x_range
 #        self.canvas.set_mapper_limits('x', x_range)
 #        self.canvas.set_mapper_limits('y', y_range)
 
@@ -232,10 +237,9 @@ class StageManager(Manager):
         return self.stage_controller.single_axis_move(*args, **kw)
 
     def linear_move(self, x, y, update_hole=True, use_calibration=True, **kw):
-
         cpos = self.get_uncalibrated_xy()
         self.linear_move_history.append((cpos, {}))
-        self.trait_set(hole='')#, trait_change_notify=False)
+        self.trait_set(hole='')  # , trait_change_notify=False)
 #        if update_hole:
 #            hole = self.get_calibrated_hole(x, y)
 #            if hole is not None:
@@ -275,7 +279,7 @@ class StageManager(Manager):
         hole = self._get_hole_by_position(x, y)
         if hole:
             self._set_hole(hole.id)
-            #self.move_to_hole(hole.id)
+            # self.move_to_hole(hole.id)
 #            self._set_hole(hole.id)
         else:
             return self.linear_move(x, y, **kw)
@@ -293,7 +297,7 @@ class StageManager(Manager):
         self.info('querying axis positions')
         self.stage_controller.update_axes()
 #        if update_hole:
-#            #check to see if we are at a hole         
+#            #check to see if we are at a hole
 #            hole = self.get_calibrated_hole(self.stage_controller._x_position,
 #                                              self.stage_controller._y_position,
 #                                              )
@@ -313,9 +317,10 @@ class StageManager(Manager):
 
     @on_trait_change('stop_button')
     def stop(self, ax_key=None):
-
         self.stage_controller.stop(ax_key=ax_key)
 
+    def relative_move(self, *args, **kw):
+        self.stage_controller.relative_move(*args, **kw)
 
     def moving(self, **kw):
 
@@ -356,9 +361,9 @@ class StageManager(Manager):
     def get_calibrated_position(self, pos, key=None):
         smap = self._stage_map
 
-        #use a affine transform object to map
+        # use a affine transform object to map
 
-##        #load the calibration from file every time
+# #        #load the calibration from file every time
 #        self.tray_calibration_manager.load_calibration()
 
         canvas = self.canvas
@@ -420,19 +425,19 @@ class StageManager(Manager):
             homed = ['x', 'y']
             home_kwargs = dict(x= -25, y= -25)
         else:
-#            define_home = 
+#            define_home =
             msg = 'homing {}'.format(self.home_option)
             home_kwargs = {self.home_option:-25 if self.home_option in ['X', 'Y'] else 50}
             homed = [self.home_option.lower().strip()]
 
         self.info(msg)
 
-        #if define_home:
+        # if define_home:
         self.stage_controller.set_home_position(**home_kwargs)
 
         self.stage_controller.home(homed)
         if 'z' in homed and 'z' in self.stage_controller.axes:
-            #will be a positive limit error in z
+            # will be a positive limit error in z
 #            self.stage_controller.read_error()
 
             time.sleep(0.25)
@@ -443,7 +448,7 @@ class StageManager(Manager):
         if self.home_option in ['XY', 'Home All']:
             time.sleep(0.25)
 
-            #the stage controller should  think x and y are at -25,-25
+            # the stage controller should  think x and y are at -25,-25
             self.stage_controller._x_position = -25
             self.stage_controller._y_position = -25
 
@@ -484,11 +489,11 @@ class StageManager(Manager):
 #            correct_position = True
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
-                #map the position to calibrated space
+                # map the position to calibrated space
                 pos = self.get_calibrated_position(pos, key=key)
             else:
-                #check if this is an interpolated position
-                #if so probably want to do an autocentering routine
+                # check if this is an interpolated position
+                # if so probably want to do an autocentering routine
                 hole = self._stage_map.get_hole(key)
                 if hole.interpolated:
                     self.info('using an interpolated value')
@@ -550,7 +555,7 @@ class StageManager(Manager):
         for h in hooks:
             vg.content.append(getattr(self, h)())
 
-        return View(HSplit(vg, canvas_group))
+        return View(HSplit(vg, canvas_group), handler=self.handler_klass)
 #===============================================================================
 # view groups
 #===============================================================================
@@ -573,7 +578,7 @@ class StageManager(Manager):
                                       show_label=False)))
 
         if len(self.buttons) > 2:
-        #vg.content.append(self._button_group_factory(self.buttons[:2], orientation = 'h'))
+        # vg.content.append(self._button_group_factory(self.buttons[:2], orientation = 'h'))
             vg.content.append(self._button_group_factory(self.buttons[2:], orientation='h'))
         return vg
 
@@ -815,7 +820,7 @@ class StageManager(Manager):
 #        if p:
 #            if not p.endswith('.txt'):
 #                p='{}.txt'.format(p)
-#                
+#
 #            with open(p, 'w') as f:
 #                f.write('{},{}\n'.format(0.1,'circle'))
 #                f.write('\n') #valid holes
@@ -823,12 +828,12 @@ class StageManager(Manager):
 #                pts=self.canvas.get_points()
 #                for _vid,x,y in pts:
 #                    f.write('{}\n'.format(x,y))
-#                    
+#
 #            sm=StageMap(file_path=p)
 #            self._stage_maps.append(sm)
-#                
 #
-##            self.canvas.save_points(p)
+#
+# #            self.canvas.save_points(p)
 
 #===============================================================================
 # factories
@@ -864,7 +869,7 @@ class StageManager(Manager):
                                map=self._stage_map,
 #                               x_range=(self.stage_controller.xaxes_min,
 #                                        self.stage_controller.xaxes_max),
-#                              
+#
 #                               y_range=(self.stage_controller.yaxes_min,
 #                                        self.stage_controller.yaxes_max),
 
@@ -881,15 +886,15 @@ class StageManager(Manager):
         w = 640 * canvas.scaling
         h = w * 0.75
         return self.canvas_editor_klass(width=w + canvas.padding_left + canvas.padding_right,
-                                          height=h + canvas.padding_top + canvas.padding_bottom
-
+                                          height=h + canvas.padding_top + canvas.padding_bottom,
+                                          keyboard_focus='keyboard_focus'
                                           )
 #===============================================================================
 # defaults
 #===============================================================================
 #    def _stage_controller_default(self):
 #        return self._stage_controller_factory()
-#     
+#
     def _canvas_default(self):
         '''
         '''
@@ -947,7 +952,7 @@ if __name__ == '__main__':
     s = StageManager(
                      name='{}stage'.format(name),
                      configuration_dir_name=name,
-                     #parent = DummyParent(),
+                     # parent = DummyParent(),
                      window_width=945,
                      window_height=545
 
@@ -964,7 +969,7 @@ if __name__ == '__main__':
     s.stage_controller.bootstrap()
     s.configure_traits()
 #========================EOF============================
-#class DummyParent(HasTraits):
+# class DummyParent(HasTraits):
 #    zoom = Float
 #    zoommin = Float
 #    zoommax = Float(10)
@@ -986,7 +991,7 @@ if __name__ == '__main__':
 
 #    def linear_move_to(self, x, y, **kw):
 #        '''
-#    
+#
 #        '''
 #        sc = self.stage_controller
 #
@@ -998,7 +1003,7 @@ if __name__ == '__main__':
 #
 #        #d = ((self._x_position - x) ** 2 + (self._y_position - y) ** 2) ** 0.5
 #
-#        tol = 0.001 #should be set to the motion controllers resolution 
+#        tol = 0.001 #should be set to the motion controllers resolution
 #        if d > tol:
 #            kw['displacement'] = d
 #
@@ -1019,16 +1024,16 @@ if __name__ == '__main__':
 #            rot=self.stage_rotation
 #
 #        self.stage_controller.arc_move(cp,rot)
-#        
-#        
+#
+#
 #        self._xaxis=cp[0]+(self.stage_length)*math.cos(rot)
 #        self._yaxis=cp[1]+ (self.stage_length)*math.sin(rot)
-#        
+#
 #        print self._xaxis,self._yaxis,(self.stage_length)*math.cos(rot)
 #        self.timer=self.timer_factory()
 #    def apply_stage_rotation(self, x, y):
 #        '''
-#        
+#
 #        @param x:
 #        @param y:
 #        '''
@@ -1040,13 +1045,13 @@ if __name__ == '__main__':
 #        t2 = matrix([[self.center_point[0]], [self.center_point[1]]])
 #
 #        a = -self.stage_rotation
-#        #rotation 
+#        #rotation
 #        r = matrix([[math.cos(a), math.sin(a)],
 #                    [-math.sin(a), math.cos(a)]])
 #
 #        p = r * (p + t1) + t2
 #        return p.item(0), p.item(1)
-##        #self.add_output('%f,%f\n%s'%(x,y,p))
+# #        #self.add_output('%f,%f\n%s'%(x,y,p))
 #    def _calibrate_stage_fired(self):
 #        '''
 #        '''
@@ -1078,7 +1083,7 @@ if __name__ == '__main__':
 #===============================================================================
 # Old jogging code
 #===============================================================================
-#def do_jog(self, name):
+# def do_jog(self, name):
 #        #load jog parameters from file into the jogmanager
 #
 #        do_later(self.jog_manager.edit_traits)
@@ -1093,7 +1098,7 @@ if __name__ == '__main__':
 #
 #        sc = self.stage_controller
 #
-##        if sc.set_group(low_speed = True):
+# #        if sc.set_group(low_speed = True):
 #        if sc.configure_group(True):
 #            if not self._stop_jog:
 #                self._jogging = True
@@ -1102,14 +1107,14 @@ if __name__ == '__main__':
 #                cx = self.stage_controller._x_position
 #                cy = self.stage_controller._y_position
 #
-#                #single jog 
+#                #single jog
 #                #self._single_jog(0.25,1,6)
 #
 #                #spirograh 1
-##                self._spirograph_jog(6, 0.25, 0.75, 3, cx, cy, 10)
+# #                self._spirograph_jog(6, 0.25, 0.75, 3, cx, cy, 10)
 #
 #                #spiral jog
-##                self._circle_spiral_jog(cx, cy, 10, 0.2)
+# #                self._circle_spiral_jog(cx, cy, 10, 0.2)
 #
 #                #angular spiral jog
 #                jk = self.jog_manager.kind
