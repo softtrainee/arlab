@@ -92,14 +92,12 @@ class ExperimentSet(BaseSchedule):
 
     def automated_run_factory(self, copy_automated_run=False, **params):
         arun = self.automated_run
-#        configuration = self.make_configuration()
         if arun and copy_automated_run:
             params.update(dict(
                                labnumber=arun.labnumber,
                                position=arun.position,
                                aliquot=arun.aliquot))
 
-#        params['configuration'] = configuration
         params['db'] = self.db
         params['mass_spectrometer'] = self.mass_spectrometer
         return self._automated_run_factory({}, params)
@@ -114,21 +112,19 @@ class ExperimentSet(BaseSchedule):
         arun = self.automated_run
 
         def get_name(si):
-            script = getattr(arun.script_info, '{}_script_name'.format(si))
-            if script:
-                scripts = getattr(self, '{}_scripts'.format(si))
-                name = self._clean_script_name(script)
-#                name = self._remove_mass_spectrometer_name(script.name)
-                if not name in scripts:
+            scriptname = getattr(arun.script_info, '{}_script_name'.format(si))
+            if scriptname:
+                name = self._clean_script_name(scriptname)
+                script = getattr(self, '{}_script'.format(si))
+                if not name in script.names:
                     name = NULL_STR
             else:
                 name = NULL_STR
 
             return name
-#        print 'setting script names'
+
         traits = dict([('{}_script'.format(k), get_name(k)) for k in SCRIPT_KEYS])
         self.trait_set(**traits)
-
 
 #===============================================================================
 # execution
@@ -186,7 +182,6 @@ class ExperimentSet(BaseSchedule):
 
         aruns = self._load_runs(text)
         if aruns:
-#            self.update_aliquots_needed = True
             self.executable = any([ai.executable for ai in aruns])
             self.automated_runs = aruns
 
@@ -265,8 +260,6 @@ class ExperimentSet(BaseSchedule):
             try:
 
                 script_info, params = self.parse_line(header, line, meta)
-#                params, make_script_name = self.parse_line(header, line, meta)
-#                params['configuration'] = self._build_configuration(make_script_name)
                 params['mass_spectrometer'] = self.mass_spectrometer
                 params['extract_device'] = self.extract_device
                 params['db'] = self.db
@@ -423,7 +416,7 @@ tray: {}
 
     def _edit_schedule_block_fired(self):
         b = self._block_factory(name=self.schedule_block)
-        info = b.edit_traits(kind='livemodal')
+        b.edit_traits(kind='livemodal')
 
     def _add_fired(self):
 
@@ -470,10 +463,6 @@ tray: {}
 #    def _update_skip(self):
 #        self.update_aliquots_needed = True
 
-#    def _update_dirty(self, dirty):
-#        if dirty:
-#            self.dirty = dirty
-
     @on_trait_change('automated_run:labnumber')
     def _update_labnumber(self, labnumber):
 
@@ -506,19 +495,9 @@ tray: {}
                     pass
 
                 arun.run_info.irrad_level = self._make_irrad_level(ln)
-#                ipos = ln.irradiation_position
-#                if not ipos is None:
-#                    level = ipos.level
-#                    irrad = level.irradiation
-# #                    irrad = ipos.irradiation
-#                    arun.run_info.irrad_level = '{}{}'.format(irrad.name, level.name)
 
                 # set default scripts
                 self._load_default_scripts()
-
-#            elif self.confirmation_dialog('{} does not exist. Add to database?'.format(labnumber)):
-#                db.add_labnumber(labnumber, 1, commit=True)
-#                self._ok_to_add = True
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
@@ -528,7 +507,6 @@ tray: {}
         if not ipos is None:
             level = ipos.level
             irrad = level.irradiation
-#                    irrad = ipos.irradiation
             il = '{}{}'.format(irrad.name, level.name)
         return il
 
@@ -542,12 +520,12 @@ tray: {}
         if self.automated_run.labnumber:
             self._load_default_scripts()
         else:
-            self.post_equilibration_script = NULL_STR
-            self.post_measurement_script = NULL_STR
-            self.measurement_script = NULL_STR
-            self.extraction_script = NULL_STR
+            self.clear_script_names()
+
+        self.set_scripts_mass_spectrometer()
 
     def _extract_device_changed(self):
+
         if self.extract_device != NULL_STR:
 
             runs = self.automated_runs
@@ -558,7 +536,6 @@ tray: {}
 
             if self.mass_spectrometer:
                 self._load_default_scripts()
-
 
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
