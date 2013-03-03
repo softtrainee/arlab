@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ class RunParser(object):
         args = map(str.strip, line)
 
         script_info = dict()
-        #load scripts
+        # load scripts
         for attr in ['measurement', 'extraction',
                      'post_measurement',
                      'post_equilibration',
@@ -38,20 +38,21 @@ class RunParser(object):
             except IndexError, e:
                 print 'base schedule _run_parser ', e
 
-        #load strings
+        # load strings
         for attr in ['labnumber',
                      'measurement', 'extraction',
                      'post_measurement',
                      'post_equilibration',
                      'pattern',
-                     'position'
+                     'position',
+                     'comment'
                      ]:
             try:
                 params[attr] = args[header.index(attr)]
             except IndexError, e:
                 print 'base schedule _run_parser ', e
 
-        #load booleans
+        # load booleans
         for attr in ['autocenter', 'disable_between_positions']:
             try:
                 param = args[header.index(attr)]
@@ -64,9 +65,10 @@ class RunParser(object):
             except (IndexError, ValueError):
                 params[attr] = False
 
-        #load numbers
+        # load numbers
         for attr in ['duration', 'overlap', 'cleanup',
-                     'extract_group'
+                     'extract_group',
+                     'weight'
                      ]:
             try:
                 param = args[header.index(attr)].strip()
@@ -75,7 +77,7 @@ class RunParser(object):
             except IndexError:
                 pass
 
-        #default extract_units to watts
+        # default extract_units to watts
         extract_value = args[header.index('extract_value')]
         extract_units = args[header.index('extract_units')]
         if not extract_units:
@@ -99,7 +101,7 @@ class RunParser(object):
 #
 #            return na
 
-        return script_info, params#, make_script_name
+        return script_info, params  # , make_script_name
 
 
 class UVRunParser(RunParser):

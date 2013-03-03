@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, on_trait_change, Any, Str
+from traits.api import Bool, on_trait_change, Any, Str, Event
 from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
 
@@ -24,22 +24,23 @@ import wx
 #============= local library imports  ==========================
 
 class _TabularEditor(wxTabularEditor):
-    drop_target = Any
+#    drop_target = Any
+    rearranged = Event
     def init(self, parent):
-        wxTabularEditor.init(self, parent)
+        super(_TabularEditor, self).init(parent)
+
         control = self.control
-
         control.Bind(wx.EVT_KEY_DOWN, self._on_key)
-#
-#        self.sync_value(self.factory.copy_selection, 'copy_selection', 'to')
-#
-#        self.control.SetDropTarget(PythonDropTarget(self.drop_target))
 
+        # binding to the EVT_MOTION prevents the EVT_LIST_BEGIN_DRAG from firing
+        # remove binding added by wxTabularEditor
+        control.Bind(wx.EVT_MOTION, None)
+        self.sync_value(self.factory.rearranged, 'rearranged', 'to')
 
     def update_editor(self):
-        control = self.control
-        wxTabularEditor.update_editor(self)
+        super(_TabularEditor, self).update_editor()
 
+        control = self.control
         if self.factory.scroll_to_bottom:
             if not self.selected and not self.multi_selected:
                 control.EnsureVisible(control.GetItemCount() - 1)
@@ -54,10 +55,8 @@ class _TabularEditor(wxTabularEditor):
             if not self.selected and not self.multi_selected:
                 control.EnsureVisible(0)
 
-#    def _key_down(self, event):
     def _on_key(self, event):
         key = event.GetKeyCode()
-#        print event, key
 #        print event.CmdDown()
         if event.CmdDown() and key == 67:
 #            self.copy_selection = self.selected
@@ -75,8 +74,26 @@ class _TabularEditor(wxTabularEditor):
         else:
             super(_TabularEditor, self)._key_down(event)
 
-    def _begin_drag(self, event):
-        print event
+    def wx_dropped_on (self, x, y, data, drag_result):
+        super(_TabularEditor, self).wx_dropped_on (x, y, data, drag_result)
+        self.rearranged = True
+
+    def _move_up_current (self):
+        super(_TabularEditor, self)._move_up_current()
+        self.rearranged = True
+
+    def _move_down_current (self):
+        super(_TabularEditor, self)._move_down_current()
+        self.rearranged = True
+    #    def _on_motion(self, event):
+#        print event
+#        event.Skip()
+
+#    def _begin_rdrag(self, event):
+#        print 'r', event
+
+#    def _begin_drag(self, event):
+#        print 'ffff', event
 #        adapter = self.adapter
 #        object, name = self.object, self.name
 #        selected = self._get_selected()
@@ -92,7 +109,8 @@ class _TabularEditor(wxTabularEditor):
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
-    drop_target = Str
+    drag_move = Bool(True)
+    rearranged = Str
     def _get_klass(self):
         return _TabularEditor
 #============= EOF =============================================

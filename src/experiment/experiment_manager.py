@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Instance, List, Str, Property
 from apptools.preferences.preference_binding import bind_preference
-#import apptools.sweet_pickle as pickle
+# import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
 import time
@@ -59,7 +59,7 @@ class ExperimentManager(Manager, Saveable):
 #    repo_kind = Str
     experiment_sets = List
 
-    title = Property(depends_on='experiment_set')#DelegatesTo('experiment_set', prefix='name')
+    title = Property(depends_on='experiment_set')  # DelegatesTo('experiment_set', prefix='name')
 #    path = DelegatesTo('experiment_set')
 #    path = Property(depends_on='experiment_set')
 #    editing_signal = None
@@ -71,7 +71,7 @@ class ExperimentManager(Manager, Saveable):
 
 
 #===============================================================================
-# processing 
+# processing
 # @todo: refractor to separate manager
 #===============================================================================
 #    def plot_series1(self):
@@ -80,23 +80,23 @@ class ExperimentManager(Manager, Saveable):
 #        from src.processing.analysis import Analysis
 #        from src.database.records.isotope_record import IsotopeRecord
 #        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
-#        
+#
 #        #from src.graph.time_series_graph import TimeSeriesGraph
 #        from src.graph.regression_graph import RegressionTimeSeriesGraph
 #        g=RegressionTimeSeriesGraph(container_dict=dict(padding=5))
 #        p=g.new_plot()
 #        p.value_range.tight_bounds=False
 #        x,y=zip(*[(ai.timestamp,(ai.signals['Ar40'].value-ai.signals['Ar40bs'].value)/ai.signals['Ar36'].value-ai.signals['Ar36bs'].value) for ai in ans])
-#        
-#        p,s,l=g.new_series(x,y, 
+#
+#        p,s,l=g.new_series(x,y,
 #                     type='scatter', marker_size=1.5, fit='average_SEM')
 #        g.edit_traits()
-#        
+#
 #        for ri in g.regressors:
 #            print ri.coefficients
-#            
+#
 #        db.close()
-#    
+#
 #    def plot_series(self):
 #        db=self.db
 #        from src.processing.analysis import Analysis
@@ -104,28 +104,28 @@ class ExperimentManager(Manager, Saveable):
 #        dbs=db.get_labnumber(4)
 #        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
 #        bg=next((ai for ai in ans if ai.aliquot==8))
-#        
+#
 #        dbs=db.get_labnumber(3)
 #        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
 #        bu=next((ai for ai in ans if ai.aliquot==23))
-#        
+#
 #        dbs=db.get_labnumber(1203)
 #        ans=[Analysis(dbrecord=IsotopeRecord(_dbrecord=di)) for di in dbs.analyses]
 #        a=next((ai for ai in ans if ai.aliquot==10))
-#        
-#        
-#        
+#
+#
+#
 #        bg40=bg.signals['Ar40'].value-bg.signals['Ar40bs'].value
 #        bg36=bg.signals['Ar36'].value-bg.signals['Ar36bs'].value
-#        
+#
 #        b40=a.signals['Ar40bl'].value-bg40
 #        b36=a.signals['Ar36bl'].value-bg36
-#        
+#
 #        c40=a.signals['Ar40'].value-a.signals['Ar40bs'].value-b40
 #        c36=a.signals['Ar36'].value-a.signals['Ar36bs'].value-b36
-#        
+#
 #        print c40/c36
-#        
+#
 #        cbg40=c40-bg40
 #        cbg36=c36-bg36
 #        print cbg40/cbg36
@@ -161,7 +161,7 @@ class ExperimentManager(Manager, Saveable):
         self.save_as_experiment_sets()
 
     def save_as_experiment_sets(self):
-        #test sets before saving
+        # test sets before saving
         for exp in self.experiment_sets:
             if not exp.test():
                 return
@@ -317,10 +317,10 @@ class ExperimentManager(Manager, Saveable):
     def _update_aliquots(self):
 
         ans = self._get_all_automated_runs()
-        #update the aliquots
+        # update the aliquots
         self._modify_aliquots(ans)
 
-        #update the steps
+        # update the steps
         self._modify_steps(ans)
 
     def _modify_steps(self, ans):
@@ -380,8 +380,12 @@ class ExperimentManager(Manager, Saveable):
             arun.aliquot += aoff
 
     def _modify_aliquots(self, ans):
+        offset = 0
+        if self.experiment_set.selected:
+            offset = len(self.experiment_set.selected)
+
         db = self.db
-        #update the aliquots
+        # update the aliquots
         idcnt_dict = dict()
         stdict = dict()
         for arun in ans:
@@ -411,8 +415,7 @@ class ExperimentManager(Manager, Saveable):
 #                    st = stdict[arunid]
 #                else:
 #                    st = 0
-
-            arun.aliquot = st + c
+            arun.aliquot = st + c - offset
 #            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
@@ -440,7 +443,7 @@ class ExperimentManager(Manager, Saveable):
 #===============================================================================
     def load_experiment_set(self, path=None, edit=True, saveable=False):
 #        self.bind_preferences()
-        #make sure we have a database connection
+        # make sure we have a database connection
         if not self.test_connections():
             return
 
@@ -451,7 +454,7 @@ class ExperimentManager(Manager, Saveable):
 
             self.experiment_set = None
             self.experiment_sets = []
-            #parse the file into individual experiment sets
+            # parse the file into individual experiment sets
             ts = self._parse_experiment_file(path)
             ws = []
             for text in ts:
@@ -486,7 +489,7 @@ class ExperimentManager(Manager, Saveable):
 #    def _get_path(self):
 #        if self.experiment_set:
 #            return self.experiment_set.path
-#    
+#
 #===============================================================================
 # handlers
 #===============================================================================
@@ -545,7 +548,7 @@ class ExperimentManager(Manager, Saveable):
 #        repo.root = paths.isotope_dir
 #        return repo
 
-#def main():
+# def main():
 #    paths.build('_experiment')
 #    from src.helpers.logger_setup import logging_setup
 #
@@ -553,20 +556,20 @@ class ExperimentManager(Manager, Saveable):
 #
 #    globalv.show_infos = False
 #
-##    s = SpectrometerManager()
-##    s.bootstrap()
-##    s.molecular_weight = 'Ar40'
-##    ini = Initializer()
-##    ini.add_initialization(dict(name = 'spectrometer_manager',
-##                                manager = s
-##                                ))
-##    ini.run()
+# #    s = SpectrometerManager()
+# #    s.bootstrap()
+# #    s.molecular_weight = 'Ar40'
+# #    ini = Initializer()
+# #    ini.add_initialization(dict(name = 'spectrometer_manager',
+# #                                manager = s
+# #                                ))
+# #    ini.run()
 #
-##    e = ExperimentManager(spectrometer_manager=s)
+# #    e = ExperimentManager(spectrometer_manager=s)
 #    e = ExperimentManager()
 #
-##    e.configure_traits(view='test_view')
-##    e.analyze_data()
+# #    e.configure_traits(view='test_view')
+# #    e.analyze_data()
 #    e.configure_traits(view='execute_view')
 
 def dum_run(r):
@@ -588,13 +591,13 @@ def test():
         t.start()
         time.sleep(1.8)
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    main()
 #    test()
 #============= EOF ====================================
 
 #===============================================================================
-# ##analysis code 
+# ##analysis code
 #===============================================================================
 #    def analyze_data(self):
 #        '''
@@ -603,17 +606,17 @@ def test():
 #            correct the data for baseline and blank
 #            calculate blank intercept using nj points
 #            calculate intercept
-#            calculate mswd 
+#            calculate mswd
 #        '''
 ##===============================================================================
-## gather data
+# # gather data
 ##===============================================================================
 #        runlist = ['B-01', 'A-01', 'A-02', 'A-03', 'A-04', 'B-02',
 #                   'A-05', 'A-06', 'A-07', 'B-03'
 #                   ]
 #
 #        blanks, airs, unknowns, b_bs, a_bs, u_bs = self.gather_data(runlist)
-##        self.permuate_data(blanks, airs, a_bs, b_bs)
+# #        self.permuate_data(blanks, airs, a_bs, b_bs)
 #
 #        self.plot_air_series(blanks, airs, b_bs, a_bs)
 #
@@ -621,14 +624,14 @@ def test():
 #                        blank_baselines,
 #                        air_baselines):
 #        g = StackedGraph()
-##        g.new_plot(xtitle='npts',
-##                   ytitle='40/36')
-##        g.new_plot(ytitle='40/36 err')
+# #        g.new_plot(xtitle='npts',
+# #                   ytitle='40/36')
+# #        g.new_plot(ytitle='40/36 err')
 #        g.new_plot(ytitle='Population SD',
 #                   show_legend=True
 #                   )
 #
-##        xs = [100, 200, 500, 1000, 2000]
+# #        xs = [100, 200, 500, 1000, 2000]
 #        for si, fit in enumerate([
 #                                  ('linear', 1), ('parabolic', 2),
 #                                  ('cubic', 3),
@@ -650,32 +653,32 @@ def test():
 #                     ]
 #
 #        n = len(airs['h1'])
-##        scatter_args = dict(type='scatter', marker='circle',
-##                         marker_size=1.75)
+# #        scatter_args = dict(type='scatter', marker='circle',
+# #                         marker_size=1.75)
 #        scatter_args = dict()
-##        for i in range(n):
-###            g.new_series(plotid=0, **scatter_args)
-###            g.new_series(plotid=1, **scatter_args)
-##            g.new_series(plotid=0)
-##            g.new_series(plotid=1)
+# #        for i in range(n):
+# ##            g.new_series(plotid=0, **scatter_args)
+# ##            g.new_series(plotid=1, **scatter_args)
+# #            g.new_series(plotid=0)
+# #            g.new_series(plotid=1)
 #
 #        g.new_series(plotid=0, **scatter_args)
 #
 #        g.set_series_label(name, series=si)
 #        for ci, xi in zip(cor_ratioss, xs):
-##            print ci
+# #            print ci
 #            ms, sds = zip(*[(i.nominal_value, i.std_dev()) for i in ci])
 #            ms = array(ms)
 #            sds = array(sds)
-##            print SD
-##            for si in range(n):
-##                g.add_datum((xi, ms[si]), plotid=0, series=si)
-##                g.add_datum((xi, sds[si]), plotid=1, series=si)
+# #            print SD
+# #            for si in range(n):
+# #                g.add_datum((xi, ms[si]), plotid=0, series=si)
+# #                g.add_datum((xi, sds[si]), plotid=1, series=si)
 #
 #            g.add_datum((xi, ms.std()), plotid=0, series=si)
 #
-##            g.new_series(xs, ms, type='scatter', plotid=0)
-##            g.new_series(xs, sds, type='scatter', plotid=1)
+# #            g.new_series(xs, ms, type='scatter', plotid=0)
+# #            g.new_series(xs, sds, type='scatter', plotid=1)
 #
 #        g.set_x_limits(0, xs[-1] + 100)
 #
@@ -711,10 +714,10 @@ def test():
 #            cdd_baseline = ufloat((cdds_baseline.mean(), cdds_baseline.std()))
 #
 ##===============================================================================
-## 
+# #
 ##===============================================================================
-##            h1_baseline = 0
-##            cdd_baseline = 0
+# #            h1_baseline = 0
+# #            cdd_baseline = 0
 #
 #            #if the sample is a blank add to blank list
 #            if rid.startswith('B'):
@@ -780,7 +783,7 @@ def test():
 #
 #        x, errs = zip(*[(cr.nominal_value,
 #                         cr.std_dev()) for cr in cor_ratios])
-##
+# #
 #        return calculate_mswd(x, errs)
 #
 #    def calculate_ratios(self, ni, fit, blanks, airs,
@@ -797,9 +800,9 @@ def test():
 #                                                        truncate=ti)
 #
 #        h1bs, cddbs = h1bs.mean(), cddbs.mean()
-##        h1bs, cddbs = 0, 0
-##        print 'asdfas', len(airs['h1']), len(airs['cdd'])
-##        print 'asdfas', len(air_baselines['h1']), len(air_baselines['cdd'])
+# #        h1bs, cddbs = 0, 0
+# #        print 'asdfas', len(airs['h1']), len(airs['cdd'])
+# #        print 'asdfas', len(air_baselines['h1']), len(air_baselines['cdd'])
 #        cor_h1, cor_cdd = self._calculate_correct_intercept(fit,
 #                                                            airs,
 #                                                            air_baselines,

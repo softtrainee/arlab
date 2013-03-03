@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,10 +24,10 @@ from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
 from src.database.core.base_orm import BaseMixin, NameMixin
-#from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
+# from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
 from sqlalchemy.sql.expression import func
 from datetime import datetime
-#from sqlalchemy.types import FLOAT
+# from sqlalchemy.types import FLOAT
 
 Base = declarative_base()
 
@@ -211,15 +211,15 @@ class proc_IsotopeResultsTable(Base, BaseMixin):
 class proc_NotesTable(Base, HistoryMixin):
     note = Column(BLOB)
 
-#class proc_WorkspaceHistoryTable(Base, HistoryMixin):
+# class proc_WorkspaceHistoryTable(Base, HistoryMixin):
 #    workspace_id = foreignkey('WorkspaceTable')
 #
 #
-#class proc_WorkspaceTable(Base, BaseMixin):
+# class proc_WorkspaceTable(Base, BaseMixin):
 #    histories = relationship('WorkspaceHistoryTable', backref='workspace')
 #    analyses = relationship('WorkspaceAnalysisSet', backref='workspace')
 
-#class proc_WorkspaceAnalysisSet(Base, BaseMixin):
+# class proc_WorkspaceAnalysisSet(Base, BaseMixin):
 #    analysis_id = foreignkey('AnalysisTable')
 
 
@@ -229,13 +229,13 @@ class proc_WorkspaceSettings(Base, BaseMixin):
     '''
     settings = BLOB()
 #===============================================================================
-# 
+#
 #===============================================================================
 
 #===============================================================================
 # measurement
 #===============================================================================
-#class meas_AnalysisPathTable(Base, PathMixin):
+# class meas_AnalysisPathTable(Base, PathMixin):
 #    analysis_id = foreignkey('meas_AnalysisTable')
 
 class meas_SignalTable(Base, BaseMixin):
@@ -256,12 +256,13 @@ class meas_AnalysisTable(Base, BaseMixin):
     status = Column(Integer, default=0)
     aliquot = Column(Integer)
     step = stringcolumn(10)
+    comment = Column(BLOB)
 
-    #meas relationships
+    # meas relationships
     isotopes = relationship('meas_IsotopeTable', backref='analysis')
     peak_center = relationship('meas_PeakCenterTable', backref='analysis', uselist=False)
 
-    #proc relationships
+    # proc relationships
     blanks_histories = relationship('proc_BlanksHistoryTable', backref='analysis')
     blanks_sets = relationship('proc_BlanksSetTable', backref='analysis')
 
@@ -443,7 +444,7 @@ class irrad_ChronologyTable(Base, BaseMixin):
         doses = [map(convert, d) for d in doses if d]
         return doses
 #===============================================================================
-# 
+#
 #===============================================================================
 
 #===============================================================================
@@ -522,6 +523,6 @@ class gen_UserTable(Base, NameMixin):
 
 
 #===============================================================================
-# 
+#
 #===============================================================================
 #============= EOF =============================================

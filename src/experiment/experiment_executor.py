@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
 from traitsui.api import View, Item, HGroup, Group, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
-#from src.loggable import Loggable
+# from src.loggable import Loggable
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.experiment_manager import ExperimentManager
@@ -28,7 +28,7 @@ from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
-#from src.repo.repository import Repository, FTPRepository
+# from src.repo.repository import Repository, FTPRepository
 from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
 from threading import Thread
@@ -48,8 +48,8 @@ from src.experiment.automated_run_editor import AutomatedRunEditor
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 
-#@todo: display total time in iso format 
-
+# @todo: display total time in iso format
+# @todo: display current exp sets mass spectrometer, extract device and tray
 
 class ExperimentExecutor(ExperimentManager):
     spectrometer_manager = Instance(Manager)
@@ -111,11 +111,11 @@ class ExperimentExecutor(ExperimentManager):
     def isAlive(self):
         return self._alive
 
-    def info(self, msg, log=True,color=None, *args, **kw):
+    def info(self, msg, log=True, color=None, *args, **kw):
         self.statusbar = msg
         if self.info_display:
             if color is None:
-                color='yellow'
+                color = 'yellow'
             self.info_display.add_text(msg, color=color)
 
         if log:
@@ -139,6 +139,7 @@ class ExperimentExecutor(ExperimentManager):
         self.end_at_run_completion = False
         self._was_executed = False
         self.stats.reset()
+        self.statusbar = ''
         super(ExperimentExecutor, self).opened()
 
     def _get_all_automated_runs(self):
@@ -196,11 +197,11 @@ class ExperimentExecutor(ExperimentManager):
         self.stats.nruns_finished += 1
 
 #    def reset_stats(self):
-##        self._alive = True
+# #        self._alive = True
 #        self.stats.start_timer()
 #
 #    def stop_stats_timer(self):
-##        self._alive = False
+# #        self._alive = False
 #        self.stats.stop_timer()
 #===============================================================================
 # private
@@ -220,11 +221,11 @@ class ExperimentExecutor(ExperimentManager):
 
             self.stop_file_listener()
 
-            #check for blank before starting the thread
+            # check for blank before starting the thread
             exp = self.experiment_sets[0]
             if self._has_preceeding_blank_or_background(exp):
                 if self.extraction_line_manager:
-                    #start the extraction line manager's valve state monitor
+                    # start the extraction line manager's valve state monitor
                     self.extraction_line_manager.start_status_monitor()
 
                 t = Thread(target=self._execute_experiment_sets)
@@ -273,7 +274,7 @@ class ExperimentExecutor(ExperimentManager):
             self._alive = False
             return
         else:
-            mon,isok = self._monitor_factory()
+            mon, isok = self._monitor_factory()
             if mon and not isok:
                 self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
                 self.info('experiment canceled because automated_run_monitor is not setup properly')
@@ -282,7 +283,7 @@ class ExperimentExecutor(ExperimentManager):
 
         self.pyscript_runner.connect()
 
-        #check for a preceeding blank
+        # check for a preceeding blank
 #        if not self._has_preceeding_blank_or_background(exp):
 #            self.info('experiment canceled because no blank or background was configured')
 #            self._alive = False
@@ -290,7 +291,7 @@ class ExperimentExecutor(ExperimentManager):
 
         self._alive = True
 
-        #delay before starting
+        # delay before starting
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
 
@@ -352,7 +353,7 @@ class ExperimentExecutor(ExperimentManager):
 #            if self.editing_signal:
 #                self.editing_signal.wait()
 
-            #check for mods
+            # check for mods
             if self.check_for_file_mods():
                 self._reload_from_disk()
                 cnt = 0
@@ -363,7 +364,7 @@ class ExperimentExecutor(ExperimentManager):
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
                                         not cnt == 0):
-                #delay between runs
+                # delay between runs
                 delay = exp.delay_between_analyses
                 self._delay(delay)
 
@@ -506,7 +507,7 @@ class ExperimentExecutor(ExperimentManager):
 
         types = ['air', 'unknown', 'cocktail']
         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
-        #get first air, unknown or cocktail
+        # get first air, unknown or cocktail
         aruns = self.experiment_set.cleaned_automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types), None)
@@ -548,10 +549,10 @@ class ExperimentExecutor(ExperimentManager):
             self.err_message = 'Monitor failed to start'
             return
 
-        #set the scripts automated run to arun
+        # set the scripts automated run to arun
         self._sync_scripts(arun)
 
-        #bootstrap the extraction script and measurement script
+        # bootstrap the extraction script and measurement script
         if not arun.extraction_script:
             self.err_message = 'Invalid runscript {}'.format(arun.script_info.extraction_script_name)
 #            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
@@ -596,7 +597,7 @@ class ExperimentExecutor(ExperimentManager):
 
         if not isAlive():
             return
-        
+
         print arun.post_measurement_script
         if arun.post_measurement_script:
             if not arun.do_post_measurement():
@@ -626,7 +627,7 @@ class ExperimentExecutor(ExperimentManager):
         if selected and self.recall_enabled:
             selected = selected[-1]
             db = self.db
-            #recall the analysis and display
+            # recall the analysis and display
             db.selector.open_record(selected.uuid)
 
     def _edit_run(self):
@@ -744,6 +745,9 @@ class ExperimentExecutor(ExperimentManager):
         v = View(
 #                 sel_grp,
                  exc_grp,
+                 HGroup(Item('object.experiment_set.mass_spectrometer', style='readonly'),
+                        Item('object.experiment_set.extract_device', style='readonly'),
+                        Item('object.experiment_set.tray', style='readonly')),
                  Item('object.experiment_set.automated_runs',
                       style='custom',
                       show_label=False,
@@ -798,15 +802,15 @@ class ExperimentExecutor(ExperimentManager):
     def _set_selector_default(self):
         s = SetSelector(
                         experiment_manager=self,
-                        #experiment_sets=self.experiment_sets,
+                        # experiment_sets=self.experiment_sets,
                         editable=False
                         )
 
         return s
 
     def _monitor_factory(self):
-        mon = None 
-        isok=True
+        mon = None
+        isok = True
         if self.mode == 'client':
             ip = InitializationParser()
             exp = ip.get_plugin('Experiment', category='general')
@@ -820,20 +824,20 @@ class ExperimentExecutor(ExperimentManager):
                 kind = comms.find('kind')
 
                 if host is not None:
-                    host = host.text #if host else 'localhost'
+                    host = host.text  # if host else 'localhost'
                 if port is not None:
-                    port = int(port.text) #if port else 1061
+                    port = int(port.text)  # if port else 1061
                 if kind is not None:
                     kind = kind.text
 
                 mon = RemoteAutomatedRunMonitor(host, port, kind, name=monitor.text.strip())
         else:
             mon = AutomatedRunMonitor()
-        
+
         if mon is not None:
 #        mon.configuration_dir_name = paths.monitors_dir
-            isok=mon.load()
-                
+            isok = mon.load()
+
         return mon, isok
     def _pyscript_runner_default(self):
         if self.mode == 'client':
@@ -850,11 +854,11 @@ class ExperimentExecutor(ExperimentManager):
                 kind = comms.find('kind')
 
             if host is not None:
-                host = host.text #if host else 'localhost'
+                host = host.text  # if host else 'localhost'
             if port is not None:
-                port = int(port.text) #if port else 1061
+                port = int(port.text)  # if port else 1061
             if kind is not None:
-                kind = kind.text #if kind else 'udp'
+                kind = kind.text  # if kind else 'udp'
 
             runner = RemotePyScriptRunner(host, port, kind)
         else:
