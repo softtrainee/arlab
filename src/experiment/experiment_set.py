@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,8 +28,8 @@ from src.experiment.automated_run import AutomatedRun
 from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
 from src.experiment.stats import ExperimentStats
-#from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-#from src.traits_editors.tabular_editor import myTabularEditor
+# from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+# from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.identifier import convert_identifier
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
@@ -60,7 +60,6 @@ class ExperimentSet(BaseSchedule):
 
     executable = Bool(True)
     auto_increment = Bool(False)
-    update_aliquots_needed = Event
 
     mass_spectrometer = Str('jan')
 #    mass_spectrometer = Str(NULL_STR)
@@ -144,12 +143,12 @@ class ExperimentSet(BaseSchedule):
         n = len(runs)
         rgen = (r for r in runs)
         if last_ran is not None:
-            #get index of last run in self.automated_runs
+            # get index of last run in self.automated_runs
 #            startid = next((i for i, r in enumerate(runs) if r.runid == last_ran.runid), None)
 #            if startid is not None:
             if self._cached_runs:
                 startid = self._cached_runs.index(last_ran) + 1
-                #for graphic clarity load the finished runs back in
+                # for graphic clarity load the finished runs back in
                 cached = self._cached_runs[:startid]
 
                 cnts = {}
@@ -216,7 +215,7 @@ class ExperimentSet(BaseSchedule):
 
         f = (l for l in text.split('\n'))
         metastr = ''
-        #read until break
+        # read until break
         for line in f:
             if line.startswith('#====='):
                 break
@@ -344,7 +343,7 @@ class ExperimentSet(BaseSchedule):
                     else:
                         if ai.extract_group:
                             if cextract_group == ai.extract_group:
-                                #if this is the last run dont continue
+                                # if this is the last run dont continue
                                 if ai != runs[-1]:
                                     continue
                             else:
@@ -479,7 +478,7 @@ tray: {}
     def _update_labnumber(self, labnumber):
 
         arun = self.automated_run
-        #check for id in labtable
+        # check for id in labtable
         self._ok_to_add = False
         db = self.db
 
@@ -489,18 +488,18 @@ tray: {}
 
         if labnumber:
 
-            #convert labnumber (a, bg, or 10034 etc)
+            # convert labnumber (a, bg, or 10034 etc)
             labnumber = convert_identifier(labnumber)
 #            if isinstance(convert_identifier(labnumber), int):
 #                self._ok_to_add = True
-##                arun.sample = convert_labnumber(convert_identifier(labnumber))
+# #                arun.sample = convert_labnumber(convert_identifier(labnumber))
 #                self._load_default_scripts()
 #                return
 
             ln = db.get_labnumber(labnumber)
             if ln:
                 self._ok_to_add = True
-                #set sample and irrad info
+                # set sample and irrad info
                 try:
                     arun.run_info.sample = ln.sample.name
                 except AttributeError:
@@ -511,10 +510,10 @@ tray: {}
 #                if not ipos is None:
 #                    level = ipos.level
 #                    irrad = level.irradiation
-##                    irrad = ipos.irradiation
+# #                    irrad = ipos.irradiation
 #                    arun.run_info.irrad_level = '{}{}'.format(irrad.name, level.name)
 
-                #set default scripts
+                # set default scripts
                 self._load_default_scripts()
 
 #            elif self.confirmation_dialog('{} does not exist. Add to database?'.format(labnumber)):
@@ -564,7 +563,7 @@ tray: {}
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
 #    def _selected_changed(self, new):
-##        print new
+# #        print new
 #        self.selected_runs = new
 #        if len(new) == 1:
 #            run = new[0]
@@ -577,7 +576,7 @@ tray: {}
 #                    except AttributeError:
 #                        pass
 #
-#    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
+#    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
 #    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
 #    def _sync_selected_runs(self, name, new):
 #        if self.selected_runs:
@@ -646,7 +645,7 @@ tray: {}
              it sets the configuration, loaded scripts and binds our update_loaded_script
              handler so we are aware of scripts that have been tested
         '''
-        #copy some of the last runs values
+        # copy some of the last runs values
         if self.automated_runs:
             pa = self.automated_runs[-1]
             for k in ['extract_device', 'autocenter']:
@@ -677,7 +676,7 @@ tray: {}
             ln = self.db.get_labnumber(labnumber)
 
             if ln is None:
-                #check to see if we have already warned for this labnumber
+                # check to see if we have already warned for this labnumber
                 if not labnumber in self._warned_labnumbers:
                     self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
                     self._warned_labnumbers.append(labnumber)
@@ -709,23 +708,23 @@ tray: {}
 #===============================================================================
 # views
 #===============================================================================
-
-
     def _get_global_parameters_group(self):
         gparams_grp = VGroup(
               Item('mass_spectrometer',
                    editor=EnumEditor(name='mass_spectrometers'),
-#                                           show_label=False
+                   tooltip='Select a mass spectrometer for this set'
                    ),
               Item('extract_device',
                    editor=EnumEditor(name='extract_devices'),
-#                                           show_label=False,
+                   tooltip='Select an extraction device for this set'
                    ),
               Item('tray',
                    editor=EnumEditor(name='trays'),
-#                                           show_label=False,
+                   tooltip='Select an sample tray for this set'
                    ),
-              Item('delay_between_analyses', label='Delay between Analyses (s)')
+              Item('delay_between_analyses',
+                   tooltip='Set the delay between analysis in seconds',
+                   label='Delay between Analyses (s)')
               )
         return gparams_grp
 
@@ -754,7 +753,7 @@ tray: {}
                                enabled_when='object.schedule_block!="---"',
                                 show_label=False),
                           Item('new_schedule_block', show_label=False),
-#                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
+                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
                           )
         v = View(
                  HGroup(
@@ -842,10 +841,10 @@ tray: {}
 #                            operations=['delete',
 #                                        'move',
 #                                        'edit'],
-##                            editable=False,
-##                             auto_resize=True,
+# #                            editable=False,
+# #                             auto_resize=True,
 #                             multi_select=True,
-##                             auto_update=True,
+# #                             auto_update=True,
 #                             scroll_to_bottom=False
 #                            )
 #        return r
@@ -853,8 +852,8 @@ tray: {}
 #        self._right_clicked_changed()
 #
 #    def _right_clicked_changed(self):
-##        self.debug('Right click currently disabled')
-##        return
+# #        self.debug('Right click currently disabled')
+# #        return
 #
 #        selected = self.selected
 #        if selected:

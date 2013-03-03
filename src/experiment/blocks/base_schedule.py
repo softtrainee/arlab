@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
-    DelegatesTo, on_trait_change
+    DelegatesTo, on_trait_change, Event
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 #============= standard library imports ========================
 import yaml
@@ -35,7 +35,7 @@ class RunAdapter(AutomatedRunAdapter):
     can_edit = True
     def _columns_default(self):
         cf = self._columns_factory()
-        #remove state
+        # remove state
         cf.pop(0)
 
         cf.remove(('Aliquot', 'aliquot'))
@@ -63,6 +63,7 @@ class BaseSchedule(ScriptEditable):
     runs_table = Instance(RunsTable, ())
     automated_runs = DelegatesTo('runs_table')
     selected = DelegatesTo('runs_table')
+    rearranged = DelegatesTo('runs_table')
     selected_runs = List(AutomatedRun)
 
     tray = Str(NULL_STR)
@@ -75,6 +76,9 @@ class BaseSchedule(ScriptEditable):
 
     _copy_cache = Any
     parser = None
+    update_aliquots_needed = Event
+    def _rearranged_fired(self):
+        self.update_aliquots_needed = True
 
     @on_trait_change('''extraction_script, measurement_script,
 post_measurement_script, post_equilibration_script''')
@@ -146,7 +150,7 @@ post_measurement_script, post_equilibration_script''')
     def _add_hook(self, ar, **kw):
         self._set_script_info(ar.script_info)
         self.automated_run = ar.clone_traits()
-        #if analysis type is bg, b- or a overwrite a few defaults
+        # if analysis type is bg, b- or a overwrite a few defaults
         if not ar.analysis_type == 'unknown':
             kw['position'] = ''
             kw['extract_value'] = 0
@@ -182,10 +186,10 @@ post_measurement_script, post_equilibration_script''')
         with open(p, 'r') as fp:
             defaults = yaml.load(fp)
 
-        #convert keys to lowercase
+        # convert keys to lowercase
         defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
 
-        #if labnumber is int use key='U'
+        # if labnumber is int use key='U'
         try:
             _ = int(key)
             key = 'u'
@@ -231,7 +235,7 @@ post_measurement_script, post_equilibration_script''')
 
         tab = lambda l: writeline('\t'.join(map(str, l)))
 
-        #write metadata
+        # write metadata
         self._meta_dumper(stream)
         writeline('#' + '=' * 80)
 
@@ -253,7 +257,7 @@ post_measurement_script, post_equilibration_script''')
             tab(vals)
 
         return stream
-#               
+#
     def _get_dump_attrs(self):
         header = ['labnumber',
                   'pattern',
@@ -266,7 +270,8 @@ post_measurement_script, post_equilibration_script''')
                   'cleanup',
                   'autocenter',
                   'extraction', 'measurement', 'post_equilibration', 'post_measurement',
-                  'disable_between_positions'
+                  'disable_between_positions',
+                  'weight', 'comment'
                   ]
         attrs = ['labnumber',
                   'pattern',
@@ -280,7 +285,9 @@ post_measurement_script, post_equilibration_script''')
                   'autocenter',
                   'extraction_script', 'measurement_script',
                   'post_equilibration_script', 'post_measurement_script',
-                  'disable_between_positions']
+                  'disable_between_positions',
+                  'weight', 'comment'
+                  ]
 
         if self.extract_device == 'Fusions UV':
             header.extend(('reprate', 'mask', 'attenuator'))

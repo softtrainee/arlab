@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,12 +87,7 @@ class ScriptEditable(Saveable):
             ssname = '{}_script'.format(sname)
             name = getattr(self, ssname)
             if name:
-#                name = self._add_mass_spectromter_name(name)
-#                if run.configuration:
-#                    run.configuration[ssname] = os.path.join(paths.scripts_dir,
-#                                                                sname,
-#                                                                name
-#                                                                )
+                setattr(run.script_info, '{}_script_name'.format(sname), name)
                 setattr(run, '{}_dirty'.format(ssname), True)
 #===============================================================================
 # property get/set
