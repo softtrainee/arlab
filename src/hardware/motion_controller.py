@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@
 from traits.api import Property, Dict, Float, Any, Instance
 from traitsui.api import View, VGroup, Item, RangeEditor
 from pyface.timer.api import Timer
-#from src.helpers.timer import Timer
+# from src.helpers.timer import Timer
 #============= standard library imports ========================
 import os
 
@@ -27,6 +27,7 @@ from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
 import time
 from pyface.timer.do_later import do_later
+from threading import Thread
 
 
 class MotionController(CoreDevice):
@@ -59,18 +60,6 @@ class MotionController(CoreDevice):
     motion_profiler = Instance(MotionProfiler, ())
 
     groupobj = None
-    def save_axes_parameters(self):
-        pass
-
-    def _motion_profiler_default(self):
-        mp = MotionProfiler()
-        if self.configuration_dir_path:
-            p = os.path.join(self.configuration_dir_path, 'motion_profiler.cfg')
-            mp.load(p)
-        return mp
-
-    def traits_view(self):
-        return View(self.get_control_group())
 
     def update_axes(self):
         for a in self.axes:
@@ -78,8 +67,8 @@ class MotionController(CoreDevice):
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
 
-#        def _update():     
-#        print self._x_position, self._y_position       
+#        def _update():
+#        print self._x_position, self._y_position
         self.parent.canvas.set_stage_position(self._x_position,
                                               self._y_position)
 
@@ -98,187 +87,12 @@ class MotionController(CoreDevice):
         self._not_moving_count = 0
         return Timer(250, func)
 
-
-    def _z_inprogress_update(self):
-        '''
-        '''
-        if not self._moving_():
-            self.timer.Stop()
-
-        z = self.get_current_position('z')
-        self.z_progress = z
-
-#        if self._moving_():
-#            z = self.get_current_position('z')
-#            if z is not None:
-#                self.z_progress = z
-#        elif self._not_moving_count > 3:
-#            self.timer.Stop()
-#            self.z_progress = self.z
-#
-#        else:
-#            self._not_moving_count += 1
-
-    def _inprogress_update(self):
-        '''
-        '''
-
-        if not self._moving_():
-            self.timer.Stop()
-            self.parent.canvas.clear_desired_position()
-        else:
-#            x,y=self.get_xy()
-#            time.sleep(0.1)
-#        else:
-            x = self.get_current_position('x')
-            y = self.get_current_position('y')
-    #        self.info('setting x={:3f}, y={:3f}'.format(x, y))
-    #        do_later(self.parent.canvas.set_stage_position, x, y)
-            self.parent.canvas.set_stage_position(x, y)
-
-    def _get_x(self):
-        '''
-        '''
-        return self._x_position
-
-    def _get_y(self):
-        '''
-        '''
-        return self._y_position
-
-    def _get_z(self):
-        '''
-        '''
-        return self._z_position
-
-    def _validate(self, v, key, cur):
-        '''
-        '''
-        mi = self.axes[key].negative_limit
-        ma = self.axes[key].positive_limit
-
-        try:
-            v = float(v)
-            if not mi <= v <= ma:
-                v = None
-
-            if v is not None:
-                if abs(v - cur) <= 0.001:
-                    v = None
-        except ValueError:
-
-            v = None
-
-#        print 'validate', min, max, v
-        return v
-
-    def _validate_x(self, v):
-        '''
-
-        '''
-        return self._validate(v, 'x', self._x_position)
-
-    def _validate_y(self, v):
-        '''
-
-        '''
-        return self._validate(v, 'y', self._y_position)
-
-#    def _validate_z(self, v):
-#        '''
-
-#        '''
-#        return self._validate(v, 'z', self._z_position)
-    def _validate_z(self, v):
-        '''
-        '''
-        return self._validate(v, 'z', self._z_position)
-
     def set_z(self, v, **kw):
-        self.single_axis_move('z', v, **kw)
-        self._z_position = v
-        self.axes['z'].position = v
-
-    def _set_z(self, v):
-        '''
-        '''
-        if v is not None:
-            self.set_z(v)
-
-    def _set_x(self, v):
-        '''
-        '''
-        if v is not None:
-            self.single_axis_move('x', v)
-            self._x_position = v
-            self.axes['x'].position = v
-
-    def _set_y(self, v):
-        '''
-
-        '''
-        if v is not None:
-            self.single_axis_move('y', v)
-            self._y_position = v
-            self.axes['y'].position = v
-
-    def get_xy(self):
-        return 0, 0
-
-    def get_current_position(self, *args, **kw):
-        '''
-
-        '''
-        return 0
-
-    def single_axis_move(self, *args, **kw):
-        '''
-        '''
-        pass
-#    def _moving_(self):
-#        pass
-
-    def define_home(self):
-        '''
-        '''
-        pass
-
-    def get_control_group(self):
-        g = VGroup(show_border=True,
-                   label='Axes')
-
-        keys = self.axes.keys()
-        keys.sort()
-        for k in keys:
-
-            editor = RangeEditor(low_name='{}axes_min'.format(k),
-                                  high_name='{}axes_max'.format(k),
-                                  mode='slider',
-                                  format='%0.3f')
-
-            g.content.append(Item(k, editor=editor))
-            if k == 'z':
-                g.content.append(Item('z_progress', show_label=False,
-                                      editor=editor,
-                                      enabled_when='0'
-                                      ))
-        return g
-
-    def set_single_axis_motion_parameters(self, *args, **kw):
-        pass
+        self._move_axis('z', v, **kw)
 
     def block(self, *args, **kw):
         self._block_(*args, **kw)
-    def enqueue_move(self, *args, **kw):
-        pass
-    def set_smooth_transitions(self, *args, **kw):
-        pass
-    def set_program_mode(self, *args, **kw):
-        pass
-    def linear_move(self, *args, **kw):
-        pass
-    def set_home_position(self, *args, **kw):
-        pass
+
     def axes_factory(self, config=None):
         if config is None:
 
@@ -309,35 +123,80 @@ class MotionController(CoreDevice):
                                   )
 
             self.axes[a] = na
-    def _get_xaxes_max(self):
-        '''
-        '''
-        return self.axes['x'].positive_limit if self.axes.has_key('x') else 0
 
-    def _get_xaxes_min(self):
-        '''
-        '''
-        return self.axes['x'].negative_limit if self.axes.has_key('x') else 0
+#===============================================================================
+# define in subclass
+#===============================================================================
+    def save_axes_parameters(self):
+        pass
 
-    def _get_yaxes_min(self):
-        '''
-        '''
-        return self.axes['y'].negative_limit if self.axes.has_key('y') else 0
+    def get_xy(self):
+        return 0, 0
 
-    def _get_yaxes_max(self):
-        '''
-        '''
-        return self.axes['y'].positive_limit if self.axes.has_key('y') else 0
+    def get_current_position(self, *args, **kw):
+        return 0
 
-    def _get_zaxes_min(self):
-        '''
-        '''
-        return self.axes['z'].negative_limit if self.axes.has_key('z') else 0
+    def enqueue_move(self, *args, **kw):
+        pass
 
-    def _get_zaxes_max(self):
+    def set_smooth_transitions(self, *args, **kw):
+        pass
+
+    def set_program_mode(self, *args, **kw):
+        pass
+
+    def linear_move(self, *args, **kw):
+        pass
+
+    def set_home_position(self, *args, **kw):
+        pass
+
+    def single_axis_move(self, *args, **kw):
+        pass
+
+    def define_home(self):
+        pass
+
+    def set_single_axis_motion_parameters(self, *args, **kw):
+        pass
+
+#===============================================================================
+# private
+#===============================================================================
+    def _set_axis(self, name, v, **kw):
+        if v is None:
+            return
+
+        c = getattr(self, '_{}_position'.format(name))
+        disp = abs(c - v)
+        self.single_axis_move(name, v, update=disp > 4, **kw)
+
+        setattr(self, '_{}_position'.format(name), v)
+        self.axes[name].position = v
+
+        if disp <= 4:
+            self.parent.canvas.clear_desired_position()
+
+    def _z_inprogress_update(self):
         '''
         '''
-        return self.axes['z'].positive_limit if self.axes.has_key('z') else 0
+        if not self._moving_():
+            self.timer.Stop()
+
+        z = self.get_current_position('z')
+        self.z_progress = z
+
+    def _inprogress_update(self):
+        '''
+        '''
+
+        if not self._moving_():
+            self.timer.Stop()
+            self.parent.canvas.clear_desired_position()
+        else:
+            x = self.get_current_position('x')
+            y = self.get_current_position('y')
+            self.parent.canvas.set_stage_position(x, y)
 
     def _sign_correct(self, val, key, ratio=True):
         '''
@@ -358,7 +217,7 @@ class MotionController(CoreDevice):
 
         func = lambda: self._moving_(axis=axis)
         if self.timer is not None:
-            #timer is calling self._moving_
+            # timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
 
         time.sleep(0.25)
@@ -367,4 +226,111 @@ class MotionController(CoreDevice):
 
         if event is not None:
             event.set()
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_x(self):
+        return self._x_position
+
+    def _get_y(self):
+        return self._y_position
+
+    def _get_z(self):
+        return self._z_position
+
+    def _set_x(self, v):
+        self._set_axis('x', v)
+
+    def _set_y(self, v):
+        self._set_axis('y', v)
+
+    def _set_z(self, v):
+        self.set_z(v)
+
+    def _validate_x(self, v):
+        return self._validate(v, 'x', self._x_position)
+
+    def _validate_y(self, v):
+        return self._validate(v, 'y', self._y_position)
+
+    def _validate_z(self, v):
+        return self._validate(v, 'z', self._z_position)
+
+    def _validate(self, v, key, cur):
+        '''
+        '''
+        mi = self.axes[key].negative_limit
+        ma = self.axes[key].positive_limit
+
+        try:
+            v = float(v)
+            if not mi <= v <= ma:
+                v = None
+
+            if v is not None:
+                if abs(v - cur) <= 0.001:
+                    v = None
+        except ValueError:
+            v = None
+
+        return v
+
+    def _get_xaxes_max(self):
+        return self._get_positive_limit('x')
+
+    def _get_xaxes_min(self):
+        return self._get_negative_limit('x')
+
+    def _get_yaxes_max(self):
+        return self._get_positive_limit('y')
+
+    def _get_yaxes_min(self):
+        return self._get_negative_limit('y')
+
+    def _get_zaxes_max(self):
+        return self._get_positive_limit('z')
+
+    def _get_zaxes_min(self):
+        return self._get_negative_limit('z')
+
+    def _get_positive_limit(self, key):
+        return self.axes[key].positive_limit if self.axes.has_key(key) else 0
+    def _get_negative_limit(self, key):
+        return self.axes[key].negative_limit if self.axes.has_key(key) else 0
+
+#===============================================================================
+# view
+#===============================================================================
+    def traits_view(self):
+        return View(self.get_control_group())
+
+    def get_control_group(self):
+        g = VGroup(show_border=True,
+                   label='Axes')
+
+        keys = self.axes.keys()
+        keys.sort()
+        for k in keys:
+
+            editor = RangeEditor(low_name='{}axes_min'.format(k),
+                                  high_name='{}axes_max'.format(k),
+                                  mode='slider',
+                                  format='%0.3f')
+
+            g.content.append(Item(k, editor=editor))
+            if k == 'z':
+                g.content.append(Item('z_progress', show_label=False,
+                                      editor=editor,
+                                      enabled_when='0'
+                                      ))
+        return g
+#===============================================================================
+# defaults
+#===============================================================================
+    def _motion_profiler_default(self):
+        mp = MotionProfiler()
+        if self.configuration_dir_path:
+            p = os.path.join(self.configuration_dir_path, 'motion_profiler.cfg')
+            mp.load(p)
+        return mp
 #============= EOF ====================================

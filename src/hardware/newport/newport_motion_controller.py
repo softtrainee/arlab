@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,14 +45,14 @@ class NewportMotionController(MotionController):
         '''
         '''
 
-        #try to get x position to test comms
+        # try to get x position to test comms
 
         r = True if self.get_current_position('x') is not None else False
 
-        #force group destruction
+        # force group destruction
         self.destroy_group(force=True)
 
-        #get and clear any error
+        # get and clear any error
         self.read_error()
 
         return r
@@ -128,11 +128,11 @@ ABLE TO PERFORM GROUPED MOVES I.E. LINEAR OR CIRCULAR
 ABLE TO USE THE HARDWARE JOYSTICK
             ''')
 
-        #the esp 300 doesnt like grouped commands 
-        #ie 1PA1.0;2PA1.0
+        # the esp 300 doesnt like grouped commands
+        # ie 1PA1.0;2PA1.0
         self.set_attribute(config, 'group_commands', 'General', 'group_commands', cast='boolean', optional=True)
 
-        #set the drive calibration values
+        # set the drive calibration values
 
         return True
 
@@ -203,18 +203,18 @@ ABLE TO USE THE HARDWARE JOYSTICK
             return self.axes['x'].id == 2
 
 #    def get_xy(self):
-#        
+#
 #        xax=self.axes['x']
 #        yax=self.axes['y']
-#        
-#        
-##        v = self.ask('1TP?;2TP?', verbose=False)
+#
+#
+# #        v = self.ask('1TP?;2TP?', verbose=False)
 #        v = self.ask('{}TP?;{}TP?'.format(xax.id, yax.id), verbose=False)
 #        if v is None:
 #            return 0, 0
-#        
+#
 #        v=map(float, v.split('\n'))
-#        
+#
 #        x = self._sign_correct(v[0], 'x', ratio=False) / xax.drive_ratio
 #        y = self._sign_correct(v[1], 'y', ratio=False) / yax.drive_ratio
 #        return x,y
@@ -250,7 +250,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         return f
 
     def relative_move(self, key_direction):
-        #move one pixel in the specified direction
+        # move one pixel in the specified direction
 
         if key_direction == 'Left':
             ax_key = 'x'
@@ -282,16 +282,16 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def multiple_point_move(self, points, nominal_displacement=0.5):
         gid = self.groupobj.id
         self.timer = self.timer_factory()
-        #use a nominal displacement to set the motion params
+        # use a nominal displacement to set the motion params
         self.configure_group(True, displacement=nominal_displacement)
 
-        #is this command necessary or is it
+        # is this command necessary or is it
         cmd = self._build_command('HQ', xx=self.groupobj.id, nn=10)
         self.tell(cmd, verbose=True)
 
         avaliable_spaces = 10
         while 1:
-            #issue the first 10 points and wait
+            # issue the first 10 points and wait
             cmd = ';'.join([self._build_command('HL', xx=gid,
                                                 nn='{:0.5f},{:0.5f}'.format(self._sign_correct(x, 'x'),
                                                                             self._sign_correct(y, 'y')))
@@ -303,7 +303,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             resp = 0
             cmd = self._build_query('HQ', xx=gid)
             while waiting and not self.simulation:
-                # wait until the via point buffer is empty 
+                # wait until the via point buffer is empty
                 # e.i HQ?=10 10 via point spaces available in buffer
                 resp = self.ask(cmd, verbose=False)
                 if resp is not None:
@@ -320,7 +320,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
     def linear_move(self, x, y, **kw):
 
-        #calc the displacement
+        # calc the displacement
         dx = self._x_position - x
         dy = self._y_position - y
         tol = 0.0001
@@ -350,7 +350,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if errx is None and erry is None:
             return 'invalid position {},{}'.format(x, y)
 
-        tol = 0.001 #should be set to the motion controllers resolution 
+        tol = 0.001  # should be set to the motion controllers resolution
         if d > tol:
             kw['displacement'] = d
 #            do_later(self.parent.canvas.set_desired_position, x,y)
@@ -472,33 +472,33 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def home(self, axes, search_mode=4, block=True):
         '''
         '''
-        #manual 3-104
-        #If nn = 0, the axes will search for zero position count.
-        #If nn = 1, the axis will search for combined Home and 
-        #Index signal transitions. 
-        #If nn = 2, the axes will search for Home signal 
-        #transition only. 
-        #If nn = 3, the axes willsearch for positive limit signal transition. 
-        #If nn = 4, the axes will search for negative limit signal
-        # transition. 
-        #If nn = 5, the axes will search for positive limit and index signal
-        # transition. 
-        #If nn = 6, the axes will search for negative limit and
+        # manual 3-104
+        # If nn = 0, the axes will search for zero position count.
+        # If nn = 1, the axis will search for combined Home and
+        # Index signal transitions.
+        # If nn = 2, the axes will search for Home signal
+        # transition only.
+        # If nn = 3, the axes willsearch for positive limit signal transition.
+        # If nn = 4, the axes will search for negative limit signal
+        # transition.
+        # If nn = 5, the axes will search for positive limit and index signal
+        # transition.
+        # If nn = 6, the axes will search for negative limit and
         # index signal transition.
 
-        #destroy the grouping
+        # destroy the grouping
         self.destroy_group(force=True)
 
 
 #        cmd = ';'.join(['{}OR{{}}'.format(k.id) for k in self.axes.itervalues()])
-        #if all:
+        # if all:
 #            cmd = ';'.join(['{}OR{{}}'.format(k.id) for k in self.axes.itervalues()])
         cmd = ';'.join([self._build_command('OR', a.id, nn=search_mode if a.name.lower() != 'z' else 3)
                          for a in self.axes.itervalues() if a.name in axes])
 
 
-        #force z axis home positive 
-        #cmd = '1OR{};2OR{};3OR{}' .format(search_mode, search_mode, 3)
+        # force z axis home positive
+        # cmd = '1OR{};2OR{};3OR{}' .format(search_mode, search_mode, 3)
 #        cmd = cmd.format(*[search_mode if v.id != 3 else 3 for k, v in self.axes.iteritems()])
 #        cmd = cmd.format(*[search_mode if v.id != 3 else 3 for v in axes])
 #        if 'z' in axes:
@@ -539,7 +539,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self.timer.Stop()
 
         if self.mode == 'grouped':
-            #check group is moving
+            # check group is moving
             cmd = '1HS'
             while self.group_moving() and not self.simulation:
                 self.tell(cmd)
@@ -669,7 +669,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if change:
                 obj.trait_set(_acceleration=ac,
                                         _deceleration=dc,
-                                        _velocity=nv)
+                                        _velocity=nv, trait_change_notify=False)
         else:
             change = (obj.machine_acceleration != obj.acceleration or
                       obj.machine_deceleration != obj.deceleration or
@@ -693,9 +693,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if self.mode == 'grouped':
             if not group:
                 self.destroy_group()
-            elif change: #the group needs a motion parameter change
+            elif change:  # the group needs a motion parameter change
                 self._set_axis_grouping(new_group=False)
-        else: # mode==normal
+        else:  # mode==normal
             if group:
                 self._set_axis_grouping()
             else:
@@ -727,9 +727,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if v is not None:
             return float(v)
 
-
     def _set_axis_grouping(self, new_group=True):
-        #check group_parameters are acceptable
+        # check group_parameters are acceptable
         if new_group:
             msg = 'setting new group'
             self.set_trajectory_mode(1)
@@ -746,8 +745,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
             for c in cmd.split(';'):
                 self.tell(c)
                 time.sleep(0.1)
-                #self.read_error()
-                #time.sleep(0.1)
+                # self.read_error()
+                # time.sleep(0.1)
 
     def set_single_axis_motion_parameters(self, axis=None, pdict=None):
         '''
@@ -756,7 +755,6 @@ ABLE TO USE THE HARDWARE JOYSTICK
         pmap = dict(velocity='VA',
                   acceleration='AC',
                   deceleration='AG')
-
 
         if pdict:
             axis = self.axes[pdict['key']]
@@ -776,8 +774,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
             cmd = ';'.join(['{:n}{}{{{}:0.2f}}'.format(*(axis.id,) + p) for p in param_coms])
 
-        #ex cmd
-        #1VA1.00;1AC2.00;1AG2.00
+        # ex cmd
+        # 1VA1.00;1AC2.00;1AG2.00
             cmd = cmd.format(**pdict)
 
         if self.group_commands:
@@ -810,7 +808,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
             gid = self.groupobj.id
             st = '{:n}HL{x:0.5f},{y:0.5f}'.format(gid, **kwargs)
-#            this switch is accomplished by the group_parameter axes orer 
+#            this switch is accomplished by the group_parameter axes orer
 #            axes=2,1
 #            if self.axes['x'].id == 2:
 #                st = '{:n}HL{y:0.3f},{x:0.3f}'.format(id, **kwargs)
@@ -957,7 +955,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         self.parent.canvas.set_stage_position(self._x_position, self._y_position)
 #======================EOF========================================
-#def jog_move(self, c):
+# def jog_move(self, c):
 #
 #        if c == 'Left':
 #            ax_key = 'x'
