@@ -416,8 +416,10 @@ class LaserTrayCanvas(MapCanvas):
         c = event.GetKeyCode()
         if c in (314, 316):  # left, right
             self.parent.stop(ax_key='x')
+            self.parent.update_axes()
         elif c in (315, 317):  # up, down
             self.parent.stop(ax_key='y')
+            self.parent.update_axes()
 
     def normal_mouse_move(self, event):
         '''
