@@ -162,7 +162,6 @@ post_measurement_script, post_equilibration_script''')
 
     def update_loaded_scripts(self, new):
         if new:
-            print 'new script', new, type(new)
             self.loaded_scripts[new.name] = new
             for ai in self.automated_runs:
                 ai.scripts = self.loaded_scripts

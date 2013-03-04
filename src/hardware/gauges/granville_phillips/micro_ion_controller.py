@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -89,7 +89,6 @@ class MicroIonController(CoreDevice):
             except (TypeError, ValueError):
                 pass
 
-
     def get_pressures(self, verbose=False):
         b = self.get_convectron_b_pressure(verbose=verbose)
         self._set_gauge_pressure('CG2', b)
@@ -100,9 +99,8 @@ class MicroIonController(CoreDevice):
         ig = self.get_ion_pressure(verbose=verbose)
         self._set_gauge_pressure('IG', ig)
 
-
         return ig, a, b
-        #return self.get_convectron_a_pressure()
+        # return self.get_convectron_a_pressure()
 
     def set_degas(self, state):
         key = 'DG'
@@ -149,7 +147,7 @@ class MicroIonController(CoreDevice):
 
         if channel is None:
             if r is None:
-                #from numpy import random,char
+                # from numpy import random,char
                 r = random.randint(0, 2, 6)
                 r = ','.join(char.array(r))
 
@@ -166,9 +164,9 @@ class MicroIonController(CoreDevice):
 
     def _build_command(self, key, value=None):
 
-        #prepend key with our address
-        #example of new string formating 
-        #see http://docs.python.org/library/string.html#formatspec
+        # prepend key with our address
+        # example of new string formating
+        # see http://docs.python.org/library/string.html#formatspec
         key = '#{}{}'.format(self.address, key)
         if value is not None:
 #            args = (key, value, CRLF)
@@ -186,54 +184,5 @@ class MicroIonController(CoreDevice):
 
         return r
 
-ON = True
-OFF = False
-import unittest
-class tester(unittest.TestCase):
-    def setUp(self):
-        self._controller = MicroIonController()
-        self._controller.bootstrap()
-    def testSetDegas(self):
 
-        cmd = self._controller.set_degas(ON)
-        self.assertEqual(cmd, 'DG ON ' + CRLF)
-
-        cmd = self._controller.set_degas(OFF)
-        self.assertEqual(cmd, 'DG OFF ' + CRLF)
-
-    def testGetDegas(self):
-        cmd = self._controller.get_degas()
-        self.assertEqual(cmd, 'DGS ' + CRLF)
-
-    def testGetPressure(self):
-        cmd = self._controller.get_ion_pressure()
-        self.assertEqual(cmd, 'DS IG ' + CRLF)
-
-        cmd = self._controller.get_convectron_a_pressure()
-        self.assertEqual(cmd, 'DS CG1 ' + CRLF)
-
-        cmd = self._controller.get_convectron_b_pressure()
-        self.assertEqual(cmd, 'DS CG2 ' + CRLF)
-
-    def testSetPower(self):
-
-        cmd = self._controller.set_ion_gauge_state(ON)
-        self.assertEqual(cmd, 'IG1 ON ' + CRLF)
-
-        cmd = self._controller.set_ion_gauge_state(OFF)
-        self.assertEqual(cmd, 'IG1 OFF ' + CRLF)
-
-    def testProcessControl(self):
-        cmd = self._controller.get_process_control_status(channel=1)
-        self.assertEqual(cmd, 'PCS 1 ' + CRLF)
-
-        cmd = self._controller.get_process_control_status(channel=None)
-        self.assertEqual(cmd, 'PCS ' + CRLF)
-
-
-
-if __name__ == '__main__':
-    m = MicroIonController(name='micro_ion_controller')
-    m.bootstrap()
-    m.scan()
 #============= EOF ====================================
