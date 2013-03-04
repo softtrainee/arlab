@@ -276,7 +276,6 @@ class PyScript(Loggable):
     def bootstrap(self, load=True, **kw):
         self._interval_flag = Event()
         self._interval_stack = Queue()
-        self.set_default_context()
 
         if self.root and self.name and load:
 #            p = os.path.join(self.root, self.name)

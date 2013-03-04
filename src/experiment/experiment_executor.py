@@ -531,12 +531,6 @@ class ExperimentExecutor(ExperimentManager):
 
         return True
 
-    def _sync_scripts(self, arun):
-        for si in SCRIPT_KEYS:
-            s = getattr(arun, '{}_script'.format(si))
-            if s:
-                s.automated_run = arun
-
     def _do_automated_run(self, arun):
         def isAlive():
             if not self.isAlive():
@@ -549,29 +543,6 @@ class ExperimentExecutor(ExperimentManager):
             self.err_message = 'Monitor failed to start'
             return
 
-        # set the scripts automated run to arun
-        self._sync_scripts(arun)
-
-        # bootstrap the extraction script and measurement script
-        if not arun.extraction_script:
-            self.err_message = 'Invalid runscript {}'.format(arun.script_info.extraction_script_name)
-#            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
-            return
-        else:
-            arun.extraction_script.syntax_checked = True
-
-        if not arun.measurement_script:
-            self.err_message = 'Invalid measurement_script {}'.format(arun.script_info.measurement_script_name)
-            return
-        else:
-            arun.measurement_script.syntax_checked = True
-
-#        if not arun.post_measurement_script:
-#            self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
-#            return
-#        else:
-#            arun.post_measurement_script.syntax_checked = True
-
         if not isAlive():
             return
 
@@ -582,15 +553,6 @@ class ExperimentExecutor(ExperimentManager):
         if not isAlive():
             return
 
-#        #do_equilibration
-#        evt = arun.do_equilibration()
-#        if evt:
-#            self.info('waiting for the inlet to open')
-#            evt.wait()
-#            self.info('inlet opened')
-#
-#        if not isAlive():
-#            return
         arun.state = 'measurement'
         if not arun.do_measurement():
             self._alive = False
@@ -598,7 +560,6 @@ class ExperimentExecutor(ExperimentManager):
         if not isAlive():
             return
 
-        print arun.post_measurement_script
         if arun.post_measurement_script:
             if not arun.do_post_measurement():
                 if not arun.state == 'truncate':
@@ -612,16 +573,13 @@ class ExperimentExecutor(ExperimentManager):
         else:
             arun.state = 'success'
             fstate = 'finished'
-#        fstate = 'truncated' if arun.state == 'truncate' else 'finished'
+
         self.info('Automated run {} {}'.format(arun.runid, fstate))
 
     def _end_runs(self):
         self._last_ran = None
         self.stats.stop_timer()
-#        self._alive = False
-#        exp = self.experiment_set
-#        exp.stats.nruns_finished = len(exp.automated_runs)
-#        self.stop_stats_timer()
+
     def _recall_run(self):
         selected = self.selected
         if selected and self.recall_enabled:
@@ -647,14 +605,15 @@ class ExperimentExecutor(ExperimentManager):
 #===============================================================================
     def _save_button_fired(self):
         self.save()
+
     def _save_as_button_fired(self):
         self.save_as()
 
-#    def _experiment_set_changed(self):
-#        if self.experiment_set:
-#            nonfound = self._check_for_managers(self.experiment_set)
-#            if nonfound:
-#                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+    def _experiment_set_changed(self):
+        if self.experiment_set:
+            nonfound = self._check_for_managers(self.experiment_set)
+            if nonfound:
+                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
 
     def _resume_button_fired(self):
         self.resume_runs = True
@@ -866,3 +825,22 @@ class ExperimentExecutor(ExperimentManager):
 
         return runner
 #============= EOF =============================================
+#        # bootstrap the extraction script and measurement script
+#        if not arun.extraction_script:
+#            self.err_message = 'Invalid runscript {}'.format(arun.script_info.extraction_script_name)
+# #            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
+#            return
+# #        else:
+# #            arun.extraction_script.syntax_checked = True
+#
+#        if not arun.measurement_script:
+#            self.err_message = 'Invalid measurement_script {}'.format(arun.script_info.measurement_script_name)
+#            return
+#        else:
+#            arun.measurement_script.syntax_checked = True
+
+#        if not arun.post_measurement_script:
+#            self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
+#            return
+#        else:
+#            arun.post_measurement_script.syntax_checked = True

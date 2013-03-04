@@ -137,6 +137,7 @@ class PyScriptManager(Manager):
         ps.text = self.body
 
         ps.bootstrap(load=False)
+        ps.set_default_context()
 
         try:
             err = ps.test()

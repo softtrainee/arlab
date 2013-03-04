@@ -54,6 +54,8 @@ class ExtractionLinePyScript(ValvePyScript):
         '''
             provide default values for all the properties exposed in the script
         '''
+        self.info('%%%%%%%%%%%%%%%%%%%%%%% setting default context')
+
         self.setup_context(analysis_type='',
                            position='',
                            pattern='',

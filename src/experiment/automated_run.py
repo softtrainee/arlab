@@ -609,7 +609,11 @@ anaylsis_type={}
             self._alive = True
             self._total_counts = 0
 
+            # setup the scripts
             self.measurement_script.automated_run = self
+            for si in ('extraction', 'post_measurement', 'post_equilibration'):
+                script = getattr(self, '{}_script'.format(si))
+                self._setup_context(script)
 
             return True
 
@@ -1578,81 +1582,21 @@ anaylsis_type={}
 # factories
 #===============================================================================
     def _load_script(self, name):
-
-#        print name, self.scripts
         script = None
         sname = getattr(self.script_info, '{}_script_name'.format(name))
 
         if sname and sname != NULL_STR:
             sname = self._make_script_name(sname)
-#            print sname, self.scripts.keys()
-# #                self.info('script {} modified reloading'.format(fname))
-#                s = self._bootstrap_script(fname, name, ec)
             if sname in self.scripts:
                 script = self.scripts[sname]
                 if script.check_for_modifications():
+                    self.debug('script {} modified reloading'.format(sname))
                     script = self._bootstrap_script(sname, name)
-                else:
-                    hdn = self.extract_device.replace(' ', '_').lower()
-                    an = self.analysis_type.split('_')[0]
-                    script.setup_context(position=self.position,
-                                    extract_value=self.extract_value,
-                                    extract_units=self.extract_units,
-                                    duration=self.duration,
-                                    cleanup=self.cleanup,
-                                    extract_device=hdn,
-                                    analysis_type=an
-                                    )
             else:
                 script = self._bootstrap_script(sname, name)
 
-#        self.scripts[sname] = script
         return script
-#        ec = self.configuration
-#        if not ec:
-#            return
-#
-#        fname = os.path.basename(ec['{}_script'.format(name)])
-#        if not fname:
-#            return
-#
-#        if NULL_STR in fname:
-#            return
-#
-#        fname = fname if fname.endswith('.py') else fname + '.py'
-#
-#        if fname in self.scripts:
-#            s = self.scripts[fname]
-# #            print fname, s.check_for_modifications()
-#            if s.check_for_modifications():
-# #                self.info('script {} modified reloading'.format(fname))
-#                s = self._bootstrap_script(fname, name, ec)
-#                self.scripts[fname] = s
-#            else:
-#
-# #                s = s.clone_traits()
-# #                print s, s.__class__
-# #                s = s.__class__()
-#                s.automated_run = self
-#                hdn = self.extract_device.replace(' ', '_').lower()
-#                an = self.analysis_type.split('_')[0]
-#                s.setup_context(position=self.position,
-#                                extract_value=self.extract_value,
-#                                extract_units=self.extract_units,
-#                                duration=self.duration,
-#                                cleanup=self.cleanup,
-#                                extract_device=hdn,
-#                                analysis_type=an
-#                                )
-# #            return s
-#        else:
-#            s = self._bootstrap_script(fname, name, ec)
-#
-#        self.scripts[fname] = s
-# #        print s
-#        return s
 
-#    def _bootstrap_script(self, fname, name, ec):
     def _bootstrap_script(self, fname, name):
         self.info('============================= loading script "{}"'.format(fname))
         func = getattr(self, '{}_script_factory'.format(name))
@@ -1661,6 +1605,7 @@ anaylsis_type={}
 #        self._executable = True
         if s and os.path.isfile(s.filename):
             if s.bootstrap():
+                s.set_default_context()
                 try:
                     s.test()
 #                    s.test()
@@ -1730,32 +1675,34 @@ anaylsis_type={}
         file_name = self._make_script_name(file_name)
         if os.path.isfile(os.path.join(root, file_name)):
             klass = ExtractionLinePyScript
-            hdn = self.extract_device.replace(' ', '_').lower()
             obj = klass(
                     root=root,
                     name=file_name,
                     runner=self.runner
                     )
 
-            an = self.analysis_type.split('_')[0]
 
-            '''
-                setup_context to expose variables to the pyscript
-            '''
-            obj.setup_context(tray=self.tray,
-                              position=self.get_position_list(),
-                              disable_between_positions=self.disable_between_positions,
-                              duration=self.duration,
-                              extract_value=self._extract_value,
-                              extract_units=self.extract_units,
-                              cleanup=self.cleanup,
-                              extract_device=hdn,
-                              analysis_type=an,
-                              ramp_rate=self.ramp_rate,
-                              pattern=self.pattern
-                              )
 
             return obj
+
+    def _setup_context(self, script):
+        '''
+            setup_context to expose variables to the pyscript
+        '''
+        hdn = self.extract_device.replace(' ', '_').lower()
+        an = self.analysis_type.split('_')[0]
+        script.setup_context(tray=self.tray,
+                          position=self.get_position_list(),
+                          disable_between_positions=self.disable_between_positions,
+                          duration=self.duration,
+                          extract_value=self._extract_value,
+                          extract_units=self.extract_units,
+                          cleanup=self.cleanup,
+                          extract_device=hdn,
+                          analysis_type=an,
+                          ramp_rate=self.ramp_rate,
+                          pattern=self.pattern
+                          )
 
     def _add_script_extension(self, name, ext='.py'):
         return name if name.endswith(ext) else name + ext
