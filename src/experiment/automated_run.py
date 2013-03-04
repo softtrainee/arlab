@@ -610,10 +610,12 @@ anaylsis_type={}
             self._total_counts = 0
 
             # setup the scripts
-            self.measurement_script.automated_run = self
+            self.measurement_script.reset(self)
+
             for si in ('extraction', 'post_measurement', 'post_equilibration'):
                 script = getattr(self, '{}_script'.format(si))
-                self._setup_context(script)
+                if script:
+                    self._setup_context(script)
 
             return True
 
@@ -1032,12 +1034,10 @@ anaylsis_type={}
                            ncounts, starttime, series, fits, check_conditions):
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts))
         if not self.spectrometer_manager:
-            self.warning('not spectrometer manager')
+            self.warning('no spectrometer manager')
             return True
 
         self.truncated = False
-
-        spec = self.spectrometer_manager.spectrometer
         graph = self.plot_panel.graph
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
@@ -1045,6 +1045,7 @@ anaylsis_type={}
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
 
+        spec = self.spectrometer_manager.spectrometer
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1058,26 +1059,10 @@ anaylsis_type={}
             _debug = globalv.automated_run_debug
             m = self.integration_time * 0.99 if not _debug else 0.1
             time.sleep(m)
-
-            if not _debug:
-                data = spec.get_intensities(tagged=True)
-                if data is not None:
-                    keys, signals = data
-#                keys, signals = zip(*data)
+            data = spec.get_intensities(tagged=True)
+            if data is not None:
+                keys, signals = data
             else:
-                keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
-
-                if series == 0:
-                    signals = [10, 1000, 8, 8, 8, 3]
-                elif series == 1:
-                    r = random.randint(0, 10)
-                    signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
-                               0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
-                               ]
-                else:
-                    signals = [1, 2, 3, 4, 5, 6]
-
-            if not keys or not signals:
                 continue
 
             # if user forgot to set the time zero in measurement script
@@ -1089,46 +1074,53 @@ anaylsis_type={}
 
             self.signals = dict(zip(keys, signals))
 
-            kw = dict(series=series, do_after=100,
-                      update_y_limits=True,
-                      ypadding='0.5'
-                      )
             if len(graph.series[0]) < series + 1:
-                kw['marker'] = 'circle'
-                kw['type'] = 'scatter'
-                kw['marker_size'] = 1.25
+                graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
                 func = lambda x, signal, kw: graph.new_series(x=[x],
                                                                  y=[signal],
                                                                  **kw
                                                                  )
             else:
+                graph_kw = dict(series=series, do_after=100,
+                                update_y_limits=True,
+                                ypadding='0.5')
                 func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
 
             dets = self._active_detectors
 
             for pi, (fi, dn) in enumerate(zip(fits, dets)):
                 signal = signals[keys.index(dn.name)]
-                kw['plotid'] = pi
-                kw['fit'] = fi
-                func(x, signal, kw)
+                graph_kw['plotid'] = pi
+                graph_kw['fit'] = fi
+                func(x, signal, graph_kw)
 
-#            mi, ma = graph.get_x_limits()
-#            dev = (ma - mi) * 0.05
-#            if (x + dev) > ma:
-#                do_later(graph.set_x_limits, 0,x + (ma - mi) * 0.25)
-#                graph.suppress_regression = True
-#                for j, _ in enumerate(graph.plots):
-#                    graph.set_x_limits(0, x + (ma - mi) * 0.25, plotid=j)
-#                graph.suppress_regression = False
-#            graph._update_graph()
             data_write_hook(x, keys, signals)
             do_after(100, graph._update_graph)
 
         return True
 
 
-
-
+#    def _get_spectrometer_signals(self, series):
+#        keys, signals = None, None
+#        spec = self.spectrometer_manager.spectrometer
+#        if not _debug:
+#            data = spec.get_intensities(tagged=True)
+#            if data is not None:
+#                keys, signals = data
+# #                keys, signals = zip(*data)
+#        else:
+#            keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+#
+#            if series == 0:
+#                signals = [10, 1000, 8, 8, 8, 3]
+#            elif series == 1:
+#                r = random.randint(0, 10)
+#                signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
+#                           0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
+#                           ]
+#            else:
+#                signals = [1, 2, 3, 4, 5, 6]
+#        return keys, signals
 #===============================================================================
 # save
 #===============================================================================
