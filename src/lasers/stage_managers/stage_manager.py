@@ -839,7 +839,9 @@ class StageManager(Manager):
 # factories
 #===============================================================================
     def motion_configure_factory(self, **kw):
-        return MotionControllerManager(motion_controller=self.stage_controller, **kw)
+        return MotionControllerManager(motion_controller=self.stage_controller,
+                                       application=self.application,
+                                       **kw)
 
     def _stage_controller_factory(self):
         '''
