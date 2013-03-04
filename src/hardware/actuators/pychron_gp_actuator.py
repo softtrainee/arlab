@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,6 +19,7 @@ import time
 
 #========== local library imports =============
 from gp_actuator import GPActuator
+from src.helpers.filetools import str_to_bool
 
 
 
@@ -83,7 +84,7 @@ class PychronGPActuator(GPActuator):
 #        return bool(random.randint(0, 1))
 
 #    def get_lock_state(self, obj):
-##        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+# #        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
 #        cmd = 'GetValveLockStates'
 #        resp = self.ask(cmd)
 #
@@ -118,11 +119,11 @@ class PychronGPActuator(GPActuator):
          
         '''
         # returns one if channel close  0 for open
-        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+#        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
         cmd = 'GetValveState {}'.format(self._get_valve_name(obj))
         resp = self.ask(cmd)
         if resp is not None:
-            resp = boolfunc(resp.strip())
+            resp = str_to_bool(resp.strip())
 
         return resp
 

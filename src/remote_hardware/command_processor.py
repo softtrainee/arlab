@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors import SystemLockErrorCode, \
     SecurityErrorCode
 from globals import globalv
-BUFSIZE = 1024
+BUFSIZE = 2048
 
 def end_request(fn):
     def end(obj, rtype, data, sender, sock=None):
@@ -37,7 +37,7 @@ def end_request(fn):
             data = str(data)
 
         if globalv.use_ipc:
-            #self.debug('Result: {}'.format(data))
+            # self.debug('Result: {}'.format(data))
 #            if isinstance(data, ErrorCode):
 #                data = str(data)
             try:
@@ -45,7 +45,7 @@ def end_request(fn):
                     sock.sendto(data, obj.path)
                 else:
                     sock.send(str(data))
-                #sock.close()
+                # sock.close()
             except Exception, err:
                 obj.debug('End Request Exception: {}'.format(err))
         else:
@@ -59,7 +59,7 @@ def end_request(fn):
     return end
 
 
-#def memoize_value(func):
+# def memoize_value(func):
 #    stored = []
 #    def memoized():
 #        try:
@@ -71,8 +71,8 @@ def end_request(fn):
 #
 #    return memoized
 #
-#@memoize_value
-#def get_authentication_hmac():
+# @memoize_value
+# def get_authentication_hmac():
 #    '''
 #        only open an read the file on start up
 #        memoize_value stores the result
@@ -89,7 +89,7 @@ class CommandProcessor(ConfigLoadable):
     listens to a specified port for incoming requests.
     request will come from the repeater
     '''
-    #port = None
+    # port = None
     path = None
 
     _listen = True
@@ -137,7 +137,7 @@ class CommandProcessor(ConfigLoadable):
             kind = socket.SOCK_DGRAM
 
         self._sock = socket.socket(socket.AF_UNIX, kind)
-        #self._sock.settimeout(1)
+        # self._sock.settimeout(1)
         if not globalv.ipc_dgram:
             self._sock.setblocking(False)
 
@@ -178,7 +178,8 @@ class CommandProcessor(ConfigLoadable):
                     client, _addr = self._sock.accept()
                     _input.append(client)
                 else:
-                    data = s.recv(BUFSIZE)
+                    data = self._read(s)
+#                    data = s.recv(BUFSIZE)
                     if data:
     #                            sender_addr, ptype, payload = data.split('|')
                         self._process_data(s, data)
@@ -187,6 +188,15 @@ class CommandProcessor(ConfigLoadable):
                         _input.remove(s)
         except Exception:
             pass
+
+    def _read(self, sock):
+        data = sock.recv(BUFSIZE)
+        if data:
+            mlen = int(data[:2], 16)
+            while len(data) < (mlen + 2):
+                data += sock.recv(BUFSIZE)
+
+        return data[2:]
 
     def _process_data(self, sock, data):
         args = data.split('|') + [sock]
@@ -212,10 +222,10 @@ class CommandProcessor(ConfigLoadable):
             pass
 #            args = [self._sock] + data.split('|')
 #            if len(args) == 4:
-##            if self._threaded:
-##                t = Thread(target=self._process_request, args=args)
-##                t.start()
-##            else:
+# #            if self._threaded:
+# #                t = Thread(target=self._process_request, args=args)
+# #                t.start()
+# #            else:
 #                self._process_request(*args)
 
 
@@ -242,11 +252,11 @@ class CommandProcessor(ConfigLoadable):
 
     def _authenticate(self, data, sender_addr):
         if self.use_security:
-            #check sender addr is in hosts
+            # check sender addr is in hosts
             if self._hosts:
                 if not sender_addr in self._hosts:
                     for h in self._hosts:
-                        #match to any computer on the subnet
+                        # match to any computer on the subnet
                         hargs = h.split('.')
                         if hargs[-1] == '*':
                             if sender_addr.split('.')[:-1] == hargs[:-1]:
@@ -263,7 +273,7 @@ class CommandProcessor(ConfigLoadable):
 
     @end_request
     def _process_request(self, request_type, data, sender_addr, sock=None):
-        #self.debug('Request: {}, {}'.format(request_type, data.strip()))
+        # self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
 
             auth_err = self._authenticate(data, sender_addr)
@@ -322,32 +332,32 @@ class CommandProcessor(ConfigLoadable):
 
 
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    setup('command server')
 #    e = CommandProcessor(name='command_server',
 #                                  configuration_dir_name='servers')
 #    e.bootstrap()
 #============= EOF ====================================
-#            
+#
 #    def _handler(self, rsock):
 #        '''
 #        '''
 #        data = rsock.recv(1024)
 #        #self.debug('Received %s' % data)
-##        if self.manager is not None:
+# #        if self.manager is not None:
 #        ptype, payload = data.split('|')
 #
-##            t = Thread(target=self.manager.process_server_request, args=(ptype, payload))
-##            t.start()
-##            t.join()
+# #            t = Thread(target=self.manager.process_server_request, args=(ptype, payload))
+# #            t.start()
+# #            t.join()
 #
 #            #response = self.manager.get_server_response()
 #
 #        response = self._process_server_request(ptype, payload)
 #            #rsock.send(str(response))
-##        else:
-##            self.warning('No manager reference')
-##        
+# #        else:
+# #            self.warning('No manager reference')
+# #
 #        return response
 
 #===============================================================================
@@ -355,7 +365,7 @@ class CommandProcessor(ConfigLoadable):
 #===============================================================================
 
 
-#class SHMCommandProcessor(SHMServer):
+# class SHMCommandProcessor(SHMServer):
 #    '''
 #    listens to a specified port for incoming requests.
 #    request will come from the repeater
@@ -373,7 +383,7 @@ class CommandProcessor(ConfigLoadable):
 #        config = self.get_configuration(path=os.path.join(paths.device_dir,
 #                                                            'servers', 'repeater.cfg'))
 #        if config:
-##            self.port = self.config_get(config, 'General', 'port', cast = 'int')
+# #            self.port = self.config_get(config, 'General', 'port', cast = 'int')
 #            self.path = self.config_get(config, 'General', 'path')
 #            return True
 #
@@ -385,7 +395,7 @@ class CommandProcessor(ConfigLoadable):
 #
 #    def _handle(self, data):
 #        '''
-#  
+#
 #        '''
 #        self.debug('Received %s' % data)
 #        response = None
@@ -398,7 +408,7 @@ class CommandProcessor(ConfigLoadable):
 #
 #            if isinstance(response, ErrorCode):
 #                response = repr(response)
-#                
+#
 #            self.debug('Response %s' % response)
 #        else:
 #            self.warning('No manager reference')

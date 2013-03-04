@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -97,7 +97,7 @@ class HardwareValve(Loggable):
 
     def set_open(self, mode='normal'):
         self.info('open mode={}'.format(mode))
-        current_state = copy(self.state)
+#        current_state = copy(self.state)
         state_change = False
         success = True
         if self.software_lock:
@@ -113,7 +113,7 @@ class HardwareValve(Loggable):
 
     def set_closed(self, mode='normal'):
         self.info('close mode={}'.format(mode))
-        current_state = copy(self.state)
+#        current_state = copy(self.state)
         state_change = False
         success = True
         if self.software_lock:
@@ -123,7 +123,7 @@ class HardwareValve(Loggable):
             success = self._close_()
             if success:
 #                print 'self.state',self.state, current_state
-                if current_state == True:
+                if self.state == True:
                     state_change = True
                 self.state = False
 
@@ -146,10 +146,10 @@ class HardwareValve(Loggable):
             r = True
         elif self.actuator is not None:
             if mode.startswith('client'):
-                #always actuate if mode is client
+                # always actuate if mode is client
                 r = True if actuator.open_channel(self) else False
             else:
-                #dont actuate if already open
+                # dont actuate if already open
                 if self.state == True:
                     r = True
                 else:
@@ -170,7 +170,7 @@ class HardwareValve(Loggable):
                 print 'close', self.state
                 r = True if actuator.close_channel(self) else False
             else:
-                #dont actuate if already closed
+                # dont actuate if already closed
                 if self.state == False:
                     r = True
                 else:
@@ -181,13 +181,16 @@ class HardwareValve(Loggable):
         return r
 
     def _get_shaft_low(self):
-        return self.canvas_valve.low_side.orientation
+        if self.canvas_valve:
+            return self.canvas_valve.low_side.orientation
 
     def _get_shaft_high(self):
-        return self.canvas_valve.high_side.orientation
+        if self.canvas_valve:
+            return self.canvas_valve.high_side.orientation
 
     def _get_position(self):
-        return ','.join(map(str, self.canvas_valve.translate))
+        if self.canvas_valve:
+            return ','.join(map(str, self.canvas_valve.translate))
 
     def _get_display_state(self):
         return 'Open' if self.state else 'Close'
@@ -240,8 +243,8 @@ class HardwareValve(Loggable):
 #        self.debug = mode == 'debug'
 #        self._fsm.Open()
 #
-##        if mode in ['auto', 'manual', 'debug', 'remote']:
-##            self._fsm.Open()
+# #        if mode in ['auto', 'manual', 'debug', 'remote']:
+# #            self._fsm.Open()
 #
 #        result = self.success
 #        if self.error is not None:
@@ -262,8 +265,8 @@ class HardwareValve(Loggable):
 #        self.info('close mode={}'.format(mode))
 #
 #        self.debug = mode == 'debug'
-##        if mode in ['auto', 'manual', 'debug', 'remote']:
-##            self._fsm.Close()
+# #        if mode in ['auto', 'manual', 'debug', 'remote']:
+# #            self._fsm.Close()
 #        self._fsm.Close()
 #
 #        result = self.success
@@ -279,10 +282,10 @@ class HardwareValve(Loggable):
 
 #    def acquire_critical_section(self):
 #        self._critical_section = True
-#    
+#
 #    def release_system_lock(self):
 #        self._critical_section = False
-#    
+#
 #    def isCritical(self):
 #        return self._critical_section
 #    def _error_(self, message):
@@ -294,7 +297,7 @@ class HardwareValve(Loggable):
 #            @type msg: C{str}
 #            @param msg:
 #        '''
-##        super(HardwareValve, self).warning(msg)
+# #        super(HardwareValve, self).warning(msg)
 #        Loggable.warning(self, msg)
 #        self.success = False
 #    def get_hard_lock(self):
