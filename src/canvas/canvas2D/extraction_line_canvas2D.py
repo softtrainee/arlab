@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ from traits.api import Any, Str
 
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-#from src.canvas.designer.valve import Valve
+# from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
     Label, RoughValve, BaseValve, RoundedRectangle
 from pyface.wx.dialog import confirmation
@@ -71,14 +71,16 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         if valve is not None:
             valve.state = nstate
 
-        self.invalidate_and_redraw()
+        self.request_redraw()
+#        self.invalidate_and_redraw()
 
     def update_valve_lock_state(self, name, lockstate):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.soft_lock = lockstate
 
-        self.invalidate_and_redraw()
+        self.request_redraw()
+#        self.invalidate_and_redraw()
 
 
     def _get_valve_by_name(self, name):
@@ -95,7 +97,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         return next((i for i in self.valves.itervalues() if i.name == name), None)
 
 #    def _bootstrap(self, path):
-#        ''' 
+#        '''
 #        '''
 #        self.valves = []
 #        valves = None
@@ -142,7 +144,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 #            return map(float, elem.find('translation').text.split(','))
 #
 #        def get_dimensions(elem):
-#            return 
+#            return
 
         def get_floats(elem, name):
             return map(float, elem.find(name).text.split(','))
@@ -159,7 +161,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                                                 border_width=bw,
                                                 default_color=c)
         color_dict = dict()
-        #get default colors
+        # get default colors
         for c in cp._tree.findall('color'):
             t = c.text.strip()
             k = c.get('tag')
@@ -170,7 +172,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             else:
                 color_dict[k] = co
 
-        #get an origin offset
+        # get an origin offset
         ox = 0
         oy = 0
 
@@ -187,7 +189,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                                     canvas=self,
                                     border_width=3
                                     )
-            #sync the states
+            # sync the states
             if key in self.valves:
                 vv = self.valves[key]
                 v.state = vv.state
@@ -383,7 +385,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 #        self._selected = obj
         self._popup_menu = wx.Menu()
 
-        panel = event.window.control#GetEventObject()
+        panel = event.window.control  # GetEventObject()
         if self.manager.mode != 'client':
             t = 'Lock'
             lfunc = self.OnLock

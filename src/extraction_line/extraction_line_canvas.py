@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,11 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Property, Float, Enum
 from traitsui.api import View, Item
-#from enable.component_editor import ComponentEditor
+# from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-#from canvas.canvas3D.extraction_line_canvas3D import ExtractionLineCanvas3D
+# from canvas.canvas3D.extraction_line_canvas3D import ExtractionLineCanvas3D
 from src.canvas.canvas3D.canvas3D_editor import Canvas3DEditor
 
 from src.paths import paths
@@ -60,7 +60,7 @@ class ExtractionLineCanvas3DDummy(HasTraits):
         if v is not None:
             v.toggle_identify()
 
-        #self.canvas.Refresh()
+        # self.canvas.Refresh()
     def lock_valve(self, name):
         '''
         '''
@@ -82,12 +82,10 @@ class ExtractionLineCanvas3DDummy(HasTraits):
         va = self._get_object_by_name(name)
         if va is not None:
             if state:
-
-                va._finish_state_change(True)
-
+                va.finish_state_change(True)
             else:
-                va._finish_state_change(False)
-            self.Refresh()
+                va.finish_state_change(False)
+
 
     def _get_object_by_name(self, name):
         '''
@@ -213,7 +211,7 @@ class ExtractionLineCanvas(HasTraits):
                                    )
         e.load_canvas_file(p)
         return e
-#     
+#
     def _canvas3D_default(self):
         '''
         '''
@@ -237,7 +235,7 @@ class ExtractionLineCanvas(HasTraits):
         w, h = self._get_canvas_size()
         g = Item('canvas2D',
                     style='custom',
-                    #visible_when='twod_canvas',
+                    # visible_when='twod_canvas',
                     show_label=False,
                     editor=ComponentEditor(width=w,
                                            height=h
@@ -255,7 +253,7 @@ class ExtractionLineCanvas(HasTraits):
         g = Item('canvas3D',
                     style='custom',
                     show_label=False,
-                    #visible_when = 'not twod_canvas',
+                    # visible_when = 'not twod_canvas',
                     editor=Canvas3DEditor(),
                     width=w,
                     height=h,

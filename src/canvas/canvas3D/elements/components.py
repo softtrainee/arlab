@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,8 +37,8 @@ class Grid(Object3D):
         xl = n
         for x in range(-n, n + 1, i):
             self._set_material()
-            self._line2D_((x, -n), (x, n))  # vertical lines    
-            self._line2D_((-n, x), (n, x)) # horizontal lines
+            self._line2D_((x, -n), (x, n))  # vertical lines
+            self._line2D_((-n, x), (n, x))  # horizontal lines
 
             self._set_material(color=(0, 1, 1))
             self._line3D_((x, 0, n), (x, 0, -n))
@@ -104,8 +104,8 @@ class Turbo(MultiStateObject3D):
 
         glPopMatrix()
         glPopAttrib()
-        #self._set_material()
-        #draw main body
+        # self._set_material()
+        # draw main body
 
         glPushAttrib(GL_CURRENT_BIT)
         for r, h, alpha in [(1, 3, 0.5), (1.5, 0.5, False)]:
@@ -219,7 +219,7 @@ class Laser(MultiStateObject3D):
     def render(self):
         '''
         '''
-        #super(Laser, self).render()
+        # super(Laser, self).render()
         MultiStateObject3D.render(self)
         glPushAttrib(GL_CURRENT_BIT)
         self._set_material()
@@ -241,13 +241,13 @@ class Laser(MultiStateObject3D):
     def on(self):
         '''
         '''
-        #self.state=True
+        # self.state=True
         self.color = [1, 1, 0]
 
     def off(self):
         '''
         '''
-        #self.state=False
+        # self.state=False
         if self.state:
             self.color = colors['green']
         else:
@@ -319,7 +319,7 @@ class Sector(MultiStateObject3D):
 class Shaft(MultiStateObject3D):
     '''
     '''
-    #state=F
+    # state=F
     prev_ac = 0
     orientation = None
     length = 6
@@ -394,7 +394,7 @@ class Bone(MultiStateObject3D):
 
         glPushMatrix()
         self._set_material()
-        #glTranslatef(0, 0, 0)
+        # glTranslatef(0, 0, 0)
         self._cube_()
         for _i in range(self.length - 1):
             glTranslatef(1, 0, 0)
@@ -467,8 +467,8 @@ class TextPanel(Object2D):
 #                text = ('p %i = %s (torr)' % (i, fmt)) % val, [3, h - 5 - (i * 3.5)]
 #            elif _type == 'pumping_dur':
 #                val = f[0]
-##                if f>60:
-##                    tunit='min'
+# #                if f>60:
+# #                    tunit='min'
 #                tunit = 'sec'
 #                text = ('p. dur.= %0.1f (%s)' % (val, tunit), [3, h - 5 - (i * 3.5)])
 #            elif _type == 'idle_dur':
@@ -505,12 +505,12 @@ class Valve(SetStateObject3D):
         '''
 
         '''
-        #glPushAttrib(GL_CURRENT_BIT)
+        # glPushAttrib(GL_CURRENT_BIT)
         super(Valve, self).render()
-        #SetStateObject3D.render(self)
-        #self._set_material()
+        # SetStateObject3D.render(self)
+        # self._set_material()
         self._sphere_(radius=self.radius)
-        #glPopAttrib()
+        # glPopAttrib()
 
         if self.identify:
             self._draw_halo()
@@ -549,14 +549,14 @@ class Valve(SetStateObject3D):
         '''
         '''
         s = self.set_state(True)
-        self._finish_state_change(True, success=s)
+        self.finish_state_change(True, success=s)
         return s
 
     def close(self):
         '''
         '''
         s = self.set_state(False)
-        self._finish_state_change(False, success=s)
+        self.finish_state_change(False, success=s)
         return s
 
 #    def set_hard_lock(self, lock):
@@ -566,7 +566,7 @@ class Valve(SetStateObject3D):
 #            self.color = colors['yellow']
 #            #self.default_color = colors['yellow']
 #        else:
-#            self._finish_state_change(self.state)
+#            self.finish_state_change(self.state)
 #        self.refresh()
 
     def set_state(self, state):
@@ -581,7 +581,7 @@ class Valve(SetStateObject3D):
 
             return s
 
-    def _finish_state_change(self, s, success=True):
+    def finish_state_change(self, s, success=True):
         '''
 
         '''
@@ -593,14 +593,14 @@ class Valve(SetStateObject3D):
             else:
                 self.color = colors['red']
 
-            #required so canvas shows valve state changes
+            # required so canvas shows valve state changes
             self.refresh()
 
     def _draw_soft_locked_identifier(self):
         '''
         '''
         self._draw_orbitals()
-        #self._draw_halo()
+        # self._draw_halo()
 
     def _draw_orbitals(self):
         r = 1.5
@@ -645,12 +645,12 @@ class PipetteValve(Valve):
 
 
 #=============== EOF ==================
-    #def _draw_halo(self):
+    # def _draw_halo(self):
 #        glPushAttrib(GL_CURRENT_BIT)
 #        glColor4f(1, 1, 0, 0.5)
 
-        #self._sphere_(radius = 1.3)
-        #glPopAttrib()
+        # self._sphere_(radius = 1.3)
+        # glPopAttrib()
 #        alpha = 'ABCDEFGHIFKLMNOPQRSTUVWXYZ'
 #        try:
 #            tex = self.textures[alpha.index(self.name)]
