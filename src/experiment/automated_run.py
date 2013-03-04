@@ -156,6 +156,8 @@ class AutomatedRun(Loggable):
 
     extraction_script_dirty = Event
     extraction_script = Property(depends_on='extraction_script_dirty')
+    _extraction_script = Any
+
 
     _active_detectors = List
     _loaded = False
