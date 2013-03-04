@@ -1305,7 +1305,7 @@ anaylsis_type={}
             center = tab.attrs.center_dac
             pc = db.add_peak_center(
                                analysis,
-                               center=center, points=points)
+                               center=float(center), points=points)
             return pc
 
     def _save_measurement(self, analysis):
