@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,8 +32,9 @@ import time
 from src.loggable import Loggable
 import random
 from Queue import Queue
-#from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
+# from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
 from globals import globalv
+from src.helpers.alphas import ALPHAS
 
 
 class ValveGroup(object):
@@ -50,12 +51,12 @@ class ValveManager(Manager):
     explanable_items = List
     extraction_line_manager = Any
     sampletime = 0.1
-    #actuator = Any
+    # actuator = Any
     actuators = List
     canvas3D = Any
     sections = List
 
-    sample_gas_type = None #valid values None,sample,air
+    sample_gas_type = None  # valid values None,sample,air
     sector_inlet_valve = None
     quad_inlet_valve = None
 
@@ -96,7 +97,7 @@ class ValveManager(Manager):
 
                 self.info('comm. device = {} '.format(a._cdevice.__class__.__name__))
 
-        #open config file
+        # open config file
         setup_file = os.path.join(paths.extraction_line_dir, 'valves.xml')
         self._load_valves_from_file(setup_file)
 
@@ -106,10 +107,10 @@ class ValveManager(Manager):
             self._load_soft_lock_states()
 
         self._load_system_dict()
-        #self.info('loading section definitions file')
-        #open config file
-        #setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
-        #self._load_sections_from_file(setup_file)
+        # self.info('loading section definitions file')
+        # open config file
+        # setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
+        # self._load_sections_from_file(setup_file)
     def _save_soft_lock_states(self):
 
         p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
@@ -155,10 +156,24 @@ class ValveManager(Manager):
     def _parse_word(self, word):
         if word is not None:
             try:
+                d = dict()
                 if ',' in word:
-                    d = dict([(r[:-1], bool(int(r[-1:]))) for r in word.split(',')])
+                    for packet in word.split(','):
+                        key = packet[:-1]
+                        state = r[-1:].strip()
+                        if key[0] in ALPHAS \
+                            and state in ('0', '1'):
+                                d[key] = bool(int(state))
                 else:
-                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
+                    for i in xrange(0, len(word), 2):
+                        packet = word[i:i + 2]
+                        key = packet[0]
+                        state = packet[1]
+                        if key.upper() in ALPHAS:
+                            if state in ('0', '1'):
+                                d[key] = bool(int(state))
+
+#                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
                 return d
             except ValueError:
                 pass
@@ -168,6 +183,7 @@ class ValveManager(Manager):
         for k, v in self.valves.iteritems():
             s = v.get_hardware_state()
             elm.update_valve_state(k, s)
+            time.sleep(0.025)
 
     def _load_soft_lock_states(self):
         if self.extraction_line_manager.mode == 'client':
@@ -175,6 +191,7 @@ class ValveManager(Manager):
                 s = v.get_lock_state()
                 func = self.lock if s else self.unlock
                 func(k, save=False)
+                time.sleep(0.025)
 
         else:
             p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
@@ -264,7 +281,7 @@ class ValveManager(Manager):
         except (Exception,), e:
             pass
 
-        #ensure word has even number of elements
+        # ensure word has even number of elements
         s = ''
         i = 0
         n = states_queue.qsize()
@@ -342,7 +359,7 @@ class ValveManager(Manager):
         '''
         state = None
         if self.query_valve_state and v.query_state:
-            state = v.get_hardware_state()#actuator.get_channel_state(v)
+            state = v.get_hardware_state()  # actuator.get_channel_state(v)
 
         if state is None:
             state = v.state
@@ -402,9 +419,9 @@ class ValveManager(Manager):
 
 #    def check_ownership(self, name, sender_address):
 #        v = self.get_valve_by_name(name)
-#        
+#
 #        system = self.get_system(sender_address)
-#        
+#
 #        if v is not None:
 #            if v.system == system:
 #                return True
@@ -451,7 +468,7 @@ class ValveManager(Manager):
 #
 #        '''
 #        #do not sample a open valve
-#        # fixme 
+#        # fixme
 #        #span a new thread to perform the the sampling
 #        v = self.get_valve_by_name(vid)
 #        if self.validate(v) and not v.state:
@@ -512,7 +529,7 @@ class ValveManager(Manager):
         '''
         '''
         action = 'set_open'
-        #check software interlocks and return None if True
+        # check software interlocks and return None if True
         if self.check_soft_interlocks(name):
             self.warning('Software Interlock')
             return
@@ -548,7 +565,7 @@ class ValveManager(Manager):
                 act = getattr(v, action)
 
                 result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
-                if isinstance(result, bool):#else its an error message
+                if isinstance(result, bool):  # else its an error message
                     if result:
                         ve = self.get_evalve_by_name(name)
                         ve.state = True if action == 'open' else False
@@ -557,11 +574,11 @@ class ValveManager(Manager):
     #                for s in self.sections:
     #                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
 
-                    #result = True
+                    # result = True
 
         else:
             self.warning('Valve {} not available'.format(vid))
-            #result = 'Valve %s not available' % id
+            # result = 'Valve %s not available' % id
 
         return result, changed
 
@@ -580,13 +597,13 @@ class ValveManager(Manager):
             self.systems[name] = host
 
 #        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
-#        
+#
 #        for sect in config.sections():
 #            name = config.get(sect, 'name')
 #            host = config.get(sect, 'host')
-##            names.append(name)
+# #            names.append(name)
 #            self.systems[name] = host
-#    
+#
     def _load_sections_from_file(self, path):
         '''
         '''
@@ -661,7 +678,7 @@ class ValveManager(Manager):
 
     def _load_explanation_valve(self, v):
 #        s = v.get_hardware_state()
-        #update the extraction line managers canvas
+        # update the extraction line managers canvas
 #            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
         name = v.name.split('-')[1]
 #        self.extraction_line_manager.update_valve_state(name, s)
@@ -699,7 +716,7 @@ class Foo(Loggable):
                 break
             sq.put('1' if s else '0')
 
-        #return ''.join(states)
+        # return ''.join(states)
 
     def get_states(self):
         '''
@@ -750,10 +767,10 @@ if __name__ == '__main__':
     for i in range(10):
         r = f.get_states()
         time.sleep(2)
-        #print r, len(r)
+        # print r, len(r)
 
 #==================== EOF ==================================
-#def _load_valves_from_filetxt(self, path):
+# def _load_valves_from_filetxt(self, path):
 #        '''
 #
 #        '''
@@ -783,7 +800,7 @@ if __name__ == '__main__':
 #                     actuator=self.get_actuator_by_name(act),
 #                     interlocks=a[2].split(','),
 #                     query_valve_state=a[4] in ['True', 'true']
-##                     group=a[4]
+# #                     group=a[4]
 #                     )
 #            try:
 #                if a[5] and a[5] != curgrp:
@@ -805,7 +822,7 @@ if __name__ == '__main__':
 #            s = v.get_hardware_state()
 #
 #            #update the extraction line managers canvas
-##            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
+# #            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
 #            self.extraction_line_manager.update_valve_state(v.name[-1], s)
 #            args = dict(name=a[0],
 #                        address=a[1],
@@ -820,6 +837,6 @@ if __name__ == '__main__':
 #            self.explanable_items.append(ev)
 
 #        for k,g in self.valve_groups.iteritems():
-#            
+#
 #            for v in g.valves:
 #                print k,v.name

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,10 +69,10 @@ class CommandRepeater(ConfigLoadable):
 
         sock = socket.socket(socket.AF_UNIX, kind)
 
-        sock.settimeout(1.5)
+        sock.settimeout(2)
         self._sock = sock
 
-        #create a sync lock
+        # create a sync lock
         self._lock = Lock()
 
         return True
@@ -80,8 +80,8 @@ class CommandRepeater(ConfigLoadable):
     def get_response(self, rid, data, sender_address, verbose=True):
         '''
         '''
-        #intercept the pychron ready command
-        #sent a test query
+        # intercept the pychron ready command
+        # sent a test query
         with self._lock:
             ready_flag = False
             ready_data = ''
@@ -96,7 +96,7 @@ class CommandRepeater(ConfigLoadable):
             try:
                 self._sock.connect(self.path)
             except socket.error:
-                #_sock is already connected
+                # _sock is already connected
                 pass
 
             s = '{}|{}|{}'.format(rid, data, sender_address)
@@ -179,7 +179,7 @@ class CommandRepeater(ConfigLoadable):
         from os import path
         from src.paths import paths
 
-        #launch pychron
+        # launch pychron
         p = path.join(paths.pychron_src_root, '{}.app'.format(name))
         result = 'OK'
         try:
@@ -196,7 +196,14 @@ class CommandRepeater(ConfigLoadable):
         success = True
         e = None
         try:
-            self._sock.send(s)
+            totalsent = 0
+            mlen = len(s)
+            s = '{:02X}{}'.format(mlen, s)
+
+            while totalsent < mlen:
+                sent = self._sock.send(s[totalsent:])
+                totalsent += sent
+
         except socket.error, e:
             success = self._handle_socket_send_error(e, s, verbose)
 
@@ -205,7 +212,7 @@ class CommandRepeater(ConfigLoadable):
     def _read_(self, count=0, verbose=True):
         rd = None
         try:
-            rd = self._sock.recv(1024)
+            rd = self._sock.recv(2048)
             success = True
         except socket.error, e:
             success, rd = self._handle_socket_read_error(e, count, verbose)
@@ -223,7 +230,7 @@ class CommandRepeater(ConfigLoadable):
         if verbose:
             self.info('send failed - {} - retrying n={}'.format(e, retries))
 
-        #use a retry loop only if error is a broken pipe
+        # use a retry loop only if error is a broken pipe
         for i in range(retries):
             try:
                 self.open()
@@ -318,7 +325,7 @@ if __name__ == '__main__':
 # SHMCommandRepeater
 #===============================================================================
 
-#class SHMCommandRepeater(SHMClient):
+# class SHMCommandRepeater(SHMClient):
 #    '''
 #    '''
 #    path = String(enter_set=True, auto_set=False)
@@ -363,7 +370,7 @@ if __name__ == '__main__':
 #
 #    def load(self, *args, **kw):
 #        '''
-#  
+#
 #        '''
 #
 #        config = self.get_configuration()
