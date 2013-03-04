@@ -36,7 +36,7 @@ class RunParser(object):
             try:
                 script_info[attr] = args[header.index(attr)]
             except IndexError, e:
-                print 'base schedule _run_parser ', e
+                print 'base schedule _run_parser ', e, attr
 
         # load strings
         for attr in ['labnumber',
@@ -50,7 +50,7 @@ class RunParser(object):
             try:
                 params[attr] = args[header.index(attr)]
             except IndexError, e:
-                print 'base schedule _run_parser ', e
+                print 'base schedule _run_parser ', e, attr
 
         # load booleans
         for attr in ['autocenter', 'disable_between_positions']:

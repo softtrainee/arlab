@@ -381,7 +381,7 @@ class ExperimentManager(Manager, Saveable):
 
     def _modify_aliquots(self, ans):
         offset = 0
-        if self.experiment_set.selected:
+        if self.experiment_set and self.experiment_set.selected:
             offset = len(self.experiment_set.selected)
 
         db = self.db

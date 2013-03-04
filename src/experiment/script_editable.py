@@ -97,7 +97,8 @@ class Script(Loggable):
         names = [NULL_STR]
         ms = self._load_script_names()
         if ms:
-            names.extend([self._clean_script_name(ei) for ei in ms])
+            msn = '{}_'.format(self.mass_spectrometer)
+            names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
 
         return names
 

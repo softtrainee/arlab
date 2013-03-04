@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,8 @@ from traits.api import Float
 from threading import Thread, Event
 import time
 #============= local library imports  ==========================
-#from src.config_loadable import ConfigLoadable
-#from src.managers.manager import Manager
+# from src.config_loadable import ConfigLoadable
+# from src.managers.manager import Manager
 from src.config_loadable import ConfigLoadable
 from pyface.message_dialog import warning
 from src.paths import paths
@@ -41,7 +41,6 @@ class Monitor(ConfigLoadable):
 
     def load(self):
         config = self.get_configuration()
-        print self, config
         if config:
             self.set_attribute(config, 'sample_delay',
                                'General', 'sample_delay', cast='float', optional=False)
@@ -96,11 +95,11 @@ class Monitor(ConfigLoadable):
     def _monitor_(self, stop_signal):
         '''
         '''
-        #load before every monitor call so that changes to the config file
-        #are incorpoated
+        # load before every monitor call so that changes to the config file
+        # are incorpoated
 
         if self.manager is not None:
-            #clear error
+            # clear error
             self.manager.error_code = None
 
             self.gntries = 0
@@ -113,7 +112,7 @@ class Monitor(ConfigLoadable):
                     if stop_signal.isSet():
                         break
 
-                #sleep before running monitor again
+                # sleep before running monitor again
                 time.sleep(self.sample_delay)
 #============= EOF ====================================
 #    def _monitor_(self, stop_signal):
