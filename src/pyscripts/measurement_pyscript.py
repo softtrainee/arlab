@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,16 @@ class MeasurementPyScript(ValvePyScript):
     _detectors = None
     _use_abbreviated_counts = False
 
+    def reset(self, arun):
+        self.automated_run = arun
+
+        self._series_count = 0
+        self._time_zero = None
+        self._regress_id = 0
+        self._detectors = None
+        self._use_abbreviated_counts = False
+        self.ncounts = 0
+
     def get_command_register(self):
         cs = super(MeasurementPyScript, self).get_command_register()
         return cs + command_register.commands.items()
@@ -66,7 +76,7 @@ class MeasurementPyScript(ValvePyScript):
 
 #===============================================================================
 # commands
-#===============================================================================    
+#===============================================================================
     @verbose_skip
     @command_register
     def extraction_gosub(self, *args, **kw):
@@ -173,7 +183,7 @@ class MeasurementPyScript(ValvePyScript):
         if not evt:
             self.cancel()
         else:
-            #wait for inlet to open
+            # wait for inlet to open
             evt.wait()
 
     @verbose_skip
@@ -211,7 +221,7 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('py_coincidence_scan')
 
 #===============================================================================
-# 
+#
 #===============================================================================
     def _automated_run_call(self, func, *args, **kw):
         if self.automated_run is None:
@@ -402,18 +412,18 @@ class MeasurementPyScript(ValvePyScript):
         except AttributeError:
             pass
 
-if __name__ == '__main__':
-    from src.helpers.logger_setup import logging_setup
-    paths.build('_test')
-    logging_setup('m_pyscript')
-
-    d = AutomatedRun()
-    d.configure_traits()
+# if __name__ == '__main__':
+#    from src.helpers.logger_setup import logging_setup
+#    paths.build('_test')
+#    logging_setup('m_pyscript')
+#
+#    d = AutomatedRun()
+#    d.configure_traits()
 
 #============= EOF =============================================
-#from traits.api import HasTraits, Button, Dict
-#from traitsui.api import View
-#class AutomatedRun(HasTraits):
+# from traits.api import HasTraits, Button, Dict
+# from traitsui.api import View
+# class AutomatedRun(HasTraits):
 #    test = Button
 #    traits_view = View('test')
 #    signals = Dict
@@ -441,7 +451,7 @@ if __name__ == '__main__':
 #        pass
 #    def do_data_collection(self, *args, **kw):
 #        pass
-#class Detector(object):
+# class Detector(object):
 #    name = None
 #    mass = None
 #    signal = None
