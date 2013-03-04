@@ -608,6 +608,9 @@ anaylsis_type={}
             self.info('Start automated run {}'.format(self.runid))
             self._alive = True
             self._total_counts = 0
+
+            self.measurement_script.automated_run = self
+
             return True
 
         if self.monitor is None:
@@ -1683,7 +1686,7 @@ anaylsis_type={}
 
         ms = MeasurementPyScript(root=root,
             name=sname,
-            automated_run=self,
+#            automated_run=self,
             runner=self.runner
             )
         return ms
