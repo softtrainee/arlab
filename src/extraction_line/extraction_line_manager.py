@@ -123,7 +123,6 @@ class ExtractionLineManager(Manager):
     def finish_loading(self):
         '''
         '''
-        print self.mode
         if self.mode != 'client':
             self.monitor = SystemMonitor(manager=self,
                                          name='system_monitor'
@@ -170,12 +169,13 @@ class ExtractionLineManager(Manager):
             cnt = 0
             state_freq = self._valve_state_frequency
             lock_freq = self._valve_lock_frequency
+            vm = self.valve_manager
             while not self._update_status_flag.isSet():
                 time.sleep(1)
                 if cnt % state_freq == 0:
-                    self.valve_manager.load_valve_states()
+                    vm.load_valve_states()
                 if cnt % lock_freq == 0:
-                    self.valve_manager.load_valve_lock_states()
+                    vm.load_valve_lock_states()
 
                 cnt += 1
                 if cnt > 100:
