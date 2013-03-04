@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,12 +17,12 @@
 
 
 #============= enthought library imports =======================
-from envisage.ui.action.api import Action#, Group, Menu, ToolBar
+from envisage.ui.action.api import Action  # , Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from src.lasers.plugins.laser_action_set import LaserActionSet
+# from src.lasers.plugins.laser_action_set import LaserActionSet
 
 class FusionsActionSet(WorkbenchActionSet):
     '''
@@ -42,10 +42,10 @@ class FusionsActionSet(WorkbenchActionSet):
                        path=laser_path,
                        class_name='{}OpenLaserManagerAction'.format(self.action_path)
                        ),
-#                Action(name='Configure Motion Controller',
-#                       path=laser_path,
-#                       class_name='{}OpenMotionControllerManagerAction'.format(self.action_path)
-#                       ),
+                Action(name='Configure Motion Controller',
+                       path=laser_path,
+                       class_name='{}OpenMotionControllerManagerAction'.format(self.action_path)
+                       ),
                 Action(name='Power Calibration',
                        path=laser_path,
                        class_name='{}PowerCalibrationAction'.format(self.action_path)
@@ -64,7 +64,7 @@ class FusionsActionSet(WorkbenchActionSet):
                        ),
 
                 #===============================================================
-                # 
+                #
                 #===============================================================
 #                Action(name='Beam',
 #                       path='{}/Initialize'.format(laser_path),
