@@ -271,13 +271,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
         v2 = self.parent.canvas.map_data((1, 1))
 
         if ax_key == 'y':
-            v = (v2[1] - v1[1]) * direction * ax.sign + self._y_position
+            v = (v2[1] - v1[1]) * direction  # * ax.sign + self._y_position
 
         else:
-            v = (v2[0] - v1[0]) * direction * ax.sign + self._x_position
+            v = (v2[0] - v1[0]) * direction  # * ax.sign + self._x_position
 
         self.single_axis_move(ax_key, v, block=False, mode='relative', update=False)
-        setattr(self, '_{}_position'.format(ax_key), v)
 
     def multiple_point_move(self, points, nominal_displacement=0.5):
         gid = self.groupobj.id
@@ -669,7 +668,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if change:
                 obj.trait_set(_acceleration=ac,
                                         _deceleration=dc,
-                                        _velocity=nv, trait_change_notify=False)
+                                        _velocity=nv,
+                                        trait_change_notify=False
+                                        )
         else:
             change = (obj.machine_acceleration != obj.acceleration or
                       obj.machine_deceleration != obj.deceleration or

@@ -440,7 +440,7 @@ class StageManager(Manager):
             # will be a positive limit error in z
 #            self.stage_controller.read_error()
 
-            time.sleep(0.25)
+            time.sleep(1)
             self.info('setting z to nominal position. {} mm '.format(self._default_z))
             self.stage_controller.single_axis_move('z', self._default_z, block=True)
             self.stage_controller._z_position = self._default_z
