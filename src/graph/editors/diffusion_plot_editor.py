@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,13 +27,13 @@ from src.graph.editors.diffusion_series_editor import  \
     SpectrumSeriesEditor, ChistSeriesEditor, UnchistSeriesEditor, \
     LogrroSeriesEditor, ArrheniusSeriesEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
-#from chaco.polygon_plot import PolygonPlot
-#from chaco.contour_poly_plot import ContourPolyPlot
-#from chaco.cmap_image_plot import CMapImagePlot
-#from src.graph.editors.series_editor import ContourPolyPlotEditor
-#from chaco.base_xy_plot import BaseXYPlot
-#from chaco.contour_line_plot import ContourLinePlot
-#from chaco.base_contour_plot import BaseContourPlot
+# from chaco.polygon_plot import PolygonPlot
+# from chaco.contour_poly_plot import ContourPolyPlot
+# from chaco.cmap_image_plot import CMapImagePlot
+# from src.graph.editors.series_editor import ContourPolyPlotEditor
+# from chaco.base_xy_plot import BaseXYPlot
+# from chaco.contour_line_plot import ContourLinePlot
+# from chaco.base_contour_plot import BaseContourPlot
 
 
 class DiffusionPlotEditor(PlotEditor):
@@ -93,7 +93,7 @@ class DiffusionPlotEditor(PlotEditor):
 #            elif isspectrum:
 #            elif isinstance(plot, BaseXYPlot):
 #                editor = DiffusionSeriesEditor
-##
+# #
             if editor:
                 self.series_editors.append(editor(**kwargs))
 
@@ -115,7 +115,7 @@ class DiffusionPlotEditor(PlotEditor):
 #        return grp
 
 #            super(DiffusionPlotEditor,self)._build_series_editors(editors=self._series_editors)
-#    
+#
 #    def _get_plots(self):
 #        p=super(DiffusionPlotEditor,self)._get_plots()
 #        ps=dict()
@@ -159,13 +159,13 @@ class DiffusionPlotEditor(PlotEditor):
 #                    isspectrum = True
 #                    i += 1
 #
-##                plot = plots['plot{}'.format(i)][0]
+# #                plot = plots['plot{}'.format(i)][0]
 #
-##                elif isinstance(plot, CMapImagePlot):
+# #                elif isinstance(plot, CMapImagePlot):
 #            elif isinstance(plot, BaseContourPlot):
 #                self.isunconstrained_thermal_history = True
 #                isspectrum = False
-##                    i+=1
-##                    plot=plots['plot{}'.format(i)][0]
+# #                    i+=1
+# #                    plot=plots['plot{}'.format(i)][0]
 #
 #============= EOF =====================================

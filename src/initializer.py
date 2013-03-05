@@ -1,13 +1,13 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -190,7 +190,7 @@ class Initializer(Loggable):
             flags = parser.get_flags(mp)
             timed_flags = parser.get_timed_flags(mp)
 
-            #set rpc server
+            # set rpc server
             mode, _, port = parser.get_rpc_params(mp)
             if port and mode != 'client':
                 manager.load_rpc_server(port)
@@ -279,7 +279,7 @@ class Initializer(Loggable):
             self.add_initialization(d)
 
     def _check_required(self, subtree):
-        #check the subtree has all required devices enabled
+        # check the subtree has all required devices enabled
         devs = self.parser.get_devices(subtree, all=True, element=True)
         for di in devs:
             required = True

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ def Si(pis, ai_ei, ts):
 
 
 if __name__ == '__main__':
-    #[35.27,36.27] [0.59, 0.41]
+    # [35.27,36.27] [0.59, 0.41]
     p = '/Users/ross/Sandbox/unmix_data.txt'
     with open(p, 'U') as fp:
         reader = csv.reader(fp, delimiter='\t')

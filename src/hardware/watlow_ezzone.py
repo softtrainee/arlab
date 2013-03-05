@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,12 +17,12 @@
 #=============enthought library imports========================
 from traits.api import Enum, Float, Event, Property, Int, Button, Bool, Str, Any, DelegatesTo, on_trait_change
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor, spring
-#from pyface.timer.api import Timer
+# from pyface.timer.api import Timer
 
 #=============standard library imports ========================
-#import sys, os
+# import sys, os
 #=============local library imports  ==========================
-#sys.path.insert(0, os.path.join(os.path.expanduser('~'),
+# sys.path.insert(0, os.path.join(os.path.expanduser('~'),
 #                               'Programming', 'mercurial', 'pychron_beta'))
 
 from core.core_device import CoreDevice
@@ -107,7 +107,7 @@ class WatlowEZZone(CoreDevice):
 #    _power=Float(0.0)
 #    powermin=Float(300.0)
 #    powermax=Float(1500.0)
-#    
+#
     closed_loop_setpoint = Property(Float(0,
                                           auto_set=False,
                                           enter_set=True),
@@ -200,7 +200,7 @@ class WatlowEZZone(CoreDevice):
     process_value = Float
 
     heat_power_value = Float
-    #scan_func = 'get_temperature'
+    # scan_func = 'get_temperature'
     scan_func = 'get_temp_and_power'
 
     memory_blocks_enabled = Bool(True)
@@ -265,7 +265,7 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
         if self.read_baudrate(port=1):
-            #set open loop and closed loop to zero
+            # set open loop and closed loop to zero
             self.disable()
             if self.program_memory_blocks:
                 self._program_memory_blocks()
@@ -391,7 +391,7 @@ class WatlowEZZone(CoreDevice):
             t = self.get_random_value() + self.closed_loop_setpoint
         else:
             t = self.read_process_value(1, **kw)
-        #print t
+        # print t
         if t is not None:
             try:
 
@@ -561,9 +561,9 @@ class WatlowEZZone(CoreDevice):
         g.new_series()
         do_later(g.edit_traits)
 
-        #start a query thread
+        # start a query thread
         self.autotune_timer = Timer(sp * 1000, self._autotune_update, g)
-        #self.autotune_timer.Start()
+        # self.autotune_timer.Start()
 
     def _autotune_update(self, graph):
         if self.simulation:
@@ -578,12 +578,12 @@ class WatlowEZZone(CoreDevice):
         if self.autotuning and self.autotune_finished():
             self.autotuning = False
             self.info('autotuning finished')
-            #requery the device
+            # requery the device
             self.initialization_hook()
             self.acount = 0
 
         elif self.acount > self.autotuning_additional_recording:
-            #stop the timer n secs after finishing
+            # stop the timer n secs after finishing
             self.autotune_timer.Stop()
             self.acount = 0
         else:
@@ -765,7 +765,7 @@ class WatlowEZZone(CoreDevice):
         self.write(register, v, nregisters=2, **kw)
 #    def duty_cycle_increment(self):
 #        '''
-#        simple keep track off the number of times an output state is true and 
+#        simple keep track off the number of times an output state is true and
 #        the number of times queried
 #        '''
 #        self.n_queries += 1
@@ -1240,10 +1240,10 @@ class WatlowEZZone(CoreDevice):
     def get_control_group(self):
         closed_grp = VGroup(
                             Item('use_calibrated_temperature',
-                                 #enabled_when='calibration is not None',
+                                 # enabled_when='calibration is not None',
                                  label='Use Calibration'),
                             Item('coeff_string', label='Calibration Coefficients',
-                                 #enabled_when='calibration is not None'
+                                 # enabled_when='calibration is not None'
                                  ),
                             Item('closed_loop_setpoint',
                                  label='setpoint',
@@ -1290,10 +1290,10 @@ class WatlowEZZone(CoreDevice):
                             )
 
         input_grp = Group(VGroup(Item('sensor1_type',
-                                      #editor=EnumEditor(values=sensor_map),
+                                      # editor=EnumEditor(values=sensor_map),
                                       show_label=False),
                                 Item('thermocouple1_type',
-                                     #editor=EnumEditor(values=tc_map),
+                                     # editor=EnumEditor(values=tc_map),
                                      show_label=False,
                                      visible_when='_sensor1_type==95'),
                                  Item('input_scale_low', format_str='%0.3f',
@@ -1318,7 +1318,7 @@ class WatlowEZZone(CoreDevice):
                     HGroup(output_grp,
                            input_grp),
                     pid_grp,
-                    #autotune_grp,
+                    # autotune_grp,
 
                     )
 
@@ -1358,7 +1358,7 @@ if __name__ == '__main__':
 #        ph = self.read_heat_proportional_band()
 #        if ph is not None:
 #            self._Ph_ = ph
-#        
+#
 #        pc = self.read_cool_proportional_band()
 #        if pc is not None:
 #            self._Pc_ = pc
@@ -1366,27 +1366,27 @@ if __name__ == '__main__':
 #        i = self.read_time_integral()
 #        if i is not None:
 #            self._I_ = i
-#            
+#
 #        d = self.read_time_derivative()
 #        if d is not None:
 #            self._D_ = d
 
-        #read autotune parameters
+        # read autotune parameters
 #        asp = self.read_autotune_setpoint()
 #        if asp is not None:
 #            self._autotune_setpoint = asp
 #        ttb = self.read_tru_tune_band()
 #        if ttb is not None:
 #            self._tru_tune_band = ttb
-#            
+#
 #        ttg = self.read_tru_tune_gain()
-#        if ttg is not None: 
+#        if ttg is not None:
 #            self._tru_tune_gain = str(ttg)
 
 #        osl = self.read_output_scale_low()
 #        if osl is not None:
 #            self._output_scale_low = osl
-#            
+#
 #        osh = self.read_output_scale_low()
 #        if osh is not None:
 #            self._output_scale_high = osh

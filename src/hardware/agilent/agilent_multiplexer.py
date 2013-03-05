@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ import time
 from numpy import polyval
 from src.hardware.agilent.agilent_unit import AgilentUnit
 #=============local library imports  ==========================
-#from src.hardware.adc.analog_digital_converter import AnalogDigitalConverter
+# from src.hardware.adc.analog_digital_converter import AnalogDigitalConverter
 
 '''
 Agilent requires chr(10) as its communicator terminator
@@ -53,7 +53,7 @@ class AgilentMultiplexer(AgilentUnit):
     scan_func = 'channel_scan'
     def load_additional_args(self, config):
         super(AgilentMultiplexer, self).load_additional_args(config)
-        #load channels
+        # load channels
         for section in config.sections():
             if section.startswith('Channel'):
                 kind = self.config_get(config, section, 'kind', default='DC')
@@ -96,8 +96,8 @@ class AgilentMultiplexer(AgilentUnit):
         for c in cmds:
             self.tell(c)
 
-        #configure channels
-        #configure volt changes
+        # configure channels
+        # configure volt changes
         chs = self._get_dc_channels()
         c = 'CONF:VOLT:DC {}'.format(self._make_scan_list(chs))
         self.tell(c)
@@ -186,7 +186,7 @@ class AgilentSingleADC(AgilentUnit):
                 resp = self.ask('DATA:REMOVE? {}'.format(float(n)))
                 resp = self._parse_response_(resp)
 
-            #self.current_value = resp
+            # self.current_value = resp
             self.read_voltage = resp
         return resp
 

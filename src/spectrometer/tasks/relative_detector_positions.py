@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,10 +32,10 @@ class RelativeDetectorPositions(SpectrometerTask):
         ion = self.ion_optics_manager
         spec = self.spectrometer
 
-        #set deflection to 0
+        # set deflection to 0
         det = spec.get_detector('AX')
         det.deflection = 0
-        #peak center on the axial detector
+        # peak center on the axial detector
         isotope = 'Ar40'
         t = ion.do_peak_center(detector='AX', isotope=isotope, save=False)
         if t is not None:
@@ -48,13 +48,13 @@ class RelativeDetectorPositions(SpectrometerTask):
         if axial_dac is not None:
 
             rps = []
-            #peak center on all detectors
+            # peak center on all detectors
             for d in self.spectrometer.detectors:
                 if not self.isAlive():
                     self.info('canceling relative detector position calculation')
                     break
 
-                #skip this for now
+                # skip this for now
                 if d.name == 'CDD':
                     continue
                 if d.name == 'H2':
@@ -62,7 +62,7 @@ class RelativeDetectorPositions(SpectrometerTask):
                 if d.name == 'AX':
                     continue
 
-                #set deflection to 0
+                # set deflection to 0
                 d.deflection = 0
 
                 t = ion.do_peak_center(detector=d.name, isotope=isotope, save=False)

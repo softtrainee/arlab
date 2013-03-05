@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -102,9 +102,9 @@ class FerrupsUPS(CoreDevice):
         _query, resp = self.get_parameter(1, verbose=False)
 
         if self.simulation:
-            #ensures True...  random 0-10
+            # ensures True...  random 0-10
             return self.get_random_value() < 100
-            #return not self._power_out
+            # return not self._power_out
 
         vin = resp.split(' ')[-1]
         try:

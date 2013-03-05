@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,7 +61,7 @@ class UDPHandler(Handler):
     def open_socket(self, addr, timeout=0.75):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #self.sock.connect(addr)
+        # self.sock.connect(addr)
         self.sock.settimeout(timeout)
 
     def get_packet(self):
@@ -101,7 +101,7 @@ class EthernetCommunicator(Communicator):
         '''
         '''
         self.host = self.config_get(config, 'Communications', 'host')
-        #self.host = 'localhost'
+        # self.host = 'localhost'
         self.port = self.config_get(config, 'Communications', 'port', cast='int')
 
         self.kind = self.config_get(config, 'Communications', 'kind', optional=True)
@@ -116,7 +116,7 @@ class EthernetCommunicator(Communicator):
         self.simulation = False
 
         handler = self.get_handler()
-        #send a test command so see if wer have connection
+        # send a test command so see if wer have connection
         if handler.send_packet('***'):
             r = handler.get_packet()
             if r is None:

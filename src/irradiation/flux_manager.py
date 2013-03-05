@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -112,7 +112,7 @@ class SelectView(HasTraits):
         return ilv
 
 
-#class PlotView(HasTraits):
+# class PlotView(HasTraits):
 #    db = Any
 #    flux_view = Instance(FluxView)
 
@@ -131,7 +131,7 @@ class FluxManager(BaseAnalysisManager):
 
     def calculate_flux(self, monitors, unknowns):
         monitor_age = 28.02e6
-        #helper funcs
+        # helper funcs
         def calc_j(ai):
             ar40 = ai.arar_result['rad40']
             ar39 = ai.arar_result['k39']
@@ -150,7 +150,7 @@ class FluxManager(BaseAnalysisManager):
             return ir
 
         for mi in monitors:
-            #calculate the mean j for this hole
+            # calculate the mean j for this hole
             ln = self.db.get_labnumber(mi.labnumber)
             ans = [afactory(ai) for ai in ln.analyses
                    if ai.status == 0 and \
@@ -216,55 +216,55 @@ class FluxManager(BaseAnalysisManager):
 
 
 ##===============================================================================
-## Copyright 2012 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2012 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 ##============= enthought library imports =======================
-#from traits.api import HasTraits, Property, Str, cached_property, Int, List, \
+# from traits.api import HasTraits, Property, Str, cached_property, Int, List, \
 #    Float, Bool, on_trait_change, Button
-#from traitsui.api import View, Item, EnumEditor, TabularEditor, TableEditor, HGroup
-#from src.processing.database_manager import DatabaseManager
-#from traitsui.tabular_adapter import TabularAdapter
-#from traitsui.table_column import ObjectColumn
-#from traitsui.extras.checkbox_column import CheckboxColumn
+# from traitsui.api import View, Item, EnumEditor, TabularEditor, TableEditor, HGroup
+# from src.processing.database_manager import DatabaseManager
+# from traitsui.tabular_adapter import TabularAdapter
+# from traitsui.table_column import ObjectColumn
+# from traitsui.extras.checkbox_column import CheckboxColumn
 ##============= standard library imports ========================
-#import struct
-#from numpy import average, std, asarray, mgrid, zeros, array
+# import struct
+# from numpy import average, std, asarray, mgrid, zeros, array
 ##============= local library imports  ==========================
-#from src.processing.argon_calculations import calculate_flux
-#from src.processing.flux.position import Position
-#from src.regression.ols_regressor import MultipleLinearRegressor
-#from src.database.records.isotope_record import IsotopeRecord
-#from threading import Thread
-#from src.helpers.thread_pool import ThreadPool
-#from src.progress_dialog import MProgressDialog
+# from src.processing.argon_calculations import calculate_flux
+# from src.processing.flux.position import Position
+# from src.regression.ols_regressor import MultipleLinearRegressor
+# from src.database.records.isotope_record import IsotopeRecord
+# from threading import Thread
+# from src.helpers.thread_pool import ThreadPool
+# from src.progress_dialog import MProgressDialog
 #
-#plusminus = u'\u00b1'
-#one_sigma = u'1\u03c3'
-##class PositionAdapter(TabularAdapter):
-##    columns = [
-##             ('Labnumber', 'labnumber'),
-##             ('Hole', 'hole'),
-##             ('X', 'x'), ('Y', 'y'),
-##             ('J', 'j'), (plusminus + ' J', 'jerr'),
-##             ('Pred. J', 'j'), (plusminus + ' Pred. J', 'pred_jerr'),
-##
-##             ]
+# plusminus = u'\u00b1'
+# one_sigma = u'1\u03c3'
+# #class PositionAdapter(TabularAdapter):
+# #    columns = [
+# #             ('Labnumber', 'labnumber'),
+# #             ('Hole', 'hole'),
+# #             ('X', 'x'), ('Y', 'y'),
+# #             ('J', 'j'), (plusminus + ' J', 'jerr'),
+# #             ('Pred. J', 'j'), (plusminus + ' Pred. J', 'pred_jerr'),
+# #
+# #             ]
 #
 #
-#class FluxManager(DatabaseManager):
+# class FluxManager(DatabaseManager):
 #    irradiation = Str
 #    irradiations = Property
 #    irradiation_labels = Property
@@ -307,8 +307,8 @@ class FluxManager(BaseAnalysisManager):
 #        xx = xx / float(n) * w - w / 2.
 #        yy = yy / float(n) * w - w / 2.
 #
-##        xx = xx * r / 2. - w
-##        yy = yy * r / 2. - w
+# #        xx = xx * r / 2. - w
+# #        yy = yy * r / 2. - w
 #        z = zeros((r * 2, c * 2))
 #
 #        reg = self._model_flux(use_pred=True)
@@ -341,13 +341,13 @@ class FluxManager(BaseAnalysisManager):
 #        ax.scatter(x, y, ys, s=10)
 #        ax.scatter(mx, my, mys, color='g', s=50)
 #        for xi, yi, zi, ei in zip(x, y, ys, ye):
-##        for i in np.arange(0, len(x)):
+# #        for i in np.arange(0, len(x)):
 #            ax.plot([xi, xi], [yi, yi], [zi - ei, zi + ei],
 #                    color='blue',
 #                    marker='_'
 #                    )
 #        for xi, yi, zi, ei in zip(mx, my, mys, mye):
-##        for i in np.arange(0, len(x)):
+# #        for i in np.arange(0, len(x)):
 #            ax.plot([xi, xi], [yi, yi], [zi - ei, zi + ei],
 #                    color='green',
 #                    marker='_'
@@ -362,13 +362,13 @@ class FluxManager(BaseAnalysisManager):
 #
 #    def _calculate_j_fired(self):
 #        '''
-#            instead of using the current j 
-#            
+#            instead of using the current j
+#
 #            load all the analyses for each hole
 #            plot as ideogram
-#            
+#
 #            calculate weighted mean of each group
-#            
+#
 #        '''
 #        aids = []
 #        for pi in self.positions:
@@ -451,7 +451,7 @@ class FluxManager(BaseAnalysisManager):
 #        p.pred_jerr = p.jerr
 #
 #    def _calculate_flux(self, p):
-##        j, jerr = calculate_flux(p.ar40, p.ar39, (self.age * 1e6, self.age_error * 1e6))
+# #        j, jerr = calculate_flux(p.ar40, p.ar39, (self.age * 1e6, self.age_error * 1e6))
 #        p.pred_j = p.j
 #        p.pred_jerr = p.jerr
 #
@@ -482,8 +482,8 @@ class FluxManager(BaseAnalysisManager):
 #        import math
 #        theta = math.radians(0)
 #        self.positions = [Position(hole=i + 1,
-##                                   x=x, 
-##                                   y=y,
+# #                                   x=x,
+# #                                   y=y,
 #                                   x=math.cos(theta) * x - math.sin(theta) * y,
 #                                   y=math.sin(theta) * x + math.cos(theta) * y,
 #                                   use_j=not i < n / 2,
@@ -498,7 +498,7 @@ class FluxManager(BaseAnalysisManager):
 #            f = dbpos.labnumber.selected_flux_history.flux
 #            pos.j, pos.jerr = f.j, f.j_err
 #            pos.labnumber = dbpos.labnumber
-##            pos.dbrecord = dbpos
+# #            pos.dbrecord = dbpos
 #
 #    def _get_holder(self):
 #        level = next((l for l in self.levels if l.name == self.level), None)
@@ -537,7 +537,7 @@ class FluxManager(BaseAnalysisManager):
 #                      editor=EnumEditor(name='level_labels')
 #                      ),
 #                 Item('holder', style='readonly'),
-##                 HGroup(Item('age'), Item('age_error', label=plusminus + one_sigma)),
+# #                 HGroup(Item('age'), Item('age_error', label=plusminus + one_sigma)),
 #                HGroup(
 #                       Item('calculate_button'),
 #                       Item('calculate_j'),
@@ -552,7 +552,7 @@ class FluxManager(BaseAnalysisManager):
 #                                         row_height=18,
 #                                         )
 #
-##                      editor=TabularEditor(adapter=PositionAdapter())
+# #                      editor=TabularEditor(adapter=PositionAdapter())
 #                      ),
 #                 width=700,
 #                 height=500,
@@ -560,7 +560,7 @@ class FluxManager(BaseAnalysisManager):
 #                 )
 #        return v
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    from src.helpers.logger_setup import logging_setup
 #    logging_setup('fluxman')
 #    f = FluxManager()

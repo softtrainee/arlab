@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,13 +28,13 @@ from pychron_application import Pychron
 from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
 from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 
-#from src.helpers.paths import plugins_dir
+# from src.helpers.paths import plugins_dir
 
 
-#from src.helpers.logger_setup import add_console
+# from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from globals import globalv
-#import logging
+# import logging
 from src.helpers.logger_setup import new_logger
 
 
@@ -42,8 +42,8 @@ if globalv.open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
 
 logger = new_logger('launcher')
-#logger = logging.getLogger('launcher')
-#logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
+# logger = logging.getLogger('launcher')
+# logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 
 PACKAGE_DICT = dict(
                    DatabasePlugin='src.database.plugins.database_plugin',
@@ -150,7 +150,7 @@ def get_user_plugins():
             logger.warning('****** {} could not be imported {} ******'.format(name, e))
         return klass
 
-    #append plugins dir to the sys path
+    # append plugins dir to the sys path
 #    sys.path.append(plugins_dir)
     from src.helpers.parsers.initialization_parser import InitializationParser
     plugins = []
@@ -159,7 +159,7 @@ def get_user_plugins():
         pp = []
         gdict = globals()
         pp.append(p + 'Plugin')
-        #add UI 
+        # add UI
         uip = p + 'UIPlugin'
         pp.append(uip)
 
@@ -171,7 +171,7 @@ def get_user_plugins():
                 package = PACKAGE_DICT[pname]
                 klass = get_klass(package, pname)
             elif not pname.endswith('UIPlugin'):
-                #dont warn if uiplugin not available
+                # dont warn if uiplugin not available
                 logger.warning('***** {} not available ******'.format(pname))
 
             if klass is not None:
@@ -213,7 +213,7 @@ def launch():
     if globalv.test:
 
         def start_test():
-            #run the test suite
+            # run the test suite
             from src.testing.testrunner import run_tests
 #            run_tests(logger)
 
@@ -243,8 +243,8 @@ def launch():
     return
 
 
-#import unittest
-#class tempTest(unittest.TestCase):
+# import unittest
+# class tempTest(unittest.TestCase):
 #    def testTemp(self):
 #        global app
 #
@@ -253,7 +253,7 @@ def launch():
 #        self.assertNotEqual(man, None)
 #        self.assertEqual(man, None)
 #
-#def run_tests():
+# def run_tests():
 #    def _run():
 #        import time
 #        time.sleep(3)

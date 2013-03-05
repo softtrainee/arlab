@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -91,7 +91,7 @@ class ATLLaserControlUnit(CoreDevice):
 #        self.stop_update_timer()
 #        self._timer = Timer(1000, self._update_parameters)
 #        self._timer.Start()
-#        
+#
 #    def stop_update_timer(self):
 #        if self._timer:
 #            self._timer.Stop()
@@ -120,18 +120,18 @@ class ATLLaserControlUnit(CoreDevice):
         return self._enabled
 
 #    def laser_burst(self, n):
-        #get process status
-        #if not burst mode set to burst mode
+        # get process status
+        # if not burst mode set to burst mode
 #        ps=self.get_process_status()
 #        if not self.is_burst_mode(ps):
 #            time.sleep(0.05)
 #            self.set_burst_mode(True, ps)
-#            
+#
 #        time.sleep(0.05)
-##        #set number of bursts
+# #        #set number of bursts
 #        self.set_nburst(n)
 
-        #run laser
+        # run laser
 #        cmd = self._build_command(11, 3)
 #        self._send_command(cmd)
     def set_reprate(self, n, save=True):
@@ -253,7 +253,7 @@ class ATLLaserControlUnit(CoreDevice):
 #===============================================================================
     def do_auto_vac(self):
 #        self.start_auto_vac()
-        #wait until idle
+        # wait until idle
         self.wait_for_idle()
 #        self.wait_for_gwr()
 
@@ -324,7 +324,7 @@ class ATLLaserControlUnit(CoreDevice):
     def update_parameters(self):
         '''
         '''
-        #energy and pressure_readback
+        # energy and pressure_readback
         vs = self._send_query(8, 4, verbose=False)
 #        vs=self._send_query(30, 2, verbose=False)
         if vs is not None:
@@ -339,7 +339,7 @@ class ATLLaserControlUnit(CoreDevice):
         time.sleep(0.1)
 #        vs=self._send_query(12, 1, verbose=False)
 #        if vs is not None:
-#            vs=self._parse_response(vs, 1)   
+#            vs=self._parse_response(vs, 1)
 #            print vs
 #        print self.get_process_status()
         self.get_nburst(verbose=False)
@@ -347,15 +347,15 @@ class ATLLaserControlUnit(CoreDevice):
 #        if s<=3:
 
 #        vs=self._send_query(6, 2, verbose=False)
-##        vs=self._send_query(30, 2, verbose=False)
+# #        vs=self._send_query(30, 2, verbose=False)
 #        if vs is not None:
-#            vs=self._parse_response(vs, 2)   
+#            vs=self._parse_response(vs, 2)
 #            print vs
 
 #        formatter = lambda x:x / 10.0
 #        read and set energy and pressure_readback as one block
 #        self._update_parameter_list([('energy_readback', formatter)], 8, 1)
-##        read and set frequency and hv as one block
+# #        read and set frequency and hv as one block
 #        self._update_parameter_list(['reprate', ('hv', formatter)], 1001, 2)
 
 #        read and set gas action
@@ -419,7 +419,7 @@ class ATLLaserControlUnit(CoreDevice):
             cmd = self._build_command(ANSWER_ADDR, (s, l))
             self._send_command(cmd, verbose=verbose, lock=False)
 
-            #=self.ask('A'+ENQ, nchars=(l+1)*4+6)
+            # =self.ask('A'+ENQ, nchars=(l+1)*4+6)
     #        self._start_message()
             n = (l + 1) * 4 + 6
             cmd = 'a' + ENQ
@@ -506,7 +506,7 @@ class ATLLaserControlUnit(CoreDevice):
 
 #    def _update_parameter_list(self, names, s, l):
 #        '''
-#            
+#
 #        '''
 #        resp = self._send_query(s, l)
 #        if resp is not None:

@@ -29,17 +29,17 @@ def acalc_fractional_error(*args):
     return r
 
 def calc_error_contrib(ar40, ar39, ar38, ar37, ar36, s40, s39, s38, s37, s36, J, constants):
-    #fraction of ar36err from s36,ar37,ar38
+    # fraction of ar36err from s36,ar37,ar38
     fe36_36, fe36_37, fe36_38 = acalc_fractional_error(s36,
                                                        ca3637 * s37,
                                                        cl3638 * s38,
                                                        ar36)
 
-    #fraction of ar40err from 40signal, 36signal
+    # fraction of ar40err from 40signal, 36signal
     fe40_40, fe40_36 = acalc_fractional_error(s40, constants.atm4036_v * ar36, ar40)
 
     R = ar40 / ar39
-    #fraction of R error from ar40 and ar39
+    # fraction of R error from ar40 and ar39
     fe40, fe39 = mcalc_fractional_error(ar40, ar39, R)
 
 #    JR.std_dev equals total error
@@ -66,19 +66,19 @@ def calc_error_contrib(ar40, ar39, ar38, ar37, ar36, s40, s39, s38, s37, s36, J,
 #    #fraction of JR from J and R
     Je, Re = mcalc_fractional_error(J, R, JR)
 #    print Je, Re
-    #fractional error from ar40. e40=F40+F36
+    # fractional error from ar40. e40=F40+F36
     err = fe40 * Re * feJR
 
-    #error in ar40 is sum of s40err and s36err
+    # error in ar40 is sum of s40err and s36err
     err40 = fe40_40 * err
 
     err = fe40_36 * err
-    #error in ar36 is sum of s40err and s36err
+    # error in ar36 is sum of s40err and s36err
     err36 = fe36_36 * err
     err37 = fe36_37 * err
     err38 = fe36_38 * err
 
-    #fractional error from ar39
+    # fractional error from ar39
     err39 = fe39 * Re * feJR
 
     errJ = Je * feJR

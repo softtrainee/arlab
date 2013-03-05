@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ from mayavi.tools.mlab_scene_model import MlabSceneModel
 
 def point_generator(padding, cx, cy):
     offset = 1
-    #nrows should be calculates so  result is a square
+    # nrows should be calculates so  result is a square
     nrows = int(padding * 2 / offset) + 1
 
     for i in range(nrows):
@@ -53,7 +53,7 @@ class Graph3D(HasTraits):
 #        yy = []
 #        zz = []
 #        for p1, p2 in [((-5, 0), (5, 0)), ((5, 1), (-5, 1))]:
-##        for p1, p2 in pt_gen:
+# #        for p1, p2 in pt_gen:
 #
 #            #move to p1
 #            #move to p2
@@ -87,7 +87,7 @@ class Graph3D(HasTraits):
 #            zz.append(zs)
 #
 #        s.mlab.mesh(asarray(xx), asarray(yy), asarray(zz))
-##        s.mlab.plot3d(asarray(xx)[0], asarray(yy)[0], asarray(zz)[0], asarray(zz)[0])
+# #        s.mlab.plot3d(asarray(xx)[0], asarray(yy)[0], asarray(zz)[0], asarray(zz)[0])
 #        return s
 #        xs = []
 #        ys = []
@@ -103,8 +103,8 @@ class Graph3D(HasTraits):
 #
 #        s.mlab.mesh(asarray(xs), asarray(ys), asarray(zs)
 #                        #z,
-##                          line_width = 50,
-##                          tube_radius = None,
+# #                          line_width = 50,
+# #                          tube_radius = None,
 #                          #representation = 'wireframe'
 #                          )
 #        return s
@@ -182,10 +182,10 @@ class Graph3D(HasTraits):
         return v
 
 #============= EOF ====================================
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    g = FastScan()
 #    g.configure_traits()
-#class FastScan(HasTraits):
+# class FastScan(HasTraits):
 #    scan = Button
 #    graph = Instance(Graph3D, ())
 #    def _scan_(self):
@@ -196,8 +196,8 @@ class Graph3D(HasTraits):
 #        xx = []
 #        yy = []
 #        zz = []
-##        for p1, p2 in [((5, -5), (-5, 5)), ((-5, -4), (5, -4))]:
-##            print p1, p2, pt_gen.next()
+# #        for p1, p2 in [((5, -5), (-5, 5)), ((-5, -4), (5, -4))]:
+# #            print p1, p2, pt_gen.next()
 #        for p1, p2 in pt_gen:
 #
 #            #move to p1
@@ -233,7 +233,7 @@ class Graph3D(HasTraits):
 #            xx.append(xs)
 #            yy.append(ys)
 #            zz.append(zs)
-##            do_after(1, s.mlab.plot3d, asarray(xs), asarray(ys), asarray(zs), asarray(zs))#, asarray(zz)[0])
+# #            do_after(1, s.mlab.plot3d, asarray(xs), asarray(ys), asarray(zs), asarray(zs))#, asarray(zz)[0])
 #            do_after(1, s.mlab.mesh, asarray(xx), asarray(yy), asarray(zz))
 #            time.sleep(0.1)
 #

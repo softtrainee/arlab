@@ -1,13 +1,13 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -167,19 +167,19 @@ class BakeoutManager(Manager):
         self._buffer_lock = Lock()
 
 #        self.reset_data_recording()
-        #reset the graph
+        # reset the graph
         self.graph = self._graph_factory()
         for i, name in enumerate(self._get_controller_names()):
             self._setup_graph(name, i)
 
         cs = self._get_controllers()
         for i, c in enumerate(cs):
-        #reset the general timers
+        # reset the general timers
             c.start_timer()
 
     def opened(self):
         self.info('opened')
-        #delay 1s before starting scan
+        # delay 1s before starting scan
         do_after_timer(1000, self.reset_general_scan)
 
     def load(self, *args, **kw):
@@ -333,13 +333,13 @@ class BakeoutManager(Manager):
 
         try:
             self.graph.update_y_limits(plotid=self.plotids[0]
-                                       #, force=False
+                                       # , force=False
                                        )
         except IndexError:
             pass
         try:
             self.graph.update_y_limits(plotid=self.plotids[1]
-                                       #, force=False
+                                       # , force=False
                                        )
         except IndexError:
             pass
@@ -436,7 +436,7 @@ class BakeoutManager(Manager):
         gys = []
         gps = []
 
-        #use only the first 10 minutes of data
+        # use only the first 10 minutes of data
         npts = 10 * 60 / float(self.update_interval)
         for ci in controllers:
             temptable = ci.temp[:npts]
@@ -466,19 +466,19 @@ class BakeoutManager(Manager):
 
     def _add_bakeout_to_db(self, controllers, path):
         db = self.database
-        #add to BakeoutTable
+        # add to BakeoutTable
         b = db.add_bakeout()
         b.timestamp = datetime.datetime.now()
 
-        #add to PathTable
+        # add to PathTable
         db.add_path(b, path)
 
-        #add to ControllerTable
+        # add to ControllerTable
         for c in controllers:
             db.add_controller(b, name=c.name, script=c.script,
                               setpoint=c.setpoint, duration=c.duration)
 #===============================================================================
-# handlers 
+# handlers
 #===============================================================================
     @on_trait_change('bakeout+:active')
     def update_active(self, obj, name, old, new):
@@ -524,7 +524,7 @@ class BakeoutManager(Manager):
                         self._classifier_save()
 
                     self.info('commit session to db')
-                    #database session started in main thread so use do_later for commit
+                    # database session started in main thread so use do_later for commit
                     do_later(self.database.commit)
 #                    time.sleep(0.5)
                     do_after_timer(1000, self.open_latest_bake)
@@ -930,19 +930,19 @@ class BakeoutManager(Manager):
                  handler=AppHandler,
                  resizable=True, title='Bakedpy', height=830)
         return v
-#def launch_bakeout():
+# def launch_bakeout():
 #    b = BakeoutManager()
 #    b.load()
 #    b.configure_traits()
 
-##bm = BakeoutManager()
+# #bm = BakeoutManager()
 #
 #
-#def load_h5():
+# def load_h5():
 #    bm._bakeout_h5_parser(path + '.h5')
 #
 #
-#def load_csv():
+# def load_csv():
 #    bm._bakeout_csv_parser(path + '.txt')
 #
 if __name__ == '__main__':
@@ -961,7 +961,7 @@ if __name__ == '__main__':
 #    csv_time = t.timeit(n) / float(n)
 #
 #    print 'csv', csv_time
-#def _execute2_(self):
+# def _execute2_(self):
 #        '''
 #        '''
 #        self._buffer_lock = Lock()
@@ -978,20 +978,20 @@ if __name__ == '__main__':
 #        controllers = []
 #        for bc in self._get_controllers():
 #            name = bc.name
-##        for name in self._get_controller_names():
-##            bc = self.trait_get(name)[name]
+# #        for name in self._get_controller_names():
+# #            bc = self.trait_get(name)[name]
 #            if bc.ok_to_run():
 #
 #                bc.on_trait_change(self.update_alive, 'active')
 #
 #                # set up graph
-##                self.graph.new_series()
-##                self.graph_info[bc.name] = dict(id=pid)
-##
-##                self.graph.set_series_label(name, series=pid)
+# #                self.graph.new_series()
+# #                self.graph_info[bc.name] = dict(id=pid)
+# #
+# #                self.graph.set_series_label(name, series=pid)
 #
-##                if self.include_heat:
-##                    self.graph.new_series(plotid=self.plotids[1])
+# #                if self.include_heat:
+# #                    self.graph.new_series(plotid=self.plotids[1])
 #                self._setup_graph(name, pid)
 #                if pid == 0:
 #                    header.append('#{}_time'.format(name))
@@ -1033,7 +1033,7 @@ if __name__ == '__main__':
 #            if pv.scripts:
 #                do_later(pv.edit_traits)
 #
-##            time.sleep(0.5)
+# #            time.sleep(0.5)
 #            for c in controllers:
 #                c.start_timer()
 #
@@ -1044,8 +1044,8 @@ if __name__ == '__main__':
 #                        plotid=self.plotids[2])
 #
 #            # start a pressure monitor thread
-##                t = Thread(target=self._pressure_monitor)
-##                t.start()
+# #                t = Thread(target=self._pressure_monitor)
+# #                t.start()
 #
 #            self._start_time = time.time()
 #        else:
@@ -1066,7 +1066,7 @@ if __name__ == '__main__':
 #
 #            nv = self.gauge_controller.get_convectron_a_pressure()
 #            self._pressure = nv
-#            self.graph.record(nv, track_y=(5e-3, None), track_y_pad=5e-3, 
+#            self.graph.record(nv, track_y=(5e-3, None), track_y_pad=5e-3,
 #                    track_x=False, plotid=2, do_later=10)
 #
 #            if self.use_pressure_monitor:

@@ -1,57 +1,57 @@
 ##===============================================================================
-## Copyright 2012 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2012 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 ##============= enthought library imports =======================
-#from traits.api import HasTraits, Instance, Any, List, Bool, Property, \
+# from traits.api import HasTraits, Instance, Any, List, Bool, Property, \
 #    cached_property, Button, on_trait_change, Str
-#from traitsui.api import View, Item, TabularEditor, VSplit, Group, HGroup, VGroup, \
+# from traitsui.api import View, Item, TabularEditor, VSplit, Group, HGroup, VGroup, \
 #    spring, Handler
-##import apptools.sweet_pickle as pickle
-#from pyface.timer.do_later import do_later
+# #import apptools.sweet_pickle as pickle
+# from pyface.timer.do_later import do_later
 ##============= standard library imports ========================
-##from tables import openFile
-#import cPickle as pickle
-#import os
+# #from tables import openFile
+# import cPickle as pickle
+# import os
 #
 ##============= local library imports  ==========================
-##from src.loggable import Loggable
-#from src.graph.graph import Graph
-#from src.processing.analysis import Analysis, AnalysisTabularAdapter
-#from src.processing.plotters.series import Series
-#from src.processing.series_config import SeriesConfig, RatioConfig
-#from src.processing.processing_selector import ProcessingSelector
-#from src.helpers.traitsui_shortcuts import listeditor
-#from src.viewable import ViewableHandler, Viewable
-#from src.paths import paths
-#from src.database.core.database_selector import ColumnSorterMixin
-#from src.displays.rich_text_display import RichTextDisplay
-#from src.processing.export.csv_exporter import CSVExporter
-#from src.processing.export.excel_exporter import ExcelExporter
-#from src.processing.figures.figure_store import FigureStore
-#from src.progress_dialog import MProgressDialog
-#from src.saveable import Saveable, SaveableHandler, SaveButton
-#from src.graph.graph_container import HGraphContainer
-#from enable.component_editor import ComponentEditor
-#from multiprocessing.process import Process
-#from threading import Thread
-#from Queue import Queue
-#import time
-#from src.helpers.thread_pool import ThreadPool
+# #from src.loggable import Loggable
+# from src.graph.graph import Graph
+# from src.processing.analysis import Analysis, AnalysisTabularAdapter
+# from src.processing.plotters.series import Series
+# from src.processing.series_config import SeriesConfig, RatioConfig
+# from src.processing.processing_selector import ProcessingSelector
+# from src.helpers.traitsui_shortcuts import listeditor
+# from src.viewable import ViewableHandler, Viewable
+# from src.paths import paths
+# from src.database.core.database_selector import ColumnSorterMixin
+# from src.displays.rich_text_display import RichTextDisplay
+# from src.processing.export.csv_exporter import CSVExporter
+# from src.processing.export.excel_exporter import ExcelExporter
+# from src.processing.figures.figure_store import FigureStore
+# from src.progress_dialog import MProgressDialog
+# from src.saveable import Saveable, SaveableHandler, SaveButton
+# from src.graph.graph_container import HGraphContainer
+# from enable.component_editor import ComponentEditor
+# from multiprocessing.process import Process
+# from threading import Thread
+# from Queue import Queue
+# import time
+# from src.helpers.thread_pool import ThreadPool
 #
-#class GraphSelector(HasTraits):
+# class GraphSelector(HasTraits):
 #    show_series = Bool(False)
 #    selections = Property
 #    @classmethod
@@ -64,7 +64,7 @@
 #        v = View(VGroup(*self.selections))
 #        return v
 #
-#def sort_keys(func):
+# def sort_keys(func):
 #    def decorator(cls):
 #        import re
 #        key = lambda x: re.sub('\D', '', x)
@@ -73,8 +73,8 @@
 #
 #    return decorator
 #
-#class BaseFigure(Saveable, ColumnSorterMixin):
-##    graph = Instance(Graph)
+# class BaseFigure(Saveable, ColumnSorterMixin):
+# #    graph = Instance(Graph)
 #    graph = Instance(HGraphContainer)
 #    series = Instance(Series)
 #    graph_selector = Instance(GraphSelector, ())
@@ -90,7 +90,7 @@
 #    ratio_configs = List
 #    selector = None
 #
-##    _debug = False
+# #    _debug = False
 #    _debug = True
 #
 #    manage_data = Button
@@ -122,13 +122,13 @@
 #    def _save(self):
 #        for a in self.analyses:
 #            a.dbrecord.set_status(a.temp_status)
-##            print a.rid, a.temp_status
+# #            print a.rid, a.temp_status
 #
 #    def refresh(self, caller=None):
 #
 #        print 'refresh called from {}'.format(caller)
 #
-##        self.results_display.clear()
+# #        self.results_display.clear()
 #
 #        analyses = self._analyses
 #        if not self._check_refresh():
@@ -137,7 +137,7 @@
 #        graph = self.graph
 #        try:
 #            comps = graph.components
-##            comps = graph.plotcontainer.components
+# #            comps = graph.plotcontainer.components
 #            graph.remove(*comps)
 #        except Exception, e:
 #            print e
@@ -146,7 +146,7 @@
 #        padding = [pl, 10, 0, 30]
 #        self._refresh(graph, analyses, padding)
 #
-##        self._refresh_stats()
+# #        self._refresh_stats()
 #
 #    def _refresh_stats(self):
 #        rd = self.results_display
@@ -165,16 +165,16 @@
 #                        rd.add_text(header(['mean', 'SD', 'SEM']))
 #                        rd.add_text('{} ={}'.format(config.label,
 #                                                    '{:<10s}'.format('{:0.7f}'.format(reg.coefficients[0]))))
-##                        es = ''.join(map('{:0.7f}'.format, reg.coefficient_errors))
+# #                        es = ''.join(map('{:0.7f}'.format, reg.coefficient_errors))
 #                        es = tabulate(reg.coefficient_errors)
 #                        es = '{:<10s}'.format(es)
 #                        rd.add_text('err  =            {}'.format(es))
 #                    else:
 #
 #                        rd.add_text(header(['c', 'x', 'x2', 'x3']))
-##                    cs = reg.coefficients
-##                    ss = ' + '.join(map(lambda x:'{:0.7f}{}'.format(*x),
-##                                              zip(cs, xx[:len(cs)][::-1])))
+# #                    cs = reg.coefficients
+# #                    ss = ' + '.join(map(lambda x:'{:0.7f}{}'.format(*x),
+# #                                              zip(cs, xx[:len(cs)][::-1])))
 #                        cs = reg.coefficients
 #                        if cs is not None:
 #                            cs = cs[::-1]
@@ -186,7 +186,7 @@
 #    #                        se = ' '.join(map('{:<10s}'.format,
 #    #                                          map('{:0.7f}'.format,
 #    #                                              ce)))
-#        ##                    
+#        ##
 #                            ss = tabulate(cs)
 #                            se = tabulate(ce)
 #                            rd.add_text('{} ='.format(config.label) + ss)
@@ -194,7 +194,7 @@
 #
 #    def _get_group_ids(self, analyses):
 #        return list(set([a.group_id for a in analyses]))
-##        return list(set([(a.group_id + offset, True) for a in analyses]))
+# #        return list(set([(a.group_id + offset, True) for a in analyses]))
 #    def _check_refresh(self):
 #        if self._analyses:
 #            return True
@@ -213,7 +213,7 @@
 #            series = self.series_klass()
 #            series.analyses = analyses
 #            keys = sks + bks + rks
-##            epts = None
+# #            epts = None
 #            if self.series:
 #                epts = self.series.get_excluded_points(keys, group_ids)
 #            else:
@@ -224,9 +224,9 @@
 #                                   seriespadding)
 #
 #            if gseries:
-##                graph.plotcontainer.add(gseries.plotcontainer)
+# #                graph.plotcontainer.add(gseries.plotcontainer)
 #                graph.add(gseries.plotcontainer)
-##                series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
+# #                series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
 #                series.set_excluded_points(epts, keys, group_ids)
 #
 #            self.series = series
@@ -243,15 +243,15 @@
 #        q = sess.query(meas_AnalysisTable)
 #        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
 #        dbr = q.one()
-##        print id(dbr), dbr
+# #        print id(dbr), dbr
 #        dbrecord._dbrecord = dbr
 #        a = Analysis(uuid=n,
 #                     dbrecord=dbrecord,
 #                         **kw)
 #        if a.load_age():
 #            queue.put(a)
-##            self._analyses.append(a)
-##        sess.expunge_all()
+# #            self._analyses.append(a)
+# #        sess.expunge_all()
 #        sess.close()
 #        sess.remove()
 #
@@ -266,15 +266,15 @@
 #            attrs = [dict() for n in names]
 #
 #        _names = [a.uuid for a in analyses]
-##        rnames = []
-##        if exclusive:
+# #        rnames = []
+# #        if exclusive:
 #        rnames = list(set(_names) - set(names))
 #
 #        newnames = list(set(names) - set(_names))
 #        n = len(analyses) - len(rnames) + len(newnames) - 1
 #
 ##===============================================================================
-##     serial load
+# #     serial load
 ##===============================================================================
 #        pd = MProgressDialog(max=n + 2, size=(550, 15))
 #        import wx
@@ -287,13 +287,13 @@
 #        def add_analysis(q):
 #            while 1:
 #
-##                msg = 'loading analysis {}'.format('fffd')
-##                pd.change_message(msg)
-##                pd.increment()
+# #                msg = 'loading analysis {}'.format('fffd')
+# #                pd.change_message(msg)
+# #                pd.increment()
 #                a = q.get()
 #                if a:
-##                    print a
-##                    do_later(pd.increment)
+# #                    print a
+# #                    do_later(pd.increment)
 #                    self._analyses.append(a)
 #                    time.sleep(0.0001)
 #                else:
@@ -312,13 +312,13 @@
 #                self.info(msg)
 #
 #                t.add_task(self._load_analysis, q, n, **attr)
-##                t = Thread(target=self._load_analysis, args=(q, n,), kwargs=attr)
-##                t.start()
+# #                t = Thread(target=self._load_analysis, args=(q, n,), kwargs=attr)
+# #                t.start()
 #
 #            pd.increment()
 #
 #        pd.change_message('Finishing calculations')
-##        t.join()
+# #        t.join()
 #        t.wait_completion()
 #        pd.increment()
 #
@@ -326,12 +326,12 @@
 #        q.put(None)
 #        print 'threads finished'
 ##===============================================================================
-## 
+# #
 ##===============================================================================
 #        #remove analyses not in names
 #        self._analyses = [ai for ai in analyses if ai.uuid not in rnames]
-##        print self._analyses
-##        self.nanalyses = -1
+# #        print self._analyses
+# #        self.nanalyses = -1
 #
 #        keys = self.isotope_keys
 #        keys.sort(key=lambda k:k[2:4], reverse=True)
@@ -339,12 +339,12 @@
 #            self.series_configs = [self.series_config_klass(label=iso, figure=self)
 #                                   for iso in keys]
 #        else:
-#            #have a series configs list 
+#            #have a series configs list
 #            #load any missing isotopes
-##            print keys
+# #            print keys
 #            for i, iso in enumerate(keys):
 #                se = next((s for s in self.series_configs if s.label == iso), None)
-##                print i, iso, se
+# #                print i, iso, se
 #                if not se:
 #                    self.series_configs.insert(1, self.series_config_klass(label=iso,
 #                                                                           figure=self))
@@ -359,12 +359,12 @@
 #            self.ratio_configs = [self.ratio_config_klass(label=ri,
 #                                                        figure=self) for ri in rkeys]
 #        else:
-#            #have a series configs list 
+#            #have a series configs list
 #            #load any missing isotopes
-##            print keys
+# #            print keys
 #            for i, iso in enumerate(rkeys):
 #                se = next((s for s in self.ratio_configs if s.label == iso), None)
-##                print i, iso, se
+# #                print i, iso, se
 #                if not se:
 #                    self.ratio_configs.insert(1, self.ratio_config_klass(label=iso,
 #                                                                           figure=self))
@@ -376,12 +376,12 @@
 #        bs_keys = [i for i in signal_keys if i.endswith('bs')]
 #        bs_keys.sort(key=lambda k:k[2:4], reverse=True)
 #
-##        self.signal_table_adapter.iso_keys = self.isotope_keys
-##        self.baseline_table_adapter.iso_keys = bs_keys
+# #        self.signal_table_adapter.iso_keys = self.isotope_keys
+# #        self.baseline_table_adapter.iso_keys = bs_keys
 #
 #        self.refresh(caller='load analyses')
 ##===============================================================================
-## viewable
+# # viewable
 ##===============================================================================
 #    def closed(self, ok):
 #        self._dump_series_configs()
@@ -399,7 +399,7 @@
 #            self._load_graph_selector()
 #
 ##===============================================================================
-## persistence
+# # persistence
 ##===============================================================================
 #    def _get_series_config_path(self):
 #        return os.path.join(paths.hidden_dir, 'series_config')
@@ -462,7 +462,7 @@
 #            print 'ddd', p
 #            print e
 ##===============================================================================
-## private
+# # private
 ##===============================================================================
 #    def _update_data(self):
 #        def do():
@@ -472,7 +472,7 @@
 #                                                 dict(dbrecord=ri),
 #                                                ri.group_id)
 #                                                for ri in ps.selected_records
-##                                            if ri.path.strip()
+# #                                            if ri.path.strip()
 #
 #                                            ])
 #
@@ -487,16 +487,16 @@
 #        return {}
 #
 ##===============================================================================
-## handlers
+# # handlers
 ##===============================================================================
 #    def _update_selected_analysis(self, new):
 #        self.selected_analysis = new
 #
-##    @on_trait_change('_analyses[]')
-##    def _analyses_changed(self):
-###        print len(self.analyses), self.nanalyses
-##        if len(self._analyses) > self.nanalyses:
-##            self.refresh(caller='analyses_changed')
+# #    @on_trait_change('_analyses[]')
+# #    def _analyses_changed(self):
+# ##        print len(self.analyses), self.nanalyses
+# #        if len(self._analyses) > self.nanalyses:
+# #            self.refresh(caller='analyses_changed')
 #
 #    @on_trait_change('graph_selector:show_series')
 #    def _refresh_graph(self, obj, name, old, new):
@@ -518,13 +518,13 @@
 #    def _custom_query_fired(self):
 #        db = self.db
 #        db.connect()
-##        if self.selector is None:
+# #        if self.selector is None:
 #        ps = ProcessingSelector(db=self.db)
 #        self.selector = ps
 #        ps.selector.style = 'panel'
 #        ps.on_trait_change(self._update_data, 'update_data')
-##            ps.selector.load_last(n=200)
-##        sess = db.get_session()
+# #            ps.selector.load_last(n=200)
+# #        sess = db.get_session()
 #
 #        #=======================================================================
 #        # custom
@@ -541,52 +541,52 @@
 #            gs = ps._group_by_labnumber()
 #            for ri in ps.selected_records:
 #                ri.group_id = gs.index(ri.labnumber)
-##            ps.show()
+# #            ps.show()
 #        except Exception, e:
 #            self.warning_dialog('Custom Query failed {}'.format(e))
 #            print 'custom query exception', e
 #
 #        #=======================================================================
-#        # 
+#        #
 #        #=======================================================================
 #
-##        self.selector.show()
+# #        self.selector.show()
 #        self._update_data()
 #
 #    def _manage_data_fired(self):
 #        db = self.db
 #        db.connect()
-##        import time
-##        st = time.clock()
+# #        import time
+# #        st = time.clock()
 #        if self.selector is None:
-##            db.selector_factory()
+# #            db.selector_factory()
 #            ps = ProcessingSelector(db=self.db)
 #            ps.selector.style = 'panel'
 #            ps.on_trait_change(self._update_data, 'update_data')
-##            ps.selector.load_recent()
+# #            ps.selector.load_recent()
 #            ps.selector.load_last(n=200)
-##            ps._analysis_type_changed()
+# #            ps._analysis_type_changed()
 #            ps.edit_traits()
 #            self.selector = ps
-##            if self._debug:
+# #            if self._debug:
 #
-##            ps.selected_records = [i for i in ps.selector.records if i.labnumber in [57740, 57741,
-##                                                                                      57743, 57742, 57745
-##                                                                                     ]]
-##            for pi in ps.selected_records:
-##                if pi.labnumber == 57741:
-###                    pi.group_id = 1
-##                    pi.graph_id = 1
-##            ps.selected_records = ps.selected_records[::5]
-##            print len(ps.selected_records)
-##            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
-##            print 'get results time', time.clock() - st
+# #            ps.selected_records = [i for i in ps.selector.records if i.labnumber in [57740, 57741,
+# #                                                                                      57743, 57742, 57745
+# #                                                                                     ]]
+# #            for pi in ps.selected_records:
+# #                if pi.labnumber == 57741:
+# ##                    pi.group_id = 1
+# #                    pi.graph_id = 1
+# #            ps.selected_records = ps.selected_records[::5]
+# #            print len(ps.selected_records)
+# #            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
+# #            print 'get results time', time.clock() - st
 #        else:
 #            self.selector.show()
 #
-##        st = time.clock()
-##        self._update_data()
-##        print 'update time', time.clock() - st
+# #        st = time.clock()
+# #        self._update_data()
+# #        print 'update time', time.clock() - st
 #
 #    def _show_results_fired(self):
 #        self.results_display.edit_traits()
@@ -602,7 +602,7 @@
 #
 #    def _export_pdf_fired(self):
 #        self.info('exporting to pdf')
-##        self._export(pdfExporter)
+# #        self._export(pdfExporter)
 #
 #    def _export(self, klass):
 #        exp = klass(figure=self)
@@ -627,70 +627,70 @@
 #
 #
 ##===============================================================================
-## factories
+# # factories
 ##===============================================================================
 #
 #    def _analysis_factory(self, n, dbrecord=None, **kw):
 #        from src.database.orms.isotope_orm import meas_AnalysisTable
 #
-##        sess = self.db.new_session()
-##        q = sess.query(meas_AnalysisTable)
-##        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
-##        dbr = q.one()
-###        print id(dbr), dbr
-##        dbrecord._dbrecord = dbr
-##        do_later(progress.change_message, 'loading analysis')
+# #        sess = self.db.new_session()
+# #        q = sess.query(meas_AnalysisTable)
+# #        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
+# #        dbr = q.one()
+# ##        print id(dbr), dbr
+# #        dbrecord._dbrecord = dbr
+# #        do_later(progress.change_message, 'loading analysis')
 #        a = Analysis(uuid=n,
-##                     repo=self.repo,
-##                     workspace=self.workspace,
+# #                     repo=self.repo,
+# #                     workspace=self.workspace,
 #                     dbrecord=dbrecord,
 #                     **kw)
-##        t = Thread(target=a.load_age)
-##        t.start()
+# #        t = Thread(target=a.load_age)
+# #        t.start()
 #        if a.load_age():
 #            return a
-##            self._analyses.append(a)
-##        return a
-##        do_later(progress.increment)
-##        sess.expunge
-##        return a
-##            return a
-##        sess.expunge(dbr)
-##        sess.close()
-##        return a
+# #            self._analyses.append(a)
+# #        return a
+# #        do_later(progress.increment)
+# #        sess.expunge
+# #        return a
+# #            return a
+# #        sess.expunge(dbr)
+# #        sess.close()
+# #        return a
 #        #need to call both load from file and database
-##        if not a.load_from_file(n):
-##            return
+# #        if not a.load_from_file(n):
+# #            return
 #
-##        if self.db.connect():
-##            sess = self.db.get_session()
-##            from src.database.orms.isotope_orm import AnalysisPathTable
-##            from src.database.orms.isotope_orm import AnalysisTable
-##            q = sess.query(AnalysisTable)
-##            q = q.join(AnalysisPathTable)
-##            q = q.filter(AnalysisPathTable.filename == n)
-##            dbr = q.one()
+# #        if self.db.connect():
+# #            sess = self.db.get_session()
+# #            from src.database.orms.isotope_orm import AnalysisPathTable
+# #            from src.database.orms.isotope_orm import AnalysisTable
+# #            q = sess.query(AnalysisTable)
+# #            q = q.join(AnalysisPathTable)
+# #            q = q.filter(AnalysisPathTable.filename == n)
+# #            dbr = q.one()
 #
-##            selector = self.db.new_selector()
-##            selector.data_manager = H5DataManager(repository=self.repo)
-##            dbrecord = selector.record_klass(_dbrecord=dbr, selector=selector)
-##        if dbrecord and dbrecord.loadable:
+# #            selector = self.db.new_selector()
+# #            selector.data_manager = H5DataManager(repository=self.repo)
+# #            dbrecord = selector.record_klass(_dbrecord=dbr, selector=selector)
+# #        if dbrecord and dbrecord.loadable:
 #
-##            a.dbrecord = dbrecord
+# #            a.dbrecord = dbrecord
 #
-##                a.load_from_file(n)
-##        if a.load_age():
-##            return a
+# #                a.load_from_file(n)
+# #        if a.load_age():
+# #            return a
 #
 #    def _graph_factory(self, klass=None, **kw):
-##        g = Graph(container_dict=dict(kind='h', padding=0,
-##                                      bgcolor='lightgray',
-##                                      spacing=0,
-##                                      ))
+# #        g = Graph(container_dict=dict(kind='h', padding=0,
+# #                                      bgcolor='lightgray',
+# #                                      spacing=0,
+# #                                      ))
 #        g = HGraphContainer(
 #                            bgcolor='lightgray',
 #                            padding=0, spacing=0,
-##                            fill_padding=True,
+# #                            fill_padding=True,
 #                            use_backbuffer=True
 #                            )
 #        return g
@@ -710,7 +710,7 @@
 #                       )
 #        return grp, ta
 ##===============================================================================
-## defaults
+# # defaults
 ##===============================================================================
 #    def _graph_default(self):
 #        return self._graph_factory()
@@ -720,14 +720,14 @@
 #                            default_color='black',
 #                            width=290,
 #                            selectable=True,
-##                            id='stats_display'
-##                            id='stats_display.{}'.format(self.workspace.name)
+# #                            id='stats_display'
+# #                            id='stats_display.{}'.format(self.workspace.name)
 #                            )
-##        r.title = '{} Stats'.format(self.workspace.name)
-##        r.title = ''.format(self)
+# #        r.title = '{} Stats'.format(self.workspace.name)
+# #        r.title = ''.format(self)
 #        return r
 ##===============================================================================
-## property get/set
+# # property get/set
 ##===============================================================================
 #    def _get_analyses(self):
 #        return self._analyses
@@ -743,22 +743,22 @@
 #
 #        keys = self.signal_keys
 #        return [ki for ki in keys if not exc(ki)]
-##        exc=lambda x: i.endswith('bs') or i.endswith
-##        return [i for i in keys if not (i.endswith('bs') or i.endswith('bl'))]
+# #        exc=lambda x: i.endswith('bs') or i.endswith
+# #        return [i for i in keys if not (i.endswith('bs') or i.endswith('bl'))]
 #
 #    @sort_keys
 #    def _get_signal_keys(self):
 #        keys = list(set([ki for ai in self._analyses
 #                    for ki in ai.signals.keys()]))
 #        return keys
-##        return sorted(list(set(keys)), key=lambda x:int(x[2:4]), reverse=True)
+# #        return sorted(list(set(keys)), key=lambda x:int(x[2:4]), reverse=True)
 #
-##    def _sort_keys(self, keys, reverse=True):
-##        import re
-##        key = lambda x: re.sub('\D', '', x)
-##        return sorted(list(set(keys)), key=key, reverse=reverse)
+# #    def _sort_keys(self, keys, reverse=True):
+# #        import re
+# #        key = lambda x: re.sub('\D', '', x)
+# #        return sorted(list(set(keys)), key=key, reverse=reverse)
 ##===============================================================================
-## views
+# # views
 ##===============================================================================
 #    def traits_view(self):
 #        top = self._get_top_group()
@@ -767,13 +767,13 @@
 #                        enabled_when='analyses'
 #                        )
 #        tb = HGroup(
-##                    spring,
+# #                    spring,
 #                    export,
 #                    Item('store', show_label=False,),
 #                    Item('load_button', show_label=False,),
-##                    Item('export_csv', show_label=False),
-##                    Item('export_excel', show_label=False),
-##                    Item('export_pdf', show_label=False),
+# #                    Item('export_csv', show_label=False),
+# #                    Item('export_excel', show_label=False),
+# #                    Item('export_pdf', show_label=False),
 #                    Item('show_results', show_label=False),
 #                    Item('manage_data', show_label=False),
 #                    Item('custom_query', show_label=False),
@@ -784,7 +784,7 @@
 #                 resizable=True,
 #                 width=0.5,
 #                 height=800,
-##                 height=0.8,
+# #                 height=0.8,
 #                 title=' '
 #                 )
 #        v.buttons = self._get_buttons()
@@ -810,8 +810,8 @@
 #
 #        grps = [
 #              self._get_graph_edit_group(),
-##              self._get_signals_group(),
-##              self._get_baselines_group(),
+# #              self._get_signals_group(),
+# #              self._get_baselines_group(),
 #              ]
 #
 #        g = Group(*grps,

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,8 +27,8 @@ from numpy import array, loadtxt
 from src.loggable import Loggable
 
 TAB = chr(9)
-#labtable = {"temp":21, "time":27, "39Armol":34, "er39Ar":35, "Age":109, "erAge":110, "terAge":21, "SenseMol":26} # autoupdate column numbers for each header of interest
-#REQUIRED_FILES = ['logr.samp', 'logr.dat', 'arr.samp', 'arr.dat']
+# labtable = {"temp":21, "time":27, "39Armol":34, "er39Ar":35, "Age":109, "erAge":110, "terAge":21, "SenseMol":26} # autoupdate column numbers for each header of interest
+# REQUIRED_FILES = ['logr.samp', 'logr.dat', 'arr.samp', 'arr.dat']
 REQUIRED_FILES = ['age.in']
 
 class DataLoader(Loggable):
@@ -303,8 +303,8 @@ class DataLoader(Loggable):
             elif len(row) == 3:
                 ar39.append(float(row[0].strip()))
                 age.append(float(row[1]))
-            #ar39.append(float(row[0].strip())
-            #age.append(float(row[1]))
+            # ar39.append(float(row[0].strip())
+            # age.append(float(row[1]))
         f.close()
         return ar39, age
 
@@ -346,13 +346,13 @@ class DataLoader(Loggable):
 #                return
 #            p=self._build_path('matx.dat')
 #            m=loadtxt(p, dtype='float')
-#            
+#
 #            p=self._build_path('matx.dat')
 #            data=loadtxt(p, dtype='float')
-#            
+#
 #            p=self._build_path('matx1.dat')
 #            data=loadtxt(p, dtype='float')
-#            
+#
             p = self._build_path('matx2.dat')
             if os.path.isfile(p):
                 return loadtxt(p, dtype='float')
@@ -375,7 +375,7 @@ class DataLoader(Loggable):
                 try:
                     try:
                         float(row[0])
-                        #xy.append(row)
+                        # xy.append(row)
                     except ValueError:
                         pass
                     xy.append(map(float, [row[0].strip(), row[1].strip()]))

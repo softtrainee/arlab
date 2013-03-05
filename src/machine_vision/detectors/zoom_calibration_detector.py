@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -126,7 +126,7 @@ class ZoomCalibrationDetector(Detector):
     def zoom_calibration_sweep(self, zs, ze, step, fstart, fend, fstep, dm):
         areas = []
         for zi in range(zs, ze, step):
-            #set zoom
+            # set zoom
             if not self.parent.testing:
                 break
 
@@ -156,7 +156,7 @@ class ZoomCalibrationDetector(Detector):
 #                    w = size[0]
 #                    h = size[1]
 #                    accumulated = new_dst(width=w, height=h, mode='float32')
-##                print src.size(), accumulated.size()
+# #                print src.size(), accumulated.size()
 #                running_average(src, accumulated)
 #                time.sleep(0.1)
 #
@@ -202,7 +202,7 @@ class ZoomCalibrationDetector(Detector):
 #    def locate_calibration_object1(self):
 #        src = self.parent.load_source()
 #        self.parent.show_image()
-##        src = grayspace(src)
+# #        src = grayspace(src)
 #        self.image.frames[0] = colorspace(src)
 #        csrc = isolate_color(src, 2)
 #        self.image.frames.append(csrc)
@@ -243,7 +243,7 @@ class ZoomCalibrationDetector(Detector):
 #
 #            clines = self.filter_calibration_lines(lines)
 #
-##            time.sleep(0.1)
+# #            time.sleep(0.1)
 #
 #        bins, edges = histogram(self.intercepts)
 #        print self.intercepts
@@ -257,7 +257,7 @@ class ZoomCalibrationDetector(Detector):
 #        cpoints = []
 #        for i in range(len(intercepts)):
 #            for j in range(len(intercepts)):
-##                print i, j, intercepts[i], intercepts[j]
+# #                print i, j, intercepts[i], intercepts[j]
 #                d = abs(intercepts[i] - intercepts[j])
 #                if int(d) and not d in cpoints:
 #                    cpoints.append(d)
@@ -271,13 +271,13 @@ class ZoomCalibrationDetector(Detector):
 #
 #        for l in ls:
 #            if self._is_calibration_line(l, 0, tol=4.999):
-##                print l
+# #                print l
 #                m, b = self._get_coeffs(l)
 #                print m, b
 #                if b < 479:
 #                    print m, b
-##                print b
-##                self.intercepts.append(b)
+# #                print b
+# #                self.intercepts.append(b)
 #
 #    def _get_coeffs(self, l):
 #        return polyfit([l[0], l[2]],
@@ -292,10 +292,10 @@ class ZoomCalibrationDetector(Detector):
 #        if abs(dx) < tol and m == 'inf':
 #            return True
 #
-##        if abs(dx) > 0.0001:
+# #        if abs(dx) > 0.0001:
 #        mm = abs(dy / float(dx))
-##        if abs(mm - m) <= tol:
-##        print 'a', mm, m, tol
+# #        if abs(mm - m) <= tol:
+# #        print 'a', mm, m, tol
 #        return abs(m - mm) <= tol
 
     def update_threshold(self, v):

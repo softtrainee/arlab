@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ class ManagerPreferencesPage(PreferencesPage):
     def _managers_default(self):
 
         r = []
-        #get the plugin this manager belongs to
+        # get the plugin this manager belongs to
         plugin = self.parser.get_plugin(self.plugin_name)
         mans = self.parser.get_managers(plugin, element=True, all=True)
         if mans is not None:
@@ -84,7 +84,7 @@ class ManagerPreferencesPage(PreferencesPage):
     def _devices_default(self):
         r = []
 
-        #get the plugin this manager belongs to
+        # get the plugin this manager belongs to
         plugin = self.parser.get_plugin(self.plugin_name)
 
         devs = self.parser.get_devices(plugin, element=True, all=True)

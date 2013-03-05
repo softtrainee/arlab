@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ import time
 from matplotlib.cm import get_cmap
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, colorspace, grayspace, draw_polygons
-#from src.image.image import StandAloneImage
+# from src.image.image import StandAloneImage
 from co2_detector import CO2HoleDetector
 
 
@@ -64,16 +64,16 @@ class BrightnessDetector(CO2HoleDetector):
         iar = s.ndarray[:]
         niar = iar - self.baseline
 
-        #high pass filter
+        # high pass filter
         thres = self.brightness_threshold
         niar[niar < thres] = 0
 
-        #mask the image with a circle
+        # mask the image with a circle
         mask_radius = self._get_mask_radius()
         mask = self._apply_circular_mask(niar, radius=mask_radius)
         src = asarray(niar, dtype='uint8')
 
-        #colormap image
+        # colormap image
         if self.use_colormap:
             cm_src = asarray([colormap(ci, cmax=255.) for ci in src], 'uint8')
         else:
@@ -85,37 +85,37 @@ class BrightnessDetector(CO2HoleDetector):
 
 #        self.target_image.set_frame(0, gsrc)
 
-        #calculate the masked area intensity
+        # calculate the masked area intensity
         spx_mask = sum(src[invert(mask)])
         area_mask = pi * mask_radius ** 2
 #        #normalize to area
         bm_m = nspx = spx_mask / area_mask
 
-        #find and draw a target
+        # find and draw a target
         area_target, target = self._get_intensity_area(gsrc, verbose)
         if target:
             self._draw_result(csrc, target)
 
-            #make a blank image
-            #make the mask
+            # make a blank image
+            # make the mask
             target_mask = colorspace(asMat(ones_like(gsrc.ndarray) * 255))
 
-            #draw filled polygon representing target
+            # draw filled polygon representing target
             draw_polygons(target_mask, [target.poly_points], thickness= -1, color=(0, 0, 0))
 
-            #subtract target mask from image
+            # subtract target mask from image
             d = niar - grayspace(target_mask).ndarray
             d[d < 0] = 0
 
-            #calculate sum of all target pixels
+            # calculate sum of all target pixels
             spx_target = d.sum()
-            #normalize to area
+            # normalize to area
             bm_t = nspx = spx_target / area_target
         else:
             bm_t = 0
             spx_target = 0
 
-        #draw the mask circle
+        # draw the mask circle
         x, y = src.shape
         self._draw_indicator(csrc, (x / 2, y / 2),
                              size=int(mask_radius) + 1, thickness=1)
@@ -144,7 +144,7 @@ class BrightnessDetector(CO2HoleDetector):
 
 #            p = self.parent.get_new_frame()
 #            im.load(p)
-##            cs = im.source_frame.clone()
+# #            cs = im.source_frame.clone()
 #            gs = grayspace(p)
 #            cs = self._crop_image(gs,
 #                                  self.cropwidth,
@@ -157,11 +157,11 @@ class BrightnessDetector(CO2HoleDetector):
             self._apply_circular_mask(nd, radius=mask_radius)
 #            src = asMat(invert(asarray(nd, dtype='uint8')))
             src = asMat(asarray(nd, dtype='uint8'))
-###            src = self._apply_filters(src)
+# ##            src = self._apply_filters(src)
             self.display_processed_image = False
             targets = self._segment_source(src, self.segmentation_style,
                                            verbose=False)
-##
+# #
 #            dsrc = im.get_frame(0)
 #            x, y = nd.shape
 #            self._draw_indicator(dsrc, (x / 2, y / 2),
@@ -196,7 +196,7 @@ class BrightnessDetector(CO2HoleDetector):
             targets = self._segment_source(src, self.segmentation_style, verbose=verbose)
 
             if targets:
-                #sort targets by distance from center
+                # sort targets by distance from center
                 cx, cy = self._get_center()
                 cmpfunc = lambda t:((t.centroid_value[0] - cx) ** 2 + (t.centroid_value[1] - cy) ** 2) ** 0.5
                 targets = sorted(targets, key=cmpfunc)
@@ -242,7 +242,7 @@ class BrightnessDetector(CO2HoleDetector):
         return mask
 #============= EOF =============================================
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    from timeit import Timer
 #    n = 92
 #    testd = ones(n * n).reshape(n, n)
@@ -266,7 +266,7 @@ class BrightnessDetector(CO2HoleDetector):
 #    b.use_colormap = False
 #    print t.timeit(1)
 
-#def colormap(mag, cmin=0, cmax=1, scalar=None):
+# def colormap(mag, cmin=0, cmax=1, scalar=None):
 #    n = mag.shape[0]
 #    z = zeros(n)
 #    o = ones(n)
@@ -275,15 +275,15 @@ class BrightnessDetector(CO2HoleDetector):
 #    if scalar is None:
 #        scalar = cmax
 #
-##    print x, 4 * (x - 0.25), 4 * abs(x - 0.5) - 1, 4 * (0.75 - x)
+# #    print x, 4 * (x - 0.25), 4 * abs(x - 0.5) - 1, 4 * (0.75 - x)
 #    b = minimum(maximum(4 * (0.75 - x), z), o) * scalar
 #    r = minimum(maximum(4 * (x - 0.25), z), o) * scalar
 #    g = minimum(maximum(4 * abs(x - 0.5) - 1., z), o) * scalar
 #    return zip(r, g, b)
-#def colormap_scalar(mag, cmin=0, cmax=1, scalar=None):
-##    n = mag.shape[0]
-##    z = zeros(n)
-##    o = ones(n)
+# def colormap_scalar(mag, cmin=0, cmax=1, scalar=None):
+# #    n = mag.shape[0]
+# #    z = zeros(n)
+# #    o = ones(n)
 #
 #    x = (mag - cmin) / float(cmax - cmin)
 #    if scalar is None:
@@ -291,14 +291,14 @@ class BrightnessDetector(CO2HoleDetector):
 #    z = 0
 #    o = 1
 #
-##    print x, 4 * (x - 0.25), 4 * abs(x - 0.5) - 1, 4 * (0.75 - x)
+# #    print x, 4 * (x - 0.25), 4 * abs(x - 0.5) - 1, 4 * (0.75 - x)
 #    b = min(max(4 * (0.75 - x), z), o) * scalar
 #    r = min(max(4 * (x - 0.25), z), o) * scalar
 #    g = min(max(4 * abs(x - 0.5) - 1., z), o) * scalar
 #    return (r, g, b)
 #
 #
-#def colormap1(v, cmin=0, cmax=1, scalar=None):
+# def colormap1(v, cmin=0, cmax=1, scalar=None):
 #    cmi = min(cmin, cmax)
 #    cma = max(cmin, cmax)
 #    n = v.shape[0]

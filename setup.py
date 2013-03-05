@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +64,7 @@ def get_data_files():
 
         dst = os.path.join(dsthome, ri)
 
-        #filter out hidden files
+        # filter out hidden files
         fs = [os.path.join('data', os.path.basename(root), f)
              for f in files
                 if not f.startswith('.')]
@@ -72,14 +72,14 @@ def get_data_files():
             fss.append((dst, fs))
 
     return fss
-#python setup.py sdist adds everything under version control
+# python setup.py sdist adds everything under version control
 setup(
 
     packages=find_packages(),
     py_modules=get_top_level_modules(),
 
     data_files=get_data_files(),
-    #info
+    # info
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     description=DESCRIPTION,

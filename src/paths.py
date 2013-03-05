@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,26 +26,26 @@ from os import path, mkdir, getcwd
 
 
 
-#host_url = 'https://arlab.googlecode.com/svn'
-#project_root = 'trunk'
+# host_url = 'https://arlab.googlecode.com/svn'
+# project_root = 'trunk'
 
-#if beta:
+# if beta:
 #    home = '{}_beta{}'.format(home, version)
 #    project_root = 'branches/pychron'
 #
-#project_home = join(host_url, project_root)
+# project_home = join(host_url, project_root)
 
 class Paths():
     version = None
     root = None
     bundle_root = None
-    #pychron_src_root = None
-    #doc_html_root = None
+    # pychron_src_root = None
+    # doc_html_root = None
     icons = None
     splashes = None
     abouts = None
     sounds = None
-    #_dir suffix ensures the path is checked for existence
+    # _dir suffix ensures the path is checked for existence
     root_dir = root
     stable_root = None
     #==============================================================================
@@ -116,8 +116,8 @@ class Paths():
     workspace_root_dir = None
     spectrometer_scans_dir = None
     processing_dir = None
-    #initialization_dir = None
-    #device_creator_dir = None
+    # initialization_dir = None
+    # device_creator_dir = None
 
     #==============================================================================
     # lovera exectuables
@@ -145,7 +145,7 @@ class Paths():
                                              'pychron{}'.format(version),
                                              'resources'
                                             )
-        #_dir suffix ensures the path is checked for existence
+        # _dir suffix ensures the path is checked for existence
         self.root_dir = root
         stable_root = join(HOME, 'Pychrondata')
 
@@ -220,8 +220,8 @@ class Paths():
         self.workspace_root_dir = join(self.data_dir, 'workspaces')
         self.default_workspace_dir = join(self.workspace_root_dir, 'collection')
         self.processing_dir = join(self.data_dir, 'processing')
-        #initialization_dir = join(setup_dir, 'initializations')
-        #device_creator_dir = join(device_dir, 'device_creator')
+        # initialization_dir = join(setup_dir, 'initializations')
+        # device_creator_dir = join(device_dir, 'device_creator')
 
         #==============================================================================
         # lovera exectuables
@@ -242,14 +242,14 @@ def rec_make(pi):
 
 def build_directories(paths):
 #    global paths
-    #verify paths
+    # verify paths
 #    import copy
     for l in dir(paths):
         if l.endswith('_dir'):
             rec_make(getattr(paths, l))
 
 
-#def build_initialization_file(root):
+# def build_initialization_file(root):
 #    p = join(root, 'initialization.xml')
 #    if os.path.isfile(p):
 #        from src.helpers.initialization_parser import InitializationParser
@@ -290,34 +290,34 @@ def build_directories(paths):
 #    else:
 #        with open(p, 'w') as f:
 #            f.write('''
-#<!--
-#This is the initialization file. It defines the plugins and the associated managers and devices
-#that should be bootstrapped (load, open, initialize) on startup.
+# <!--
+# This is the initialization file. It defines the plugins and the associated managers and devices
+# that should be bootstrapped (load, open, initialize) on startup.
 #
-#load means read configuration values
-#open means create and error check communication handles
-#initialize is a hook for object specific tasks directly after communications is established
+# load means read configuration values
+# open means create and error check communication handles
+# initialize is a hook for object specific tasks directly after communications is established
 #
-#plugins
-#general
+# plugins
+# general
 #  database
 #  svn @depecretated
 #  script
-#hardware
+# hardware
 #  extractionline
 #  bakeout
 #  fusionsCO2
 #  fusionsDiode
 #  synradCO2
 #  spectrometer
-#data
+# data
 #  graph
-#social
+# social
 #  email
 #  twitter
-#-->
+# -->
 #
-#<root>
+# <root>
 #  <general>
 #    <plugin enabled="false">Database</plugin>
 #    <plugin enabled="false">SVN</plugin>
@@ -362,8 +362,8 @@ def build_directories(paths):
 #      <plugin enabled="false">Twitter</plugin>
 #      <plugin enabled="false">Email</plugin>
 #  </social>
-#</root>
-#''')
+# </root>
+# ''')
 
 
 

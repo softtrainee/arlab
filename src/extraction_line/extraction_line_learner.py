@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@ class LearnerGetter(HasTraits):
     _kind = None
     _spectrometer = None
     _hotcold = None
-    #kind = Str
+    # kind = Str
     @property
     def duration(self):
         if self.valve is not None:
@@ -128,7 +128,7 @@ class ExtractionLineLearner(Loggable):
 
     def open_close_valve(self, name, action, result):
         if self.getters:
-            #find valve in configuration
+            # find valve in configuration
             getter = self._get_getter_by_valve(name)
 #            print 'open', getter
             if getter:
@@ -180,16 +180,16 @@ class ExtractionLineLearner(Loggable):
         mass = 25.32
         material = 'groundmass'
 
-        #write the getter info
+        # write the getter info
         for gi in getters:
             g = self._get_getter(gi)
             data += [g.kind, g.duration, g.hotcold]
 
-        #write the exp setup info
+        # write the exp setup info
         data += SPECDICT[spec], MATERIALDICT[material], mass
         signals, deltas = self._get_isotopic_data()
         data += signals + deltas
-        #write the results info
+        # write the results info
 
         print data
         return data

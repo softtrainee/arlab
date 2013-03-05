@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -107,7 +107,7 @@ class ArcBallT:
             NewVec [X] = TempPt [X] * norm;
             NewVec [Y] = TempPt [Y] * norm;
             NewVec [Z] = 0.0;
-        else:            # //Else it's on the inside
+        else:  # //Else it's on the inside
             # //Return a vector to a point mapped inside the sphere sqrt(radius squared - length)
             NewVec [X] = TempPt [X]
             NewVec [Y] = TempPt [Y]
@@ -143,14 +143,14 @@ class ArcBallT:
 
         NewRot = Quat4fT ()
         # //Compute the length of the perpendicular vector
-        if (Vector3fLength(Perp) > Epsilon):        #    //if its non-zero
+        if (Vector3fLength(Perp) > Epsilon):  #    //if its non-zero
             # //We're ok, so return the perpendicular vector as the transform after all
             NewRot[X] = Perp[X];
             NewRot[Y] = Perp[Y];
             NewRot[Z] = Perp[Z];
             # //In the quaternion values, w is cosine (theta / 2), where theta is rotation angle
             NewRot[W] = Vector3fDot(self.m_StVec, self.m_EnVec);
-        else:        #                            //if its zero
+        else:  #                            //if its zero
             # //The begin and end vectors coincide, so return a quaternion of zero matrix (no rotation)
             NewRot[X] = NewRot[Y] = NewRot[Z] = NewRot[W] = 0.0;
 
@@ -247,7 +247,7 @@ def Matrix4fSetRotationScaleFromMatrix3f(NewObj, three_by_three_matrix):
     '''
 
     '''
-    # Modifies NewObj in-place by replacing its upper 3x3 portion from the 
+    # Modifies NewObj in-place by replacing its upper 3x3 portion from the
     # passed in 3x3 matrix.
     # NewObj = Matrix4fT ()
     NewObj [0:3, 0:3] = three_by_three_matrix
@@ -271,13 +271,13 @@ def Matrix4fSetRotationFromMatrix3f (NewObj, three_by_three_matrix):
     scale = Matrix4fSVD (NewObj)
 
     NewObj = Matrix4fSetRotationScaleFromMatrix3f(NewObj, three_by_three_matrix);
-    scaled_NewObj = NewObj * scale             # Matrix4fMulRotationScale(NewObj, scale);
+    scaled_NewObj = NewObj * scale  # Matrix4fMulRotationScale(NewObj, scale);
     return scaled_NewObj
 
 def Matrix3fSetRotationFromQuat4f (q1):
     '''
     '''
-    # Converts the H quaternion q1 into a new equivalent 3x3 rotation matrix. 
+    # Converts the H quaternion q1 into a new equivalent 3x3 rotation matrix.
     X = 0
     Y = 1
     Z = 2

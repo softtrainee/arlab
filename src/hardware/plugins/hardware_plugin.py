@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ from apptools.preferences.preference_binding import bind_preference
 from src.managers.hardware_manager import HardwareManager
 from src.hardware.core.i_core_device import ICoreDevice
 from src.hardware.flag_manager import FlagManager
-#from src.managers.system_lock_manager import SystemLockManager
+# from src.managers.system_lock_manager import SystemLockManager
 
 class Preference(HasTraits):
     pass
@@ -83,7 +83,7 @@ class HardwarePlugin(CorePlugin):
     def start(self):
         '''
         '''
-        #if self.managers:
+        # if self.managers:
         from src.initializer import Initializer
         dp = DevicePreferences()
         afh = self.application.preferences.get('pychron.hardware.auto_find_handle')
@@ -98,12 +98,12 @@ class HardwarePlugin(CorePlugin):
         for m in self.managers:
             ini.add_initialization(m)
 
-        #any loaded managers will be registered as services
+        # any loaded managers will be registered as services
         if not ini.run(application=self.application):
             self.application.exit()
             return
 
-        #create the hardware server
+        # create the hardware server
         rhm = self.application.get_service(RemoteHardwareManager)
         bind_preference(rhm, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
         rhm.bootstrap()

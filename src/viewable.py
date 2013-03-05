@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ from pyface.timer.do_later import do_after
 from src.loggable import Loggable
 
 
-#class ViewableHandler(Controller):
+# class ViewableHandler(Controller):
 class ViewableHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
@@ -69,10 +69,10 @@ class Viewable(Loggable):
 
     def close_ui(self):
         if self.ui is not None:
-            #disposes 50 ms from now
+            # disposes 50 ms from now
             do_after(50, self.ui.dispose)
-            #sleep a little so everything has time to update
-            #time.sleep(0.05) 
+            # sleep a little so everything has time to update
+            # time.sleep(0.05)
 
     def show(self, **kw):
         if self.ui is None or self.ui.control is None:

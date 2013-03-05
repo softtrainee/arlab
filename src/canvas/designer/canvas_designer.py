@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ class CanvasDesigner(EnvisageEditable):
         d = DesignerCanvas()
 #        d.items = self._load_fired(d)
         return d
-#    
+#
     def save(self, path=None):
         oldname, path = self._pre_save(path)
         self._dump_items(path, self.canvas.items)
@@ -52,14 +52,14 @@ class CanvasDesigner(EnvisageEditable):
         '''
         '''
 
-        #self.load_items_from_file()
+        # self.load_items_from_file()
         self.file_path = path
         self.canvas.bootstrap(path)
 
     def load_items_from_file(self):
         '''
         '''
-        #valves = []
+        # valves = []
         p = os.path.join(paths.canvas2D_dir, 'canvas.cad')
         f = open(p, 'r')
         lines = f.read().split('\n')

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -146,8 +146,8 @@ class DatabaseRecord(Saveable):
 #        return ''
 #        analysis = self.dbrecord
 #        analts = analysis.timestamp
-##        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
-##        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+# #        analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+# #        analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
 #        return time.mktime(analts.timetuple())
 
 #    @cached_property
@@ -232,13 +232,13 @@ class DatabaseRecord(Saveable):
 #                                            show_label=False),
 #                       visible_when='object.exportable'
 #                       ),
-##                    label='Info',
+# #                    label='Info',
 #                    )
 
 #    def traits_view(self):
 #
 #        grps = Group(self._get_info_grp())
-##        grps = Group()
+# #        grps = Group()
 #
 #        agrps = self._get_additional_tabs()
 #        g = self._get_graph_item()

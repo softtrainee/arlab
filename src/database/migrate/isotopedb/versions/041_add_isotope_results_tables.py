@@ -7,7 +7,7 @@ Column('id', Integer, primary_key=True),
 Column('signal_', Float(Precision=32)),
 Column('signal_err', Float(Precision=32)),
 Column('isotope_id', Integer),
-Column('history_id', Integer) #use the fithistory table
+Column('history_id', Integer)  # use the fithistory table
 )
 
 t1 = Table('meas_SignalTable', meta,

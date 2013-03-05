@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ from traits.api import List, Str, Bool, Float, Int
 from traitsui.api import View, Item, ListEditor
 #=============standard library imports ========================
 
-#from numpy import random
+# from numpy import random
 import time
 #=============local library imports  ==========================
 from setpoint import Setpoint
@@ -42,7 +42,7 @@ class BaseGauge(CoreDevice):
 
     description = Str
     state = Bool
-    #show_data = Bool
+    # show_data = Bool
 
     pressure = Float
     identify = Bool(False)
@@ -50,8 +50,8 @@ class BaseGauge(CoreDevice):
     indicator = Bool
     delay_after_power_on = Bool(False)
 
-    #setpoints = Float
-    #etpoint_enabled=Bool
+    # setpoints = Float
+    # etpoint_enabled=Bool
     nsetpoints = Int(3)
     setpoints = List(Setpoint)
 
@@ -74,7 +74,7 @@ class BaseGauge(CoreDevice):
             self.setpoints.append(s)
 
 
-        #self.write(q)
+        # self.write(q)
 
 
     def get_transducer_pressure(self, retry=5, verbose=False):
@@ -99,7 +99,7 @@ class BaseGauge(CoreDevice):
         def read(q):
             p = self._parse_response('pressure', self.ask(q,
                                                       verbose=verbose,
-                                                      #delay = 125
+                                                      # delay = 125
                                                       )
                                 )
             if isinstance(p, float):
@@ -132,14 +132,14 @@ class BaseGauge(CoreDevice):
 
         if not read_success:
 
-            #self.error=1
-            #reset error flag
-            #self.error=0
+            # self.error=1
+            # reset error flag
+            # self.error=0
 
             self.pressure = 0
 
             self.trait_set(state=False, trait_change_notify=False)
-#            
+#
 #        else:#if self.state:
 #            self.pressure = p
 
@@ -161,7 +161,7 @@ class BaseGauge(CoreDevice):
         '''
         '''
         return View(
-                    #Item('name', style = 'readonly', show_label = False),
+                    # Item('name', style = 'readonly', show_label = False),
                     Item('setpoints', style='custom',
                          show_label=False,
                          editor=ListEditor(use_notebook=True,
@@ -174,7 +174,7 @@ class BaseGauge(CoreDevice):
 
 
 
-#class SetPoint(HasTraits):
+# class SetPoint(HasTraits):
 #    #setpoint5=Float
 #    #raits_view=View('setpoint5')
 #    #setpoint_values=[]
@@ -186,13 +186,13 @@ class BaseGauge(CoreDevice):
 #        self._set_up(size, simulation)
 #    def _set_up(self, size, simulation):
 #        for i in range(size):
-#            #query the gauges set point 
-##            if simulation:
-##                s=1
-##                b=False
-##            else:
-##                s=self.parent_gauge.get_setpoint(i+1)
-##                b=self.parent_gauge.get_setpoint_state(i+1)
+#            #query the gauges set point
+# #            if simulation:
+# #                s=1
+# #                b=False
+# #            else:
+# #                s=self.parent_gauge.get_setpoint(i+1)
+# #                b=self.parent_gauge.get_setpoint_state(i+1)
 #            s = 1
 #            b = False
 #            #self.setpoint_values.append(s)
@@ -210,24 +210,24 @@ class BaseGauge(CoreDevice):
 #    def set_transducer_set_point(self, v, i):
 #        self.parent_gauge.set_transducer_set_point(v, i)
 
-            #self.data_buffer.add_datum(self.pressure)
+            # self.data_buffer.add_datum(self.pressure)
 
-            #self.flag = not self.flag
-            #m = 'pressure == %0.3e' % p
-            #self.logger.info(m)
+            # self.flag = not self.flag
+            # m = 'pressure == %0.3e' % p
+            # self.logger.info(m)
 
 
 #    def _data_buffer_default(self):
 #
 #        return XYDataBuffer(parent = self, size = 10000)
-#   
-#        
+#
+#
 #        self.data_buffer.add_datum(self._pressure)
 
 #===================listeners=====================
 #    @on_trait_change('_pressure')
 #    def pressure_change(self, o, n, oo, nn):
-#        
+#
 
 #        '''
 #        this is validating the pressure and toggling flag
@@ -289,7 +289,7 @@ class BaseGauge(CoreDevice):
 #        if self.simulation:
 #            return False
 #        else:
-#            return self._parse_response(type, r)      
+#            return self._parse_response(type, r)
 #    def _setup_setpoints(self):
 #        '''
 #        helper method to setup the setpoint

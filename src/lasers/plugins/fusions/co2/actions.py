@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,10 +80,10 @@ class OpenVideoAction(CO2Mixin, FOpenVideoAction):
 #===============================================================================
 # initializations
 #===============================================================================
-#class InitializeBeamAction(CO2Mixin, FInitializeBeamAction):
+# class InitializeBeamAction(CO2Mixin, FInitializeBeamAction):
 #    pass
 #
-#class InitializeZoomAction(CO2Mixin, FInitializeZoomAction):
+# class InitializeZoomAction(CO2Mixin, FInitializeZoomAction):
 #    pass
 
 #===============================================================================
@@ -98,7 +98,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #===============================================================================
 # unused
 #===============================================================================
-#class PowerScanAction(CO2Mixin, Action):
+# class PowerScanAction(CO2Mixin, Action):
 #    name = 'Open Power Scan'
 #
 #    def perform(self, event):
@@ -107,7 +107,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            manager.show_power_scan()
 #
 #
-#class StepHeatAction(CO2Mixin, Action):
+# class StepHeatAction(CO2Mixin, Action):
 #    name = 'Open Step Heater'
 #    enabled = False
 #
@@ -122,7 +122,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #        manager = get_manager(event)
 #        if manager is not None:
 #            manager.show_step_heater()
-#class PulseAction(CO2Mixin, Action):
+# class PulseAction(CO2Mixin, Action):
 #    name = 'Power Map'
 #
 #    def perform(self, event):
@@ -131,14 +131,14 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            man = manager.get_pulse_manager()
 #            open_manager(self.window.application,
 #                         man, view='standalone_view')
-#class OpenPowerScanGraphAction(CO2Mixin, Action):
+# class OpenPowerScanGraphAction(CO2Mixin, Action):
 #    name = 'Open Power Scan Result'
 #
 #    def perform(self, event):
 #        manager = get_manager(event)
 #        if manager is not None:
 #            manager.graph_manager.open_graph('powerscan')
-#class MoveLoadPositionAction(CO2Mixin, Action):
+# class MoveLoadPositionAction(CO2Mixin, Action):
 #    name = 'Loading Position'
 #    description = 'Move to loading position'
 #
@@ -146,7 +146,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #        manager = get_manager(event)
 #        if manager is not None:
 #            manager.move_to_load_position()
-#class ExecutePatternAction(CO2Mixin, Action):
+# class ExecutePatternAction(CO2Mixin, Action):
 #
 #    def perform(self, event):
 #        manager = get_manager(event)
@@ -154,7 +154,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            manager.stage_manager.pattern_manager.execute_pattern()
 #
 #
-#class OpenPatternManagerAction(CO2Mixin, Action):
+# class OpenPatternManagerAction(CO2Mixin, Action):
 #
 #    def perform(self, event):
 #        manager = get_manager(event)
@@ -164,7 +164,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
 
 
-#class PowerMapAction(CO2Mixin, Action):
+# class PowerMapAction(CO2Mixin, Action):
 #    name = 'Power Map'
 #
 #    def perform(self, event):
@@ -174,7 +174,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            app = self.window.application
 #            open_manager(app, man)
 #
-#class PowerCalibrationAction(CO2Mixin, Action):
+# class PowerCalibrationAction(CO2Mixin, Action):
 #    def perform(self, event):
 #        manager = get_manager(event)
 #        if manager is not None:
@@ -182,9 +182,9 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            open_manager(app, manager.power_calibration_manager)
 #
 ##===============================================================================
-## database selectors
+# # database selectors
 ##===============================================================================
-#class OpenPowerCalibrationAction(CO2Mixin, Action):
+# class OpenPowerCalibrationAction(CO2Mixin, Action):
 #    def perform(self, event):
 #        manager = get_manager(event)
 #        if manager is not None:
@@ -192,7 +192,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            open_selector(db, self.window.application)
 #
 #
-#class OpenPowerMapAction(CO2Mixin, Action):
+# class OpenPowerMapAction(CO2Mixin, Action):
 #    name = 'Open Map Result'
 #
 #    def perform(self, event):
@@ -202,7 +202,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            open_selector(db, self.window.application)
 #
 #
-#class OpenPowerRecordGraphAction(CO2Mixin, Action):
+# class OpenPowerRecordGraphAction(CO2Mixin, Action):
 #    name = 'Open Power Scan Result'
 #
 #    def perform(self, event):
@@ -212,7 +212,7 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            open_selector(db, self.window.application)
 #
 #
-#class OpenVideoAction(CO2Mixin, Action):
+# class OpenVideoAction(CO2Mixin, Action):
 #    name = 'Open Video Result'
 #
 #    def perform(self, event):
@@ -222,16 +222,16 @@ class ExecutePatternAction(CO2Mixin, FExecutePatternAction):
 #            open_selector(db, self.window.application)
 #
 ##===============================================================================
-## initializations
+# # initializations
 ##===============================================================================
-#class InitializeBeamAction(CO2Mixin, Action):
+# class InitializeBeamAction(CO2Mixin, Action):
 #    def perform(self, event):
 #        manager = get_manager(event)
 #        if manager is not None:
 #            manager.do_motor_initialization('beam')
 #
 #
-#class InitializeZoomAction(CO2Mixin, Action):
+# class InitializeZoomAction(CO2Mixin, Action):
 #    def perform(self, event):
 #        manager = get_manager(event)
 #        if manager is not None:

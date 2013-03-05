@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ from src.processing.tabular_analysis_manager import AnalysisAdapter
 from src.viewable import Viewable
 from src.processing.plotter_options_manager import IdeogramOptionsManager
 
-#class Panel(HasTraits):
+# class Panel(HasTraits):
 #    pass
 
 class SamplesAdapter(TabularAdapter):
@@ -162,7 +162,7 @@ class ProjectView(Viewable):
     def traits_view(self):
 #        l = Item('lpanel', style='custom', show_label=False, width=0.25)
 #        r = Item('rpanel', style='custom', show_label=False, width=0.75)
-#        
+#
 #        v = View(HGroup(l, r))
         prj = Item('project', show_label=False,
                    editor=EnumEditor(name='projects'))
@@ -237,7 +237,7 @@ if __name__ == '__main__':
 #            pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
 #
 #        do_later(open_progress)
-##        time.sleep(0.1)
+# #        time.sleep(0.1)
 #        ranalyses = []
 #        def add_analysis(q):
 #            while 1:
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 #        #send stop signal to adder thread
 #        q.put(None)
 #        do_later(pd.close)
-##        print time.time() - st
+# #        print time.time() - st
 #        return ranalyses
 #
 #    def _load_analysis(self, queue, n, dbrecord=None, **kw):
@@ -273,7 +273,7 @@ if __name__ == '__main__':
 #        q = sess.query(meas_AnalysisTable)
 #        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
 #        dbr = q.one()
-##        print id(dbr), dbr
+# #        print id(dbr), dbr
 #        dbrecord._dbrecord = dbr
 #        a = Analysis(uuid=n,
 #                     dbrecord=dbrecord,
@@ -281,7 +281,7 @@ if __name__ == '__main__':
 #
 #        if a.load_age():
 #            queue.put(a)
-##            self._analyses.append(a)
-##        sess.expunge_all()
+# #            self._analyses.append(a)
+# #        sess.expunge_all()
 #        sess.close()
 #        sess.remove()

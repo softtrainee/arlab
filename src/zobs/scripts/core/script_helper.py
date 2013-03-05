@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -95,9 +95,9 @@ def check_point(points, point, setpoint, n=10, mean_tolerance=1.5,
         avg = points.mean()
         stderr = points.std()
         if mean_check:
-            #print mean(points),setpoint
+            # print mean(points),setpoint
             dif = abs(avg - setpoint)
-            #bits = (dif < 1.5 or avg >= setpoint)
+            # bits = (dif < 1.5 or avg >= setpoint)
             bits = dif <= mean_tolerance
 
         elif std_check:

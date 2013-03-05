@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +64,7 @@ class ScanableDevice(ViewableDevice):
 #===============================================================================
 
     def setup_scan(self):
-        #should get scan settings from the config file not the initialization.xml
+        # should get scan settings from the config file not the initialization.xml
 
         config = self.get_configuration()
         if config.has_section('Scan'):
@@ -266,7 +266,7 @@ class ScanableDevice(ViewableDevice):
                         VGroup(Item('scan_func', label='Function', style='readonly'),
 
                                HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
-                                            #style='readonly'
+                                            # style='readonly'
                                             ), spring),
                                  Item('current_scan_value', style='readonly'),
                                ),

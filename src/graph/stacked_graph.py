@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,9 +72,9 @@ class StackedGraph(Graph):
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
                 kw['bounds'] = (1, self.panel_height)
-##            key = 'padding_top'
-##            if 'title' not in kw:
-##                kw['padding_top'] = 
+# #            key = 'padding_top'
+# #            if 'title' not in kw:
+# #                kw['padding_top'] =
 #
 #            pass
 #        else:
@@ -96,10 +96,10 @@ class StackedGraph(Graph):
         if n >= 1:
 #        if n >1:
 #            if not bottom:
-##                plotiter = self.plots[1:]
+# #                plotiter = self.plots[1:]
 #                plotiter1 = self.plots[:-1]
 #            else:
-##                plotiter = self.plots[:-1]
+# #                plotiter = self.plots[:-1]
 #                plotiter1 = self.plots[1:]
 
 #            pm = self.plots[0]
@@ -114,15 +114,15 @@ class StackedGraph(Graph):
 #
 #            if link:
 #                pm = self.plots[0].index_mapper
-##                pii = self.plots[0].index_axis
-##                for pi in self.plots[1:]:
-##                    pi.index_mapper = pm
-##                    pi.index_axis = pii
-##                print pi, link, self.plots[0]
-###                pi.padding_top = 0
-###                pi.padding_bottom = 0
+# #                pii = self.plots[0].index_axis
+# #                for pi in self.plots[1:]:
+# #                    pi.index_mapper = pm
+# #                    pi.index_axis = pii
+# #                print pi, link, self.plots[0]
+# ##                pi.padding_top = 0
+# ##                pi.padding_bottom = 0
 #                if link:
-###                    pi.index_range = self.plots[0].index_range
+# ##                    pi.index_range = self.plots[0].index_range
 #                    p.index_mapper = self.plots[0].index_mapper
 #            for pi in plotiter1:
 #                pi.index_axis.visible = False

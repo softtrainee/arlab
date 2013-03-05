@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,7 @@ class ExperimentNode(SeriesNode):
     def _analysis_factory(self, ref, rid, kwargs):
         anode = AnalysisNode(rid=rid, **kwargs)
 
-        #save peak regressions
+        # save peak regressions
         for iso in ref.isotopes:
             ps = iso.peak_time_series
             xs, ys = self.parse_timeblob(ps.PeakTimeBlob)

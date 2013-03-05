@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,8 +79,8 @@ class WeightIndex(Index):
 
 class VolumeIndex(Index):
     name = 'Volume'
-    depth = Float(0.1) #mm
-    rho = 2580 #kg/m^3
+    depth = Float(0.1)  # mm
+    rho = 2580  # kg/m^3
     shape = Enum('circle', 'square')
     def traits_view(self):
         v = View(Item('start', label='Dimension Start (mm)'),
@@ -99,7 +99,7 @@ class VolumeIndex(Index):
                 depth==mm
                 rho==kg/m^3
             '''
-            #convert dimension to meters
+            # convert dimension to meters
             d = d / 1000.
             depth = depth / 1000.
             if self.shape == 'circle':
@@ -108,10 +108,10 @@ class VolumeIndex(Index):
                 v = d ** 2 * depth
 
             m = rho * v
-            #convert mass to mg 1e6 mg in 1 kg
+            # convert mass to mg 1e6 mg in 1 kg
             return m * 1e6
 
-        #convert dim to weight
+        # convert dim to weight
         ws = [to_weight(di, self.depth, self.rho) for di in xs]
 
         ys = [self._calculate(wi, age, sensitivity, k2o, c) for wi in ws]
@@ -122,8 +122,8 @@ class VolumeIndex(Index):
 
 class SignalCalculator(HasTraits):
     age = Float(28.2)
-    k2o = Float #percent
-    sensitivity = Float(5e-17) #moles/fA
+    k2o = Float  # percent
+    sensitivity = Float(5e-17)  # moles/fA
 
     graph = Instance(Graph)
     weight_index = Instance(WeightIndex, ())

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ class CameraCalibrationManager(Manager):
     polygons = List
     pxpercmx = Int
     pxpercmy = Int
-    target_size = Float(0.5, enter_set=True, auto_set=False) #cm
+    target_size = Float(0.5, enter_set=True, auto_set=False)  # cm
     n = Int
     threshold = Range(0, 255, 100)
     cond = None
@@ -77,7 +77,7 @@ class CameraCalibrationManager(Manager):
         widths = []
         heights = []
         for i, p in enumerate(polygons):
-            #this calculation assumes 4 points 
+            # this calculation assumes 4 points
             print len(p), 'points'
 
             if len(p) != 4:
@@ -104,7 +104,7 @@ class CameraCalibrationManager(Manager):
             dy = p3.y - p0.y
             l4 = (dx ** 2 + dy ** 2) ** 0.5
 
-            #width and height maybe switched check order of points
+            # width and height maybe switched check order of points
             print p0.x, p1.x, p2.x, p3.x
             print p0.y, p1.y, p2.y, p3.y
 
@@ -123,7 +123,7 @@ class CameraCalibrationManager(Manager):
             n = len(polygons)
             self.n = n
 
-            #also calc pxpercm using polygon separation
+            # also calc pxpercm using polygon separation
             self.pxpercmx = int(sum(widths) / float(n) / self.target_size)
             self.pxpercmy = int(sum(heights) / float(n) / self.target_size)
         except ZeroDivisionError:

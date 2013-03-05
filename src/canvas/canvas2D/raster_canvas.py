@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,7 +72,7 @@ class RasterCanvas(BaseCanvas):
         '''
         '''
 
-        #apply a rotation around diag 
+        # apply a rotation around diag
         m = len(self.xstepper) - 1
         n = len(self.ystepper) - 1
 
@@ -155,7 +155,7 @@ class RasterCanvas(BaseCanvas):
             for j, yi in enumerate(self.ystepper):
                 yi = yi * ystep + self.centery
                 if j < len(self.ystepper) and i < len(self.xstepper):
-                    #get the cells value and colormap it
+                    # get the cells value and colormap it
                     color = self._colormap(self.cells[i][j], cmax=self.max_value)
                     self._color_cell(gc, xi, yi, color, width=xstep, height=ystep)
 

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,13 +18,13 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.figures.base_figure import BaseFigure
-#from src.viewable import ViewableHandler
+# from src.viewable import ViewableHandler
 from src.processing.series_config import  BlanksSeriesConfig
 from src.processing.figures.fit_series_figure import FitSeriesFigure
-#from src.paths import paths
+# from src.paths import paths
 
 #
-#class BlanksSeries(Series):
+# class BlanksSeries(Series):
 #    blanks = Property
 #
 #    @cached_property
@@ -37,7 +37,7 @@ from src.processing.figures.fit_series_figure import FitSeriesFigure
 #        else:
 #            t = a.timestamp
 #            blanks = self.blanks
-##            blanks = sorted(blanks, key=lambda x: x.timestamp)
+# #            blanks = sorted(blanks, key=lambda x: x.timestamp)
 #            #get the interpolated value
 #            fit = self.fits[k].lower()
 #            ts = array([a.timestamp for a in blanks])
@@ -49,25 +49,25 @@ from src.processing.figures.fit_series_figure import FitSeriesFigure
 #            elif fit == 'bracketing average':
 #                n = bracketing_average_blanks(ts=ts, *args)
 #
-##            if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
-##                fit = '{}_blanks'.format(fit.replace(' ', '_'))
-##                ts = array([a.timestamp for a in blanks])
-##                ti = where(ts < t)[0][-1]
-##                pb = blanks[ti]
+# #            if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+# #                fit = '{}_blanks'.format(fit.replace(' ', '_'))
+# #                ts = array([a.timestamp for a in blanks])
+# #                ti = where(ts < t)[0][-1]
+# #                pb = blanks[ti]
 #
-##                if  fit == 'preceeding':
-##                    pb = preceeding_blanks(blanks, t)
-##                    n = pb.signals[k].value
-##                else:
-##                    pb, ab = bracketing_blanks(blanks, t)
-##
-##                    ab = blanks[ti + 1]
-##                    x = [pb.timestamp, ab.timestamp]
-##                    y = [pb.signals[k].value, ab.signals[k].value]
-##                    if fit == 'bracketing interpolate':
-##                        n = polyval(polyfit(x, y, 1), t)
-##                    else:
-##                        n = sum(y) / 2.0
+# #                if  fit == 'preceeding':
+# #                    pb = preceeding_blanks(blanks, t)
+# #                    n = pb.signals[k].value
+# #                else:
+# #                    pb, ab = bracketing_blanks(blanks, t)
+# #
+# #                    ab = blanks[ti + 1]
+# #                    x = [pb.timestamp, ab.timestamp]
+# #                    y = [pb.signals[k].value, ab.signals[k].value]
+# #                    if fit == 'bracketing interpolate':
+# #                        n = polyval(polyfit(x, y, 1), t)
+# #                    else:
+# #                        n = sum(y) / 2.0
 #            else:
 #                n = self.graph.get_value_at(t)
 #

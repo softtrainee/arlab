@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,8 @@ from traitsui.api import View, Item, HGroup, VGroup, EnumEditor
 EInt = lambda x: Int(x, enter_set=True, auto_set=False)
 
 class GraphPanelInfo(HasTraits):
-    nrows = EInt(1)#Int(1, enter_set=True, auto_set=False)
-    ncols = EInt(2)#Int(2, enter_set=True, auto_set=False)
+    nrows = EInt(1)  # Int(1, enter_set=True, auto_set=False)
+    ncols = EInt(2)  # Int(2, enter_set=True, auto_set=False)
     fixed = Str('cols')
     padding_left = EInt(40)
     padding_right = EInt(5)

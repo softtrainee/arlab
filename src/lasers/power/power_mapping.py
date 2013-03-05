@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ from src.loggable import Loggable
 from src.database.data_warehouse import DataWarehouse
 from src.helpers.datetime_tools import generate_datestamp
 from src.paths import paths
-#from src.graph.graph3D import Graph3D
+# from src.graph.graph3D import Graph3D
 
 
 def gaussian(height, center_x, center_y, width_x, width_y):
@@ -49,7 +49,7 @@ def power_generator(nsteps):
     '''
     '''
     x, y = np.mgrid[0:nsteps, 0:nsteps]
-    data = gaussian(2, 5, 5, 5, 5)(x, y)#+np.random.random(x.shape)
+    data = gaussian(2, 5, 5, 5, 5)(x, y)  # +np.random.random(x.shape)
     i = 0
     j = 0
     while 1:
@@ -163,8 +163,8 @@ class PowerMapping(Loggable):
                 if not lm.simulation:
                     sm.linear_move(nx, ny, verbose=False, block=True, grouped_move=False)
                     if i == 0:
-                        #sleep for 1.5 nsecs to let the detector cool off.
-                        #usually gets blasted as the laser moves into position
+                        # sleep for 1.5 nsecs to let the detector cool off.
+                        # usually gets blasted as the laser moves into position
                         time.sleep(1.5)
                     mag = 0
                     for _ in range(self.integration):
@@ -180,7 +180,7 @@ class PowerMapping(Loggable):
                 do_after(10, canvas.set_cell_value, *datum)
 #                self.data_manager.write_to_frame(datum)
 #
-                #write to the table
+                # write to the table
                 nr = tab.row
                 nr['row'] = i
                 nr['col'] = j
@@ -248,13 +248,13 @@ class PowerMapping(Loggable):
 #        padding = self.padding
 #
 #        sm = lm.stage_manager
-##        analog_power_meter = lm.analog_power_meter
+# #        analog_power_meter = lm.analog_power_meter
 #        stage_controller = sm.stage_controller
 #
-##        graph = Graph3D()
-##        s = graph.scene
+# #        graph = Graph3D()
+# #        s = graph.scene
 #
-##        do_after(1, graph.edit_traits)
+# #        do_after(1, graph.edit_traits)
 #
 #        offset = 1
 #
@@ -303,14 +303,14 @@ class PowerMapping(Loggable):
 #
 #            #sleep time required to reach cvt zone
 #
-##            max_len = 50
+# #            max_len = 50
 #            event = Event()
 #            axkey = 'x'
 #            t = Thread(target=stage_controller.at_velocity, args=(axkey, event))
 #            t.start()
 #            j = 0
 #            while not event.isSet():
-##                print i
+# #                print i
 #                if sm.simulation:
 #                    x = p1[0] + j
 #                    y = i
@@ -328,13 +328,13 @@ class PowerMapping(Loggable):
 #                data.set_data('y0', ys)
 #                data.set_data('c0', cs)
 #
-##                print xs
+# #                print xs
 #                do_after(1, g.redraw)
 #                time.sleep(0.1)
 
-##            nvalues = random.randint(0, 0) + max_len
-##            j = 0
-##            while j <= nvalues:
+# #            nvalues = random.randint(0, 0) + max_len
+# #            j = 0
+# #            while j <= nvalues:
 #            xs = []
 #            ys = []
 #            zs = []

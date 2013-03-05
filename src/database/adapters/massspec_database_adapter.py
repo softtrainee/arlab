@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -200,7 +200,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            d = int(args[1]) if len(args) == 2 else None
             rd = self.get_detector(refdetlabel)
 
-            #query the IrradiationPositionTable
+            # query the IrradiationPositionTable
             irradpos = self.get_irradiation_position(irradpos)
             params = dict(RID=rid,
                          Aliquot=aliquot,
@@ -212,7 +212,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                          ReferenceDetectorLabel=rd.Label
                          )
 
-            #IrradPosition cannot be null
+            # IrradPosition cannot be null
             if irradpos is not None:
                 ip = irradpos.IrradPosition
                 sa = irradpos.SampleID
@@ -277,7 +277,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         detector = None
         analysis = self.get_analysis(rid)
         if isinstance(det, str):
-            #assume is a detector label e.i H1
+            # assume is a detector label e.i H1
             dettype = self.get_detector_type(det)
             if dettype is not None and len(dettype.detectors):
                 det = dettype.detectors[-1]
@@ -312,14 +312,14 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         isotope = self.get_isotope(isotope)
 
-        #in mass spec intercept is baseline corrected
-        #mass spec does not propogate baseline error
-        #convert baseline to scalar
+        # in mass spec intercept is baseline corrected
+        # mass spec does not propogate baseline error
+        # convert baseline to scalar
         baseline = baseline.nominal_value
 
         intercept = intercept - baseline
 
-        #isotope is corrected for background (blank in pychron parlance)
+        # isotope is corrected for background (blank in pychron parlance)
         isotope_value = intercept - blank
 
         fit = self.get_fittype(fit)
@@ -368,7 +368,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         item = AnalysesChangeableItemsTable()
         analysis = self.get_analysis(rid)
         if analysis is not None:
-            #get the lastest preferencesetid
+            # get the lastest preferencesetid
 #            sess = self.get_session()
 #            q = sess.query(PreferencesTable)
 #            q = q.order_by(PreferencesTable.PreferencesSetID.desc())
@@ -410,24 +410,24 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return AnalysesTable, 'RID'
 
 #==================EOF======================================================
-##    def add_detector(self, detector_id, kw, sess=None):
-##        '''
-##        '''
-###        if sess is None:
-###            sess = self.session_factory()
-##
-###        print det_args, sess, detector_id
-##        if detector_id is not None:
-###            #get the detector row
-##            det, sess = self.get_detector(detector_id, sess=sess)
-##            #print det
-##            for a in kw:
-##                setattr(det, a, kw[a])
-##        else:
-##            det = DetectorTable(**kw)
-##            sess.add(det)
-##
-##        return det, sess
+# #    def add_detector(self, detector_id, kw, sess=None):
+# #        '''
+# #        '''
+# ##        if sess is None:
+# ##            sess = self.session_factory()
+# #
+# ##        print det_args, sess, detector_id
+# #        if detector_id is not None:
+# ##            #get the detector row
+# #            det, sess = self.get_detector(detector_id, sess=sess)
+# #            #print det
+# #            for a in kw:
+# #                setattr(det, a, kw[a])
+# #        else:
+# #            det = DetectorTable(**kw)
+# #            sess.add(det)
+# #
+# #        return det, sess
 #    def add_detector(self, args):
 #        return self._add_tableitem(DetectorTable(**args))
 #
@@ -439,8 +439,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            return c
 #
 #    def add_isotope_result(self, args, dbisotope=None):
-##        if sess is None:
-##            sess = self.session_factory()
+# #        if sess is None:
+# #            sess = self.session_factory()
 #
 #        iso = self._get_dbrecord(dbisotope, 'get_isotope')
 #        if iso is not None:
@@ -453,8 +453,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #
 
 #        '''
-##        if sess is None:
-##            sess = self.session_factory()
+# #        if sess is None:
+# #            sess = self.session_factory()
 #
 #        analysis = self._get_dbrecord(dbanalysis, 'get_analysis')
 #
@@ -467,7 +467,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #                detector.isotopes.append(iso)
 #
 #                return iso
-##
+# #
 #    def add_peaktimeblob(self, blob, dbisotope=None):
 #        iso = self._get_dbrecord(dbisotope, 'get_isotope')
 #        if iso is not None:
@@ -496,8 +496,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #    def get_rids(self, limit=1000):
 #        '''
 #        '''
-##        if sess is None:
-##            sess = self.session_factory()
+# #        if sess is None:
+# #            sess = self.session_factory()
 #        sess = self.get_session()
 #        q = sess.query(AnalysesTable.AnalysisID, AnalysesTable.RID)
 #        p = q.limit(limit)
@@ -579,21 +579,21 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #
 #        return record_or_id
 
-##    def add_peaktimeblob(self, iso_id, blob, dbisotope=None, sess=None):
-##        '''
-##        '''
-###        if sess is None:
-###            sess = self.session_factory()
-##        
-##        isotope = dbisotope
-##        if dbisotope is None:
-##            isotope, sess = self.get_isotope(iso_id, sess=sess)
-##
-##        if isotope is not None:
-##            pk = PeakTimeTable(PeakTimeBlob=blob)
-##            isotope.peak_time_series.append(pk)
-##
-##        return sess
+# #    def add_peaktimeblob(self, iso_id, blob, dbisotope=None, sess=None):
+# #        '''
+# #        '''
+# ##        if sess is None:
+# ##            sess = self.session_factory()
+# #
+# #        isotope = dbisotope
+# #        if dbisotope is None:
+# #            isotope, sess = self.get_isotope(iso_id, sess=sess)
+# #
+# #        if isotope is not None:
+# #            pk = PeakTimeTable(PeakTimeBlob=blob)
+# #            isotope.peak_time_series.append(pk)
+# #
+# #        return sess
 
 #    def add_project(self, args):
 #        '''
@@ -601,14 +601,14 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #        p = self.get_project(args['Project'])
 #        if p is None:
 #            return self._add_tableitem(ProjectTable(**args))
-##        if sess is None:
-##            sess = self.session_factory()
+# #        if sess is None:
+# #            sess = self.session_factory()
 #
-##        p, sess = self.get_project(args['Project'], sess=sess)
-##        if p is None:
-##        p = ProjectTable(**args)
-##        sess.add(p)
-##        return p
+# #        p, sess = self.get_project(args['Project'], sess=sess)
+# #        if p is None:
+# #        p = ProjectTable(**args)
+# #        sess.add(p)
+# #        return p
 #
 #    def add_sample(self, args, project=None):
 #        '''
@@ -616,57 +616,57 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #        s = self.get_sample(args['Sample'])
 #        if s is None:
 #            p = self.get_project(project)
-##            self._add_tableitem(SampleTable(**args))
+# #            self._add_tableitem(SampleTable(**args))
 #            if p is not None:
 #                s = SampleTable(**args)
 #                p.samples.append(s)
 #
 #        return s
-##        if sess is None:
-##            sess = self.session_factory()
-##        #check to see if sample already exists
-##        s, sess = self.get_sample(args['Sample'], sess=sess)
-##        if s is None:
-##            p, sess = self.get_project(args['Project'], sess=sess)
-##
-##            s = SampleTable(**args)
-##            p.samples.append(s)
-##            sess.add(s)
-##        return s, sess
+# #        if sess is None:
+# #            sess = self.session_factory()
+# #        #check to see if sample already exists
+# #        s, sess = self.get_sample(args['Sample'], sess=sess)
+# #        if s is None:
+# #            p, sess = self.get_project(args['Project'], sess=sess)
+# #
+# #            s = SampleTable(**args)
+# #            p.samples.append(s)
+# #            sess.add(s)
+# #        return s, sess
 #
 #    def add_material(self, args):
 #        '''
 #
 #        '''
-##        if sess is None:
-##            sess = self.session_factory()
-##        m = MaterialTable(**args)
-##        sess.add(m)
-##        return m, sess
+# #        if sess is None:
+# #            sess = self.session_factory()
+# #        m = MaterialTable(**args)
+# #        sess.add(m)
+# #        return m, sess
 #        return self._add_tableitem(MaterialTable(**args))
 #
-##    def add_irradiation_position(self, args):
-##        '''
-##        '''
-##       
-##
-##        ip, sess = self.get_irradiation_position((args['IrradiationLevel'],
-##                                                 args['HoleNumber']),
-##                                                 sess=sess)
-##        if ip is None:
-##            material, sess = self.get_material(args['Material'], sess=sess)
-##            #if the material doesnt exist add it
-##            if material is None:
-##                material, sess = self.add_material(dict(Material=args['Material']),
-##                                                   sess=sess)
-##            sample, sess = self.get_sample(args['Sample'], sess=sess)
-##            args.pop('Sample')
-##
-##            ip = IrradiationPositionTable(**args)
-##            sample.irradpositions.append(ip)
-##            material.irradpositions.append(ip)
-##
-##        return ip, sess
+# #    def add_irradiation_position(self, args):
+# #        '''
+# #        '''
+# #
+# #
+# #        ip, sess = self.get_irradiation_position((args['IrradiationLevel'],
+# #                                                 args['HoleNumber']),
+# #                                                 sess=sess)
+# #        if ip is None:
+# #            material, sess = self.get_material(args['Material'], sess=sess)
+# #            #if the material doesnt exist add it
+# #            if material is None:
+# #                material, sess = self.add_material(dict(Material=args['Material']),
+# #                                                   sess=sess)
+# #            sample, sess = self.get_sample(args['Sample'], sess=sess)
+# #            args.pop('Sample')
+# #
+# #            ip = IrradiationPositionTable(**args)
+# #            sample.irradpositions.append(ip)
+# #            material.irradpositions.append(ip)
+# #
+# #        return ip, sess
 #
 #    def debug_delete_table(self, table, sess=None):
 #        def _delete_table(t):

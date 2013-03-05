@@ -1,13 +1,13 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ class Installer(object):
 
             dst.write(line)
 
-        #close temp file
+        # close temp file
         src.close()
         dst.close()
         os.unlink(src.name)
@@ -91,8 +91,8 @@ class Installer(object):
                             '{}.py'.format(self.name))
             sys.argv[1:] = [op]
 
-            #set the version in the script
-            #of = open(op, 'r')
+            # set the version in the script
+            # of = open(op, 'r')
 #            self.change_version(op)
 #            self.change_version(os.path.join(root, 'src', 'helpers', 'paths.py'))
 
@@ -122,7 +122,7 @@ class Installer(object):
 
             resource_path = lambda x: os.path.join(dist_root, 'Resources', x)
             src_path = lambda x:resource_path(os.path.join('src', x))
-            #copy the helpers module
+            # copy the helpers module
             helpers_path = os.path.join(launchers_root, 'helpers.py')
             if os.path.isfile(helpers_path):
                 shutil.copyfile(helpers_path,
@@ -131,11 +131,11 @@ class Installer(object):
 
             #===================================================================
             # copy all source file
-            # will make this bundle self contained 
+            # will make this bundle self contained
             #===================================================================
             if not self.include_pkgs:
                 print 'Copying entire src tree'
-                #copy entire src directory
+                # copy entire src directory
                 shutil.copytree(os.path.join(root, 'src'),
                             resource_path('src'))
             else:
@@ -167,7 +167,7 @@ class Installer(object):
                                 )
 
 
-            #walk the resource dir and add __init__ if missing
+            # walk the resource dir and add __init__ if missing
             for rt, _, files in os.walk(resource_path('src')):
                 if not '__init__.py' in files:
                     p = os.path.join(rt, '__init__.py')
@@ -179,7 +179,7 @@ class Installer(object):
                             resource_path('globals.py')
                             )
 
-            #copy pngs
+            # copy pngs
             for name in map('{}.png'.format, ['red_ball',
                                               'gray_ball', 'green_ball',
                                               'orange_ball', 'yellow_ball']):
@@ -187,7 +187,7 @@ class Installer(object):
                             resource_path(name)
                             )
 
-            #move splash and about into place
+            # move splash and about into place
             if version_name:
                 for ni, nd in (('splash', 'splashes'), ('about', 'abouts')):
                     sname = '{}_{}.png'.format(ni, version_name)

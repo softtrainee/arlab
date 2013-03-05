@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@ class AgeCalcTest(TestCase):
         t = math.log(ar37df) / (constants.lambda_37.nominal_value * 365.25)
         irradinfo.append(t)
 
-        #load results
+        # load results
         r = 'results-{}'.format(rid)
         self.age = config.getfloat(r, 'age')
         self.rad4039 = config.getfloat(r, 'rad4039')
@@ -68,7 +68,7 @@ class AgeCalcTest(TestCase):
         age = ageerr.nominal_value / 1e6
         err = ageerr.std_dev()
         self.assertAlmostEqual(age,
-                         self.age, #28.0625,
+                         self.age,  # 28.0625,
                          places=4)
 
     def test_4039(self):
@@ -79,7 +79,7 @@ class AgeCalcTest(TestCase):
         n = n.nominal_value
         self.assertAlmostEqual(n,
                          self.rad4039,
-                         #7.0039026,
+                         # 7.0039026,
                          places=5
                          )
     def test_3739(self):

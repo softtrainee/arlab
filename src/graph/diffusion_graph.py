@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,8 @@ from src.graph.editors.diffusion_plot_editor import DiffusionPlotEditor
 from src.graph.graph import name_generator
 from chaco.default_colormaps import color_map_name_dict
 
-#GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
-#GROUPNAMES = ['spectrum', 'logr_ro', 'arrhenius', 'cooling_history', 'unconstrained_thermal_history']
+# GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
+# GROUPNAMES = ['spectrum', 'logr_ro', 'arrhenius', 'cooling_history', 'unconstrained_thermal_history']
 GROUPNAMES = ['spectrum', 'arrhenius', 'cooling_history', 'unconstrained_thermal_history', 'logr_ro']
 
 LABELS = dict(spectrum='Spectrum', arrhenius='Arrhenius', logr_ro='LogR/Ro',
@@ -234,7 +234,7 @@ class DiffusionGraph(Graph):
 #        elif isinstance(ngroup, str):
 #            try:
 #                self.groups[ngroup].append(plots)
-##                print self.groups[ngroup]
+# #                print self.groups[ngroup]
 #            except KeyError:
 #                self.groups[ngroup] = [plots]
 #
@@ -350,7 +350,7 @@ class DiffusionGraph(Graph):
                              hide_grids=False,
                              **rd)[0]
 #            self.groups['unconstrained_thermal_history'].append([pline, ppoly])
-            #remove zoom
+            # remove zoom
             self.plots[pid].overlays.pop()
 
 #            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
@@ -368,7 +368,7 @@ class DiffusionGraph(Graph):
 
 #    def set_group_color(self, gid=0, series=None):
 #        '''
-#            
+#
 #        '''
 #        for k in ['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
 #            g = self.groups[k]

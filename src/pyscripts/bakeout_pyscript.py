@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ class BakeoutPyScript(PyScript):
     def calculate_graph(self):
         xs, ys = self._calculate_graph()
 
-        #convert to hours
+        # convert to hours
         xs = [xi / 3600. for xi in xs]
         from src.graph.graph import Graph
         g = Graph(container_dict=dict(padding=[50, 10, 10, 50],
@@ -85,8 +85,8 @@ class BakeoutPyScript(PyScript):
         if start is None:
             start = 25
             if c is not None:
-                #possible to just read the process_value 
-                #for now force a query to the device
+                # possible to just read the process_value
+                # for now force a query to the device
                 ctemp = int(c.get_temperature())
                 start = max(start, ctemp)
 
@@ -104,7 +104,7 @@ class BakeoutPyScript(PyScript):
                 c.heating = True
             else:
                 c.heating = False
-        #convert period to hours
+        # convert period to hours
 #        hperiod = period / 3600.
 #        steps = linspace(start, temperature, dur * 3600 / float(period))
 
@@ -141,7 +141,7 @@ class BakeoutPyScript(PyScript):
         if self._syntax_checking or self._cancel:
             return
 
-        #convert duration from units to seconds
+        # convert duration from units to seconds
 
         duration *= ts
         self.info('setting setpoint to {} for {}'.format(temperature, duration))
@@ -149,7 +149,7 @@ class BakeoutPyScript(PyScript):
         if c is not None:
 
             self._set_setpoint(temperature)
-            #convert back to hours
+            # convert back to hours
             do_later(c.trait_set, duration=duration / 3600.,
                                  heating=True
                                  )

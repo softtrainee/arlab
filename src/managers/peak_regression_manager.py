@@ -1,45 +1,45 @@
 ##===============================================================================
-## Copyright 2011 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2011 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 #
 #
 ##=============enthought library imports=======================
-#from traits.api import HasTraits, File, Str, Bool, Event, Enum, Button, \
+# from traits.api import HasTraits, File, Str, Bool, Event, Enum, Button, \
 #    String, Property, List, Int, Any, Directory
-#from traitsui.api import View, Item, HGroup, spring, TableEditor, ButtonEditor
-#from traitsui.extras.checkbox_column import CheckboxColumn
-#from traitsui.table_column import ObjectColumn
-#from pyface.message_dialog import information
+# from traitsui.api import View, Item, HGroup, spring, TableEditor, ButtonEditor
+# from traitsui.extras.checkbox_column import CheckboxColumn
+# from traitsui.table_column import ObjectColumn
+# from pyface.message_dialog import information
 #
 #
 ##=============standard library imports ========================
-#import os
-#import csv
-#import numpy as np
-#from threading import Thread
+# import os
+# import csv
+# import numpy as np
+# from threading import Thread
 ##=============local library imports  ==========================
-#from manager import Manager
-#from src.data_processing.import_filters.qtegra_filter import QtegraFilter
-#from src.paths import paths
-#from src.graph.regression_graph import RegressionGraph
-#from src.data_processing.regression.regressor import Regressor
-#from src.helpers.filetools import unique_path
-#from src.helpers.data_tools import add_sub_error_prop#, mult_div_error_prop
+# from manager import Manager
+# from src.data_processing.import_filters.qtegra_filter import QtegraFilter
+# from src.paths import paths
+# from src.graph.regression_graph import RegressionGraph
+# from src.data_processing.regression.regressor import Regressor
+# from src.helpers.filetools import unique_path
+# from src.helpers.data_tools import add_sub_error_prop#, mult_div_error_prop
 #
-#class RegressionItem(HasTraits):
+# class RegressionItem(HasTraits):
 #    fit_type = Enum('linear', 'parabolic', 'average +/- SD', 'average +/- SEM', 'cubic', 'exponential')
 #    name = String
 #    data_path = String
@@ -70,7 +70,7 @@
 #    def get_result_row(self):
 #        return [self.intercept, self.intercept_error, self.intercept_error / self.intercept * 100]
 #
-#class PeakRegressionManager(Manager):
+# class PeakRegressionManager(Manager):
 #    fitall = Enum('linear', 'parabolic', 'average +/- SD', 'average +/- SEM', 'cubic', 'exponential')
 #    exportbutton = Button('Export')
 #
@@ -125,7 +125,7 @@
 #                    ngroup[ind] = item
 #                    tx[ind] = item.name
 #
-#            #compress ngroup     
+#            #compress ngroup
 #            ngroup = [n for n in ngroup if not isinstance(n, int)]
 #
 #            ngroups.append(ngroup)
@@ -349,11 +349,11 @@
 #               )
 #        return v
 #
-#def main():
+# def main():
 #    i = PeakRegressionManager()
 #    i.configure_traits()
 #
-#def main2():
+# def main2():
 #    from src.data_processing.regression.ols import OLS
 #    path = '/Users/Ross/Pychrondata_beta/data/sandbox/West Air CDD w 36 ax labbook 2/4_H1_40.txt'
 #    xs = []
@@ -373,28 +373,28 @@
 #    #print o.results.summary()
 #
 #
-##def main3():
-##    from src.data_processing.regression.regressor import Regressor
-##
-##    regressor = Regressor()
-##    path = '/Users/fargo2/Pychrondata_beta/data/sandbox/April 4 Axial 4036 labbook 1/5_AX_40.txt'
-##    xs = []
-##    ys = []
-##    with open(path, 'r') as f:
-##        reader = csv.reader(f, delimiter = '\t')
-##        header = reader.next()
-##        for r in reader:
-##
-##            xs.append(float(r[0]))
-##            ys.append(float(r[1]))
-##
-##
-##    ff = lambda p, x:p[0] * np.exp(p[1] * x)
-##    ef = lambda p, x, y: ff(p, x) - y
-##    r = regressor.least_squares(xs, ys, fitfunc = ff, errfunc = ef, p0 = [1, -1])
-#def test():
+# #def main3():
+# #    from src.data_processing.regression.regressor import Regressor
+# #
+# #    regressor = Regressor()
+# #    path = '/Users/fargo2/Pychrondata_beta/data/sandbox/April 4 Axial 4036 labbook 1/5_AX_40.txt'
+# #    xs = []
+# #    ys = []
+# #    with open(path, 'r') as f:
+# #        reader = csv.reader(f, delimiter = '\t')
+# #        header = reader.next()
+# #        for r in reader:
+# #
+# #            xs.append(float(r[0]))
+# #            ys.append(float(r[1]))
+# #
+# #
+# #    ff = lambda p, x:p[0] * np.exp(p[1] * x)
+# #    ef = lambda p, x, y: ff(p, x) - y
+# #    r = regressor.least_squares(xs, ys, fitfunc = ff, errfunc = ef, p0 = [1, -1])
+# def test():
 #    pm = PeakRegressionManager()
-##    pm.directory = '/Users/Ross/Pychrondata_beta/data/sandbox/West Air CDD w 36 ax labbook 2'
+# #    pm.directory = '/Users/Ross/Pychrondata_beta/data/sandbox/West Air CDD w 36 ax labbook 2'
 #    #pm.directory = '/Users/fargo2/Pychrondata_beta/data/sandbox/April 11 Faraday air labbook'
 #    pm.directory = '/Users/fargo2/Pychrondata_beta/data/sandbox/test'
 #    pm.load_directory()
@@ -402,7 +402,7 @@
 #    pm._exportbutton_fired()
 #
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    #main()
 #    test()
 #

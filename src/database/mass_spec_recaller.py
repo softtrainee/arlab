@@ -1,45 +1,45 @@
 ##===============================================================================
-## Copyright 2011 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2011 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 #
 #
-##from traits.etsconfig.api import ETSConfig
-##ETSConfig.toolkit = "qt4"
+# #from traits.etsconfig.api import ETSConfig
+# #ETSConfig.toolkit = "qt4"
 #
 #
-#from traits.api import HasTraits, List, Button, Instance, Enum
-#from traitsui.api import View, Item, VGroup, HGroup, TabularEditor, TableEditor, ListStrEditor
+# from traits.api import HasTraits, List, Button, Instance, Enum
+# from traitsui.api import View, Item, VGroup, HGroup, TabularEditor, TableEditor, ListStrEditor
 #
-#import numpy as np
-#import math
-#
-#
-#from src.graph.stacked_graph import StackedGraph
-#from chaco.array_data_source import ArrayDataSource
-#from src.graph.error_bar_overlay import ErrorBarOverlay
-#from traitsui.table_column import ObjectColumn
-#from traitsui.list_str_adapter import ListStrAdapter
-#from src.database.selectors.massspec_selector import MassSpecSelector
-#from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+# import numpy as np
+# import math
 #
 #
-#class LAdapter(ListStrAdapter):
-##    def get_bg_color(self, obj, trait, row):
+# from src.graph.stacked_graph import StackedGraph
+# from chaco.array_data_source import ArrayDataSource
+# from src.graph.error_bar_overlay import ErrorBarOverlay
+# from traitsui.table_column import ObjectColumn
+# from traitsui.list_str_adapter import ListStrAdapter
+# from src.database.selectors.massspec_selector import MassSpecSelector
+# from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+#
+#
+# class LAdapter(ListStrAdapter):
+# #    def get_bg_color(self, obj, trait, row):
 #    def get_text_color(self, obj, trait, row):
-##        print obj, trait, row
+# #        print obj, trait, row
 #        o = getattr(obj, trait)[row]
 #
 #        if 'group_marker' in o:
@@ -54,7 +54,7 @@
 #        else:
 #            return o
 #
-#class MassSpecRecaller(HasTraits):
+# class MassSpecRecaller(HasTraits):
 #    results = List
 #    OK = Button
 #    cancel = Button
@@ -68,8 +68,8 @@
 #    def _selector_default(self):
 #        db = MassSpecDatabaseAdapter(name='massspecdata_local',
 #                                  #host='129.138.12.131',
-##                                  user='massspec',
-##                                  password='DBArgon'
+# #                                  user='massspec',
+# #                                  password='DBArgon'
 #                                  )
 #        db.connect()
 #        m = MassSpecSelector(_db=db,
@@ -87,8 +87,8 @@
 #        self._load_selected_results()
 #
 #    def _OK_fired(self):
-##        self._open_ideogram()
-##        self._open_spectrum()
+# #        self._open_ideogram()
+# #        self._open_spectrum()
 #        self.selected_results.append('group_marker1')
 #
 #    def _open_ideogram(self):
@@ -96,7 +96,7 @@
 #                             r._db_result.araranalyses[-1].ErrAge)
 #                            for r in self.selected_results])
 #
-#        #errs from mass spec are 2sigma 
+#        #errs from mass spec are 2sigma
 #        errs = np.array(errs)
 #        errs /= 2.0
 #        g = self.build_ideogram(ages, errs)
@@ -160,7 +160,7 @@
 #        prev = 0
 #
 #        for ai, ei, ar in zip(ages, errors, ar39s):
-##            print ai, ei
+# #            print ai, ei
 #            xs.append(prev)
 #            ys.append(ai)
 #            es.append(ei)
@@ -177,7 +177,7 @@
 #        xs.append(100)
 #
 #        #main age line
-##        g.new_series(xs, ys)
+# #        g.new_series(xs, ys)
 #        #error box
 #        ox = xs[:]
 #        xs.reverse()
@@ -258,10 +258,10 @@
 #        g.set_axis_traits(orientation='right', plotid=1, axis='y')
 #
 #        n = zip(ages, errors)
-##        ages.sort()
+# #        ages.sort()
 #        n = sorted(n, key=lambda x:x[0])
 #        ages, errors = zip(*n)
-##        print ages, errors
+# #        print ages, errors
 #        for ni in n:
 #            print ni
 #        s, _p = g.new_series(ages, range(1, len(ages) + 1, 1), type='scatter', marker='circle', plotid=1)
@@ -317,7 +317,7 @@
 #                  )
 #        return v
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #
 #
 #

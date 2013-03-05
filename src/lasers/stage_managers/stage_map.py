@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,12 +78,12 @@ class SampleHoleAdapter(TabularAdapter):
 
 class StageMap(Loggable):
     file_path = Str
-    #holes = Dict
+    # holes = Dict
     name = Property(depends_on='file_path')
     bitmap_path = Property(depends_on='file_path')
 #    valid_holes = None
 #    use_valid_holes = True
-    #holes = Property
+    # holes = Property
     sample_holes = List(SampleHole)
 
     g_dimension = Float(enter_set=True, auto_set=False)
@@ -91,7 +91,7 @@ class StageMap(Loggable):
 
     clear_corrections = Button
 
-    #should always be N,E,S,W,center
+    # should always be N,E,S,W,center
     calibration_holes = None
     cpos = None
     rotation = None
@@ -124,7 +124,7 @@ class StageMap(Loggable):
             n = 3
             for sd in range(n):
                 xi, yi, hi = self._calculated_interpolated_position(h, sd + 1)
-                #do simple weighting by distance
+                # do simple weighting by distance
                 w = (n - sd)
                 nxs += xi * w
                 nys += yi * w
@@ -134,7 +134,7 @@ class StageMap(Loggable):
                 nx, ny = (sum(nxs) / max(1, len(nxs)),
                         sum(nys) / max(1, len(nys)))
 
-                #verify within tolerance
+                # verify within tolerance
                 tol = h.dimension * 0.85
 
                 hx, hy = self.map_to_calibration(h.nominal_position)
@@ -167,9 +167,9 @@ class StageMap(Loggable):
         iholes = []
 
         if not h.has_correction():
-            #this hole does not have a correction value
+            # this hole does not have a correction value
             found = []
-            #get the cardinal holes and corner holes
+            # get the cardinal holes and corner holes
             for rx, ry in [(0, 1),
                            (-1, 0), (1, 0),
                                 (0, -1),
@@ -220,8 +220,8 @@ class StageMap(Loggable):
 
             mx, my = _midpoint(found[i], found[j])
             if mx is not None and my is not None:
-                #make sure the corrected value makes sense
-                #ie less than 1 radius from nominal hole
+                # make sure the corrected value makes sense
+                # ie less than 1 radius from nominal hole
 
                 hx, hy = self.map_to_calibration(hole.nominal_position)
                 if (abs(mx - hx) < rad
@@ -250,13 +250,13 @@ class StageMap(Loggable):
                     iholes.append(found[j])
 
     def _interpolated_normals(self, hole, found, nxs, nys, iholes, spacing):
-        #try interpolation using legs of a triangle
+        # try interpolation using legs of a triangle
         for i, j, s in [
-                        #vertical
+                        # vertical
                         (4, 1, 1), (6, 1, -1),
                         (5, 2, -1), (7, 2, 1),
 
-                        #horizontal
+                        # horizontal
                         (4, 0, -1), (5, 0, 1),
                         (7, 3, -1), (6, 3, 1)
                      ]:
@@ -393,13 +393,13 @@ class StageMap(Loggable):
 
     def _get_hole_by_pos(self, x, y, xkey, ykey, tol):
         if tol is None:
-            tol = self.g_dimension# * 0.75
+            tol = self.g_dimension  # * 0.75
 
         pythag = lambda hi, xi, yi:((hi.x - xi) ** 2 + (hi.y - yi) ** 2) ** 0.5
         holes = [(hole, pythag(hole, x, y)) for hole in self.sample_holes
                  if abs(getattr(hole, xkey) - x) < tol and abs(getattr(hole, ykey) - y) < tol]
         if holes:
-#            #sort holes by deviation 
+#            #sort holes by deviation
             holes = sorted(holes, lambda a, b: cmp(a[1], b[1]))
             return holes[0][0]
 
@@ -444,16 +444,16 @@ class StageMap(Loggable):
         if not lines:
             return
 
-        #line 0 shape, dimension
+        # line 0 shape, dimension
         shape, dimension = lines[0].split(',')
         self.g_shape = shape
         self.g_dimension = float(dimension)
 
-        #line 1 list of holes to default draw
+        # line 1 list of holes to default draw
         valid_holes = lines[1].split(',')
 
-        #line 2 list of calibration holes
-        #should always be N,E,S,W,center
+        # line 2 list of calibration holes
+        # should always be N,E,S,W,center
         self.calibration_holes = lines[2].split(',')
 
         for hi, line in enumerate(lines[3:]):
@@ -532,11 +532,11 @@ class UVStageMap(StageMap):
 #            if s.has_correction() and e.has_correction():
 #                dx = abs(s.x_cor - e.x_cor)
 #                dy = abs(s.y_cor - e.y_cor)
-##                cspacing = (dx + dy) / 2.0
+# #                cspacing = (dx + dy) / 2.0
 #                break
 
-            #if the number of adjacent holes found is only 1
-            #do a simple offset using 
+            # if the number of adjacent holes found is only 1
+            # do a simple offset using
 #                nfound = [f for f in found if f is not None]
 #                if len(nfound) == 1:
 #                    f = nfound[0]

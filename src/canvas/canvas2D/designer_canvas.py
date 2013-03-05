@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@ from traits.api import Enum, List, Property
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from markup_canvas import MarkupCanvas
+# from markup_canvas import MarkupCanvas
 from extraction_line_canvas2D import ExtractionLineCanvas2D
 from src.canvas.designer.canvas_previewer import CanvasPreviewer
 from src.canvas.canvas2D.rect_selection_tool import RectSelectionTool
@@ -110,7 +110,7 @@ class DesignerCanvas(ExtractionLineCanvas2D):
             self.event_state = 'vdraw'
 
         else:
-            #super(DesignerCanvas, self).normal_mouse_move(event)
+            # super(DesignerCanvas, self).normal_mouse_move(event)
             ExtractionLineCanvas2D.normal_key_pressed(self, event)
     def vdraw_mouse_move(self, event):
         '''
@@ -155,15 +155,15 @@ class DesignerCanvas(ExtractionLineCanvas2D):
 
     def select_mouse_move(self, event):
         def adjust(ii, adj):
-            #get items position in screen space
+            # get items position in screen space
             pos = self.map_screen([ii.pos])[0]
 
-            #apply adjustment and map to data space
+            # apply adjustment and map to data space
             ii.pos = tuple(self.map_data((pos[0] + adj[0], pos[1] + adj[1])))
 
         if self.active:
 
-            #calc adjustment in screen space
+            # calc adjustment in screen space
             adj = self._calc_adjustment(event)
             if self.selected_items:
                 for i in self.selected_items:
@@ -216,7 +216,7 @@ class DesignerCanvas(ExtractionLineCanvas2D):
 
             else:
                 ExtractionLineCanvas2D.key_set_tool_state(event)
-                #super(DesignerCanvas, self).key_set_tool_state(event)
+                # super(DesignerCanvas, self).key_set_tool_state(event)
         except:
             pass
         self.invalidate_and_redraw()

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ class RectSelectionOverlay(AbstractOverlay):
 class RectSelectionTool(BaseTool):
     '''
     '''
-    #update_flag = Bool
+    # update_flag = Bool
 #    container = Any
 #    parent = Any
 #    plotid = Int
@@ -106,7 +106,7 @@ class RectSelectionTool(BaseTool):
         return already
 
 #    def normal_key_pressed(self, event):
-##        print event
+# #        print event
 #        if event.character == 'p':
 #            self.active = False
 #        else:
@@ -124,7 +124,7 @@ class RectSelectionTool(BaseTool):
 
         '''
 #        if self.active:
-        #and not self.parent.filters[self.plotid]:
+        # and not self.parent.filters[self.plotid]:
 #            self.parent.selected_plotid = self.plotid
 #            self.parent.selected_plot = self.plot
 #            self.parent.selected_component = self.component

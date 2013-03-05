@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ class SerialCommunicator(Communicator):
     
     '''
 
-    #char_write = False
+    # char_write = False
 
     _auto_find_handle = False
     _auto_write_handle = False
@@ -158,11 +158,11 @@ class SerialCommunicator(Communicator):
         '''
         with self._lock:
             if nchars is not None:
-            #self._lock.acquire()
+            # self._lock.acquire()
                 r = self._read_nchars(nchars)
             else:
                 r = self._read_terminator(*args, **kw)
-            #self._lock.release()
+            # self._lock.release()
             return r
 
     def ask(self, cmd, is_hex=False, verbose=True, delay=None,
@@ -196,18 +196,18 @@ class SerialCommunicator(Communicator):
             elif nchars is not None:
                 re = self._read_nchars(nchars)
             else:
-                #print read_terminator
+                # print read_terminator
                 re = self._read_terminator(delay=delay,
                                 terminator=read_terminator)
         if remove_eol:
             re = self._remove_eol(re)
 
-        #print re, len(re)
+        # print re, len(re)
         if verbose:
-            #self.debug('lock acquired by {}'.format(currentThread().name))
+            # self.debug('lock acquired by {}'.format(currentThread().name))
             pre = self.process_response(re, replace)
             self.log_response(cmd, pre, info)
-            #self.debug('lock released by {}'.format(currentThread().name))
+            # self.debug('lock released by {}'.format(currentThread().name))
 
 #            time.sleep(0.005)
 #            self.info('release lock {}'.format(self._lock))
@@ -289,8 +289,8 @@ class SerialCommunicator(Communicator):
 
             r = self.ask(self.id_query)
 
-            #use id_response as a callable to do device specific 
-            #checking
+            # use id_response as a callable to do device specific
+            # checking
             if callable(self.id_response):
                 if self.id_response(r):
                     found = True
@@ -304,12 +304,12 @@ class SerialCommunicator(Communicator):
 
         if not found:
 
-            #update the port
+            # update the port
             if self._auto_write_handle and port:
-                #port in form
-                #/dev/tty.USAXXX1.1
+                # port in form
+                # /dev/tty.USAXXX1.1
                 p = os.path.split(port)[-1]
-                #remove tty.
+                # remove tty.
                 p = p[4:]
 
                 self.config.set('Communication', 'port',)
@@ -356,7 +356,7 @@ class SerialCommunicator(Communicator):
         '''
         def write(cmd_str):
             try:
-                #print 'cmd', cmd_str, len(cmd_str)
+                # print 'cmd', cmd_str, len(cmd_str)
                 self.handle.write(cmd_str)
             except (serial.serialutil.SerialException, OSError, IOError), e:
                 self.warning(e)
@@ -365,7 +365,7 @@ class SerialCommunicator(Communicator):
 
             if is_hex:
                 cmd = cmd.decode('hex')
-                #write(cmd)
+                # write(cmd)
             else:
                 if self.write_terminator is not None:
                     cmd += self.write_terminator
@@ -467,7 +467,7 @@ class SerialCommunicator(Communicator):
         c = min(inw, nchars - len(r))
         r += handle.read(c)
 #        print r, len(r), nchars
-        #print 'get n',len(r),nchars, self._prep_str(r),len(r)==nchars
+        # print 'get n',len(r),nchars, self._prep_str(r),len(r)==nchars
         return r, len(r) >= nchars
 
     def _check_handshake(self, handshake_chrs):
@@ -483,7 +483,7 @@ class SerialCommunicator(Communicator):
         try:
             inw = self.handle.inWaiting()
             r += self.handle.read(inw)
-            #print 'inw',inw,r, terminator
+            # print 'inw',inw,r, terminator
             if terminator is None:
                 terminator = ('\n', '\r')
 
@@ -509,7 +509,7 @@ class SerialCommunicator(Communicator):
         return r, terminated
 
     def _read_loop(self, func, delay, timeout=1):
-        #print func, delay, timeout
+        # print func, delay, timeout
         if delay is not None:
             time.sleep(delay / 1000.)
 
@@ -521,7 +521,7 @@ class SerialCommunicator(Communicator):
 
         ct = time.time()
         while ct - st < timeout:
-            #print func
+            # print func
             try:
                 r, isterminated = func(r)
 #                print r, isterminated
@@ -540,7 +540,7 @@ class SerialCommunicator(Communicator):
 #    def _read(self, is_hex=False, time_out=1, delay=None):
 #        '''
 #            use the serial handle to read available bytes from the serial buffer
-#            
+#
 #        '''
 #        def err_handle(func):
 #            def _err(*args):
@@ -550,25 +550,25 @@ class SerialCommunicator(Communicator):
 #                    self.warning(e)
 #            return _err
 #
-##        @err_handle
-##        def eread(inw):
-##            return self.handle.read(inw)
-##            r = None
-##            try:
-##                r = self.handle.read(inw)
-##            except (OSError, IOError), e:
-##                self.warning(e)
-##            return r
+# #        @err_handle
+# #        def eread(inw):
+# #            return self.handle.read(inw)
+# #            r = None
+# #            try:
+# #                r = self.handle.read(inw)
+# #            except (OSError, IOError), e:
+# #                self.warning(e)
+# #            return r
 #
-##        @err_handle
-##        def get_chars():
-##            return self.handle.inWaiting()
-##            c = 0
-##            try:
-##                c = self.handle.inWaiting()
-##            except (OSError, IOError), e:
-##                self.warning(e)
-##            return c
+# #        @err_handle
+# #        def get_chars():
+# #            return self.handle.inWaiting()
+# #            c = 0
+# #            try:
+# #                c = self.handle.inWaiting()
+# #            except (OSError, IOError), e:
+# #                self.warning(e)
+# #            return c
 #
 #        def get_line(terminator=None):
 #            try:
@@ -582,7 +582,7 @@ class SerialCommunicator(Communicator):
 #                    isline = r.endswith(terminator) if r is not None else False
 #            except (OSError, IOError), e:
 #                self.warning(e)
-###            print isline, r, inw
+# ##            print isline, r, inw
 #            return isline, r, inw
 #
 #        r = None
@@ -618,28 +618,28 @@ class SerialCommunicator(Communicator):
 #                        if cnt > 50000:
 #                            break
 #
-##                    print 'line', c
+# #                    print 'line', c
 #
 #
 #        return r
-##            if inw > 0:
-##                try:
-##                    r = self.handle.read(inw)
-###                    self.handle.flush()
-##                    if is_hex:
-##                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
-###                        rr = ''
-###                        for ri in r:
-###                            rr += '{:02X}' % ord(ri)
-###                        r = rr
-##
-##                except (OSError, IOError), e:
-##                    self.warning(e)
+# #            if inw > 0:
+# #                try:
+# #                    r = self.handle.read(inw)
+# ##                    self.handle.flush()
+# #                    if is_hex:
+# #                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+# ##                        rr = ''
+# ##                        for ri in r:
+# ##                            rr += '{:02X}' % ord(ri)
+# ##                        r = rr
+# #
+# #                except (OSError, IOError), e:
+# #                    self.warning(e)
 #
-##        else:
-##            r = 'simulation'
-##
-##        return r
+# #        else:
+# #            r = 'simulation'
+# #
+# #        return r
 
 if __name__ == '__main__':
     s = SerialCommunicator()

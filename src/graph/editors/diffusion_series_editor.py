@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ class DiffusionSeriesEditor(SeriesEditor):
 class KineticsSeriesEditor(DiffusionSeriesEditor):
     def _show_sample_changed(self):
 #        if self.isspectrum:
-            #toggles visibility of the error envelope
+            # toggles visibility of the error envelope
         name = '{}.meas'.format(self.series_name)
         self.graph.set_series_visiblity(self.show_sample, plotid=self.plotid,
                                             series=name)
@@ -68,7 +68,7 @@ class SpectrumSeriesEditor(DiffusionSeriesEditor):
 
     def _show_sample_changed(self):
 #        if self.isspectrum:
-            #toggles visibility of the error envelope
+            # toggles visibility of the error envelope
         ename = '{}.meas.err'.format(self.series_name)
         name = '{}.meas'.format(self.series_name)
         self.graph.set_series_visiblity(self.show_sample, plotid=self.plotid,
@@ -80,7 +80,7 @@ class SpectrumSeriesEditor(DiffusionSeriesEditor):
 
 
 class ChistSeriesEditor(PolygonPlotEditor, DiffusionSeriesEditor):
-#class PolyDiffusionSeriesEditor(PolygonPlotEditor, DiffusionSeriesEditor):
+# class PolyDiffusionSeriesEditor(PolygonPlotEditor, DiffusionSeriesEditor):
     inner = Bool(True)
     outer = Bool(True)
 
@@ -101,6 +101,6 @@ class ChistSeriesEditor(PolygonPlotEditor, DiffusionSeriesEditor):
 
 class UnchistSeriesEditor(ContourPolyPlotEditor, DiffusionSeriesEditor):
     pass
-#class ContourPolyDiffusionSeriesEditor(ContourPolyPlotEditor, DiffusionSeriesEditor):
+# class ContourPolyDiffusionSeriesEditor(ContourPolyPlotEditor, DiffusionSeriesEditor):
 #    pass
 #============= EOF =====================================

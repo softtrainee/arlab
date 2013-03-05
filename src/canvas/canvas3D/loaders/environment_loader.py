@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,22 +16,22 @@
 
 
 
-#'''
-#@author: Jake Ross
-#@copyright: 2009
-#@license: Educational Community License 1.0
-#'''
+# '''
+# @author: Jake Ross
+# @copyright: 2009
+# @license: Educational Community License 1.0
+# '''
 ##=============enthought library imports=======================
 #
 ##=============standard library imports ========================
-#from OpenGL.GL import *
-#import os
+# from OpenGL.GL import *
+# import os
 ##=============local library imports  ==========================
-##from globals import ghome
+# #from globals import ghome
 #
-#from filetools import *
-#import Image
-#def load_textures(tlist):
+# from filetools import *
+# import Image
+# def load_textures(tlist):
 #    '''
 #    '''
 #    texs = glGenTextures(len(tlist))
@@ -50,7 +50,7 @@
 #        glTexImage2D(GL_TEXTURE_2D, 0, 4, img.sizeX, img.sizeY, 0,
 #                     GL_RGBA, GL_UNSIGNED_BYTE, img.data)
 #    return texs
-#def load_texture():
+# def load_texture():
 #    '''
 #    '''
 #    img = Imaged()
@@ -69,14 +69,14 @@
 #    glTexImage2D(GL_TEXTURE_2D, 0, 4, img.sizeX, img.sizeY, 0,
 #                 GL_RGBA, GL_UNSIGNED_BYTE, img.data)
 #    return tex
-#class Imaged:
+# class Imaged:
 #    '''
 #        G{classtree}
 #    '''
 #    sizeX = 0.0
 #    sizeY = 0.0
 #    data = None
-#class Triangle:
+# class Triangle:
 #    '''
 #        G{classtree}
 #    '''
@@ -126,7 +126,7 @@
 #            glVertex3f(float(x), float(y), float(z))
 #        glEnd()
 #
-#def load_environment(sg):
+# def load_environment(sg):
 #    '''
 #    '''
 #

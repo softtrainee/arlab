@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,9 +29,9 @@ from pattern_generators import square_spiral_pattern, line_spiral_pattern, rando
 
 from src.graph.graph import Graph
 import os
-#from src.image.image import Image
-#from chaco.data_range_1d import DataRange1D
-#from chaco.linear_mapper import LinearMapper
+# from src.image.image import Image
+# from chaco.data_range_1d import DataRange1D
+# from chaco.linear_mapper import LinearMapper
 import math
 from src.lasers.pattern.pattern_generators import circular_contour_pattern, \
     diamond_pattern
@@ -164,12 +164,12 @@ class Pattern(Viewable):
 #        if graph is None:
 #            graph = self.graph
 #
-##        p = graph.plots[0].plots['plot0'][0]
-##        for ui in p.underlays:
-##            if isinstance(ui, ImageUnderlay):
-##                ui.image.load(img)
-##                break
-##        else:
+# #        p = graph.plots[0].plots['plot0'][0]
+# #        for ui in p.underlays:
+# #            if isinstance(ui, ImageUnderlay):
+# #                ui.image.load(img)
+# #                break
+# #        else:
 #        if isinstance(data, str):
 #            image = Image()
 #            image.load(data)
@@ -179,21 +179,21 @@ class Pattern(Viewable):
 #            data = data.copy()
 #            data = flipud(data)
 #
-##            mmx = px / 10.0 * (self.xbounds[1] - self.xbounds[0])
-##            mmy = py / 10.0 * (self.ybounds[1] - self.ybounds[0])
-##
-##            w = 640
-##            h = 480
-##            cb = [w / 2 - mmx, w / 2 + mmx, h / 2 - mmy, h / 2 + mmy]
-##            cb = [h / 2 - mmy, h / 2 + mmy, w / 2 - mmx, w / 2 + mmx ]
+# #            mmx = px / 10.0 * (self.xbounds[1] - self.xbounds[0])
+# #            mmy = py / 10.0 * (self.ybounds[1] - self.ybounds[0])
+# #
+# #            w = 640
+# #            h = 480
+# #            cb = [w / 2 - mmx, w / 2 + mmx, h / 2 - mmy, h / 2 + mmy]
+# #            cb = [h / 2 - mmy, h / 2 + mmy, w / 2 - mmx, w / 2 + mmx ]
 #
 #
 #        graph.plots[0].data.set_data('imagedata', data)
 #        graph.plots[0].img_plot('imagedata')
 #
-##            io = ImageUnderlay(component=p, image=image, crop_rect=(640 / 2, 480 / 2, mmx, mmy))
-##
-##            p.underlays.append(io)
+# #            io = ImageUnderlay(component=p, image=image, crop_rect=(640 / 2, 480 / 2, mmx, mmy))
+# #
+# #            p.underlays.append(io)
 #
 #        graph.redraw()
 
@@ -231,8 +231,8 @@ class Pattern(Viewable):
 
 #    def _get_crop_bounds(self):
 #        px = self.pxpermm
-##        mmx = px / 10.0 * 1 / (self.xbounds[1] - self.xbounds[0])
-##        mmy = py / 10.0 * 1 / (self.ybounds[1] - self.ybounds[0])
+# #        mmx = px / 10.0 * 1 / (self.xbounds[1] - self.xbounds[0])
+# #        mmy = py / 10.0 * 1 / (self.ybounds[1] - self.ybounds[0])
 #        windx = (self.xbounds[1] - self.xbounds[0])
 #        mmx = windx * px / 2
 #
@@ -320,10 +320,10 @@ class Pattern(Viewable):
 #        self.set_image(i, px, px, graph=g)
 #        from chaco.image_data import ImageData
 #        image = ImageData.fromfile(p)
-##        print image._data
+# #        print image._data
 #        crop(i.source_frame, 0, 0, 300, 300)
-        #self.pattern.graph.plots[0].plots['plot0'][0].overlays.append(ImageUnderlay(image=i))
-        #self.pattern.graph.plots[0].plots[0].underlays.append(ImageUnderlay(image=i))
+        # self.pattern.graph.plots[0].plots['plot0'][0].overlays.append(ImageUnderlay(image=i))
+        # self.pattern.graph.plots[0].plots[0].underlays.append(ImageUnderlay(image=i))
 #        io = ImageUnderlay(component=lp, image=i, visible=False)
 #        lp.overlays.append(io)
 
@@ -453,8 +453,8 @@ class SpiralPattern(CircularPattern):
         return [pt for pt in gen_out] + [pt for pt in gen_in]
 
     def plot_in(self, ox, oy):
-        pgen_in = self.pattern_generator_factory(ox=ox, #data_out[-1][0],
-                                                 oy=oy, #data_out[-1][1],
+        pgen_in = self.pattern_generator_factory(ox=ox,  # data_out[-1][0],
+                                                 oy=oy,  # data_out[-1][1],
                                                  direction='in')
         data_in = array([pt for pt in pgen_in])
 

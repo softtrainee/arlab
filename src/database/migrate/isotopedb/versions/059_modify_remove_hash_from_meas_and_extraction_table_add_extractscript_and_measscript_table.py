@@ -58,7 +58,7 @@ def downgrade(migrate_engine):
     c.create(mt)
     c = Column('script_name', String(80))
     c.create(mt)
-##
+# #
     c = Column('script_blob', BLOB)
     c.create(et)
     c = Column('hash', String(32))

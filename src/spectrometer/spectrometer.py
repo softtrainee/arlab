@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@
 #============= enthought library imports =======================
 from traits.api import  Instance, Int, Property, List, \
     Any, Enum, Str, DelegatesTo, Event
-#from pyface.timer.api import Timer, do_later, do_after
-#from pyface.timer.do_later import do_later
+# from pyface.timer.api import Timer, do_later, do_after
+# from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 import random
@@ -32,12 +32,12 @@ from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
 from src.constants import NULL_STR
-#from src.graph.graph import Graph
-#from src.graph.regression_graph import RegressionGraph
-#from src.paths import paths
-#import os
-#from src.managers.data_managers.csv_data_manager import CSVDataManager
-#from src.helpers.filetools import unique_dir
+# from src.graph.graph import Graph
+# from src.graph.regression_graph import RegressionGraph
+# from src.paths import paths
+# import os
+# from src.managers.data_managers.csv_data_manager import CSVDataManager
+# from src.helpers.filetools import unique_dir
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
@@ -131,8 +131,8 @@ class Spectrometer(SpectrometerDevice):
 #
 #        #correct for detector
 #        #calculate the dac so that this position is shifted onto the given
-#        #detector. 
-##        dac += self.get_detector_position(detector)
+#        #detector.
+# #        dac += self.get_detector_position(detector)
 #
 #        #correct for deflection
 #        self.magnet.dac = dac
@@ -182,12 +182,12 @@ class Spectrometer(SpectrometerDevice):
 
 
     def update_isotopes(self, isotope, detector):
-        
-        if isotope !=NULL_STR:
+
+        if isotope != NULL_STR:
             det = self.get_detector(detector)
             det.isotope = isotope
             index = self.detectors.index(det)
-    
+
             nmass = int(isotope[2:])
             for i, di in enumerate(self.detectors):
                 mass = nmass - (i - index)
@@ -235,7 +235,7 @@ class Spectrometer(SpectrometerDevice):
     def load(self):
 
         import csv
-        #load the molecular weights dictionary
+        # load the molecular weights dictionary
         p = os.path.join(paths.spectrometer_dir, 'molecular_weights.csv')
         with open(p, 'U') as f:
             reader = csv.reader(f, delimiter='\t')
@@ -288,12 +288,12 @@ class Spectrometer(SpectrometerDevice):
         return keys, signals
 #        if not tagged:
 #            #update the detector current value
-##            for det, dat in zip(self.detectors, data):
-##
-##                if det.active:
-##                    det.intensity = dat
-##                else:
-##                    det.intensity = 0
+# #            for det, dat in zip(self.detectors, data):
+# #
+# #                if det.active:
+# #                    det.intensity = dat
+# #                else:
+# #                    det.intensity = 0
 #            rdata = data
 #        else:
 #            return []
@@ -333,7 +333,7 @@ class Spectrometer(SpectrometerDevice):
         return cor
 
     def correct_dac(self, det, dac):
-#        dac is in axial units 
+#        dac is in axial units
 
 #        convert to detector
         dac *= det.relative_position
@@ -345,7 +345,7 @@ class Spectrometer(SpectrometerDevice):
         relpos==dac_detA/dac_axial 
         
         '''
-        #correct for deflection
+        # correct for deflection
         dev = det.get_deflection_correction()
 
         dac += dev
@@ -353,12 +353,12 @@ class Spectrometer(SpectrometerDevice):
 #        #correct for hv
         dac *= self.get_hv_correction(current=True)
         return dac
-    
-    def uncorrect_dac(self,det, dac):
-        dac/=self.get_hv_correction()
-        dev=det.get_deflection_correction()
-        dac-=dev
-        dac/=det.relative_position
+
+    def uncorrect_dac(self, det, dac):
+        dac /= self.get_hv_correction()
+        dev = det.get_deflection_correction()
+        dac -= dev
+        dac /= det.relative_position
         return dac
 #===============================================================================
 # defaults
@@ -371,7 +371,7 @@ class Spectrometer(SpectrometerDevice):
 
 #============= EOF =============================================
 #    def _peak_center_scan_step(self, di, graph, plotid, cond):
-##       3print cond
+# #       3print cond
 #        if self.first:
 #            self.first = False
 #            x = di
@@ -418,9 +418,9 @@ class Spectrometer(SpectrometerDevice):
 #            period = 150
 #
 #        #do first dac move
-##        di = self.gen.next()
-##        self.magnet.set_dac(di)
-##        time.sleep(2)
+# #        di = self.gen.next()
+# #        self.magnet.set_dac(di)
+# #        time.sleep(2)
 #
 #        if self.scan_timer.IsRunning():
 #            self.scan_timer.Stop()
@@ -445,7 +445,7 @@ class Spectrometer(SpectrometerDevice):
 # old end
 #===============================================================================
 
-        #restart the scan timer
+        # restart the scan timer
 #        self._timer_factory()
 #
 #        return self.finish_peak_center(graph, dac_values, self.intensities)

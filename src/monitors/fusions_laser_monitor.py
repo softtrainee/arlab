@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,9 +18,9 @@
 from traits.api import Int, Float
 
 #============= standard library imports ========================
-#import time
+# import time
 #============= local library imports  ==========================
-#from monitor import Monitor
+# from monitor import Monitor
 from src.monitors.laser_monitor import LaserMonitor
 
 NFAILURES = 3
@@ -55,7 +55,7 @@ class FusionsLaserMonitor(LaserMonitor):
     def _fcheck_interlocks(self):
         '''
         '''
-        #check laser interlocks
+        # check laser interlocks
         manager = self.manager
         self.info('Check laser interlocks')
         interlocks = manager.laser_controller.check_interlocks(verbose=False)
@@ -94,7 +94,7 @@ class FusionsLaserMonitor(LaserMonitor):
         self.info('Check laser coolant status')
 
         status = manager.get_coolant_status()
-        #returns an empty list
+        # returns an empty list
         if status is None:
             self._chiller_unavailable()
         else:
@@ -165,7 +165,7 @@ class FusionsLaserMonitor(LaserMonitor):
 #                break
 
 #        if i == NTRIES - 1:
-#            #failed checking interlocks 
+#            #failed checking interlocks
 #            self.gntries += 1
 #            if self.gntries > NFAILURES:
 #                manager.emergency_shutoff(reason='failed checking interlocks')

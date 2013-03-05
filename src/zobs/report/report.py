@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,9 +90,9 @@ class Report:
         return s
 
     def create_cover_page(self, canvas, doc):
-        #DRAW THE COVER PAGE
-        #THIS SHOULD PROBABY EITHER NOT DO ANYTHING OR PRETTY PRINT PROJECT AND METADATA
-        #PRINTS BRANDING INFO
+        # DRAW THE COVER PAGE
+        # THIS SHOULD PROBABY EITHER NOT DO ANYTHING OR PRETTY PRINT PROJECT AND METADATA
+        # PRINTS BRANDING INFO
 #        nmgrllogo=Image(
 #                        '/Users/Ross/ARLAB/images/NMGRLlogo.gif')
 #        imp = '/Users/Ross/ARLAB/images/NMGRLlogo.gif'
@@ -113,8 +113,8 @@ class Report:
         canvas.drawCentredString(PAGE_WIDTH / 2.0, PAGE_HEIGHT / 2.0 - 2.1 * inch, date)
 
         self._draw_footer(canvas, doc)
-        #canvas.setFont('Times-Roman',9) 
-        #canvas.drawString(inch, 0.75 * inch, "First Page / %s" % pageinfo) 
+        # canvas.setFont('Times-Roman',9)
+        # canvas.drawString(inch, 0.75 * inch, "First Page / %s" % pageinfo)
     def create_report_page(self, canvas, doc):
         self._draw_footer(canvas, doc)
 
@@ -233,7 +233,7 @@ class Report:
                                ('LINEBELOW', (0, 1), (-1, 1), 1, colors.black),
 #                            ('ALIGN', (2, 0), (2, 0), 'LEFT'),
                                ('LINEBELOW', (0, 3), (-1, 3), 1.5, colors.black),
-                               #('LINEBELOW', (0, 0), (-1, -1), 1, colors.red),
+                               # ('LINEBELOW', (0, 0), (-1, -1), 1, colors.red),
 
 #                               ('LINEBEFORE', (0, 0), (-1, -1), 1, colors.black),
                                ('ALIGN', (2, 0), (-1, -1), 'CENTER')
@@ -278,7 +278,7 @@ class Report:
         report_text = []
 
 #        report_text.append(PageBreak())
-        #samples = [('AF-32', 'Groundmass Concentrate', 20.55, 0.01, 0.001, 1.0004, 0.1, 'NM-205G', '56879-01')]
+        # samples = [('AF-32', 'Groundmass Concentrate', 20.55, 0.01, 0.001, 1.0004, 0.1, 'NM-205G', '56879-01')]
 
 
         parser = AutoupdateParser()
@@ -295,19 +295,19 @@ class Report:
 #        report_text.append(space)
 #        report_text.append(Spacer(3.0*inch,0))
         report_text.append(ta)
-#         
+#
 
 #        report_text = self.report_text
         doc.build(report_text,
-                  #onFirstPage=self.create_cover_page, 
+                  # onFirstPage=self.create_cover_page,
                   onLaterPages=self.create_report_page)
-#        
-#        for i in range(20): 
-#            bogustext = ("This is Paragraph number %s.  " % i) *20 
-#            p = Paragraph(bogustext, style) 
-#            Story.append(p) 
-#            Story.append(Spacer(1,0.2*inch)) 
-#        doc.build(Story, onFirstPage=self.create_cover_page, onLaterPages=self.create_report_page) 
+#
+#        for i in range(20):
+#            bogustext = ("This is Paragraph number %s.  " % i) *20
+#            p = Paragraph(bogustext, style)
+#            Story.append(p)
+#            Story.append(Spacer(1,0.2*inch))
+#        doc.build(Story, onFirstPage=self.create_cover_page, onLaterPages=self.create_report_page)
 def time_recursive():
     r = Report()
 #    r.recursive = True
@@ -324,11 +324,11 @@ def time_non_recursive():
 if __name__ == '__main__':
 #    from timeit import Timer
 #    t = Timer('time_recursive', 'from __main__ import time_recursive')
-#    
+#
 #    n = 5
 #    tr = t.timeit(n)
 #    print 'time r', tr, tr / 5
-#    
+#
 #    t = Timer('time_non_recursive', 'from __main__ import time_non_recursive')
 #    tr = t.timeit(n)
 #    print 'time nr', tr, tr / 5

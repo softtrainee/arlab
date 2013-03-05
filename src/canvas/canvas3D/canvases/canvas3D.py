@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ class Canvas3D(wx.glcanvas.GLCanvas):
     '''
     '''
     scene_graph = None
-    #draw = True
+    # draw = True
     def __init__(self, panel):
         '''
         '''
@@ -46,8 +46,8 @@ class Canvas3D(wx.glcanvas.GLCanvas):
 #        h = event.GetSize().GetHeight()
 #        #glViewport(0,0,w/10,h/10)
         #
-        #self.Update()
-        #self.Refresh()
+        # self.Update()
+        # self.Refresh()
     def draw(self, offscreen=False):
         '''
         '''
@@ -95,19 +95,19 @@ class Canvas3D(wx.glcanvas.GLCanvas):
         glLineWidth(2.0)
         glEnable(GL_DEPTH_TEST)
 
-        #glEnable(GL_TEXTURE_2D)
+        # glEnable(GL_TEXTURE_2D)
 
-        #set the lighting
+        # set the lighting
         self._set_lighting()
 
 
-        # set the background color 
-        #glClearColor(0.15, 0.15, 0.15, 1)
+        # set the background color
+        # glClearColor(0.15, 0.15, 0.15, 1)
         glClearDepth(1.0)
 
         # set the camera
         glMatrixMode(GL_PROJECTION)
-        #glPushMatrix()
+        # glPushMatrix()
         glLoadIdentity()
         self._set_view_volume()
 
@@ -134,16 +134,16 @@ class Canvas3D(wx.glcanvas.GLCanvas):
             glEnable(l)
             for pa, args in params:
                 glLightfv(l, pa, args)
-#            
-                #glLightfv(GL_LIGHT0, GL_POSITION, [10, 0, 0, 0])
+#
+                # glLightfv(GL_LIGHT0, GL_POSITION, [10, 0, 0, 0])
 #        glLightfv(GL_LIGHT0, GL_AMBIENT, [0.1, 0.1, 0.1, 1])
 #        glLightfv(GL_LIGHT0, GL_SPECULAR, [1, 1, 1, 1])
 #        glLightfv(GL_LIGHT0, GL_DIFFUSE, [1, 1, 1, 1])
-#        
+#
 #        glLightfv(GL_LIGHT0,GL_SPOT_CUTOFF,30)
-#        
+#
 #        glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,[-1,0,0,0])
-#        
+#
 
 
 

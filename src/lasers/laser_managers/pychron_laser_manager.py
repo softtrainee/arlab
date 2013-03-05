@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -124,7 +124,7 @@ class PychronLaserManager(BaseLaserManager):
 
         pm.start()
 
-        #set the current position
+        # set the current position
         xyz = self.get_position()
         if xyz:
             pm.set_current_position(*xyz)
@@ -167,7 +167,7 @@ class PychronLaserManager(BaseLaserManager):
         self._cancel_blocking = True
 
 #===============================================================================
-# 
+#
 #===============================================================================
     def _move_to_position(self, pos):
         cmd = 'GoToHole {}'.format(pos)
@@ -214,7 +214,7 @@ class PychronLaserManager(BaseLaserManager):
 
         cnt = 0
         tries = 0
-        maxtries = 200 #timeout after 50 s
+        maxtries = 200  # timeout after 50 s
         nsuccess = 4
         self._cancel_blocking = False
         period = 0.25
@@ -365,7 +365,7 @@ class PychronUVLaserManager(PychronLaserManager):
     def _get_fire_label(self):
         return 'Stop' if self.firing else 'Fire'
 #===============================================================================
-#    
+#
 #===============================================================================
     def _position_changed(self):
         if self.position is not None:
@@ -373,7 +373,7 @@ class PychronUVLaserManager(PychronLaserManager):
             t.start()
 #            self._move_to_position(self.position)
 #===============================================================================
-# 
+#
 #===============================================================================
     def extract(self, power):
         self._set_nburst(power)

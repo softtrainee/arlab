@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,15 +71,15 @@ class SpectrometerManager(Manager):
     def finish_loading(self):
         integration_time = 1.048576
 
-        #set device microcontrollers
+        # set device microcontrollers
         self.spectrometer.set_microcontroller(self.spectrometer_microcontroller)
 
-        #update the current hv
+        # update the current hv
         self.spectrometer.source.sync_parameters()
 
-        #set integration time
+        # set integration time
         self.integration_time = integration_time
-        #self.integration_time = 0.065536
+        # self.integration_time = 0.065536
 
         self.spectrometer.load_configurations()
         self.spectrometer.finish_loading()
@@ -116,13 +116,13 @@ class SpectrometerManager(Manager):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('spectrometer')
-##    s = SpectrometerManager()
+# #    s = SpectrometerManager()
 #    ini = Initializer()
 #    ini.add_initialization(dict(name='spectrometer_manager',
 #                                manager=s
 #                                ))
 #    ini.run()
-##    s.magnet_field_calibration()
+# #    s.magnet_field_calibration()
 #    s.configure_traits()#kind = 'live')
 #============= EOF =============================================
 #    def _update_hover(self, obj, name, old, new):
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 #            g = Graph(container_dict=dict(padding=[30, 0, 0, 30]))
 #            g.new_plot(padding=5)
 #            g.new_series()
-##            root = os.path.join(data_dir, 'magfield', 'def_calibration001')
+# #            root = os.path.join(data_dir, 'magfield', 'def_calibration001')
 #            try:
 #                p = os.path.join(self.results_root, self.center_paths[new])
 #            except IndexError:

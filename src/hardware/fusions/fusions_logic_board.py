@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,13 @@ see Photon Machines Logic Board Command Set for additional information
 '''
 #=============enthought library imports=======================
 from traits.api import  Instance, DelegatesTo, Str, Float, List
-#from traitsui.api import Item, VGroup, RangeEditor
+# from traitsui.api import Item, VGroup, RangeEditor
 from traitsui.api import Item, ListEditor, InstanceEditor, Group, View
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
 from globals import globalv
-#from fusions_motor_configurer import FusionsMotorConfigurer
+# from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.kerr.kerr_microcontroller import KerrMicrocontroller
 from src.hardware.kerr.kerr_motor import KerrMotor
@@ -67,10 +67,10 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
 
-        #disable laser
+        # disable laser
 
-        #test communciations with board issue warning if 
-        #no handle or response is none
+        # test communciations with board issue warning if
+        # no handle or response is none
         resp = True
         if self._test_comms:
             resp = True if self.ask(';LB.VER') else False
@@ -83,10 +83,10 @@ class FusionsLogicBoard(CoreDevice):
                 if result:
                     os._exit(0)
 
-        #turn off pointer
+        # turn off pointer
         self.set_pointer_onoff(False)
 
-        #initialize Kerr devices
+        # initialize Kerr devices
         self.motor_microcontroller.initialize(*args, **kw)
 
         for m in self.motors:
@@ -173,12 +173,12 @@ class FusionsLogicBoard(CoreDevice):
 #        if motor:
 #            return cb(motor, vattr)
 #
-##    def __setattr__(self, attr, v):
-##        print attr, v
-##        cb = lambda m, va:setattr(m, va, v)
-##        r = self._motor_attr(attr, cb)
-##        if not r:
-##            super(FusionsLogicBoard, self).__setattr__(attr, v)
+# #    def __setattr__(self, attr, v):
+# #        print attr, v
+# #        cb = lambda m, va:setattr(m, va, v)
+# #        r = self._motor_attr(attr, cb)
+# #        if not r:
+# #            super(FusionsLogicBoard, self).__setattr__(attr, v)
 #
 #    def __getattr__(self, attr):
 #        cb = lambda m, va:getattr(m, va)
@@ -241,7 +241,7 @@ class FusionsLogicBoard(CoreDevice):
 #        fc.edit_traits()
 
 #==============================================================================
-#laser methods
+# laser methods
 #==============================================================================
     def check_interlocks(self, verbose=True):
         '''
@@ -349,7 +349,7 @@ class FusionsLogicBoard(CoreDevice):
 #        return KerrMotor(name='beameere', parent=self)
 
 #==============================================================================
-#motor methods
+# motor methods
 #==============================================================================
     def set_motor(self, name, value, block=False,
                   relative=False):

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
-#import time
+# import time
 #=============local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 
@@ -39,17 +39,17 @@ class AnalogDigitalConverter(CoreDevice):
 #        '''
 #        return self.read_device(**kw)
 
-            #self.stream_manager.record(r, self.name)
+            # self.stream_manager.record(r, self.name)
 
-#'''
-#Agilent requires chr(10) as its communicator terminator
+# '''
+# Agilent requires chr(10) as its communicator terminator
 #
-#'''
-#class AgilentADC(AnalogDigitalConverter):
+# '''
+# class AgilentADC(AnalogDigitalConverter):
 #    '''
 #    '''
-##    def __init__(self, *args, **kw):
-##        super(AgilentADC, self).__init__(*args, **kw)
+# #    def __init__(self, *args, **kw):
+# #        super(AgilentADC, self).__init__(*args, **kw)
 #    address = None
 #
 #    def load_additional_args(self, config):
@@ -123,7 +123,7 @@ class AnalogDigitalConverter(CoreDevice):
 #
 #    def _parse_response_(self, r):
 #        '''
-#            
+#
 #        '''
 #        if r is None:
 #            return r
@@ -162,7 +162,7 @@ class M1000(AnalogDigitalConverter):
 #
 #        addr = '%02X' % ord(self.address)
 #
-#        byte2 = '01' #comunications options 
+#        byte2 = '01' #comunications options
 #                    #no linefeed, no parity 19200kbs
 #        byte3 = '01' #seldom used options
 #        btye4 = '%02X' % int('1100000', 2)

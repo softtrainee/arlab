@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ class AnalysisSummary(Summary):
 #        if not isos:
 #            isos = []
 
-        #add header
+        # add header
         columns = [('Det.', 0),
                    ('Iso.', 0),
                    ('Int.', 12), (PLUSMINUS_ERR, 18),
@@ -54,13 +54,13 @@ class AnalysisSummary(Summary):
 
         underline_width = len(header)
 
-        #add metadata
+        # add metadata
         self._make_keyword('Analysis ID', record.record_id, width=30)
 
         self._make_keyword('Date', record.rundate)
         self._make_keyword('Time', record.runtime, new_line=True)
 
-        #add extraction
+        # add extraction
         self._make_keyword('Mass Spectrometer', record.mass_spectrometer, width=30)
         self._make_keyword('Extraction Device', record.extract_device, new_line=True)
         exs = [
@@ -73,12 +73,12 @@ class AnalysisSummary(Summary):
         for i, (name, value) in enumerate(exs):
             self._make_keyword(name, value, True if i == n - 1 else False)
 
-        #add j
+        # add j
         j, je = record.j
         self._make_keyword('J', '{} {}{}'.format(j, PLUSMINUS, self.make_error(j, je)),
                            new_line=True)
 
-        #add sensitivity
+        # add sensitivity
         s = record.sensitivity
         m = record.sensitivity_multiplier
 
@@ -93,7 +93,7 @@ class AnalysisSummary(Summary):
         ics = '{} {}{}'.format(ic, PLUSMINUS, self.make_error(ic, ic_e))
         self._make_keyword('IC', ics, new_line=True)
         self._make_keyword('Sensitivity', ss, new_line=True)
-        #added header
+        # added header
         self.add_text(header, underline=True, bold=True)
 
         keys = record.isotope_keys
@@ -101,12 +101,12 @@ class AnalysisSummary(Summary):
             iso = record.isotopes[k]
             self._make_isotope(iso, widths, last_line=i == n)
 
-        #add corrected signals
+        # add corrected signals
         m = 'Baseline Corrected Signals          Fully Corrected Signals'
         self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
         widths = [5, 12, 10, 5, 12, 10]
 
-        #refresh arar_result
+        # refresh arar_result
         self.record.calculate_age()
 
         keys = record.isotope_keys
@@ -116,7 +116,7 @@ class AnalysisSummary(Summary):
 #        for i, iso in enumerate(isos):
 #            self._make_corrected_signals(n, i, iso, widths, underline_width)
 
-        #add corrected values
+        # add corrected values
         m = 'Corrected Values'
         self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
 #
@@ -300,7 +300,7 @@ class AnalysisSummary(Summary):
 
 
 #============= EOF =============================================
-#class AnalysisSummary2(HasTraits):
+# class AnalysisSummary2(HasTraits):
 #    age = Float
 #    error = Float
 #    record = Any
@@ -313,25 +313,25 @@ class AnalysisSummary(Summary):
 #    def _get_summary(self):
 #        from jinja2 import Template
 #        doc = '''
-#{{header1}}
-#{{data1}}
+# {{header1}}
+# {{data1}}
 #
-#Name:{{record.filename}}
-#Root:{{record.directory}}
+# Name:{{record.filename}}
+# Root:{{record.directory}}
 #
-#{{header2}}
-#{%- for k,v in signals %}
-#{{k}}\t{{v}} 
-#{%- endfor %}
+# {{header2}}
+# {%- for k,v in signals %}
+# {{k}}\t{{v}}
+# {%- endfor %}
 #
-#Age : {{obj.age}}\xb1{{obj.error}}    
-#'''
+# Age : {{obj.age}}\xb1{{obj.error}}
+# '''
 #
 #        data1 = map(lambda x: getattr(self.record, x), ['rid', 'rundate', 'runtime'])
 #
 #        temp = Template(doc)
 #        join = lambda f, n: ('\t' * n).join(f)
-##        join = '\t\t\t'.join
+# #        join = '\t\t\t'.join
 #        entab = lambda x:map('{}'.format, map(str, x))
 #        makerow = lambda x, n: join(entab(x), n)
 #        record = self.record
@@ -347,7 +347,7 @@ class AnalysisSummary(Summary):
 #        return r
 #
 #    def traits_view(self):
-##        s = 51
+# #        s = 51
 #        ha1 = wx.TextAttr()
 #        f = wx.Font(12, wx.MODERN, wx.NORMAL,
 #                         wx.NORMAL, False, u'Consolas')
@@ -380,7 +380,7 @@ class AnalysisSummary(Summary):
 #                  }
 #
 #        v = View(Item('summary', show_label=False,
-##                      editor=HTMLEditor()
+# #                      editor=HTMLEditor()
 #                        style='custom',
 #                        editor=SelectableReadonlyTextEditor(
 #                        styles=styles,

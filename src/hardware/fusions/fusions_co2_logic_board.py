@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         self.set_attribute(config, 'request_powermax', 'General',
                             'power max', cast='float')
 
-        #read in the coefficients from file
+        # read in the coefficients from file
         coeffs = self.config_get(config, 'PowerMeter', 'coefficients')
         if coeffs is not None:
             self.power_meter_calibration = MeterCalibration(coeffs)
@@ -57,8 +57,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
                         '{}_power_calibration'.format(self.name.split('.')[0]))
 
             obj = MeterCalibration(coeffs)
-            #dump to the hidden dir 
-            #the manager will use it directly
+            # dump to the hidden dir
+            # the manager will use it directly
             try:
                 self.info('loading power calibration from config file')
                 with open(p, 'wb') as f:
@@ -99,9 +99,9 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         if r is not None:
             try:
                 r = float(r)
-            #convert to watts
-            #no calibration of logic board currently available
-            #will have to simple normalize to 100
+            # convert to watts
+            # no calibration of logic board currently available
+            # will have to simple normalize to 100
 
                 if self.power_meter_calibration is not None:
                     r = self.power_meter_calibration.get_input(r)

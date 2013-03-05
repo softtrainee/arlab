@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ from chaco.plot_containers import GridPlotContainer
 from chaco.data_label import DataLabel
 from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
-#from chaco.scatterplot import ScatterPlot
+# from chaco.scatterplot import ScatterPlot
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
@@ -33,8 +33,8 @@ from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapte
 from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
-#from enable.font_metrics_provider import font_metrics_provider
-#from src.canvas.popup_window import PopupWindow
+# from enable.font_metrics_provider import font_metrics_provider
+# from src.canvas.popup_window import PopupWindow
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.stacked_graph import StackedGraph
 from src.processing.plotters.graph_panel_info import GraphPanelInfo
@@ -328,7 +328,7 @@ class Plotter(Viewable):
             ffunc = getattr(selection, func)
             ffunc(point)
 
-            #force scatterplot to compute selection cache
+            # force scatterplot to compute selection cache
             plot._selection_cache_valid = False
 
         except IndexError, e:
@@ -400,22 +400,22 @@ class Plotter(Viewable):
                                value_format=None,
                                additional_info=None
                                ):
-        #add a scatter hover tool
+        # add a scatter hover tool
 #        bc = BroadcasterTool()
 #        broadcaster = BroadcasterTool()
 #        scatter.tools.append(broadcaster)
 #        self.plots[plotid].container.tools.append(broadcaster)
 #        scatter.tools.append(ScatterInspector(scatter,
-##                                              selection_mode='off'
+# #                                              selection_mode='off'
 #                                              ))
 
 #        broadcaster.tools.append(ScatterInspector(scatter,
-##                                              selection_mode='off'
+# #                                              selection_mode='off'
 #                                              ))
 
 #        rect_tool = RectSelectionTool(scatter,
-##                                      parent=self,
-##                                      plot=self.graph.plots[0],
+# #                                      parent=self,
+# #                                      plot=self.graph.plots[0],
 #                                      plotid=1
 #                                      )
         if add_tool:
@@ -462,9 +462,9 @@ class Plotter(Viewable):
 #        overlay = ScatterInspectorOverlay(scatter,
 #                    hover_color="red",
 #                    hover_marker_size=int(scatter.marker_size + 2),
-                    #selection_color='transparent',
-                    #selection_marker_size=int(scatter.marker_size),
-                    #selection_marker=scatter.marker
+                    # selection_color='transparent',
+                    # selection_marker_size=int(scatter.marker_size),
+                    # selection_marker=scatter.marker
 #                    selection_outlin
 #                    )
 #        scatter.overlays.append(overlay)
@@ -488,8 +488,8 @@ class Plotter(Viewable):
                           marker_visible=False,
                           text_color=color,
 
-                          #setting the arrow to visible causes an error when reading with illustrator
-                          #if the arrow is not drawn
+                          # setting the arrow to visible causes an error when reading with illustrator
+                          # if the arrow is not drawn
                           arrow_visible=False,
                           **kw
                           )
@@ -521,7 +521,7 @@ class Plotter(Viewable):
             self.selected_analysis = None
 
         sel = obj.metadata.get('selections', [])
-        #set the temp_status for all the analyses
+        # set the temp_status for all the analyses
         for i, a in enumerate(sorted_ans):
             a.temp_status = 1 if i in sel else 0
 
@@ -553,7 +553,7 @@ class Plotter(Viewable):
         return zip(*[(ri.nominal_value, ri.std_dev()) for ri in pairs])
 
     def _add_plot_metadata(self, g):
-        #add meta plot info
+        # add meta plot info
         font = self._get_plot_option(self.options, 'metadata_label_font', default='modern 10')
         ustr = self.metadata_label_text
 #        ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)
@@ -640,22 +640,22 @@ class Plotter(Viewable):
 #            gc.set_font(Font(face_name=font.GetFaceName(),
 #                             size=font.GetPointSize(),
 #                             family=font.GetFamily(),
-##                             weight=font.GetWeight(),
-##                             style=font.GetStyle(),
-##                             underline=0, 
-##                             encoding=DEFAULT
+# #                             weight=font.GetWeight(),
+# #                             style=font.GetStyle(),
+# #                             underline=0,
+# #                             encoding=DEFAULT
 #                             ))
 #            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-##            print linewidths, lineheights
+# #            print linewidths, lineheights
 #            ml = max(linewidths)
 #            mh = max(lineheights)
 #
-##        ch = popup.GetCharWidth()
+# #        ch = popup.GetCharWidth()
 #        mh = mh * len(lines)
-##        print ml, mh
-##        popup.Freeze()
+# #        print ml, mh
+# #        popup.Freeze()
 #        popup.SetPosition((x + 55, y + 25))
 #        popup.set_size(ml, mh)
 #        popup.SetText(t)
 #        popup.Show(True)
-##        popup.Thaw()
+# #        popup.Thaw()

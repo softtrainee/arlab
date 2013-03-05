@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Bool, Any, Instance, List, Float, Tuple, Int
-from traitsui.api import View, Item#, TableEditor
+from traitsui.api import View, Item  # , TableEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import numpy as np
@@ -185,7 +185,7 @@ class Camera(ConfigLoadable):
             else:
                 d = self.height
 
-            #scale to mm
+            # scale to mm
             if canvas is None:
                 canvas = self.parent
 
@@ -204,7 +204,7 @@ class Camera(ConfigLoadable):
 if __name__ == '__main__':
 #    c = Camera()
 #    p = '/Users/fargo2/Pychrondata_beta/setupfiles/canvas2D/camera.txt'
-#    c.save_calibration_data(p)    
+#    c.save_calibration_data(p)
     c = CalibrationData(xcoeff_str='1.1, 5')
     c.configure_traits()
 
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 #    def reset_calibration_data(self):
 #
 #        self.calibration_data = np.array([[], []])
-##
+# #
 #    def add_calibration_datum(self, zoom, pxpercm):
 #        x = self.calibration_data[0]
 #        if zoom in x:

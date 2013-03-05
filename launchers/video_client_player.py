@@ -15,8 +15,8 @@ from scipy.misc.pilutil import toimage
 # Icons film.png, control_stop.png, and control_play.png were sourced from
 # Mark James' Silk icon set 1.3 at http://www.famfamfam.com/lab/icons/silk/
 
-#WIDTH = 1280
-#HEIGHT = 720
+# WIDTH = 1280
+# HEIGHT = 720
 class Client(Thread):
     data = None
     queue = None
@@ -165,15 +165,15 @@ class VideoClientPlayer(wx.Frame):
         self.playing = False
 
 #    def onPlay(self, evt):
-##        fps = cv.GetCaptureProperty(self.capture, cv.CV_CAP_PROP_FPS)
-##        if fps != 0:
-##            self.playTimer.Start(1000 / fps)#every X ms
-##        else:
-##        frame = self.capture.get_frame()
+# #        fps = cv.GetCaptureProperty(self.capture, cv.CV_CAP_PROP_FPS)
+# #        if fps != 0:
+# #            self.playTimer.Start(1000 / fps)#every X ms
+# #        else:
+# #        frame = self.capture.get_frame()
 #
 #
-##        self.bmp = wx.BitmapFromBuffer(w, h, frame)
-##        self.SetSize((w, h))
+# #        self.bmp = wx.BitmapFromBuffer(w, h, frame)
+# #        self.SetSize((w, h))
 #        self.playTimer.Start(1000 / 15)#assuming 15 fps
 #        self.playing = True
 

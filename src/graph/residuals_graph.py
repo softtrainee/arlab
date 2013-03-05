@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -130,7 +130,7 @@ class ResidualsGraph(RegressionGraph):
                     )
 
 #        left_axis = PlotAxis(bar, orientation = 'left')
-        #bottom_axis=PlotAxis(bar,orientaiton='bottom')
+        # bottom_axis=PlotAxis(bar,orientaiton='bottom')
 
         kw = dict(vtitle='residuals')
         if self.xtitle:
@@ -153,18 +153,18 @@ class ResidualsGraph(RegressionGraph):
                     bar_width=0.2,
                     line_color='green',
                     fill_color='green',
-                    #bgcolor = 'green',
+                    # bgcolor = 'green',
 
                     resizable='hv',
                     border_visible=True,
-                    #padding = [30, 5, 0, 30]
+                    # padding = [30, 5, 0, 30]
                     )
         bar2.overlays.append(GuideOverlay(bar2, value=0, color=(0, 0, 0)))
         bar2.underlays.append(hgrid)
         container.add(bar)
         container.add(bar2)
 
-        #container.add(PlotLabel('foo'))
+        # container.add(PlotLabel('foo'))
 
         self.residual_plots = [bar, bar2]
         self.plotcontainer.add(container)

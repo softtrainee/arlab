@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
-#from traitsui.api import View, Item, Group, HGroup, VGroup
+# from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
+# from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -39,7 +39,7 @@ class ImageCanvas(BaseDataCanvas):
 
         self.underlays.insert(0, image_underlay)
 
-        #self.overlays.pop()
+        # self.overlays.pop()
 
         for key, d in [('x_grid', dict(line_color=(1, 1, 0),
                                      line_width=1,

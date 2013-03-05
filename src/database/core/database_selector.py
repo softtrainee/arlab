@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ class ColumnSorterMixin(HasTraits):
         self._sort_columns(values, field)
 
     def _sort_columns(self, values, field=None):
-        #get the field to sort on
+        # get the field to sort on
         if field is None:
             field = self._sort_field
             if field is None:
@@ -63,7 +63,7 @@ class ColumnSorterMixin(HasTraits):
 class SelectorHandler(Handler):
     def init(self, info):
         pass
-##        if info.initialized:
+# #        if info.initialized:
 #        import wx
 #        for control in info.ui.control.GetChildren()[0].GetChildren():
 #            if isinstance(control, wx.Button):
@@ -181,7 +181,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 # private
 #===============================================================================
     def _get_recent(self):
-        #param = '{}.{}'.format(self.query_table.__tablename__, self.date_str)
+        # param = '{}.{}'.format(self.query_table.__tablename__, self.date_str)
 #        comp = '='
         criterion = 'this month'
         q = self.queries[0]
@@ -213,7 +213,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if queries is None:
             queries = self.queries
 
-        #@todo: only get displayed columns
+        # @todo: only get displayed columns
         dbs, query_str = self._get_selector_records(limit=self.limit,
                                                     queries=queries
                                                     )
@@ -414,7 +414,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        if load:
 #            d.load()
 #
-##        d.on_trait_change(self._changed, 'changed')
+# #        d.on_trait_change(self._changed, 'changed')
 #        d.on_trait_change(self._record_closed, 'close_event')
 #        return d
 #===============================================================================

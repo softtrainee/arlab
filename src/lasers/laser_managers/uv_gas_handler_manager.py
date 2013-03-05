@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ from enable.component_editor import ComponentEditor
 from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
 import os
 from src.paths import paths
-#from src.managers.manager import Manager
+# from src.managers.manager import Manager
 from src.extraction_line.valve_manager import ValveManager
 from pyface.timer.timer import Timer
 #============= standard library imports ========================
@@ -36,7 +36,7 @@ class UVGasHandlerManager(ValveManager):
 
     auto_gas_exchange = Button
 
-    #energy_readback=DelegatesTo('controller')
+    # energy_readback=DelegatesTo('controller')
     pressure_readback = DelegatesTo('controller')
 #    pressure_readback=Float
     def set_software_lock(self, name, lock):
@@ -101,7 +101,7 @@ class UVGasHandlerManager(ValveManager):
     def traits_view(self):
         ctrl_grp = HGroup(Item('auto_gas_exchange', show_label=False))
         info_grp = HGroup(
-                        #Item('energy_readback', width=50,style='readonly'),
+                        # Item('energy_readback', width=50,style='readonly'),
                         Item('pressure_readback', width=50, style='readonly')
                         )
         v = View(

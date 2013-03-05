@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,26 +24,26 @@ from traitsui.table_column import ObjectColumn
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
-#import numpy as np
+# import numpy as np
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-#from src.scripts.laser.power_map_script import PowerMapScript
-#from src.canvas.canvas2D.raster_canvas import RasterCanvas
+# from src.scripts.laser.power_map_script import PowerMapScript
+# from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from threading import Thread
 
 from src.lasers.power.power_mapping import PowerMapping
 from src.paths import paths
 from pyface.timer.do_later import do_later
-#from src.helpers.datetime_tools import get_datetime
-#from src.database.adapters.power_map_adapter import PowerMapAdapter
+# from src.helpers.datetime_tools import get_datetime
+# from src.database.adapters.power_map_adapter import PowerMapAdapter
 
-#from enable.component_editor import ComponentEditor
-#class PowerMapStep(HasTraits):
+# from enable.component_editor import ComponentEditor
+# class PowerMapStep(HasTraits):
 #    beam_diameter = Float
 #    padding = Float
 #    step_length = Float
 #    power = Float
-#class PowerMapHandler(Handler):
+# class PowerMapHandler(Handler):
 #    def close(self, info, ok):
 #        info.object.script.kill_script()
 #        return True
@@ -128,7 +128,7 @@ class PowerMapManager(Manager):
             self.execute()
 
     def kill(self):
-        #suppress killing
+        # suppress killing
         pass
 
     def end(self, user_cancel=False):
@@ -172,7 +172,7 @@ class PowerMapManager(Manager):
         self.end()
         self._alive = False
 
-##        
+# #
 
 #        if not self.script.isAlive():
 #            self.script.kind = self.kind
@@ -195,10 +195,10 @@ class PowerMapManager(Manager):
 #    def _canvas_default(self):
 #        return RasterCanvas()
 #    def _database_default(self):
-##        db = PowerMapAdapter(
-##                             name='co2laserdb',
-##                            password='Argon'
-##                            )
+# #        db = PowerMapAdapter(
+# #                             name='co2laserdb',
+# #                            password='Argon'
+# #                            )
 #        db = PowerMapAdapter(
 #                            name=paths.co2laser_db,
 #                            kind='sqlite'

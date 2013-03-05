@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,23 +17,23 @@
 
 
 ##=============enthought library imports=======================
-#from traits.api import HasTraits, Float, Any
-#from traitsui.api import View, Item
-#from pyface.timer.api import Timer
+# from traits.api import HasTraits, Float, Any
+# from traitsui.api import View, Item
+# from pyface.timer.api import Timer
 #
 ##=============standard library imports ========================
-#import math, copy
+# import math, copy
 #
 ##=============local library imports  ==========================
 #
-#def point_calc(nx, ny):
+# def point_calc(nx, ny):
 #    '''
 #        @type ny: C{str}
 #        @param ny:
 #    '''
 #    return 500 - 0.005 * (nx - 150) ** 2 + 500 - 0.005 * (ny - 350) ** 2#+random.randint(0,2)
 #
-#class Triangle(object):
+# class Triangle(object):
 #    def __init__(self):
 #        '''
 #        '''
@@ -76,7 +76,7 @@
 #                    gc.show_text('%0.1f' % v)
 #
 #        gc.restore_state()
-#class Searcher(HasTraits):
+# class Searcher(HasTraits):
 #    '''
 #        G{classtree}
 #    '''

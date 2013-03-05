@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,24 +60,24 @@ class YorkRegressor(OLSRegressor):
             intercept = _y_ - m * _x_
             return slope, intercept
 
-        #get a starting slope
+        # get a starting slope
         m = self.coefficients[0]
 
         for i in range(10):
-            #evaluate f(m) for m-n, m+n and find the roots
+            # evaluate f(m) for m-n, m+n and find the roots
             n = 1 / float(i)
             ms = linspace(m - n, m + n, 100)
             fs, cs = apply_along_axis(f, 0, ms)
 
-            #find roots
-            #find where fs crosses zero line
+            # find roots
+            # find where fs crosses zero line
             asign = sign(fs)
             signchange = ((roll(asign, 1) - asign) != 0).astype(int)
 
             roots = where(signchange == 1)[0]
 
             ss_min = Inf
-            #find root that minminzes ss_resid
+            # find root that minminzes ss_resid
             for ri in roots:
                 m, c = fs[ri], cs[ri]
                 W = Wx * Wy / (ri ** 2 * Wy + Wx)
@@ -86,7 +86,7 @@ class YorkRegressor(OLSRegressor):
                     ss_min = ss
                     ri_min = ri
 
-            #do f(m) around ri_min with tighter bounds
+            # do f(m) around ri_min with tighter bounds
             m = ri_min
 
 #============= EOF =============================================

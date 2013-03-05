@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,10 +33,10 @@ class AffineTransform:
         if init:
             if len(init) == 6 :
                 self.A = init
-            if type(init) == type(self): # erpht!!! this seems so wrong
+            if type(init) == type(self):  # erpht!!! this seems so wrong
                 self.A = init.A
         else:
-            self.A = [1.0, 0, 0, 1.0, 0.0, 0.0] # set to identity
+            self.A = [1.0, 0, 0, 1.0, 0.0, 0.0]  # set to identity
 
     def scale(self, sx, sy):
         self.A = [sx * self.A[0], sx * self.A[1], sy * self.A[2], sy * self.A[3], self.A[4], self.A[5] ]
@@ -63,7 +63,7 @@ class AffineTransform:
 
     def rightMultiply(self, a, b, c, d, e, f):
         "multiply self.A by matrix M defined by coefficients a,b,c,d,e,f"
-        # 
+        #
 
         #             [    m0*a+m2*b,    m0*c+m2*d, m0*e+m2*f+m4]
         #  ctm * M =  [    m1*a+m3*b,    m1*c+m3*d, m1*e+m3*f+m5]
@@ -95,7 +95,7 @@ class AffineTransform:
 
     def transformFlatList(self, seq):
         # transform a (flattened) sequence of points in form [x0,y0, x1,y1,..., x(N-1), y(N-1)]
-        N = len(seq) # assert N even
+        N = len(seq)  # assert N even
 
         # would like to reshape the sequence, do w/ a loop for now
         res = []

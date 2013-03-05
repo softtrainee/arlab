@@ -1,13 +1,13 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,7 +73,7 @@ def betaFraction(x, p, q):
     while m <= MAX_ITERATIONS and abs(delta - 1.0) > PRECISION:
         m2 = 2 * m
 
-        # even index for d 
+        # even index for d
         d = m * (q - m) * x / ((p_minus + m2) * (p + m2))
         h = 1.0 + d * h
         if abs(h) < XMININ:
@@ -410,10 +410,10 @@ def stats(r, confidence_interval=0.05):
     # We must estimate both using the t distribution:
     # http://davidmlane.com/hyperstat/B7483.html
     # s_m = s / sqrt(N)
-    ###~ s_m = standard_deviation / math.sqrt(len(r))
+    # ##~ s_m = standard_deviation / math.sqrt(len(r))
     # Degrees of freedom = n-1
     # t = tinv(0.05, degrees_of_freedom)
     # confidence = +/- t * s_m
-    ###~ confidence = cached_tinv(confidence_interval, len(r)-1) * s_m
-    #~ return average, median, standard_deviation, minimum, maximum, confidence, interval25, interval75
+    # ##~ confidence = cached_tinv(confidence_interval, len(r)-1) * s_m
+    # ~ return average, median, standard_deviation, minimum, maximum, confidence, interval25, interval75
     return average, median, standard_deviation, minimum, maximum, interval25, interval75

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +19,14 @@ from numpy import array, ones, zeros
 from src.image.centroid.calculate_centroid import calculate_centroid
 
 #
-#def clone(src):
+# def clone(src):
 #    return cv.cloneMat(src)
 
-#def cvSetImageROI():
+# def cvSetImageROI():
 #    pass
-#def cvResetImageROI():
+# def cvResetImageROI():
 #    pass
-#def subsample(src, x, y, w, h):
+# def subsample(src, x, y, w, h):
 #    return cv.asMat(src[x:]
 def resize(src, w, h, dst=None):
     if dst is None:
@@ -43,11 +43,11 @@ def asMat(src, *args, **kw):
 def frompil(src):
     return cv.Mat.from_pil_image(src)
 
-#def setImageROI(*args):
+# def setImageROI(*args):
 #    return cv.setImageROI(*args)
 #
 #
-#def resetImageROI(*args):
+# def resetImageROI(*args):
 #    return cv.ResetImageROI(*args)
 
 
@@ -112,7 +112,7 @@ def grayspace(src):
 #    dst = cv.Mat(src.size(), cv.CV_8UC1)#cv.Size(src.cols, src.rows), cv.CV_8UC1)
 #    cv.cvtColor(src, dst, cv.CV_BGR2GRAY)
     if src.channels() > 1:
-        dst = cv.Mat(src.size(), cv.CV_8UC1)#cv.Size(src.cols, src.rows), cv.CV_8UC1)
+        dst = cv.Mat(src.size(), cv.CV_8UC1)  # cv.Size(src.cols, src.rows), cv.CV_8UC1)
         cv.cvtColor(src, dst, cv.CV_BGR2GRAY)
     else:
         dst = src
@@ -139,11 +139,11 @@ def swapRB(src):
         cv.convertImage(src, src, cv.CV_CVTIMG_SWAP_RB)
         return src
 
-#def new_dst(src, width=None, height=None, a=None, b=None):
+# def new_dst(src, width=None, height=None, a=None, b=None):
 #    return src.clone()
 
 
-#def new_color_dst(width, height, zero=True):
+# def new_color_dst(width, height, zero=True):
 #    dst = cv.Mat(cv.Size(width, height), cv.CV_8UC3)
 #    if zero:
 #        zeros((width, height, 3))
@@ -172,7 +172,7 @@ def add_scalar(src, v):
 
     cv.add(src, cv.Scalar(*v), src)
 
-#def zero(src):
+# def zero(src):
 #    cv.zero(src)
 #===============================================================================
 # morphology
@@ -270,8 +270,8 @@ def get_focus_measure(src, kind):
 #    src = grayspace(src)
 #    d = src.ndarray
 #
-##    print d[0]
-##    print d[-1]
+# #    print d[0]
+# #    print d[-1]
 #    fftsig = fft(d)
 #    d = abs(fftsig)
 #    print d.shape
@@ -285,11 +285,11 @@ def get_focus_measure(src, kind):
 #    N = len(d)
 #    f = 50000 * r_[0:(N / 2)] / N
 #    n = len(f)
-##    print f
+# #    print f
 #    d = d.transpose()
 #    d = abs(fftsig[:n]) / N
 #    print d
-##    plot(f, d[0], 'b', f, d[1], 'g', f, d[2], 'r')
+# #    plot(f, d[0], 'b', f, d[1], 'g', f, d[2], 'r')
 #    plot(f, d)
 #    show()
 
@@ -384,7 +384,7 @@ def find_lines(src, t1, minlen=100):
 
 def get_polygons(contours, hierarchy,
                  convextest=False,
-#                 hole=False, 
+#                 hole=False,
                  nsides=5,
                  min_area=100,
                  perimeter_smooth_factor=0.001,
@@ -418,7 +418,7 @@ def get_polygons(contours, hierarchy,
 #            ch = cv.asMat(cv.convexHull_int(cont))
 #            ch = cv.asMat(ch.ndarray.flatten())
 #            seq = cv.convexityDefects(cont, ch, cv.createMemStorage(0))
-#            
+#
 #        if not hole_flag:
 #            continue
 
@@ -506,13 +506,13 @@ def draw_contour_list(src, clist, hierarchy=None,
 
         color = hole_color if hi[3] != -1 else external_color
         p = cv.vector_vector_Point2i()
-        #if hi[3]
+        # if hi[3]
         p.create([ci])
         cv.drawContours(src,
                         p,
                     0,
                    convert_color(color),
-                   #255,
+                   # 255,
 #                   thickness=thickness
                    )
 
@@ -553,7 +553,7 @@ def calculate_sum(src):
     return cv.sum(src).ndarray
 
 #===============================================================================
-# video 
+# video
 #===============================================================================
 def get_nframes(cap):
     return cap.get(cv.CV_CAP_PROP_FRAME_COUNT)
@@ -613,7 +613,7 @@ if __name__ == '__main__':
     csrc = colorspace(tsrc)
 #    gsrc = src
 #    conts, hierarchy = contour(tsrc)
-##
+# #
 #    print get_polygons(conts)
 
     draw_lines(csrc, [[(0, 0), (100, 100)]])
@@ -622,12 +622,12 @@ if __name__ == '__main__':
 #    if(c & 255 == 27):
 #        break
 #======== EOF ===================================================
-#def new_dst(src, zero=False, width=None,
+# def new_dst(src, zero=False, width=None,
 #            height=None, nchannels=None, size=None):
 #    '''
 #    '''
 #
-##    print nchannels
+# #    print nchannels
 #    if width is not None and height is not None:
 #        size = cv.Size(width, height)
 #    elif size is None:

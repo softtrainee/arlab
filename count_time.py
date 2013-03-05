@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -94,10 +94,10 @@ class CountAnalyzer(HasTraits):
         p = '/Users/ross/Desktop/counting exp/peak-time1200s'
         with open(p, 'U') as f:
             reader = csv.reader(f, delimiter='\t')
-            #first line is runid
+            # first line is runid
             _rid = reader.next()[0]
 
-            #second line is signal name and num points
+            # second line is signal name and num points
 
             self.read_signal_data(reader, oxs_40, oys_40)
             self.read_signal_data(reader, oxs_39, oys_39)
@@ -170,7 +170,7 @@ class CountAnalyzer(HasTraits):
 #        ymean = ys.mean()
         yeval = polyval(coeffs, xs)
 
-        #calculate detection_tol. use error of fit
+        # calculate detection_tol. use error of fit
         devs = abs(ys - yeval)
         ssr = sum(devs ** 2)
         detection_tol = 2.5 * (ssr / ((n) - (degree))) ** 0.5
@@ -179,7 +179,7 @@ class CountAnalyzer(HasTraits):
             if di > detection_tol:
                 outs[i] = 1
             omit = 'OK' if di <= detection_tol and not mi else 'User omitted'
-            #print xi, ys, di, detection_tol, omit, mi
+            # print xi, ys, di, detection_tol, omit, mi
         return outs
 
     def analyze_count_times(self, rids=None, do_omits=None, colors=None):
@@ -189,7 +189,7 @@ class CountAnalyzer(HasTraits):
             do_omits = [True] * len(rids)
         if colors is None:
             colors = [None] * len(rids)
-        #load the file
+        # load the file
 #        args = self.load_data2()
         for rid, do_omit, color in zip(rids, do_omits, colors):
 
@@ -221,8 +221,8 @@ class CountAnalyzer(HasTraits):
             ys = (r - ro) / ro * 100
     #        mswd calculation
     #        err = ((io40_e / io40) ** 2 + (io36_e / io36) ** 2) ** 0.5 * r
-    ##        for ri, ei in zip(r, err):
-    ##            print ri, ei
+    # #        for ri, ei in zip(r, err):
+    # #            print ri, ei
     #        resultmswd = pool.map(mcalculate_mswd, [(r[:i], err[:i]) for i in range(len(r))])
             self.graph.new_series(xs, ys, plotid=5, **kw)
 
@@ -230,7 +230,7 @@ class CountAnalyzer(HasTraits):
 
     def _test_fired(self):
         t = Thread(target=self.analyze_count_times, kwargs=dict(rids=['769', '769'],
-                                                                #colors=['black', 'green'],
+                                                                # colors=['black', 'green'],
                                                                 do_omits=[False, True]
                                                                 ))
         t.start()
@@ -240,7 +240,7 @@ class CountAnalyzer(HasTraits):
 #
 #        t = Thread(target=self.analyze_count_times, kwargs=dict(rid='770', series=1))
 #        t.start()
-####        
+####
 #        t = Thread(target=self.analyze_count_times, kwargs=dict(rid='771', series=2))
 #        t.start()
 
@@ -248,7 +248,7 @@ if __name__ == '__main__':
     d = CountAnalyzer()
 
 
-    #d.configure_traits()
+    # d.configure_traits()
     x, y, _, _ = d.load_data('769')
 
 #    outlier_mask = zeros(len(x))

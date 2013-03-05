@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ try:
     get_size
 except ImportError:
     pass
-#class GraphicsContainer(object):
+# class GraphicsContainer(object):
 #
 #    _lines = None
 #
@@ -45,11 +45,11 @@ except ImportError:
 #    @property
 #    def lines(self):
 #        return self._lines
-#from numpy.core.numeric import zeros
-#import Image as PILImage
+# from numpy.core.numeric import zeros
+# import Image as PILImage
 from pyface.timer.do_later import do_later, do_after
 
-#from src.helpers.memo import memoized
+# from src.helpers.memo import memoized
 class Image(HasTraits):
     '''
     '''
@@ -129,7 +129,7 @@ class Image(HasTraits):
                 cropbounds[2]:cropbounds[3]
                 ]
 
-        return flipud(a)#[lx / 4:-lx / 4, ly / 4:-ly / 4]
+        return flipud(a)  # [lx / 4:-lx / 4, ly / 4:-ly / 4]
 
     def get_frame(self, vflip=None, hflip=None , gray=False, swap_rb=None,
                   clone=False, croprect=None, size=None, **kw):
@@ -161,7 +161,7 @@ class Image(HasTraits):
                 frame = grayspace(frame)
 
             if croprect:
-                if len(croprect) == 2: # assume w, h
+                if len(croprect) == 2:  # assume w, h
                     w, h = get_size(frame)
                     croprect = (w - croprect[0]) / 2, (h - croprect[1]) / 2, croprect[0], croprect[1]
                 else:
@@ -194,7 +194,7 @@ class Image(HasTraits):
         return frame.to_pil_image()
 
 
-    def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):
+    def get_bitmap(self, **kw):  # flip = False, swap_rb = False, mirror = True):
         '''
 
         '''
@@ -312,10 +312,10 @@ class StandAloneImage(HasTraits):
 #        print self._image.frames[0] == self.source_frame
 #        sc = self._image.source_frame
 #        tim = threshold(self.osrc, self.thresholdv)
-##        self._image = Image(width=self.width, height=self.height)
-##        self.load(colorspace(tim))
+# #        self._image = Image(width=self.width, height=self.height)
+# #        self.load(colorspace(tim))
 #        self.set_frame(0, colorspace(tim))
-#        
+#
     def __image_default(self):
         return Image(width=self.width, height=self.height)
 
@@ -404,17 +404,17 @@ if __name__ == '__main__':
 #            if cols * rows < nsrc:
 #                rows += 1
 #
-##        size = 300
+# #        size = 300
 #        size = self.panel_size
 #        #create display image
 #        w = self.width
 #        h = self.height
 #
-##        display = cvCreateImage(CvSize(w, h), 8, 3)
-##        display = cvCreateImage(CvSize(w, h), 8, 3)
-##        display = new_color_dst(w, h)
+# #        display = cvCreateImage(CvSize(w, h), 8, 3)
+# #        display = cvCreateImage(CvSize(w, h), 8, 3)
+# #        display = new_color_dst(w, h)
 #        display = new_dst(w, h, 3)
-##        zero(display)
+# #        zero(display)
 #        add_scalar(display, 100)
 #        #cvAddS(display, CvScalar(200, 200, 200), display)
 #        padding = 12
@@ -422,8 +422,8 @@ if __name__ == '__main__':
 #        n = padding
 #        for i, s in enumerate(src[:0]):
 #
-##            x = s.width
-##            y = s.height
+# #            x = s.width
+# #            y = s.height
 #            x, y = get_size(s)
 #
 #            ma = float(max(x, y))
@@ -433,11 +433,11 @@ if __name__ == '__main__':
 #                n += size + padding
 #            display.adjustROI(m, n, int(x / scale), int(y / scale))
 #
-##            setImageROI(display, new_rect(int(m), int(n), int(x / scale),
-##                                            int(y / scale)))
+# #            setImageROI(display, new_rect(int(m), int(n), int(x / scale),
+# #                                            int(y / scale)))
 #            resize(s, 640, 480, dst=display)
 #            display.adjustROI(0, 0, w, h)
-##            resetImageROI(display)
+# #            resetImageROI(display)
 #            m += (padding + size)
 #
 #        return display
@@ -454,8 +454,8 @@ if __name__ == '__main__':
 #
 #            else:
 #                self._bitmap.CopyFromBuffer(frame.data_as_string())
-#                
-##
+#
+# #
 #            return self._bitmap
 
 
@@ -469,46 +469,46 @@ if __name__ == '__main__':
 #    sources=List
 #    source=String
 #    sources=['/Users/Ross/Desktop/calibration_chamber.png']
-#    
+#
 #    frames=List
 #    frame=Any
-#    
+#
 #    low_threshold=Float(50)
 #    high_threshold=Float(120)
-#    
+#
 #    low_low=Float(0)
 #    low_high=Float(50)
-#    
+#
 #    high_low=Float(0)
 #    high_high=Float(255)
-#    
+#
 #    #control=Any
 #    center=Tuple
 #    def get_avg(self,frame=None):
 #        if frame is None:
 #            frame=self.frame
-#        
+#
 #        return cvAvg(frame)#,cvAvgSdv(frame),cvSum(frame)
 #    def _low_threshold_changed(self):
 #        if self.frame:
 #            self.process(self.frame)
-#            
+#
 #    def _high_threshold_changed(self):
-#        
+#
 #        if self.frame:
 #            self.low_high=self.high_threshold
 #            self.process(self.frame)
-#            
+#
 #    def save(self,root, path=None):
 #        return save_image(self.frame, root, path=path)
-#         
+#
 #    def process(self,frame=None):
-#        
+#
 #        if frame is None:
 #            frame=cvLoadImage(self.sources[0])
-#        
+#
 #        self.frame=frame=cvCloneImage(frame)
-#        
+#
 #        gray_frame=grayspace(frame)
 #        thresh_g,cont_frame=contour(gray_frame,threshold=self.high_threshold)
 

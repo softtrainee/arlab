@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,7 +79,7 @@ class InvalidValveGroupErrorCode(ErrorCode):
         super(InvalidValveGroupErrorCode, self).__init__(*args, **kw)
 
 
-#====== initialization problems with pychron    
+#====== initialization problems with pychron
 @generate_code
 class ManagerUnavaliableErrorCode(ErrorCode):
     msg = 'manager unavaliable: {}'
@@ -107,7 +107,7 @@ class InvalidIPAddressErrorCode(ErrorCode):
         super(InvalidIPAddressErrorCode, self).__init__(*args, **kw)
 
 
-#===== comm errors =====        
+#===== comm errors =====
 @generate_code
 class NoResponseErrorCode(ErrorCode):
     msg = 'no response from device'
@@ -163,8 +163,8 @@ class InvalidGaugeErrorCode(ErrorCode):
         self.msg = self.msg.format(controller, gauge)
         super(InvalidGaugeErrorCode, self).__init__(*args, **kw)
 
-#@generate_code
-#class HMACSecurityErrorCode(ErrorCode):
+# @generate_code
+# class HMACSecurityErrorCode(ErrorCode):
 #    msg = 'Computer {} was not authenticated. Invalid HMAC certificate'
 #    code = 000
 #    def __init__(self, addr, *args, **kw):

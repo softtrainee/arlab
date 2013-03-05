@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ class PIDObject(HasTraits):
         derivative = (error - self._prev_err) / dt
         output = (self.Kp * error) + (self.Ki * self._integral_err) + (self.Kd * derivative)
         self._prev_err = error
-        #limit the output to 
+        # limit the output to
         output = max(0, min(self.max_output, output))
         return output
 

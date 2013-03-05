@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,9 +22,9 @@ from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.api import FileDialog, OK
 from pyface.directory_dialog import DirectoryDialog
-#from enthought.pyface.timer import do_later
-#from traitsui.menu import Action, Menu, MenuBar
-#import apptools.sweet_pickle as pickle
+# from enthought.pyface.timer import do_later
+# from traitsui.menu import Action, Menu, MenuBar
+# import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 from Queue import Queue
@@ -33,8 +33,8 @@ import time
 import sys
 #============= local library imports  ==========================
 from src.paths import paths
-#from src.helpers.paths import LOVERA_PATH
-from src.graph.diffusion_graph import DiffusionGraph#, GROUPNAMES
+# from src.helpers.paths import LOVERA_PATH
+from src.graph.diffusion_graph import DiffusionGraph  # , GROUPNAMES
 from src.loggable import Loggable
 from src.modeling.data_loader import DataLoader
 from src.modeling.model_data_directory import ModelDataDirectory
@@ -55,7 +55,7 @@ class Modeler(Loggable):
     name = Str(enter_set=True, auto_set=False)
 
     datum = Property(Directory,
-                     depends_on='_datum')#(value=paths.modeling_data_dir)
+                     depends_on='_datum')  # (value=paths.modeling_data_dir)
     _datum = Directory
     data = List(ModelDataDirectory)
 
@@ -105,7 +105,7 @@ class Modeler(Loggable):
         if f.open() == OK:
             self.info('loading autoupdate file {}'.format(f.path))
 
-            #open a autoupdate config dialog
+            # open a autoupdate config dialog
             from clovera_configs import AutoUpdateParseConfig
             adlg = AutoUpdateParseConfig('', '')
             info = adlg.edit_traits()
@@ -126,8 +126,8 @@ class Modeler(Loggable):
         #=======================================================================
         # debug
         #=======================================================================
-        #path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt' 
-        #self.data_loader.load_autoupdate(path)
+        # path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt'
+        # self.data_loader.load_autoupdate(path)
 
     def execute_files(self, rid=None, root=None, **kw):
         if rid is None:
@@ -135,16 +135,16 @@ class Modeler(Loggable):
 
         if rid is not None:
             from clovera_configs import FilesConfig
-            #make a config obj
+            # make a config obj
             f = FilesConfig(rid, root)
 
-            #write config to ./files.cl
+            # write config to ./files.cl
             f.dump()
 
-            #change current working dir
+            # change current working dir
             os.chdir(os.path.join(root, rid))
 
-            #now ready to run fortran
+            # now ready to run fortran
             name = 'files_py'
 #            if sys.platform != 'darwin':
 #                name += '.exe'
@@ -167,7 +167,7 @@ class Modeler(Loggable):
             rid = os.path.basename(d.path)
             root = os.path.dirname(d.path)
 
-            #set this root as the working directory
+            # set this root as the working directory
             os.chdir(d.path)
             self.info('setting working directory to {}'.format(d.path))
 
@@ -250,13 +250,13 @@ class Modeler(Loggable):
                 self.info(msg)
 
         st = time.time()
-        #handle std.out 
+        # handle std.out
         while t.isAlive() or not q.empty():
             l = q.get().rstrip()
             _handle(l)
             time.sleep(0.001)
 
-        #handle addition msgs
+        # handle addition msgs
         for m in t.get_remaining_stdout():
             _handle(m)
 
@@ -302,9 +302,9 @@ class Modeler(Loggable):
                                             bgcolor='white',
                                             padding=[10, 10, 40, 10],
 
-                                            #padding=[25, 5, 50, 30],
-                                            #spacing=(5,5),
-                                            #spacing=32 if c==1 else (32, 25),
+                                            # padding=[25, 5, 50, 30],
+                                            # spacing=(5,5),
+                                            # spacing=32 if c==1 else (32, 25),
                                             shape=(r, c)
                                             )
 
@@ -312,7 +312,7 @@ class Modeler(Loggable):
 
             self.graph = g
         else:
-        #if g is not None:
+        # if g is not None:
             sync = True
             xlims = []
             ylims = []
@@ -340,7 +340,7 @@ class Modeler(Loggable):
             self.sync_groups = g.groups
             bindings = g.bindings
 
-        #self.graph = g = DiffusionGraph()
+        # self.graph = g = DiffusionGraph()
         g.clear()
         g.new_graph()
         self._spec_cnt = 0
@@ -363,12 +363,12 @@ class Modeler(Loggable):
                 plot.x_axis.title_font = axp[2]
                 plot.y_axis.title_font = axp[3]
 
-                #check to see limits are not inf or -inf
+                # check to see limits are not inf or -inf
                 if xlim[0] != float('-inf') and xlim[1] != float('inf'):
                     g.set_x_limits(min=xlim[0], max=xlim[1], plotid=i)
                     g.set_y_limits(min=ylim[0], max=ylim[1], plotid=i)
 
-            #sync open editors    
+            # sync open editors
             if graph_editor is not None:
                 graph_editor.graph = g
 
@@ -393,7 +393,7 @@ class Modeler(Loggable):
     def _sync_groups(self, data_directory):
         g = self.graph
         g.set_group_visiblity(data_directory.show, gid=data_directory.id)
-        #sync thecolors
+        # sync thecolors
 #        try:
 
 #            if self.sync_groups:
@@ -423,7 +423,7 @@ class Modeler(Loggable):
 #        except Exception, e:
 #            print 'sync groups', e
 #============= views ===================================
-#    
+#
     def traits_view(self):
         return self.data_select_view()
 
@@ -436,15 +436,15 @@ class Modeler(Loggable):
                 CheckboxColumn(name='show'),
                 CheckboxColumn(name='bind'),
 #                ObjectColumn(name='primary_color',
-##                             editable=False, 
+# #                             editable=False,
 #                             label='Pc',
-##                             style='simple'
+# #                             style='simple'
 #                             style='custom'
 #                             ),
 #                ObjectColumn(name='secondary_color', editable=False, label='Sc',
 #                             style='custom',
 #                             graph_color_='red'
-##                             style='simple'
+# #                             style='simple'
 #                             ),
                 CheckboxColumn(name='model_spectrum_enabled', label='Ms'),
                 CheckboxColumn(name='inverse_model_spectrum_enabled', label='IMs'),
@@ -473,7 +473,7 @@ class Modeler(Loggable):
     def graph_view(self):
         graph = Item('graph', show_label=False,
                     style='custom',
-                    #width = 0.75
+                    # width = 0.75
                     )
         v = View(graph)
         return v
@@ -510,10 +510,10 @@ class Modeler(Loggable):
         '''
 
         d = self.datum
-        #validate datum as proper directory
+        # validate datum as proper directory
         if self.data_loader.validate_data_dir(d):
 
-            #dont add if already in list
+            # dont add if already in list
             for di in self.data:
                 if di.path == d:
                     self.selected = d
@@ -522,7 +522,7 @@ class Modeler(Loggable):
             pid = len(self.data)
             d = ModelDataDirectory(path=d,
                                 modeler=self,
-                                show=True, # if len(self.data) >= 1 else False,
+                                show=True,  # if len(self.data) >= 1 else False,
                                 bind=True,
                                 model_spectrum_enabled=True,
                                 inverse_model_spectrum_enabled=True,
@@ -541,9 +541,9 @@ class Modeler(Loggable):
         self.refresh_graph()
         color_gen = paired_colorname_generator()
         for gid, d in enumerate(self.data):
-            #need to load all graphs even if we are not going to show them 
-            #this is to ensure proper grouping
-            #set visiblity after
+            # need to load all graphs even if we are not going to show them
+            # this is to ensure proper grouping
+            # set visiblity after
 #            c = color_gen.next()
 #            d.primary_color = c
             pc, sc = color_gen.next()
@@ -554,11 +554,11 @@ class Modeler(Loggable):
             d.secondary_color = sc
 
 
-            #skip a color
+            # skip a color
 #            color_gen.next()
 
         self.update_graph_title()
-        #force update of notes and summary 
+        # force update of notes and summary
         d = self.selected
         self.selected = None
         self.selected = d
@@ -609,8 +609,8 @@ class Modeler(Loggable):
         dl = self.data_loader
         g = self.graph
 
-        data = dl.load_logr_ro('logr.samp') #Produced by Autoarr with dictated/automated arrhenius parameters
-        data2 = dl.load_logr_ro('log.smp') #Produced by running'files' during parsing of autoupdate
+        data = dl.load_logr_ro('logr.samp')  # Produced by Autoarr with dictated/automated arrhenius parameters
+        data2 = dl.load_logr_ro('log.smp')  # Produced by running'files' during parsing of autoupdate
         if data is not None:
             def build(data):
                 p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width,
@@ -796,7 +796,7 @@ if __name__ == '__main__':
 #
 #        return v
 
-#def run_model(self):
+# def run_model(self):
 #        '''
 #        '''
 #
@@ -807,7 +807,7 @@ if __name__ == '__main__':
 #        '''
 #
 #        '''
-##        src_dir = os.path.join(data_dir, 'TESTDATA')
+# #        src_dir = os.path.join(data_dir, 'TESTDATA')
 #        self.info('Running Model')
 #        if run_config is None:
 #            run_config = self.run_configuration
@@ -869,7 +869,7 @@ if __name__ == '__main__':
 #
 #            self.info('====== Modeling finished======')
 #            self.status_text = 'modeling finished'
-#def open_run_configuration(self):
+# def open_run_configuration(self):
 #        def edit_config(*args):
 #            if args:
 #                m = args[0]
@@ -899,7 +899,7 @@ if __name__ == '__main__':
 #            r = edit_config()
 #            if r is not None:
 #                self.run_configuration = r
-#class RunConfiguration(HasTraits):
+# class RunConfiguration(HasTraits):
 #    '''
 #    '''
 #    data_dir = Directory('~/Pychrondata_beta/data/modeling')

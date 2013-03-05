@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ class H5DataManager(DataManager):
 #        group.flush()
 #    def set_table_attribute(self, key, value, table):
 #        '''
-#            
+#
 #        '''
 #        _df, table = self._get_parent(table)
 #        setattr(table.attrs, key, value)
@@ -256,7 +256,7 @@ class H5DataManager(DataManager):
 #
 #        for group in df.walkGroups('/'):
 #
-##            grpname = self._get_group_name(group)
+# #            grpname = self._get_group_name(group)
 #            for table in df.listNodes(group, classname='Table'):
 #                #name = '%s.%s' % (grpname, table.name)
 #                #tabs.append((grpname, table.name))

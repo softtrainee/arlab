@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,18 +40,18 @@ class Series(Plotter):
 
         key = options.key
 
-        #sort analyses by timestamp first
+        # sort analyses by timestamp first
         analyses = sorted(analyses, key=lambda x: x.timestamp)
         x, ys = zip(*[(ai.timestamp, self.get_value(ai, key)) for ai in analyses])
         y, es = zip(*ys)
 
 
-        #normalize x to first analysis
+        # normalize x to first analysis
         x = array(x)
         ox = x[:]
         x -= x[0]
 
-        #scale timestamp to hours
+        # scale timestamp to hours
         x *= 1 / (60.*60)
 
         '''
@@ -87,12 +87,12 @@ class Series(Plotter):
         def get_value(ai, ki):
             try:
 #                nv = ai.arar_result[ki.replace('Ar', 's')]
-                #if ki is like s40 or s39
+                # if ki is like s40 or s39
                 nv = ai.arar_result[ki]
             except KeyError:
 
-                #ki is like Ar40 or Ar39bs
-                nv = ai.signals[ki].uvalue# - ai.signals['{}bs'.format(ki)]
+                # ki is like Ar40 or Ar39bs
+                nv = ai.signals[ki].uvalue  # - ai.signals['{}bs'.format(ki)]
             return nv
 
         if '/' in k:
@@ -108,32 +108,32 @@ class Series(Plotter):
 #============= EOF =============================================
 
 ##===============================================================================
-## Copyright 2012 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2012 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 ##============= enthought library imports =======================
-#from traits.api import HasTraits, Any, Dict
-##from traitsui.api import View, Item, TableEditor
+# from traits.api import HasTraits, Any, Dict
+# #from traitsui.api import View, Item, TableEditor
 ##============= standard library imports ========================
 ##============= local library imports  ==========================
-##from src.graph.graph import Graph
-##from src.graph.time_series_graph import TimeSeriesGraph
-#from src.graph.regression_graph import StackedRegressionTimeSeriesGraph
-#from src.processing.plotters.plotter import Plotter
-#from uncertainties import ufloat
-#def colorname_gen():
+# #from src.graph.graph import Graph
+# #from src.graph.time_series_graph import TimeSeriesGraph
+# from src.graph.regression_graph import StackedRegressionTimeSeriesGraph
+# from src.processing.plotters.plotter import Plotter
+# from uncertainties import ufloat
+# def colorname_gen():
 #    r = ['black', 'red', 'green', 'blue', 'yellow']
 #    i = 0
 #    while 1:
@@ -141,7 +141,7 @@ class Series(Plotter):
 #        i += 1
 #
 #
-#class Series(Plotter):
+# class Series(Plotter):
 #    fits = None
 #    pxma = None
 #    pxmi = None
@@ -173,8 +173,8 @@ class Series(Plotter):
 #            for i, (k, f) in enumerate(keys):
 #                for group_id in group_ids:
 #                    try:
-##                        plot = graph.plots[i].plots['data{}'.format(group_id)][0]
-##                        sel = plot.index.metadata['selections']
+# #                        plot = graph.plots[i].plots['data{}'.format(group_id)][0]
+# #                        sel = plot.index.metadata['selections']
 #                        ff = [i for i, si in enumerate(self.sorted_analyses)
 #                                    if si.status == -1 and si.group_id == group_id]
 #                        exclude['{}{}'.format(k, group_id)] = ff
@@ -189,7 +189,7 @@ class Series(Plotter):
 #            return
 #
 #        graph = self.graph
-##        ks = keys + basekeys + ratiokeys
+# #        ks = keys + basekeys + ratiokeys
 #        graph.suppress_regression = True
 #        for i, (k, f) in enumerate(keys):
 #            for group_id in group_ids:
@@ -217,7 +217,7 @@ class Series(Plotter):
 #        if graph is None:
 #            klass = StackedRegressionTimeSeriesGraph
 #            graph = klass(container_dict=dict(
-##                                          bgcolor='lightgray',
+# #                                          bgcolor='lightgray',
 #    #                                      padding=2,
 #                                          padding_top=0,
 #                                          padding_bottom=5,
@@ -231,8 +231,8 @@ class Series(Plotter):
 #
 #        self.fits = dict()
 #        cnt = 0
-##        pxma = None
-##        pxmi = None
+# #        pxma = None
+# #        pxmi = None
 #        for i, (k, f) in enumerate(keys + basekeys):
 #            if new_plot:
 #                graph.new_plot(
@@ -273,7 +273,7 @@ class Series(Plotter):
 #            cnt += 1
 #
 #        for ri, f in ratiokeys:
-##            ni,di=ri.split('/')
+# #            ni,di=ri.split('/')
 #            if new_plot:
 #                graph.new_plot(
 #                        padding=padding,
@@ -302,10 +302,10 @@ class Series(Plotter):
 #            for group_id in group_ids:
 #                data = [get_ratio(ri, a) for a in analyses if a.timestamp > 0 and a.group_id == group_id]
 #
-##                data = [(a.timestamp,
-##                                    self._get_series_value(a, ni, i, group_id),
-##                                    self._get_series_error(a, ni, i, group_id),
-##                                    ) for a in analyses if a.timestamp > 0 and a.group_id == group_id]
+# #                data = [(a.timestamp,
+# #                                    self._get_series_value(a, ni, i, group_id),
+# #                                    self._get_series_error(a, ni, i, group_id),
+# #                                    ) for a in analyses if a.timestamp > 0 and a.group_id == group_id]
 #
 #                data = [di for di in data if di[1] is not None]
 #                xs, ys, es = zip(*data)
@@ -325,10 +325,10 @@ class Series(Plotter):
 #
 #        if self.pxma and self.pxmi:
 #            for pi in range(cnt):
-##                print self.pxma, self.pxmi
+# #                print self.pxma, self.pxmi
 #                graph.set_x_limits(min=self.pxmi, max=self.pxma, plotid=pi, pad='0.1')
-##            print self.pxma, self.pxmi
-##            graph.set_x_limits(min=self.pxmi, max=self.pxma, plotid=0, pad='0.1')
+# #            print self.pxma, self.pxmi
+# #            graph.set_x_limits(min=self.pxmi, max=self.pxma, plotid=0, pad='0.1')
 #
 #        return graph
 #
@@ -350,7 +350,7 @@ class Series(Plotter):
 #                     plotid=plotid,
 #                     fit=fi,
 #                     filter_outliers=False,
-##                     regress=regress,
+# #                     regress=regress,
 #                     type='scatter',
 #                     marker='circle',
 #                     color=color,
@@ -371,7 +371,7 @@ class Series(Plotter):
 #        self._add_scatter_inspector(g.plotcontainer, plot, scatter, group_id, add_tool=False)
 #        self._add_error_bars(scatter, es, 'y')
 #
-##        g.regress_plots()
+# #        g.regress_plots()
 #
 #
 ##============= EOF =============================================

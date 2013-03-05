@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,7 +74,7 @@ class PatternManager(Manager):
 
             self.close_ui()
 
-            #clear current pattern
+            # clear current pattern
             self.pattern = None
 
     def execute_pattern(self, pattern_name=None):
@@ -88,7 +88,7 @@ class PatternManager(Manager):
                 return err
 
         #===================================================================
-        #for testing
+        # for testing
         # path = os.path.join(pattern_dir, 'testpattern.lp')
         #===================================================================
 
@@ -144,7 +144,7 @@ class PatternManager(Manager):
     def _execute_(self):
         controller = self.parent.stage_controller
 
-        #if the laser is moving wait until finished
+        # if the laser is moving wait until finished
         controller.block()
 
         self.info('started pattern {}'.format(self.pattern_name))

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ class MotionDesigner(HasTraits):
 
     acceleration = Property(Range(0, 8., 7.62), depends_on='_acceleration')
     _acceleration = Range(0, 8., 7.62)
-    #deceleration = Range(0, 8., 7.62)
+    # deceleration = Range(0, 8., 7.62)
     velocity = Property(Range(0, 8., 3.81), depends_on='_velocity')
     _velocity = Range(0, 8., 3.81)
 
@@ -69,7 +69,7 @@ class MotionDesigner(HasTraits):
 
 #    def _anytrait_changed(self, name, old, new):
 #        if name in ['acceleration', 'deceleration', 'velocity',
-#            #        'distance', 
+#            #        'distance',
 #                    #'beam_radius'
 #                    ]:
 #            self.replot()
@@ -77,7 +77,7 @@ class MotionDesigner(HasTraits):
 #            mp=MotionProfiler()
 #            cv,ac,dc=mp.calculate_corrected_parameters(self.distance, self.velocity, self.acceleration, self.acceleration)
 #            times, dist=mp.calculate_transit_parameters(self.distance, cv, ac, dc)
-#            
+#
 #            self.plot_velocity_profile(times,cv, 0)
 #            self.plot_position_profile(*times, 1)
 
@@ -97,17 +97,17 @@ class MotionDesigner(HasTraits):
 
         x = [0]
         y = [0]
-        #plot accel
+        # plot accel
         for i in linspace(0, atime, 50):
             x.append(i)
 
             p = 0.5 * self.acceleration * i ** 2
             y.append(p)
 
-        #plot constant velocity
+        # plot constant velocity
         yo = p + vtime * self.velocity
 
-        #plot decel
+        # plot decel
         for i in linspace(0, dtime, 50):
             x.append(atime + vtime + i)
 #            p = yo + self.velocity * i - 0.5 * self.deceleration * i ** 2
@@ -115,23 +115,23 @@ class MotionDesigner(HasTraits):
             y.append(p)
         g.new_series(x, y, render_style='connectedpoints')
 
-        #plot beam center
+        # plot beam center
 #        y = [p / 2.0] * 50
 #        x = linspace(0, atime + vtime + dtime, 50)
 #        g.new_series(x, y)
 
-        #plot beam radius'
-        #include padding in the beam radius
+        # plot beam radius'
+        # include padding in the beam radius
        # yl = [pi - self.beam_radius for pi in y]
-        #yu = [pi + self.beam_radius for pi in y]
-        #g.new_series(x, yl, color='blue')
-        #g.new_series(x, yu, color='blue')
+        # yu = [pi + self.beam_radius for pi in y]
+        # g.new_series(x, yl, color='blue')
+        # g.new_series(x, yu, color='blue')
 
     def velocity_profile(self, plotid):
 
 #        v = self.velocity
-        #ac = self.acceleration
-        #dc = self.deceleration
+        # ac = self.acceleration
+        # dc = self.deceleration
 
         d = self.distance
         m = MotionProfiler()
@@ -145,7 +145,7 @@ class MotionDesigner(HasTraits):
     def plot_velocity_profile(self, times, v, plotid):
         g = self.canvas
         atime, dtime, vtime = times
-        #error, atime, dtime, cvd = m.check_motion(v, ac, d)
+        # error, atime, dtime, cvd = m.check_motion(v, ac, d)
         x = [0]
         y = [0]
 

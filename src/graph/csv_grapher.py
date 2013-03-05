@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -154,7 +154,7 @@ class CSVGrapher(Loggable):
                   window_y=20
                   )
         with open(p, 'r') as fp:
-            #gather data
+            # gather data
             reader = csv.reader(fp)
             header = reader.next()
             groups = self._parse_data(reader)
@@ -167,15 +167,15 @@ class CSVGrapher(Loggable):
             x = data[0]
             y = data[header.index(det)]
 
-        sy = smooth(y, window_len=120)#, window='flat')
+        sy = smooth(y, window_len=120)  # , window='flat')
 
         x = x[::50]
         y = y[::50]
         sy = sy[::50]
 
-        #smooth
+        # smooth
 
-        #plot
+        # plot
         g.new_plot(zoom=True, xtitle='Time (s)', ytitle='{} Baseline Intensity (fA)'.format(det))
         g.new_series(x, y, type=kind, marker='dot', marker_size=2)
         g.new_series(x, sy, line_width=2)
@@ -249,7 +249,7 @@ class CSVGrapher(Loggable):
 #                for l in lines:
 #                    print l
 #                    print map(float, l)
-#                    
+#
                 data = np.array([map(float, l) for l in lines])
                 data = data.transpose()
                 groups.append(data)
@@ -369,7 +369,7 @@ class CSVGrapher(Loggable):
 if __name__ == '__main__':
     cs = CSVGrapher()
 #    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
-    #do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan013.txt')
+    # do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan013.txt')
 #    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan011.txt')
     do_later(cs.quick_graph, '/Users/argonlab2/Pychrondata/data/spectrometer_scans/scan017.txt')
     cs.configure_traits()

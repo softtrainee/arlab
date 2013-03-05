@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,13 +27,13 @@ from wx import Panel, PaintDC, \
     RED_PEN, BitmapFromBuffer
 import wx
 
-#import math
-#import wx
-#from wx._core import EVT_PAINT
+# import math
+# import wx
+# from wx._core import EVT_PAINT
 #=============local library imports  ==========================
-#from ctypes_opencv import  cvCreateImage, CvSize, cvAddS, CvScalar, \
+# from ctypes_opencv import  cvCreateImage, CvSize, cvAddS, CvScalar, \
 # CvRect, cvSetImageROI, cvResize, cvResetImageROI
-#from ctypes_opencv.cxcore import cvZero
+# from ctypes_opencv.cxcore import cvZero
 
 
 class _ImageEditor(Editor):
@@ -145,8 +145,8 @@ class _ImageEditor(Editor):
 #        if src:
 #            self._display_images(src)
 #
-##        if self.points:
-##            self._display_points(dc,self.points)
+# #        if self.points:
+# #            self._display_points(dc,self.points)
 #
 #    def _display_image(self, src):
 #        '''

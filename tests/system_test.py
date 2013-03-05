@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-#import unittest
+# import unittest
 #============= local library imports  ==========================
-#from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
+# from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from src.remote_hardware.protocols.system_protocol import SystemProtocol
 from src.remote_hardware.tests.base_test import baseTest
 from src.remote_hardware.errors import InvalidCommandErrorCode, \
@@ -74,12 +74,12 @@ class SystemTest(baseTest):
         data = ['GetValveStates', 'getValveStates']
         vs = ['True,True,False', InvalidCommandErrorCode]
         self._test_suite('System', data, vs)
-#        
+#
 #    def testRemoteLaunch(self):
 #        data = 'RemoteLaunch'
 #        v = 'OK'
 #        self._test('System', data, v)
-#    
+#
 #    def testPychronReady(self):
 #        data = 'PychronReady'
 #        v = 'OK'

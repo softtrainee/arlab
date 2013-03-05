@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,25 +31,25 @@ from src.database.core.database_adapter import DatabaseAdapter
 from src.constants import NULL_STR
 from src.paths import paths
 from src.deprecate import deprecate_klass
-#from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
-#from traitsui.basic_editor_factory import BasicEditorFactory
+# from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
+# from traitsui.basic_editor_factory import BasicEditorFactory
 #
-#class _TabularEditor(wxTabularEditor):
+# class _TabularEditor(wxTabularEditor):
 #    def init(self, parent):
 #        super(_TabularEditor, self).init(parent)
 #        print parent
 #        print parent.GetSizeTuple()
-#        
-#class TabularEditor(traitsTabularEditor):
+#
+# class TabularEditor(traitsTabularEditor):
 #
 #    def _get_klass(self):
 #        return _TabularEditor
 
-#class LAdapter(ListStrAdapter):
+# class LAdapter(ListStrAdapter):
 #
-##    def get_bg_color(self, obj, trait, row):
+# #    def get_bg_color(self, obj, trait, row):
 #    def get_text_color(self, obj, trait, row):
-##        print obj, trait, row
+# #        print obj, trait, row
 #        o = getattr(obj, trait)[row]
 #
 #        if 'group_marker' in str(o):
@@ -91,7 +91,7 @@ class SelectedrecordsAdapter(TabularAdapter):
 
     def _columns_default(self):
         cols = [
-                #('ID', 'rid'),
+                # ('ID', 'rid'),
                 ('Labnumber', 'labnumber'),
                 ('Aliquot', 'aliquot'),
                 ('Group', 'group_id'),
@@ -451,7 +451,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 #============= EOF =============================================
 #    def _project_changed(self):
 #        #get all analyses of this project
-##        db = self.db
+# #        db = self.db
 #        selector = self.selector
 #
 #        pr = self.project
@@ -463,35 +463,35 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 #                selector.load_recent()
 #                return
 #
-##            nrs = selector.get_recent()
-##            nrs = [ni for ni in nrs if ni.measurement.mass_spectrometer.name == self.machine]
+# #            nrs = selector.get_recent()
+# #            nrs = [ni for ni in nrs if ni.measurement.mass_spectrometer.name == self.machine]
 #
 #        else:
-##            def exclude(ai):
-##                a = False
-##                b = False
-##                if self.machine != '---':
-##                    a = ai.measurement.mass_spectrometer.name != self.machine
-##                if self.analysis_type != '---':
-##                    b = ai.measurement.analysis_type.name != self.analysis_type
-##                return a or b
+# #            def exclude(ai):
+# #                a = False
+# #                b = False
+# #                if self.machine != '---':
+# #                    a = ai.measurement.mass_spectrometer.name != self.machine
+# #                if self.analysis_type != '---':
+# #                    b = ai.measurement.analysis_type.name != self.analysis_type
+# #                return a or b
 #
-##            pi = db.get_project(pr)
+# #            pi = db.get_project(pr)
 #            q = selector.query_factory(parameter='Project', criterion=pr)
 #            qs = [q]
-##            if self.machine != NULL_STR:
-##                q = selector.query_factory(parameter='Mass Spectrometer',
-##                                           comparator='!=',
-##                                           criterion=self.machine)
-##                qs.append(q)
+# #            if self.machine != NULL_STR:
+# #                q = selector.query_factory(parameter='Mass Spectrometer',
+# #                                           comparator='!=',
+# #                                           criterion=self.machine)
+# #                qs.append(q)
 #
 #            selector.execute_query(queries=qs, load=False)
-##            nrs = []
-##            nrs = [an for s in pi.samples
-##                    for ln in s.labnumbers
-##                        for an in ln.analyses if not exclude(an)]
+# #            nrs = []
+# #            nrs = [an for s in pi.samples
+# #                    for ln in s.labnumbers
+# #                        for an in ln.analyses if not exclude(an)]
 #
-##        selector.load_records(nrs)
+# #        selector.load_records(nrs)
 #    def _analysis_type_changed(self):
 #        db = self.db
 #        selector = self.selector

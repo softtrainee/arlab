@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,7 @@ from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
 from globals import globalv
 
-#from src.image.pyopencv_image_helper import grayspace
+# from src.image.pyopencv_image_helper import grayspace
 
 
 DEVX = random.randint(-10, 10)
@@ -111,7 +111,7 @@ class HoleDetector(Detector):
     @on_trait_change('target_image:ui')
     def _add_target_window(self, new):
         try:
-            #added windows will be closed by the application on exit
+            # added windows will be closed by the application on exit
             self.parent.add_window(new)
         except AttributeError:
             pass
@@ -205,7 +205,7 @@ class HoleDetector(Detector):
             dx = avg(devxs)
             dy = avg(devys)
 
-        #calculate the data position to move to nx,ny
+        # calculate the data position to move to nx,ny
         dxmm = (dx) / float(self.pxpermm)
 
         dymm = (dy) / float(self.pxpermm)
@@ -213,7 +213,7 @@ class HoleDetector(Detector):
         ny = cy + dymm
 
         try:
-            #verify that this target is within 1 radius of the uncorrected by calibrated position
+            # verify that this target is within 1 radius of the uncorrected by calibrated position
             lm = self.parent.laser_manager
             h = lm.stage_manager.get_hole(holenum)
             calpos = lm.stage_manager.get_calibrated_position((h.x, h.y))
@@ -224,7 +224,7 @@ class HoleDetector(Detector):
             if abs(calpos[0] - nx) > r or abs(calpos[1] - ny) > r:
                 return
         except Exception, e:
-            #debugging 
+            # debugging
             pass
 
 #        self._draw_markup(self.target_image.get_frame(0), targets, dev=(dx, dy))
@@ -234,7 +234,7 @@ class HoleDetector(Detector):
         self._nominal_position = cx, cy
         self._corrected_position = nx, ny
 
-        args = cx, cy, nx, ny, dxmm, dymm, round(dx), round(dy)#int(dx), int(dy)
+        args = cx, cy, nx, ny, dxmm, dymm, round(dx), round(dy)  # int(dx), int(dy)
 
         self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
         if self.save_positioning_error and holenum:
@@ -247,7 +247,7 @@ class HoleDetector(Detector):
                               'positioning_error{:03n}_'.format(int(holenum)),
                             extension='jpg')
         self.target_image.save(path)
-        #save an associated text file with some metadata
+        # save an associated text file with some metadata
         head, _ = os.path.splitext(path)
         with open(head + '.txt', 'w') as f:
             f.write('hole={}\n'.format(holenum))
@@ -283,16 +283,16 @@ class HoleDetector(Detector):
                                 )
 
     def _draw_markup(self, src, results, dev=None):
-        #add to indicators to ensure the indicator is drawn on top
+        # add to indicators to ensure the indicator is drawn on top
         for pi in results:
 
 #            f0 = self.target_image.get_frame(0)
             draw_polygons(src, [pi.poly_points], color=(255, 255, 0), thickness=1)
 
-            #draw the centroid in blue
+            # draw the centroid in blue
             pi.center = new_point(*pi.centroid_value)
 
-        #draw the center of the image
+        # draw the center of the image
         true_cx, true_cy = self._get_true_xy(src)
 
 #        #draw the calculated center
@@ -325,7 +325,7 @@ class HoleDetector(Detector):
         disp = lambda p:((p.x - cx) ** 2 + (p.y - cy) ** 2) ** 0.5
         disps = map(disp, pi)
 
-        #filter by tol
+        # filter by tol
         fpi = filter(lambda p:p[1] < tol, zip(pi, disps))
         if fpi:
             pii, disps = zip(*fpi)
@@ -490,7 +490,7 @@ class HoleDetector(Detector):
         targets = self._locate_helper(segmenter.segment(src), **kw)
         if targets:
             if self.filter_targets:
-                #use only targets that are close to cx,cy and the right size
+                # use only targets that are close to cx,cy and the right size
                 targets = self._filter_targets(targets)
             return targets
 
@@ -530,7 +530,7 @@ class HoleDetector(Detector):
                 src = self.target_image.get_frame(0)
                 draw_polygons(src, [tar.poly_points], color=(0, 255, 255))
 
-                #make image with polygon
+                # make image with polygon
                 image = zeros(self.croppixels)
                 points = asarray(tar.poly_points)
 
@@ -539,7 +539,7 @@ class HoleDetector(Detector):
 
                 image[cc, rr] = 255
 
-                #do watershedding
+                # do watershedding
                 distance = ndimage.distance_transform_edt(image)
                 local_maxi = is_local_maximum(distance, image)
                 markers, ns = ndimage.label(local_maxi)
@@ -547,7 +547,7 @@ class HoleDetector(Detector):
                                   mask=image
                                  )
 
-                #find the label with the max area ie max of histogram
+                # find the label with the max area ie max of histogram
                 def get_limits(values, bins):
                     ind = argmax(values)
                     if ind == 0:
@@ -562,7 +562,7 @@ class HoleDetector(Detector):
 
                     return bil, biu, ind
 
-                #bins = 3 * number of labels. this allows you to precisely pick the value of the max area
+                # bins = 3 * number of labels. this allows you to precisely pick the value of the max area
                 values, bins = histogram(wsrc, bins=ns * 3)
                 bil, biu, ind = get_limits(values, bins)
 
@@ -581,7 +581,7 @@ class HoleDetector(Detector):
 
                 img = asMat(nimage)
 
-                #locate new polygon from the segmented image
+                # locate new polygon from the segmented image
                 tars = self._locate_targets(img)
                 if globalv.show_autocenter_debug_image:
                     do_later(lambda: self.debug_show(image, distance, wsrc, nimage))
@@ -618,22 +618,22 @@ class HoleDetector(Detector):
         plt.show()
 #============= EOF =====================================
 #    def _watershed_segmentation(self, src, **kw):
-##        from scipy import ndimage
+# #        from scipy import ndimage
 #        from skimage.morphology import watershed, is_local_maximum
-##        ndsrc = src.ndarray
-##
-##
-##        distance = ndimage.distance_transform_edt(ndsrc)
-##        local_maxi = is_local_maximum(distance, ndsrc,
-##                                    ones((3, 3)))
-##
-##        markers = ndimage.label(local_maxi)[0]
-##
-###        wsrc = watershed(-distance, markers)
-##
-###        src = invert(src)
-##        p = asMat(asarray(markers, 'uint8'))
-##        self.target_image.set_frame(0, colorspace(p))
+# #        ndsrc = src.ndarray
+# #
+# #
+# #        distance = ndimage.distance_transform_edt(ndsrc)
+# #        local_maxi = is_local_maximum(distance, ndsrc,
+# #                                    ones((3, 3)))
+# #
+# #        markers = ndimage.label(local_maxi)[0]
+# #
+# ##        wsrc = watershed(-distance, markers)
+# #
+# ##        src = invert(src)
+# #        p = asMat(asarray(markers, 'uint8'))
+# #        self.target_image.set_frame(0, colorspace(p))
 #
 #        from scipy import ndimage
 #        import numpy as np
@@ -667,12 +667,12 @@ class HoleDetector(Detector):
 #        ax2.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest')
 #
 #        from pyface.timer.do_later import do_later
-##        do_later(plt.show)
+# #        do_later(plt.show)
 #    def _random_walker_segmentation(self, src, **kw):
 #        from skimage.segmentation import random_walker
 #        import numpy as np
 #        ndsrc = src.ndarray[:]
-##        ndsrc += np.random.randn(*ndsrc.shape)
+# #        ndsrc += np.random.randn(*ndsrc.shape)
 #        tlow = 100
 #        thigh = 150
 #        markers = zeros_like(ndsrc)
@@ -680,10 +680,10 @@ class HoleDetector(Detector):
 #        markers[ndsrc > thigh] = 2
 #
 #        labels = random_walker(ndsrc, markers,
-##                               beta=10
-##                               , mode='bf'
+# #                               beta=10
+# #                               , mode='bf'
 #                               )
-##        labels = markers
+# #        labels = markers
 #
 #        import matplotlib.pyplot as plt
 #        plt.figure(figsize=(8, 3.2))
@@ -707,38 +707,38 @@ class HoleDetector(Detector):
 #        from pyface.timer.do_later import do_later
 #        do_later(plt.show)
 #
-#        return self._locate_helper(labels)#  
+#        return self._locate_helper(labels)#
 #  def _watershed(self, ndsrc):
 #        from skimage.filter import sobel
 #        from skimage.morphology import watershed, is_local_maximum
 #        import matplotlib.pyplot as plt
 #        from scipy import ndimage
 #        image = ndsrc.ndarray
-##        image = invert(ndsrc)
+# #        image = invert(ndsrc)
 #        distance = ndimage.distance_transform_edt(image)
 #        local_maxi = is_local_maximum(distance, image, ones((3, 3)))
 #        markers = ndimage.label(local_maxi)[0]
 #
 #        labels = watershed(-distance, markers, mask=image) * 100
 #        x, y = ndimage.find_objects(labels == 100)[0]
-##        print
+# #        print
 #        s = image[x, y]
 #        print s.shape
-##        labels = asarray(labels, 'uint8')
-##        labels = invert(labels)
+# #        labels = asarray(labels, 'uint8')
+# #        labels = invert(labels)
 #
 #        self.working_image.frames[0] = colorspace(asMat(s))
-##        self.working_image.frames[0] = colorspace(asMat(labels))
-##        plt.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest')
+# #        self.working_image.frames[0] = colorspace(asMat(labels))
+# #        plt.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest')
 #        do_later(plt.show)
 #    def _co2_well(self, results):
 #        devx, devy = zip(*[r.dev_centroid for r in results])
 #
 #        ind = max(0, len(results) / 2)
-##        ind = 0
+# #        ind = 0
 #        ts = results[ind].threshold_value
 #        es = results[ind].erode_value
 #        ds = results[ind].dilate_value
-##        print ts, es, ds
+# #        print ts, es, ds
 #        return [], [], devx, devy, ts, ds, es
 

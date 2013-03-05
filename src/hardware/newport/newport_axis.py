@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -135,7 +135,7 @@ def int_binstr(n):
 
     return bStr
 
-#class NewportAxisHandler(Handler):
+# class NewportAxisHandler(Handler):
 #    '''
 #        G{classtree}
 #    '''
@@ -322,79 +322,79 @@ class NewportAxis(Axis):
 
         '''
         self.loaded = False
-        #self.kind='Commutated step motor'
+        # self.kind='Commutated step motor'
         parameters = parse_file(path)
 #        with open(path, 'r') as f:
 #            parameters = []
 #            for line in f:
 #                parameters.append(line.strip())
 
-        self._kind = int(parameters[0][-1:]) #QM
-        self._unit = int(parameters[1][-1:]) #SN
+        self._kind = int(parameters[0][-1:])  # QM
+        self._unit = int(parameters[1][-1:])  # SN
 
-        self.encoder_resolution = float(parameters[2][3:]) #SU
-        self.encoder_full_step_resolution = float(parameters[3][3:]) #FR
-        self.microstep_factor = float(parameters[4][3:]) #QS
+        self.encoder_resolution = float(parameters[2][3:])  # SU
+        self.encoder_full_step_resolution = float(parameters[3][3:])  # FR
+        self.microstep_factor = float(parameters[4][3:])  # QS
 
-        self.average_motor_voltage = float(parameters[5][3:]) #QV
-        self.maximum_motor_current = float(parameters[6][3:]) #QI
-        self.gear_constant = float(parameters[7][3:]) #QG
-        self.tachometer_gain = float(parameters[8][3:]) #QT
+        self.average_motor_voltage = float(parameters[5][3:])  # QV
+        self.maximum_motor_current = float(parameters[6][3:])  # QI
+        self.gear_constant = float(parameters[7][3:])  # QG
+        self.tachometer_gain = float(parameters[8][3:])  # QT
 
-        self.software_negative_limit = float(parameters[9][3:]) #SL
-        self.software_positive_limit = float(parameters[10][3:]) #SR
+        self.software_negative_limit = float(parameters[9][3:])  # SL
+        self.software_positive_limit = float(parameters[10][3:])  # SR
 
-        self._trajectory_mode = int(parameters[11][-1:]) - 1 #TJ
-        self._home_search_mode = int(parameters[12][-1:]) #OM
+        self._trajectory_mode = int(parameters[11][-1:]) - 1  # TJ
+        self._home_search_mode = int(parameters[12][-1:])  # OM
 
-        self.maximum_velocity = float(parameters[13][3:]) #VU
-        self.velocity = float(parameters[14][3:]) #VA
-        self.jog_high_speed = float(parameters[15][3:]) #JH
-        self.jog_low_speed = float(parameters[16][3:]) #JW
+        self.maximum_velocity = float(parameters[13][3:])  # VU
+        self.velocity = float(parameters[14][3:])  # VA
+        self.jog_high_speed = float(parameters[15][3:])  # JH
+        self.jog_low_speed = float(parameters[16][3:])  # JW
 
-        self.home_search_high_speed = float(parameters[17][3:]) #OH
-        self.home_search_low_speed = float(parameters[18][3:]) #OL
-        self.base_velocity = float(parameters[19][3:]) #VB
+        self.home_search_high_speed = float(parameters[17][3:])  # OH
+        self.home_search_low_speed = float(parameters[18][3:])  # OL
+        self.base_velocity = float(parameters[19][3:])  # VB
 
-        self.maximum_acceleration_deceleration = float(parameters[20][3:]) #AU
-        self.acceleration = float(parameters[21][3:])   #AC
-        self.deceleration = float(parameters[22][3:])   #AG
-        self.estop_deceleration = float(parameters[23][3:]) #AE
+        self.maximum_acceleration_deceleration = float(parameters[20][3:])  # AU
+        self.acceleration = float(parameters[21][3:])  # AC
+        self.deceleration = float(parameters[22][3:])  # AG
+        self.estop_deceleration = float(parameters[23][3:])  # AE
 
-        self.jerk_rate = float(parameters[24][3:]) #JK
+        self.jerk_rate = float(parameters[24][3:])  # JK
 
-        self.proportional_gain = float(parameters[25][3:]) #KP
-        self.integral_gain = float(parameters[26][3:]) #KI
-        self.derivative_gain = float(parameters[27][3:]) #KD
+        self.proportional_gain = float(parameters[25][3:])  # KP
+        self.integral_gain = float(parameters[26][3:])  # KI
+        self.derivative_gain = float(parameters[27][3:])  # KD
 
-        self.velocity_feed_forward_gain = float(parameters[28][3:]) #VF
-        self.acceleration_feed_forward_gain = float(parameters[29][3:]) #AF
+        self.velocity_feed_forward_gain = float(parameters[28][3:])  # VF
+        self.acceleration_feed_forward_gain = float(parameters[29][3:])  # AF
 
-        self.integral_saturation_level = float(parameters[30][3:]) #KS
+        self.integral_saturation_level = float(parameters[30][3:])  # KS
 
-        self.maximum_following_error_threshold = float(parameters[31][3:]) #FE
-        self.position_deadband = float(parameters[32][3:]) #DB
+        self.maximum_following_error_threshold = float(parameters[31][3:])  # FE
+        self.position_deadband = float(parameters[32][3:])  # DB
 
-        self.update_interval = float(parameters[33][3:]) #CL
+        self.update_interval = float(parameters[33][3:])  # CL
 
         a, b = parameters[34][3:].split(',')
-        self.reduce_motor_torque_time = float(a) #QR
-        self.reduce_motor_torque_percent = float(b) #QR
+        self.reduce_motor_torque_time = float(a)  # QR
+        self.reduce_motor_torque_percent = float(b)  # QR
 
-        self.slave_axis = int(parameters[35][3:]) #SS
-        self.master_slave_reduction_ratio = float(parameters[36][3:]) #GR
-        self.master_slave_jog_velocity_update = float(parameters[37][3:])   #SI
-        self.master_slave_jog_velocity_scaling_coefficients = parameters[38][3:] #SK
+        self.slave_axis = int(parameters[35][3:])  # SS
+        self.master_slave_reduction_ratio = float(parameters[36][3:])  # GR
+        self.master_slave_jog_velocity_update = float(parameters[37][3:])  # SI
+        self.master_slave_jog_velocity_scaling_coefficients = parameters[38][3:]  # SK
 
-        self.backlash_compensation = float(parameters[39][3:]) #BA
-        self.linear_compensation = float(parameters[40][3:]) #CO
+        self.backlash_compensation = float(parameters[39][3:])  # BA
+        self.linear_compensation = float(parameters[40][3:])  # CO
 
-        self._amplifier_io_configuration = int(parameters[41][3:-1], 16) #ZA
-        self._feedback_configuration = int(parameters[42][3:-1], 16) #ZB
-        self._estop_configuration = int(parameters[43][3:-1], 16) #ZE
-        self._following_error_configuration = int(parameters[44][3:-1], 16) #ZF
-        self._hardware_limit_configuration = int(parameters[45][3:-1], 16) #ZH
-        self._software_limit_configuration = int(parameters[46][3:-1], 16) #ZS
+        self._amplifier_io_configuration = int(parameters[41][3:-1], 16)  # ZA
+        self._feedback_configuration = int(parameters[42][3:-1], 16)  # ZB
+        self._estop_configuration = int(parameters[43][3:-1], 16)  # ZE
+        self._following_error_configuration = int(parameters[44][3:-1], 16)  # ZF
+        self._hardware_limit_configuration = int(parameters[45][3:-1], 16)  # ZH
+        self._software_limit_configuration = int(parameters[46][3:-1], 16)  # ZS
 
         self.loaded = True
     def _get_kind(self):
@@ -609,7 +609,7 @@ class NewportAxis(Axis):
         self.info('saving parameters to {}'.format(self.config_path))
         cp = self.get_configuration()
 
-        #ensure 0 is not saved causing the axis to not move
+        # ensure 0 is not saved causing the axis to not move
         cp.set('General', 'velocity', max(0.1, self.velocity))
         cp.set('General', 'acceleration', max(0.1, self.acceleration))
         cp.set('General', 'deceleration', max(0.1, self.deceleration))

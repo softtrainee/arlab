@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,13 +17,13 @@
 
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits
-#from traitsui.api import View,Item,Group,HGroup,VGroup
+# from traits.api import HasTraits
+# from traitsui.api import View,Item,Group,HGroup,VGroup
 
 #============= standard library imports ========================
 import time
 from monitor import Monitor
-#from threading import Thread
+# from threading import Thread
 #============= local library imports  ==========================
 
 cnt = 0
@@ -34,8 +34,8 @@ class PumpingMonitor(Monitor):
     gauge_manager = None
     tank_gauge_name = 'gauge1'
     pump_gauge_name = 'gauge2'
-    #pumping_duration=Float
-    #idle_duration=Float
+    # pumping_duration=Float
+    # idle_duration=Float
     name = 'AnalyticalPumpingMonitor'
 
 
@@ -61,10 +61,10 @@ class PumpingMonitor(Monitor):
                 idle_start = 0
                 pump_start, pump_duration = get_time(pump_start)
                 self.parent.update_pumping_duration(self.name, pump_duration)
-            else: #state=='idle'
+            else:  # state=='idle'
                 pump_start = 0
                 idle_start, idle_duration = get_time(idle_start)
-                #print 'idle duir',idle_duration
+                # print 'idle duir',idle_duration
                 self.parent.update_idle_duration(self.name, idle_duration)
 
             time.sleep(1)
@@ -72,7 +72,7 @@ class PumpingMonitor(Monitor):
         '''
         '''
         state = 'idle'
-        #gm=self.gauge_manager
+        # gm=self.gauge_manager
         global cnt
 
         if cnt >= 5 and cnt < 10:

@@ -1,13 +1,13 @@
 #!/Library/Frameworks/Python.framework/Versions/Current/bin/python
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,7 +90,7 @@ class BandwidthHighlighter(HasTraits):
 #        mask = where((ndim > low) & (ndim < high))
 #
 #        im[mask] = [255, 0, 0]
-##        im = Image.fromarray(im)
+# #        im = Image.fromarray(im)
 #
 #        plot = self.oplot
 #
@@ -128,8 +128,8 @@ class BandwidthHighlighter(HasTraits):
 
 #    @on_trait_change('contrast+')
 #    def _contrast_changed(self):
-##        if self.path:
-##            self._load_image(self.path)
+# #        if self.path:
+# #            self._load_image(self.path)
 #        if not (self.oplot and self.plot):
 #            return
 #
@@ -143,8 +143,8 @@ class BandwidthHighlighter(HasTraits):
 #        else:
 #            if self.path:
 #                self._load_image(self.path)
-##                img_rescale = self._ndim
-##
+# #                img_rescale = self._ndim
+# #
 #
 #    def _contrast_equalize(self, src):
 #        p2 = percentile(src, self.contrast_low)
@@ -216,23 +216,23 @@ class BandwidthHighlighter(HasTraits):
 #        if not path.endswith('.pdf'):
 #            path += '.pdf'
 #        gc = PdfPlotGraphicsContext(filename=path)
-##        opad = obj.padding_bottom
-##        obj.padding_bottom = 60
+# #        opad = obj.padding_bottom
+# #        obj.padding_bottom = 60
 #        obj.do_layout(force=True)
 #        gc.render_component(obj, valign='center')
 #
 #        gc.gc.drawString(600, 5, 'area:{:0.3f}% low={} high={}'.format(self.area, self.low, self.high))
 #
 #        gc.save()
-##        obj.padding_bottom = opad
+# #        obj.padding_bottom = opad
 #
 #    def render_pic(self, obj, path):
 #        from chaco.plot_graphics_context import PlotGraphicsContext
 #
 #        gc = PlotGraphicsContext((int(obj.outer_width), int(obj.outer_height)))
-##            obj.use_backbuffer = False
+# #            obj.use_backbuffer = False
 #        gc.render_component(obj)
-##            obj.use_backbuffer = True
+# #            obj.use_backbuffer = True
 #        if not path.endswith('.png'):
 #            path += '.png'
 #        gc.save(path)
@@ -338,14 +338,14 @@ class BandwidthHighlighter(HasTraits):
 #
 #        img_plot.tools = tools
 #        img_plot.overlays = overlays
-##        self.add_inspector(img_plot)
-##        self.add_tools(img_plot)
+# #        self.add_inspector(img_plot)
+# #        self.add_tools(img_plot)
 #
 #        self.oplot.request_redraw()
 #
 #    def _colormap_name_2_changed(self):
 #        cmap = color_map_name_dict[self.colormap_name_2]
-##        self.plot.colormap = cmp
+# #        self.plot.colormap = cmp
 #        self.plot.delplot('plot0')
 #        img_plot = self.plot.img_plot('img', colormap=cmap)[0]
 #        self.add_inspector(img_plot)

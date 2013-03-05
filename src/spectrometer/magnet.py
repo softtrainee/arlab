@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,11 +29,11 @@ import time
 from numpy import polyval, polyfit
 #============= local library imports  ==========================
 from src.paths import paths
-#import math
-#from src.graph.graph import Graph
+# import math
+# from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
-#from src.regression.ols_regressor import PolynomialRegressor
+# from src.regression.ols_regressor import PolynomialRegressor
 
 class CalibrationPoint(HasTraits):
     x = Float
@@ -50,9 +50,9 @@ def get_float(func):
 
 class Magnet(SpectrometerDevice):
     mftable = List(
-                   #[[40, 39, 38, 36], [2, 5, 10, 26]]
+                   # [[40, 39, 38, 36], [2, 5, 10, 26]]
                    )
-    #regressor = Instance(PolynomialRegressor, ())
+    # regressor = Instance(PolynomialRegressor, ())
 
     dac = Property(depends_on='_dac')
     mass = Property(depends_on='_mass')
@@ -94,8 +94,8 @@ class Magnet(SpectrometerDevice):
 
         refindex = xs.index(isotope)
         delta = dac - ys[refindex]
-        #need to calculate all ys
-        #using simple linear offset
+        # need to calculate all ys
+        # using simple linear offset
         ys = [yi + delta for yi in ys]
 
         self.mftable = [xs, ys]
@@ -149,7 +149,7 @@ class Magnet(SpectrometerDevice):
 #    def calculate_dac(self, pos):
 #        #is pos a number
 #        if not isinstance(pos, (float, int)):
-#            #is pos a isokey or a masskey 
+#            #is pos a isokey or a masskey
 #            # eg. Ar40, or 39.962
 #            mass = None
 #            isokeys = {'Ar40':39.962}
@@ -248,16 +248,16 @@ class Magnet(SpectrometerDevice):
         if dac is None:
             dac = self._dac
         if det is None:
-            det=self.detector
-            
+            det = self.detector
+
         if det:
-            dac=self.spectrometer.uncorrect_dac(det, dac)
-            
+            dac = self.spectrometer.uncorrect_dac(det, dac)
+
         m = self.map_dac_to_mass(dac)
         return next((k for k, v in MOLECULAR_WEIGHTS.iteritems() if abs(v - m) < 0.001), None)
 #    def __dac_changed(self):
 #        m = self.map_dac_to_mass(self._dac)
-##        print 'get mass', m, type(m), nan, type(nan)
+# #        print 'get mass', m, type(m), nan, type(nan)
 #        if not isnan(m):
 #            self._mass = m
 

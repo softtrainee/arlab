@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,15 +38,15 @@ class Constants(ExcelMixin):
 
         self.lambda_k = lambda_e + lambda_b
 
-        self.lambda_Ar37 = self._get_constant('lambda_Ar37', 0.01975, 0) #per day
-        self.lambda_Ar39 = self._get_constant('lambda_Ar39', 7.068000e-6, 0)  #per day
-        self.lambda_Cl36 = self._get_constant('lambda_Cl36', 6.308000e-9, 0)  #per day
+        self.lambda_Ar37 = self._get_constant('lambda_Ar37', 0.01975, 0)  # per day
+        self.lambda_Ar39 = self._get_constant('lambda_Ar39', 7.068000e-6, 0)  # per day
+        self.lambda_Cl36 = self._get_constant('lambda_Cl36', 6.308000e-9, 0)  # per day
 
-        #atmospheric ratios
+        # atmospheric ratios
         self.atm4036 = self._get_constant('Ar40_Ar36_atm', 295.5, 0)
         self.atm4038 = self._get_constant('Ar40_Ar38_atm', 1575, 2)
 
-        #atm4038 = ufloat((1575, 2))
+        # atm4038 = ufloat((1575, 2))
         self.atm3638 = self.atm4038 / self.atm4036
         self.atm3836 = self.atm4036 / self.atm4038
 

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,10 +74,10 @@ class ModbusCommunicator(SerialCommunicator):
         '''
         cmd = ''.join([self.slave_address] + args)
 
-        #convert hex string into list of ints
+        # convert hex string into list of ints
         cmdargs = self._parse_hexstr(cmd, return_type='int')
 
-        #calculate the CRC and append to message
+        # calculate the CRC and append to message
         crc = computeCRC(cmdargs)
         cmd += crc
 
@@ -115,7 +115,7 @@ class ModbusCommunicator(SerialCommunicator):
             else:
                 return
 
-            #check the crc
+            # check the crc
             cargs = self._parse_hexstr(resp, return_type='int')
 
             crc = ''.join(args[-2:])
@@ -156,12 +156,12 @@ class ModbusCommunicator(SerialCommunicator):
                 if response_type == 'float':
                     fmt_str = '!' + 'f' * (ndata / 4)
                     resp = struct.unpack(fmt_str, data.decode('hex'))
-                    #return a single value
+                    # return a single value
 
                     if ndata == 4:
                         return resp[0]
                     else:
-                        #return a list of values
+                        # return a list of values
                         return resp
 
                 else:
@@ -181,16 +181,16 @@ class ModbusCommunicator(SerialCommunicator):
         if isinstance(value, tuple):
             value = ''.join(map('{:04X}'.format, value))
         else:
-            #convert decimal value to 32-bit float
+            # convert decimal value to 32-bit float
             binstr = struct.pack('!f', value)
 
-            #convert binary string to a ascii hex string
+            # convert binary string to a ascii hex string
             hexstr = binascii.hexlify(binstr)
             if self.device_word_order == 'low_high':
                 high = hexstr[:4]
                 low = hexstr[4:]
 
-                #flip order of words
+                # flip order of words
                 value = ''.join([low, high])
             else:
                 value = hexstr

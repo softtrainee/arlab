@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ class CoincidenceScan(MagnetScan):
         centers = dict([(di.name, get_peak_center(i, di))
                             for i, di in enumerate(spec.detectors)])
 
-        #calculate relative to AX
+        # calculate relative to AX
         config = ConfigParser()
         p = os.path.join(paths.spectrometer_dir, 'config.cfg')
         config.read(open(p, 'r'))
@@ -94,7 +94,7 @@ class CoincidenceScan(MagnetScan):
             if newdefl > 0:
                 msg = 'Apply new deflection. {} Current {}. New {}'.format(di.name, curdefl, newdefl)
                 if self.confirmation_dialog(msg):
-                    #update the config.cfg deflections
+                    # update the config.cfg deflections
                     config.set('Deflection', di.name, newdefl)
                     di.deflection = newdefl
 

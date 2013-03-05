@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -161,7 +161,7 @@ class StageVisualizationCanvas(MarkupCanvas):
         if cor is not None:
             cor.visible = not cor.visible
 
-        #toggle the visiblity of the objects interpolation holes
+        # toggle the visiblity of the objects interpolation holes
         for k, v in cont.iteritems():
             if k.startswith('{}-interpolation-line'.format(obj.name)):
                 v.visible = not v.visible

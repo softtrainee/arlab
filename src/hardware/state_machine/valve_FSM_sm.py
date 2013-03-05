@@ -4,17 +4,17 @@
 # from file : valve_FSM.sm
 
 
-# 
-# Copyright (c) 2010 RossLabas 
-# All rights reserved. 
-# 
+#
+# Copyright (c) 2010 RossLabas
+# All rights reserved.
+#
 # Author: Jake Ross
 #
-#To compile the state map file (.sm) 
+# To compile the state map file (.sm)
 #
-#java -jar /Path/to/Smc.jar -python /Path/to/state_map.sm
+# java -jar /Path/to/Smc.jar -python /Path/to/state_map.sm
 #
-#see http://smc.sourceforge.net/SmcManual.htm
+# see http://smc.sourceforge.net/SmcManual.htm
 
 
 import statemap

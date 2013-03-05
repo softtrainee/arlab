@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ class MarkupContainer(collections.MutableMapping):
 
 #    def add_layer(self):
 #        self.layers.append(dict())
-#        
+#
 #    def add_item(self, item, key, layer=0):
 #        l = self.layers[layer]
 #        l.update(key, item)
@@ -254,7 +254,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
         self.current_pos = (event.x, event.y)
         if a is not None or o is not None:
             if self.tool_state not in ['line', 'mline', 'rect']:
-                #change mouse
+                # change mouse
                 event.window.set_pointer(self.select_pointer)
                 event.handled = True
         else:
@@ -281,7 +281,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
 
 #        self.selected_point = None
 #        self.selected_element = None
-#        
+#
         self.temp_start_pos = (event.x, event.y)
 
         if self.tool_state in ['line', 'mline']:
@@ -314,7 +314,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
                         self.event_state = 'lmove'
                         point = None
                         if isinstance(e[0], list):
-                            #this is a multiline
+                            # this is a multiline
                             for i, pts in enumerate(e[0]):
                                 point = self._over_mark_up_point(event, pts)
                                 if point is not None:
@@ -329,7 +329,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
                             self.event_state = 'pmove'
                     elif 'rect' in l:
                         self.event_state = 'rmove'
-                        #check over corner
+                        # check over corner
                         pts = e[0]
                         tol = 10
                         pti = None
@@ -402,7 +402,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
         element = self.markupcontainer[self.selected_element]
         pt = self.selected_point
         if isinstance(pt, list):
-            #multiline 
+            # multiline
             ep, re = _update_(pt[0], element[0][pt[1]], element)
             self.selected_point = [ep, pt[1]]
             self.markupcontainer[self.selected_element][0][pt[1]] = (re[0], re[1])
@@ -451,7 +451,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
 
         self.markupcontainer[se] = ndict
         self.temp_start_pos = (event.x, event.y)
-        #self.invalidate_and_redraw()
+        # self.invalidate_and_redraw()
         self.request_redraw()
     def lmove_left_up(self, event):
         self.end_move()
@@ -469,21 +469,21 @@ class InteractionMarkupCanvas(MarkupCanvas):
         '''
         b = self.bounds
         ob = self.outer_bounds
-        #assumes uniform padding
+        # assumes uniform padding
         px = (ob[0] - b[0]) / 2.0
         py = (ob[1] - b[1]) / 2.0
 
         if px <= event.x <= b[0] + px and py <= event.y <= b[1] + py:
             self.temp_end_pos = (event.x, event.y)
 
-            #store the line in the markupcontainer
+            # store the line in the markupcontainer
             nline = [self.temp_start_pos, self.temp_end_pos, False]
             key = 'line{}'.format(self.line_counter)
             if self.tool_state == 'line':
                 self.markupcontainer[key] = nline
                 self.line_counter += 1
 
-                #set state back to normal and redraw
+                # set state back to normal and redraw
                 self.event_state = 'normal'
             elif self.tool_state == 'mline':
                 pkey = 'mline{}'.format(self.line_counter - 1)
@@ -495,7 +495,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
                     self.line_counter += 1
                 self.temp_start_pos = (event.x, event.y)
 
-        #self.invalidate_and_redraw()
+        # self.invalidate_and_redraw()
         self.request_redraw()
 
     def ldraw_key_pressed(self, event):
@@ -509,7 +509,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
                 self.line_counter += 1
             self.tool_state = 'select'
 
-        #self.invalidate_and_redraw()
+        # self.invalidate_and_redraw()
         self.request_redraw()
 
     def rmove_mouse_move(self, event):
@@ -666,20 +666,20 @@ class InteractionMarkupCanvas(MarkupCanvas):
             yb = max(y, y2)
 
             if m == 'undefined' or abs(m) > 1000000:
-                    #the line is vertical
+                    # the line is vertical
                     if abs(event.x - x) <= tolerance and ya <= event.y <= yb:
                         return k
 
-            #do a first pass by making a box
+            # do a first pass by making a box
             elif xa <= event.x <= xb and ya - 5 <= event.y <= yb + 5:
                 hitbounds = 5 * abs(m) / 3.0
                 if m == 0:
                     hitbounds = 10
 
                 tolerance = abs(m) * tolerance / 3.0
-                #loop thru x values form mousex to +- tolerance
+                # loop thru x values form mousex to +- tolerance
                 for i in range(int(event.x - hitbounds), int(event.x + hitbounds)):
-                    #get the y value of the line at i
+                    # get the y value of the line at i
                     yi = m * i + b
 
                     if m == 0:
@@ -693,7 +693,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
         for k, v in md.iteritems():
             if 'line' in k:
                 if isinstance(v[0], list):
-                    #this is a multi segment line
+                    # this is a multi segment line
                     for pts in v[0]:
                         key = _get_key(pts, tolerance)
                         if key is not None:
@@ -772,7 +772,7 @@ class InteractionMarkupCanvas(MarkupCanvas):
 #============= EOF ====================================
 #    def mldraw_mouse_move(self,event):
 #        self.ldraw_mouse_move(event)
-#        
+#
 #    def mldraw_left_down(self,event):
 #        self.ldraw_left_down(event)
 #    def _save(self, pdf = False):

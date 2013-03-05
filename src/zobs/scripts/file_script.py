@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,7 +30,7 @@ import os
 #=============local library imports  ==========================
 from manager_script import ManagerScript
 from src.managers.displays.rich_text_display import RichTextDisplay
-#from src.managers.displays.rich_text_display import StyledTextDisplay
+# from src.managers.displays.rich_text_display import StyledTextDisplay
 from src.helpers.color_generators import colors8i as colors
 from src.helpers.filetools import parse_file
 
@@ -97,7 +97,7 @@ class FileScript(ManagerScript):
             if self.load():
                 self.start()
 
-                #we are started so update running flag
+                # we are started so update running flag
                 return True
 
 

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,8 @@
 from traits.api import HasTraits, Str, Enum, List, Instance, Any, \
      on_trait_change, String, Event, Property, Int
 from traitsui.api import View, Item, HGroup, spring, ButtonEditor, TabularEditor, ListEditor
-#from src.managers.displays.rich_text_display import RichTextDisplay
-#from src.scripts.core.scripts_manager import ScriptSelector
+# from src.managers.displays.rich_text_display import RichTextDisplay
+# from src.scripts.core.scripts_manager import ScriptSelector
 from traitsui.tabular_adapter import TabularAdapter
 import os
 
@@ -73,7 +73,7 @@ class ProcessAdapter(TabularAdapter):
             elif self.item.state == 'error':
                 im = 'red'
 
-            #get the source path
+            # get the source path
             root = os.path.split(__file__)[0]
             while not root.endswith('src'):
                 root = os.path.split(root)[0]
@@ -115,7 +115,7 @@ class ProcessView(HasTraits):
 
 #    def load_scripts(self, s):
 #        for name, si in s:
-##            print '{} {}'.format(name, si.file_name)
+# #            print '{} {}'.format(name, si.file_name)
 #            ss = Script(name='{} {}'.format(name, si.file_name))
 #            ss.load(si)
 #            self.scripts.append(ss)
@@ -193,7 +193,7 @@ class ProcessView(HasTraits):
 #    def update_alive(self, obj, name, old, new):
 #        '''
 #           handle the script death ie not alive
-#            
+#
 #        '''
 #        self.alive = new
 #
@@ -206,7 +206,7 @@ class ProcessView(HasTraits):
 #            self.selected = new
 #            if new is not None:
 #                self.name = new.name
-##                self.dirty = False
+# #                self.dirty = False
 #                new.on_trait_change(self.update_dirty, 'dirty')
 #
 #    @on_trait_change('selected:name')

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from kiva.trait_defs.kiva_font_trait import KivaFontFunc
 from src.graph.editors.series_editor import ContourPolyPlotEditor
-#from chaco.contour_poly_plot import ContourPolyPlot
+# from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.base_2d_plot import Base2DPlot
 from chaco.cmap_image_plot import CMapImagePlot
 from chaco.base_contour_plot import BaseContourPlot
@@ -71,10 +71,10 @@ class PlotEditor(HasTraits):
     name = Str('Plot Editor')
     series_editors = List
 
-    #autoupdate = DelegatesTo('graph')
+    # autoupdate = DelegatesTo('graph')
 
-    #the _prev_selected hack prevents selected from ever being set to None
-    #this prevents view resizing when hiding/showing series.
+    # the _prev_selected hack prevents selected from ever being set to None
+    # this prevents view resizing when hiding/showing series.
     selected = Property(depends_on='_selected')
     _selected = Any
     _prev_selected = Any
@@ -173,8 +173,8 @@ class PlotEditor(HasTraits):
             self._xmax = phigh[0]
             self._ymax = phigh[1]
 
-            #print plot.value_range.low
-            #print plot.value_range.high
+            # print plot.value_range.low
+            # print plot.value_range.high
         else:
             self._xmin, self._xmax = plot.index_range.low, plot.index_range.high
             self._ymin, self._ymax = plot.value_range.low, plot.value_range.high
@@ -183,11 +183,11 @@ class PlotEditor(HasTraits):
         editor = TextEditor(enter_set=True, auto_set=False)
         xgrp = VGroup('xtitle', Item('xmin', editor=editor),
                                 Item('xmax', editor=editor),
-                                #Item('xcolor_', editor = ColorEditor(current_color = 'red'))
+                                # Item('xcolor_', editor = ColorEditor(current_color = 'red'))
                                 )
         ygrp = VGroup('ytitle', Item('ymin', editor=editor),
                                 Item('ymax', editor=editor),
-                                #Item('ycolor_', editor = ColorEditor(current_color = 'blue'))
+                                # Item('ycolor_', editor = ColorEditor(current_color = 'blue'))
                                 )
 
         return VGroup(xgrp, ygrp, show_border=True)
@@ -242,7 +242,7 @@ class PlotEditor(HasTraits):
 #        VGroup(
 #                        self.get_axes_group(),
 #                        self._get_selected_group(),
-#                        
+#
 #                        Item('series_editors',
 #                             style='custom',
 #                             editor=self._get_table_editor(),
@@ -250,7 +250,7 @@ class PlotEditor(HasTraits):
 #                             springy=False,
 #                             height=0.75
 #                             ),
-#                        ),         
+#                        ),
         v = View(vg,
                 resizable=True,
                 height=0.8,

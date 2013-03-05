@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ import os
 from src.graph.graph import Graph
 import time
 from src.viewable import Viewable
-#from src.managers.data_managers.h5_data_manager import H5DataManager
+# from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 class BaseDBResult(Viewable):
@@ -115,9 +115,9 @@ class DBResult(BaseDBResult):
         return self.isloadable()
 
 #    def _set_metadata(self, dbr):
-##        self.rid = dbr.id
-##        self.rundate = dbr.rundate
-##        self.runtime = dbr.runtime.strftime('%H:%M:%S')
+# #        self.rid = dbr.id
+# #        self.rundate = dbr.rundate
+# #        self.runtime = dbr.runtime.strftime('%H:%M:%S')
 #
 #        p = dbr.path
 #        if p is not None:
@@ -157,9 +157,9 @@ class DBResult(BaseDBResult):
         return self._loadable
 
 #    def _get_data_manager(self):
-##        dm = self.data_manager
-##        if dm is None:
-##        data = self._get_path()
+# #        dm = self.data_manager
+# #        if dm is None:
+# #        data = self._get_path()
 #        path = self.path
 #        name = os.path.basename(path)
 #        _, ext = os.path.splitext(name)
@@ -167,9 +167,9 @@ class DBResult(BaseDBResult):
 #        if ext in ['.h5', '.hdf5']:
 #            dm = self._data_manager_factory()
 #            if dm.isfile(path):
-##            if os.path.isfile(data):
+# #            if os.path.isfile(data):
 #                #is it wise to actually open the file now?
-##                    self._loadable = dm.open_data(data)
+# #                    self._loadable = dm.open_data(data)
 #                self._loadable = True
 #
 #        else:

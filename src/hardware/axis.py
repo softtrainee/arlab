@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ class Axis(ConfigLoadable):
     machine_velocity = Float
     machine_acceleration = Float
     machine_deceleration = Float
-    #sets handled by child class
+    # sets handled by child class
 
     nominal_velocity = Float
     nominal_acceleration = Float
@@ -95,7 +95,7 @@ class Axis(ConfigLoadable):
         '''
         pass
 #        self.loaded = False
-#        
+#
 #        p = os.path.join(self.pdir, '.%s' % self.name)
 #        with open(p, 'w') as f:
 #            pickle.dump(self, f)
@@ -106,12 +106,12 @@ class Axis(ConfigLoadable):
 #    def load_parameters(self, pdir):
 #        '''
 #        '''
-##        self.pdir = pdir
-##        p = os.path.join(pdir, '.%s' % self.name)
-##
-##        if os.path.isfile(p):
-##            return p
-##        else:
+# #        self.pdir = pdir
+# #        p = os.path.join(pdir, '.%s' % self.name)
+# #
+# #        if os.path.isfile(p):
+# #            return p
+# #        else:
 #        self.load(pdir)
 
     def save(self):

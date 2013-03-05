@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,22 +17,22 @@
 
 
 ##============= enthought library imports =======================
-##from traits.api import HasTraits, on_trait_change,Str,Int,Float,Button
-##from traitsui.api import View,Item,Group,HGroup,VGroup
+# #from traits.api import HasTraits, on_trait_change,Str,Int,Float,Button
+# #from traitsui.api import View,Item,Group,HGroup,VGroup
 #
 ##============= standard library imports ========================
-#from pylab import *
-#from numpy.random import normal
-#from uncertainties import ufloat
-#from src.data_processing.regression.multiple_linear_regressor import MultipleLinearRegressor
+# from pylab import *
+# from numpy.random import normal
+# from uncertainties import ufloat
+# from src.data_processing.regression.multiple_linear_regressor import MultipleLinearRegressor
 ##============= local library imports  ==========================
-#class MonteCarloError(Exception):
+# class MonteCarloError(Exception):
 #    def __init__(self, msg):
 #        self.msg = msg
 #    def __str__(self):
 #        return repr(self.msg)
 #
-#def test():
+# def test():
 #    regressor = MultipleLinearRegressor()
 #    ntrials = 10000
 #    nholes = 12
@@ -79,12 +79,12 @@
 #        r = get_mc_error(i, results, ntrials)
 #        predicted_errors[i] = r
 #
-#def get_mc_error(i, results, ntrials):
+# def get_mc_error(i, results, ntrials):
 #    percentile1 = results[i][int(ntrials * 0.1587)]
 #    percentile2 = results[i][int(ntrials * 0.8413)]
 #    return (abs(percentile1) + abs(percentile2)) / 2
 #
-#def eval_coeffs(*args):
+# def eval_coeffs(*args):
 #    coeffs = args[0]
 #    xs = args[1:] + (1,)
 #    if len(xs) != len(coeffs):
@@ -93,7 +93,7 @@
 #
 #    return sum(map(func, zip(coeffs, xs)))
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    from timeit import Timer
 #    t = Timer('test()', 'from __main__ import test')
 #    print t.timeit(1)

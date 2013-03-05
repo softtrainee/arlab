@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
-#from traitsui.api import View, Item, TableEditor
+# from traitsui.api import View, Item, TableEditor
 from pyface.timer.api import do_later
 #============= standard library imports ========================
 import os
@@ -34,7 +34,7 @@ class DeflectionCalibraiton(HasTraits):
 #        for det , mass in [('H2', 'Ar38'), ('H1', 'Ar39'), ('AX', 'Ar40'), ('L1', 41), ('L2', 42)]:
 #        for det , mass in [('H2', 'Ar38'), ('H1', 'Ar39'), ('AX', 'Ar40'), ('L1', 41), ('L2', 42)]:
 #        for det , mass in [('L1', 'PM41'), ('H2', 'Ar38')]:#, ('L1', 40.9), ('L2', 41.8)]:
-        #for det, mass in [('H2', 'Ar38')]:
+        # for det, mass in [('H2', 'Ar38')]:
         for det, mass in [('CDD', 'Ar39')]:
             '''
                  use mftable to calculate the nominal center_pos
@@ -108,7 +108,7 @@ class DeflectionCalibraiton(HasTraits):
                                   )
 
                 if self.isAlive():
-                    #write scan to file
+                    # write scan to file
                     dm.write_to_frame(zip(graph.get_data(), graph.get_data(axis=1)))
 
                     if npeak_centers > 1:
@@ -120,7 +120,7 @@ class DeflectionCalibraiton(HasTraits):
                         ds.append(self.peak_center_results[0][1])
                         dm.write_to_frame(list(d), frame_key=deflection_frame_key)
 
-                        #write the centering results to the centering file
+                        # write the centering results to the centering file
                         dm.write_to_frame([('#{}'.format(x), y) for x, y in  zip(graph.get_data(series=1), graph.get_data(series=1, axis=1))])
 
             if self.peak_center_results:
@@ -129,7 +129,7 @@ class DeflectionCalibraiton(HasTraits):
             if i == 2:
                 do_later(rgraph.edit_traits)
 
-            #delay so we can view graph momonetarily
+            # delay so we can view graph momonetarily
             if not self.simulation and self.isAlive():
                 time.sleep(2)
 

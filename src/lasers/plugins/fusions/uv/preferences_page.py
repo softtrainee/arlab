@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,13 +17,13 @@
 
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits, Str, Password, Bool, Button, Enum, Float, List, on_trait_change
+# from traits.api import HasTraits, Str, Password, Bool, Button, Enum, Float, List, on_trait_change
 #
-#from traitsui.table_column import ObjectColumn
-#from traitsui.extras.checkbox_column import CheckboxColumn
-#from src.helpers.paths import initialization_dir
-#import os
-#from ConfigParser import ConfigParser
+# from traitsui.table_column import ObjectColumn
+# from traitsui.extras.checkbox_column import CheckboxColumn
+# from src.helpers.paths import initialization_dir
+# import os
+# from ConfigParser import ConfigParser
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -41,11 +41,11 @@ class FusionsUvPreferencesPage(FusionsLaserPreferencesPage):
 #    width = Float
 #    height = Float
 
-#class CItem(HasTraits):
+# class CItem(HasTraits):
 #    enabled = Bool
 #    name = Str
 #
-#class ExtractionLinePreferencesPage(PreferencesPage):
+# class ExtractionLinePreferencesPage(PreferencesPage):
 #    '''
 #        G{classtree}
 #    '''

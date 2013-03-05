@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -95,7 +95,7 @@ class EmailManager(Manager):
 
     def _message_factory(self, text, level, subject='!Pychron Alert!'):
         msg = MIMEMultipart()
-        msg['From'] = self.sender#'nmgrl@gmail.com'
+        msg['From'] = self.sender  # 'nmgrl@gmail.com'
         msg['To'] = ', '.join(self.get_emails(level))
         msg['Subject'] = subject
 
@@ -133,10 +133,10 @@ class EmailManager(Manager):
         self.users.append(u)
 
 #    def get_configuration(self):
-#        p = 
+#        p =
 #        config = ConfigParser()
 #        config.read(p)
-#        
+#
 #        return config
 
     def load_users_file(self, *args, **kw):
@@ -165,7 +165,7 @@ class EmailManager(Manager):
             config.add_section(name)
             for attr in ['email', 'level', 'email_enabled', 'multruns_notify']:
                 config.set(name, attr, getattr(user, attr))
-#                
+#
 #            config.set(name, 'email', user.email)
 #            config.set(name, 'level', user.level)
 #            config.set(name, 'email_enabled', user.email_enabled)
@@ -186,5 +186,5 @@ if __name__ == '__main__':
                    )
               ]
     em.broadcast('ffoooo')
-    #em.configure_traits()
+    # em.configure_traits()
 #============= EOF =====================================

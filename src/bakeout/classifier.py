@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -75,7 +75,7 @@ class Classifier(Loggable):
         xs, ys = np.asarray(xs), np.asarray(ys)
         total_time = xs[-1] - xs[0]
 
-        #calculate rise rate for 10s window
+        # calculate rise rate for 10s window
         window = [-1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         rise_rates = abs(np.convolve(ys, window, mode='same') / np.convolve(xs, window, mode='same'))
 
@@ -156,7 +156,7 @@ class Classifier(Loggable):
         X, y = self.get_training_data()
         knn = KNeighborsClassifier()
 
-        #fit the classifier with the training data
+        # fit the classifier with the training data
         knn.fit(X, y)
 
         classification = knn.predict(observation)

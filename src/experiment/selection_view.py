@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -203,7 +203,7 @@ class SelectionView(Viewable):
                                    )
                     s.overlays.append(dl)
                     self.data_labels.append(dl)
-                #add range selection tool
+                # add range selection tool
 #                s.active_tool = RangeSelection(s, left_button_selects=True)
 #                s.overlays.append(RangeSelectionOverlay(component=s))
 #                s.index.on_trait_change(getattr(self, '_update_{}'.format(at)), 'metadata_changed')
@@ -212,7 +212,7 @@ class SelectionView(Viewable):
         g.set_y_limits(min=0, max=yma * 1.1)
 
 #    def _update(self, sc, nds):
-#        #rescale y limits 
+#        #rescale y limits
 #        plot = self.graph.plots[0]
 #        if self.data_labels:
 #            low = plot.index_mapper.range.low
@@ -229,15 +229,15 @@ class SelectionView(Viewable):
 #                nlow = min(nys)
 #                nhigh = max(nys)
 #
-##                nhigh = np.random.randint(100000)
+# #                nhigh = np.random.randint(100000)
 #                print 'looo', nlow, nhigh
 #                sc.value_mapper.range.low = nlow
 #                sc.value_mapper.range.high = nhigh
 #    #            print plot.value_mapper.range.low_setting
 #    #            print plot.value_mapper.range.high_setting
-##                self.graph.set_y_limits(nlow, nhigh, pad='0.1')
-##                plot.value_mapper.range.low = nlow
-##                plot.value_mapper.range.high = nhigh
+# #                self.graph.set_y_limits(nlow, nhigh, pad='0.1')
+# #                plot.value_mapper.range.low = nlow
+# #                plot.value_mapper.range.high = nhigh
 #                self.graph.redraw()
 
 

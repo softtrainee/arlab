@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +16,9 @@
 
 #=============enthought library imports=======================
 from traits.api import Button, DelegatesTo
-#import apptools.sweet_pickle as pickle
+# import apptools.sweet_pickle as pickle
 #=============standard library imports ========================
-#import os
+# import os
 #=============local library imports  ==========================
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from src.paths import paths
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 #        avaliable_streams = [apm]
 #        self._show_streams_(avaliable_streams)
 
-#        
+#
 #    def get_menus(self):
 #        '''
 #        '''

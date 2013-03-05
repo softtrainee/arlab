@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -122,7 +122,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         return v
 
     if arar_constants is None:
-        #lazy load constants
+        # lazy load constants
         arar_constants = ArArConstants()
 
 #    if isinstance(signals[0], tuple):
@@ -151,21 +151,21 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #    temp_ic = ufloat(ic)
 
 #===============================================================================
-# 
+#
 #===============================================================================
 
-    #subtract blanks and baselines (and backgrounds)
+    # subtract blanks and baselines (and backgrounds)
     s40 -= (s40bl + s40bs + s40bk)
     s39 -= (s39bl + s39bs + s39bk)
     s38 -= (s38bl + s38bs + s38bk)
     s37 -= (s37bl + s37bs + s37bk)
     s36 -= (s36bl + s36bs + s36bk)
 
-    #apply intercalibration factor to corrected 36
+    # apply intercalibration factor to corrected 36
     s36 *= ic
 
-    #correct for abundant sensitivity
-    #assumes symmetric and equal abundant sens for all peaks
+    # correct for abundant sensitivity
+    # assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundant_sensitivity * (s39 + s39)
     n39 = s39 - abundant_sensitivity * (s40 + s38)
     n38 = s38 - abundant_sensitivity * (s39 + s37)
@@ -174,7 +174,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
 
-    #calculate decay factors
+    # calculate decay factors
     if a37decayfactor is None:
         try:
             dc = arar_constants.lambda_Ar37.nominal_value
@@ -189,13 +189,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         except ZeroDivisionError:
             a39decayfactor = 1
 
-    #calculate interference corrections
+    # calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
     k37 = ufloat((0, 1e-20))
 
-    #iteratively calculate 37, 39
+    # iteratively calculate 37, 39
     for _ in range(5):
         ca37 = s37dec_cor - k37
         ca39 = ca3937 * ca37
@@ -222,8 +222,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         cl36 = cl38 * m
         atm36 = s36 - ca36 - cl36
 
-    #calculate rodiogenic
-    #dont include error in 40/36
+    # calculate rodiogenic
+    # dont include error in 40/36
 
 #    pc = sc.node('pychron').node('experiment')
 #    print pc
@@ -237,13 +237,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     age_wo_jerr = ufloat((0, 0))
     try:
         R = ar40rad / k39
-        #dont include error in decay constant
+        # dont include error in decay constant
         age = age_equation(j, R, include_decay_error=include_decay_error,
                            arar_constants=arar_constants)
 #        age = age_equation(j, R)
         age_with_jerr = deepcopy(age)
 
-        #dont include error in decay constant
+        # dont include error in decay constant
         j.set_std_dev(0)
         age = age_equation(j, R, include_decay_error=include_decay_error,
                            arar_constants=arar_constants)
@@ -294,18 +294,18 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
     else:
         age = (1 / arar_constants.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
     return age
-#def calculate_arar_age(signals, baselines, blanks, backgrounds,
+# def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                       j, irradinfo,
 #                       ic=(1.0, 0),
 #                       a37decayfactor=None,
 #                       a39decayfactor=None
 #                       ):
-##    s40, s39, s38, s37, s36 = signals
+# #    s40, s39, s38, s37, s36 = signals
 #    s40bs, s39bs, s38bs, s37bs, s36bs = baselines
 #    s40bl, s39bl, s38bl, s37bl, s36bl = blanks
 #    s40bk, s39bk, s38bk, s37bk, s36bk = backgrounds
 #
-##    k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
+# #    k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
 #    pr, t = irradinfo[:-1], irradinfo[-1]
 #
 #    s40, s39, s38, s37, s36 = map(ufloat, signals)
@@ -331,7 +331,7 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
 #    #2004-11-16 21:16:00
 #    if a37decayfactor is None:
 #        try:
-##            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+# #            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
 #            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
 #            #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
 #        except ZeroDivisionError:
@@ -339,7 +339,7 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
 #
 #    if a39decayfactor is None:
 #        try:
-##            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+# #            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
 #            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
 #            #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
 #        except ZeroDivisionError:
@@ -374,16 +374,16 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
 #        #dont include error in decay constant
 #        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
 #
-##        j.set_std_dev(0)
-##        JR = j * ar40rad / k39
-##        #dont include error in decay constant
-##        age_wo_jerr = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
+# #        j.set_std_dev(0)
+# #        JR = j * ar40rad / k39
+# #        #dont include error in decay constant
+# #        age_wo_jerr = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
 #    except (ZeroDivisionError, ValueError):
 #        age = ufloat((0, 0))
-##        age_wo_jerr = ufloat((0, 0))
+# #        age_wo_jerr = ufloat((0, 0))
 #
 #    result = dict(age=age,
-##                  age_wo_jerr=age_wo_jerr,
+# #                  age_wo_jerr=age_wo_jerr,
 #                  rad40=ar40rad,
 #                  tot40=s40,
 #                  k39=k39,
@@ -406,17 +406,17 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
 #        return e
 #============= EOF =====================================
 
-##=============enthought library imports=======================oup
+# #=============enthought library imports=======================oup
 #
 ##=============standard library imports ========================
-#from uncertainties import ufloat
-#from uncertainties.umath import log, exp
+# from uncertainties import ufloat
+# from uncertainties.umath import log, exp
 #
 ##=============local library imports  ==========================
-#import constants
-##from data_adapter import new_unknown
+# import constants
+# #from data_adapter import new_unknown
 #
-#plateau definition
+# plateau definition
 plateau_criteria = {'number_steps':3}
 
 def overlap(a1, a2, e1, e2, overlap_sigma):
@@ -576,7 +576,7 @@ def time_non_recursive():
     find_plateaus(ages, errors)
 
 if __name__ == '__main__':
-    #21055-02
+    # 21055-02
 #    signals = ((8.681775, 0.004059),
 #                   (9.557604, 0.003301),
 #                   (0.128056, 0.000320),
@@ -587,10 +587,10 @@ if __name__ == '__main__':
 #              (0.00003314, 0.0000088),
 #
 #              (0.0002788, 0.000013), (0.00005382, 0.0000048))
-#    t = 
+#    t =
 #    print 'asdfs', 1 / umath.exp(-constants.lambda_37 * t)
 #    print 1 / (constants.lambda_37) * umath.log(3.801e1)
-    #60754-10
+    # 60754-10
     signals = ((2655.294, 0.12),
                (377.5964, 0.046),
                (4.999, 0.012),
@@ -629,7 +629,7 @@ if __name__ == '__main__':
 #    tr = t.timeit(n)
 #    print 'time nr', tr / 5
 #    find_plateaus(ages, errors)
-#def find_plateaus(ages, errors):
+# def find_plateaus(ages, errors):
 #    def __add_plateau(s, e, p, di):
 #        d = e - s
 #        if d >= plateau_criteria['number_steps']:
@@ -643,7 +643,7 @@ if __name__ == '__main__':
 #    for i in range(1, len(ages)):
 #        a1 = ages[start_i]
 #        a2 = ages[i]
-#        
+#
 #        e1 = 2 * errors[start_i]
 #        e2 = 2 * errors[i]
 #        #a1 = aa1.nominal_value
@@ -670,7 +670,7 @@ if __name__ == '__main__':
 #    return (plateaus[max_i][0], plateaus[max_i][1] + 1)
 
 
-#def age_calculation(*args):
+# def age_calculation(*args):
 #    '''
 #    j, m40, m39, m38, m37, m36, production_ratio, days_since_irradiation, irradiation_time
 #    return age in years
@@ -683,7 +683,7 @@ if __name__ == '__main__':
 #    age = (1 / constants.lambdak) * log(1 + JR)
 #
 #    return age
-#def j_calculation(*args):
+# def j_calculation(*args):
 #    '''
 #    age, m40, m39, m38, m37, m36, production_ratio, days_since_irradiation, irradiation_time
 #        age in a (years)
@@ -693,7 +693,7 @@ if __name__ == '__main__':
 #    j_val = (exp(age * constants.lambdak) - 1) * isotope_components['k39'] / isotope_components['rad40']
 #    return j_val
 #
-#def get_isotope_components(m40, m39, m38, m37, m36, production_ratio, days_since_irradiation, irradiation_time):
+# def get_isotope_components(m40, m39, m38, m37, m36, production_ratio, days_since_irradiation, irradiation_time):
 #    #iteratively calculate 37 and 39
 #    k37 = 0
 #    for i in range(10):
@@ -709,7 +709,7 @@ if __name__ == '__main__':
 #    k38 = k39 * production_ratio.k3839
 #    ca38 = ca37 * production_ratio.ca3837
 #
-#    #36 from calcium 
+#    #36 from calcium
 #    ca36 = production_ratio.ca3637 * ca37
 #
 #    #cosmogenic 36 from cl
@@ -722,7 +722,7 @@ if __name__ == '__main__':
 #    #36 from atm
 #    atm36 = m36 - ca36 - cl36
 #
-#    #38 from atm and cl 
+#    #38 from atm and cl
 #    atm38 = atm36 / constants.atm36_38
 #    cl38 = m38 - k38 - atm38 - ca38
 #
@@ -738,7 +738,7 @@ if __name__ == '__main__':
 #
 #    return dict(zip(keys, values))
 #
-#def correct_for_decay(m37, m39, days_since_irradiation, irradiation_time):
+# def correct_for_decay(m37, m39, days_since_irradiation, irradiation_time):
 #    '''
 #    '''
 #    lam = constants.lambda_37
@@ -755,66 +755,66 @@ if __name__ == '__main__':
 #
 #
 #
-##def plateau_age(data):
-##    '''
-##    data = rowtuple of corrected data
-##    '''
-##    #calculate the ages and store ref to 39
-##    ages = []
-##    ar_39_signals = []
-##
-##    integrated = new_unknown()
-##    keys = ['ar40', 'ar39', 'ar38', 'ar37', 'ar36']
-##    integrated.j_value = data[0].j_value
-##    for d in data:
-##        for k in keys:
-##            integrated.isotopes[k] += d.isotopes[k]
-##        ar_39_signals.append(d.isotopes['ar39'])
-##
-##        ages.append(calc_corrected_age(d))
-##    print 'integrated age :', calc_corrected_age(integrated)
-##
-##    indices = find_plateaus(ages)
-##    if indices is None:
-##        print 'no plateau'
-##    for d in data[indices[0]:indices[1]+1]:
-##        print 'plateau step',d.AnalysisID,d.DataReductionSessionID
-##    
-##def calc_corrected_age(corrected_unknown):
-##    '''
-##    return age in Ma
-##    
-##    '''
-##
-##    #correct unknown for blank value
-##    corrected_unknown.correct_for_blank()
-##    corrected_unknown.correct_for_decay()
-##
-##    days_since_irradiation = corrected_unknown.days_since_irradiation()
-##
-##    #set up some shorthand names
-##    corrected_40 = corrected_unknown.isotopes['ar40']
-##    corrected_39 = corrected_unknown.isotopes['ar39']
-##    corrected_38 = corrected_unknown.isotopes['ar38']
-##    corrected_37 = corrected_unknown.isotopes['ar37']
-##    corrected_36 = corrected_unknown.isotopes['ar36']
-##
-##
-##    j_value = corrected_unknown.j_value
-##    production_ratio = corrected_unknown.production_ratio
-##
-##    return __corrected_age_calc__(corrected_40, corrected_39, corrected_38, corrected_37, corrected_36,
-##                           j_value, production_ratio, days_since_irradiation) / 1e6
+# #def plateau_age(data):
+# #    '''
+# #    data = rowtuple of corrected data
+# #    '''
+# #    #calculate the ages and store ref to 39
+# #    ages = []
+# #    ar_39_signals = []
+# #
+# #    integrated = new_unknown()
+# #    keys = ['ar40', 'ar39', 'ar38', 'ar37', 'ar36']
+# #    integrated.j_value = data[0].j_value
+# #    for d in data:
+# #        for k in keys:
+# #            integrated.isotopes[k] += d.isotopes[k]
+# #        ar_39_signals.append(d.isotopes['ar39'])
+# #
+# #        ages.append(calc_corrected_age(d))
+# #    print 'integrated age :', calc_corrected_age(integrated)
+# #
+# #    indices = find_plateaus(ages)
+# #    if indices is None:
+# #        print 'no plateau'
+# #    for d in data[indices[0]:indices[1]+1]:
+# #        print 'plateau step',d.AnalysisID,d.DataReductionSessionID
+# #
+# #def calc_corrected_age(corrected_unknown):
+# #    '''
+# #    return age in Ma
+# #
+# #    '''
+# #
+# #    #correct unknown for blank value
+# #    corrected_unknown.correct_for_blank()
+# #    corrected_unknown.correct_for_decay()
+# #
+# #    days_since_irradiation = corrected_unknown.days_since_irradiation()
+# #
+# #    #set up some shorthand names
+# #    corrected_40 = corrected_unknown.isotopes['ar40']
+# #    corrected_39 = corrected_unknown.isotopes['ar39']
+# #    corrected_38 = corrected_unknown.isotopes['ar38']
+# #    corrected_37 = corrected_unknown.isotopes['ar37']
+# #    corrected_36 = corrected_unknown.isotopes['ar36']
+# #
+# #
+# #    j_value = corrected_unknown.j_value
+# #    production_ratio = corrected_unknown.production_ratio
+# #
+# #    return __corrected_age_calc__(corrected_40, corrected_39, corrected_38, corrected_37, corrected_36,
+# #                           j_value, production_ratio, days_since_irradiation) / 1e6
 #
 #
 #
-#def calculate_arar_age(signals, ratios, ratio_errs,
+# def calculate_arar_age(signals, ratios, ratio_errs,
 #                       a37decayfactor, a39decayfactor, j, jer, d, der):
 #    s40, s40er, s39, s39er, s38, s38er, s37, s37er, s36, s36er = signals
 #    p36cl38cl, k4039, k3839, ca3637, ca3937, ca3837 = ratios
 #    k4039er, ca3637er, ca3937er = ratio_errs
-##    a37decayfactor = 1
-##    a39decayfactor = 1
+# #    a37decayfactor = 1
+# #    a39decayfactor = 1
 #    #convert to ufloats
 #    from uncertainties import ufloat
 #    from uncertainties.umath import log
@@ -830,7 +830,7 @@ if __name__ == '__main__':
 #    j = ufloat((j, jer))
 #    d = ufloat((d, der))
 #
-##    #calculate the age
+# #    #calculate the age
 #    ca37 = s37 * a37decayfactor
 #    s39 = s39 * a39decayfactor
 #    ca36 = ca3637 * ca37
@@ -854,7 +854,7 @@ if __name__ == '__main__':
 #    k40 = k39 * k4039
 #    ar40rad = s40 - atm40 - k40
 #    JR = j * ar40rad / k39
-##    age = (1 / constants.lambdak) * math.log(1 + JR)
+# #    age = (1 / constants.lambdak) * math.log(1 + JR)
 #    age = (1 / constants.lambdak) * log(1 + JR)
 #
 #    #==========================================================================
@@ -886,7 +886,7 @@ if __name__ == '__main__':
 #    s = ca3937 * D * T37
 #    T = ca3637 * D * T37
 #    G = D3 * T39 - s
-##    P = mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)
+# #    P = mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)
 #    R = (-k4039 * G - A4036 * (T36 - T - mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)) + D4 * T40)
 #    G2 = G * G
 #
@@ -902,13 +902,13 @@ if __name__ == '__main__':
 #
 #    er36 = square(A4036 * j * (1 - A3836 * mcl) / G) * square(Tot36Er)
 #    '''
-#    square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37) 
-#        - A4036 * (-(Ca3637 * T37) - MCl * (-(A3836 * Ca3637 * T37) 
-#        + Ca3837 * T37 + K3839 * (3 * D2 * T39 - Ca3937 * T37) 
-#        - 2 * D * T38)))) 
-#        / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - Ca3937 * T37) 
-#        * (T40 * D4 - K4039 * (D3 * T39 - s) 
-#        - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s))))) 
+#    square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37)
+#        - A4036 * (-(Ca3637 * T37) - MCl * (-(A3836 * Ca3637 * T37)
+#        + Ca3837 * T37 + K3839 * (3 * D2 * T39 - Ca3937 * T37)
+#        - 2 * D * T38))))
+#        / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - Ca3937 * T37)
+#        * (T40 * D4 - K4039 * (D3 * T39 - s)
+#        - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s)))))
 #        / square(D3 * T39 - s)) * square(DiscEr)
 #      '''
 #    erD = square((j * (4 * T40 * D3 - k4039 * (3 * D2 * T39 - ca3937 * T37)
@@ -930,61 +930,61 @@ if __name__ == '__main__':
 #    JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
 #    age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
 ##===============================================================================
-## error pychron port 
+# # error pychron port
 ##===============================================================================
-##    s = ca3937 * s37 
-##    T = ca3637 * s37
-##    G = s39 - s
-##    R = (-k4039 * G - constants.atm4036 * (s36 - T - mcl * (ca3837 * s37 + constants.atm3836 * (s36 - T) - s38 + k3839 * G)) + s40)
-##    #ErComp(1) = square(D4 * j / G) * square(Tot40Er)
-##    er40 = (d ** 4 * j / G) ** 2 * s40er ** 2
-##    
-##    #square((j * (-D3 * K4039 + A4036 * D3 * K3839 * MCl)) / G - (D3 * j * R) / G2) * square(Tot39Er)
-##    d3 = d ** 3
-##    er39 = ((j * (-d3 * k4039 + constants.atm4036 * d3 * k3839 * mcl)) / G - (d3 * j * R) / G ** 2) ** 2 * s39er ** 2
-##    
-##    #square(A4036 * D2 * j * MCl / G) * square(Tot38Er)
-##    er38 = (constants.atm4036 * d * d * j * mcl / G) ** 2 * s38er ** 2
-##    
-##    #square((j * (Ca3937 * D * K4039 - A4036 * 
-##    #        (-Ca3637 * D - (-A3836 * Ca3637 * D + Ca3837 * D - Ca3937 * D * K3839) * MCl))) 
-##    #        / G + (Ca3937 * D * j * R) / G2) * square(Tot37Er)
-##    er37 = ((j * (ca3937 * d * k4039 - constants.atm4036 
-##            * (-ca3637 * d - (-constants.atm3836 * ca3637 * d + ca3837 * d - ca3937 * d * k3839) * mcl))) 
-##            / G + (ca3937 * d * j * R) / G ** 2) ** 2 * s37er ** 2
-##    
-##    #square(A4036 * j * (1 - A3836 * MCl) / G) * square(Tot36Er)
-##    er36 = (constants.atm4036 * j * (1 - constants.atm3836 * mcl) / G) ** 2 * s36er ** 2
-##    
-##    #square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37) 
-##    #    -A4036 * (-(Ca3637 * T37) - MCl * (-(A3836 * Ca3637 * T37) 
-##    #    + Ca3837 * T37 + K3839 * (3 * D2 * T39 - Ca3937 * T37) 
-##    #    - 2 * D * T38)))) 
-##    #    / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - Ca3937 * T37) 
-##    #    * (T40 * D4 - K4039 * (D3 * T39 - s) 
-##    #    - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s))))) 
-##    #    / square(D3 * T39 - s)) * square(DiscEr)
-##        
-##    erD = ((j * (4 * s40 / d - k4039 * (3 * s39 / d - ca3937 * s37 / d)
-##        - constants.atm4036 * (-(ca3637 * s37 / d) - mcl * (-(constants.atm3836 * ca3637 * s37 / d)
-##        + ca3837 * s37 / d + k3839 * (3 * s39 / d - ca3937 * s37 / d)
-##        - 2 * s38 / d))))  
-##        / (s39 / d - s) - (1 * j * (3 * s39 / d - ca3937 * s37 / d)
-##        * (s40 / d - k4039 * (s40 / d - s)
-##        - constants.atm4036 * (s36 - T - mcl * (-(s38 / d) + ca3837 * s37 + constants.atm3836 * (s36 - T) + k3839 * (s39 / d - s)))))
-##        / (s39 / d - s) ** 2) ** 2 * der ** 2
-##    #square(j * (s - D3 * T39) / G) * square(K4039Er)
-##    er4039 = (j * (s - s39 / d) / G) ** 2 * k4039er ** 2
-##    
-##    #square((j * (D * K4039 * T37 - A4036 * D * K3839 * MCl * T37)) / G + (D * j * T37 * R) / G2) * square(Ca3937Er)
-##    er3937 = ((j * (k4039 * s37 - constants.atm4036 * k3839 * mcl * s37)) / G + (j * s37 * R) / G ** 2) ** 2 * ca3937er ** 2
-##    
-##    #square(-((A4036 * j * (-D * T37 + A3836 * D * MCl * T37)) / G)) * square(Ca3637Er)
-##    er3637 = (-((constants.atm4036 * j * (-s37 + constants.atm3836 * mcl * s37)) / G)) ** 2 * ca3637er ** 2
-##    
-##    #square(R / G) * square(JErLocal)
-##    erJ = (R / G) ** 2 * jer ** 2
-##    JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
-##    age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
+# #    s = ca3937 * s37
+# #    T = ca3637 * s37
+# #    G = s39 - s
+# #    R = (-k4039 * G - constants.atm4036 * (s36 - T - mcl * (ca3837 * s37 + constants.atm3836 * (s36 - T) - s38 + k3839 * G)) + s40)
+# #    #ErComp(1) = square(D4 * j / G) * square(Tot40Er)
+# #    er40 = (d ** 4 * j / G) ** 2 * s40er ** 2
+# #
+# #    #square((j * (-D3 * K4039 + A4036 * D3 * K3839 * MCl)) / G - (D3 * j * R) / G2) * square(Tot39Er)
+# #    d3 = d ** 3
+# #    er39 = ((j * (-d3 * k4039 + constants.atm4036 * d3 * k3839 * mcl)) / G - (d3 * j * R) / G ** 2) ** 2 * s39er ** 2
+# #
+# #    #square(A4036 * D2 * j * MCl / G) * square(Tot38Er)
+# #    er38 = (constants.atm4036 * d * d * j * mcl / G) ** 2 * s38er ** 2
+# #
+# #    #square((j * (Ca3937 * D * K4039 - A4036 *
+# #    #        (-Ca3637 * D - (-A3836 * Ca3637 * D + Ca3837 * D - Ca3937 * D * K3839) * MCl)))
+# #    #        / G + (Ca3937 * D * j * R) / G2) * square(Tot37Er)
+# #    er37 = ((j * (ca3937 * d * k4039 - constants.atm4036
+# #            * (-ca3637 * d - (-constants.atm3836 * ca3637 * d + ca3837 * d - ca3937 * d * k3839) * mcl)))
+# #            / G + (ca3937 * d * j * R) / G ** 2) ** 2 * s37er ** 2
+# #
+# #    #square(A4036 * j * (1 - A3836 * MCl) / G) * square(Tot36Er)
+# #    er36 = (constants.atm4036 * j * (1 - constants.atm3836 * mcl) / G) ** 2 * s36er ** 2
+# #
+# #    #square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37)
+# #    #    -A4036 * (-(Ca3637 * T37) - MCl * (-(A3836 * Ca3637 * T37)
+# #    #    + Ca3837 * T37 + K3839 * (3 * D2 * T39 - Ca3937 * T37)
+# #    #    - 2 * D * T38))))
+# #    #    / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - Ca3937 * T37)
+# #    #    * (T40 * D4 - K4039 * (D3 * T39 - s)
+# #    #    - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s)))))
+# #    #    / square(D3 * T39 - s)) * square(DiscEr)
+# #
+# #    erD = ((j * (4 * s40 / d - k4039 * (3 * s39 / d - ca3937 * s37 / d)
+# #        - constants.atm4036 * (-(ca3637 * s37 / d) - mcl * (-(constants.atm3836 * ca3637 * s37 / d)
+# #        + ca3837 * s37 / d + k3839 * (3 * s39 / d - ca3937 * s37 / d)
+# #        - 2 * s38 / d))))
+# #        / (s39 / d - s) - (1 * j * (3 * s39 / d - ca3937 * s37 / d)
+# #        * (s40 / d - k4039 * (s40 / d - s)
+# #        - constants.atm4036 * (s36 - T - mcl * (-(s38 / d) + ca3837 * s37 + constants.atm3836 * (s36 - T) + k3839 * (s39 / d - s)))))
+# #        / (s39 / d - s) ** 2) ** 2 * der ** 2
+# #    #square(j * (s - D3 * T39) / G) * square(K4039Er)
+# #    er4039 = (j * (s - s39 / d) / G) ** 2 * k4039er ** 2
+# #
+# #    #square((j * (D * K4039 * T37 - A4036 * D * K3839 * MCl * T37)) / G + (D * j * T37 * R) / G2) * square(Ca3937Er)
+# #    er3937 = ((j * (k4039 * s37 - constants.atm4036 * k3839 * mcl * s37)) / G + (j * s37 * R) / G ** 2) ** 2 * ca3937er ** 2
+# #
+# #    #square(-((A4036 * j * (-D * T37 + A3836 * D * MCl * T37)) / G)) * square(Ca3637Er)
+# #    er3637 = (-((constants.atm4036 * j * (-s37 + constants.atm3836 * mcl * s37)) / G)) ** 2 * ca3637er ** 2
+# #
+# #    #square(R / G) * square(JErLocal)
+# #    erJ = (R / G) ** 2 * jer ** 2
+# #    JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
+# #    age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
 #
 #    return age / 1e6, age_err

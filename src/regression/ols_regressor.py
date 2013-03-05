@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ class OLSRegressor(BaseRegressor):
 #    def _xs_changed(self):
 #            xs = asarray(self.xs)
 #            ys = asarray(self.ys)
-##            print len(xs), len(ys)
+# #            print len(xs), len(ys)
 #            self._ols = OLS(ys, vander(xs, self.degree + 1))
 #            self._result = self._ols.fit()
     def __degree_changed(self):
@@ -368,7 +368,7 @@ class MultipleLinearRegressor(OLSRegressor):
 
 #    def _get_X(self):
 #        '''
-#           
+#
 #        '''
 #        xs = self.xs
 #        xs = asarray(xs)
@@ -403,7 +403,7 @@ if __name__ == '__main__':
 #    print ys
 #    p = '/Users/ross/Sandbox/61311-36b'
 #    xs, ys = np.loadtxt(p, unpack=True)
-##    xs, ys = np.loadtxt(p)
+# #    xs, ys = np.loadtxt(p)
 #    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
 #    print m.calculate_y(0)
     xs = [(0, 0), (1, 0), (2, 0)]
@@ -411,7 +411,7 @@ if __name__ == '__main__':
     r = MultipleLinearRegressor(xs=xs, ys=ys)
     print r.predict([(0, 1)])
 #============= EOF =============================================
-#def predict_error_al(self, x, error_calc='sem'):
+# def predict_error_al(self, x, error_calc='sem'):
 #        result = self._result
 #        cov_varM = result.cov_params()
 #        cov_varM = matrix(cov_varM)
@@ -419,15 +419,15 @@ if __name__ == '__main__':
 #
 #        def predict_yi_err(xi):
 #            '''
-#                
+#
 #                bx= x**0,x**1,x**n where n= degree of fit linear=2, parabolic=3 etc
-#                
+#
 #            '''
 #            bx = asarray([pow(xi, i) for i in range(self.degree + 1)])
 #            bx_covar = bx * cov_varM
 #            bx_covar = asarray(bx_covar)[0]
 #            var = sum(bx * bx_covar)
-##            print var
+# #            print var
 #            s = var ** 0.5
 #            if error_calc == 'sd':
 #                s = (se ** 2 + s ** 2) ** 2

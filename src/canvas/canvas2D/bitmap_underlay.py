@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,12 +62,12 @@ class BitmapUnderlay(AbstractOverlay):
 
                 rx = cx + 1
                 ry = cy + 1
-                #do rotation around center
+                # do rotation around center
                 gc.translate_ctm(rx, ry)
                 gc.rotate_ctm(math.radians(ca.rotation))
                 gc.translate_ctm(-rx, -ry)
 
-                #correct for padding and delta size
+                # correct for padding and delta size
                 dx = ((self.bitmap.GetWidth() - self.component.width -
                       self.component.padding_left - self.component.padding_right
                       ) / 2.0)
@@ -79,19 +79,19 @@ class BitmapUnderlay(AbstractOverlay):
                 dy = (self.bitmap.GetHeight() - self.component.height) / 2.0 - self.component.padding_bottom
                 gc.translate_ctm(-dx, -dy)
 
-                #correct for center
+                # correct for center
                 ox, oy = component.map_screen([(0, 0)])[0]
                 tpos = (cx - ox, cy - oy)
                 gc.translate_ctm(tpos[0], tpos[1])
 
-                #correct for scaling
+                # correct for scaling
                 scale = self.scale * self.canvas_scaling
 
                 sdx = self.bitmap.GetWidth() / 2.0 * (scale - 1)
                 sdy = self.bitmap.GetHeight() / 2.0 * (scale - 1)
                 gc.translate_ctm(-sdx , -sdy)
 
-                #scale
+                # scale
                 gc.scale_ctm(scale, scale)
 
                 da = self.component.map_data((0, 0))

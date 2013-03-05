@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ class ExtractStepAdapter(TabularAdapter):
             hp = ('Power', 'extract_value')
 
         return [
-                #('', 'step'), 
+                # ('', 'step'),
                 ('', 'state'), hp ,
                 ('Duration (sec)', 'duration'),
                 ]
@@ -81,7 +81,7 @@ class ExtractStepAdapter(TabularAdapter):
         pass
 
     def get_format(self, obj, name, row, column):
-        if column == 3: #elapsed_time
+        if column == 3:  # elapsed_time
             fmt = '%0.3f'
         else:
             fmt = '%s'
@@ -99,7 +99,7 @@ class ExtractStepAdapter(TabularAdapter):
             elif self.item.state == 'fail':
                 im = 'red'
 
-            #get the source path
+            # get the source path
             root = os.path.split(__file__)[0]
             while not root.endswith('src'):
                 root = os.path.split(root)[0]
@@ -169,7 +169,7 @@ class ExtractSchedule(HasTraits):
 
 #    @on_trait_change('current_step:elapsed_time')
 #    def update_elapsed_time(self, o, n, oo, nn):
-##        print o, n, oo, nn
+# #        print o, n, oo, nn
 #        self.elapsed_time = nn
 
 #    def reset_steps(self):
@@ -245,7 +245,7 @@ class ExtractSchedule(HasTraits):
 
         self.steps = []
         if p.endswith('.txt'):
-            #load a text file
+            # load a text file
             for args in parse_file(p, delimiter=','):
                 if len(args) == 2:
                     self.steps.append(ExtractStep(extract_value=float(args[0]),

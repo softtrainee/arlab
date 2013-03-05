@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,9 +22,9 @@ from pyface.timer.do_later import do_later
 import math
 #============= standard library imports ========================
 #============= local library imports  ==========================
-#def fixed_width(m, i):
+# def fixed_width(m, i):
 #    return '{{:<{}s}}'.format(i).format(m)
-#def floatfmt(m, i=6):
+# def floatfmt(m, i=6):
 #    if abs(m) < 10 ** -i:
 #        return '{:0.2e}'.format(m)
 #    else:
@@ -84,7 +84,7 @@ class Summary(HasTraits):
 #
 #            #d.freeze()
 #
-#            #double clear for safety 
+#            #double clear for safety
 #            #d.clear(gui=False)
 #            self._build_summary(*args, **kw)
 #            #d.thaw()
@@ -122,7 +122,7 @@ class Summary(HasTraits):
     def traits_view(self):
         v = View(
                  Item('display',
-#                      height=0.8, 
+#                      height=0.8,
                       show_label=False, style='custom'),
                  )
         return v

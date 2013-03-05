@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -128,35 +128,35 @@ class OpenImportManagerAction(ExperimentAction):
         obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
         open_manager(event.window.application, obj)
 
-#class AddProjectAction(Action):
+# class AddProjectAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
 #        manager = _get_manager(event)
 #
 #
-#class AddSampleProjectAction(Action):
+# class AddSampleProjectAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
 #        manager = _get_manager(event)
 #
 #
-#class AddMaterialAction(Action):
+# class AddMaterialAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
 #        manager = _get_manager(event)
 #
 #
-#class IrradiationChronologyAction(Action):
+# class IrradiationChronologyAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''
 #        manager = _get_manager(event)
 #
 #
-#class IrradiationProductAction(Action):
+# class IrradiationProductAction(Action):
 #    def perform(self, event):
 #        '''
 #        '''

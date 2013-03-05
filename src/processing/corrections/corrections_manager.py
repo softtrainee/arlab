@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,11 +27,11 @@ import re
 from src.processing.analysis import Analysis
 from src.helpers.traitsui_shortcuts import listeditor
 
-#from src.processing.signal import Blank, Background, Signal
+# from src.processing.signal import Blank, Background, Signal
 from src.processing.corrections.fixed_value_correction import FixedValueCorrection
 from src.processing.corrections.interpolation_correction import InterpolationCorrection, \
     DetectorIntercalibrationInterpolationCorrection
-#from src.viewable import Viewable
+# from src.viewable import Viewable
 from src.saveable import Saveable
 from traitsui.tabular_adapter import TabularAdapter
 from src.processing.isotope import Isotope
@@ -117,7 +117,7 @@ class CorrectionsManager(Saveable):
 
     def _edit_predictors_fired(self):
 
-        #set the selector.selected_records to the predictors
+        # set the selector.selected_records to the predictors
         ps = self.interpolation_correction.predictors
         selector = self.processing_manager.selector_manager
         selector.selected_records = [ri.isotope_record for ri in ps]
@@ -129,7 +129,7 @@ class CorrectionsManager(Saveable):
 
     def _analyses_changed(self):
         if self.analyses:
-            #load a fit series
+            # load a fit series
             self.interpolation_correction = self.interpolation_correction_klass(analyses=self.analyses,
                                                                     kind=self.correction_name,
                                                                     isotope_klass=self.isotope_klass,
@@ -140,7 +140,7 @@ class CorrectionsManager(Saveable):
             self.interpolation_correction.load_fits(self._get_isotope_names())
             self.interpolation_correction.load_predictors()
 
-            #load fixed values
+            # load fixed values
             self._load_fixed_values()
 
     def _apply_interpolation_correction(self):
@@ -180,15 +180,15 @@ class CorrectionsManager(Saveable):
 #        db = self.db
 #        func = getattr(db, 'add_{}'.format(self.correction_name))
 #        func2 = getattr(db, 'add_{}_set'.format(self.correction_name))
-##        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
-##        ss=ai.isotopes
+# #        ss = ai.signals['{}{}'.format(si.name, self.signal_key)]
+# #        ss=ai.isotopes
 #
 #        ss = self._get_isotope_value(ai, si.name)
 #
 #        item = func(history, isotope=si.name,
 #                    user_value=ss.value,
 #                    user_error=ss.error,
-##                                use_set=True, 
+# #                                use_set=True,
 #                    fit=si.fit)
 #        ps = self.interpolation_correction.predictors
 #        if ps:
@@ -225,12 +225,12 @@ class CorrectionsManager(Saveable):
         dbrecord = analysis.dbrecord
         db = self.db
 
-        #new history
+        # new history
         func = getattr(db, 'add_{}_history'.format(self.correction_name))
         history = func(dbrecord, user=db.save_username)
 #        history = db.add_blanks_history(dbrecord, user=db.save_username)
 
-        #set analysis' selected history
+        # set analysis' selected history
         sh = db.add_selected_histories(dbrecord)
         setattr(sh, 'selected_{}'.format(self.correction_name), history)
 #        sh.selected_blanks = history
@@ -248,7 +248,7 @@ class CorrectionsManager(Saveable):
         func(history, isotope=isotope, use_set=False, user_value=value, user_error=error)
 #        db.add_blanks(history, isotope=isotope, use_set=False, user_value=value, user_error=error)
 
-        #need to reimplement copy from previous
+        # need to reimplement copy from previous
 #        self._copy_from_previous(phistory, history, isotope)
 
 
@@ -274,14 +274,14 @@ class CorrectionsManager(Saveable):
 #                prev_values.append(bi.isotope)
 #                bb.append(bi)
 #
-##        bss = [bi for bi in bs if bi.isotope != isotope]
-##        get_config = lambda x: next((ci for ci in self.fixed_values if ci.name == x))
+# #        bss = [bi for bi in bs if bi.isotope != isotope]
+# #        get_config = lambda x: next((ci for ci in self.fixed_values if ci.name == x))
 #        for bi in bb:
 #
-##            print bi, li
-##            if get_config(li).save:
-##                #dont copy from history if were going to save
-##                continue
+# #            print bi, li
+# #            if get_config(li).save:
+# #                #dont copy from history if were going to save
+# #                continue
 #
 #            uv = bi.user_value
 #            ue = bi.user_error

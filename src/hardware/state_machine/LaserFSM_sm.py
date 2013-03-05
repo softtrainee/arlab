@@ -4,10 +4,10 @@
 # from file : LaserFSM.sm
 
 
-# 
-# Copyright (c) 2010 RossLabas 
-# All rights reserved. 
-# 
+#
+# Copyright (c) 2010 RossLabas
+# All rights reserved.
+#
 # Author: Jake Ross
 #
 

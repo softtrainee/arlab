@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,8 +22,8 @@ from src.graph.graph import Graph
 from uncertainties import ufloat
 import csv
 from src.stats import calculate_mswd, calculate_weighted_mean
-#KEYS36 = ['one36', 'two36', 'three36', 'four36', 'five36', 'six36']
-#KEYS40 = ['one40', 'two40', 'three40', 'four40', 'five40', 'six40']
+# KEYS36 = ['one36', 'two36', 'three36', 'four36', 'five36', 'six36']
+# KEYS40 = ['one40', 'two40', 'three40', 'four40', 'five40', 'six40']
 KEYS = ['one', 'two', 'three', 'four', 'five']
 KEYS40 = ['{}40'.format(k) for k in KEYS]
 KEYS36 = ['{}36'.format(k) for k in KEYS]
@@ -36,7 +36,7 @@ class DeadTime():
     def read_csv(self):
 
         p = '/Users/ross/Desktop/deadtime_full_obama'
-        #p = '/Users/ross/Desktop/deadtime_jan2'
+        # p = '/Users/ross/Desktop/deadtime_jan2'
         f = open(p, 'U')
         reader = csv.reader(f, delimiter='\t')
 
@@ -143,9 +143,9 @@ if __name__ == '__main__':
     g.new_series(taus, mswds1, plotid=0, type='line_scatter')
     g.set_y_limits(min(mswds1) - 5, max(mswds1) + 5, plotid=0)
 
-    #fit parabola and find minimum.
+    # fit parabola and find minimum.
     coeffs1 = polyfit(taus, mswds1, 2)
-    #min at dy=0   (ax2+bx+c)dx=dy==2ax+b 
+    # min at dy=0   (ax2+bx+c)dx=dy==2ax+b
     # 2ax+b=0 , x=-b/(2a)
     dt = -coeffs1[1] / (2 * coeffs1[0])
     print 'dead time1= ', dt

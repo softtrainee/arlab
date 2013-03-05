@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import  Str
-#from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 from pyface.message_dialog import warning
 #============= standard library imports ========================
 from threading import Thread
@@ -27,7 +27,7 @@ import time
 
 #============= local library imports  ==========================
 from src.loggable import Loggable
-#from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import MProgressDialog
 
 class FortranProcess(Loggable):
     _thread = None
@@ -92,7 +92,7 @@ class FortranProcess(Loggable):
             self.warning_dialog('Clovera programs are not executable. Check Default Clovera Directory.\n{}'.format(e))
             import traceback
             traceback.print_exc()
-            #warning(None, '{} - {}'.format(e, self.name))
+            # warning(None, '{} - {}'.format(e, self.name))
 #            do_later(pd.change_message, '{} process did not finish properly'.format(self.name))
 
     def get_remaining_stdout(self):
@@ -103,7 +103,7 @@ class FortranProcess(Loggable):
                     return txt.split('\n')
             except Exception, e:
                 pass
-                #print 'get remaining stdout',e
+                # print 'get remaining stdout',e
         return []
 
 
@@ -119,9 +119,9 @@ if __name__ == '__main__':
     time.clock()
     while f.isAlive() or not q.empty():
         l = q.get().rstrip()
-        #print l
+        # print l
 
-    #print f.get_remaining_stdout()
+    # print f.get_remaining_stdout()
     print time.clock()
 #============= EOF =====================================
 

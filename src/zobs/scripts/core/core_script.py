@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ class CoreScript(Loggable):
     source_dir = Directory
     file_name = Str
 
-    #user_cancel = False
+    # user_cancel = False
     condition = None
 
     data_manager = Instance(CSVDataManager)
@@ -54,7 +54,7 @@ class CoreScript(Loggable):
 
     _alive = Bool(False)
     _display_msg = String
-    #_ok_to_run = False
+    # _ok_to_run = False
 #    record_data = Bool(False)
 
     base_frame_name = None
@@ -88,7 +88,7 @@ class CoreScript(Loggable):
 
     def bootstrap(self, new_thread=True):
 
-        #load the file 
+        # load the file
         p = os.path.join(self.source_dir, self.file_name)
         ok = False
 
@@ -96,7 +96,7 @@ class CoreScript(Loggable):
             self.file_path = p
             self._file_contents_ = parse_file(p)
             if self.load():
-                #if self.set_data_frame():
+                # if self.set_data_frame():
                 self.set_graph()
                 self._alive = True
                 ok = self.start(new_thread)
@@ -140,7 +140,7 @@ class CoreScript(Loggable):
 
 
             self.info('{} finished'.format(self.file_name))
-            #self._ok_to_run = False
+            # self._ok_to_run = False
         self._alive = False
 
     def _kill_script(self):
@@ -169,9 +169,9 @@ class CoreScript(Loggable):
 #        if not r and self.manager.failure_reason is None:
 #            self.user_cancel = True
 
-        #r = r and self._ok_to_run
-        #self._alive = r
-        #print 'isAlive', self._thread.isAlive(), self.manager.enabled, r
+        # r = r and self._ok_to_run
+        # self._alive = r
+        # print 'isAlive', self._thread.isAlive(), self.manager.enabled, r
         return r
 
     def graph_view(self, **kw):
@@ -190,12 +190,12 @@ class CoreScript(Loggable):
 #            if p is not None:
 #
 #                dm.new_frame(p)
-##                self.notes_enabled = True
+# #                self.notes_enabled = True
 #                return True
 #
 #        else:
 
-        #if self.record_data:
+        # if self.record_data:
         dm.new_frame(directory=self.name[:-6].lower(),
                      base_frame_name=base_frame_name)
 
@@ -209,7 +209,7 @@ class CoreScript(Loggable):
         return []
 
     def start(self, new_thread):
-        #new_thread = True
+        # new_thread = True
         if new_thread:
             self._thread = Thread(target=self.run)
             self._thread.start()
@@ -231,7 +231,7 @@ class CoreScript(Loggable):
                 self.warning('Line: {} - {}'.format(e[1], e[2]))
 
         if not error:
-            #self._ok_to_run = True
+            # self._ok_to_run = True
             self.info('{} started'.format(self.file_name))
             if self._pre_run_():
                 self._alive = True
@@ -252,7 +252,7 @@ class CoreScript(Loggable):
             self.warning('parsing unsuccessful')
             return
 
-        #join any daughter threads before finishing
+        # join any daughter threads before finishing
         for d in self.daughter_threads:
             d.join()
 
@@ -286,14 +286,14 @@ class CoreScript(Loggable):
             token = 'raw'
 
         if not token.lower() == 'log':
-            self.info(cmd)#
+            self.info(cmd)  #
 
-        # get a statement method 
+        # get a statement method
         func = getattr(self, '{}_statement'.format(token.lower()))
 
         # get a parser method
         # all parsers should return a tuple
-        #print token
+        # print token
         parser = getattr(self.parser, '_{}_parse'.format(token.lower()))
 
         func(*parser(0, line=cmd)[1:])

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ see http://www.vuemetrix.com/support/tech/tec_commands.html
 from traits.api import Float
 from traitsui.api import VGroup, Item
 #=============standard library imports ========================
-#import os
+# import os
 #=============local library imports  =========================
 from src.hardware.core.core_device import CoreDevice
 
@@ -65,7 +65,7 @@ class VueDiodeControlModule(CoreDevice):
             t = self.get_random_value(0, 50)
         else:
             t = self.thermistor_intercept + 2.5 * t / 4096. * self.thermistor_slope
-        #convert to temperature scale
+        # convert to temperature scale
         return t
     def get_current(self):
         return self.read_laser_current_adc()
@@ -102,7 +102,7 @@ class VueDiodeControlModule(CoreDevice):
     def get_fault_flags(self, **kw):
         '''
         '''
-        #raise NotImplementedError
+        # raise NotImplementedError
         cmd = 'f?'
         return self.ask(cmd, **kw)
 
@@ -131,7 +131,7 @@ class VueDiodeControlModule(CoreDevice):
         '''
         '''
         cmd = 'adlt?'
-        #cmd = 't0?'
+        # cmd = 't0?'
 
         return self._parse_response(self.ask(cmd, **kw), type='float')
 
@@ -168,7 +168,7 @@ class VueDiodeControlModule(CoreDevice):
         '''
         '''
         r = None
-        if res is not None:# and res is not 'simulation':
+        if res is not None:  # and res is not 'simulation':
             res = res.strip()
             if type == 'bool':
                 if res == 'OK':

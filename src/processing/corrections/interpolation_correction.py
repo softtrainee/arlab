@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -129,7 +129,7 @@ class InterpolationCorrection(HasTraits):
         self.refresh_graph()
 
     def load_predictors(self):
-        #force load predictors
+        # force load predictors
         _ = self.predictors
         self.refresh_graph()
 
@@ -156,7 +156,7 @@ class InterpolationCorrection(HasTraits):
         xs.sort()
         xs -= start
 
-        #scale to hours
+        # scale to hours
         xs = xs / (60.*60.)
         return xs
 
@@ -173,7 +173,7 @@ class InterpolationCorrection(HasTraits):
 
             start = min(min(axs), min(xs))
 
-            #normalize to earliest
+            # normalize to earliest
             oxs = asarray(map(convert_timestamp, xs[:]))
             xs = self.normalize(xs, start)
             axs = self.normalize(axs, start)
@@ -223,10 +223,10 @@ class InterpolationCorrection(HasTraits):
                     ays.append(0)
                     aes.append(0)
 
-        #sync the analysis' signals
+        # sync the analysis' signals
 #        self.sync_analyses(ays, aes, key)
 
-        #display the predicted values
+        # display the predicted values
         ss, _ = graph.new_series(axs,
                                 ays,
                                 yerror=ArrayDataSource(aes),
@@ -349,7 +349,7 @@ class InterpolationCorrection(HasTraits):
             pi = datetime.datetime.fromtimestamp(pi)
 
             br = find_analyses(pi, -60, atype)
-            ar = find_analyses(pi, 60, atype, maxtries=1) #dont search forward was much as backward
+            ar = find_analyses(pi, 60, atype, maxtries=1)  # dont search forward was much as backward
 #            print len(br), len(ar)
             return br + ar
 
@@ -382,7 +382,7 @@ class InterpolationCorrection(HasTraits):
         pp = []
 
         if ps:
-            #filter duplicates
+            # filter duplicates
             uuids = []
             for pi in ps:
                 if pi.uuid in uuids:

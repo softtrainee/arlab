@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,15 +35,15 @@ class Source(SpectrometerDevice):
     y_symmetry = Property(depends_on='_y_symmetry')
     extraction_lens = Property(Range(0, 100.0), depends_on='_extraction_lens')
 
-    _y_symmetry = Float#Range(0.0, 100.)
-    _z_symmetry = Float#Range(0.0, 100.)
+    _y_symmetry = Float  # Range(0.0, 100.)
+    _z_symmetry = Float  # Range(0.0, 100.)
 
     y_symmetry_low = Float(-50.0)
     y_symmetry_high = Float(50.0)
     z_symmetry_low = Float(-50.0)
     z_symmetry_high = Float(100.0)
 
-    _extraction_lens = Float#Range(0.0, 100.)
+    _extraction_lens = Float  # Range(0.0, 100.)
 #    zlow=Float()
     def read_y_symmetry(self):
         return self._read_value('GetYSymmetry', '_y_symmetry')

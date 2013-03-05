@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,7 +67,7 @@ class FileMonitor(Loggable):
         '''
         '''
         # check algorithm should be more sophisticated
-        #now just check to see it the number of files changes
+        # now just check to see it the number of files changes
         def get_files():
 
             files = os.listdir(self.watch_dir)
@@ -76,7 +76,7 @@ class FileMonitor(Loggable):
 
         if self.first_check:
             self.first_check = False
-            #self.files = get_files()
+            # self.files = get_files()
             self.before = get_files()
         else:
             self.after = get_files()
@@ -90,10 +90,10 @@ class FileMonitor(Loggable):
                 print 'removed', ', '.join(removed)
 
 #============= EOF ====================================
-#import os, time
-#path_to_watch = "."
-#before = dict ([(f, None) for f in os.listdir (path_to_watch)])
-#while 1:
+# import os, time
+# path_to_watch = "."
+# before = dict ([(f, None) for f in os.listdir (path_to_watch)])
+# while 1:
 #  time.sleep (10)
 #  after = dict ([(f, None) for f in os.listdir (path_to_watch)])
 #  added = [f for f in after if not f in before]

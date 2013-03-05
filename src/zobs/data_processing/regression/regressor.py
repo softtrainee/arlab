@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,16 @@
 
 
 #=============enthought library imports=======================
-#from traits.api import HasTraits, Instance, DelegatesTo, String, Float
-#from traitsui.api import View, Item, Group, HGroup
+# from traits.api import HasTraits, Instance, DelegatesTo, String, Float
+# from traitsui.api import View, Item, Group, HGroup
 import math
 #=============standard library imports ========================
 from numpy import poly1d, array, polyfit, \
     linspace, std, vstack, polyval, mean, ones, sqrt, diagonal, exp, min, max
-#import numpy.linalg as la
+# import numpy.linalg as la
 
 from tinv import tinv
-#from scipy.stats import linregress
+# from scipy.stats import linregress
 from ols import OLS
 #=============local library imports  ==========================
 class RegressorError(Exception):
@@ -97,8 +97,8 @@ class Regressor(object):
         fitfunc = lambda p, x:p[0] * exp(p[1] * x)
         errfunc = lambda p, x, y: fitfunc(p, x) - y
 
-        #do a linear fit first to estimate the initial guess
-        #p0=[intercept, slope]
+        # do a linear fit first to estimate the initial guess
+        # p0=[intercept, slope]
 
 #        r = self.linear(x, y)
 
@@ -109,7 +109,7 @@ class Regressor(object):
         from scipy import optimize
         coeffs, cov_params, _infodict, _msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
                                     full_output=1,
-                                    #maxfev = 1000
+                                    # maxfev = 1000
                                      )
         while ier != 1:
             p0 = [pi / 2.0 for pi in p0]
@@ -129,8 +129,8 @@ class Regressor(object):
         kw['fitfunc'] = ff
         kw['errfunc'] = ef
 
-        #do a linear fit first to estimate the initial guess
-        #p0=[intercept, slope]
+        # do a linear fit first to estimate the initial guess
+        # p0=[intercept, slope]
 
         r = self.linear(x, y)
         slope, intercept = r['coefficients']
@@ -249,7 +249,7 @@ class Regressor(object):
             if kind == 'least_squares':
                 coeffs, cov_params, _infodict, _msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
                                     full_output=1,
-                                    #maxfev = 1000
+                                    # maxfev = 1000
                                      )
                 while ier != 1:
                     p0 = [pi / 2.0 for pi in p0]
@@ -267,10 +267,10 @@ class Regressor(object):
 #                        sum = 0
 #                        for xi, yi, ei in zip(x, y, err):
 #            sum += ((fitfunc(self.fitparams, xi) - yi) ** 2) / ei
-            #sum += (fitfunc(coeffs, xi) - yi) ** 2
+            # sum += (fitfunc(coeffs, xi) - yi) ** 2
                 func = lambda c, fitfunc, x, y, err:sum([(fitfunc(c, xi) - yi) ** 2 / ei for xi, yi, ei in zip(x, y, err)])
 #        return sum
-                #self.fitparams = p0
+                # self.fitparams = p0
                 a = optimize.fmin(func, p0,
                                     maxiter=100,
                                     ftol=1e-15,
@@ -306,7 +306,7 @@ class Regressor(object):
                     lower_x=xreturn,
                     lower_y=lcly,
                     coefficients=coeffs,
-                    coeff_errors=coeff_errors, #(slope_error, intercept_error),
+                    coeff_errors=coeff_errors,  # (slope_error, intercept_error),
                     statistics=stats)
 
     def calc_r_squared(self, y, ymodel):
@@ -314,7 +314,7 @@ class Regressor(object):
             data = array(data)
             model = array(model)
             return ((data - model) ** 2).sum()
-            #return sum([(d - model[i]) ** 2 for i, d in enumerate(data)])
+            # return sum([(d - model[i]) ** 2 for i, d in enumerate(data)])
 
         ssreg = sum_of_squares(y, ymodel)
         sstot = sum_of_squares(y, ones(len(y)) * mean(y))
@@ -340,7 +340,7 @@ class Regressor(object):
             syx = math.sqrt(1. / (n - 2) * ((observations - model) ** 2).sum())
             ssx = ((x - xm) ** 2).sum()
 
-            #ssx = sum([(xi - xm) ** 2 for xi in x])
+            # ssx = sum([(xi - xm) ** 2 for xi in x])
 
             ti = tinv(alpha, n - 2)
 
@@ -351,7 +351,7 @@ class Regressor(object):
                 upper.append(rmodel[i] + cor)
 
 
-            #see http://mathworld.wolfram.com/LeastSquaresFitting.html
+            # see http://mathworld.wolfram.com/LeastSquaresFitting.html
 #            error_a = syx * ((1.0 / n + xm ** 2 / ssx)) ** 0.5
 #            error_b = syx / (ssx) ** 0.5
 
@@ -359,28 +359,28 @@ class Regressor(object):
         return array(lower), array(upper)
 #    def _calculate_syx(self):
 #        xs=self.
-#        
+#
 #        yi =
 #        ym = self.value_at([])
 #
 #        return 1 / (n - 2) * ((yi - ym) ** 2).sum()
 #    def calc_confidence_interval(self,confidence,observations,model):
-#        
+#
 #        alpha=1.0-confidence/100.0
-#        
+#
 #        n=len(observations)
-#        
+#
 #        xm=mean(observations)
 #        ssx=sum([(xi-xm)**2 for xi in observations])
 #        syx=math.sqrt(1.0/(n-2)*sum([(obs-model[i])**2 for i,obs in enumerate(observations)]))
-#        
+#
 #        lower=[]
 #        upper=[]
 #        ti=1.0/t.pdf(alpha,n-2)
 #        for i,xi in enumerate(model):
-#            
+#
 #            cor=ti*syx*math.sqrt((1.0/n+((observations[i]-xm)**2)/ssx))
 #            lower.append(xi-cor)
 #            upper.append(xi+cor)
-#        
+#
 #        return array(lower),array(upper)

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ from traits.api import Int, Enum, CFloat
 from traitsui.api import View, Item, Group
 
 #============= standard library imports ========================
-#import math
+# import math
 #============= local library imports  ==========================
 from src.hardware.axis import Axis
 
@@ -50,7 +50,7 @@ class AerotechAxis(Axis):
 
     def load_parameters(self):
 
-        #homing and limts 4.7
+        # homing and limts 4.7
         attrs = [
                     ('home_direction_ccw', 2),
                     ('home_switch_normally_open', 3),
@@ -140,7 +140,7 @@ class AerotechAxis(Axis):
 
         return v
 
-#class AerotechAxis(Axis):
+# class AerotechAxis(Axis):
 #    '''
 #    '''
 #    feedrate = Float(enter_set=True, auto_set=False)
@@ -155,7 +155,7 @@ class AerotechAxis(Axis):
 #
 #    def _validate_rms_current_sample_time(self, s):
 #        '''
-#            
+#
 #        '''
 #        if 0 <= s <= 16383:
 #            nv = s
@@ -170,17 +170,17 @@ class AerotechAxis(Axis):
 #
 #    def _set_rms_current_sample_time(self, v):
 #        '''
-#     
+#
 #        '''
 #        cmd = int('%i49' % self.id)
 #        self.parent.set_parameter(cmd, v)
 #
-##    def load_parameters_from_config(self, path):
-##        '''
-##      
-##        '''
-##        for key, value in self._get_parameters(path):
-##            pass
+# #    def load_parameters_from_config(self, path):
+# #        '''
+# #
+# #        '''
+# #        for key, value in self._get_parameters(path):
+# #            pass
 #
 #    def load_parameters_from_device(self):
 #        '''
@@ -217,22 +217,22 @@ class AerotechAxis(Axis):
 #        n = int('%i00' % self.id)
 #        v = self.conversion_factor
 #
-##        machine_steps = 4000
-##        prog_unit = 10
-##
-##        cf = (machine_steps / prog_unit) / math.pow(10, self.metric_digits)
+# #        machine_steps = 4000
+# #        prog_unit = 10
+# #
+# #        cf = (machine_steps / prog_unit) / math.pow(10, self.metric_digits)
 #
 #        self._set_parameter(n, v)
 #
 #    def _set_parameter(self, n, v):
 #        '''
-#            
+#
 #        '''
 #        self.parent.set_parameter(n, v)
 #
 #    def _anytrait_changed(self, name, old, new):
 #        '''
-#            
+#
 #        '''
 #        #print name,old,new
 #        pass

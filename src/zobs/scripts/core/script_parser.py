@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -115,9 +115,9 @@ class ScriptParser(object):
                 error = 'Invalid KEY %s' % token
         return self.script_name, linenum, error
 
-    #------------------------------------------------------------------- 
+    #-------------------------------------------------------------------
     #    parsers
-    #------------------------------------------------------------------------------ 
+    #------------------------------------------------------------------------------
     def __define_parse__(self, linenum):
         error = None
         lexer = self.lexer
@@ -319,7 +319,7 @@ class ScriptParser(object):
         if not subroutine:
             error = 'Expected a subroutine'
         else:
-            #check for valid subroutine
+            # check for valid subroutine
             subpath = self._check_valid_subroutine__(subroutine)
             if not subpath:
 
@@ -372,7 +372,7 @@ class ScriptParser(object):
             try:
                 t = float(time)
             except ValueError:
-                #see if this is a interpolation key
+                # see if this is a interpolation key
                 if time[0] == '%':
                     t = time
                 else:
@@ -403,7 +403,7 @@ class ScriptParser(object):
                     int(r)
                 except ValueError:
                     if not "'" in r:
-                        #assume quotes not apostrophe
+                        # assume quotes not apostrophe
                         r = 'self.%s' % r
 
                 return ''.join((l, key, r))

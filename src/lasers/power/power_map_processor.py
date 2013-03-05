@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,16 +18,16 @@
 
 #============= enthought library imports =======================
 from traits.api import Bool
-#from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, VSplit
+# from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, VSplit
 #============= standard library imports ========================
-#from tables import openFile
+# from tables import openFile
 from numpy import transpose, array, shape, max, linspace, rot90
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 
 from scipy import ndimage
-#from src.managers.data_managers.h5_data_manager import H5DataManager
+# from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class PowerMapProcessor:
     '''
@@ -49,7 +49,7 @@ class PowerMapProcessor:
         h = 300
         bounds = metadata['bounds']
         cplot = cg.new_plot(
-                            #add=False,
+                            # add=False,
                             padding_top=15,
                             padding_left=20,
                             padding_right=5,
@@ -66,7 +66,7 @@ class PowerMapProcessor:
                       colorbar=True,
                       levels=self.levels)
 
-        #plot max location
+        # plot max location
         from scipy.ndimage import maximum_position
         xm, ym = maximum_position(z)
         f = lambda a, i: [a[i] * abs(bounds[0] - bounds[1]) + bounds[0]]
@@ -163,7 +163,7 @@ class PowerMapProcessor:
                 cells.append([])
                 nr = cells[x]
 
-            #baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
+            # baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
             baseline = 0
             pwr = row['power']
 
@@ -175,7 +175,7 @@ class PowerMapProcessor:
             cells[-1] += [0, ] * d
 
         cells = array(cells)
-        #use interpolation to provide smoother interaction
+        # use interpolation to provide smoother interaction
         cells = ndimage.interpolation.zoom(cells, self.interpolation_factor)
 
         return rot90(cells, k=2), metadata
@@ -204,7 +204,7 @@ class PowerMapProcessor:
                 cells.append([])
                 nr = cells[x]
 
-            #baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
+            # baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
             baseline = 0
             try:
                 pwr = row['power']
@@ -214,10 +214,10 @@ class PowerMapProcessor:
 
 
 
-        #metadata now is supposed to be a dict
+        # metadata now is supposed to be a dict
         md = dict(bounds=(-float(metadata[1][1]), float(metadata[1][1])))
 
-        #rotate the array
+        # rotate the array
         return rot90(array(cells), k=2), md
 
     def _calc_baseline(self, table, index):
@@ -254,14 +254,14 @@ class PowerMapProcessor:
         y = linspace(0, 1, c)
         return x, y, z
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    p=PowerMapViewer()
-#    
+#
 #    pa=sys.argv[1]
 #    if pa[-2:]!='.h5':
 #        pa+='.h5'
-#        
-#    
+#
+#
 #    pa=os.path.join(paths.data_dir,'powermap',pa)
 #    if os.path.isfile(pa):
 #        p.open_power_map(pa)

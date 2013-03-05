@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,13 +44,13 @@ def scan(root):
         subprocess.call(['/usr/local/bin/sloccount', root, 'cached'],
                                       stdout=f
                                       )
-    #parse results
+    # parse results
     with open(os.path.join(root, 'sloccount_stats.txt'), 'r') as f:
         line = f.next().strip()
         while line != 'Computing results.':
             line = f.next().strip()
 
-        #parse individual packages
+        # parse individual packages
 
 
         while line != 'Totals grouped by language (dominant language first):':
@@ -60,7 +60,7 @@ def scan(root):
         line = f.next().strip()
         while line:
 
-            #parse individual languages
+            # parse individual languages
             lang, stats = line.split(':')
             n, per = stats.strip().split(' ')
             n = int(n)
@@ -114,9 +114,9 @@ if __name__ == '__main__':
 
     root = os.getcwd()
     scan(root)
-    #plot_stats(root)
+    # plot_stats(root)
 #============= EOF ====================================
-#def get_num_lines(file):
+# def get_num_lines(file):
 #    '''
 #    '''
 #    comment = False

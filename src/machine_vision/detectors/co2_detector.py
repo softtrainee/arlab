@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,8 @@ make another class to do all perms
 class CO2HoleDetector(HoleDetector):
 
 #    def close_images(self):
-##        if self.brightness_image is not None:
-##            self.brightness_image.close()
+# #        if self.brightness_image is not None:
+# #            self.brightness_image.close()
 #
 #        if self.target_image is not None:
 #            self.target_image.close()
@@ -46,9 +46,9 @@ class CO2HoleDetector(HoleDetector):
 
         if self.holedim:
 
-            #holedim is in px convert to mm
+            # holedim is in px convert to mm
             hd = self.holedim / self.pxpermm
-            ff = 2.5 #empirical fugde factor, 2<=ff<=2.6
+            ff = 2.5  # empirical fugde factor, 2<=ff<=2.6
             cw = ch = hd * ff
         else:
             cw = self.cropwidth
@@ -65,7 +65,7 @@ class CO2HoleDetector(HoleDetector):
 
         self.target_image = im
         if self.parent is not None:
-            #use a manager to open so will auto close on quit
+            # use a manager to open so will auto close on quit
             self.parent.open_view(im)
             if auto_close:
                 minutes = 1
@@ -106,7 +106,7 @@ class CO2HoleDetector(HoleDetector):
         self.current_hole = str(holenum)
         self.info('locating CO2 sample hole {}'.format(holenum if holenum else ''))
 
-        #convert hole dim to pxpermm
+        # convert hole dim to pxpermm
         holedim *= self.pxpermm
         self.holedim = holedim
         if new_image:
@@ -148,7 +148,7 @@ class CO2HoleDetector(HoleDetector):
 #        ba = lambda v: [bool((v >> i) & 1) for i in xrange(width - 1, -1, -1)]
 #        tests = [ba(i) for i in range(2 ** width)]
 
-        #best set of parameters
+        # best set of parameters
 #        tests.insert(0, (False, True, False))
 
 
@@ -198,17 +198,17 @@ class CO2HoleDetector(HoleDetector):
 
 #        if len(nposs) >= ntests:
 #            nxs, nys = zip(*nposs)
-##
+# #
 #            nx = hist(nxs)
 #            ny = hist(nys)
-##
+# #
 #            src = self.target_image.get_frame(0)
 #            tcx, tcy = self._get_true_xy(src)
 #            self._draw_indicator(src, (tcx - nx, tcy - ny) ,
-##                                 shape='circle',
+# #                                 shape='circle',
 #                                 color=(100, 100, 0),
 #                                 size=10)
-##            self._draw_center_indicator(src, size=5)
+# #            self._draw_center_indicator(src, size=5)
 #            return nx, ny
 
 #============= EOF =====================================

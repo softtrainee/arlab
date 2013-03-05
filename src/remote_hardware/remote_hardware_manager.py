@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ class RemoteHardwareManager(Manager):
     system_lock = Bool(False)
 #    def process_server_request(self, rt, data, processor=None):
 #        d = self.processors['diode']
-##        print rt, data
+# #        print rt, data
 #        return d.get_response(rt, data, None)
 
     def _processors_default(self):
@@ -64,7 +64,7 @@ class RemoteHardwareManager(Manager):
         ip = InitializationParser()
 
         hosts = []
-        #load the hosts file
+        # load the hosts file
         p = os.path.join(paths.setup_dir, 'hosts')
         if os.path.isfile(p):
             with open(p, 'r') as f:
@@ -186,7 +186,7 @@ class RemoteHardwareManager(Manager):
     def load_servers(self):
         '''
         '''
-        #get server names
+        # get server names
         ip = InitializationParser()
         names = ip.get_servers()
         if names:
@@ -261,22 +261,22 @@ class RemoteHardwareManager(Manager):
 #            klass = '{}Handler'.format(request_type.capitalize())
 #            pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
 #            try:
-#                
-#                    
+#
+#
 #                module = __import__(pkg, globals(), locals(), [klass])
 #
 #                factory = getattr(module, klass)
 #
 #                handler = factory(application=self.application)
 #                '''
-#                    the context filter uses the handler object to 
+#                    the context filter uses the handler object to
 #                    get the kind and request
 #                    if the min period has elapse since last request or the message is triggered
 #                    get and return the state from pychron
-#                    
-#        
-#                    pure frequency filtering could be accomplished earlier in the stream in the 
-#                    Remote Hardware Server (CommandRepeater.get_response) 
+#
+#
+#                    pure frequency filtering could be accomplished earlier in the stream in the
+#                    Remote Hardware Server (CommandRepeater.get_response)
 #                '''
 #
 #
@@ -290,5 +290,5 @@ class RemoteHardwareManager(Manager):
 #            self.result = repr(result)
 #        else:
 #            self.result = result
-#            
+#
 #        return result

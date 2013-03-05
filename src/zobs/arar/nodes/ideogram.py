@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits
-#from traitsui.api import View, Item, TableEditor
+# from traits.api import HasTraits
+# from traitsui.api import View, Item, TableEditor
 from chaco.api import ArrayDataSource, ScatterInspectorOverlay
 from chaco.tools.api import ScatterInspector
 #============= standard library imports ========================
@@ -77,13 +77,13 @@ class IdeogramNode(ExperimentNode):
 #        print 'waieht', wm, we
         for ai, ei in zip(ages, errors):
             for j, bj in enumerate(bins):
-                #calculate the gaussian prob
-                #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
-                #see http://en.wikipedia.org/wiki/Normal_distribution
+                # calculate the gaussian prob
+                # p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
+                # see http://en.wikipedia.org/wiki/Normal_distribution
                 delta = math.pow(ai - bj, 2)
                 prob = math.exp(-delta / (2 * ei * ei)) / (math.sqrt(2 * math.pi * ei * ei))
 
-                #cumulate probablities
+                # cumulate probablities
                 probs[j] += prob
 
         minp = min(probs)
@@ -121,7 +121,7 @@ class IdeogramNode(ExperimentNode):
         scatter.underlays.append(ErrorBarOverlay(component=s))
         scatter.xerror = ArrayDataSource(errors)
 
-        #add a scatter hover tool
+        # add a scatter hover tool
         scatter.tools.append(ScatterInspector(scatter, selection_mode='off'))
         overlay = ScatterInspectorOverlay(scatter,
                     hover_color="red",
@@ -129,7 +129,7 @@ class IdeogramNode(ExperimentNode):
                     )
         scatter.overlays.append(overlay)
 
-        #bind to the metadata
+        # bind to the metadata
         scatter.index.on_trait_change(self.update_graph_metadata, 'metadata_changed')
         self.metadata = scatter.index.metadata
 

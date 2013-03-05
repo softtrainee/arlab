@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 
-#from numpy import array
+# from numpy import array
 #============= local library imports  ==========================
-#from image_helper import erode, dilate, draw_squares, draw_rectangle, \
+# from image_helper import erode, dilate, draw_squares, draw_rectangle, \
 #    new_dst, new_size, new_point, new_mask, new_rect, grayspace, colorspace, threshold, contour, draw_contour_list, \
 #    clone, new_seq, avg, rotate, get_polygons, draw_polygons, subsample, \
 #    avg_std, get_min_max_location, draw_point, convert_seq, equalize, lines, \
@@ -38,10 +38,10 @@ class CalibrationImage(Image):
     def find_polygons(self, thresh=0, erode_value=0, dilate_value=0, angle=0):
         self.frames = []
         frame = self.source_frame
-        #crop(frame, 150, 150, 300, 300)
-        #display original
-        #timg = rotate(clone(self.source_frame), angle)
-        #self.frames.append(timg)
+        # crop(frame, 150, 150, 300, 300)
+        # display original
+        # timg = rotate(clone(self.source_frame), angle)
+        # self.frames.append(timg)
         self.frames.append(frame)
         gsrc = grayspace(frame)
         gsrc = erode(gsrc, erode_value)
@@ -49,22 +49,22 @@ class CalibrationImage(Image):
         gsrc = threshold(gsrc, thresh)
 
         self.frames.append(colorspace(gsrc))
-        #contour the threshold source
+        # contour the threshold source
         _nc, contours = contour(gsrc)
         if contours:
-            #display the contours 
+            # display the contours
             csrc = clone(colorspace(gsrc))
 #            draw_contour_list(csrc, contours)
 
-            #approximate and draw polygons from contours
+            # approximate and draw polygons from contours
             polygons, br = get_polygons(contours)
 
-            #draw_rectangles(csrc, polygons)
+            # draw_rectangles(csrc, polygons)
             draw_polygons(csrc, polygons)
             self.frames.append(csrc)
             return br, polygons
-        #lsrc, ls = lines(gsrc, thresh = thresh)
-        #self.frames.append(lsrc)
+        # lsrc, ls = lines(gsrc, thresh = thresh)
+        # self.frames.append(lsrc)
 
     def process(self, thresh=0, erode_value=0, dilate_value=0, angle=0):
         '''
@@ -73,10 +73,10 @@ class CalibrationImage(Image):
 
         self.frames = []
         frame = self.source_frame
-        #crop(frame, 150, 150, 300, 300)
-        #display original
-        #timg = rotate(clone(self.source_frame), angle)
-        #self.frames.append(timg)
+        # crop(frame, 150, 150, 300, 300)
+        # display original
+        # timg = rotate(clone(self.source_frame), angle)
+        # self.frames.append(timg)
         self.frames.append(frame)
         gsrc = grayspace(frame)
         gsrc = erode(gsrc, erode_value)
@@ -90,7 +90,7 @@ class CalibrationImage(Image):
         vert = []
         horz = []
         for li in ls:
-            #find vert
+            # find vert
             tol = 5
             if abs(li[0].x - li[1].x) < tol:
 #                print 'vert', ((li[0].x + li[1].x) ** 2 + (li[0].y + li[1].y) ** 2) ** 0.5

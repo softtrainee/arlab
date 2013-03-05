@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -95,13 +95,13 @@ class InteractionCanvas3D(AnimationCanvas3D):
 
             handled = True
 #        elif char_code == 308: #  Control
-        elif char_code == 307: #  Alt
+        elif char_code == 307:  #  Alt
             pass
-            #self._show_popup(event, position=self._current_pos)
-            #handled = True
-            #self.Refresh()
+            # self._show_popup(event, position=self._current_pos)
+            # handled = True
+            # self.Refresh()
         else:
-            #check for user views
+            # check for user views
             for v in self.user_views:
                 if char_code == ord(v.key.upper()):
                     handled = True
@@ -299,7 +299,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
         hits = glRenderMode(GL_RENDER)
         glMatrixMode(GL_MODELVIEW)
 
-        self.scene_graph.set_view_cube_face(struct.unpack('BBB', b))            #get the top object
+        self.scene_graph.set_view_cube_face(struct.unpack('BBB', b))  # get the top object
 
         return min([(h.near, h.names[0]) for h in hits])[1] if hits else None
 

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,16 +16,16 @@
 
 #============= enthought library imports =======================
 from traits.api import Int, Property
-#from traits.api import HasTraits, Any, List, String, \
+# from traits.api import HasTraits, Any, List, String, \
 #    Float, Bool, Int, Instance, Property, Dict, Enum, on_trait_change, \
 #    Str, Trait, cached_property
-#from traitsui.api import VGroup, HGroup, Item, Group, View, ListStrEditor, \
+# from traitsui.api import VGroup, HGroup, Item, Group, View, ListStrEditor, \
 #    InstanceEditor, ListEditor, EnumEditor, Label, Spring
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 from src.database.core.database_selector import DatabaseSelector
-#from src.database.core.base_db_result import DBResult
+# from src.database.core.base_db_result import DBResult
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
     gen_SampleTable, irrad_PositionTable, irrad_LevelTable, \
     irrad_IrradiationTable, gen_ProjectTable, meas_MeasurementTable, \
