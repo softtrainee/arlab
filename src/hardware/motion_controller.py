@@ -88,7 +88,10 @@ class MotionController(CoreDevice):
         return Timer(250, func)
 
     def set_z(self, v, **kw):
-        self._move_axis('z', v, **kw)
+        self.single_axis_move('z', v, **kw)
+#        setattr(self, '_{}_position'.format('z'), v)
+        self._z_position = v
+        self.axes['z'].position = v
 
     def block(self, *args, **kw):
         self._block_(*args, **kw)
