@@ -436,6 +436,10 @@ class StageManager(Manager):
         self.stage_controller.set_home_position(**home_kwargs)
 
         self.stage_controller.home(homed)
+
+        #explicitly block
+#        self.stage_controller.block()
+
         if 'z' in homed and 'z' in self.stage_controller.axes:
             # will be a positive limit error in z
 #            self.stage_controller.read_error()

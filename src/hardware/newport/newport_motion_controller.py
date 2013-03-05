@@ -202,22 +202,37 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if self.axes.has_key('x'):
             return self.axes['x'].id == 2
 
-#    def get_xy(self):
+#    def get_xyz(self):
 #
-#        xax=self.axes['x']
-#        yax=self.axes['y']
-#
+#        xax = self.axes['x']
+#        yax = self.axes['y']
+#        zax = self.axes['z']
 #
 # #        v = self.ask('1TP?;2TP?', verbose=False)
-#        v = self.ask('{}TP?;{}TP?'.format(xax.id, yax.id), verbose=False)
+#        v = self.ask('{}TP?;{}TP?;{}TP?'.format(xax.id, yax.id, zax.id), verbose=False)
 #        if v is None:
-#            return 0, 0
+#            return 0, 0, 0
 #
-#        v=map(float, v.split('\n'))
+#        vs = v.split('\n')
+#        nv = []
+#        for vi in vs:
+#            if vi.strip():
+#                nv.append(float(vi))
+#
+#            print 'vvvv', vi
+#
+#        while len(nv) < 3:
+#            nv.append(0)
+#        x, y, z = [float(vi) for vi in vs if vi.strip()]
+#        v = map(float, v.split('\n'))
+#        print v
+#        x, y, z = 0, 0, 0
 #
 #        x = self._sign_correct(v[0], 'x', ratio=False) / xax.drive_ratio
 #        y = self._sign_correct(v[1], 'y', ratio=False) / yax.drive_ratio
-#        return x,y
+#        z = self._sign_correct(v[2], 'z', ratio=False) / zax.drive_ratio
+
+#        return nv
 
     def get_current_position(self, aid):
         ''' 
@@ -251,13 +266,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
     def relative_move(self, key_direction):
         # move one pixel in the specified direction
-
         if key_direction == 'Left':
             ax_key = 'x'
-            direction = -1
+            direction = 1
         elif key_direction == 'Right':
             ax_key = 'x'
-            direction = 1
+            direction = -1
         elif key_direction == 'Down':
             ax_key = 'y'
             direction = 1
@@ -268,15 +282,17 @@ ABLE TO USE THE HARDWARE JOYSTICK
         ax = self.axes[ax_key]
 
         v1 = self.parent.canvas.map_data((0, 0))
-        v2 = self.parent.canvas.map_data((1, 1))
+        v2 = self.parent.canvas.map_data((5, 5))
 
         if ax_key == 'y':
-            v = (v2[1] - v1[1]) * direction  # * ax.sign + self._y_position
+            v = (v2[1] - v1[1]) * direction * ax.sign #+ self._y_position
 
         else:
-            v = (v2[0] - v1[0]) * direction  # * ax.sign + self._x_position
+            v = (v2[0] - v1[0]) * direction * ax.sign #+ self._x_position
 
-        self.single_axis_move(ax_key, v, block=False, mode='relative', update=False)
+        self.single_axis_move(ax_key, v, block=False, mode='relative',
+                              verbose=False,
+                              update=False)
 
     def multiple_point_move(self, points, nominal_displacement=0.5):
         gid = self.groupobj.id
@@ -398,11 +414,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 if abs(value - o) <= 0.001:
                     return 'At desired position. cur={} desired={}'.format(o, value)
                 return 'invalid position {}'.format(value)
-
-            self.parent.canvas.set_desired_position(x, y)
-
-            dx = self._x_position - self._sign_correct(x, 'x')
-            dy = self._y_position - self._sign_correct(y, 'y')
+            if mode == 'absolute':
+                self.parent.canvas.set_desired_position(x, y)
+                dx = self._x_position - self._sign_correct(x, 'x')
+                dy = self._y_position - self._sign_correct(y, 'y')
+            else:
+                dx, dy = x, y
 
             disp = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
 
@@ -418,11 +435,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
 #        if update and not block:
             self.timer = self.timer_factory(func=func)
         else:
-            if x is not None and y is not None:
-                self.parent.canvas.set_stage_position(x, y)
-            else:
-                self._z_position = value
-                self.z_progress = value
+            if mode == 'absolute':
+                if x is not None and y is not None:
+                    self.parent.canvas.set_stage_position(x, y)
+                else:
+                    self._z_position = value
+                    self.z_progress = value
 
         self._axis_move(cmd, block=block)
 
@@ -506,7 +524,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
 #            cmd = self._build_command('OR', xx = axis, nn = )
 
-#        self.timer = self.timer_factory()
+        self.timer = self.timer_factory()
         if self.group_commands:
             self.tell(cmd)
 
@@ -666,9 +684,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if obj.calculate_parameters:
             change, nv, ac, dc = self.motion_profiler.check_motion(displacement, obj)
             if change:
-                obj.trait_set(_acceleration=ac,
-                                        _deceleration=dc,
-                                        _velocity=nv,
+                obj.trait_set(acceleration=ac,
+                                        deceleration=dc,
+                                        velocity=nv,
                                         trait_change_notify=False
                                         )
         else:
