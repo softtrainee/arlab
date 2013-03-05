@@ -322,11 +322,11 @@ class StageManager(Manager):
     def relative_move(self, *args, **kw):
         self.stage_controller.relative_move(*args, **kw)
 
-    def moving(self, **kw):
-
+    def moving(self, force_query=False, **kw):
+        moving = False
         if self.stage_controller.timer is not None:
             moving = self.stage_controller.timer.IsRunning()
-        else:
+        elif force_query:
             moving = self.stage_controller._moving_(**kw)
 
         return moving
@@ -437,7 +437,7 @@ class StageManager(Manager):
 
         self.stage_controller.home(homed)
 
-        #explicitly block
+        # explicitly block
 #        self.stage_controller.block()
 
         if 'z' in homed and 'z' in self.stage_controller.axes:
@@ -486,11 +486,9 @@ class StageManager(Manager):
 
     def _move_to_hole(self, key, correct_position=True):
         self.info('Move to hole {}'.format(key))
-        self.temp_position = self._stage_map.get_hole_pos(key)
-#        holes = self._stage_map.holes
+#        self.temp_position = self._stage_map.get_hole_pos(key)
         pos = self._stage_map.get_corrected_hole_pos(key)
         if pos is not None:
-#            correct_position = True
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
                 # map the position to calibrated space
@@ -503,7 +501,6 @@ class StageManager(Manager):
                     self.info('using an interpolated value')
                 else:
                     self.info('using previously calculated corrected position')
-#                    correct_position = False
 
             self.stage_controller.linear_move(block=True, *pos)
             if self.tray_calibration_manager.calibration_style == 'MassSpec':
@@ -513,7 +510,7 @@ class StageManager(Manager):
                 self._move_to_hole_hook(key, correct_position)
 
             self.info('Move complete')
-            self.update_axes(update_hole=False)
+            self.update_axes()  # update_hole=False)
 
         self.hole_thread = None
 

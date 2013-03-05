@@ -111,48 +111,16 @@ class CommandRepeater(ConfigLoadable):
                 if ready_flag and ready_data == rd:
                     rd = 'OK'
 
-#                result_str = rd
                 result = rd.split('|')[1] if '|' in rd else rd
 
             else:
                 self.led.state = 'red'
                 result = str(PychronCommErrorCode(self.path, rd))
 
-#                print 'result', result, rd, self.path
-
-#            self.debug('command={} result_command={}'.format(data, result_str))
-
-#            cmd = data.split(' ')[0].strip()
-#            try:
-#                float(cmd)
-#            except ValueError:
-#                rcmd = result_str.split('|')[0].strip()
-#                if cmd != rcmd:
-#                    self.warning('&&&&&& Mismatch command and response &&&&&&')
-#
-#            import time
-#            time.sleep(random.random() / 10.)
             if ready_flag and data == result:
                 result = 'OK'
 
             return result
-#            try:
-#
-#                self._sock.send()
-#                self.led.state = 'green'
-#            except socket.error, e:
-#            result = self._sock.recv(2048)
-#            if not is_ok:
-#            #pychron is not running
-#            self.led.state = 'red'
-#            self.open()
-#            return repr(PychronCommErrorCode(self.path, e))
-#        else:
-#            return result
-#            if ready_flag and data == result:
-#                result = 'OK'
-#
-#            return result
 
 #===============================================================================
 # commands
@@ -241,7 +209,8 @@ class CommandRepeater(ConfigLoadable):
                         self.debug('connecting to {} failed. {}'.
                                    format(self.path, e))
 
-                self._sock.send(s)
+                self._send_(s, verbose)
+#                self._sock.send(s)
                 if verbose:
                     self.debug('send success on retry {}'.format(i + 1))
                 return True

@@ -285,10 +285,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
         v2 = self.parent.canvas.map_data((5, 5))
 
         if ax_key == 'y':
-            v = (v2[1] - v1[1]) * direction * ax.sign #+ self._y_position
+            v = (v2[1] - v1[1]) * direction * ax.sign  # + self._y_position
 
         else:
-            v = (v2[0] - v1[0]) * direction * ax.sign #+ self._x_position
+            v = (v2[0] - v1[0]) * direction * ax.sign  # + self._x_position
 
         self.single_axis_move(ax_key, v, block=False, mode='relative',
                               verbose=False,
@@ -886,7 +886,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
             7,6,5=reserved
             4=trajectory executing yes=1
             
+            return True if moving
+            
         '''
+        moving = False
         if axis is not None:
             if isinstance(axis, str):
                 axis = self.axes[axis].id
@@ -894,34 +897,18 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if self.mode == 'grouped':
                 return self.group_moving()
             else:
-
                 r = self.repeat_command(('MD?', axis), 5, check_type=int,
                                          verbose=verbose)
                 if r is not None:
-                    return not int(r)
-#                for _ in range(5):
-#                    r = self.ask(self._build_command('MD?', xx=axis),
-#                                verbose=False
-#                                )
-#                    if r in ['0', '1']:
-#                        break
-#                    time.sleep(0.25)
-#                time.sleep(0.5)
-#                return True if r == '0' else False
+                    # stage is moving if r==0
+                    moving = not int(r)
 
-        moving = False
-        if not self.simulation:
-#        else:
+        elif not self.simulation:
             r = self.repeat_command('TX', 5, check_type=str, verbose=verbose)
-
-            if r is not None:
-                if len(r) > 0:
-                    controller_state = ord(r[0])
-
-                    cs = make_bitarray(controller_state, width=8)
-                    moving = cs[3] == '1'
-            else:
-                moving = False
+            if r is not None and len(r) > 0:
+                controller_state = ord(r[0])
+                cs = make_bitarray(controller_state, width=8)
+                moving = cs[3] == '1'
         else:
             time.sleep(0.5)
 
