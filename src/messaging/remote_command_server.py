@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,15 +26,14 @@ import threading
 import datetime
 import select
 import socket
+import os
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
-from src.led.led_editor import LEDEditor
-from src.led.led import LED
 from src.messaging.command_repeater import CommandRepeater
 from src.helpers.datetime_tools import diff_timestamp
 from src.remote_hardware.command_processor import CommandProcessor
+from src.traits_editors.led_editor import LED, LEDEditor
 from globals import globalv
-import os
 
 LOCAL = False
 class RCSHandler(Handler):
@@ -166,9 +165,9 @@ class RemoteCommandServer(ConfigLoadable):
 
             self._server = self.server_factory(server_class, addr, ptype, ds)
 
-            #add links
+            # add links
             for link in self.config_get_options(config, 'Links'):
-                #note links cannot be stopped 
+                # note links cannot be stopped
                 self._server.add_link(link,
                                        self.config_get(config, 'Links', link))
 
@@ -188,8 +187,8 @@ class RemoteCommandServer(ConfigLoadable):
     def server_factory(self, klass, addr, ptype, ds):
         '''
         '''
-        #from tcp_server import TCPServer
-        #from udp_server import UDPServer
+        # from tcp_server import TCPServer
+        # from udp_server import UDPServer
 
         module = __import__('src.messaging.{}_server'.format(klass[:3].lower()), fromlist=[klass])
         factory = getattr(module, klass)
@@ -208,7 +207,7 @@ class RemoteCommandServer(ConfigLoadable):
         '''
         '''
         self._running = True
-        #t = threading.Thread(target = self._server.serve_forever)
+        # t = threading.Thread(target = self._server.serve_forever)
         t = threading.Thread(target=self.start_server)
         t.start()
 
@@ -340,7 +339,7 @@ class RemoteCommandServer(ConfigLoadable):
         if self._running:
             self.shutdown()
         else:
-            #reset the stats
+            # reset the stats
             self.packets_received = 0
             self.packets_sent = 0
             self.cur_rpacket = ''
@@ -366,15 +365,15 @@ class RemoteCommandServer(ConfigLoadable):
 #            if self._server is not None:
 #                sa = self._server.server_address
 #                '''
-#                    BUG 
-#                    1. start _server with 129.138.12.141 
+#                    BUG
+#                    1. start _server with 129.138.12.141
 #                        _server responds to commands sent to 129.138.12.141
-#                        
+#
 #                    2. reinitialize _server with 129.138.12.140
 #                        _server still responds to commands sent to 129.138.141
 #                '''
 #                if sa != addr:
-#                    
-#                    
+#
+#
 #                    self.warning('Reinitialization of _server not allowed- restart program to alter _server parameters')
 #            else:

@@ -181,19 +181,22 @@ class CommandProcessor(ConfigLoadable):
                 self.debug(tb)
 
     def _stream_listener(self, isock):
-        ins, _, _ = select.select(isock, [], [], 5)
+        try:
+            ins, _, _ = select.select(isock, [], [], 5)
 
-        for s in ins:
-            if s == self._sock:
-                client, _addr = self._sock.accept()
-                isock.append(client)
-            else:
-                data = self._read(s)
-                if data:
-                    self._process(s, data)
+            for s in ins:
+                if s == self._sock:
+                    client, _addr = self._sock.accept()
+                    isock.append(client)
                 else:
-                    s.close()
-                    isock.remove(s)
+                    data = self._read(s)
+                    if data:
+                        self._process(s, data)
+                    else:
+                        s.close()
+                        isock.remove(s)
+        except select.error:
+            pass
 
     def _dgram_listener(self):
         print 'daga'

@@ -23,7 +23,6 @@ import apptools.sweet_pickle as pickle
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.led.led import LED
 from src.lasers.stage_managers.stage_manager import StageManager
 #
 from src.monitors.laser_monitor import LaserMonitor
@@ -35,9 +34,9 @@ from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.extraction_device import IExtractionDevice
-from src.led.led_editor import LEDEditor
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
+from src.traits_editors.led_editor import LED, LEDEditor
 
 class ILaserManager(IExtractionDevice):
     def trace_path(self, *args, **kw):

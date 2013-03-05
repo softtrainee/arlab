@@ -178,9 +178,10 @@ class InstallTemplate(object):
                     'displays/rich_text_display',
                     'managers/manager',
                     'deprecate',
-                    'constants'
+                    'constants',
+                    'traits_editors/led_editor'
                     ]
-    default_pkgs = ['rpc', 'helpers', 'led']
+    default_pkgs = ['rpc', 'helpers']
 
     bundle_name = None
     def install(self, version, src_dir):
