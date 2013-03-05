@@ -73,7 +73,7 @@ class KerrMotor(KerrDevice):
 
     def _build_hexstr(self, *hxlist):
         hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
-        return map(hexfmt, hxlist)
+        return ''.join(map(hexfmt, hxlist))
 
     def _build_io(self):
         return '1800'
