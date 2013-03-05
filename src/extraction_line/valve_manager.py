@@ -160,7 +160,7 @@ class ValveManager(Manager):
                 if ',' in word:
                     for packet in word.split(','):
                         key = packet[:-1]
-                        state = r[-1:].strip()
+                        state = packet[-1:].strip()
                         if key[0] in ALPHAS \
                             and state in ('0', '1'):
                                 d[key] = bool(int(state))
