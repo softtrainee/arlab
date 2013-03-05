@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -126,7 +126,7 @@ def extract_data(p):
 
     return x, y
 
-#def plot_data(data1, data2):
+# def plot_data(data1, data2):
 #    '''
 #    '''
 #    g = TimeSeriesGraph()
@@ -137,9 +137,9 @@ if __name__ == '__main__':
     g.replot()
 #    do_later(g.plot)
     g.configure_traits()
-##    p1 = os.path.join(paths.data_dir, 'furnace_calibration', 'DPi32TemperatureMonitor002.txt')
+# #    p1 = os.path.join(paths.data_dir, 'furnace_calibration', 'DPi32TemperatureMonitor002.txt')
 #    p1 = os.path.join(paths.data_dir, 'furnace_calibration', 'DPi32TemperatureMonitor001.txt')
-##    p2 = os.path.join(paths.data_dir, 'furnace_calibration', 'Eurotherm002.txt')
+# #    p2 = os.path.join(paths.data_dir, 'furnace_calibration', 'Eurotherm002.txt')
 #    p2 = os.path.join(paths.data_dir, 'furnace_calibration', 'Eurotherm001.txt')
 #    func = lambda x: 1
 #    func = lambda x: time.mktime(dparser.parse(x.split('+')[0]).timetuple())
@@ -151,8 +151,8 @@ if __name__ == '__main__':
 #                    skiprows=1, delimiter='\t')
 #
 #
-##    x, y = extract_data(p1)
-##    x1, y1 = extract_data(p2)
+# #    x, y = extract_data(p1)
+# #    x1, y1 = extract_data(p2)
 #
 #    plot_data(data1, data2)
 

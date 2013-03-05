@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -240,7 +240,7 @@ class Object3D(Node):
         glPushMatrix()
 
         glRotatef(90, 1, 0, 0)
-        #blades=[-15,-15+45,-15+90]
+        # blades=[-15,-15+45,-15+90]
 
         sweep = 30
         nblades = 8
@@ -248,7 +248,7 @@ class Object3D(Node):
             glRotatef(-360.0 / nblades, 0, 0, 1)
             glPushMatrix()
             glRotatef(25, 0 + math.cos(start), 1, 0)
-            #glRotatef(5,math.sin(start),math.cos(start),0)
+            # glRotatef(5,math.sin(start),math.cos(start),0)
 
             gluPartialDisk(gluNewQuadric(), i_r, o_r, xseg, yseg,
                            start, sweep
@@ -305,7 +305,7 @@ class Object3D(Node):
         if self.canvas is not None:
             self.canvas.Refresh()
 
-#state_color_map = dict(static = colors['gray'],
+# state_color_map = dict(static = colors['gray'],
 #                     dynamic = colors['blue'],
 #                     gettering = colors['green'],
 #                     measuring_sample = colors['yellow'],
@@ -321,7 +321,7 @@ class MultiStateObject3D(Object3D):
     '''
         G{classtree}
     '''
-    #always_on=False
+    # always_on=False
     precedence = 0
     precedence_stack = None
     state_stack = None
@@ -337,8 +337,8 @@ class MultiStateObject3D(Object3D):
         self.precedence_stack = []
 #        if self.always_on:
 #            pass
-            #self.state=True
-            #self.color=colors['green']
+            # self.state=True
+            # self.color=colors['green']
 
 #    def _set_material(self, **kw):
 #        '''
@@ -346,8 +346,8 @@ class MultiStateObject3D(Object3D):
 #            @param **kw:
 #        '''
 #
-##        if self.always_on:
-##            kw['color']=None
+# #        if self.always_on:
+# #            kw['color']=None
 #
 #        super(MultiStateObject3D, self)._set_material(**kw)
 
@@ -411,7 +411,7 @@ class Transform(Object3D):
         if self.matrix is not None:
             glMultMatrixf(self.matrix)
 
-#class ActiveObject3D(Object3D):
+# class ActiveObject3D(Object3D):
 #    pass
 
 
@@ -421,9 +421,9 @@ class Transform(Object3D):
 #            if action:
 #                self.state_stack.insert(0,s)
 #                self.precedence_stack.insert(0,precedence)
-##                
+# #
 #                self.precedence=precedence
-##                #return s,self.precedence
+# #                #return s,self.precedence
 #                pass
 #            else:
 #                if self.state_stack:
@@ -433,7 +433,7 @@ class Transform(Object3D):
 #                else:
 #                    self.precedence=0
 #            return s,self.precedence
-#        
+#
 #        if precedence>=self.precedence:
 #            if action:
 #                #if not self.state_stack:
@@ -447,34 +447,34 @@ class Transform(Object3D):
 #                    s=self.state_stack[-1:][0]
 #                    self.precedence=self.precedence_stack[-1:][0]
 #                else:
-#                    self.precedence=0  
-#           
+#                    self.precedence=0
+#
 #            set_color(s)
 #        else:
 #            if action:
-##                max_state=None
-##                for s,p in zip(self.state_stack,
-##                               self.precedence_stack):
-##                    if p>=self.precedence:
-##                        max_state=s
-##               
-##                if max_state:
-##                    set_color(max_state)
+# #                max_state=None
+# #                for s,p in zip(self.state_stack,
+# #                               self.precedence_stack):
+# #                    if p>=self.precedence:
+# #                        max_state=s
+# #
+# #                if max_state:
+# #                    set_color(max_state)
 #                    #self.precedence=p
-#               # else:  
+#               # else:
 #                self.state_stack.append(s)
 #                self.precedence_stack.append(precedence)
-#                
+#
 #                #set to highest precedence
-#                
+#
 #            else:
 #                if self.state_stack:
 #                    self.state_stack.pop()
 #                    self.precedence_stack.pop()
-#                    
-##    
-##            
+#
+# #
+# #
 #        if self.name=='Argus':
 #            print s,action,precedence,self.precedence,self.state_stack,self.precedence_stack
 #        return s,self.precedence
-##    #
+# #    #

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@
 from traits.api import HasTraits, Property, \
     Str, Float, Button, Color, Int, Instance, Bool, List
 from traitsui.api import View, Item, HGroup, VGroup, spring
-#from pyface.timer.timer import Timer
+# from pyface.timer.timer import Timer
 
 #============= standard library imports ========================
 
@@ -100,11 +100,11 @@ class Detector(HasTraits):
 #        if self.graph is not None:
 #            if self.enabled:
 #                v=self.signal
-#            else:    
+#            else:
 #                v=None
-#                
+#
 #            self.graph.record(v,series=self.series_id)
-#                
+#
 class FaradayDetector(Detector):
     '''
     '''
@@ -115,7 +115,7 @@ class FaradayDetector(Detector):
         super(FaradayDetector, self).__init__(**kw)
         if args:
             self.resistance = int(args[0])
-    #def _child_groups(self):
+    # def _child_groups(self):
     #    return HGroup(Item('resistance',style='readonly'),spring)
 class IonCounterDetector(Detector):
     '''
@@ -137,7 +137,7 @@ class ArgusManager(Manager):
         '''
         '''
         config = self.get_configuration()
-        #load the detectors
+        # load the detectors
 
         if config is not None:
             #  config.
@@ -160,18 +160,18 @@ class ArgusManager(Manager):
         for d in self._detector_map:
             det = getattr(self, d)
 
-            #if det.enabled:
-                #setup graph
+            # if det.enabled:
+                # setup graph
             xs, _ys = self.graph.new_series(type='scatter', marker='circle',
                                         marker_size=2.5, line_width=0)
             series_id = int(xs[1:])
-            #setup timers
+            # setup timers
             det.series_id = series_id
             det.graph = self.graph
             det.color = colorname_gen.next()
 
 
-            #self.det_timers.append(Timer(SCAN_INTERVAL,det.get_signal_from_device))
+            # self.det_timers.append(Timer(SCAN_INTERVAL,det.get_signal_from_device))
 
 
         self.measure_thread = Thread(target=self.measure_gas)
@@ -189,7 +189,7 @@ class ArgusManager(Manager):
         for i, _d in enumerate(self._detector_map):
             t = Thread(target=self.detectors[i].collect_data, args=(cond,))
             t.start()
-            #self.detectors[i].collect_data(cond)
+            # self.detectors[i].collect_data(cond)
             cond.wait()
         cond.release()
 
@@ -197,11 +197,11 @@ class ArgusManager(Manager):
 #    @on_trait_change('detectors.enabled')
 #    def stop_timer(self, object, old,new):
 #      #  print object,old,new
-#        
+#
 #        if self.det_timers:
 #            id=object.series_id
 #            if not new:
-#                
+#
 #                self.det_timers[id].Stop()
 #            else:
 #                self.det_timers[id]=Timer(500,object.get_signal_from_device)

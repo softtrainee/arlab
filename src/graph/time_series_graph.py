@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ class TimeSeriesGraph(Graph):
         '''
         axis = self._get_x_axis(plotid)
         axis.title = t
-        #print axis.title, axis, t
+        # print axis.title, axis, t
         super(TimeSeriesGraph, self).set_x_title(t, plotid=plotid)
 
     def set_axis_label_color(self, *args, **kw):
@@ -91,7 +91,7 @@ class TimeSeriesGraph(Graph):
 
     def _get_x_axis(self, plotid):
         plot = self.plots[plotid]
-        #print plot.index_axis.title
+        # print plot.index_axis.title
         return plot.index_axis
 #        for underlay in plot.underlays:
 #            if underlay.orientation == 'bottom':
@@ -118,8 +118,8 @@ class TimeSeriesGraph(Graph):
         xd = x
         if x is not None:
             if isinstance(x[0], str):
-                #convert the time stamp into seconds since the Epoch
-                #Epoch = 12:00 am 1/1/1970
+                # convert the time stamp into seconds since the Epoch
+                # Epoch = 12:00 am 1/1/1970
                 fmt = "%Y-%m-%d %H:%M:%S"
 
                 args = x[0].split(' +')
@@ -158,7 +158,7 @@ class TimeSeriesGraph(Graph):
 
 #        plota.unified_draw = True
 #        plota.use_downsampling = True
-        #if the plot is not visible dont remove the underlays
+        # if the plot is not visible dont remove the underlays
         if plota.visible:
             self._set_bottom_axis(plota, plot, plotid, timescale=timescale)
 
@@ -172,10 +172,10 @@ class TimeSeriesGraph(Graph):
                 plot.underlays.pop(i)
         return title
     def _set_bottom_axis(self, plota, plot, plotid, timescale=False):
-        #this is a hack to hide the default plotaxis
-        #since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
-        #we cant remove the default axis and set the x_axis to the scaled axis
-        #also we cant remove the default axis because then we cant change the axis title
+        # this is a hack to hide the default plotaxis
+        # since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
+        # we cant remove the default axis and set the x_axis to the scaled axis
+        # also we cant remove the default axis because then we cant change the axis title
         title = self._remove_bottom(plot)
         bottom = self.plotcontainer.stack_order == 'bottom_to_top'
         if bottom:
@@ -183,7 +183,7 @@ class TimeSeriesGraph(Graph):
                 axis = ScalesPlotAxis(plota, orientation="bottom",
                                       title=title,
                                       tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(
-                                                                                                   #*HMSScales
+                                                                                                   # *HMSScales
                                                                                                    )
                                                                            # scale = TimeScale()
                                                                            )
@@ -199,7 +199,7 @@ class TimeSeriesGraph(Graph):
                 axis = ScalesPlotAxis(plota, orientation="bottom",
                                   title=title,
                                   tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(
-                                                                                               #*HMSScales
+                                                                                               # *HMSScales
                                                                                                )
                                                                        # scale = TimeScale()
                                                                        )
@@ -228,7 +228,7 @@ class TimeSeriesStreamStackedGraph(TimeSeriesGraph, StreamStackedGraph):
     '''
     pass
 #============= EOF ============================================
-#def create_dates(numpoints, units = "days"):
+# def create_dates(numpoints, units = "days"):
 #    '''
 #            @type units: C{str}
 #            @param units:

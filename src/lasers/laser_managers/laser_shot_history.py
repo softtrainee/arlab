@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -95,7 +95,7 @@ class LaserShotHistory(HasTraits):
     def __clear(self):
         '''
         '''
-        #make a backup copy
+        # make a backup copy
         p, _cnt = unique_path(paths.root, 'laser_shot_history', 'bak')
         shutil.copy(self.pickle_path, p)
 

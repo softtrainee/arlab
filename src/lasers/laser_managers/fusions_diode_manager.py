@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ from traitsui.api import VGroup, Group, Item, InstanceEditor
 #=============local library imports  ==========================
 
 from src.hardware.fusions.fusions_diode_logic_board import FusionsDiodeLogicBoard
-#from src.hardware.fusions.vue_diode_control_module import VueDiodeControlModule
+# from src.hardware.fusions.vue_diode_control_module import VueDiodeControlModule
 from src.hardware.mikron_pyrometer import MikronGA140Pyrometer
 from src.hardware.watlow_ezzone import WatlowEZZone
 from src.hardware.temperature_monitor import DPi32TemperatureMonitor
@@ -47,7 +47,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 
     pyrometer = Instance(MikronGA140Pyrometer)
     temperature_controller = Instance(WatlowEZZone)
-    #temperature_monitor = Instance(DPi32TemperatureMonitor)
+    # temperature_monitor = Instance(DPi32TemperatureMonitor)
 
     control_module_manager = Instance(VueMetrixManager)
 
@@ -57,7 +57,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     configure = Button
     tuning = Bool
 
-    #laser_measured_power = Float
+    # laser_measured_power = Float
 #    thermocouple_temp = Float
 
 #    update_timers = List
@@ -79,7 +79,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 #        super(FusionsDiodeManager, self).finish_loading()
 #
 #        self.pyrometer.start_scan()
-##        self.control_module_manager.start_scan()
+# #        self.control_module_manager.start_scan()
     def bind_preferences(self, pref_id):
         super(FusionsDiodeManager, self).bind_preferences(pref_id)
         bind_preference(self, 'use_calibrated_temperature', '{}.use_calibrated_temperature'.format(pref_id))
@@ -179,7 +179,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 #            return self.control_module_manager.enable()
 
     def _enable_hook(self):
-        if super(FusionsDiodeManager, self)._enable_hook():  #logic board sucessfully enabled
+        if super(FusionsDiodeManager, self)._enable_hook():  # logic board sucessfully enabled
             if self.fiber_light.auto_onoff and self.fiber_light.state:
                 self.fiber_light.power_off()
 
@@ -398,7 +398,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         return 'Diode Manager'
 
     def _control_module_manager_default(self):
-        v = VueMetrixManager()#control = self.control_module)
+        v = VueMetrixManager()  # control = self.control_module)
         return v
 
 if __name__ == '__main__':
@@ -537,10 +537,10 @@ if __name__ == '__main__':
 #                                  ]
 #                                ),
 #
-##            ('Streams', [dict(name = 'Stop', action = 'stop_streams', enabled_when = 'streaming'),
-##                        dict(name = 'Stream ...', action = '_launch_stream'),
-##                        dict(name='Save Graph ...', action ='_save_graph', enabled_when='dirty')
-##                        ])
+# #            ('Streams', [dict(name = 'Stop', action = 'stop_streams', enabled_when = 'streaming'),
+# #                        dict(name = 'Stream ...', action = '_launch_stream'),
+# #                        dict(name='Save Graph ...', action ='_save_graph', enabled_when='dirty')
+# #                        ])
 #                ]
 #        return m
 

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ following information is necessary
 '''
 
 RUN_TYPE_DICT = dict(Unknown=1, Air=2, Blank=5)
-#SAMPLE_DICT = dict(Air=2, Blank=1)
+# SAMPLE_DICT = dict(Air=2, Blank=1)
 ISO_LABELS = dict(H1='Ar40', AX='Ar39', L1='Ar38', L2='Ar37', CDD='Ar36')
 
 DEBUG = True
@@ -151,11 +151,11 @@ class MassSpecDatabaseImporter(Loggable):
                           extract_device,
                           tray,
                           position,
-                          extract_value, #power requested
-                          extract_value, #power achieved
+                          extract_value,  # power requested
+                          extract_value,  # power achieved
 
-                          duration, #total extraction
-                          duration, #time at extract_value
+                          duration,  # total extraction
+                          duration,  # time at extract_value
 
                           first_stage_delay,
                           second_stage_delay,
@@ -205,7 +205,7 @@ class MassSpecDatabaseImporter(Loggable):
             self.data_reduction_session_id = dr.DataReductionSessionID
 
     def create_import_session(self, spectrometer, tray):
-        #add login, sample, dr ids
+        # add login, sample, dr ids
         if self.login_session_id is None:
             self.add_login_session(spectrometer)
         if self.data_reduction_session_id is None:
@@ -261,7 +261,7 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         # add analysis
         #=======================================================================
-        #get the sample_id
+        # get the sample_id
         sample_id = 0
         if runtype == 'Air':
             sample = db.get_sample('Air')
@@ -272,7 +272,7 @@ class MassSpecDatabaseImporter(Loggable):
             if db_irradpos:
                 sample_id = db_irradpos.SampleID
 
-        #add runscript
+        # add runscript
         rs = db.add_runscript(runscript_name, runscript_text)
         db.flush()
 
@@ -328,7 +328,7 @@ class MassSpecDatabaseImporter(Loggable):
             infoblob = self._make_infoblob(baseline.nominal_value, sem)
             db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id, baseline_fits[isok], infoblob)
 
-            #baseline and baseline changeable items need matching BslnID
+            # baseline and baseline changeable items need matching BslnID
             db.flush()
             db_changeable.BslnID = db_baseline.BslnID
 
@@ -353,8 +353,8 @@ class MassSpecDatabaseImporter(Loggable):
 
             intercept = signal_dict[isok]
             fit = signal_fits[isok]
-            #in mass spec the intercept is alreay baseline corrected
-            #mass spec also doesnt propograte baseline errors
+            # in mass spec the intercept is alreay baseline corrected
+            # mass spec also doesnt propograte baseline errors
 
             if runtype == 'Blank':
                 ublank = intercept - baseline

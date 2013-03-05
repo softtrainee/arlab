@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ from traits.api import  Any, Bool, Float, List
 #=============standard library imports ========================
 from threading import Thread, Lock, Event
 import time
-#from numpy import array, hsplit, array_split, asarray, transpose, hstack, rot90, swapaxes
-#from matplotlib import cm
+# from numpy import array, hsplit, array_split, asarray, transpose, hstack, rot90, swapaxes
+# from matplotlib import cm
 #=============local library imports ===========================
 from src.image.image import Image
 from cvwrapper import get_capture_device, query_frame, write_frame, \
@@ -58,7 +58,7 @@ class Video(Image):
             if globalv.video_test:
                 self.cap = 1
             else:
-                #ideally an identifier is passed in 
+                # ideally an identifier is passed in
                 try:
                     self.cap = get_capture_device(identifier)
                 except Exception, e:
@@ -126,7 +126,7 @@ class Video(Image):
         frame = self.get_frame(**kw)
         if frame is not None:
             return frame.ndarray
-##        print arr.shape
+# #        print arr.shape
 #        if cmap is not None:
 #            _, _, colors = transpose(arr)
 #            cmap = cm.get_cmap(cmap)
@@ -141,7 +141,7 @@ class Video(Image):
 #            self._frame = self.get_frame(**kw).ndarray
 #            self._last_get = time.clock()
 #        else:
-##            print time.clock() - self._last_get
+# #            print time.clock() - self._last_get
 #            if time.clock() - self._last_get > 1 / 25.:
 #                self._frame = self.get_frame(**kw).ndarray
 #                self._last_get = time.clock()

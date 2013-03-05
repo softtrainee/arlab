@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,15 +22,15 @@ import time
 #============= local library imports  ==========================
 from monitor import Monitor
 
-#NFAILURES = 3
-#NTRIES = 3
+# NFAILURES = 3
+# NTRIES = 3
 class LaserMonitor(Monitor):
     '''
     '''
-    max_duration = Float(60) # in minutes
+    max_duration = Float(60)  # in minutes
     gntries = 0
 
-    #if max_duration_period is 10 check the max_duration every 10th cycle.
+    # if max_duration_period is 10 check the max_duration every 10th cycle.
     max_duration_period = Int(10)
     _md_cnt = 0
 
@@ -59,12 +59,12 @@ class LaserMonitor(Monitor):
     def _check_duration(self, verbose=True):
         '''
         '''
-        #check max duration
+        # check max duration
         manager = self.manager
         if verbose:
             self.info('Check lasing duration')
 
-        #max duration in mins convert to secs for comparison
+        # max duration in mins convert to secs for comparison
         if time.time() - self.start_time > self.max_duration * 60.0:
             self.warning('Max duration {} (min) exceeded'.format(self.max_duration))
             manager.emergency_shutoff(reason='Max duration exceeded')

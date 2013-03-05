@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,16 +56,16 @@ class MosaicManager(MachineVisionManager):
         if controller is not None:
             for r in range(nrows):
                 for c in range(ncols):
-                    #move to position
+                    # move to position
                     controller.linear_move(cx + c * dx, cy + r * dy, block=True)
                     time.sleep(1)
-                    #take picture
+                    # take picture
                     image_name = 'img_{:02n}{:02n}.png'.format(r, c)
                     path = os.path.join(self.current_directory, image_name)
                     self.video.record_frame(path, swap_rb=True)
 
     def generate_stitched(self):
-        from mapping.stitch import hor_stitch#, ver_stitch
+        from mapping.stitch import hor_stitch  # , ver_stitch
         for r in range(self.nrows):
             image_names = ['img_{:02n}{:02n}'.format(r, c)
                                 for c in range(self.ncols)]
@@ -75,7 +75,7 @@ class MosaicManager(MachineVisionManager):
 #            stitchh()
 
     def generate_composite(self):
-        #create a blank image to hold images
+        # create a blank image to hold images
         size = (self.ncols * self.image_width, self.nrows * self.image_height)
         im = Image.new('RGB', size)
         w, h = self.image_width, self.image_height

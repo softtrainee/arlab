@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ from src.deprecate import deprecated
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
-#def create_url(kind, user, hostname, db, password=None):
+# def create_url(kind, user, hostname, db, password=None):
 
 #    if kind == 'mysql':
 #        if password is not None:
@@ -48,11 +48,11 @@ class DatabaseAdapter(Loggable):
     sess = None
 
     connected = Bool(False)
-    kind = Str#('mysql')
-    username = Str#('root')
-    host = Str#('localhost')
+    kind = Str  # ('mysql')
+    username = Str  # ('root')
+    host = Str  # ('localhost')
 #    name = Str#('massspecdata_local')
-    password = Password#('Argon')
+    password = Password  # ('Argon')
 
     selector_klass = Any
 
@@ -64,7 +64,7 @@ class DatabaseAdapter(Loggable):
 
     selector = Any
 
-    #name used when writing to database
+    # name used when writing to database
     save_username = Str
     connection_parameters_changed = Bool
 
@@ -193,7 +193,7 @@ host={}'.format(self.name, self.username, self.host))
         host = self.host
         name = self.name
         if kind == 'mysql':
-            #add support for different mysql drivers
+            # add support for different mysql drivers
             driver = self._import_mysql_driver()
             if driver is None:
                 return
@@ -272,9 +272,9 @@ host={}'.format(self.name, self.username, self.host))
         sess.add(obj)
 
     def _add_unique(self, item, attr, name):
-        #test if already exists 
+        # test if already exists
         nitem = getattr(self, 'get_{}'.format(attr))(name)
-        if nitem is None: #or isinstance(nitem, (str, unicode)):
+        if nitem is None:  # or isinstance(nitem, (str, unicode)):
             self.info('adding {}= {}'.format(attr, name))
             self._add_item(item)
             nitem = item
@@ -375,7 +375,7 @@ host={}'.format(self.name, self.username, self.host))
         if limit:
             q = q.limit(limit)
 
-        #reorder based on id
+        # reorder based on id
         if order:
             q = q.from_self()
             q = q.order_by(table.id)

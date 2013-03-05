@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ class BakeoutScriptParser(CoreScriptParser):
         elif len(args) > 2:
             error = 'Too many args ' + sargs
         else:
-            #check all are numbers
+            # check all are numbers
 
             error = self._check_number(args)
 
@@ -51,11 +51,11 @@ class BakeoutScriptParser(CoreScriptParser):
         toks = tok.split(',')
         nargs = len(toks)
 
-        #tdict = {'m':'m', 's':'s', 'h':'h' }
+        # tdict = {'m':'m', 's':'s', 'h':'h' }
 
 #        check_time_units = lambda x: tdict[x]
 #        arg_map = [float, float, float, check_time_units, int]
-        arg_map = [float, float, float, float]#, check_time_units, int]
+        arg_map = [float, float, float, float]  # , check_time_units, int]
         args = None
 #        if not toks[-1] == '' and nargs <= 5 and nargs >= 2:
         if not toks[-1] == '' and 2 <= nargs <= 4:

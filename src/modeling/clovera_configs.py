@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -124,7 +124,7 @@ class AutoarrConfig(BaseConfig):
         return v
 
 
-#def validate_nruns(obj, name, value):
+# def validate_nruns(obj, name, value):
 #    try:
 #        m = float(value)
 #        if m <= 20 or m >= 199:
@@ -262,20 +262,20 @@ class AgesmeConfig(BaseConfig):
         line_str = '{}' + new_line
 
         with open(p, 'w') as f:
-            #write 1 indicating thermal history correct is correct
+            # write 1 indicating thermal history correct is correct
             f.write(line_str.format('1'))
             f.write(str(self.geometry))
 
         ap = os.path.join(os.path.dirname(p), 'agesme.in')
         with open(ap, 'w') as f:
-            #write the cooling history
+            # write the cooling history
             ch = ['\t'.join(map(str, r)) for r in self.cooling_history if r[0] >= 0 and r[1] >= 0]
             f.write(line_str.format(len(ch)))
             f.write(new_line.join(ch))
 
             f.write(new_line)
 
-            #write contents of arr-me.in
+            # write contents of arr-me.in
             pp = os.path.join(os.path.dirname(p), 'arr-me.in')
             with open(pp, 'r') as ff:
                 f.write(ff.read())
@@ -301,7 +301,7 @@ class AgesmeConfig(BaseConfig):
         return v
 
 
-#class ConfidenceIntervalConfig(BaseConfig):
+# class ConfidenceIntervalConfig(BaseConfig):
 #    klass_name = 'confint'
 #    #===========================================================================
 #    # config params

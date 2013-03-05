@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,12 +20,12 @@
 from traits.api import Float, Property, Str
 from traitsui.api import View, Item, EnumEditor
 #=============standard library imports ========================
-#import time
+# import time
 #=============local library imports  ==========================
 from core.core_device import CoreDevice
 from src.hardware.core.data_helper import make_bitarray
-#from modbus.modbus_device import ModbusDevice
-#class TemperatureMonitor(ModbusDevice, Streamable):
+# from modbus.modbus_device import ModbusDevice
+# class TemperatureMonitor(ModbusDevice, Streamable):
 #    def initialize(self):
 #        pass
 #    def scan(self, *args):
@@ -35,7 +35,7 @@ from src.hardware.core.data_helper import make_bitarray
 #        if super(TemperatureMonitor, self).scan(*args) is None:
 #            self.current_value = v = self.read_temperature(verbose = False)
 #            self.stream_manager.record(v, self.name)
-#from src.graph.time_series_graph import TimeSeriesStreamGraph
+# from src.graph.time_series_graph import TimeSeriesStreamGraph
 
 
 class ISeriesDevice(CoreDevice):
@@ -80,7 +80,7 @@ class ISeriesDevice(CoreDevice):
         if value is not None:
             args += [str(value)]
         self.ask(''.join(args),
-                 #delay = 400
+                 # delay = 400
                  )
 
 
@@ -101,7 +101,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         r = False
         if response is not None:
             re = response.strip()
-            #strip off first three command characters
+            # strip off first three command characters
             if re[:3] == 'R07':
                 r = True
 
@@ -144,10 +144,10 @@ class DPi32TemperatureMonitor(ISeriesDevice):
     def set_busformat(self):
         commandindex = '1F'
 
-        sep = 0 #space
-        flow = 0 #continoues
-        mode = 0 #rs232
-        echo = 1 #echo
+        sep = 0  # space
+        flow = 0  # continoues
+        mode = 0  # rs232
+        echo = 1  # echo
         linefeed = 1
         modbus = 0
 
@@ -168,7 +168,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
         input_class = '00'
 
-        #bits 7,6 meaningless for thermocouple 
+        # bits 7,6 meaningless for thermocouple
         bits = '00{}{}'.format(make_bitarray(TC_KEYS.index(v),
                                                   width=4),
                                 input_class
@@ -189,7 +189,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         re = self.repeat_command(cmd)
         if re is not None:
             re = re.strip()
-            #strip off first three command characters
+            # strip off first three command characters
             # compare with sent command for error checking
             if re[:3] == 'R07':
                 re = make_bitarray(int(re[3:]))
@@ -222,7 +222,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
 #    def current_state_view(self):
 #        v = super(DPi32TemperatureMonitor, self).current_state_view()
-#    
+#
 #        v.content.content.append(VGroup(Item('graph', show_label=False, style='custom'),
 #                                        Item('scan_func', label='Function', style='readonly'),
 #                                        Item('scan_period', label='Period ({})'.format(self.scan_units), style='readonly'),

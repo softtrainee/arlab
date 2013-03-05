@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Bool, Property
-#from traitsui.api import View, Item, Group, HGroup, VGroup
+# from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 import time
@@ -47,7 +47,7 @@ class IonGauge(BaseMKSGauge):
 #        '''
 #        '''
 #        super(IonGauge, self).initialize(*args, **kw)
-        #check filament status
+        # check filament status
 #        filon = self.get_transducer_filament_state()
 #        i = 0
 
@@ -71,7 +71,7 @@ class IonGauge(BaseMKSGauge):
 #
 #        self.state = filon
 
-    #@on_trait_change('degas')
+    # @on_trait_change('degas')
 
     def set_transducer_degas(self):
         '''
@@ -83,13 +83,13 @@ class IonGauge(BaseMKSGauge):
         import threading
         def degas_shutdown():
             start_time = time.time()
-            #30 min
+            # 30 min
             timeout = 30 * 60.0
-            #time.sleep(timeout)
+            # time.sleep(timeout)
 
-            #probably should have some loop to check state 
-            #instead of just sleeping
-            #interm just check _degas 
+            # probably should have some loop to check state
+            # instead of just sleeping
+            # interm just check _degas
             while self._degas:
                 time.sleep(1)
                 elapse_time = (time.time() - start_time)
@@ -121,7 +121,7 @@ class IonGauge(BaseMKSGauge):
             @type of: C{str}
             @param of:
         '''
-        #turn filament on
+        # turn filament on
         if onoff:
             self.delay_after_power_on = True
 

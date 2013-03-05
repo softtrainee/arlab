@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,14 +20,14 @@
 from traits.api import Float, Tuple
 #============= standard library imports ========================
 #============= local library imports  ==========================
-#from src.config_loadable import ConfigLoadable
+# from src.config_loadable import ConfigLoadable
 from src.hardware.axis import Axis
 class NewportGroup(Axis):
-    #acceleration = Float
-    #deceleration = Float
+    # acceleration = Float
+    # deceleration = Float
     emergency_deceleration = None
     jerk = Float
-    #velocity = Float
+    # velocity = Float
     name = 'GroupedAxes'
     machine_velocity = Float
     machine_acceleration = Float
@@ -40,7 +40,7 @@ class NewportGroup(Axis):
 
     MAPPING = dict(acceleration='HA',
                  deceleration='HD',
-                 #emergency_deceleration = 'HE',
+                 # emergency_deceleration = 'HE',
                  jerk='HJ',
                  velocity='HV',
                  axes='HN'
@@ -70,7 +70,7 @@ class NewportGroup(Axis):
         config = self.get_configuration(path)
         for attr in ['acceleration',
                      'deceleration',
-                     #'emergency_deceleration',
+                     # 'emergency_deceleration',
                      'jerk',
                      'velocity',
                      ]:

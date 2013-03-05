@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ from src.canvas.canvas3D.loaders.scene_parser import SceneParser
 import os
 import ConfigParser
 #=============local library imports  ==========================
-#from src.canvas.canvas3D.elements.components import *
+# from src.canvas.canvas3D.elements.components import *
 from src.canvas.canvas3D.elements.components import Bone, Origin, PipetteValve, Shaft, \
     TextPanel, Valve, Bellows, SixWayCross, Turbo, Elbow, Flex, Sector, Quadrupole, Grid
 from src.canvas.canvas3D.elements.node import Node
@@ -405,10 +405,10 @@ class SceneLoader(object):
 
 #================ EOF ==============================================
 #        for name in rows:
-##            name, _ending = r.split('.')
-#            
+# #            name, _ending = r.split('.')
+#
 #            loader = getattr(self, 'load_{}'.format(name))
-##            loader = getattr(self, 'load_{}'.format(name[:-2]))
+# #            loader = getattr(self, 'load_{}'.format(name[:-2]))
 #            #loader(os.path.join(paths.canvas3D_dir, r), sg, vm, canvas)
 #            loader(ip, sg, vm, canvas)
 #
@@ -442,7 +442,7 @@ class SceneLoader(object):
 #                      (fx, fy, fz), (fx, fy, fz)
 #                      ]
 #
-##                           ]
+# #                           ]
 #
 #    def load_connections(self, path, sg, vm, canvas):
 #        '''
@@ -456,13 +456,13 @@ class SceneLoader(object):
 #            for c in connections:
 #                v.connections.append(sg.get_object_by_name(c))
 #
-##        for args in connections:
-##            v = sg.get_object_by_name(args[0])
-##            for c in args[1:]:
-##                p = sg.get_object_by_name(c)
-##
-##                v.connections.append(p)
-##                
+# #        for args in connections:
+# #            v = sg.get_object_by_name(args[0])
+# #            for c in args[1:]:
+# #                p = sg.get_object_by_name(c)
+# #
+# #                v.connections.append(p)
+# #
 
 
 #
@@ -505,15 +505,15 @@ class SceneLoader(object):
 #            factory = globals()[c]
 #
 #            kw = {}
-##            if config.has_option(section,'always_on'):
-##                kw['always_on']=config.getboolean(section,'always_on')
+# #            if config.has_option(section,'always_on'):
+# #                kw['always_on']=config.getboolean(section,'always_on')
 #
 #            if config.has_option(section, 'radius'):
 #                kw['radius'] = config.getfloat(section, 'radius')
 #            self.part_factory(factory, name, translate, parent, sg, dependencies=dep, **kw)
 
 #    def load_sections(self,sg,vm):
-#        
+#
 #        path=os.path.join(globalv.extraction_line_dir,'section_definitions.cfg')
 #        config=get_config(path)
 #
@@ -527,18 +527,18 @@ class SceneLoader(object):
 #            #s.name=config.get(section,'name')
 #            s.components=[c for c in config.get(section,'components').split(',')]
 #            for o in config.options(section):
-#                
+#
 #                if 'test' in o:
 #                    t=config.get(section, o)
 #                    vname=t.split('-')[0]
 #                    s.add_test(t)
-#                    
+#
 #                    v=sg.get_object_by_name(vname)
 #                    v.add_section(s)
-#        
+#
 
 
-#def _generic_(self, factory, sg, args):
+# def _generic_(self, factory, sg, args):
 #        '''
 #            @type factory: C{str}
 #            @param factory:
@@ -554,7 +554,7 @@ class SceneLoader(object):
 #        g.name = args[0]
 #        g.translate = [float(v) for v in args[1:4]]
 #
-#        
+#
 #        v = sg.get_object_by_name(args[4])
 #        v.add(g)
 #        return g
@@ -617,8 +617,8 @@ class SceneLoader(object):
 #
 #        valvelist = [('bone', valves[:j]), ('minibone', valves[j + 1:])]
 #
-#        
-#        
+#
+#
 #        for b, valves in valvelist:
 #            bone = sg.get_object_by_name(b)
 #            for vattr in valves:

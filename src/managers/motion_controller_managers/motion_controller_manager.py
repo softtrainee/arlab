@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,15 +24,15 @@ from traitsui.api import View, Item, HGroup, spring, \
 
 #=============local library imports  ==========================
 from src.managers.manager import Manager
-#from src.hardware.newport.newport_motion_controller import NewportMotionController
+# from src.hardware.newport.newport_motion_controller import NewportMotionController
 from src.hardware.motion_controller import MotionController
 from src.paths import paths
 from src.helpers.filetools import parse_file
 
-#class MotionControllerManagerHandler(Handler):
+# class MotionControllerManagerHandler(Handler):
 #    def closed(self, info, is_ok):
 #        '''
-#           
+#
 #        '''
 #        info.object.motion_controller.save_parameters()
 #        Handler.closed(self, info, is_ok)
@@ -61,11 +61,11 @@ class MotionControllerManager(Manager):
 
     def _load_button_fired(self):
         path = self.open_file_dialog(default_directory=paths.device_dir)
-        #path = os.path.join(root_dir, 'zobs', 'NewStage-Axis-1.txt')
+        # path = os.path.join(root_dir, 'zobs', 'NewStage-Axis-1.txt')
         if path is not None:
 
 
-            #sniff the file to get the axis
+            # sniff the file to get the axis
             lines = parse_file(path)
 
             aid = lines[0][0]
@@ -73,7 +73,7 @@ class MotionControllerManager(Manager):
                 ax = self._get_axis_by_id(aid)
                 func = ax.load_parameters_from_file
             except ValueError:
-                #this is a txt file not a cfg 
+                # this is a txt file not a cfg
                 ax = self._get_selected()
                 if ax is not None:
                     func = ax.load
@@ -81,8 +81,8 @@ class MotionControllerManager(Manager):
 
             if ax is not None:
                 func(path)
-                #ax.load_parameters_from_file(path)
-                #ax.load_parameters_from_file(path)
+                # ax.load_parameters_from_file(path)
+                # ax.load_parameters_from_file(path)
 
     def _get_axis_by_id(self, aid):
         return next((a for a in self._axes.itervalues() if a.id == int(aid)), None)
@@ -110,10 +110,10 @@ class MotionControllerManager(Manager):
 #    def _apply_all_fired(self):
 #        '''
 #        '''
-##        for a in self.axes:
-##            a.upload_parameters_to_device()
+# #        for a in self.axes:
+# #            a.upload_parameters_to_device()
 #        if sele
-##        self.motion_controller.save()
+# #        self.motion_controller.save()
     def _get_selected(self):
         ax = self.selected
         if ax is None:
@@ -147,9 +147,9 @@ class MotionControllerManager(Manager):
                     HGroup(spring, Item('load_button'), Item('read_button'), Item('apply_button'), show_labels=False,
 #                           visible_when='view_style=="full_view"'
                            ),
-                #resizable=True,
-                #handler=self.handler_klass, #MotionControllerManagerHandler,
-                #title='Configure Motion Controller'
+                # resizable=True,
+                # handler=self.handler_klass, #MotionControllerManagerHandler,
+                # title='Configure Motion Controller'
                 )
         return v
 
@@ -183,14 +183,14 @@ class MotionControllerManager(Manager):
                         )
                         ),
                     HGroup(spring, Item('load_button'),
-#                           Item('restore'), 
+#                           Item('restore'),
                            Item('print_param_table'),
                            Item('apply_button'),
                            show_labels=False,
-                           #visible_when='view_style=="full_view"'
+                           # visible_when='view_style=="full_view"'
                            ),
                 resizable=True,
-                handler=self.handler_klass, #MotionControllerManagerHandler,
+                handler=self.handler_klass,  # MotionControllerManagerHandler,
                 title='Configure Motion Controller'
                 )
         return view

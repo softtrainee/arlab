@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -119,7 +119,7 @@ class VideoClient(HasTraits):
 #            t = time.time()
 #            print t
 #            try:
-#                
+#
 #            except:
 #                pass
 
@@ -129,9 +129,9 @@ class VideoClient(HasTraits):
 #            print d
 #            try:
 #                d = self._sock.recv(self.frame_size)
-##                print d
+# #                print d
 #                if d:
-##                    self._sock.close()
+# #                    self._sock.close()
 #            except Exception, e:
 #                pass
 #                self._sock.close()
@@ -146,10 +146,10 @@ class VideoClient(HasTraits):
 #                        d = s.recv(self.frame_size)
 #                    except:
 #                        i += 1
-##                d = self.unpickle(data)
+# #                d = self.unpickle(data)
 #                j = 0
 #                while 1 and d:
-##                    print img
+# #                    print img
 #                    try:
 #                        img = fromstring(d)
 #                        break
@@ -159,11 +159,11 @@ class VideoClient(HasTraits):
 #                    j += 1
 #
 #
-##                    d = self.unpickle(data)
-##                    if d is not None:
-##                        break
-##                    else:
-##                        data += s.recv(self.frame_size)
+# #                    d = self.unpickle(data)
+# #                    if d is not None:
+# #                        break
+# #                    else:
+# #                        data += s.recv(self.frame_size)
 #                print 'got ', len(d) if d else 0
 #                if img is not None:
 #                    self.image.load(img, nchannels=1)

@@ -154,15 +154,15 @@ def add_license(p, license):
 
     with open(p, 'w') as f:
 
-        #if the first 2 chars of the first line are a shebang
-        #setting an interperter directive
-        #skip
+        # if the first 2 chars of the first line are a shebang
+        # setting an interperter directive
+        # skip
         if lines:
             if lines[0][:2] == '#!':
                 f.write(lines[0])
                 lines = lines[1:]
 
-        #if already has this license clause dont add to file
+        # if already has this license clause dont add to file
         txt = ''.join(lines)
         render_red('checking {}'.format(p))
         if not license in txt:

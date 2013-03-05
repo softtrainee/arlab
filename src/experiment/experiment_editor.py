@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,8 +35,8 @@ class ExperimentEditor(ExperimentManager):
     def load_experiment_set(self, saveable=False, *args, **kw):
         r = super(ExperimentEditor, self).load_experiment_set(*args, **kw)
 
-        #loading the experiment set will set dirty =True 
-        #change back to false. not really dirty
+        # loading the experiment set will set dirty =True
+        # change back to false. not really dirty
 #        if r:
 #            self.experiment_set.dirty = False
         self.save_enabled = saveable
@@ -102,7 +102,7 @@ class ExperimentEditor(ExperimentManager):
 #                                 enabled_when='dirty'),
 #                          Action(name='Save As',
 #                                 action='save_as',
-##                                 enabled_when='dirty_save_as'
+# #                                 enabled_when='dirty_save_as'
 #                                 ),
 
 #                          ],

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +64,7 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
 #        return dev
 
     def Open(self, manager, vname, sender_address, *args):
-        #intercept flags
+        # intercept flags
         if vname.endswith('Flag'):
             r = self.Set(manager, vname, 1, sender_address, *args)
             return 'OK' if r else 'Error setting flag'
@@ -84,7 +84,7 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         return result
 
     def Close(self, manager, vname, sender_address, *args):
-        #intercept flags
+        # intercept flags
         if vname.endswith('Flag'):
             r = self.Set(manager, vname, 0, sender_address, *args)
             return 'OK' if r else 'Error clearing flag'
@@ -241,8 +241,8 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
     def PychronScript(self, manager, name, *args):
         result = manager.execute_pyscript(name)
 
-        #result should be a unique key that mass spec can use to identify this
-        #script
+        # result should be a unique key that mass spec can use to identify this
+        # script
 
         return result
 

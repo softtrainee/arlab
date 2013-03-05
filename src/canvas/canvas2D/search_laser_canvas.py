@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,7 +78,7 @@ class SearchLaserCanvas(LaserTrayCanvas):
             @type **kw: C{str}
             @param **kw:
         '''
-        #super(LaserTrayCanvas, self)._draw(gc, *args, **kw)
+        # super(LaserTrayCanvas, self)._draw(gc, *args, **kw)
         LaserTrayCanvas._draw(self, gc, *args, **kw)
         gc.clip_to_rect(self.x, self.y, self.width, self.height)
         self._draw_map(gc)
@@ -86,7 +86,7 @@ class SearchLaserCanvas(LaserTrayCanvas):
         self._draw_inspectors(gc)
 
 
-        #self._draw_scale(gc)
+        # self._draw_scale(gc)
 
     def _draw_triangles(self, gc):
         '''

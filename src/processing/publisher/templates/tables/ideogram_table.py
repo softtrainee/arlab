@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -203,19 +203,19 @@ class IdeogramTable(PDFTable):
     def _get_style(self):
         style = TableStyle()
         if self.add_title:
-            #(col, row)
-            #make first row span entire table
+            # (col, row)
+            # make first row span entire table
             style.add('SPAN', (0, 0), (-1, 0))
             style.add('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.black)
 
-            style.add('SPAN', (0, 1), (4, 1)) #sample
-            style.add('SPAN', (4, 1), (6, 1)) #labnumber
+            style.add('SPAN', (0, 1), (4, 1))  # sample
+            style.add('SPAN', (4, 1), (6, 1))  # labnumber
             style.add('LINEBELOW', (0, 1), (5, 1), 1.5, colors.black)
 
-            style.add('SPAN', (6, 1), (-1, 1)) #j
+            style.add('SPAN', (6, 1), (-1, 1))  # j
 
-            style.add('SPAN', (0, 2), (4, 2)) #material
-            style.add('SPAN', (4, 2), (6, 2)) #igsn
+            style.add('SPAN', (0, 2), (4, 2))  # material
+            style.add('SPAN', (4, 2), (6, 2))  # igsn
 
             style.add('LINEABOVE', (0, 3), (-1, 3), 1.5, colors.black)
             style.add('LINEBELOW', (0, 4), (-1, 4), 1.5, colors.black)
@@ -251,8 +251,8 @@ class IdeogramTable(PDFTable):
 #        ta._argW[12] = 0.4 * inch #36
 #        ta._argW[13] = 0.6 * inch #36err
 
-        ta._argW[14] = 0.5 * inch #rad40
-        ta._argW[15] = 0.8 * inch #rad40/k39
+        ta._argW[14] = 0.5 * inch  # rad40
+        ta._argW[15] = 0.8 * inch  # rad40/k39
 
 
 if __name__ == '__main__':

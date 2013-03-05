@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,9 +92,9 @@ class AutomatedRunAdapter(TabularAdapter):
         if not item.executable:
             color = 'red'
         if item.skip:
-            color = '#33CCFF' #light blue
+            color = '#33CCFF'  # light blue
         elif item.state == 'success':
-            color = '#66FF33' #light green
+            color = '#66FF33'  # light green
         return color
 
     def _columns_default(self):
@@ -173,7 +173,7 @@ class AutomatedRunAdapter(TabularAdapter):
             elif self.item.state == 'truncate':
                 im = 'blue'
 
-            #get the source path
+            # get the source path
             root = os.path.split(__file__)[0]
             while not root.endswith('src'):
                 root = os.path.split(root)[0]
@@ -245,7 +245,7 @@ class UVAutomatedRunAdapter(AutomatedRunAdapter):
 #    @get_name
 #    def _get_post_equilibration_script_text(self, trait, item):
 #        if self.item.post_equilibration_script:
-##            return self.item.post_equilibration_script.name
+# #            return self.item.post_equilibration_script.name
 #            return self.item.post_equilibration_script.name
 #    def _set_extract_value_text(self, value):
 #        self._set_float('extract_value', value)

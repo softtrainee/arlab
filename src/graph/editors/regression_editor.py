@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -109,7 +109,7 @@ class RegressionEditor(HasTraits):
         coeffs = rdict['coefficients']
         coeff_errs = rdict['coeff_errors']
 
-        #stats = rdict['statistics']
+        # stats = rdict['statistics']
 
         exp_fmt = '%0.8G'
         alpha = 'abcd'
@@ -120,7 +120,7 @@ class RegressionEditor(HasTraits):
             strfunc = self.fit_type
             strcoeffs = exp_fmt % coeffs[0]
             strcoeff_errs = '%s (%0.3f%%)' % (exp_fmt % coeff_errs[0], float(coeff_errs[0]) / float(coeffs[0]) * 100)
-            #intercept = 'Intercept %0.5e +/- %0.5e (%0.3f%%)' % (coeffs[0], coeff_errs[0], float(coeff_errs[0]) / float(coeffs[0]) * 100)
+            # intercept = 'Intercept %0.5e +/- %0.5e (%0.3f%%)' % (coeffs[0], coeff_errs[0], float(coeff_errs[0]) / float(coeffs[0]) * 100)
 
             strcoeffs_item = StatsTableItem(name='Average',
                                         value=strcoeffs)
@@ -131,8 +131,8 @@ class RegressionEditor(HasTraits):
             intercept_err = exp_fmt % coeff_errs[0]
             intercept_err_percent = exp_fmt % (abs(coeff_errs[0] / coeffs[0]) * 100)
 
-            #self.intercept = coeffs[0]
-            #intercept =
+            # self.intercept = coeffs[0]
+            # intercept =
 
         else:
             strcoeffs = '  '.join(['%s = %s, ' % (alpha[i], exp_fmt % arg) for i, arg in enumerate(coeffs)]).rstrip()[:-1]
@@ -159,7 +159,7 @@ class RegressionEditor(HasTraits):
                 icoef = float(coeffs[0])
                 icoef_err = float(coeff_errs[0])
 
-            #intercept = '%0.8G +/- %0.8G (%0.3f%%)' % (icoef, icoef_err, abs(icoef_err / icoef * 100))
+            # intercept = '%0.8G +/- %0.8G (%0.3f%%)' % (icoef, icoef_err, abs(icoef_err / icoef * 100))
 
             intercept = exp_fmt % icoef
             intercept_err = exp_fmt % icoef_err
@@ -246,7 +246,7 @@ class RegressionEditor(HasTraits):
                            )
                     )
 #========================= EOF =========================
-#class RegressionGroupEditor(HasTraits):
+# class RegressionGroupEditor(HasTraits):
 #    '''
 #        G{classtree}
 #    '''
@@ -257,46 +257,46 @@ class RegressionEditor(HasTraits):
 #
 #    regression_editors = List()
 #
-##    def __init__(self, *args, **kw):
-##        '''
-##        '''
-##        super(RegressionGroupEditor, self).__init__(*args, **kw)
+# #    def __init__(self, *args, **kw):
+# #        '''
+# #        '''
+# #        super(RegressionGroupEditor, self).__init__(*args, **kw)
 #
 #  #      self._build_()
 #
-##        self.on_trait_change(self.graph._metadata_changed,
-##                             'update_flag')
-##        
+# #        self.on_trait_change(self.graph._metadata_changed,
+# #                             'update_flag')
+# #
 #
 #
-##    def _anytrait_changed(self, name, old, new):
-##        '''
-##            @_type name: C{str}
-##            @param name:
-##
-##            @_type old: C{str}
-##            @param old:
-##
-##            @_type new: C{str}
-##            @param new:
-##        '''
-##        if '_type' in name:
-##            plotid = int(name[-1:])
-##
-##            self.graph.fit_types[plotid] = new
-##            self.graph.selected_plotid = plotid
-##
-##            self.update_flag = not self.update_flag
+# #    def _anytrait_changed(self, name, old, new):
+# #        '''
+# #            @_type name: C{str}
+# #            @param name:
+# #
+# #            @_type old: C{str}
+# #            @param old:
+# #
+# #            @_type new: C{str}
+# #            @param new:
+# #        '''
+# #        if '_type' in name:
+# #            plotid = int(name[-1:])
+# #
+# #            self.graph.fit_types[plotid] = new
+# #            self.graph.selected_plotid = plotid
+# #
+# #            self.update_flag = not self.update_flag
 #
-##    def _build_(self):
-##        '''
-##        '''
-##        self.regression_editors=[]
-##        n = self.graph.get_num_plots()
-##        for i in range(n):
-##            #self.add_trait('_type%i' % i, 'linear')
-##            self.regression_editors.append(RegressionEditor(id=i,graph=self.graph))
-##            
+# #    def _build_(self):
+# #        '''
+# #        '''
+# #        self.regression_editors=[]
+# #        n = self.graph.get_num_plots()
+# #        for i in range(n):
+# #            #self.add_trait('_type%i' % i, 'linear')
+# #            self.regression_editors.append(RegressionEditor(id=i,graph=self.graph))
+# #
 #    def add_editor(self):
 #        ed = self.regression_editors
 #        id = len(ed)
@@ -324,26 +324,26 @@ class RegressionEditor(HasTraits):
 #            rstats.stats[0] = stats
 #        else:
 #            rstats.stats.append(stats)
-##        
-##    def _regression_statistics_group(self):
-##        return VGroup(Item('regression_stats',style='custom'))
+# #
+# #    def _regression_statistics_group(self):
+# #        return VGroup(Item('regression_stats',style='custom'))
 #
-##    def traits_view(self):
-##        '''
-##        '''
-##        content = []
-##
-##        n = self.graph.get_num_plots()
-##        if n == 1:
-##            g = Group(Item('type0', editor = EnumEditor(values = self.type),
-##                         show_label = False))
-##            content.append(g)
-##        else:
-##            for i in range(n):
-##                id = (n - i - 1)
-##                g = Group(Item('type%i' % id, editor = EnumEditor(values = self.type),
-##                             show_label = False),
-##                        label = 'Fit %i' % id)
-##                content.append(g)
-##
-##        return View(Group(content = content))
+# #    def traits_view(self):
+# #        '''
+# #        '''
+# #        content = []
+# #
+# #        n = self.graph.get_num_plots()
+# #        if n == 1:
+# #            g = Group(Item('type0', editor = EnumEditor(values = self.type),
+# #                         show_label = False))
+# #            content.append(g)
+# #        else:
+# #            for i in range(n):
+# #                id = (n - i - 1)
+# #                g = Group(Item('type%i' % id, editor = EnumEditor(values = self.type),
+# #                             show_label = False),
+# #                        label = 'Fit %i' % id)
+# #                content.append(g)
+# #
+# #        return View(Group(content = content))

@@ -1,13 +1,13 @@
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -63,7 +63,7 @@ class BakeoutParameters(HasTraits):
         return '\n'.join((s0, s1, s2, self.script_text))
 
 
-#class BakeoutGraphViewer(Loggable):
+# class BakeoutGraphViewer(Loggable):
 class BakeoutGraphViewer(Viewable):
     graph = Instance(Graph)
     bakeouts = List
@@ -267,8 +267,8 @@ class BakeoutGraphViewer(Viewable):
                                         **kw)
 
         graph.clear()
-        #kw['data_limit'] = self.scan_window * 60 / self.update_interval
-        #kw['scan_delay'] = self.update_interval
+        # kw['data_limit'] = self.scan_window * 60 / self.update_interval
+        # kw['scan_delay'] = self.update_interval
 
         self.plotids = [0, 1, 2]
 
@@ -394,22 +394,22 @@ class BakeoutGraphViewer(Viewable):
 #                                                           page_name='.name'
 #
 #                                                           )),
-##                                layout='tabbed'
+# #                                layout='tabbed'
 #                              )
 #        graph_grp = Group(Item('graph', style='custom', show_label=False),
-##                       layout='tabbed'
+# #                       layout='tabbed'
 #                       )
 #        grp = Group(graph_grp, bakeout_grp, layout='tabbed')
-##        v = View(    
-##                 graph_grp,
-##                 bakeout_grp,
-##                 resizable=True,
-##                 title=self.title,
-##                 x=self.window_x,
-##                 y=self.window_y,
-##                 width=self.window_width,
-##                 height=self.window_height
-##                 )
+# #        v = View(
+# #                 graph_grp,
+# #                 bakeout_grp,
+# #                 resizable=True,
+# #                 title=self.title,
+# #                 x=self.window_x,
+# #                 y=self.window_y,
+# #                 width=self.window_width,
+# #                 height=self.window_height
+# #                 )
 #        v = self.view_factory(grp)
 #        return v
 

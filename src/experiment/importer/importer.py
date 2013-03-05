@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdap
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.displays.rich_text_display import RichTextDisplay
 from src.managers.data_managers.h5_data_manager import H5DataManager
-#from src.repo.repository import Repository
+# from src.repo.repository import Repository
 from src.managers.data_managers.table_descriptions import TimeSeriesTableDescription
 from src.database.orms.massspec_orm import IrradiationLevelTable, \
     IrradiationChronologyTable, IrradiationPositionTable, AnalysesTable, \
@@ -38,10 +38,10 @@ from src.paths import paths
 from src.processing.signal import Signal
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable
 from sqlalchemy.sql.expression import and_
-#from src.helpers.datetime_tools import get_datetime
-#from datetime import datetime
+# from src.helpers.datetime_tools import get_datetime
+# from datetime import datetime
 
-#from src.database.orms.isotope_orm import meas_AnalysisTable
+# from src.database.orms.isotope_orm import meas_AnalysisTable
 
 class Importer(Loggable):
     username = Str('root')
@@ -83,7 +83,7 @@ class Importer(Loggable):
 
         frame.createGroup('/', 'signals')
         frame.createGroup('/', 'baselines')
-        #make new h5 file
+        # make new h5 file
 
         def write_file(di, data, fit, grp, k):
 #            print di, fit, grp, k
@@ -199,7 +199,7 @@ class MassSpecImporter(Importer):
 #            import_monitors = False
             import_monitors = True
             if import_monitors:
-                #get all the monitors and add
+                # get all the monitors and add
                 monitors = self._get_monitors(msrecord)
                 if monitors:
                     for mi in monitors:
@@ -255,11 +255,11 @@ class MassSpecImporter(Importer):
         ms = msrecord.login_session.machine
         if ms:
             ms = ms.Label.lower()
-        #add measurement
+        # add measurement
         dest.add_measurement(dbanal, 'unknown', ms, 'MassSpec RunScript')
 
         if self._dbimport is None:
-            #add import 
+            # add import
             dbimp = dest.add_import(user=self.username,
                                     source=self.source.name,
                                     source_host=self.source.host
@@ -289,7 +289,7 @@ class MassSpecImporter(Importer):
 
         selhist.selected_blanks = dbhist
         for iso in isotopes:
-            #use the last result
+            # use the last result
             result = iso.results[-1]
             bk, bk_er = result.Bkgd, result.BkgdEr
             dest.add_blanks(dbhist, user_value=bk, user_error=bk_er,
@@ -319,14 +319,14 @@ class MassSpecImporter(Importer):
 #            dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
             dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
 
-            #need to get xs from PeakTimeBlob
+            # need to get xs from PeakTimeBlob
             blob = pt.PeakTimeBlob
             _ys, xs = zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
-            #get PeakNeverBslnCorBlob
+            # get PeakNeverBslnCorBlob
             blob = pt.PeakNeverBslnCorBlob
-            #this blob is different 
-            #it is a flat list of ys
+            # this blob is different
+            # it is a flat list of ys
             ys = [struct.unpack('>f', blob[i:i + 4])[0] for i in xrange(0, len(blob), 4)]
             fit = iso.results[-1].fit.Label
 
@@ -353,7 +353,7 @@ class MassSpecImporter(Importer):
 
             for k, (xi, yi), fi in (('signal', (xs, ys), fit), ('baseline', (bxs, bys), bfit)):
                 data = ''.join([struct.pack('>ff', x, y) for x, y in zip(xi, yi)])
-                #add isotope
+                # add isotope
 #                print iso.Label
                 smw = self.source.get_molecular_weight(iso.Label)
 #                print iso.Label, smw
@@ -366,10 +366,10 @@ class MassSpecImporter(Importer):
 
                 dbiso = dest.add_isotope(analysis, molweight, det, kind=k)
 
-                #add signal data
+                # add signal data
                 dest.add_signal(dbiso, data)
 
-                #add fit
+                # add fit
                 if fi == 'Average Y':
                     fi = 'average_SEM'
 
@@ -378,14 +378,14 @@ class MassSpecImporter(Importer):
                              filter_outlier_iterations=1, filter_outlier_std_devs=2
                              )
 
-                #do pychron fit of the data
+                # do pychron fit of the data
                 sig = Signal(xs=xi, ys=yi, fit=fi,
                              filter_outliers=True,
                              filter_outlier_iterations=1,
                              filter_outlier_std_devs=2)
 
 #                print sig.value
-                #add isotope result
+                # add isotope result
                 try:
                     s, e = sig.value, sig.error
                 except TypeError:
@@ -430,7 +430,7 @@ class MassSpecImporter(Importer):
 #            print q.all()
 
     def _get_irradiation_level(self, msrecord, name=None, level=None):
-        #get irradiation level
+        # get irradiation level
         irrad_position = msrecord.irradiation_position
         if name is None:
             name = irrad_position.IrradiationLevel[:-1]
@@ -451,7 +451,7 @@ class MassSpecImporter(Importer):
     def _import_irradiation(self, msrecord, dblabnumber):
 #        src = self.source
         dest = self.destination
-        #get irradiation position
+        # get irradiation position
         irrad_position = msrecord.irradiation_position
 #
 #        #get irradiation level
@@ -461,10 +461,10 @@ class MassSpecImporter(Importer):
         irrad_level = self._get_irradiation_level(msrecord, name=name, level=level)
         if irrad_level:
 
-            #get irradiation holder
+            # get irradiation holder
             holder = irrad_level.SampleHolder
 
-            #get the production ratio
+            # get the production ratio
             pri = irrad_level.production
             prname = pri.Label
             dbpr = dest.get_irradiation_production(prname)
@@ -488,11 +488,11 @@ class MassSpecImporter(Importer):
                 self.info('adding production ratio {}'.format(prname))
                 dbpr = dest.add_irradiation_production(**kw)
 
-            #get irradiation
+            # get irradiation
             dbirrad = dest.get_irradiation(name)
             if dbirrad is None:
                 sess = self.source.get_session()
-                #get the chronology
+                # get the chronology
                 q = sess.query(IrradiationChronologyTable)
                 q = q.filter(IrradiationChronologyTable.IrradBaseID == name)
                 q = q.order_by(IrradiationChronologyTable.EndTime.asc())
@@ -504,22 +504,22 @@ class MassSpecImporter(Importer):
                 dbchron = dest.add_irradiation_chronology(chronblob)
                 dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
 
-            #get irradiation level
+            # get irradiation level
             dblevel = next((li.name for li in dbirrad.levels if li.name == level), None)
             if not dblevel:
                 self.info('adding irradiation level {}'.format(level))
                 dblevel = dest.add_irradiation_level(level, dbirrad, holder)
 
-            #add position
+            # add position
             dbpos = dest.add_irradiation_position(irrad_position.HoleNumber, dblabnumber, dbirrad, dblevel)
 
-            #set the flux
+            # set the flux
             dbhist = dest.add_flux_history(dbpos)
             dbflux = dest.add_flux(irrad_position.J, irrad_position.JEr)
             dbflux.history = dbhist
             dblabnumber.selected_flux_history = dbhist
 
-            #add the sample
+            # add the sample
             sam = irrad_position.sample
             dbproj = dest.add_project('{}-MassSpecImport'.format(sam.project.Project))
 #                proj = sam.project
@@ -550,7 +550,7 @@ class MassSpecImporter(Importer):
 
 
     def _gather_data_by_labnumber(self, sess, labnumber):
-        #get by labnumber
+        # get by labnumber
         def get_analyses(ip):
             q = sess.query(IrradiationPositionTable)
             q = q.filter(IrradiationPositionTable.IrradPosition == ip)
@@ -564,7 +564,7 @@ class MassSpecImporter(Importer):
                     for a in get_analyses(ip)]
 
     def _gather_data_by_project(self, sess, project):
-        #get by project
+        # get by project
         def get_analyses(ni):
             q = sess.query(IrradiationPositionTable)
             q = q.join(SampleTable)
@@ -593,7 +593,7 @@ class MassSpecImporter(Importer):
             d = '10/31/2012'
             e = datetime.strptime(d, fmt)
         '''
-        #get by range
+        # get by range
         q = sess.query(AnalysesTable)
         q = q.filter(and_(AnalysesTable.RunDateTime >= start, AnalysesTable.RunDateTime < end))
         return q.all()

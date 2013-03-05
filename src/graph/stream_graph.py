@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,8 +44,8 @@ class StreamGraph(Graph):
 #
 #    track_x_max = Bool(True)
 #    track_x_min = Bool(True)
-#    
-#    
+#
+#
 #    force_track_x_flag = False
 
     track_y_max = None
@@ -82,11 +82,11 @@ class StreamGraph(Graph):
         self.cur_min.append(Inf)
         self.cur_max.append(-Inf)
 
-        #self.track_x_max.append(True)
-        #self.track_x_min.append(True)
+        # self.track_x_max.append(True)
+        # self.track_x_min.append(True)
         self.track_y_max.append(True)
         self.track_y_min.append(True)
-        #self.force_track_x_flag.append(False)
+        # self.force_track_x_flag.append(False)
 
         args = super(StreamGraph, self).new_plot(**kw)
 
@@ -146,7 +146,7 @@ class StreamGraph(Graph):
         if track_x:
             dl = self.data_limits[plotid]
             mi = max(1, x - dl * self.scan_delays[plotid])
-            self.set_x_limits(#max=x,
+            self.set_x_limits(# max=x,
                               min=mi,
                               plotid=plotid,
     #                          pad=1
@@ -176,7 +176,7 @@ class StreamGraph(Graph):
             nx = x
 
         ny = float(y)
-        #update raw data
+        # update raw data
 #        rx = self.raw_x[plotid][series]
 #        ry = self.raw_y[plotid][series]
 #
@@ -280,12 +280,12 @@ class StreamStackedGraph(StreamGraph, StackedGraph):
 #        '''
 #
 #        super(StreamGraph, self).set_x_limits(*args, **kw)
-##        pid = kw['plotid']
-##        args = self._get_limits('index', pid)
+# #        pid = kw['plotid']
+# #        args = self._get_limits('index', pid)
 #
-##        if args is not None:
-##
-##            self.data_limits[pid] = max(args[0], args[1])
+# #        if args is not None:
+# #
+# #            self.data_limits[pid] = max(args[0], args[1])
 
 
 #    def record(self, val, series = 0, plotid = 0):

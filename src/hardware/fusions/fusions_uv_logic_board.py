@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,17 @@
 
 
 #============= enthought library imports =======================
-#from traits.api import Instance, DelegatesTo
+# from traits.api import Instance, DelegatesTo
 #============= standard library imports ========================
-#import os
+# import os
 #============= local library imports  ==========================
 from fusions_logic_board import FusionsLogicBoard
-#from src.hardware.kerr.kerr_motor import KerrMotor
+# from src.hardware.kerr.kerr_motor import KerrMotor
 
 class FusionsUVLogicBoard(FusionsLogicBoard):
     '''
     '''
-    _test_comms = False #dont test comms on startup. UV doesn't really have logic board only kerr motor controllers
+    _test_comms = False  # dont test comms on startup. UV doesn't really have logic board only kerr motor controllers
     def _enable_laser(self):
         '''
         '''
@@ -46,7 +46,7 @@ class FusionsUVLogicBoard(FusionsLogicBoard):
 #    def load_additional_args(self, config):
 #        '''
 #        '''
-##        super(FusionsUVLogicBoard, self).load_additional_args(config)
+# #        super(FusionsUVLogicBoard, self).load_additional_args(config)
 #        FusionsLogicBoard.load_additional_args(self, config)
 #        a = self.config_get(config, 'Motors', 'attenuator')
 #        if a is not None:

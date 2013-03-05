@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@ from traits.api import Property, implements, DelegatesTo, Instance
 
 #=============standard library imports ========================
 #=============local library imports  ==========================
-#from src.config_loadable import ConfigLoadable
+# from src.config_loadable import ConfigLoadable
 from src.hardware.core.i_core_device import ICoreDevice
-#from viewable_device import ViewableDevice
+# from viewable_device import ViewableDevice
 from src.has_communicator import HasCommunicator
 from src.rpc.rpcable import RPCable
 from src.hardware.core.core_device import CoreDevice
@@ -43,7 +43,7 @@ class AbstractDevice(RPCable, HasCommunicator, ViewableDevice):
 
 #    last_command = Property(depends_on='_cdevice.last_command')
 #    last_response = Property(depends_on='_cdevice.last_response')
-#    
+#
 #    scan_units = DelegatesTo('_cdevice')
 #    scan_func = DelegatesTo('_cdevice')
 #    scan_period = DelegatesTo('_cdevice')
@@ -52,7 +52,7 @@ class AbstractDevice(RPCable, HasCommunicator, ViewableDevice):
 #    scan_path = DelegatesTo('_cdevice')
 #    last_command = DelegatesTo('_cdevice')
 #    last_response = DelegatesTo('_cdevice')
-##    simulation = DelegatesTo('_cdevice')
+# #    simulation = DelegatesTo('_cdevice')
 #    com_class = DelegatesTo('_cdevice')
 #    is_scanable = DelegatesTo('_cdevice')
 #    dm_kind = DelegatesTo('_cdevice')

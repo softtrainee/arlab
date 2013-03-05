@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ class ErrorEllipseOverlay(AbstractOverlay):
         '''
             
         '''
-#        gc.save_state()     
+#        gc.save_state()
         gc.clip_to_rect(component.x, component.y, component.width, component.height)
 
         x = component.index.get_data()
@@ -91,7 +91,7 @@ class ErrorEllipseOverlay(AbstractOverlay):
         scx, scy = component.map_screen([(cx, cy)])[0]
         ox, oy = component.map_screen([(0, 0)])[0]
 #        gc.translate_ctm(-scx, -scy)
-        #gc.rotate_ctm(45)
+        # gc.rotate_ctm(45)
         x1 = linspace(-a, a, 200)
         y1 = sqrt(power(b, 2) * (1 - power(x1, 2) / power(a, 2)))
 
@@ -144,10 +144,10 @@ if __name__ == '__main__':
     rotation = math.degrees(0.5 * math.atan(1 / aspectratio * (2 * covar) / (ox ** 2 - oy ** 2)))
 
 
-#        
-##        gc.begin_path()
-##        pts = component.map_screen(zip(x, ny))
+#
+# #        gc.begin_path()
+# #        pts = component.map_screen(zip(x, ny))
 #        gc.lines(pts)
-#        gc.stroke_path()    
+#        gc.stroke_path()
 
 #        gc.restore_state()

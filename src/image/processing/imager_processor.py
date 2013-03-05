@@ -1,13 +1,13 @@
 #!/Library/Frameworks/Python.framework/Versions/Current/bin/python
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,9 +22,9 @@ from traitsui.api import View, Item, Group, VGroup, HGroup, RangeEditor, EnumEdi
 #============= standard library imports ========================
 import sys
 import os
-#from PIL import Image
+# from PIL import Image
 from numpy import sum, zeros_like, where, array, percentile, hsplit
-#from src.image.processing.bandwidth_highlighter import BandwidthHighlighter
+# from src.image.processing.bandwidth_highlighter import BandwidthHighlighter
 #============= local library imports  ==========================
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int, Enum, File, Instance, Button, Float, Str, on_trait_change, Bool, Color, List
@@ -200,6 +200,6 @@ if __name__ == '__main__':
         path = os.path.join(os.getcwd(), sys.argv[1])
         d.path = path
 
-    #d.path='/Users/argonlab2/Sandbox/R2-03 closeup_1_BSE_1 zoomed2.png'
+    # d.path='/Users/argonlab2/Sandbox/R2-03 closeup_1_BSE_1 zoomed2.png'
     d.configure_traits()
 #============= EOF =============================================

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,8 +93,8 @@ colorname_pairs = [
                    (0xffe200, 0x4d00cc),
                    (0xdff400, 0xcc00c8),
                    (0x5adb00, 0xe40034),
-                   #(0xFF5300, 0x00ffff),
-                   #(0x0000cc, 0xffbd00),
+                   # (0xFF5300, 0x00ffff),
+                   # (0x0000cc, 0xffbd00),
                    ]
 
 

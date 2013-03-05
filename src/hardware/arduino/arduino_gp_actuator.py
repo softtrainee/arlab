@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -100,7 +100,7 @@ class ArduinoGPActuator(GPActuator):
     def _check_actuation(self, obj, request):
         cmd = 'r'
         if request:
-            #open pin
+            # open pin
             pin = int(obj.address) - 1
         else:
             pin = int(obj.address) - 2
@@ -127,7 +127,7 @@ class ArduinoGPActuator(GPActuator):
 #    def get_channel_state(self, obj):
 #        '''
 #        Query the hardware for the channel state
-#        
+#
 #        '''
 #
 #        # returns one if channel close  0 for open
@@ -137,14 +137,14 @@ class ArduinoGPActuator(GPActuator):
 #
 #            '''
 #            this loop is necessary if the arduino resets on a serial connection
-#            
+#
 #            see http://www.arduino.cc/cgi-bin/yabb2/YaBB.pl?num=1274205532
-#            
+#
 #            arduino will reset can be software initiated using the DTR line (low)
-#            
+#
 #            best solution is to disable DTR reset
 #            place 110ohm btw 5V and reset
-#            
+#
 #            leave loop in because isnt harming anything
 #            '''
 #            i = 0
@@ -161,9 +161,9 @@ class ArduinoGPActuator(GPActuator):
 #    def close_channel(self, obj):
 #        '''
 #        Close the channel
-#        
+#
 #        @type obj: C{HValve}
-#        @param obj: valve 
+#        @param obj: valve
 #        '''
 #        cmd = 'C%s' % obj.name
 #        return self.process_cmd(cmd)
@@ -171,9 +171,9 @@ class ArduinoGPActuator(GPActuator):
 #    def open_channel(self, obj):
 #        '''
 #        Open the channel
-#        
+#
 #        @type obj: C{HValve}
-#        @param obj: valve 
+#        @param obj: valve
 #        '''
 #        cmd = 'O%s' % obj.name
 #        return self.process_cmd(cmd)

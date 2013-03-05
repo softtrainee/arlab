@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,12 +23,12 @@ from os import path
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
-#from src.machine_vision.detectors.co2_detector import CO2HoleDetector
-#from src.machine_vision.detectors.tray_mapper import TrayMapper
-#from src.machine_vision.detectors.brightness_detector import BrightnessDetector
+# from src.machine_vision.detectors.co2_detector import CO2HoleDetector
+# from src.machine_vision.detectors.tray_mapper import TrayMapper
+# from src.machine_vision.detectors.brightness_detector import BrightnessDetector
 from src.image.video import Video
 from src.machine_vision.detectors.hole_detector import HoleDetector
-#from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 
 
 class ImageHandler(Handler):
@@ -101,7 +101,7 @@ class MachineVisionManager(Manager):
         hd.name = name
         return hd
 
-#class MachineVisionManager(Manager):
+# class MachineVisionManager(Manager):
 #    video = Any
 #    stage_controller = Any
 #    laser_manager = Any
@@ -109,8 +109,8 @@ class MachineVisionManager(Manager):
 #
 #    croppixels = None
 #
-##    crosshairs_offsetx = 0
-##    crosshairs_offsety = 0
+# #    crosshairs_offsetx = 0
+# #    crosshairs_offsety = 0
 #
 #    threshold = Property(Range(0, 255, 65), depends_on='_threshold')
 #    _threshold = Int
@@ -124,29 +124,29 @@ class MachineVisionManager(Manager):
 #
 #    calibration_detector = Any
 #
-##    testing = False
-##    _debug = Bool(False)
+# #    testing = False
+# #    _debug = Bool(False)
 #
 #    application = DelegatesTo('parent')
 #
-##    def _zoom_calibration(self):
-##        d = ZoomCalibrationDetector(parent=self,
-##                                    image=self.image,
-##                                    pxpermm=self.pxpermm)
-##        self._spawn_thread(d.do_zoom_calibration())
+# #    def _zoom_calibration(self):
+# #        d = ZoomCalibrationDetector(parent=self,
+# #                                    image=self.image,
+# #                                    pxpermm=self.pxpermm)
+# #        self._spawn_thread(d.do_zoom_calibration())
 #
 #    def learn(self):
 #        '''
 #        when user hits locate center, save that image
-#        
-#        
+#
+#
 #        '''
 #        from src.machine_vision.stage_learner import StageLearner
 #        sl = StageLearner(laser_manager=self.laser_manager,
 #                          machine_vision=self)
 #
 #        sl.edit_traits()
-##        sl.teach_learner()
+# #        sl.teach_learner()
 #
 #
 #    def locate_target(self, cx, cy, holenum, *args, **kw):
@@ -156,8 +156,8 @@ class MachineVisionManager(Manager):
 #                holedim = sm.g_dimension / 2.
 #            else:
 #                holedim = 1.5
-##            cx = 0
-##            cy = 0
+# #            cx = 0
+# #            cy = 0
 #            params = self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
 #            msg = 'Target found at {:0.3n}, {:0.3n}'.format(*params) if params else 'No target found'
 #            self.info(msg)
@@ -205,7 +205,7 @@ class MachineVisionManager(Manager):
 #                break
 #            self.parent._move_to_hole(h.id)
 #
-#        #interpolate correct positions for holes that could not be 
+#        #interpolate correct positions for holes that could not be
 #        #identified
 #        sm.interpolate_noncorrected()
 #
@@ -272,9 +272,9 @@ class MachineVisionManager(Manager):
 #        return cx, cy, rx, ry
 #
 #    def map_holes(self):
-##        self._load_source()
-##        self.get_new_frame()
-##        self.image.panel_size = 450
+# #        self._load_source()
+# #        self.get_new_frame()
+# #        self.image.panel_size = 450
 #        if self.parent is None:
 #            from src.lasers.stage_managers.stage_map import StageMap
 #            p = path.join(paths.setup_dir, 'tray_maps', '221-hole.txt')
@@ -295,12 +295,12 @@ class MachineVisionManager(Manager):
 #
 #                        #working_image=self.working_image,
 #                        stage_map=sm,
-##                        center_mx=center_mx,
-##                        center_my=center_my,
+# #                        center_mx=center_mx,
+# #                        center_my=center_my,
 #                        calibrated_center=cpos,
 #                        calibrated_rotation=rot,
 #                        pxpermm=self.pxpermm,
-##                        _debug=self._debug,
+# #                        _debug=self._debug,
 #                        parent=self
 #                        )
 #
@@ -333,10 +333,10 @@ class MachineVisionManager(Manager):
 #    #                cy = 250
 #                tm._draw_indicator(tm.image.get_frame(0), (cx, cy), color=(255, 0, 0))
 #
-##        center_mx = 3.596
-##        center_my = -13.321
-##        cpos = -2.066, -0.695
-##        rot = 358.099
+# #        center_mx = 3.596
+# #        center_my = -13.321
+# #        cpos = -2.066, -0.695
+# #        rot = 358.099
 #    def close_images(self):
 #        self.hole_detector.close_images()
 #
@@ -359,19 +359,19 @@ class MachineVisionManager(Manager):
         return v
 #
 #    def get_new_frame(self, path=None):
-##        if self._debug:
-##            if path is None:
-##                src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
-##                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-##                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
-##
-###                src = self._debug_path
-##                src = '/Users/ross/Sandbox/pos_err/pos_err_53001.jpg'
-##                src = '/Users/ross/Sandbox/pos_err/pos_err_3_0-002.jpg'
-##            else:
-##                src = path
-##
-##        else:
+# #        if self._debug:
+# #            if path is None:
+# #                src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
+# #                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+# #                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
+# #
+# ##                src = self._debug_path
+# #                src = '/Users/ross/Sandbox/pos_err/pos_err_53001.jpg'
+# #                src = '/Users/ross/Sandbox/pos_err/pos_err_3_0-002.jpg'
+# #            else:
+# #                src = path
+# #
+# #        else:
 #        src = self.video.get_frame()
 #
 #        return src
@@ -390,8 +390,8 @@ class MachineVisionManager(Manager):
 #        return pxpercm / 10.0
 #
 #    def _load_detector(self, name, klass):
-##        hd = CO2HoleDetector()
-##        hd = klass()
+# #        hd = CO2HoleDetector()
+# #        hd = klass()
 #        p = path.join(paths.hidden_dir, name)
 #        if path.isfile(p):
 #            with open(p, 'rb') as f:
@@ -410,7 +410,7 @@ class MachineVisionManager(Manager):
 #            z = self.laser_manager.zoom
 #            hd.pxpermm = self._calc_pxpermm_by_zoom(z)
 #
-##        hd._debug = self._debug
+# #        hd._debug = self._debug
 #        hd.name = name
 #        return hd
 #
@@ -435,29 +435,29 @@ class MachineVisionManager(Manager):
 #        return v
 #
 #    def _test_fired(self):
-##        if not self.testing:
-##            self.hole_detector._debug = self._debug
-##            self.show_image()
-##        do_later(self.hole_detector.target_image.edit_traits)
-##            self.testing = True
-##            self.brightness_detector.collect_baseline_intensity()
-##            self.get_intensity()
-##            self._spawn_thread(self.map_holes)
-##            self._zoom_calibration()
+# #        if not self.testing:
+# #            self.hole_detector._debug = self._debug
+# #            self.show_image()
+# #        do_later(self.hole_detector.target_image.edit_traits)
+# #            self.testing = True
+# #            self.brightness_detector.collect_baseline_intensity()
+# #            self.get_intensity()
+# #            self._spawn_thread(self.map_holes)
+# #            self._zoom_calibration()
 #        self._spawn_thread(self.locate_target,
 #                           0, 0, 1
 #                           )
 #
-##            self._spawn_thread(self.learn)
-##            self.learn()
-##        else:
-##            self.testing = False
+# #            self._spawn_thread(self.learn)
+# #            self.learn()
+# #        else:
+# #            self.testing = False
 #
-##
-##    def _test_view(self):
-##        v = View(
-##                 Item('hole_detector', show_label=False, style='custom'))
-##        return v
+# #
+# #    def _test_view(self):
+# #        v = View(
+# #                 Item('hole_detector', show_label=False, style='custom'))
+# #        return v
 
 if __name__ == '__main__':
 
@@ -470,7 +470,7 @@ if __name__ == '__main__':
 #                             _debug=True,
                              )
 #    m.locate_target(0, 0, 3)
-    m.configure_traits()#view='_test_view')
+    m.configure_traits()  # view='_test_view')
 #    m.configure_traits(view='configure_view')
 
 #    time_comp()
@@ -488,8 +488,8 @@ if __name__ == '__main__':
 #            do_after(50, self.edit_traits, view='image_view')
 #        elif self.ui is None:
 #            do_after(50, self.edit_traits, view='image_view')
-##        else:
-##            self.ui.control.Raise()
+# #        else:
+# #            self.ui.control.Raise()
 #        if self._debug:
 #            do_after(50, self.edit_traits, view='working_image_view')
 
@@ -512,9 +512,9 @@ if __name__ == '__main__':
 #        v = View(
 #                 HGroup(
 #                        Item('segmentation_style', show_label=False),
-##                        Item('threshold', format_str='%03i',
+# #                        Item('threshold', format_str='%03i',
 #                             #style='readonly'
-##                             ),
+# #                             ),
 #                        #spring,
 #                        Item('nominal_position', label='Nom. Pos.',
 #                             style='readonly'),
@@ -549,7 +549,7 @@ if __name__ == '__main__':
 #    def _working_image_default(self):
 #        return Image(width=self.image_width,
 #                     height=self.image_height)
-#        #use map holes to move to multiple regions and 
+#        #use map holes to move to multiple regions and
 #        #determine corrected position
 #        self.map_holes()
 #

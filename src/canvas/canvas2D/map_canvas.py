@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ class MapCanvas(MarkupCanvas):
 
 
 #    def normal_key_pressed(self, event):
-##        super(MapCanvas, self).normal_key_pressed(event)
+# #        super(MapCanvas, self).normal_key_pressed(event)
 #
 #        if event.handled:
 #            pass
@@ -59,7 +59,7 @@ class MapCanvas(MarkupCanvas):
         super(MapCanvas, self).normal_left_down(event)
 
         if self.current_hole is not None:
-        #and not event.handled
+        # and not event.handled
             ca = self.calibration_item
             if ca is not None:
                 if hasattr(event, 'item'):
@@ -80,9 +80,9 @@ class MapCanvas(MarkupCanvas):
                 dpos = aff.transformPt(mpos)
                 spos = self.map_data((event.x, event.y))
 
-                #not much point in adding an indicator because the hole 
-                #renders its own
-                #self.markupdict['tweak'] = Indicator(*spos, canvas = self)
+                # not much point in adding an indicator because the hole
+                # renders its own
+                # self.markupdict['tweak'] = Indicator(*spos, canvas = self)
 
                 tweak = spos[0] - dpos[0], spos[1] - dpos[1]
                 ca.tweak_dict[self.current_hole] = tweak
@@ -91,7 +91,7 @@ class MapCanvas(MarkupCanvas):
 
 
     def normal_mouse_move(self, event):
-        #over a hole
+        # over a hole
         ca = self.calibration_item
         if ca:
 
@@ -205,7 +205,7 @@ class MapCanvas(MarkupCanvas):
 
         ca = self.calibration_item
         if ca:
-            #make the crosshairs orthogonal
+            # make the crosshairs orthogonal
             gc.translate_ctm(x, y)
             gc.rotate_ctm(math.radians(-ca.rotation))
             gc.translate_ctm(-x, -y)

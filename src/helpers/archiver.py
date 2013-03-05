@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -100,13 +100,13 @@ class Archiver(Loggable):
                                                                 month_dir))
                         shutil.rmtree(os.path.join(arch, year_dir, month_dir))
 
-                #remove empty year archives
+                # remove empty year archives
                 if not os.listdir(yarch):
                     self.info('Deleting empty year archive {}'.format(year_dir))
                     os.rmdir(yarch)
 
     def _archive(self, root, p):
-        #create an archive directory
+        # create an archive directory
         today = datetime.today()
         month = MONTH_NAMES[today.month - 1]
         year = today.year

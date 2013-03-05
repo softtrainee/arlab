@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,10 +43,10 @@ class Analysis(Loggable):
     irradiation = Str
 
     isotope_record = Any
-    irradiation = Property#(depends_on='isotope_record')
-    group_id = Property#(depends_on='isotope_record')
-    graph_id = Property#(depends_on='isotope_record')
-    analysis_type = Property#(depends_on='labnumber')
+    irradiation = Property  # (depends_on='isotope_record')
+    group_id = Property  # (depends_on='isotope_record')
+    graph_id = Property  # (depends_on='isotope_record')
+    analysis_type = Property  # (depends_on='labnumber')
 #    rad40 = Property
 #    status_string = Property(depends_on='status, temp_status')
 
@@ -82,7 +82,7 @@ class Analysis(Loggable):
 
     def load_age(self):
         if self.age is not None:
-            #self.info('{} age={}'.format(self.isotope_record.record_id, a))
+            # self.info('{} age={}'.format(self.isotope_record.record_id, a))
             return True
         else:
             self.warning('could not compute age for {}'.format(self.rid))
@@ -257,7 +257,7 @@ class IntegratedAnalysis(NonDBAnalysis):
 
 
 
-#timeit
+# timeit
 if __name__ == '__main__':
     from tables import openFile
     a = Analysis()
@@ -286,7 +286,7 @@ if __name__ == '__main__':
 #        dbr = self.isotope_record
 #        return dbr.project
 #
-##    @cached_property
+# #    @cached_property
 #    def _get_record_id(self):
 #        return self.isotope_record.record_id
 #        dbr = self.isotope_record

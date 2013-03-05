@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ def calc_rotation(x1, y1, x2, y2):
     rise = y2 - y1
     run = x2 - x1
 
-    r = math.pow((math.pow(run, 2) + math.pow(rise, 2)), 0.5) #(x ** 2 + y ** 2) ** 0.5
+    r = math.pow((math.pow(run, 2) + math.pow(rise, 2)), 0.5)  # (x ** 2 + y ** 2) ** 0.5
     if r == 0:
         return 0
 
@@ -315,13 +315,13 @@ class Valve(RoundedRectangle, BaseValve):
     def _render_(self, gc):
 
         super(Valve, self)._render_(gc)
-##        if self.state:
-##                        gc.set_fill_color((0, 1, 0))
-##                    else:
-##                        if item.selected:
-##                            gc.set_fill_color((1, 1, 0))
-##                        else:
-##                            gc.set_fill_color((1, 0, 0))
+# #        if self.state:
+# #                        gc.set_fill_color((0, 1, 0))
+# #                    else:
+# #                        if item.selected:
+# #                            gc.set_fill_color((1, 1, 0))
+# #                        else:
+# #                            gc.set_fill_color((1, 0, 0))
 #
         x, y = self.get_xy()
         w, h = self.get_wh()

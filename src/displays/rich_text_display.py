@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,7 +80,7 @@ class RichTextDisplay(HasTraits):
     x = Float(10)
     y = Float(20)
 
-    #height of the text panel == height-_hspacer
+    # height of the text panel == height-_hspacer
     _hspacer = 25
     _text_buffer = List
     selectable = False
@@ -186,7 +186,7 @@ class RichTextDisplay(HasTraits):
 #                d.Delete(d.Selection)
 #                d.SelectNone()
 #                d.SetInsertionPoint(0)
-##            d.Thaw()
+# #            d.Thaw()
 #        if gui:
 #            do_after(1, _clear)
 #        else:
@@ -215,7 +215,7 @@ class RichTextDisplay(HasTraits):
             
         '''
         if not isinstance(msg, (str, unicode)):
-            #print 'not str or unicode ', msg
+            # print 'not str or unicode ', msg
             if not isinstance(msg, tuple):
                 return
             msg = msg[0]
@@ -273,14 +273,14 @@ class RichTextDisplay(HasTraits):
             d = self._display
     #        def _ShowPosition(self, ipos):
             line = d.GetVisibleLineForCaretPosition(ipos)
-            ppuX, ppuY = d.GetScrollPixelsPerUnit()  #unit = scroll
-    #step
+            ppuX, ppuY = d.GetScrollPixelsPerUnit()  # unit = scroll
+    # step
             startYUnits = d.GetViewStart()[1]
             sy = d.GetVirtualSize()[1]
 
             if ppuY == 0:
                 return False  # since there's no scrolling, hence no
-    #adjusting
+    # adjusting
 
             syUnits = sy / ppuY
             r = line.GetRect()
@@ -353,7 +353,7 @@ class RichTextDisplay(HasTraits):
 #
 #        if gui:
 #            do_later(_add, msg, **kw)
-##            do_after(1, _add, msg, **kw)
+# #            do_after(1, _add, msg, **kw)
 #        else:
 #            _add(msg, **kw)
 
@@ -377,7 +377,7 @@ class ErrorDisplay(RichTextDisplay):
 
                 msg.attach(MIMEText('\n'.join([t[0] for t in self.text])))
 
-                #attach the most recent log file
+                # attach the most recent log file
                 logdir = os.path.join(paths.root_dir, 'logs')
                 logs = os.listdir(logdir)
                 logs.reverse()

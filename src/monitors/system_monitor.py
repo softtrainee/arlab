@@ -1,13 +1,13 @@
 
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Bool, List
-#from traitsui.api import View, Item
+# from traitsui.api import View, Item
 from src.monitors.monitor import Monitor
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -76,13 +76,13 @@ class SystemMonitor(Monitor):
 
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -92,30 +92,30 @@ class SystemMonitor(Monitor):
 
 
 
-#'''
-#@author: Jake Ross
-#@copyright: 2009
-#@license: Educational Community License 1.0
-#'''
+# '''
+# @author: Jake Ross
+# @copyright: 2009
+# @license: Educational Community License 1.0
+# '''
 ##=============enthought library imports=======================
-#from traits.api import HasTraits, Instance, on_trait_change, Any, Str, Int, Float, Button, List, Bool
-#from traitsui.api import View, Item, Group, HGroup, VGroup, ListStrEditor
-#from pyface.api import warning, information, confirm
-#from pyface.api import ProgressDialog
+# from traits.api import HasTraits, Instance, on_trait_change, Any, Str, Int, Float, Button, List, Bool
+# from traitsui.api import View, Item, Group, HGroup, VGroup, ListStrEditor
+# from pyface.api import warning, information, confirm
+# from pyface.api import ProgressDialog
 ##=============standard library imports ========================
-#import time
-#import datetime
-##from thread import *
-#from threading import Thread
-#import wx
-#import logging
+# import time
+# import datetime
+# #from thread import *
+# from threading import Thread
+# import wx
+# import logging
 ##=============local library imports  ==========================
-##from globals import ghome, gpressuredelay
-##from filetools import parse_setupfile
-##from logger_setup import add_console
+# #from globals import ghome, gpressuredelay
+# #from filetools import parse_setupfile
+# #from logger_setup import add_console
 #
 #
-#class ErrorDurationThread(Thread):
+# class ErrorDurationThread(Thread):
 #    def run(self):
 #        '''
 #        '''
@@ -127,7 +127,7 @@ class SystemMonitor(Monitor):
 #            time.sleep(.1)
 #        else:
 #            parent.error('Pressure has not changed for %i sec' % self.delay, name, requery = True)
-#class ErrorThread(Thread):
+# class ErrorThread(Thread):
 #    def run(self):
 #        '''
 #        '''
@@ -148,7 +148,7 @@ class SystemMonitor(Monitor):
 #            #print 'find',w.FindWindowById(0)
 #            #print 'window',w
 #
-#def point_generator():
+# def point_generator():
 #    '''
 #    '''
 #    i = 0
@@ -163,8 +163,8 @@ class SystemMonitor(Monitor):
 #            i = 0
 #        yield(p)
 #        i += 1
-#point_gen = point_generator()
-#class WindowMoveThread(Thread):
+# point_gen = point_generator()
+# class WindowMoveThread(Thread):
 #
 #    def run(self):
 #        '''
@@ -178,10 +178,10 @@ class SystemMonitor(Monitor):
 #
 #            time.sleep(0.1)
 #
-#class SystemMonitor(HasTraits):
+# class SystemMonitor(HasTraits):
 #    '''
 #    Monitors the system and takes action if there is a problem
-#    
+#
 #    G{classtree}
 #    '''
 #    errors = List()
@@ -218,17 +218,17 @@ class SystemMonitor(Monitor):
 #    def _load_criteria_map(self, setup_file = None):
 #        '''
 #        load the setup file and parse in the criteria. create a dictionary of criteria C{self.criteria_map}
-#        
+#
 #        B{Example System Monitor setupfile}::
 #            #gauge name, criterion
 #            gauge0,>50
 #            gauge1,>50
 #            gauge2,>50
-#            
-#        the system monitor with trip when are gauge pressure exceeds (or the opposite of exceeds) the criterion. 
+#
+#        the system monitor with trip when are gauge pressure exceeds (or the opposite of exceeds) the criterion.
 #
 #        @note: there is no established opposite of exceeds
-#    
+#
 #        @type setup_file: C{str}
 #        @param setup_file: absolute path of the setup file
 #        '''
@@ -258,7 +258,7 @@ class SystemMonitor(Monitor):
 #    def _pressure_changed(self, object, name, old, new):
 #        '''
 #        Handler for changes to any of the C{GaugeManager}'s gauges pressures
-#        
+#
 #        @type object: C{BaseGauge}
 #        @param object: a gauge object
 #        @type name: C{str}
@@ -278,9 +278,9 @@ class SystemMonitor(Monitor):
 #    def record_error(self, msg):
 #        '''
 #        record an error
-#        
+#
 #        @type msg: C{str}
-#        @param msg: an error message 
+#        @param msg: an error message
 #        '''
 #
 #        ts = (datetime.datetime.today()).ctime()
@@ -295,7 +295,7 @@ class SystemMonitor(Monitor):
 #        self.power_cycle()
 #    def _power_cycle(self):
 #        '''
-#        
+#
 #        '''
 #        self.actuator.open('103')
 #        time.sleep(1)

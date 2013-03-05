@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -211,7 +211,7 @@ class LaserScriptExecutor(Loggable):
                     break
 #                print ti, power_off, pi, ti >= power_off, (ti >= power_off and pi)
                 if ti == power_on:
-                    #turn on set laser to power
+                    # turn on set laser to power
                     if temp:
                         self.laser_manager.set_laser_temperature(temp)
                         pi = temp
@@ -349,7 +349,7 @@ class UVLaserScriptExecutor(LaserScriptExecutor):
 
                     x, y = sx + c * xstep, sy + r * ystep
 
-                    #move at normal speed to first pos
+                    # move at normal speed to first pos
                     if r == 0 and c == 0:
                         sm.linear_move(x, y, block=True)
                     else:

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ class PychronWorkbenchUIPlugin(CoreUIPlugin):
     def _views_default(self):
         '''
         '''
-        return []#self._create_process_view]
+        return []  # self._create_process_view]
 
 #    def _create_process_view(self, **kw):
 #        '''
@@ -57,15 +57,15 @@ class PychronWorkbenchUIPlugin(CoreUIPlugin):
 #            @param **kw:
 #        '''
 #        app = self.application
-##        obj = app.get_service('src.experiments.process_view.ProcessView')
-##        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
-##        smanager = app.get_service('src.scripts.scripts_manager.ScriptsManager')
+# #        obj = app.get_service('src.experiments.process_view.ProcessView')
+# #        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
+# #        smanager = app.get_service('src.scripts.scripts_manager.ScriptsManager')
 #
 #        #obj.experiment = manager.selected
-##        if manager is not None:
-##            manager.on_trait_change(obj.selected_update, 'selected')
-##        if smanager is not None:
-##            smanager.on_trait_change(obj.selected_update, 'selected')
+# #        if manager is not None:
+# #            manager.on_trait_change(obj.selected_update, 'selected')
+# #        if smanager is not None:
+# #            smanager.on_trait_change(obj.selected_update, 'selected')
 #
 #        args = dict(id='pychron.process_view',
 #                         name='Process',

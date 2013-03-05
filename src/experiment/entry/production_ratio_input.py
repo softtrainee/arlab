@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ class ProductionRatioInput(Saveable):
     _db_name = Str
     names = Property(depends_on='saved')
     saved = Event
-    #K interferences
+    # K interferences
     k4039 = Instance(ProductionRatio, (), {'name':'K 40/39'})
     k3839 = Instance(ProductionRatio, (), {'name':'K 38/39'})
     k3739 = Instance(ProductionRatio, (), {'name':'K 37/39'})
@@ -56,7 +56,7 @@ class ProductionRatioInput(Saveable):
 #    #Cl interference
     cl3638 = Instance(ProductionRatio, (), {'name':'Cl 36/38'})
 
-    #elemental production ratio
+    # elemental production ratio
     Ca_K = Instance(ProductionRatio, (), {'name':'Ca/K'})
     Cl_K = Instance(ProductionRatio, (), {'name':'Cl/K'})
 

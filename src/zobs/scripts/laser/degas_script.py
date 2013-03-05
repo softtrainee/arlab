@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -98,21 +98,21 @@ class DegasScript(CoreScript):
 
     def load(self):
         self.scan_setup = []
-        #plotid = 0
-        #series = 0
+        # plotid = 0
+        # series = 0
 
-        #first line should be scan period
+        # first line should be scan period
         self.scan_period = float(self._file_contents_[0].strip())
         self._file_contents_.pop(0)
         for i, line in enumerate(self._file_contents_):
-            #use a ------------- line to separate metadata from script data
+            # use a ------------- line to separate metadata from script data
             if line.startswith('----'):
                 break
             else:
                 args = line.split(',')
                 obj = args[0]
                 func = args[1]
-                #label = None
+                # label = None
 
                 if len(args) >= 5:
                     d = dict(
@@ -167,7 +167,7 @@ class DegasScript(CoreScript):
         '''
         g = TimeSeriesStreamStackedGraph(
                                          panel_height=175
-                                         #window_title='Degas Scan %s' % self.file_name
+                                         # window_title='Degas Scan %s' % self.file_name
                                          )
         g.new_plot(show_legend='ur')
         g.set_x_title('Time')

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +27,7 @@ import select
 from messaging_server import MessagingServer
 from src.messaging.handlers.tcp_handler import TCPHandler
 
-#class TCPServer(_TCPServer, MessagingServer):
+# class TCPServer(_TCPServer, MessagingServer):
 class TCPServer(ThreadingTCPServer, MessagingServer):
     '''
     '''
@@ -69,7 +69,7 @@ class TCPServer(ThreadingTCPServer, MessagingServer):
 #            except:
 #                return
             sock.listen(2)
-            #running = True
+            # running = True
             input = [sock]
             while self._running:
                 inputready, _outputready, _exceptready = select.select(input, [], [], 0.25)
@@ -108,7 +108,7 @@ class TCPServer(ThreadingTCPServer, MessagingServer):
                             input.remove(s)
             sock.close()
 
-        #start a listener thread
+        # start a listener thread
         t = Thread(target=listen)
         t.start()
 

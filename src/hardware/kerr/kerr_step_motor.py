@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,7 +65,7 @@ class KerrStepMotor(KerrMotor):
         self.set_attribute(config, 'disable_estop', 'Parameters', 'disable_estop', optional=False, cast='boolean')
         self.set_attribute(config, 'disable_limits', 'Parameters', 'disable_limits', optional=False, cast='boolean')
         self.set_attribute(config, 'motor_off', 'Parameters', 'motor_off', optional=False, cast='boolean')
-        #load discrete positions
+        # load discrete positions
         section = 'Discrete Positions'
         if config.has_section(section):
             off = self.config_get(config, section, 'offset', cast='int', default=0)
@@ -98,7 +98,7 @@ class KerrStepMotor(KerrMotor):
     def _assemble_options_byte(self):
         ob = []
         sbit = SPEED_MODES[self.speed_mode]
-        ob.append(sbit) #1,2
+        ob.append(sbit)  # 1,2
         ob.append('1' if self.disable_limits else '0')
         ob.append('1' if self.disable_estop else '0')
         ob.append('1' if self.motor_off else '0')
@@ -113,7 +113,7 @@ class KerrStepMotor(KerrMotor):
         cmd = '56'
         obbyte = self._assemble_options_byte()
 #        print obbyte
-        op = (int(obbyte, 2), 2)#'00001011'
+        op = (int(obbyte, 2), 2)  # '00001011'
         mps = (1, 2)
         rcl = (self.run_current, 2)
         hcl = (self.hold_current, 2)
@@ -152,7 +152,7 @@ class KerrStepMotor(KerrMotor):
 #        a = self._float_to_hexstr(self.home_acceleration)
         move_cmd = ''.join((cmd, control, v, a))
 
-        cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
+        cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
                 (addr, home_cmd, 100, 'Set homing options'),
                 (addr, move_cmd, 100, 'Send to Home')]
         self._execute_hex_commands(cmds)
@@ -167,12 +167,12 @@ class KerrStepMotor(KerrMotor):
 
         self.block(4, progress=progress)
 
-        #we are homed and should reset position
+        # we are homed and should reset position
 
         cmds = [(addr, '00', 100, 'reset position')]
 
         self._execute_hex_commands(cmds)
-#   
+#
     def _set_motor_position_(self, pos, hysteresis=0):
         '''
         '''

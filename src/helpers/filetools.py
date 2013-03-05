@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -106,7 +106,7 @@ def parse_canvasfile(p, kw):
     '''
     
     '''
-    #kw=['origin','valvexy','valvewh','opencolor','closecolor']
+    # kw=['origin','valvexy','valvewh','opencolor','closecolor']
 
     if os.path.exists(p) and os.path.isfile(p):
         with open(p, 'r') as file:
@@ -141,8 +141,8 @@ def filetoarray(f, commentchar='#'):
     for line in f:
         cc = line[:1]
         if not cc == commentchar and not isNewLine(cc):
-            #l = line[:-1] if line[-1:] == '\n' else line
-            #remove inline comments
+            # l = line[:-1] if line[-1:] == '\n' else line
+            # remove inline comments
             line = line.split('#')[0]
             r.append(line.strip())
     return r

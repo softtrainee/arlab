@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from canvas.canvas3D.elements.components import Valve, Shaft
+# from canvas.canvas3D.elements.components import Valve, Shaft
 class Section(object):
     '''
         G{classtree}
@@ -91,7 +91,7 @@ class Section(object):
         '''
 
 
-        #update the state based on the initial valve state change
+        # update the state based on the initial valve state change
         state, prec = self._update_state_(action, valve, sg)
 
 
@@ -100,7 +100,7 @@ class Section(object):
         if action:
             # if the state change was to open the valve
             if prec is not None:
-                #self.precedence_stack.append(prec)
+                # self.precedence_stack.append(prec)
                 self.cur_precedence = prec
 
             v = sg.get_object_by_name(valve.name)
@@ -111,42 +111,42 @@ class Section(object):
             else:
                 if gas_type is not None and state == 'measuring':
                     state = '_'.join((state, gas_type))
-                #print state
+                # print state
                 self.set_state(valve, state, sg)
 
 
-                #update the state of any open valve 
+                # update the state of any open valve
                 self._update_other_valves(valve.name, valves, state, sg)
 #                for vk in valves:
 #                    v=sg.get_object_by_name(vk)
 #                    if v is not None and v.state:
 #                        for b in v.branches:
 #                            b.set_state(state,valve.name)
-#               
+#
 
         else:
-            #the state change closed the valve so reset precedence to zero
-            #and change our state to static
-            #then run test on all other valves to see if a lower precedence is 
-            #applicable
+            # the state change closed the valve so reset precedence to zero
+            # and change our state to static
+            # then run test on all other valves to see if a lower precedence is
+            # applicable
             state = 'static'
             self.cur_precedence = 0
 
 
-            #run all tests on all valves
+            # run all tests on all valves
             avalve = None
             for vk in valves:
-                #exclude the initial valve 
+                # exclude the initial valve
                 if not vk == valve.name:
                     _s, prec = self._update_state_(action, valves[vk], sg)
 
                     if _s is not None and _s != 'static':
-                        #a lower precedence test was found to be true
+                        # a lower precedence test was found to be true
                         state = _s
-                        #update our current precedence
+                        # update our current precedence
                         self.cur_precedence = prec
 
-                        #remember the valve 
+                        # remember the valve
                         avalve = valves[vk]
 
             if avalve is not None:
@@ -170,8 +170,8 @@ class Section(object):
             @type sg: C{str}
             @param sg:
         '''
-        #need list of components to change
-        #need a scene graph instance
+        # need list of components to change
+        # need a scene graph instance
         state = None
         precedence = None
         for t in self.tests:
@@ -272,7 +272,7 @@ class Section(object):
                 return true_outcome
             else:
                 return false_outcome
-#class Section(object):
+# class Section(object):
 #    tests=None
 #    components=None
 #    valve_manager=None
@@ -283,45 +283,45 @@ class Section(object):
 #        self.components=[]
 #    def add_test(self,c):
 #        self.tests.append(c)
-#        
+#
 #    def test(self,action):
-#            
+#
 #        for t in self.tests:
-#            
+#
 #            vname,tstate,true_out,false_out=t.split('-')
 #            v=self.scene_graph.get_object_by_name(vname)
-#            
-#            
+#
+#
 #            tstate=True if tstate=='open' else False
 #            vstate=self.valve_manager.get_valve_state_by_name(vname)
 #            outcome = true_out if vstate==tstate else false_out
-#            
-#            
+#
+#
 #            args=(outcome,action,self.precedence)
 #            for b in v.branches:
 #                b.set_state(*args)
-#                
+#
 #            for c in v.connections:
 #                c.set_state(*args)
-#                
+#
 #            valves=[]
 #            for c in self.components:
 #              #  args=(outcome,action,self.precedence)
 #                c=self.scene_graph.get_object_by_name(c)
 #                if isinstance(c,Valve):
 #                    valves.append(c)
-#                    
+#
 #                else:
 #                    noutcome,precedence=c.set_state(*args)
 #                    #c.set_state(*args)
-#                    
+#
 #            #print 'new out', noutcome,outcome,precedence
-#            # args=(noutcome,action,precedence)        
-##            for v in valves:
-##                if v.state:
-##                    for b in v.branches:
-##                        b.set_state(*args)
-#            
-#            
+#            # args=(noutcome,action,precedence)
+# #            for v in valves:
+# #                if v.state:
+# #                    for b in v.branches:
+# #                        b.set_state(*args)
+#
+#
 
 #============= EOF ====================================

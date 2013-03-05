@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,16 +17,16 @@
 #=============enthought library imports=======================
 from traits.api import HasTraits, Str, implements, Any, List, \
     Bool, Enum
-#from pyface.timer.api import Timer
+# from pyface.timer.api import Timer
 #=============standard library imports ========================
 import random
-#from threading import Lock
+# from threading import Lock
 from datetime import datetime
 #=============local library imports  ==========================
 from i_core_device import ICoreDevice
-#from src.helpers.timer import Timer
-#from src.managers.data_managers.csv_data_manager import CSVDataManager
-#from src.helpers.datetime_tools import generate_datetimestamp
+# from src.helpers.timer import Timer
+# from src.managers.data_managers.csv_data_manager import CSVDataManager
+# from src.helpers.datetime_tools import generate_datetimestamp
 from src.hardware.core.scanable_device import ScanableDevice
 from src.rpc.rpcable import RPCable
 from src.has_communicator import HasCommunicator
@@ -112,7 +112,7 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
 
             self._load_hook(config)
 
-            #load additional child specific args
+            # load additional child specific args
             r = self.load_additional_args(config)
             if r:
                 self._loaded = True

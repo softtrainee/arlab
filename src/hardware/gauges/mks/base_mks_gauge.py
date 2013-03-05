@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -85,7 +85,7 @@ class BaseMKSGauge(BaseGauge):
             tag = 'FP'
 
             s = base % (addr, tag, ('ON' if value else 'OFF'))
-            #s='@%s%s!%s;FF' % (addr, tag, value)
+            # s='@%s%s!%s;FF' % (addr, tag, value)
         elif typetag == 'address':
             tag = 'AD'
             s = base % (addr, tag, value)
@@ -93,7 +93,7 @@ class BaseMKSGauge(BaseGauge):
             tag = 'TST'
             s = base % (addr, tag, value)
 
-            #s='@%s%s!%s;FF' % (addr, tag, value)
+            # s='@%s%s!%s;FF' % (addr, tag, value)
         elif typetag == 'setpoint_enable':
             tag = 'EN%i' % setpointindex
 
@@ -103,7 +103,7 @@ class BaseMKSGauge(BaseGauge):
             tag = 'SP%i' % setpointindex
             # for some reason mks gauges 925 do not like x.xxe-xx as sci notation
             # likes x.xxe-x
-            #convert value 
+            # convert value
             scivalue = '%0.2e' % value
             a, b = scivalue.split('e')
             sign = b[:1]
@@ -112,7 +112,7 @@ class BaseMKSGauge(BaseGauge):
             v = '%sE%s%s' % (a, sign, ex)
 
             s = '@%s%s!%s;FF' % (addr, tag, v)
-            #s='@%s%s!%0.1e;FF' % (addr, tag, value)
+            # s='@%s%s!%0.1e;FF' % (addr, tag, value)
 
 
         elif typetag == 'hysteresis':

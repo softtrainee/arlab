@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ from sqlalchemy.sql.expression import  and_
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
-#meas_
+# meas_
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
@@ -30,20 +30,20 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable, \
     proc_NotesTable, meas_MonitorTable
 
-#proc_
+# proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
     proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, proc_SelectedHistoriesTable, \
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
     proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
 
-#irrad_
+# irrad_
 from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, irrad_ChronologyTable, irrad_LevelTable, \
     irrad_PositionTable
 
-#flux_
+# flux_
 from src.database.orms.isotope_orm import flux_FluxTable, flux_HistoryTable, flux_MonitorTable
 
-#gen_
+# gen_
 from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDeviceTable, gen_ProjectTable, \
     gen_MolecularWeightTable, gen_MaterialTable, gen_MassSpectrometerTable, \
     gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable, gen_ImportTable
@@ -52,12 +52,12 @@ from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDevic
 from src.database.core.functions import delete_one
 
 from src.experiment.identifier import convert_identifier
-#from src.repo.repository import Repository, ZIPRepository
-#from src.paths import paths
-#import binascii
+# from src.repo.repository import Repository, ZIPRepository
+# from src.paths import paths
+# import binascii
 import hashlib
 
-#@todo: change rundate and runtime to DateTime columns
+# @todo: change rundate and runtime to DateTime columns
 
 class IsotopeAdapter(DatabaseAdapter):
     '''
@@ -514,7 +514,7 @@ class IsotopeAdapter(DatabaseAdapter):
         return sp
 
     def add_labnumber(self, labnumber,
-#                      aliquot, 
+#                      aliquot,
                       sample=None, irradiation=None, **kw):
         ln = self.get_labnumber(labnumber)
         if ln is None:

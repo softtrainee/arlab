@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,9 +55,9 @@ class IonOpticsManager(Manager):
         return molweights[isotope_key]
 
     def position(self, pos, detector, use_dac=False):
-        if pos==NULL_STR:
+        if pos == NULL_STR:
             return
-        
+
         spec = self.spectrometer
         mag = spec.magnet
 
@@ -66,14 +66,14 @@ class IonOpticsManager(Manager):
         else:
             if isinstance(pos, str):
 
-                #if the pos is an isotope then update the detectors
+                # if the pos is an isotope then update the detectors
                 spec.update_isotopes(pos, detector)
 
-                #pos is isotope
+                # pos is isotope
                 pos = self.get_mass(pos)
                 mag._mass = pos
 
-            #pos is mass i.e 39.962
+            # pos is mass i.e 39.962
             dac = mag.map_mass_to_dac(pos)
 
         det = spec.get_detector(detector)
@@ -92,28 +92,28 @@ class IonOpticsManager(Manager):
         mass = molweights[iso]
         dac = spec.magnet.map_mass_to_dac(mass)
 
-        #correct for deflection
+        # correct for deflection
         return spec.correct_dac(det, dac)
 
 #    def _correct_dac(self, det, dac):
-#        #        dac is in axial units 
+#        #        dac is in axial units
 #
-##        convert to detector
+# #        convert to detector
 #        dac *= det.relative_position
 #
 #        '''
-#        convert to axial detector 
+#        convert to axial detector
 #        dac_a=  dac_d / relpos
-#        
-#        relpos==dac_detA/dac_axial 
-#        
+#
+#        relpos==dac_detA/dac_axial
+#
 #        '''
 #        #correct for deflection
 #        dev = det.get_deflection_correction()
 #
 #        dac += dev
 #
-##        #correct for hv
+# #        #correct for hv
 #        dac *= self.spectrometer.get_hv_correction(current=True)
 #        return dac
 
@@ -167,11 +167,11 @@ class IonOpticsManager(Manager):
                         spectrometer=spec
                         )
 
-        #bind to the graphs close_func
-        #self.close is called when graph window is closed
-        #use so we can stop the timer
+        # bind to the graphs close_func
+        # self.close is called when graph window is closed
+        # use so we can stop the timer
         pc.graph.close_func = self.close
-        #set graph window attributes
+        # set graph window attributes
         pc.graph.window_title = 'Peak Center {}({}) @ {:0.3f}'.format(detector, isotope, center_dac)
         self.open_view(pc.graph)
 
@@ -183,13 +183,13 @@ class IonOpticsManager(Manager):
 
             det = spec.get_detector(detector)
 
-            #correct for hv
+            # correct for hv
             dac_d /= spec.get_hv_correction(current=True)
 
-            #correct for deflection
+            # correct for deflection
             dac_d = dac_d - det.get_deflection_correction()
 
-            #convert dac to axial units
+            # convert dac to axial units
             dac_a = dac_d / det.relative_position
 
             self.info('converted to axial units {}'.format(dac_a))
@@ -210,8 +210,8 @@ class IonOpticsManager(Manager):
                 self.warning_dialog(msg)
             self.warning(msg)
 
-        #needs to be called on the main thread to properly update
-        #the menubar actions. alive=False enables IonOptics>Peak Center
+        # needs to be called on the main thread to properly update
+        # the menubar actions. alive=False enables IonOptics>Peak Center
         d = lambda:self.trait_set(alive=False)
         do_later(d)
 

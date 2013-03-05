@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -80,7 +80,7 @@ class Detector(SpectrometerDevice):
     def load(self):
         self.read_deflection()
 
-        #load deflection correction table
+        # load deflection correction table
         p = os.path.join(paths.spectrometer_dir,
                          'deflections', self.name)
         x, y = loadtxt(p, delimiter=',', unpack=True)

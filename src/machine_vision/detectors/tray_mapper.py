@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,7 @@ from traits.api import Any
 from src.image.cvwrapper import grayspace
 from co2_detector import CO2HoleDetector
 from src.image.image import StandAloneImage
-#from src.image.pyopencv_image_helper import asMat
+# from src.image.pyopencv_image_helper import asMat
 
 class TrayMapper(CO2HoleDetector):
     center_mx = 0
@@ -92,8 +92,8 @@ class TrayMapper(CO2HoleDetector):
 #        print non_cor
 #        if non_cor:
 #            self.info('no correction found for {} holes'.format(len(non_cor)))
-##            self.info('no correction found for {}'.format(
-##                                ' '.join(map(str, non_cor))))
+# #            self.info('no correction found for {}'.format(
+# #                                ' '.join(map(str, non_cor))))
 #            for ni in non_cor:
 #                mx, my = self.stage_map.get_hole_pos(str(ni))
 #
@@ -101,7 +101,7 @@ class TrayMapper(CO2HoleDetector):
 #                rot = self.calibrated_rotation
 #
 #                cx, cy = self.stage_map.map_to_uncalibration((mx, my), cpos, rot)
-##                cx, cy = self.map_screen(cx, cy)
+# #                cx, cy = self.map_screen(cx, cy)
 #
 #                mx, my = self.map_screen(cx, cy)
 #                w, h = 20, 20
@@ -170,7 +170,7 @@ class TrayMapper(CO2HoleDetector):
                     mmx, mmy = self.stage_map.map_to_calibration(cargs,
                                                                 cpos, rot)
 
-                    #check for a match to the stage map
+                    # check for a match to the stage map
                     hole = self.stage_map._get_hole_by_position(mmx, mmy)
                     if hole is not None:
                         if self._add_correction(hole.id, (mmx, mmy)):
@@ -181,12 +181,12 @@ class TrayMapper(CO2HoleDetector):
 #                            tx = hole.x
 #                            ty = hole.y
 
-                            #map to calibrated space
+                            # map to calibrated space
 #                            pos = (tx, ty)
 #                            pos = self.stage_map.map_to_uncalibration(pos,
 #                                                                cpos, rot)
 #
-##                            #map to screen
+# #                            #map to screen
 #                            pos = self.map_screen(*pos)
 #
 #                            self._draw_indicator(self.image.frames[0],

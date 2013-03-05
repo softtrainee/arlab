@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 from src.database.isotope_analysis.notes_summary import NotesSummary
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import Isotope, Blank, Background, Baseline
-#from src.database.records.isotope import Isotope, Baseline, Blank, Background
+# from src.database.records.isotope import Isotope, Baseline, Blank, Background
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -182,9 +182,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #        db.sess = db.new_session()
 
 #        sess.expunge_all()
-        #save the fits
+        # save the fits
         for fi in self.signal_graph.fit_selector.fits:
-            #get database fit
+            # get database fit
             dbfit = self._get_db_fit(fi.name)
             if dbfit != fi.fit:
                 if fit_hist is None:
@@ -256,7 +256,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
     def opened(self):
 #        def d():
-##            self.selected = None
+# #            self.selected = None
 #            self.selected = 'summary'
 #        do_later(d)
         self.selected = 'summary'
@@ -345,25 +345,25 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #        peakcenter = self._get_peakcenter()
 #        if peakcenter:
 #            self.categories.insert(-1, 'peak center')
-##            self.categories.append('peak center')
+# #            self.categories.append('peak center')
 #            graph = self._make_peak_center_graph(*peakcenter)
 #            self.peak_center_graph = graph
 #
 #        blanks = self._get_blanks()
 #        if blanks:
 #            if 'blanks' not in self.categories:
-##                self.categories.append(-1, 'blanks')
+# #                self.categories.append(-1, 'blanks')
 #                self.categories.append('blanks')
 #
 #        backgrounds = self._get_backgrounds()
 #        if backgrounds:
 #            if 'backgrounds' not in self.categories:
-##                self.categories.insert(-1, 'backgrounds')
+# #                self.categories.insert(-1, 'backgrounds')
 #                self.categories.append('backgrounds')
 #
 #        det_intercals = self._get_detector_intercalibrations()
 #        if det_intercals:
-##            self.categories.insert(-1, 'Det. Intercal.')
+# #            self.categories.insert(-1, 'Det. Intercal.')
 #            self.categories.append('Det. Intercal.')
 
     def get_baseline_corrected_signal_dict(self):
@@ -394,7 +394,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             if selected == 'summary':
                 item = self.analysis_summary
             elif selected == 'blanks':
-                item = self.blanks_summary#BlanksSummary(record=self)
+                item = self.blanks_summary  # BlanksSummary(record=self)
             elif selected == 'backgrounds':
                 item = self.backgrounds_summary
 #                item = BackgroundsSummary(record=self)
@@ -434,11 +434,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #        #load backgrounds
 #        self._load_from_history('backgrounds', Background)
 #
-##        #load airs for detector intercal
-##        self._load_detector_intercalibration()
-##
-##    def _load_detector_intercalibration(self):
-##        pass
+# #        #load airs for detector intercal
+# #        self._load_detector_intercalibration()
+# #
+# #    def _load_detector_intercalibration(self):
+# #        pass
 #
 #    def _load_from_history(self, name, klass, **kw):
 #        kind = name[:-1]
@@ -458,7 +458,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #                    iso.b = nitem
 
 #                if not bi.fit:
-##                if not bi.use_set:
+# #                if not bi.use_set:
 #                    s = klass(timestamp=self.timestamp, **kw)
 #                    s.value = bi.user_value
 #                    s.error = bi.user_error
@@ -684,14 +684,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 its the only one with non unity
             '''
 
-            #get Ar36 detector
+            # get Ar36 detector
             det = next((iso.detector for iso in self.dbrecord.isotopes
                       if iso.molecular_weight.name == 'Ar36'), None)
 #            for iso in self.dbrecord.isotopes:
 #                print iso
             if det:
 
-                #get the intercalibration for this detector
+                # get the intercalibration for this detector
                 item = next((item for item in items if item.detector == det), None)
                 ic = item.user_value, item.user_error
 
@@ -1029,17 +1029,17 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #            x = array(x)
 #            y = array(y)
 #
-##            if iso == 'Ar40':
-##                import numpy as np
-##                p = '/Users/ross/Sandbox/61311-36b'
-##                xs, ys = np.loadtxt(p, unpack=True)
-##                for ya, yb in zip(ys, y):
-##                    print ya, yb, ya - yb
+# #            if iso == 'Ar40':
+# #                import numpy as np
+# #                p = '/Users/ross/Sandbox/61311-36b'
+# #                xs, ys = np.loadtxt(p, unpack=True)
+# #                for ya, yb in zip(ys, y):
+# #                    print ya, yb, ya - yb
 #
 #
-##            exc = RegressionGraph._apply_filter_outliers(x, y)
-##            x = delete(x[:], exc, 0)
-##            y = delete(y[:], exc, 0)
+# #            exc = RegressionGraph._apply_filter_outliers(x, y)
+# #            x = delete(x[:], exc, 0)
+# #            y = delete(y[:], exc, 0)
 #
 #            low = min(x)
 #
@@ -1049,7 +1049,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #                    return
 #                st = low
 #                xn = x - st
-##                print x[0], x[-1]
+# #                print x[0], x[-1]
 #                r = PolynomialRegressor(xs=xn, ys=y,
 #                                        degree=fit)
 #                t_fx, t_fy = x[:], y[:]

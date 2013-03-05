@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,26 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits, Button, List, Str, Int, Instance, Property, Bool, Any, \
+# from traits.api import HasTraits, Button, List, Str, Int, Instance, Property, Bool, Any, \
 #    DelegatesTo
-#from traitsui.api import View, Item, VGroup, HGroup, Spring, Label, Group, \
+# from traitsui.api import View, Item, VGroup, HGroup, Spring, Label, Group, \
 #    spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
-#from src.helpers.traitsui_shortcuts import listeditor
+# from src.helpers.traitsui_shortcuts import listeditor
 from src.processing.series.blank_config import BlankConfig
-#from src.database.core.database_adapter import DatabaseAdapter
-#from src.database.orms.isotope_orm import proc_BlanksTable
-#from src.loggable import Loggable
-#from src.processing.analysis import Signal
+# from src.database.core.database_adapter import DatabaseAdapter
+# from src.database.orms.isotope_orm import proc_BlanksTable
+# from src.loggable import Loggable
+# from src.processing.analysis import Signal
 from src.processing.series.fit_series_editor import FitSeriesEditor
 from src.processing.figures.blanks_figure import BlanksFigure
-#from src.database.orms.isotope_orm import AnalysisTable, MeasurementTable, AnalysisTypeTable, ExperimentTable
+# from src.database.orms.isotope_orm import AnalysisTable, MeasurementTable, AnalysisTypeTable, ExperimentTable
 
-#@todo: add notes to configs history table
-#@todo: save notes to configs history table
+# @todo: add notes to configs history table
+# @todo: save notes to configs history table
 
-#class BlanksEditor(Loggable):
+# class BlanksEditor(Loggable):
 class BlanksEditor(FitSeriesEditor):
     config_klass = BlankConfig
     figure_klass = BlanksFigure
@@ -57,17 +57,17 @@ class BlanksEditor(FitSeriesEditor):
 
 #    configs = List
 #
-##    note = Str
-##    save_note = Button('Save')
+# #    note = Str
+# #    save_note = Button('Save')
 #
 #    saveable = Bool(False)
 #    appliable = Property(depends_on='configs.save')
 #
 #    def _get_appliable(self):
 #        return [s for s in self.configs if s.save]
-##    saveable = Property(depends_on='configs.save')
-##    def _get_saveable(self):
-##        return [s for s in self.configs if s.save]
+# #    saveable = Property(depends_on='configs.save')
+# #    def _get_saveable(self):
+# #        return [s for s in self.configs if s.save]
 #
 #    def add(self, iso_keys):
 #        self.configs = [self.config_klass(label=iso)
@@ -79,10 +79,10 @@ class BlanksEditor(FitSeriesEditor):
 
 #    def _fit_fired(self):
 #        #open a figure with the default loaded configs
-##        from figures.fits_figure import BlanksFigure
-##        f = BlanksFigure(db=self.db,
-##                   workspace=self.workspace,
-##                   repo=self.repo)
+# #        from figures.fits_figure import BlanksFigure
+# #        f = BlanksFigure(db=self.db,
+# #                   workspace=self.workspace,
+# #                   repo=self.repo)
 #        f = self.figure_klass(db=self.db,
 #                   workspace=self.workspace,
 #                   repo=self.repo)
@@ -110,28 +110,28 @@ class BlanksEditor(FitSeriesEditor):
 #                  for a in self.analyses
 #                    for bi in self._get_db_results(a, sess)]
 #        self._load(analyses)
-##    def _load(self, blanks):
-##        f = self.fits_figure
-##        sess = self.db.get_session()
-##        from src.database.orms.isotope_orm import AnalysisTable, MeasurementTable, AnalysisTypeTable, ExperimentTable
+# #    def _load(self, blanks):
+# #        f = self.fits_figure
+# #        sess = self.db.get_session()
+# #        from src.database.orms.isotope_orm import AnalysisTable, MeasurementTable, AnalysisTypeTable, ExperimentTable
 #        #get configs associated with these analyses base on the experiment
-##        names = []
-##        attrs = []
-##        def get_blanks(a):
-##            an = a.dbrecord
-##            exp = an.experiment
-##            q = sess.query(AnalysisTable)
-##            q = q.join(ExperimentTable)
-##            q = q.join(MeasurementTable)
-##            q = q.join(AnalysisTypeTable)
-##            q = q.filter(AnalysisTypeTable.name == 'blank')
-##            q = q.filter(ExperimentTable.id == exp.id)
-##            q = q.filter(AnalysisTable.id != an.id)
-##            return q.all()
+# #        names = []
+# #        attrs = []
+# #        def get_blanks(a):
+# #            an = a.dbrecord
+# #            exp = an.experiment
+# #            q = sess.query(AnalysisTable)
+# #            q = q.join(ExperimentTable)
+# #            q = q.join(MeasurementTable)
+# #            q = q.join(AnalysisTypeTable)
+# #            q = q.filter(AnalysisTypeTable.name == 'blank')
+# #            q = q.filter(ExperimentTable.id == exp.id)
+# #            q = q.filter(AnalysisTable.id != an.id)
+# #            return q.all()
 #
-##        blanks = [bi
-##                  for a in self.analyses
-##                    for bi in self._get_db_results(a, sess)]
+# #        blanks = [bi
+# #                  for a in self.analyses
+# #                    for bi in self._get_db_results(a, sess)]
 #
 #        blanks = list(set(blanks))
 #        names, attrs = zip(*[(bi.path.filename, dict(dbrecord=bi)) for bi in blanks])
@@ -164,7 +164,7 @@ class BlanksEditor(FitSeriesEditor):
 #
 #                isotope = bi.label
 #                fit = bi.fit
-##                a.age_dirty = True
+# #                a.age_dirty = True
 #                self.info('adding configs. isotope={} fit={}'.format(isotope, fit))
 #                bl = db.add_blanks(history,
 #                              isotope=isotope,
@@ -251,7 +251,7 @@ class BlanksEditor(FitSeriesEditor):
 #                  user_value=uv,
 #                  user_error=ue
 #                  )
-#            
+#
 #            self.info('copying {} {} from previous history. {:0.5f} +/- {:0.5f}'.format(li, sn, uv, ue))
 
 #===============================================================================
@@ -285,6 +285,6 @@ class BlanksEditor(FitSeriesEditor):
 #                    )
 #
 #        v = View(HGroup(left, right))
-##        v = View(right)
+# #        v = View(right)
 #        return v
 #============= EOF =============================================

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@ from src.processing.search.search_manager import SearchManager
 from src.processing.search.selected_view import SelectedView
 from src.processing.search.selector_view import SelectorView
 
-#class Marker(HasTraits):
+# class Marker(HasTraits):
 #    color = 'white'
 #    def __getattr__(self, attr):
 #        return ' '
@@ -148,7 +148,7 @@ class SelectorManager(SearchManager):
 #                continue
 #
 #            setattr(ri, attr, keys.index(ri.labnumber))
-##            ri.group_id = keys.index(ri.labnumber)
+# #            ri.group_id = keys.index(ri.labnumber)
 #            if getattr(ri, attr) != pid:
 #                inserts.append(i)
 #                pid = getattr(ri, attr)
@@ -195,7 +195,7 @@ class SelectorManager(SearchManager):
 #        self.group_cnt += 1
 #        for r in self.selected:
 #            r.group_id = self.group_cnt
-##            r.color = 'red'
+# #            r.color = 'red'
 #
 #        oruns = set(self.selected_records) ^ set(self.selected)
 #        self.selected_records = list(oruns) + [Marker()] + self.selected
@@ -204,7 +204,7 @@ class SelectorManager(SearchManager):
 #        self.graph_cnt += 1
 #        for r in self.selected:
 #            r.graph_id = self.graph_cnt
-##            r.color = 'red'
+# #            r.color = 'red'
 #
 #        oruns = set(self.selected_records) ^ set(self.selected)
 #        self.selected_records = list(oruns) + [Marker()] + self.selected
@@ -257,7 +257,7 @@ class SelectorManager(SearchManager):
 
 #    def _get_projects(self):
 #        db = self.db
-##        db.reset()
+# #        db.reset()
 #        prs = ['---', 'recent']
 #        ps = db.get_projects()
 #        if ps:
@@ -266,7 +266,7 @@ class SelectorManager(SearchManager):
 #
 #    def _get_machines(self):
 #        db = self.db
-##        db.reset()
+# #        db.reset()
 #        mas = ['---']
 #        ms = db.get_mass_spectrometers()
 #        if ms:
@@ -281,7 +281,7 @@ class SelectorManager(SearchManager):
 #            ats += [aii.name.capitalize() for aii in ai]
 #
 #        return ats
-##        return ['Blank', 'Air', 'Unknown']
+# #        return ['Blank', 'Air', 'Unknown']
 
 #    def _get_selected_record_labels(self):
 #        return ['{} {}'.format(r.rid, r.labnumber) for r in self.selected_records]

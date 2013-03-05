@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ class HardwarePreferencesPage(PreferencesPage):
             return
 
         self.system_lock_address = addr
-#        
+#
 #    def __init__(self, *args, **kw):
 #
 #        config = ConfigParser.ConfigParser()
@@ -64,10 +64,10 @@ class HardwarePreferencesPage(PreferencesPage):
 #        for sect in config.sections():
 #            name = config.get(sect, 'name')
 #            host = config.get(sect, 'host')
-#            
+#
 #            self.system_lock_names.append(name)
 #            self.system_lock_addresses[name] = host
-#        
+#
 #        pref = ConfigParser.ConfigParser()
 #        p = os.path.join(os.path.expanduser('~'), '.enthought', 'pychron', 'preferences.ini')
 #        pref.read(p)
@@ -75,13 +75,13 @@ class HardwarePreferencesPage(PreferencesPage):
 #        pref.set('pychron.hardware', 'system_lock_names', value)
 #        with open(p, 'w') as fp:
 #            pref.write(fp)
-#        
-#        #you must open the preference window and hit ok for changes in the configuration file to be passed into the master preference file    
+#
+#        #you must open the preference window and hit ok for changes in the configuration file to be passed into the master preference file
 #        if not self.system_lock_addresses.has_key(self.system_lock_name):
 #            self.system_lock_name = self.system_lock_names[0]
-#            
+#
 #        self.system_lock_address = self.system_lock_addresses[self.system_lock_name]
-#        
+#
 #        super(HardwarePreferencesPage, self).__init__(*args, **kw)
 
 

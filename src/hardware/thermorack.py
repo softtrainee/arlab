@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -124,7 +124,7 @@ class ThermoRack(CoreDevice):
         if self.simulation:
             resp = '0'
 
-        #parse the fault byte
+        # parse the fault byte
         fault_byte = make_bitarray(int(resp, 16))
 #        faults = []
 #        for i, fault in enumerate(FAULTS_TABLE):
@@ -154,8 +154,8 @@ class ThermoRack(CoreDevice):
         '''
         '''
         # resp low byte high byte
-        #flip to high byte low byte
-        #split the response into high and low bytes
+        # flip to high byte low byte
+        # split the response into high and low bytes
         if resp is not None:
             h = resp[2:]
             l = resp[:2]

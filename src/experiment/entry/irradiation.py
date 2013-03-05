@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -156,19 +156,19 @@ class Irradiation(Saveable):
 #                return '{},{}%{},{}'.format(ci.startdate, ci.starttime,
 #                                        ci.enddate, ci.endtime)
 #            err = self.chronology_input.validate_chronology()
-##            if err :
-##                self.warning_dialog('Invalid Chronology. {}'.format(err))
-##                return
+# #            if err :
+# #                self.warning_dialog('Invalid Chronology. {}'.format(err))
+# #                return
 #
 #            chronblob = '$'.join([make_ci(ci) for ci in self.chronology_input.dosages])
 #            cr = db.add_irradiation_chronology(chronblob)
 #
 #            ir = db.add_irradiation(self.name, prn, cr)
 #
-##            holder = db.get_irradiation_holder(self.holder)
-##            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
-##            for ni in alpha:
-##                db.add_irradiation_level(ni, ir, holder)
+# #            holder = db.get_irradiation_holder(self.holder)
+# #            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
+# #            for ni in alpha:
+# #                db.add_irradiation_level(ni, ir, holder)
 #
 #        db.commit()
 #        self.close_ui()
@@ -188,7 +188,7 @@ class Irradiation(Saveable):
                  buttons=['OK', 'Cancel'],
                  title='New Irradiation',
 #                 buttons=[Action(name='OK', action='save',
-##                                enabled_when='object.save_enabled'
+# #                                enabled_when='object.save_enabled'
 #                                ),
 #                          'Cancel'
 #                          ],

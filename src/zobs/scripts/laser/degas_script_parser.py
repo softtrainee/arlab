@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,7 @@ class DegasScriptParser(CoreScriptParser):
             if self.headerindex is not None:
                 text = text[self.headerindex:]
         errors += super(DegasScriptParser, self).parse(text, check_header=check_header)
-        #errors += CoreScriptParser.parse(self, text, check_header=check_header)
+        # errors += CoreScriptParser.parse(self, text, check_header=check_header)
         return errors
 
     def raw_parse(self, args):

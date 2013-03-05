@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,12 +31,12 @@ from src.pyscripts.pyscript_editor import PyScriptManager
 from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
-#from src.managers.multruns_report_manager import MultrunsReportManager
+# from src.managers.multruns_report_manager import MultrunsReportManager
 
-#Macro = None
-#start_recording = None
-#stop_recording = None
-#play_macro = None
+# Macro = None
+# start_recording = None
+# stop_recording = None
+# play_macro = None
 
 
 class ExtractionLineManager(Manager):
@@ -88,7 +88,7 @@ class ExtractionLineManager(Manager):
         if klass in gdict:
             class_factory = gdict[klass]
         else:
-            #try a lazy load of the required module
+            # try a lazy load of the required module
             if 'fusions' in manager:
                 package = 'src.managers.laser_managers.{}'.format(manager)
                 self.laser_manager_id = manager
@@ -109,14 +109,14 @@ class ExtractionLineManager(Manager):
             if manager in ['gauge_manager',
                            'valve_manager',
                            'multiplexer_manager',
-                           #'environmental_manager', 'device_stream_manager',
+                           # 'environmental_manager', 'device_stream_manager',
                            'multruns_report_manager',
                            ]:
                 self.trait_set(**{manager:m})
             else:
                 self.add_trait(manager, m)
 
-            #m.exit_on_close = False
+            # m.exit_on_close = False
 
             return m
 
@@ -169,7 +169,7 @@ class ExtractionLineManager(Manager):
             cnt = 0
             state_freq = self._valve_state_frequency
             lock_freq = self._valve_lock_frequency
-            vm=self.valve_manager
+            vm = self.valve_manager
             while not self._update_status_flag.isSet():
                 time.sleep(1)
                 if cnt % state_freq == 0:
@@ -227,7 +227,7 @@ class ExtractionLineManager(Manager):
     def reload_scene_graph(self):
 
         iddict = dict()
-        #remember the explanation settings
+        # remember the explanation settings
         exp = self.explanation
         if exp:
             for ev in exp.explanable_items:
@@ -239,14 +239,14 @@ class ExtractionLineManager(Manager):
                 p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
                 self.canvas.load_canvas_file(p)
             else:
-                self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
+                self.canvas.canvas3D.setup()  # canvas3D_dir, 'extractionline3D.txt')
 
 #        if self.canvas.style == '2D':
-##            self.canvas.invalidate_and_redraw()
+# #            self.canvas.invalidate_and_redraw()
 #        else:
 #            if self.canvas is not None:
 
-            #load state
+            # load state
             if self.valve_manager:
                 for k, v in self.valve_manager.valves.iteritems():
                     vc = self.canvas.get_object(k)
@@ -273,7 +273,7 @@ class ExtractionLineManager(Manager):
 #    def pressure_update(self, o, oo, n):
 #        '''
 #        on_trait_change handler for gauge_manager.gauges.pressure
-#        
+#
 #        '''
 #        if self.canvas:
 #            self.canvas.update_pressure(o.name, n, o.state)
@@ -437,7 +437,7 @@ class ExtractionLineManager(Manager):
 #            self.warning(result)
 
 #        system,f ok = self.valve_manager.check_ownership(name, sender_address)
-##        ok = True
+# #        ok = True
 #        if ok:
 #            critical = self.valve_manager.check_critical_section()
 #            if not critical:
@@ -447,7 +447,7 @@ class ExtractionLineManager(Manager):
 #                self.warning(result)
 #        else:
         if isinstance(result, bool):
-            #valve state show as changed if even it didnt actuate
+            # valve state show as changed if even it didnt actuate
 #            if result:
             if change:
                 do_later(self.canvas.update_valve_state, name, True if action == 'open' else False)

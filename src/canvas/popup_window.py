@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -36,7 +36,7 @@ class PopupWindow(wx.MiniFrame):
 
                               )
         self.SetBackgroundColour('red')
-        #self.Bind(wx.EVT_KEY_DOWN , self.OnKeyDown)
+        # self.Bind(wx.EVT_KEY_DOWN , self.OnKeyDown)
 #        self.Bind(wx.EVT_CHAR, self.OnChar)
 #        self.Bind(wx.EVT_SET_FOCUS, self.OnFocus)
 #        w = 125
@@ -56,7 +56,7 @@ class PopupWindow(wx.MiniFrame):
         self.Layout()
 
 
-        #t = wx.TextCtrl(self, style = wx.TE_READONLY | wx.TE_)
+        # t = wx.TextCtrl(self, style = wx.TE_READONLY | wx.TE_)
 
 
     def set_width(self, w):
@@ -81,7 +81,7 @@ class PopupWindow(wx.MiniFrame):
 #        self.Move((position[0] + size[0], position[1] + size[1]))
 
     def SetPosition(self, position):
-        #print("pos=%s" % (position))
+        # print("pos=%s" % (position))
         self.Freeze()
         self.Move((position[0], position[1]))
         self.Thaw()
@@ -108,5 +108,5 @@ class PopupWindow(wx.MiniFrame):
 #        print("On Focus: set focus to %s" % str(self.GetParent()))
 #        self.ActivateParent()
 #        evt.Skip()
-#        
+#
 #============= EOF ============================================

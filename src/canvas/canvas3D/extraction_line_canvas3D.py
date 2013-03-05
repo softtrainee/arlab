@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -139,8 +139,8 @@ Locked: {}'''.format(obj.name,
             panel.PopupMenu(self._popup_menu, pos)
             self._popup_menu.Destroy()
 
-            #obj.toggle_lock()
-            #self.update_popup(obj)
+            # obj.toggle_lock()
+            # self.update_popup(obj)
 
             self.Refresh()
 
@@ -202,7 +202,7 @@ Locked: {}'''.format(obj.name,
             if self._current is not None:
                 self._current.toggle_lock()
 
-        #CMD-B
+        # CMD-B
         elif event.MetaDown() and charcode == 66:
             import webbrowser
             webbrowser.open(url_gen.next())
@@ -230,7 +230,7 @@ Locked: {}'''.format(obj.name,
 #        self.Refresh()
 #    def update_pressure(self, name, val, state):
 #        '''
-#            
+#
 #        '''
 #
 #        id = int(name[-1:])
@@ -245,7 +245,7 @@ Locked: {}'''.format(obj.name,
 #
 #        self.Refresh()
 
-        #self.Refresh()
+        # self.Refresh()
 
 #    def toggle_laser(self,name):
 #        l=self._get_object_by_name(name)

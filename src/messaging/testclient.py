@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,13 +28,13 @@ from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor
 
 import socket
 
-#from timeit import Timer
+# from timeit import Timer
 import time
-#import os
-#from datetime import timedelta
+# import os
+# from datetime import timedelta
 from threading import Thread
 import random
-#import struct
+# import struct
 
 
 class Client(HasTraits):
@@ -46,7 +46,7 @@ class Client(HasTraits):
     response = String
     port = Int(1069)
 #    port = Int(8080)
-    #host = Str('192.168.0.65')
+    # host = Str('192.168.0.65')
 #    host = Str('129.138.12.145')
     host = 'localhost'
     path = None
@@ -119,11 +119,11 @@ class Client(HasTraits):
         if sock is None:
             sock = self._sock
             if sock is None:
-                #open connection
+                # open connection
                 sock = self.get_connection()
 
 
-        #send command
+        # send command
         sock.send(self.command)
         self.response = sock.recv(1024)
 #        print self.response, 'foo'
@@ -185,14 +185,14 @@ class Client(HasTraits):
 
 #        for i in range(500):
 #            for v in 'ABCEDFG':
-#                
+#
 #                self.ask('GetValveState {}'.format(v))
-#            
+#
 #            if i % 5 == 0:
 #                self.ask('Open {}'.format(self.ask_id[0]))
 #            elif i % 8 == 0:
 #                self.ask('Close {}'.format(self.ask_id[0]))
-#                
+#
 #            time.sleep(random.randint(0, 175) / 100.)
 
     def traits_view(self):
@@ -272,7 +272,7 @@ def main2():
 
 
 def multiplex_test():
-    #cmd = 'GetValveState C'
+    # cmd = 'GetValveState C'
     c = Client(
                port=1067,
                ask_id='D'
@@ -283,7 +283,7 @@ def multiplex_test():
     t = Thread(target=c.test)
 
 
-    #cmd = 'GetValveState C'
+    # cmd = 'GetValveState C'
     c = Client(
                port=1067,
                ask_id='E')
@@ -386,9 +386,9 @@ if __name__ == '__main__':
     video_test()
 #    local_client()
 #    diode_client()
-#	system_client()
-    #power_test()
-    #plothist('benchmark_unix_only.npz')
+# 	system_client()
+    # power_test()
+    # plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
@@ -399,7 +399,7 @@ if __name__ == '__main__':
 #    timed_flag_test()
 #    mass_spec_param_test()
     #===========================================================================
-    #Check Remote launch snippet 
+    # Check Remote launch snippet
     #===========================================================================
     #===========================================================================
     # def ready(client):
@@ -407,9 +407,9 @@ if __name__ == '__main__':
     #    if r is not None:
     #        r = r.strip()
     #    return r == 'OK'
-    # 
+    #
     # c.port = 1063
-    # 
+    #
     # if not ready(c):
     #    print 'not ready'
     #    c.ask('RemoteLaunch')
@@ -420,9 +420,9 @@ if __name__ == '__main__':
     #    while time.time() - st < timeout:
     #        if ready(c):
     #            success = True
-    #            print 'Remotely launched !!!'   
+    #            print 'Remotely launched !!!'
     #            break
-    #        
+    #
     #        time.sleep(2)
     #    if not success:
     #        print 'Launch timed out after {}'.format(timeout)
@@ -437,25 +437,25 @@ if __name__ == '__main__':
 #        n = struct.unpack('!I', nbytes)[0]
 #        print n
 #        data = sock.recv(n)
-#        
+#
 #        #print struct.unpack('!d',data[:8])
-#        
+#
 #        ys = []
 #        for i in range(0, n, 8):
 #            ys.append(struct.unpack('>d', data[i:i + 8]))
 #        plot(linspace(0, 6.28, n / 8), ys)
 #        show()
 #            print struct.unpack('!dd',data[i:i+16])
-            #print struct.unpack('>d',data[i:i+8])
-        #array(data, dtype='>'+'d'*400)
-#def plothist(name):
+            # print struct.unpack('>d',data[i:i+8])
+        # array(data, dtype='>'+'d'*400)
+# def plothist(name):
 #    p = os.path.join(os.getcwd(), name)
 #    files = load(p)
 #    hist(files['times'], 1000 / 4.)
 #    xlim(0, 0.040)
 #    show()
 #
-#def benchmark(me, im, fp):
+# def benchmark(me, im, fp):
 #    t = Timer(me, im)
 #    st = time.time()
 #    n = 1000
@@ -482,10 +482,10 @@ if __name__ == '__main__':
 
 #    host = '129.138.12.145'
 #
-##    host = 'localhost'
+# #    host = 'localhost'
 #    port = 1069
 #    cmds = ['SetIntegrationTime 1.048576']
-##    cmds = ['GetHighVoltage', 'GetTrapVoltage']
+# #    cmds = ['GetHighVoltage', 'GetTrapVoltage']
 #    #cmds = ['DoJog standard_short']
 #    for c in cmds:
 #        r = send_command((host, port), c)

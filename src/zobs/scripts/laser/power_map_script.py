@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ def power_generator(nsteps):
     '''
     '''
     x, y = np.mgrid[0:nsteps, 0:nsteps]
-    data = gaussian(2, 5, 5, 5, 5)(x, y)#+np.random.random(x.shape)
+    data = gaussian(2, 5, 5, 5, 5)(x, y)  # +np.random.random(x.shape)
     i = 0
     j = 0
     while 1:
@@ -88,7 +88,7 @@ class PowerMapStep(HasTraits):
         m = (nsecs % 3600) / 60
         s = (nsecs % 3600) % 60
 
-        time_padding = 0.5 #increase duration by 50%
+        time_padding = 0.5  # increase duration by 50%
         self.duration = nsecs / 60.0 * (1 + time_padding)
 
         return '{:02n}:{:02n}:{:02n}'.format(h, m, s)
@@ -162,8 +162,8 @@ class PowerMapScript(CoreScript):
     def _pre_run_(self):
 
         if self.manager.enable_laser():
-            #slow motion while mapping for smoother moves
-            #self.manager.stage_manager.stage_controller.set_low_speed()
+            # slow motion while mapping for smoother moves
+            # self.manager.stage_manager.stage_controller.set_low_speed()
 
             return True
 
@@ -223,7 +223,7 @@ class PowerMapScript(CoreScript):
 
         offset = 1
 
-        #nrows should be calculates so  result is a square
+        # nrows should be calculates so  result is a square
         nrows = int(padding * 2 / offset) + 1
 
         cx = self.center_x
@@ -258,13 +258,13 @@ class PowerMapScript(CoreScript):
 
             stage_controller.linear_move(p1[0], p1[1], block=True, grouped_move=False)
 
-            #wait at the start for a bit to let the detector settle
-            #time.sleep(0.5)
+            # wait at the start for a bit to let the detector settle
+            # time.sleep(0.5)
 
             stage_controller.linear_move(p2[0], p2[1],
                                                         block=False, grouped_move=False)
 
-            #sleep time required to reach cvt zone
+            # sleep time required to reach cvt zone
 
             max_len = 50
             event = Event()
@@ -279,10 +279,10 @@ class PowerMapScript(CoreScript):
             ys = []
             zs = []
             while not event.isSet():
-                #collect power data
+                # collect power data
 
                 x, y = stage_controller.get_xy()
-                mag = analog_power_meter.read_power_meter()#verbose = False)
+                mag = analog_power_meter.read_power_meter()  # verbose = False)
 
 #                d = j / float(max_len) * 3.3
 #                d = d if i % 2 == 0 else -d
@@ -295,13 +295,13 @@ class PowerMapScript(CoreScript):
                 ys.append(y)
                 zs.append(mag)
 
-            #sort the lists
+            # sort the lists
             data = sorted(zip(xs, ys, zs), key=lambda d:d[0])
             xs = [d[0] for d in data]
             ys = [d[1] for d in data]
             zs = [d[2] for d in data]
 
-            #truncate the lists
+            # truncate the lists
             xs = xs[:max_len]
             ys = ys[:max_len]
             zs = zs[:max_len]
@@ -370,8 +370,8 @@ class PowerMapScript(CoreScript):
                 else:
 
                     if i == 0:
-                        #sleep for 1.5 nsecs to let the detector cool off.
-                        #usually gets blasted as the laser moves into position
+                        # sleep for 1.5 nsecs to let the detector cool off.
+                        # usually gets blasted as the laser moves into position
                         time.sleep(1.5)
                     mag = 0
                     for c in range(self.integration):
@@ -410,7 +410,7 @@ class PowerMapScript(CoreScript):
                     resizable=True,
                     height=625,
                     width=625,
-                    #title = 'Raster Manager',
+                    # title = 'Raster Manager',
                     handler=PowerMapHandler
                     )
         return v

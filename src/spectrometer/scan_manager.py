@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str, \
 from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
      ListEditor, InstanceEditor, EnumEditor
 from traits.api import HasTraits, Range, Float
-#from pyface.timer.api import Timer
+# from pyface.timer.api import Timer
 #============= standard library imports ========================
 import random
 import os
@@ -32,11 +32,11 @@ from src.spectrometer.detector import Detector
 from src.spectrometer.tasks.magnet_scan import MagnetScan
 from src.spectrometer.tasks.rise_rate import RiseRate
 from src.paths import paths
-#from src.graph.tools.data_tool import DataTool, DataToolOverlay
-#import csv
-#from src.helpers.filetools import unique_path
+# from src.graph.tools.data_tool import DataTool, DataToolOverlay
+# import csv
+# from src.helpers.filetools import unique_path
 from src.managers.data_managers.csv_data_manager import CSVDataManager
-#import time
+# import time
 from pyface.timer.do_later import do_later
 import time
 from threading import Thread
@@ -45,7 +45,7 @@ from src.helpers.timer import Timer
 from src.constants import NULL_STR
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from src.spectrometer.readout_view import ReadoutView
-#class CSVDataManager(HasTraits):
+# class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
 #        self._file = open(p, mode)
 #        self._writer = csv.writer(self._file)
@@ -54,7 +54,7 @@ from src.spectrometer.readout_view import ReadoutView
 #        self._writer.writerow(datum_tuple)
 #
 #    def close(self):
-##        self._writer.close()
+# #        self._writer.close()
 #        self._file.close()
 
 
@@ -85,7 +85,7 @@ class ScanManager(Manager):
     graph_ymax = Property(Float, depends_on='_graph_ymax')
     _graph_ymin = Float
     _graph_ymax = Float
-    graph_scan_width = Int #in minutes
+    graph_scan_width = Int  # in minutes
 
     record_button = Event
     add_marker_button = Button('Add Marker')
@@ -106,8 +106,8 @@ class ScanManager(Manager):
 
     def _update_magnet(self, obj, name, old, new):
         if new:
-            #covnert dac into a mass
-            #convert mass to isotope
+            # covnert dac into a mass
+            # convert mass to isotope
 #            d = self.magnet.dac
             iso = self.magnet.map_dac_to_isotope()
             if not iso in self.isotopes:
@@ -121,16 +121,16 @@ class ScanManager(Manager):
 
         self._start_timer()
 
-        #listen to detector for enabling 
+        # listen to detector for enabling
         self.on_trait_change(self._toggle_detector, 'detectors:active')
 
-        #force update
+        # force update
         self.load_settings()
 
-        #bind 
+        # bind
         self.on_trait_change(self._update_magnet, 'magnet:dac_changed')
 
-        #force position update
+        # force position update
         self._set_position()
 
     def load_settings(self):
@@ -165,7 +165,7 @@ class ScanManager(Manager):
             det = self.detector
             if not det:
                 det = self.detectors[0]
-            
+
             d = dict(isotope=iso,
                      detector=det.name)
 
@@ -187,7 +187,7 @@ class ScanManager(Manager):
         self.dump_settings()
         self._stop_timer()
 
-        #clear our graph settings so on reopen events will fire
+        # clear our graph settings so on reopen events will fire
         del self.graph_scale
         del self._graph_ymax
         del self._graph_ymin
@@ -211,14 +211,14 @@ class ScanManager(Manager):
 #            self._write_data(x, keys, signals)
 
 #    def _write_data(self, x, keys, signals):
-##        st = time.clock()
+# #        st = time.clock()
 #            dm = self.record_data_manager
 #            if dm:
 #                if self._first_recording:
 #                    self._first_recording = False
 #                    dm.write_to_frame(('time',) + tuple(keys))
 #                dm.write_to_frame((x,) + tuple(signals))
-##        print time.clock() - st
+# #        print time.clock() - st
 
     def _start_timer(self):
 #        self._first_iteration = True
@@ -238,8 +238,8 @@ class ScanManager(Manager):
 
         self.consumer = Thread(target=self._consume, args=(dm,))
         self.consumer.start()
-##        root = paths.spectrometer_scans_dir
-##        p, _c = unique_path(root, 'scan')
+# #        root = paths.spectrometer_scans_dir
+# #        p, _c = unique_path(root, 'scan')
         dm.new_frame(directory=paths.spectrometer_scans_dir)
 
 
@@ -250,9 +250,9 @@ class ScanManager(Manager):
 # handlers
 #===============================================================================
     def _set_position(self):
-        if self.isotope and self.isotope!=NULL_STR \
+        if self.isotope and self.isotope != NULL_STR \
             and self.detector:
-            
+
             self.info('set position {} on {}'.format(self.isotope, self.detector))
             self.ion_optics_manager.position(self.isotope, self.detector.name)
 
@@ -290,11 +290,11 @@ class ScanManager(Manager):
 
                 self.info('set position {} on {}'.format(mass, self.detector))
 
-                #thread not super necessary
-                #simple allows gui to update while the magnet is delaying for settling_time
+                # thread not super necessary
+                # simple allows gui to update while the magnet is delaying for settling_time
                 t = Thread(target=self.ion_optics_manager.position, args=(mass, self.detector))
                 t.start()
-#                
+#
 
     def _graph_y_auto_changed(self, new):
         p = self.graph.plots[0]

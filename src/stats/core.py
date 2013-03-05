@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,7 @@ def calculate_mswd(x, errs, k=1):
         x = asarray(x)
         errs = asarray(errs)
 
-    #    xmean_u = x.mean()    
+    #    xmean_u = x.mean()
         xmean_w, _err = calculate_weighted_mean(x, errs)
 
         ssw = (x - xmean_w) ** 2 / errs ** 2
@@ -72,8 +72,8 @@ def validate_mswd(mswd, n, k=1):
         return
 
     dof = n - k
-    #calculate the reduced chi2 95% interval for given dof
-    #use scale parameter to calculate the chi2_reduced from chi2
+    # calculate the reduced chi2 95% interval for given dof
+    # use scale parameter to calculate the chi2_reduced from chi2
 
     rv = chi2(dof, scale=1 / float(dof))
     low, high = rv.interval(0.95)

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,13 +93,13 @@ class ContourGraph(Graph):
             cb.padding_bottom = plot.padding_bottom
             cb.padding_right = 50
             cb.padding_left = 25
-            #cb.plot=p[0]
-            #expand the plotcontainers shape in col space
+            # cb.plot=p[0]
+            # expand the plotcontainers shape in col space
 #            shape=self.plotcontainer.shape
 #            self.plotcontainer.shape=(shape[0],shape[1]+1)
             self.plotcontainer.add(cb)
 
-        #self.refresh_editor()
+        # self.refresh_editor()
         return plot, names, rd
 
     def metadata_changed(self):
@@ -115,9 +115,9 @@ class ContourGraph(Graph):
 
             if x_ndx and y_ndx:
 
-                #get horizontal data
+                # get horizontal data
                 d1 = data.data[y_ndx, :]
-                #get vertical data
+                # get vertical data
                 d2 = data.data[:, x_ndx]
 
                 xdata, ydata = index.get_data()
@@ -164,7 +164,7 @@ class ContourGraph(Graph):
                           orientation='v',
                           resizable='v',
                           width=30,
-                          #padding=20
+                          # padding=20
                           )
 
         return colorbar

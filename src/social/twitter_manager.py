@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,10 +22,10 @@ from threading import Thread
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-#def sudo(command, password=None, prompt="Enter password "):
+# def sudo(command, password=None, prompt="Enter password "):
 #
 #    import pexpect
-#    
+#
 #    if not password:
 #        import getpass
 #        password = getpass.getpass(prompt)
@@ -87,46 +87,46 @@ class TwitterManager(Manager):
         except NameError, e:
             print e
 #    def get_twitter(self):
-        #check for dependencies:
+        # check for dependencies:
 #        try:
 #
 #            import twitter
 #        except ImportError:
 #            self.warning('Could not import python-twitter. Is it installed?')
-#            
+#
 #            info = self.edit_traits(view='install_view')
 #            if info.result:
 #                cmd = '/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install python-twitter'
 #                #cmd='/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install crcmod'
-##                cmd='pwd'
+# #                cmd='pwd'
 #                err = sudo(cmd,
 #                     password=self.credientials.password)
-##                
+# #
 #                #activation not working so gonna have to require a restart
 #                #python-twitter requires setuptools and I think thats causing the problem
-#                
+#
 #                if err is None:
-#                    msg = 'python-twitter successfully installed. restart required '          
+#                    msg = 'python-twitter successfully installed. restart required '
 #                    self.info(msg)
 #                    information(None, msg)
 #                else:
-#                    msg = 'python-twitter failed to install. '          
+#                    msg = 'python-twitter failed to install. '
 #                    self.info(msg)
 #                    information(None, msg)
-#                    
+#
 #                sys.exit()
 
 
 #                import pkg_resources
-##                dist=pkg_resources.Distribution.from_location('/Library/Frameworks/Python.framework/Versions/7.1/lib/python2.7/site-packages',
-##                                                         'python_twitter-0.8.2-py2.7.egg'
-##                                                       )
-##                pkg_resources.working_set.add(dist)
+# #                dist=pkg_resources.Distribution.from_location('/Library/Frameworks/Python.framework/Versions/7.1/lib/python2.7/site-packages',
+# #                                                         'python_twitter-0.8.2-py2.7.egg'
+# #                                                       )
+# #                pkg_resources.working_set.add(dist)
 #                dist=pkg_resources.get_distribution('python-twitter')
 #                print dist
 #                dist.activate()
-##                reload(pkg_resources)
-#                
+# #                reload(pkg_resources)
+#
 #                import crcmod
 #                print crcmod
 

@@ -14,7 +14,7 @@ Column('id', Integer, primary_key=True),
 Column('history_id', Integer),
 Column('user_value', Float),
 Column('user_error', Float),
-#Column('use_set', Boolean),
+# Column('use_set', Boolean),
 Column('fit', String(40)),
 )
 bst = Table('proc_DetectorIntercalibrationSetTable', meta,

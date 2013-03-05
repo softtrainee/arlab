@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,12 +79,12 @@ class baseTest(unittest.TestCase):
                 error(request_types, data[1], v[1])
             except IndexError:
                 pass
-            #failure(request_types, data[1], v[1])
+            # failure(request_types, data[1], v[1])
 
     def setUp(self):
         self.manager = RemoteHardwareManager()
 
-        #verfiy that all commands in the protocol are tested
+        # verfiy that all commands in the protocol are tested
         p = self.protocol()
 
         test = [t[4:] for t in dir(self) if t.startswith('test')]

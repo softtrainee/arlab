@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,10 +18,10 @@
 from traits.api import HasTraits, List
 #============= standard library imports ========================
 from reportlab.platypus.doctemplate import SimpleDocTemplate
-#from reportlab.platypus.tables import Table, TableStyle
-#from reportlab.lib.styles import getSampleStyleSheet
-#from reportlab.platypus import Paragraph
-#from reportlab.lib.units import inch
+# from reportlab.platypus.tables import Table, TableStyle
+# from reportlab.lib.styles import getSampleStyleSheet
+# from reportlab.platypus import Paragraph
+# from reportlab.lib.units import inch
 
 #============= local library imports  ==========================
 from src.loggable import Loggable
@@ -30,7 +30,7 @@ from src.processing.publisher.templates.tables.ideogram_table import IdeogramTab
 import csv
 import os
 from reportlab.lib.units import inch
-#from reportlab.lib import colors
+# from reportlab.lib import colors
 
 
 
@@ -51,10 +51,10 @@ class Publisher(Loggable):
 #
 #        pub = klass(filename=out)
 #        pub.add_spectrum_table([1, 2])
-##        for si in samples:
-##            pass
-##            pub.add_spectrum()
-##            pub.add_sample(si)
+# #        for si in samples:
+# #            pass
+# #            pub.add_spectrum()
+# #            pub.add_sample(si)
 #
 #        pub.publish()
 class BaseWriter(Loggable):

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,9 +28,9 @@ from dummies import DummyDevice, DummyLM
 from src.remote_hardware.errors import DeviceConnectionErrorCode
 from src.lasers.laser_managers.laser_manager import ILaserManager
 
-#DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
-#CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
-#SYNRAD_PROTOCOL = 'src.lasers.laser_managers.synrad_co2_manager.SynradCO2Manager'
+# DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
+# CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+# SYNRAD_PROTOCOL = 'src.lasers.laser_managers.synrad_co2_manager.SynradCO2Manager'
 
 cnt = 0
 gErrorSet = False
@@ -48,7 +48,7 @@ class BaseRemoteHardwareHandler(Loggable):
         eh.logger = self
         return eh
 
-    #@staticmethod
+    # @staticmethod
     def _make_keys(self, name):
         return [name, name.upper(), name.capitalize(), name.lower()]
 
@@ -62,12 +62,12 @@ class BaseRemoteHardwareHandler(Loggable):
             manager = self.get_manager()
             err = eh.check_manager(manager, self.manager_name)
             if err is None:
-                #str list split by shlex
-                #first arg is the command
+                # str list split by shlex
+                # first arg is the command
                 args = self.split_data(data)
-                #try:
+                # try:
                 err, func = eh.check_command(self, args)
-                #except InvalidCommandErrorCode, e:
+                # except InvalidCommandErrorCode, e:
                 #    err = e
 
                 if err is None:
@@ -82,7 +82,7 @@ class BaseRemoteHardwareHandler(Loggable):
     def get_manager(self):
         return
 
-    #@staticmethod
+    # @staticmethod
     def split_data(self, data):
         return [a.strip() for a in shlex.split(data)]
 
@@ -100,7 +100,7 @@ class BaseRemoteHardwareHandler(Loggable):
                 protocol = 'src.hardware.core.i_core_device.ICoreDevice'
             dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
             if dev is None:
-                #possible we are trying to get a flag
+                # possible we are trying to get a flag
                 m = self.get_manager()
                 if m:
                     dev = m.get_flag(name)

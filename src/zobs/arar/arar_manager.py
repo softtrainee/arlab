@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,8 +19,8 @@ from traits.api import HasTraits, Instance, Any, List, Str, Enum
 from traitsui.api import View, Item, TreeEditor, TreeNode
 #============= standard library imports ========================
 #============= local library imports  ==========================
-#from src.managers.manager import Manager
-#from src.arar.arar_engine import ArArEngine
+# from src.managers.manager import Manager
+# from src.arar.arar_engine import ArArEngine
 from src.envisage.core.envisage_editor import EnvisageEditor
 from src.arar.workspace import  ArArWorkspace
 from src.arar.nodes.experiment import ExperimentNode
@@ -53,7 +53,7 @@ class ArArManager(EnvisageManager):
     def _active_workspace(self, ws):
         w = self.application.workbench.windows[0]
 #                w.active_editor = w.editors[0]
-#                w.active_part = w.editors[0]   
+#                w.active_part = w.editors[0]
         ind = self.engine.workspaces.index(ws)
         try:
             w.activate_editor(w.editors[ind])

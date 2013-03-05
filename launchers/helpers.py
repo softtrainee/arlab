@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,14 +25,14 @@ def build_version(ver, set_path=False):
 #       insert pychron src dir into sys.path
         build_sys_path(ver)
 
-    #can now use src. 
-    #build the global path structure
+    # can now use src.
+    # build the global path structure
     from src.paths import paths
 
     paths.bundle_root = os.path.dirname(__file__)
     paths.build(ver)
 
-    #build globals
+    # build globals
     build_globals()
 
 def build_sys_path(ver):
@@ -48,7 +48,7 @@ def build_globals():
 
     from globals import globalv
     globalv.build(ip)
-##    use_ipc = ip.get_global('use_ipc')
+# #    use_ipc = ip.get_global('use_ipc')
 #    boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
 #    for attr, func in [('use_ipc', boolfunc),
 #                       ('ignore_initialization_')

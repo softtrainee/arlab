@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,7 @@
 from traits.api import Property, Any, Button, Event, Bool, String
 from traitsui.api import Item, HGroup, \
     ButtonEditor
-#from enable.savage.trait_defs.ui.svg_button import SVGButton
+# from enable.savage.trait_defs.ui.svg_button import SVGButton
 
 #=============standard library imports ========================
 from thread import start_new_thread
@@ -54,7 +54,7 @@ class ManagerScript(Loggable):
     default_save = Bool(True)
     '''
     '''
-    #stop_button = SVGButton(label = 'Stop',
+    # stop_button = SVGButton(label = 'Stop',
     #               filename = os.path.join(os.getcwd(), 'resources', 'stop.svg'))
 
     user_cancel = False
@@ -84,7 +84,7 @@ class ManagerScript(Loggable):
             a = self._alive
         else:
             if hasattr(self.manager, '_enabled'):
-                a = self._alive and self.manager._enabled# or self.manager.simulation)
+                a = self._alive and self.manager._enabled  # or self.manager.simulation)
             else:
                 a = self._alive
 
@@ -131,12 +131,12 @@ class ManagerScript(Loggable):
     def _end_run_(self):
         '''
         '''
-        #self.trait_set(start_label='Start')
-        #print self.start_label
-        #self.start_label = 'Start'
+        # self.trait_set(start_label='Start')
+        # print self.start_label
+        # self.start_label = 'Start'
         self.kill_script()
         self.info('%s finished' % self.name)
-        #print 
+        # print
 
     def start(self):
         '''
@@ -173,7 +173,7 @@ class ManagerScript(Loggable):
         if not self._alive:
             if self._start_fired():
                 self._alive = True
-                #self.start_label = 'Stop'
+                # self.start_label = 'Stop'
         else:
             self.kill_script()
 
@@ -181,7 +181,7 @@ class ManagerScript(Loggable):
         '''
         '''
         return HGroup(Item('start_button',
-                           #style='custom',
+                           # style='custom',
                            editor=ButtonEditor(label_value='start_label')),
                       Item('notes_button', enabled_when='notes_enabled'),
                            show_labels=False)
@@ -198,7 +198,7 @@ class ManagerScript(Loggable):
                 break
             time.sleep(0.01)
 #=========== EOF ================
-    #def _data_manager_default(self):
+    # def _data_manager_default(self):
     #    return DataManager()
 #    def traits_view(self):
 #        return View(HGroup('start_button','stop_button',show_labels=False))#Item('stop', show_label = False))

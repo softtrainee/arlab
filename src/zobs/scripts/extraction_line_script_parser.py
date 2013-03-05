@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
-#from traitsui.api import View, Item, Group, HGroup, VGroup
+# from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
+# from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 import os
@@ -257,7 +257,7 @@ class ExtractionLineScriptParser(CoreScriptParser):
         if not subroutine:
             error = 'Expected a subroutine'
         else:
-            #check for valid subroutine
+            # check for valid subroutine
             subpath = self._check_valid_subroutine_(subroutine)
             if not subpath:
 
@@ -322,7 +322,7 @@ class ExtractionLineScriptParser(CoreScriptParser):
                     float(r)
                 except ValueError:
                     if not "'" in r and r not in ['True', 'False']:
-                        #assume quotes not apostrophe
+                        # assume quotes not apostrophe
                         r = 'self.%s' % r
 
                 return ''.join((l, key, r))

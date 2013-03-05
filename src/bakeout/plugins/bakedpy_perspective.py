@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,7 +28,7 @@ class BakedpyPerspective(Perspective):
     show_editor_area = False
     contents = [
                 PerspectiveItem(id='pychron.bakeout.main',
-                              #width = 0.65
+                              # width = 0.65
                               ),
 
 #                PerspectiveItem(id='pychron.arar.info',
@@ -36,11 +36,11 @@ class BakedpyPerspective(Perspective):
 #                             relative_to='pychron.arar.engine',
 #                             position='bottom'
 #                              ),
-##                PerspectiveItem(id='pychron.arar.engine.configure',
-##                              #width = 0.65
-##                             relative_to='pychron.arar.info',
-##                             position='with'
-##                              ),
+# #                PerspectiveItem(id='pychron.arar.engine.configure',
+# #                              #width = 0.65
+# #                             relative_to='pychron.arar.info',
+# #                             position='with'
+# #                              ),
 #                PerspectiveItem(id='pychron.arar.database',
 #                              #width = 0.65
 #                             relative_to='pychron.arar.info',
@@ -48,9 +48,9 @@ class BakedpyPerspective(Perspective):
 #                              ),
 #
 #                PerspectiveItem(id='pychron.arar.notes_view',
-##                              relative_to='pychron.modeler.summary_view',
+# #                              relative_to='pychron.modeler.summary_view',
 #                              #width = 0.65
-##                              position='bottom'
+# #                              position='bottom'
 #                              ),
 
               ]

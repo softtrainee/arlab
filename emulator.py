@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,10 +90,10 @@ class Emulator(object):
 
     def GetValveStates(self, *args):
         r = 'T0'
-        #if self.cnt%2==0:
+        # if self.cnt%2==0:
         #    r='T1'
 
-#        self.cnt+=1       
+#        self.cnt+=1
 #        r='T'+self.state
         print 'Get valve states ', r
         return r
@@ -182,7 +182,7 @@ class Emulator(object):
         return 'OK'
 
     #===========================================================================
-    # Qtegra Protocol    
+    # Qtegra Protocol
     #===========================================================================
     def SetMass(self, mass):
         mass = float(mass)

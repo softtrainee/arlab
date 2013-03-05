@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,11 +69,11 @@ class MagnetScan(SpectrometerTask):
 #            intensity = peak_generator.next()
 #        intensities = [intensity]
 #
-##        if graph:
-##            graph.add_datum(
-##                            (do, intensity),
-###                            update_y_limits=True,
-##                            do_after=1)
+# #        if graph:
+# #            graph.add_datum(
+# #                            (do, intensity),
+# ##                            update_y_limits=True,
+# #                            do_after=1)
 #
 #        for di in values[1:]:
 #            if not self.isAlive():
@@ -83,7 +83,7 @@ class MagnetScan(SpectrometerTask):
 #
 #            intensity = spec.get_intensity(det)
 #
-##            debug
+# #            debug
 #            if globalv.experiment_debug:
 #                intensity = peak_generator.next()
 #
@@ -169,7 +169,7 @@ class MagnetScan(SpectrometerTask):
             self._post_execute()
 
     def _do_scan(self, sm, em, stm, directions=None, map_mass=True):
-        #default to forward scan
+        # default to forward scan
         if directions is None:
             directions = [1]
         elif isinstance(directions, str):

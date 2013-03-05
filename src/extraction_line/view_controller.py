@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,7 +41,7 @@ class ViewControllerHandler(Handler):
 
         '''
 
-        #delete any previous view
+        # delete any previous view
         # if they exist they will be rewritten below
 
         for uvi in get_user_views():
@@ -100,7 +100,7 @@ class UserView(HasTraits):
             m, rot = self.scene_graph.calc_rotation_matrix(self.rx, self.ry, self.rz)
             self.scene_graph.canvas.thisrotation = rot
             self.scene_graph.root[0].matrix = m
-            self.scene_graph.root[0].scale = (self._zoom,) * 3#(self.zoom * 0.02,)*3
+            self.scene_graph.root[0].scale = (self._zoom,) * 3  # (self.zoom * 0.02,)*3
 
             try:
                 self.scene_graph.root[1].matrix = m
@@ -117,7 +117,7 @@ class ViewController(HasTraits):
     '''
     views = List
 
-    scene_graph = Any#(transient = True)
+    scene_graph = Any  # (transient = True)
 #    def __init__(self, *args, **kw):
 #        super(ViewController, self).__init__(*args, **kw)
     def _views_default(self):
@@ -134,7 +134,7 @@ class ViewController(HasTraits):
     def views_factory(self):
         '''
         '''
-        #if os.path.exists(picklepath):
+        # if os.path.exists(picklepath):
 
         uvfs = get_user_views()
         if uvfs:
@@ -149,7 +149,7 @@ class ViewController(HasTraits):
                         pass
             return px
         else:
-            return []#UserView(name = 'home', key = 'h', scene_graph = self.scene_graph)]
+            return []  # UserView(name = 'home', key = 'h', scene_graph = self.scene_graph)]
 
     def _scene_graph_changed(self):
         for v in self.views:
@@ -203,7 +203,7 @@ class ViewController(HasTraits):
                                                                              high_name='zmax',
                                                                              mode='slider')),
                                                 Group('background_color'
-                                                      #, style = 'custom'
+                                                      # , style = 'custom'
                                                       ),
                                                 show_border=True,
                                                 ),

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ from src.processing.isotope import Isotope
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
-#class AgeProperty()(Property):
+# class AgeProperty()(Property):
 #    depends_on = 'age_dirty'
 
 class ArArAge(HasTraits):
@@ -50,7 +50,7 @@ class ArArAge(HasTraits):
     kcl = AgeProperty()
     clk = AgeProperty()
 
-    #ratios
+    # ratios
     Ar40_39 = AgeProperty()
     Ar37_39 = AgeProperty()
     Ar36_39 = AgeProperty()
@@ -211,7 +211,7 @@ class ArArAge(HasTraits):
 #            return ss
 
 #        fsignals = sigs('')
-##        print fsignals[0]
+# #        print fsignals[0]
 #        bssignals = sigs('bs')
 #        blsignals = sigs('bl')
 #        bksignals = sigs('bg')
@@ -292,14 +292,14 @@ class ArArAge(HasTraits):
 #        return 1e6
         try:
             return AGE_SCALARS[self.age_units]
-##            return AGE_SCALARS[constants.constants.age_units]
+# #            return AGE_SCALARS[constants.constants.age_units]
         except KeyError:
             return 1
 
 #    @cached_property
 #    def _get_signals(self):
-##        if not self._signals:
-##        self._load_signals()
+# #        if not self._signals:
+# #        self._load_signals()
 #
 #        return self._signals
 
@@ -366,7 +366,7 @@ class ArArAge(HasTraits):
                 if chron:
                     doses = chron.get_doses()
 #                    chronblob = chron.chronology
-#                    
+#
 #                    doses = chronblob.split('$')
 #                    doses = [di.strip().split('%') for di in doses]
 #

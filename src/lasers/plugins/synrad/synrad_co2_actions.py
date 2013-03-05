@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
-#from traits.api import on_trait_change
+# from traits.api import on_trait_change
 
 #============= standard library imports ========================
 
@@ -31,7 +31,7 @@ def get_manager(event):
 
         return manager
 
-#class OpenJogManagerAction(Action):
+# class OpenJogManagerAction(Action):
 #    def perform(self, event):
 #        manager = get_manager(event)
 #        if manager is not None:
@@ -43,7 +43,7 @@ class ConfigStageControllerAction(Action):
         app = self.window.application
         open_manager(app,
                      manager.stage_manager.motion_controller_manager)
-#class OpenStageManagerAction(Action):
+# class OpenStageManagerAction(Action):
 #    name = 'Open Stage Manager'
 #
 #    enabled = True

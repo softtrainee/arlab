@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ def horizontal_panorama(H, fromim, toim, padding=2400, delta=2400):
     def transf(p):
         p2 = dot(H, [p[0], p[1], 1])
         return [p2[0] / p2[2], p2[1] / p2[2]]
-    if H[1, 2] < 0: #fromim is to the right
+    if H[1, 2] < 0:  # fromim is to the right
         if is_color:
             toim_t = hstack((toim, zeros((toim.shape[0], padding, 3))))
             fromim_t = zeros((toim.shape[0], toim.shape[1] + padding, toim.shape[2]))

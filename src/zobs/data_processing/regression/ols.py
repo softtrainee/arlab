@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ class WLS(object):
         self.X = np.asarray(x)
         self.Y = np.asarray(y)
 
-        #weights = 1.0 / np.asarray(w)
+        # weights = 1.0 / np.asarray(w)
 
         self._ols = sm.WLS(self.Y, np.vander(self.X, order))
         self.results = self._ols.results
@@ -61,7 +61,7 @@ class OLS(object):
         return self._get_result_param('params')
 
     def get_coefficient_standard_errors(self):
-        #return np.sqrt(np.diagonal(self.results.cov_params()))
+        # return np.sqrt(np.diagonal(self.results.cov_params()))
         return self.results.bse
 
     def get_residuals(self):

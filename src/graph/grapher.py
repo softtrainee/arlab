@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -113,7 +113,7 @@ class Grapher(HasTraits):
 
             y, x = histogram(relative_errs)
 
-            #convert edges to mids
+            # convert edges to mids
             mids = zeros(len(x) - 1)
             for i in range(len(x) - 1):
                 mids[i] = x[i] + (x[i + 1] - x[i]) / 2.0
@@ -122,7 +122,7 @@ class Grapher(HasTraits):
 
             g.new_series(mids, y, type='bar', bar_width=width)
 
-        #add the labels
+        # add the labels
         with open(path, 'r') as f:
             header = f.readline()
             for i, l in enumerate(header.split(',')):

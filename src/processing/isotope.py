@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -89,7 +89,7 @@ class IsotopicMeasurement(HasTraits):
 
     @cached_property
     def _get_value(self):
-        if self.xs is not None and len(self.xs) > 1:# and self.ys is not None:
+        if self.xs is not None and len(self.xs) > 1:  # and self.ys is not None:
 #            if len(self.xs) > 2 and len(self.ys) > 2:
 #            print self.xs
 #            print self._get_regression_param('coefficients')

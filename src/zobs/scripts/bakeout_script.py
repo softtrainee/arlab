@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ from numpy import linspace
 
 #============= local library imports  ==========================
 
-from src.scripts.core.script_helper import smart_equilibrate#, equilibrate
+from src.scripts.core.script_helper import smart_equilibrate  # , equilibrate
 from src.scripts.core.core_script import CoreScript
 from bakeout_script_parser import BakeoutScriptParser
 
@@ -114,7 +114,7 @@ class BakeoutScript(CoreScript):
             steps = linspace(s_start, s_end, dur * 3600 / float(period))
             for si in steps:
 #            if step < 1:
-##                step = int()
+# #                step = int()
 #                scalar = 1 / float(step)
 #                step = int(scalar)
 #                gen = xrange(int(s_start), int(s_end * step) + step, step)
@@ -147,7 +147,7 @@ class BakeoutScript(CoreScript):
 
     def set_setpoint(self, sp):
         if self.controller.setpoint == sp:
-            #if self.controller.isAlive():
+            # if self.controller.isAlive():
             self.controller.set_closed_loop_setpoint(sp)
         else:
             self.controller.setpoint = sp
@@ -156,12 +156,12 @@ class BakeoutScript(CoreScript):
 
     def raw_statement(self, args):
 
-        #change the setpoint temp
+        # change the setpoint temp
         if self.controller is not None:
             sp = float(args[0])
             self.set_setpoint(sp)
             self.controller.duration = float(args[1])
-        #wait for dur 
+        # wait for dur
         self.info('waiting {}'.format(float(args[1]) * TIMEDICT[self.scale]))
         self.wait(float(args[1]) * TIMEDICT[self.scale])
 
@@ -186,7 +186,7 @@ class BakeoutScript(CoreScript):
         while time.time() - st < mt and self.isAlive():
             time.sleep(sleep_time)
             self.controller._duration = self.controller._oduration - cnt * sleep_time / 3600.
-            #print 'f', cnt, self.controller._duration, self.controller._oduration
+            # print 'f', cnt, self.controller._duration, self.controller._oduration
             cnt += 1
 
     def goto_statement(self, setpoint):
@@ -201,13 +201,13 @@ class BakeoutScript(CoreScript):
             name = 'cool'
 
         ramp = float(getattr(self, '{}_ramp'.format(name)))
-        #sp = getattr(self, '{}_setpoint'.format(name))
+        # sp = getattr(self, '{}_setpoint'.format(name))
 
         if controller is not None:
             controller.led.state = -1
             controller.ramp_to_setpoint(ramp, setpoint, self.scale)
 
-        #wait until setpoint reached or ramping timed out
+        # wait until setpoint reached or ramping timed out
         kw = dict()
         if name == 'cool':
             kw['mean_check'] = False
@@ -226,7 +226,7 @@ class BakeoutScript(CoreScript):
             if self.controller.simulation:
                 time.sleep(3)
             else:
-                #equilibrate(sp, frequency = frequency, mean_check = True, mean_tolerance = tolerance)
+                # equilibrate(sp, frequency = frequency, mean_check = True, mean_tolerance = tolerance)
                 smart_equilibrate(self,
                                   self.controller.get_temperature,
                                   sp,
@@ -272,7 +272,7 @@ class BakeoutScript(CoreScript):
 #            dur = float(args[1])
 #
 #        #change the setpoint temp
-##        self.manager.setpoint = sp
+# #        self.manager.setpoint = sp
 #
 #        #wait for dur mins
 #        self.wait(dur * 60)
@@ -301,12 +301,12 @@ class BakeoutScript(CoreScript):
 #                    dur = float(args[1])
 #
 #                self.manager.setpoint = sp
-##                if not self.isAlive():
-##                    break
+# #                if not self.isAlive():
+# #                    break
 #
 #                self.wait(dur * 60)
-##                st = time.time()
-##                while time.time() - st < dur * 60.:
-##                    if not self.isAlive():
-##                        break
+# #                st = time.time()
+# #                while time.time() - st < dur * 60.:
+# #                    if not self.isAlive():
+# #                        break
 #                    #time.sleep(0.5)

@@ -8,7 +8,7 @@ cimport numpy as np
 
 from numpy.random import normal
 
-#this import adds ~1sec to execution
+# this import adds ~1sec to execution
 from src.data_processing.regression.multiple_linear_regressor import MultipleLinearRegressor
 regressor = MultipleLinearRegressor()
 

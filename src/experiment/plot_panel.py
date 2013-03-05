@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,8 +27,8 @@ from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 import math
 #============= standard library imports ========================
-#from numpy import Inf
-#from pyface.timer.do_later import do_later
+# from numpy import Inf
+# from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 class PlotPanelHandler(ViewableHandler):
     pass
@@ -153,8 +153,8 @@ class PlotPanel(Viewable):
     def _print_summary(self, display):
         arar_age = self.automated_run.arar_age
         if arar_age:
-            #call age first
-            #loads all the other attrs
+            # call age first
+            # loads all the other attrs
             age = arar_age.age
 
             j = ufloat(arar_age.j)

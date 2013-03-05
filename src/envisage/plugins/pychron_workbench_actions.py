@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,14 +22,14 @@ from pyface.action.api import Action
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from src.scripts.core.scripts_manager import SEditor
-#from src.experiments.experiments_manager import EEditor
-#from src.canvas.designer.canvas_manager import CEditor
-#from src.data_processing.modeling.modeler_manager import MEditor
+# from src.scripts.core.scripts_manager import SEditor
+# from src.experiments.experiments_manager import EEditor
+# from src.canvas.designer.canvas_manager import CEditor
+# from src.data_processing.modeling.modeler_manager import MEditor
 from src.helpers.gdisplays import gLoggerDisplay
 
 
-#def get_manager(window, editor=None):
+# def get_manager(window, editor=None):
 #    if editor is None:
 #        editor = window.active_editor
 #
@@ -52,7 +52,7 @@ from src.helpers.gdisplays import gLoggerDisplay
 #        manager = window.application.get_service(service_id)
 #        return manager
 #
-#class SaveAction(Action):
+# class SaveAction(Action):
 #    '''
 #    '''
 #    accelerator = 'Ctrl+S'
@@ -76,7 +76,7 @@ from src.helpers.gdisplays import gLoggerDisplay
 #        else:
 #            self.enabled = False
 #
-##    def update_file_path(self, obj, name, old, new):
+# #    def update_file_path(self, obj, name, old, new):
 #    def update_dirty(self, obj, name, old, new):
 #        manager = get_manager(self.window)
 #        if manager is None:
@@ -99,7 +99,7 @@ from src.helpers.gdisplays import gLoggerDisplay
 #        if manager:
 #            getattr(manager, func)()
 #
-#class SaveAsAction(Action):
+# class SaveAsAction(Action):
 #    accelerator = 'Ctrl+Shift+S'
 #    def perform(self, event):
 #        '''
@@ -153,13 +153,13 @@ class GotoAPIPageAction(Action):
         import webbrowser
         webbrowser.open_new('http://argon131.nmt.edu/~ross/pychron/index.html')
 
-#class OpenUpdateManagerAction(Action):
+# class OpenUpdateManagerAction(Action):
 #    def perform(self, event):
 #        from src.managers.update_manager import UpdateManager
 #        manager = UpdateManager()
 #        manager.edit_traits(parent=self.window.control)
-#        
-#class RefreshSourceAction(Action):
+#
+# class RefreshSourceAction(Action):
 #    accelerator = 'Ctrl+R'
 #    def perform(self, event):
 #        from traits.util.refresh import refresh

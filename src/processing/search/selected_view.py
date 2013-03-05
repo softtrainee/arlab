@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,7 +60,7 @@ class SelectedrecordsAdapter(TabularAdapter):
     def _get_aliquot_text(self, trait, item):
         return '{}{}'.format(self.item.aliquot, self.item.step)
 
-#class Marker(HasTraits):
+# class Marker(HasTraits):
 #    color = 'white'
 #    def __getattr__(self, attr):
 #        return ' '
@@ -85,7 +85,7 @@ class SelectedView(ColumnSorterMixin):
     selected_row = Any
     selected = Any
 
-    previous_selection = Any#Instance(PreviousSelection)
+    previous_selection = Any  # Instance(PreviousSelection)
     previous_selections = List(PreviousSelection)
 
     def _open_shelve(self):

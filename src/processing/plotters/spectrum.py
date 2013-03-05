@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +19,14 @@ from traits.api import Any, Int, List, Array, Float
 #============= standard library imports ========================
 from numpy import array, Inf, where, average, hstack
 #============= local library imports  ==========================
-#from src.graph.stacked_graph import StackedGraph
+# from src.graph.stacked_graph import StackedGraph
 from src.processing.plotters.results_tabular_adapter import SpectrumResults, \
     SpectrumResultsAdapter
 from src.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_mswd, validate_mswd
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
-#from enable.enable_traits import Pointer
+# from enable.enable_traits import Pointer
 from enable.colors import color_table
 from src.processing.argon_calculations import age_equation, find_plateaus
 from src.processing.analysis import IntegratedAnalysis
@@ -39,9 +39,9 @@ from chaco.base_xy_plot import BaseXYPlot
 from enable.tools.drag_tool import DragTool
 from src.processing.plotters.point_move_tool import PointMoveTool
 from chaco.plot_label import PlotLabel
-#from chaco.plot_label import PlotLabel
-#from enable.font_metrics_provider import font_metrics_provider
-#from chaco.data_label import DataLabel
+# from chaco.plot_label import PlotLabel
+# from enable.font_metrics_provider import font_metrics_provider
+# from chaco.data_label import DataLabel
 
 class BasePlateauOverlay(AbstractOverlay):
     cumulative39s = Array
@@ -110,7 +110,7 @@ class SpectrumTool(BaseTool, BasePlateauOverlay):
 #            print self.spectrum.cumulative39s[self.group_id].index(d)
 
 
-#class SpectrumOverlay(AbstractOverlay):
+# class SpectrumOverlay(AbstractOverlay):
 #    group_id = 0
 #    def overlay(self, component, gc, *args, **kw):
 #        sels = self.component.index.metadata['selections']
@@ -121,7 +121,7 @@ class SpectrumTool(BaseTool, BasePlateauOverlay):
 #        xs = xs[1:n / 2 - 1:2]
 #        yu = ys[1:n / 2 - 1:2]
 #        yl = ys[n / 2::2][::-1]
-##        print yl
+# #        print yl
 #        for si in sels:
 #            if si == 0:
 #                p2 = 0, yl[si]
@@ -164,13 +164,13 @@ class SpectrumTool(BaseTool, BasePlateauOverlay):
 #            gc.set_fill_color((1, 0, 0))
 #            gc.set_stroke_color((1, 0, 0))
 #            gc.set_line_width(1)
-##            gc.set_line_width(0)
-##            print pts
+# #            gc.set_line_width(0)
+# #            print pts
 #            x = pts[1][0]
 #            y = pts[1][1]
 #            w = pts[3][0] - pts[1][0]
 #            h = pts[3][1] - pts[4][1]
-##            gc.rect(x, y - 0.5, w + 1, h + 1)
+# #            gc.rect(x, y - 0.5, w + 1, h + 1)
 #
 #            gc.lines(pts)
 #            gc.draw_path()
@@ -293,7 +293,7 @@ class PlateauOverlay(BasePlateauOverlay):
                 x2 = pt2[0] - 1
                 gc.lines([(x1, y), (x2, y)])
 
-                #add end caps
+                # add end caps
                 gc.lines([(x1, y - 10), (x1, y + 10)])
                 gc.lines([(x2, y - 10), (x2, y + 10)])
                 gc.draw_path()
@@ -329,9 +329,9 @@ class Spectrum(Plotter):
             mi = min(mi, miage)
             labels.append(label)
 
-            #add aux plots
+            # add aux plots
             for plotid, ap in enumerate(aux_plots):
-                #get aux type and plot
+                # get aux type and plot
                 name = ap['name']
                 if name != 'analysis_number':
                     func = getattr(self, '_aux_plot_{}'.format(name))
@@ -429,7 +429,7 @@ class Spectrum(Plotter):
             es.append(ei)
             prev = s
 
-        return array(xs), array(ys), array(es), array(c39s)#, array(ar39s), array(values)
+        return array(xs), array(ys), array(es), array(c39s)  # , array(ar39s), array(values)
 
     def _add_plot(self, g, xs, ys, es, cum39s=None, group_id=0, plotid=0, value_scale='linear', **kw):
         xs, ys, es = map(array, (xs, ys, es))
@@ -446,7 +446,7 @@ class Spectrum(Plotter):
         sp = SpectrumTool(ds, cumulative39s=cum39s)
         ds.tools.append(sp)
 
-        #provide 1s errors use nsigma to control display
+        # provide 1s errors use nsigma to control display
         ds.errors = es
 
         ns = self.plotter_options.step_nsigma
@@ -467,7 +467,7 @@ class Spectrum(Plotter):
         k39s = [a.k39.nominal_value for a in analyses]
         ages, errors = self._unzip_value_error(ages)
 
-        #provide 1s errors
+        # provide 1s errors
         platbounds = find_plateaus(ages, errors, k39s, overlap_sigma=2, exclude=exclude)
         n = platbounds[1] - platbounds[0] + 1
         if n > 1:
@@ -517,9 +517,9 @@ class Spectrum(Plotter):
 #        weighted_mean_error = ss ** -0.5
 
 #        weighted_mean_error
-        #print 'tga', tga.nominal_value, tga.std_dev()
-        #print 'mean', mean_age, mean_error
-        #print 'wmean', weighted_mean_age, weighted_mean_error
+        # print 'tga', tga.nominal_value, tga.std_dev()
+        # print 'mean', mean_age, mean_error
+        # print 'wmean', weighted_mean_age, weighted_mean_error
 #        print '----------'
 #        rad40_percent = self._calculate_total_gas_rad40(analyses)
 #        age = mean_age
@@ -599,7 +599,7 @@ class Spectrum(Plotter):
         plateau_age, platbounds, plateau_mswd, valid_mswd, nplateau_steps = self._get_plateau(ans, exclude=sel)
 #        n = platbounds[1] - platbounds[0]
 
-        #provide 1s errors
+        # provide 1s errors
 #        platbounds = find_plateaus(ages, errors, k39s, overlap_sigma=2, exclude=sel)
 
 #        if sel and platbounds[0] != platbounds[1]:
@@ -608,7 +608,7 @@ class Spectrum(Plotter):
 #            if len(ages) not in sel:
 #                platbounds[1] += len(sel)
 
-        #get the plateau overlay
+        # get the plateau overlay
         po = lp.overlays[-1]
         po.plateau_bounds = platbounds
 
@@ -655,7 +655,7 @@ class Spectrum(Plotter):
 #            else:
 #                dp.color = 'transparent'
 
-            #recalculate spectrum without selected
+            # recalculate spectrum without selected
 #            xs, ys, es, c39s = self._calculate_spectrum(self.analyses,
 #                                                        'k39', excludes=sel)
 #            lp.index.set_data(xs)
@@ -748,8 +748,8 @@ class Spectrum(Plotter):
         lp.tools.insert(0, tool)
 
     def _get_metadata_label_text(self):
-        #sigmas displayed as separate chars in Illustrator
-        #use the 's' instead
+        # sigmas displayed as separate chars in Illustrator
+        # use the 's' instead
         ustr = u'data {}s, age {}s'.format(self.plotter_options.step_nsigma,
                                            self.plotter_options.nsigma)
 #        ustr = u'data 1\u03c3, age {}\u03c3'.format(self.plotter_options.nsigma)

@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,8 +30,8 @@ ATTRS = ['max_velocity', 'max_transit_time',
 
 
 class MotionProfiler(ConfigLoadable):
-#===========================================================================    
-# configable parameters 
+#===========================================================================
+# configable parameters
 #===========================================================================
     velocity_tol = Float(0.5, enter_set=True, auto_set=False)
     acceleration_tol = Float(0.5, enter_set=True, auto_set=False)
@@ -57,7 +57,7 @@ class MotionProfiler(ConfigLoadable):
     cvdisp = Float
 
 #===============================================================================
-#error flags
+# error flags
 #===============================================================================
     max_transit_err = Bool
     velocity_err = Bool
@@ -79,7 +79,7 @@ class MotionProfiler(ConfigLoadable):
             for attr in ATTRS:
                 self.set_attribute(config, attr, 'General', attr, cast='float')
         else:
-            #create a new config file with default values
+            # create a new config file with default values
             config = self.configparser_factory()
             config.add_section('General')
             for attr in ATTRS:
@@ -147,17 +147,17 @@ class MotionProfiler(ConfigLoadable):
             return the time spent accelerating, decelerating, and at speed
             and respective displacements
         '''
-        #time to velocity
+        # time to velocity
         atime = v / ac
         dtime = v / dc
 
-        #acceleration distance
+        # acceleration distance
         acd = 0.5 * ac * math.pow(atime, 2)
 
-        #decel distance
+        # decel distance
         dcd = 0.5 * dc * math.pow(dtime, 2)
 
-        #constant velocity distance
+        # constant velocity distance
         cvd = displacement - acd - dcd
 
         cvtime = cvd / v
@@ -173,13 +173,13 @@ class MotionProfiler(ConfigLoadable):
         return (atime, dtime, cvtime), (acd, dcd, cvd),
 #    def calculate_corrected_parameters2(self, disp, vel, ac, dc):
 #        #assume ac==dc
-#        
+#
 #        cv=math.sqrt(disp*ac/2.0)
 #
-#        
+#
 #        atime=cv/ac
 #        times, _distances = self.calculate_transit_parameters(disp, cv, ac, dc)
-#        
+#
 #        print times
 #        return cv,ac,dc
 
@@ -205,8 +205,8 @@ class MotionProfiler(ConfigLoadable):
         if sum(times) > self.max_transit_time:
             self.max_transit_err = True
             self.debug('max transit error. {} > {}'.format(sum(times), self.max_transit_time))
-            #calculate the min velocity required for max_transit_time 
-            #given ac and dc
+            # calculate the min velocity required for max_transit_time
+            # given ac and dc
             A = 0.5 * acdc_param
             B = -self.max_transit_time
             C = displacement
@@ -246,7 +246,7 @@ class MotionProfiler(ConfigLoadable):
 #                cv = self.min_velocity
 #                ac = self.min_acceleration
 #                dc = self.min_acceleration
-                #ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
+                # ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
 #            force = True
 
 #            times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)

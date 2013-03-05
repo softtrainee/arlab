@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,7 @@ from src.processing.plotters.plotter_options import PlotterOptions
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Int, Any, Either, Float, Dict, Str
 from traitsui.api import View, Item, ShellEditor
-#from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import and_
 #============= local library imports  ==========================
@@ -33,8 +33,8 @@ from src.helpers.filetools import unique_path
 import os
 from src.paths import paths
 from src.database.records.isotope_record import IsotopeRecord
-#from threading import Event as TEvent, Thread
-#from src.viewable import ViewableHandler, Viewable
+# from threading import Event as TEvent, Thread
+# from src.viewable import ViewableHandler, Viewable
 
 class Window(HasTraits):
     container = Instance(HGraphContainer, ())
@@ -319,7 +319,7 @@ class ProcessScript(DatabaseManager):
                        display_mean_indicator=display_mean_indicator
                        )
 
-        #filter out omitted results
+        # filter out omitted results
         if not (display_omitted or highlight_omitted):
             analyses = filter(lambda x: x.status == 0, analyses)
 
@@ -331,7 +331,7 @@ class ProcessScript(DatabaseManager):
 
             if highlight_omitted:
                 ta = sorted(analyses, key=lambda x:x.age)
-                #find omitted ans
+                # find omitted ans
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
                 p.set_excluded_points(sel, 0)
 

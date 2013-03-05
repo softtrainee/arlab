@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,11 +24,11 @@ import os
 from src.managers.manager import Manager
 from src.hardware.core.pid_object import PIDObject
 from src.paths import paths
-#from src.helpers.timer import Timer
+# from src.helpers.timer import Timer
 from pyface.timer.api import Timer
 from src.graph.stream_graph import StreamGraph
 from src.machine_vision.brigthness_manager import BrightnessManager
-#from pyface.timer.api import do_later
+# from pyface.timer.api import do_later
 
 
 from traits.api import HasTraits, Button, Str
@@ -99,9 +99,9 @@ class BrightnessPIDManager(Manager):
 #    _prev_v = 0
 #    _reset_cnt = True
     def set_brightness_setpoint(self, b):
-        #start a timer for the pid loop
+        # start a timer for the pid loop
         self.info('setting brightness {}'.format(b))
-        #stop the timer if its already running
+        # stop the timer if its already running
         if self.brightness_timer:
             self.brightness_timer.Stop()
 
@@ -124,16 +124,16 @@ class BrightnessPIDManager(Manager):
 
 #        if self.brightness_manager:
 #            v = self.brightness_manager.get_value(verbose=False)
-#            
+#
 
 #        return v
 
     def set_output(self, sp):
-        #get the current brightness error
+        # get the current brightness error
         brightness = self.brightness_manager.get_value(verbose=False)
         err = sp - brightness
 
-        #get the pid output
+        # get the pid output
         out = self.pid_object.get_value(err)
 
         if self.parent:

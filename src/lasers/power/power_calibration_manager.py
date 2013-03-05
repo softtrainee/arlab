@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ from src.paths import paths
 from src.graph.graph import Graph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
-#from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
+# from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 from src.hardware.analog_power_meter import AnalogPowerMeter
 from src.hardware.meter_calibration import MeterCalibration
 
@@ -48,7 +48,7 @@ def confirmation(message):
 #    tc = wx.StaticText(dialog, label=message)
     return dialog
 
-#class PowerCalibrationObject(object):
+# class PowerCalibrationObject(object):
 #    coefficients = None
 #    bounds = None
 #
@@ -290,13 +290,13 @@ class PowerCalibrationManager(Manager):
                 callback(pi, rp, *args)
 
 
-            #check for detector saturation
+            # check for detector saturation
 #            if apm is not None:
                 if apm.check_saturation(n=3):
                     if not self.confirmation_dialog('Increment Power Meter'):
                         self._alive = False
                         break
-            #calculate slope and intercept of data
+            # calculate slope and intercept of data
 
 #        x = graph.get_data()
 #        y = graph.get_data(axis=1)
@@ -639,7 +639,7 @@ class PowerCalibrationManager(Manager):
 #        except  (pickle.PickleError, EOFError, OSError), e:
 #            self.warning('pickling error {}'.format(e))
 
-        #also update logic board configuration file
+        # also update logic board configuration file
         if self.parent is not None:
             lb = self.parent.laser_controller
             config = lb.get_configuration()
@@ -705,7 +705,7 @@ class FusionsCO2PowerCalibrationManager(PowerCalibrationManager):
 #                self.info('dumped internal power meter calibration to {}'.format(p))
 #            except (OSError, pickle.PickleError):
 #                pass
-        #write coeffs to logic board config file
+        # write coeffs to logic board config file
         if self.parent:
             lb = self.parent.laser_controller
             config = lb.get_configuration()
@@ -721,7 +721,7 @@ class FusionsCO2PowerCalibrationManager(PowerCalibrationManager):
         g = Graph()
         g.new_plot()
 
-        #plot W vs 8bit dac
+        # plot W vs 8bit dac
         x = self.graph.get_data(axis=1)
         _, y = self.graph.get_aux_data()
 

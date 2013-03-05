@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,15 +18,15 @@
 from traits.api import  Any, Int, Str, List, Range, Property, Bool, \
     Enum, on_trait_change, Dict
 from traitsui.api import Item, HGroup, spring, Group
-#from chaco.api import ArrayDataSource
+# from chaco.api import ArrayDataSource
 #============= standard library imports ========================
 from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack, max, min, Inf
 from chaco.data_label import DataLabel
 from chaco.ticks import DefaultTickGenerator
 #============= local library imports  ==========================
 
-#from src.graph.stacked_graph import StackedGraph
-#from src.graph.error_bar_overlay import ErrorBarOverlay
+# from src.graph.stacked_graph import StackedGraph
+# from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.processing.plotters.results_tabular_adapter import IdeoResults, \
     IdeoResultsAdapter
 from src.processing.plotters.plotter import Plotter
@@ -38,9 +38,9 @@ from src.helpers.formatting import floatfmt
 from numpy import log10
 from src.processing.plotters.point_move_tool import PointMoveTool
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
-#from src.processing.figure import AgeResult
+# from src.processing.figure import AgeResult
 
-#def weighted_mean(x, errs):
+# def weighted_mean(x, errs):
 #    x = asarray(x)
 #    errs = asarray(errs)
 #
@@ -50,7 +50,7 @@ from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 #    wmean = (weights * x).sum() / wtot
 #    werr = wtot ** -0.5
 #    return wmean, werr
-#class mStackedGraph(IsotopeContextMenuMixin, StackedGraph):
+# class mStackedGraph(IsotopeContextMenuMixin, StackedGraph):
 #    pass
 
 N = 300
@@ -88,20 +88,20 @@ class Ideogram(Plotter):
 
 #    def build_results(self, display):
 #        width = lambda x, w = 8:'{{:<{}s}}='.format(w).format(x)
-##        floatfmt = lambda x, w = 3:'{{:0.{}f}}'.format(w).format(x)
+# #        floatfmt = lambda x, w = 3:'{{:0.{}f}}'.format(w).format(x)
 #        floatfmt = lambda x:'{:0.3f}'.format(x)
 #        attr = lambda n, v:'{}{}'.format(width(n), floatfmt(v))
 #
-##        display.add_text(' ')
-##        lines = []
+# #        display.add_text(' ')
+# #        lines = []
 #
-##        for ai, ei in zip(self.ages, self.errors):
+# #        for ai, ei in zip(self.ages, self.errors):
 #        for ri in self.results:
 #            display.add_text(attr('age', ri.age))
 #            display.add_text(attr('error', ri.error))
 #    def _ideogram_of_means_changed(self):
-##        self.build()
-##        self.graph.redraw()
+# #        self.build()
+# #        self.graph.redraw()
 #        self.figure.refresh()
 
 
@@ -169,7 +169,7 @@ class Ideogram(Plotter):
                                  start=start)
 
             for plotid, ap in enumerate(aux_plots):
-                #get aux type and plot
+                # get aux type and plot
                 try:
                     func = getattr(self, '_aux_plot_{}'.format(ap['name']))
                     func(g, analyses, plotid + 1, group_id, aux_namespace,
@@ -180,7 +180,7 @@ class Ideogram(Plotter):
                 except AttributeError, e:
                     print e
 
-            #add analysis number plot
+            # add analysis number plot
             start = start + len(ans) + 1
 
 #        g.set_x_limits(min=xmin, max=xmax)
@@ -286,16 +286,16 @@ class Ideogram(Plotter):
             if abs(ai) < 1e-10 or abs(ei) < 1e-10:
                 continue
 
-            #calculate probability curve for ai+/-ei
-            #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
-            #see http://en.wikipedia.org/wiki/Normal_distribution
+            # calculate probability curve for ai+/-ei
+            # p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
+            # see http://en.wikipedia.org/wiki/Normal_distribution
             ds = (ones(N) * ai - bins) ** 2
             es = ones(N) * ei
             es2 = 2 * es * es
             gs = (es2 * pi) ** -0.5 * exp(-ds / es2)
 
-            #cumulate probabilities
-            #numpy element_wise addition
+            # cumulate probabilities
+            # numpy element_wise addition
             probs += gs
 
         return bins, probs
@@ -336,7 +336,7 @@ class Ideogram(Plotter):
         minp = min(probs)
         maxp = max(probs)
 
-        percentH = 1 - 0.954 #2sigma
+        percentH = 1 - 0.954  # 2sigma
         s, _p = g.new_series(x=bins, y=probs, plotid=0)
         _s, _p = g.new_series(x=bins, y=probs,
                               plotid=0,
@@ -366,7 +366,7 @@ class Ideogram(Plotter):
             self._add_data_label(s, text, (wm, ym),
                                  font=font
                                  )
-        #add a tool to move the mean age point
+        # add a tool to move the mean age point
         s.tools.append(PointMoveTool(component=s,
                                      label=label,
                                      constrain='y'))
@@ -375,7 +375,7 @@ class Ideogram(Plotter):
         p.index_mapper.on_trait_change(d, 'updated')
 
         print group_id, we
-        #we already scaled by nsigma 
+        # we already scaled by nsigma
         self._add_error_bars(s, [we], 'x', 1)
 
         if g.minprob:
@@ -478,7 +478,7 @@ class Ideogram(Plotter):
 
 
 #    def update_graph_metadata(self, obj, name, old, new):
-###        print obj, name, old, new
+# ##        print obj, name, old, new
 #        hover = self.metadata.get('hover')
 #        if hover:
 #            hoverid = hover[0]
@@ -526,7 +526,7 @@ class Ideogram(Plotter):
         self._set_y_limits(graph, mi, ma)
 
         if not bounds_only:
-            #update the data label position
+            # update the data label position
             for ov in sp.overlays:
                 if isinstance(ov, DataLabel):
                     _, y = ov.data_point
@@ -591,7 +591,7 @@ class Ideogram(Plotter):
     def _plot_label_text_changed(self):
         self.plot_label.text = self.plot_label_text
 #===============================================================================
-# 
+#
 #===============================================================================
     def _get_adapter(self):
         return IdeoResultsAdapter
@@ -616,8 +616,8 @@ class Ideogram(Plotter):
         return xmin, xmax
 
     def _get_metadata_label_text(self):
-        #sigmas displayed as separate chars in Illustrator
-        #use the 's' instead
+        # sigmas displayed as separate chars in Illustrator
+        # use the 's' instead
         ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)
 #        ustr = u'data 1\u03c3, age {}\u03c3'.format(self.plotter_options.nsigma)
 #        ustr = 'data 1s, age {}s'.format(self.nsigma)
@@ -656,7 +656,7 @@ class Ideogram(Plotter):
 #                 )
 #        return v
 
-#class MultipleIdeogram(Ideogram):
+# class MultipleIdeogram(Ideogram):
 #    def _build_ideo(self, g):
 #        for i in range(3):
 #            anals = [a for a in self.analyses if a.group_id == i]
@@ -666,7 +666,7 @@ class Ideogram(Plotter):
 
 
 #============= EOF =============================================
-#g = StackedGraph(panel_height=200,
+# g = StackedGraph(panel_height=200,
 #                         equi_stack=False
 #                         )
 #
@@ -680,7 +680,7 @@ class Ideogram(Plotter):
 #        g.set_x_title('Age (Ma)')
 #        g.set_y_title('Relative Probability')
 #
-##        ages, errors = zip(*[(ai.age, ai.age_err) for ai in self.analyses])
+# #        ages, errors = zip(*[(ai.age, ai.age_err) for ai in self.analyses])
 #        ages = self.ages
 #        errors = self.errors
 #        pad = 1
@@ -695,9 +695,9 @@ class Ideogram(Plotter):
 #        wm, we = weighted_mean(ages, errors)
 #        self.age = wm
 #        self.age_err = we
-##        print ages
-##        print errors
-##        print 'waieht', wm, we
+# #        print ages
+# #        print errors
+# #        print 'waieht', wm, we
 #        for ai, ei in zip(ages, errors):
 #            for j, bj in enumerate(bins):
 #                #calculate the gaussian prob

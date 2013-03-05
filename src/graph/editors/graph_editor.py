@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -182,7 +182,7 @@ class GraphEditor(HasTraits):
     def _global_axis_title_font_changed(self):
         self._change_global_font(
                                  'axis_title',
-#                                 self.global_axis_title_font, 
+#                                 self.global_axis_title_font,
                                  'title_font')
 
     def _change_global_font(self, f, key):
@@ -227,7 +227,7 @@ class GraphEditor(HasTraits):
                 _pl, _pr, pt, _pb = self.graph.plots[0].padding
                 _pl, _pr, pt2, _pb = self.graph.plots[-1].padding
 
-                #dont change the top padding of the first plot and last
+                # dont change the top padding of the first plot and last
 
                 self.graph.plots[0].padding = [l, r, pt, b]
                 for ps in self.graph.plots[1:-1]:

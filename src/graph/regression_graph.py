@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -89,7 +89,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self._update_graph()
 
 #===============================================================================
-# 
+#
 #===============================================================================
 
     def set_filter(self, fi, plotid=0, series=0):
@@ -303,7 +303,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
 #        n = 10
 #        m = r.coefficients[0]
-##            print fit, fit.endswith("SEM")
+# #            print fit, fit.endswith("SEM")
 #        fit = fit.lower()
 #        if fit.endswith('sem'):
 #            s = r.coefficient_errors[1]
@@ -422,7 +422,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             blocksize = sf.blocksize
             tolerance_factor = sf.tolerance_factor
 
-            #group into blocks
+            # group into blocks
             n = ys.shape[0]
             r = n / blocksize
             c = blocksize
@@ -436,13 +436,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
             blocks = ys.reshape(r, c)
 
-            #calculate stats
+            # calculate stats
             block_avgs = average(blocks, axis=1)
             block_stds = np.std(blocks, axis=1)
             devs = (blocks - block_avgs.reshape(r, 1)) ** 2
     #        devs = abs(blocks - block_avgs.reshape(r, 1))
 
-            #find outliers
+            # find outliers
             tol = block_stds.reshape(r, 1) * tolerance_factor
             exc_r, exc_c = np.where(devs > tol)
 #            inc_r, inc_c = np.where(devs <= tol)
@@ -451,7 +451,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             exc_xs = list(exc_c + exc_r * blocksize)
 
     #        if remainder_block:
-    #        #do filter on remainder block 
+    #        #do filter on remainder block
     #            avg = average(remainder_block)
     #            stds = np.std(remainder_block)
     #            tol = stds * tolerance_factor
@@ -602,19 +602,19 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #            gc.set_font(Font(face_name=font.GetFaceName(),
 #                             size=font.GetPointSize(),
 #                             family=font.GetFamily(),
-##                             weight=font.GetWeight(),
-##                             style=font.GetStyle(),
-##                             underline=0, 
-##                             encoding=DEFAULT
+# #                             weight=font.GetWeight(),
+# #                             style=font.GetStyle(),
+# #                             underline=0,
+# #                             encoding=DEFAULT
 #                             ))
 #            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-##            print linewidths, lineheights
+# #            print linewidths, lineheights
 #            ml = max(linewidths)
 #            mh = max(lineheights)
 #
-##        ch = popup.GetCharWidth()
+# #        ch = popup.GetCharWidth()
 #        mh = mh * len(lines)
-##        print ml, mh
+# #        print ml, mh
 #        popup.Freeze()
 #        popup.set_size(ml, mh)
 #        popup.SetText(t)
@@ -625,7 +625,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def add_tools(self, plot, scatter, line=None, convert_index=None):
 
-        #add a regression inspector tool to the line
+        # add a regression inspector tool to the line
         if line:
             tool = RegressionInspectorTool(component=line)
             overlay = RegressionInspectorOverlay(component=line,
@@ -665,7 +665,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #            print container
 
 #        print scatter.tools
-        #add a broadcaster so scatterinspector and rect selection will received events
+        # add a broadcaster so scatterinspector and rect selection will received events
 #        scatter.overlays.append(rect_overlay)
 #        data_tool = DataTool(
 #                             component=plot,
@@ -771,7 +771,7 @@ class AnnotatedRegressionGraph(HasTraits):
             for ri in new:
                 eq = ri.make_equation()
                 if eq:
-                    #mean regressor doesnt display an equation
+                    # mean regressor doesnt display an equation
                     self.display.add_text(eq)
 
                 self.display.add_text(ri.tostring())

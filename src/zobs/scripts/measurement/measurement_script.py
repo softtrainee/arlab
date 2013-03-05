@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,16 +26,16 @@ from src.scripts.core.core_script import CoreScript
 from src.helpers.datetime_tools import time_generator
 from src.scripts.measurement.measurement_script_parser import MeasurementScriptParser
 
-#def ppr():
+# def ppr():
 #    x = 1
 #    while 1:
 #
 #        c = [(-1.5, 2000), (-1.2, 1000), (1, 500), (1, 50), (1, 10) ]
-##        yield [coeffs[1] / 10 * random.random() + np.polyval(coeffs, x) for coeffs in c]
+# #        yield [coeffs[1] / 10 * random.random() + np.polyval(coeffs, x) for coeffs in c]
 #        yield [np.polyval(coeffs, x) for coeffs in c]
 #        x += 1
-#pseudo_peak_regressions = ppr()
-#pc_window_cnt = 0
+# pseudo_peak_regressions = ppr()
+# pc_window_cnt = 0
 class MeasurementScript(CoreScript):
     parser_klass = MeasurementScriptParser
     identifier = 1
@@ -74,8 +74,8 @@ class MeasurementScript(CoreScript):
             for mass, settle, peak_center, baseline in self.measurements:
                 self.info('setting mass {}'.format(mass))
                 if abs(self.prev_mass - mass) > 0.5:
-                    #this  should be handled automatically my spectrometer
-                    #blank beam
+                    # this  should be handled automatically my spectrometer
+                    # blank beam
                     time.sleep(settle / 1000.0)
 
                 if peak_center:
@@ -98,9 +98,9 @@ class MeasurementScript(CoreScript):
 
     def record(self):
         t = self.time_generator.next()
-        #d = pseudo_peak_regressions.next()
+        # d = pseudo_peak_regressions.next()
         d = 0
-        #come
+        # come
         d.reverse()
 
         datum = [t] + d
@@ -142,7 +142,7 @@ class MeasurementScript(CoreScript):
             d = self.data_gen.next()
 
             self.info('get data {},{}'.format(t, d))
-            #record data to file
+            # record data to file
             self.data_manager.write_to_frame([d])
         except StopIteration:
             self.info('{} finished'.format(self.name))
@@ -170,12 +170,12 @@ class MeasurementScript(CoreScript):
             
         '''
         if self.measurements:
-            #if the time generator isnt set ie set_time_zero was never called
-            #call it now
+            # if the time generator isnt set ie set_time_zero was never called
+            # call it now
             if self.time_generator is None:
                 self.set_time_zero()
 
-            #get the current mass
+            # get the current mass
             self.prev_mass = 40
             self.pre_cycle()
             self.cycle()
@@ -212,7 +212,7 @@ class MeasurementScript(CoreScript):
 
     def load(self):
 
-        #trim off metadata
+        # trim off metadata
         for k, c in [('ncycles', int), ('integration_time', float),
                   ('pre_peak', 'bool'), ('pre_baseline', 'bool'),
                   ('post_peak', 'bool'), ('post_baseline', 'bool'),
@@ -296,11 +296,11 @@ class MeasurementScript(CoreScript):
 
 #            mg = ((mi, n) for n in range(self.ncycles) for mi in enumerate(self.measurements))
 #
-#            #do the first 
+#            #do the first
 #            self._measure_step(None, mg)
 #            self.first = True
 #            cond = Condition()
-##            with cond:
+# #            with cond:
 #            cond.acquire()
 #            t = Timer(self.integration_time * 1000, self._measure_step, cond, mg)
 #            self.measurement_timer = t

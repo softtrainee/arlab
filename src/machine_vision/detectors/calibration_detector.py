@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,11 +64,11 @@ class CalibrationDetector(Detector):
 #            src = self.parent.load_source()
 #
 #            break
-##            Ab = areas[0]
-##
-##            Ao = w * h - Ab
-##
-##            self.info('ratio {}'.format(Ab, Ao))
+# #            Ab = areas[0]
+# #
+# #            Ao = w * h - Ab
+# #
+# #            self.info('ratio {}'.format(Ab, Ao))
     def locate_calibration_object(self, src, t):
         gsrc = grayspace(src)
 
@@ -180,7 +180,7 @@ class CalibrationDetector(Detector):
                        1)
 
     def _is_calibration_line(self, l, m, tol=0.01):
-        #calculate slope of line
+        # calculate slope of line
         dx = l[0] - l[2]
         dy = l[1] - l[3]
 

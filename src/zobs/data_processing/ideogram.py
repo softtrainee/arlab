@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -99,13 +99,13 @@ class Demo(HasTraits):
         wm, we = self._weighted_mean(ages, errors)
         for ai, ei in zip(ages, errors):
             for j, bj in enumerate(bins):
-                #calculate the gaussian prob
-                #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
-                #see http://en.wikipedia.org/wiki/Normal_distribution
+                # calculate the gaussian prob
+                # p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
+                # see http://en.wikipedia.org/wiki/Normal_distribution
                 delta = math.pow(ai - bj, 2)
                 prob = math.exp(-delta / (2 * ei * ei)) / (math.sqrt(2 * math.pi * ei * ei))
 
-                #cumulate probablities
+                # cumulate probablities
                 probs[j] += prob
 
         g.set_y_limits(min=min(probs), max=max(probs) * 1.05)

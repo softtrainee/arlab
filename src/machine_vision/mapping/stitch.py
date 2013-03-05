@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,7 +82,7 @@ def hor_stitch(root, image_names, result_name='result'):
 
 #    im2 = array(Image.open(image_names[center_idx + 1]))
     im2 = open_image(root, image_names[center_idx + 1])
-    tp, fp = convert_points(matches, l, center_idx)# reverse order
+    tp, fp = convert_points(matches, l, center_idx)  # reverse order
     prev_H = homography.H_from_ransac(fp, tp, model)[0]
     pano = horizontal_panorama(prev_H, im1, im2, delta, delta)
     for i in range(center_idx, end, 1):

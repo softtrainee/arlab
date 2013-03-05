@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -156,7 +156,7 @@ class SeriesManager(Viewable):
             self.baseline_values = [SeriesOptions(name=ki, key='{}bs'.format(ki)) for ki in keys]
             self.blank_values = [SeriesOptions(name=ki, key='{}bl'.format(ki)) for ki in keys]
             self.background_values = [SeriesOptions(name=ki, key='{}bg'.format(ki)) for ki in keys]
-            #make ratios
+            # make ratios
             for n, d in [('Ar40', 'Ar36')]:
                 if n in keys and d in keys:
                     cv.append(SeriesOptions(name='{}/{}'.format(n, d)))

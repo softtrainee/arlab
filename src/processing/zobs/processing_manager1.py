@@ -1,40 +1,40 @@
 ##===============================================================================
-## Copyright 2012 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2012 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 ##============= enthought library imports =======================
-#from traits.api import Str, Instance
-#from traitsui.api import View, Item
-#from apptools.preferences.preference_binding import bind_preference
+# from traits.api import Str, Instance
+# from traitsui.api import View, Item
+# from apptools.preferences.preference_binding import bind_preference
 ##============= standard library imports ========================
-#import os
+# import os
 ##============= local library imports  ==========================
-##from src.managers.manager import Manager
-#from src.repo.repository import FTPRepository, Repository, SFTPRepository, \
+# #from src.managers.manager import Manager
+# from src.repo.repository import FTPRepository, Repository, SFTPRepository, \
 #    ZIPRepository
 #
-#from src.processing.figures.figure import Figure
-#from src.processing.database_manager import DatabaseManager
-#from src.paths import paths
-#from src.deprecate import deprecate_klass
-#class ProcessingRepository(Repository):
+# from src.processing.figures.figure import Figure
+# from src.processing.database_manager import DatabaseManager
+# from src.paths import paths
+# from src.deprecate import deprecate_klass
+# class ProcessingRepository(Repository):
 #    pass
 #
 #
-#@deprecate_klass()
-#class ProcessingManager(DatabaseManager):
+# @deprecate_klass()
+# class ProcessingManager(DatabaseManager):
 #    workspace_root = paths.workspace_root_dir
 #    workspace = None
 #    new_name = Str
@@ -48,7 +48,7 @@
 #
 #    def bind_preferences(self):
 #        try:
-##            bind_preference(self, 'username', 'envisage.ui.workbench.username')
+# #            bind_preference(self, 'username', 'envisage.ui.workbench.username')
 #            bind_preference(self.db, 'save_username', 'envisage.ui.workbench.username')
 #            prefid = 'pychron.experiment'
 #            bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
@@ -69,13 +69,13 @@
 #
 #        self.repo_kind = 'FTP'
 #        self.repo_kind = 'ZIP'
-##        host = '129.138.12.131'
-##        pwd = 'JR*4039'
+# #        host = '129.138.12.131'
+# #        pwd = 'JR*4039'
 #        if self.repo_kind == 'FTP':
 #            repo = SFTPRepository(host=host, username=usr,
 #                                  password=pwd,
-##                                root='ftp/data'
-##                             root=paths.isotope_dir
+# #                                root='ftp/data'
+# #                             root=paths.isotope_dir
 #                                root='/Users/ross/Sandbox/importtest'
 #                             )
 #        elif self.repo_kind == 'ZIP':
@@ -120,8 +120,8 @@
 #        self.connect_repo()
 #
 #
-##        self.workspace_root = '/Users/ross/Sandbox/workspace'
-##        self.new_workspace('foo2')
+# #        self.workspace_root = '/Users/ross/Sandbox/workspace'
+# #        self.new_workspace('foo2')
 #
 #        if self.workspace is None:
 #            self.information_dialog('Set a workspace')
@@ -133,11 +133,11 @@
 #                                         )
 #
 #
-##            usr = self.username
+# #            usr = self.username
 #            return self._figure_factory()
 #
 ##===============================================================================
-## factories
+# # factories
 ##===============================================================================
 #    def _figure_factory(self, **kw):
 #        fc = Figure(
@@ -167,7 +167,7 @@
 #                                          )
 #        return db
 ##===============================================================================
-## views
+# # views
 ##===============================================================================
 #    def new_workspace_view(self):
 #        return View(Item('new_name', label='Name',),
@@ -177,7 +177,7 @@
 #    def traits_view(self):
 #        return View('test')
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    from globals import globalv
 #    globalv.show_infos = False
 #    globalv.show_warnings = False
@@ -187,16 +187,16 @@
 #    logging_setup('processing')
 #
 #    pm = ProcessingManager()
-##    pm.connect_repo()
-##    pm.workspace_root = '/Users/ross/Sandbox/workspace'
-##    pm.username = 'bar'
-##    pm.open_workspace('mobat')
+# #    pm.connect_repo()
+# #    pm.workspace_root = '/Users/ross/Sandbox/workspace'
+# #    pm.username = 'bar'
+# #    pm.open_workspace('mobat')
 #
-##    print pm.repo
+# #    print pm.repo
 #
-##    sl = pm.db.selector_factory()
-##    sl.configure_traits()
-##    pm.configure_traits()
+# #    sl = pm.db.selector_factory()
+# #    sl.configure_traits()
+# #    pm.configure_traits()
 #    fc = pm._figure_factory()
 #    fc.configure_traits()
 ##============= EOF =============================================

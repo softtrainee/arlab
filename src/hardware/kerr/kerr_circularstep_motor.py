@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,7 +57,7 @@ class KerrCircularStepMotor(KerrStepMotor):
 #
 #        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
 #        bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
-##        print bs,''.join(bs)
+# #        print bs,''.join(bs)
 #        return ''.join(bs)
 
     def _initialize_(self, *args, **kw):
@@ -76,7 +76,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         self._home_motor(*args, **kw)
 
     def _home_motor(self, *args, **kw):
-        #start moving
+        # start moving
         progress = self.progress
         if progress is not None:
             progress = kw['progress']
@@ -96,51 +96,51 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         move_cmd = ''.join((cmd, control, v, a))
 
-        cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
+        cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
               (addr, move_cmd, 100, 'Send to Limit')]
         self._execute_hex_commands(cmds)
-        #poll proximity switch
+        # poll proximity switch
         while 1:
             time.sleep(0.05)
             if self._get_proximity_limit():
                 break
 
-        #stop moving when proximity limit set
-        cmds = [(addr, '1707', 100, 'Stop motor'), #leave amp on
+        # stop moving when proximity limit set
+        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
 
-        #start moving
+        # start moving
         self._set_motor_position_(100)
 
-        #poll proximity switch
+        # poll proximity switch
         while 1:
             time.sleep(0.05)
             if not self._get_proximity_limit():
                 break
-        cmds = [(addr, '1707', 100, 'Stop motor'), #leave amp on
+        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-        #define homing options
-        #stop abruptly on home signal
+        # define homing options
+        # stop abruptly on home signal
         home_control_byte = self._load_home_control_byte()
         home_cmd = '19{:02x}'.format(home_control_byte)
         cmds = [(addr, home_cmd, 100, 'Set home options')]
         self._execute_hex_commands(cmds)
 
-        #start moving
+        # start moving
         self._set_motor_position_(100)
 
-        #wait until home signal is set.
-        #wait max of 2 sec
+        # wait until home signal is set.
+        # wait max of 2 sec
         while 1:
             time.sleep(0.05)
             lim = self._read_limits()
             if int(lim[2]) == 1:
                 break
 
-        #motor is stopped 
-        #reset pos
+        # motor is stopped
+        # reset pos
         self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
 
     def _read_limits(self):
@@ -148,8 +148,8 @@ class KerrCircularStepMotor(KerrStepMotor):
         inb = self.read_status(cb, verbose=True)
         inb = inb[2:-2]
         if inb:
-            #resp_byte consists of input_byte
-            ba = make_bitarray(int(inb, 16))#, self._hexstr_to_float(rb)
+            # resp_byte consists of input_byte
+            ba = make_bitarray(int(inb, 16))  # , self._hexstr_to_float(rb)
             return ba
 
     def _get_proximity_limit(self):
@@ -175,13 +175,13 @@ class KerrCircularStepMotor(KerrStepMotor):
 
 
 #============= EOF =============================================
-#            
+#
 #    def _load_trajectory_controlbyte(self):
 #        '''
 #           control byte
 #                7 6 5 4 3 2 1 0
 #            97- 1 0 0 1 0 1 1 1
-#            
+#
 #            0=load pos
 #            1=load vel
 #            2=load acce
@@ -190,7 +190,7 @@ class KerrCircularStepMotor(KerrStepMotor):
 #            5=profile mode 0=trap 1=vel
 #            6=direction trap mode 0=abs 1=rel vel mode 0=for. 1=back
 #            7=start motion now
-#            
+#
 #        '''
 #        return '{:02x}'.format(int('10000111', 2))
 #

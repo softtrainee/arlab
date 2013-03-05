@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -69,7 +69,7 @@ class TrayCalibrationManager(Manager):
         canvas.new_calibration_item(self.x,
                         self.y, 0, kind=self.calibration_style)
 
-        #use our machine vision manager to do calibration
+        # use our machine vision manager to do calibration
         if self.parent is not None:
             mv = self.parent.machine_vision_manager
             if mv is not None:
@@ -148,7 +148,7 @@ class TrayCalibrationManager(Manager):
 
     def save_calibration(self):
 
-        #delete the corrections file
+        # delete the corrections file
         stage_map_name = self.parent.stage_map
         ca = self.canvas.calibration_item
         if  ca is not None:
@@ -170,7 +170,7 @@ class TrayCalibrationManager(Manager):
                         self._button_factory('calibrate', 'calibration_step',),
 
                         HGroup(
-                        #Item('calibrate', show_label = False),
+                        # Item('calibrate', show_label = False),
                         spring,
                         Item('edit', show_label=False,
                              enabled_when='editable',
@@ -193,7 +193,7 @@ class TrayCalibrationManager(Manager):
                              height=2,
 #                             springy=True
                              ),
-                        #springy=True
+                        # springy=True
                         )
 
                 )
@@ -217,7 +217,7 @@ class TrayCalibrationManager(Manager):
                 canvas.calibrate = True
                 t = Thread(target=self._pychron_auto_calibration)
                 t.start()
-            #make a new calibration item
+            # make a new calibration item
 
 #        else:
 #
@@ -243,7 +243,7 @@ class TrayCalibrationManager(Manager):
 
     def _cancel_fired(self):
         canvas = self.canvas
-        #try to cancel the machine vision manager 
+        # try to cancel the machine vision manager
         mv = self.parent.machine_vision_manager
         if mv is not None:
             mv.cancel_calibration()

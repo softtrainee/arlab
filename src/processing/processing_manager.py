@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,18 +16,18 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, List
-#from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup
-#import apptools.sweet_pickle as pickle
+# from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup
+# import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-#import os
-#from numpy import array
+# import os
+# from numpy import array
 #============= local library imports  ==========================
 from src.processing.database_manager import DatabaseManager
-#from src.processing.processing_selector import ProcessingSelector
+# from src.processing.processing_selector import ProcessingSelector
 from src.processing.analysis import Analysis, NonDBAnalysis
-#from src.processing.script import ProcessScript
-#from src.constants import NULL_STR
-#from src.progress_dialog import MProgressDialog
+# from src.processing.script import ProcessScript
+# from src.constants import NULL_STR
+# from src.progress_dialog import MProgressDialog
 from src.processing.plotter_options_manager import PlotterOptionsManager, \
     IdeogramOptionsManager, SpectrumOptionsManager, IsochronOptionsManager
 from src.processing.window import Window
@@ -40,7 +40,7 @@ from src.processing.search.selector_manager import SelectorManager
 from src.processing.search.selected_view import Marker
 from src.processing.search.figure_manager import FigureManager
 from src.database.records.isotope_record import IsotopeRecord
-#import csv
+# import csv
 from src.processing.publisher.publisher import  CSVWriter, \
     PDFWriter, MassSpecCSVWriter
 from src.irradiation.flux_manager import FluxManager
@@ -110,11 +110,11 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                             dbiso = self._add_fit(ai, hist, name, fi.fit, kind)
                             self.info('setting analysis {} {} isotope result'.format(ai.record_id, name))
 
-                            #compute new intercept value
+                            # compute new intercept value
                             v, e = ai.fit_isotope(name, fi.fit, kind)
                             dbresult = db.add_isotope_result(dbiso, hist, signal_=v, signal_err=e)
 
-                        #copy from previous
+                        # copy from previous
                         nfitnames = [fi.name for fi in nfits]
                         def exists(na, ki):
                             if ki == 'baseline':
@@ -422,7 +422,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
                         func = getattr(self, '_display_{}'.format(name))
                         func(ans, po, title, data_type=data_type)
             elif name == 'ideogram':
-                #open manual entry plotter
+                # open manual entry plotter
                 mep = ManualEntryManager(processing_manager=self,
                                          plotter_options_manager=pom
                                          )
@@ -436,7 +436,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
         self.open_view(fig)
 
 #===============================================================================
-# 
+#
 #===============================================================================
     def _gather_data(self, data_type='database'):
         '''
@@ -517,7 +517,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
         return fig
 
     def _display_series(self, ans, po, title):
-        #open a series manager
+        # open a series manager
         sm = SeriesManager(analyses=ans)
         info = sm.edit_traits(kind='livemodal')
         if info.result:
@@ -755,7 +755,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
 
             if highlight_omitted:
                 ta = sorted(analyses, key=lambda x:x.age)
-                #find omitted ans
+                # find omitted ans
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
                 p.set_excluded_points(sel, 0)
 
@@ -846,7 +846,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 sgrps = []
 
                 for xi, sti in zip(aliquots[1:], steps[1:]):
-                    #handle analyses with steps
+                    # handle analyses with steps
                     if sti != '':
                         if not sgrp:
                             sgrp.append(xi)
@@ -872,7 +872,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 fs = [make_bounds(gi) for gi in ggrps]
 
                 if sgrps[0]:
-                    #handle steps
+                    # handle steps
                     pa = sgrps[0][0]
                     ggrps = []
                     cgrp = [sgrps[0]]

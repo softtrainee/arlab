@@ -79,7 +79,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         return v
 
     if constants is None:
-        #lazy load constants
+        # lazy load constants
         from src.processing.constants import Constants
         constants = Constants()
 
@@ -109,21 +109,21 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #    temp_ic = ufloat(ic)
 
 #===============================================================================
-# 
+#
 #===============================================================================
 
-    #subtract blanks and baselines (and backgrounds)
+    # subtract blanks and baselines (and backgrounds)
     s40 -= (s40bl + s40bs + s40bk)
     s39 -= (s39bl + s39bs + s39bk)
     s38 -= (s38bl + s38bs + s38bk)
     s37 -= (s37bl + s37bs + s37bk)
     s36 -= (s36bl + s36bs + s36bk)
 
-    #apply intercalibration factor to corrected 36
+    # apply intercalibration factor to corrected 36
     s36 *= ic
 
-    #correct for abundant sensitivity
-    #assumes symmetric and equal abundant sens for all peaks
+    # correct for abundant sensitivity
+    # assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundant_sensitivity * (0 + s39)
     n39 = s39 - abundant_sensitivity * (s40 + s38)
     n38 = s38 - abundant_sensitivity * (s39 + s37)
@@ -132,7 +132,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
 
-    #calculate decay factors
+    # calculate decay factors
     if a37decayfactor is None:
         try:
             dc = constants.lambda_Ar37.nominal_value
@@ -147,13 +147,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         except ZeroDivisionError:
             a39decayfactor = 1
 
-    #calculate interference corrections
+    # calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
     k37 = ufloat((0, 1e-20))
 
-    #iteratively calculate 37, 39
+    # iteratively calculate 37, 39
     for _ in range(5):
         ca37 = s37dec_cor - k37
         ca39 = ca3937 * ca37
@@ -180,8 +180,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         cl36 = cl38 * m
         atm36 = s36 - ca36 - cl36
 
-    #calculate rodiogenic
-    #dont include error in 40/36
+    # calculate rodiogenic
+    # dont include error in 40/36
 
 #    pc = sc.node('pychron').node('experiment')
 #    print pc
@@ -195,12 +195,12 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     age_wo_jerr = ufloat((0, 0))
     try:
         R = ar40rad / k39
-        #dont include error in decay constant
+        # dont include error in decay constant
         age = age_equation(j, R, include_decay_error=include_decay_error, constants=constants)
 #        age = age_equation(j, R)
         age_with_jerr = deepcopy(age)
 
-        #dont include error in decay constant
+        # dont include error in decay constant
         j.set_std_dev(0)
         age = age_equation(j, R, include_decay_error=include_decay_error, constants=constants)
 #        age = age_equation(j, R)
@@ -260,9 +260,9 @@ class Constants(ExcelMixin):
     age_units = 'Ma'
     def __init__(self, sheet):
         self.sheet = sheet
-        #lambda_epsilon = ufloat((5.81e-11,
+        # lambda_epsilon = ufloat((5.81e-11,
         #                                    0))
-        #lambda_beta = ufloat((4.962e-10,
+        # lambda_beta = ufloat((4.962e-10,
         #                                 0))
 
 #        lambda_e = ufloat((5.755e-11,
@@ -276,20 +276,20 @@ class Constants(ExcelMixin):
 #        lambda_b = get_constant('lambda_b', 4.962e-10, 0)
 
         self.lambda_k = lambda_e + lambda_b
-        #lambda_k = get_constant('lambda_K', 5.81e-11 + 4.962e-10, 0)
+        # lambda_k = get_constant('lambda_K', 5.81e-11 + 4.962e-10, 0)
 
-        self.lambda_Ar37 = self._get_constant('lambda_Ar37', 0.01975, 0) #per day
-        #lambda_37 = ufloat((0.01975, 0)) #per day
-        self.lambda_Ar39 = self._get_constant('lambda_Ar39', 7.068000e-6, 0)  #per day
-        #lambda_39 = ufloat((7.068000e-6, 0))  #per day
-        self.lambda_Cl36 = self._get_constant('lambda_Cl36', 6.308000e-9, 0)  #per day
-        #lambda_cl36 = ufloat((6.308000e-9, 0))  #per day
+        self.lambda_Ar37 = self._get_constant('lambda_Ar37', 0.01975, 0)  # per day
+        # lambda_37 = ufloat((0.01975, 0)) #per day
+        self.lambda_Ar39 = self._get_constant('lambda_Ar39', 7.068000e-6, 0)  # per day
+        # lambda_39 = ufloat((7.068000e-6, 0))  #per day
+        self.lambda_Cl36 = self._get_constant('lambda_Cl36', 6.308000e-9, 0)  # per day
+        # lambda_cl36 = ufloat((6.308000e-9, 0))  #per day
 
-        #atmospheric ratios
+        # atmospheric ratios
         self.atm4036 = self._get_constant('Ar40_Ar36_atm', 295.5, 0)
         self.atm4038 = self._get_constant('Ar40_Ar38_atm', 1575, 2)
 
-        #atm4038 = ufloat((1575, 2))
+        # atm4038 = ufloat((1575, 2))
         self.atm3638 = self.atm4038 / self.atm4036
         self.atm3836 = self.atm4036 / self.atm4038
 
@@ -312,7 +312,7 @@ class Constants(ExcelMixin):
         return ufloat((value, error))
 
 
-#class Isotope(HasTraits):
+# class Isotope(HasTraits):
 #    value = Float
 #    error = Float
 #    uvalue = Property

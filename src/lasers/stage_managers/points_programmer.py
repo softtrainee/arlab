@@ -2,7 +2,7 @@ from traits.api import HasTraits, Color, Button, Event, Property, \
     Any, List, Bool, Enum, Float, Int
 from traitsui.api import View, Item, ButtonEditor, Group, HGroup, VGroup
 from src.paths import paths
-#from src.lasers.stage_managers.stage_map import StageMap
+# from src.lasers.stage_managers.stage_map import StageMap
 from src.loggable import Loggable
 import yaml
 from src.managers.manager import Manager
@@ -201,14 +201,14 @@ class PointsProgrammer(Manager):
             txt['lines'] = lines
             with open(p, 'w') as f:
                 f.write(yaml.dump(txt, default_flow_style=False))
-#            
+#
 #            with open(p, 'w') as f:
 #                f.write('{},{}\n'.format('circle',0.1))
 #                f.write('\n') #valid holes
 #                f.write('\n') #calibration holes
 #                for pt in self.canvas.points:
 #                    f.write('p{:003n},{},{}\n'.format(pt.identifier,pt.x,pt.y))
-#                
+#
 #                f.write('='*80)
 #                for li in self.canvas.lines:
 #                    for i in range(0,len(li.points),2):
@@ -216,13 +216,13 @@ class PointsProgrammer(Manager):
 #                        p2=li.points[i+1]
 #                        v=li.velocity_segments[i]
 #                        f.write('{:003n},{},{},{},{},{}'.format(li.identifier,
-#                                                                p1.x, p1.y, 
+#                                                                p1.x, p1.y,
 #                                                                p2.x, p2.y,
 #                                                                v))
 #                    f.write('\n')
 
             sm = self.stage_map_klass(file_path=p)
-#            
+#
             self._stage_maps.append(sm)
 
 
@@ -231,7 +231,7 @@ class PointsProgrammer(Manager):
         return 'Hide' if self.is_programming else 'Show'
 
     def _mode_default(self):
-        return 'transect'#'point'
+        return 'transect'  # 'point'
 
     def _clear_mode_default(self):
         return 'all'

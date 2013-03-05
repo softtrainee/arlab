@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,11 +77,11 @@ class PatternExecutor(Patternable):
         if path:
             fp = open(path, 'rb')
         else:
-            #convert name_or_pickle into a file like obj
+            # convert name_or_pickle into a file like obj
             fp = cStringIO.StringIO()
             fp.write(name_or_pickle)
 
-        #self._load_pattern sets self.pattern
+        # self._load_pattern sets self.pattern
         pattern = self._load_pattern(fp, path)
         self.on_trait_change(self.stop, 'canceled')
         return pattern
@@ -106,7 +106,7 @@ class PatternExecutor(Patternable):
             self.pattern.close_ui()
             self.info('Pattern {} stopped'.format(self.pattern_name))
 
-            #prevent future stops (AbortJogs from massspec) from executing
+            # prevent future stops (AbortJogs from massspec) from executing
             self.pattern = None
 
     def isPatterning(self):

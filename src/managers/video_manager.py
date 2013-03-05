@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -99,7 +99,7 @@ class VideoManager(Manager):
 
         self.info('saving recording to path {}'.format(path))
 
-        #self.start()
+        # self.start()
         self.video.start_recording(path)
 #        time.sleep(5)
 #        self.stop_recording()
@@ -222,7 +222,7 @@ class VideoManager(Manager):
 #        '''
 #        '''
 #        self.find_lines()
-##        p = '/Users/fargo2/Desktop/laser_tray_75.tiff'
+# #        p = '/Users/fargo2/Desktop/laser_tray_75.tiff'
 #        av = self.process_image(#crop = (self.x, self.y, 250, 250),
 #                               # erode = self.erosion,
 #                                #dilate = self.dilation
@@ -247,21 +247,21 @@ class VideoManager(Manager):
 #        control_grp = VGroup(Item('threshold', editor=RangeEditor(mode='slider',
 #                                                        low=0,
 #                                                        high=255)),
-##                                Item('angle', editor = RangeEditor(mode = 'slider',
-##                                                                    low = 0,
-##                                                                    high = 360)),
+# #                                Item('angle', editor = RangeEditor(mode = 'slider',
+# #                                                                    low = 0,
+# #                                                                    high = 360)),
 #                                Item('erosion', editor=RangeEditor(mode='spinner',
 #                                                                    low=0,
 #                                                                    high=4)),
 #                                Item('dilation', editor=RangeEditor(mode='spinner',
 #                                                                    low=0,
 #                                                                    high=4)))
-##                                Item('x', editor = RangeEditor(mode = 'spinner',
-##                                                                    low = 0,
-##                                                                    high = 500)),
-##                                Item('y', editor = RangeEditor(mode = 'spinner',
-##                                                                    low = 0,
-##                                                                    high = 500)),)
+# #                                Item('x', editor = RangeEditor(mode = 'spinner',
+# #                                                                    low = 0,
+# #                                                                    high = 500)),
+# #                                Item('y', editor = RangeEditor(mode = 'spinner',
+# #                                                                    low = 0,
+# #                                                                    high = 500)),)
 #        return View(
 #                    VGroup(control_grp,
 #                           Item('image', show_label=False,
@@ -282,11 +282,11 @@ if __name__ == '__main__':
     logging_setup('video')
     vm = VideoManager()
 
-    #p = '/Users/fargo2/Desktop/laser_tray_50.tiff'
+    # p = '/Users/fargo2/Desktop/laser_tray_50.tiff'
 
-    #vm.process_image(p, crop=(0, 0, 250, 250))
+    # vm.process_image(p, crop=(0, 0, 250, 250))
     vm.start()
-    vm.configure_traits()#view='image_view')
+    vm.configure_traits()  # view='image_view')
 
 
 
@@ -314,14 +314,14 @@ if __name__ == '__main__':
 #        return results
 #
 #
-##    def load_image(self, path = None):
-##        '''
-##            @type path: C{str}
-##            @param path:
-##        '''
-##        if path is None:
-##            frame = load_image(path)
-##            self.image.source_frame = frame
+# #    def load_image(self, path = None):
+# #        '''
+# #            @type path: C{str}
+# #            @param path:
+# #        '''
+# #        if path is None:
+# #            frame = load_image(path)
+# #            self.image.source_frame = frame
 #
 #
 #    def save_frame(self, name = None, frame = None, path = None, root = None):
@@ -369,16 +369,16 @@ if __name__ == '__main__':
 #            frame = self.video.get_frame()
 #            self.save_frame(frame = frame, name = 'frame%i_%i' % (setpoint, i))
 #            time.sleep(interval)
-##        #fi=self.video.get_frame()
-##        
-##        #dst=new_dst(fi)            
-##        for i in range(n-1):
-##            self.info('accumulating frame %i'%(i))
-##            f=self.video.get_frame()#gray=True)
-##            #cvAcc(f,dst)
-##            time.sleep(interval)
-##            
-##        return fi
+# #        #fi=self.video.get_frame()
+# #
+# #        #dst=new_dst(fi)
+# #        for i in range(n-1):
+# #            self.info('accumulating frame %i'%(i))
+# #            f=self.video.get_frame()#gray=True)
+# #            #cvAcc(f,dst)
+# #            time.sleep(interval)
+# #
+# #        return fi
 #
 #    def _process_fired(self):
 #        '''
@@ -388,47 +388,47 @@ if __name__ == '__main__':
 
 #    def process_frame(self,frame=None,path=None,type='temperature',**kw):
 #        self.logger.info('========= processing frame for %s =========='%type)
-#    
+#
 #        if path is not None:
-#            #frame=cvLoadImage(path)   
-#            frame=load_image(path) 
-#            
+#            #frame=cvLoadImage(path)
+#            frame=load_image(path)
+#
 #        elif frame is None:
 #            frame=self.video.get_frame(clone=True,
 #                                       flag=CV_CVTIMG_SWAP_RB
 #                                       )
-#        
+#
 #        self.image.frames.append(frame)
 #        a=self.image
-#        
+#
 #        #locate the ROI
 #        self.logger.info('=========== locating target and selecting ROI =========')
 #        #a.locate_target()
-#        
+#
 #        #calculate a temperature
 #        self.logger.info('============ calculating temperature from ROI =========')
 #        #avg= a.get_target_info()
-#        
-#        
+#
+#
 #        #self.edit_traits(view='image_view')
 #        return 10
 #        #return avg.val
 #   low_threshold=DelegatesTo('image')
 #    high_threshold=DelegatesTo('image')
-#    
+#
 #    low_low=DelegatesTo('image')
 #    low_high=DelegatesTo('image')
-#    
+#
 #    high_low=DelegatesTo('image')
 #    high_high=DelegatesTo('image')
 #    process=Button
 #    prev_ui=Any
-#    
-#   
+#
+#
 #    record_button=Event
 #    record_label=Property(depends_on='recording')
 #    recording=Bool
-#    
+#
 #    snapshot=DelegatesTo('video')
 #    def process_view(self):
 #        return View(Item('low_threshold',editor=RangeEditor(low_name='low_low',
@@ -445,31 +445,31 @@ if __name__ == '__main__':
 #                         resizable=True,
 #                         title='Snapshot View'
 #                         )
-##    def _snapshot_fired(self):
-##        directory='/Users/Ross/Pychrondata/data/video'
-##        self.video.record_frame(directory)
-#        
+# #    def _snapshot_fired(self):
+# #        directory='/Users/Ross/Pychrondata/data/video'
+# #        self.video.record_frame(directory)
+#
 #    def _record_button_fired(self):
 #        if not self.recording:
 #            self.logger.info('starting video record')
-#            
+#
 #            self.video.start_recording()
 #        else:
 #            self.logger.info('stop video record')
-#        
+#
 #        self.recording =not self.recording
-#        
+#
 #    def _get_record_label(self):
 #        return 'RECORD' if not self.recording else 'STOP'
-#    
+#
 #    def _high_threshold_changed(self):
 #        self.low_high=self.high_threshold
-#        
+#
 
 #    def _set_center_fired(self):
 #        center=self.video.mouse_x,self.video.mouse_y
-#        
+#
 #        #self.video.set_center()
 #        print center
-#        
+#
 #        self.image.center=center

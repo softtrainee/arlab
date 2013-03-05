@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -104,27 +104,27 @@ class RegionSegmenter(BaseSegmenter):
 #        markers = zeros_like(image)
 #        markers[image < self.threshold_low] = 0
 #        markers[image > self.threshold_high] = 1
-##        image = markers
-##        if self.use_adaptive_threshold:
+# #        image = markers
+# #        if self.use_adaptive_threshold:
 #        block_size = image.shape[0]
 #        image = threshold_adaptive(image, block_size)
-##        markers[markers < 1] = 1
-##        image = markers
-##        else:
+# #        markers[markers < 1] = 1
+# #        image = markers
+# #        else:
 #
-##        import numpy as np
-##        x, y = np.indices((80, 80))
-##        x1, y1, x2, y2 = 28, 28, 44, 52
-##        r1, r2 = 16, 20
-##        mask_circle1 = (x - x1) ** 2 + (y - y1) ** 2 < r1 ** 2
-##        mask_circle2 = (x - x2) ** 2 + (y - y2) ** 2 < r2 ** 2
-##        fimage = np.logical_or(mask_circle1, mask_circle2)
-##        print fimage.shape, image.shape
-##        image = invert(image)
+# #        import numpy as np
+# #        x, y = np.indices((80, 80))
+# #        x1, y1, x2, y2 = 28, 28, 44, 52
+# #        r1, r2 = 16, 20
+# #        mask_circle1 = (x - x1) ** 2 + (y - y1) ** 2 < r1 ** 2
+# #        mask_circle2 = (x - x2) ** 2 + (y - y2) ** 2 < r2 ** 2
+# #        fimage = np.logical_or(mask_circle1, mask_circle2)
+# #        print fimage.shape, image.shape
+# #        image = invert(image)
 #
 #        distance = ndimage.distance_transform_edt(image)
 #        local_maxi = is_local_maximum(distance, image,
-##                                      ones((5, 5))
+# #                                      ones((5, 5))
 #                                      )
 #        markers = ndimage.label(local_maxi)[0]
 #        wsrc = watershed(-distance, markers,
@@ -140,14 +140,14 @@ class RegionSegmenter(BaseSegmenter):
 #
 #        mi = ma = bi
 #        nimage = zeros_like(wsrc)
-##        wsrc[wsrc < ma] = 0
+# #        wsrc[wsrc < ma] = 0
 #        nimage[wsrc > mi] = 255
 #        nimage[wsrc > ma + 1] = 0
 #
 #
 #        wsrc = nimage
-##        el_map = sobel(image)
-##        wsrc = watershed(el_map, markers)
+# #        el_map = sobel(image)
+# #        wsrc = watershed(el_map, markers)
 #
 #        global show
 #        if show:
@@ -168,7 +168,7 @@ class RegionSegmenter(BaseSegmenter):
 #            show = False
 #
 #        return wsrc
-##        return invert(wsrc)
+# #        return invert(wsrc)
 
 #===============================================================================
 # property get/set

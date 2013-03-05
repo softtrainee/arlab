@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,9 +19,9 @@
 import unittest
 #============= local library imports  ==========================
 from .laser_test import LaserTest
-#from .system_test import SystemTest
+# from .system_test import SystemTest
 
-#class MainTestCase(unittest.TestCase):
+# class MainTestCase(unittest.TestCase):
 #    def setUp(self):
 #        pass
 #    def tearDown(self):
@@ -29,14 +29,14 @@ from .laser_test import LaserTest
 #    def testFoo(self):
 #        assert 1 == 0
 #
-#class FooTestCase(unittest.TestCase):
+# class FooTestCase(unittest.TestCase):
 #    def testMoo(self):
 #        assert 1 == 1
 #    def testBoo(self):
 #        assert 1 == 0
-#pychronTestSuite=
+# pychronTestSuite=
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    runner = unittest.TextTestRunner()
 #    runner.run(pychronTestSuite)
 

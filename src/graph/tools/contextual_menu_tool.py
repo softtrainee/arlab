@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@
 #============= enthought library imports =======================
 from traits.api import Any
 from enable.api import Interactor
-#from chaco.base_plot_container import BasePlotContainer
+# from chaco.base_plot_container import BasePlotContainer
 from chaco.plot import Plot
 
 #============= standard library imports ========================
@@ -117,7 +117,7 @@ class ContextualMenuTool(Interactor):
             self.parent.selected_plot = None
 
         display_menu(self.parent, event)
-            #if hasattr(self.parent, 'explanable_items'):
+            # if hasattr(self.parent, 'explanable_items'):
     #            self.parent.selected_plotid = self.parent.plotcontainer.explanable_items.index(plot)
 
         event.handled = True

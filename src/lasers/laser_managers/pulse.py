@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,7 +79,7 @@ class Pulse(HasTraits):
         evt = TEvent()
         man = self.manager
         if man is not None:
-            #man.enable_laser()
+            # man.enable_laser()
             resp = man.set_laser_power(self.power)
             if resp is False:
                 self.pulsing = False
@@ -132,10 +132,10 @@ class Pulse(HasTraits):
         return v
 
 
-#class LaserPulseManager(Manager):
-##    pulse_button = Event
-##    pulse_label = Property
-##    pulsing = Bool(False)
+# class LaserPulseManager(Manager):
+# #    pulse_button = Event
+# #    pulse_label = Property
+# #    pulsing = Bool(False)
 #    pulse = Instance(Pulse)
 #
 #    def dump_pulse(self):
@@ -154,7 +154,7 @@ class Pulse(HasTraits):
 #                    pul = Pulse(manager=self.parent)
 #        else:
 #            pul = Pulse(manager=self.parent)
-##        pul = Pulse(manager=self.parent)
+# #        pul = Pulse(manager=self.parent)
 #
 #        return pul
 #
@@ -168,7 +168,7 @@ class Pulse(HasTraits):
 #        return v
 #
 #
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    lp = LaserPulseManager()
 #    lp.configure_traits()
 #============= EOF ====================================

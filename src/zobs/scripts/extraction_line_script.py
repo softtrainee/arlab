@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,28 +30,28 @@ from src.helpers.filetools import parse_file
 from src.helpers.datetime_tools import generate_datetimestamp
 from wait_dialog import WaitDialog
 from extraction_line_script_parser import ExtractionLineScriptParser
-#from src.scripts.analysis.analysis_script import AnalysisScript
+# from src.scripts.analysis.analysis_script import AnalysisScript
 from src.scripts.measurement.measurement_script import MeasurementScript
 
 class Sniffer:
     def sniff(self):
         nsniff = 6
-        #record a block of spectrometer data
+        # record a block of spectrometer data
         data = []
         for i in range(nsniff):
             data.append(i)
 
-        #analysis the data
+        # analysis the data
         action = self.analyze_data(data)
 
-        #return the sniff action
+        # return the sniff action
         return action
 
     def analyze_data(self, data):
 
         action = 'continue'
-        #action = 'signal too high'
-        #action = 'signal too low'
+        # action = 'signal too high'
+        # action = 'signal too low'
         return action
 
 
@@ -85,9 +85,9 @@ class ExtractionLineScript(CoreScript):
             self._ok_to_run = False
             self.warning(action)
 
-        #daughter threads are joined just before the script is killed
-        #so that the script will wait for the daughter before finishing 
-        #self.daughter_threads.append(t)
+        # daughter threads are joined just before the script is killed
+        # so that the script will wait for the daughter before finishing
+        # self.daughter_threads.append(t)
 
 #    def extraction_analysis_statement(self, *args):
 #        #bootstrap an analysis script
@@ -225,18 +225,18 @@ class ExtractionLineScript(CoreScript):
             @type subpath: C{str}
             @param subpath:
         '''
-        #c = self.cond
+        # c = self.cond
         for i, cmd in enumerate(parse_file(subpath)):
             self._run_command(i, cmd)
-            #ri = ExtractionLineScriptItem(self, c, cmd, self.logger)
-            #ri.start()
+            # ri = ExtractionLineScriptItem(self, c, cmd, self.logger)
+            # ri.start()
 
     def warning_statement(self, statement):
         '''
             @type statement: C{str}
             @param statement:
         '''
-        #warning(None, statement)
+        # warning(None, statement)
         self.logger.warning('****** %s ******' % statement)
 
     def close_stage_manager_statement(self):
@@ -272,7 +272,7 @@ class ExtractionLineScript(CoreScript):
             if args is not None:
                 if isinstance(args, (str, int, float)):
                     args = [args]
-                #check for interpolation keys
+                # check for interpolation keys
                 for i, a in enumerate(args):
                     if isinstance(a, str):
                         if a[0] == '%':
@@ -309,21 +309,21 @@ class ExtractionLineScript(CoreScript):
 
 #
 ##============= enthought library imports =======================
-#from traits.api import Button, Float, Enum, Int
-#from traitsui.api import Item
+# from traits.api import Button, Float, Enum, Int
+# from traitsui.api import Item
 ##============= standard library imports ========================
-#from threading import Condition
+# from threading import Condition
 ##============= local library imports  ==========================
-##import time
-##st=time.time()
-#from file_script import FileScript
-##print 'file script load time %0.5f'%(time.time()-st)
+# #import time
+# #st=time.time()
+# from file_script import FileScript
+# #print 'file script load time %0.5f'%(time.time()-st)
 #
-#from extraction_line_script_item import ExtractionLineScriptItem
-#from src.scripts.core.script_validator import ScriptValidator
+# from extraction_line_script_item import ExtractionLineScriptItem
+# from src.scripts.core.script_validator import ScriptValidator
 #
 #
-#class ExtractionLineScript(FileScript):
+# class ExtractionLineScript(FileScript):
 #    '''
 #        G{classtree}
 #    '''
@@ -338,23 +338,23 @@ class ExtractionLineScript(CoreScript):
 #    def _edit_fired(self):
 #        '''
 #
-##        from src.scripts.script_writer import ScriptWriter
-##        s = ScriptWriter()
-##
-##        f = self.file_name
-##        if f is None:
-##            f = self.available_scripts[0]
-##
-##        p = os.path.join(self.source_dir, f)
-##        s.add_script(p)
-##        s.edit_traits()
+# #        from src.scripts.script_writer import ScriptWriter
+# #        s = ScriptWriter()
+# #
+# #        f = self.file_name
+# #        if f is None:
+# #            f = self.available_scripts[0]
+# #
+# #        p = os.path.join(self.source_dir, f)
+# #        s.add_script(p)
+# #        s.edit_traits()
 #        '''
 #        pass
 #    def load_file(self):
 #        '''
 #        _file_contents_ is now loaded
-#        
-#        
+#
+#
 #        '''
 #        #the script loaded into _file_contents may not be valid
 #

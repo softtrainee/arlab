@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -154,7 +154,7 @@ class DataReductionSessionTable(Base):
     __tablename__ = 'datareductionsessiontable'
     DataReductionSessionID = Column(Integer, primary_key=True)
     SessionDate = Column(DateTime)
-    #changeable_items = relationship('AnalysesChangeableItemsTable')
+    # changeable_items = relationship('AnalysesChangeableItemsTable')
 
 
 class DetectorTable(Base):
@@ -291,8 +291,8 @@ class IsotopeTable(Base):
     Label = Column(String(40))
     NumCnts = Column(Integer)
     NCyc = Column(Integer, nullable=True)
-    #CycleStartIndexList
-    #CycleStartIndexblob
+    # CycleStartIndexList
+    # CycleStartIndexblob
     BslnID = Column(Integer, ForeignKey('baselinestable.BslnID'))
     RatNumerator = Column(Integer, nullable=True)
     RatDenominator = Column(Integer, nullable=True)
@@ -314,7 +314,7 @@ class FittypeTable(Base):
 #                          uselist=False
                           )
 #    baseline_results = relationship('baselineschangeableitemstable', backref='fit',
-##                          uselist=False
+# #                          uselist=False
 #                          )
 
 
@@ -384,7 +384,7 @@ class SampleTable(Base):
     SampleID = Column(Integer, primary_key=True)
     Sample = Column(String(40))
 
-    Project = Column(String(40))#, ForeignKey('projecttable.Project'))
+    Project = Column(String(40))  # , ForeignKey('projecttable.Project'))
 #    Project = relation('ProjectTable', backref = 'SampleTable')
     ProjectID = Column(Integer, ForeignKey('projecttable.ProjectID'))
     Note = Column(String(40) , default='NULL')

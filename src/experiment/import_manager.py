@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -54,20 +54,20 @@ class MassSpecExtractor(Extractor):
     def import_irradiation(self, dest, name):
         self.connect()
 
-        #is irrad already in dest
+        # is irrad already in dest
         dbirrad = dest.get_irradiation(name)
         skipped = True
         if dbirrad is None:
-            #add chronology
+            # add chronology
             dbchron = self._add_chronology(dest, name)
-            #add production
+            # add production
             dbpr = self._add_production_ratios(dest, name)
-            #add irradiation
+            # add irradiation
             dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
             skipped = False
 
         dest.flush()
-        #add all the levels and positions for this irradiation
+        # add all the levels and positions for this irradiation
         self._add_levels(dest, dbirrad, name)
 
         dest.commit()
@@ -76,14 +76,14 @@ class MassSpecExtractor(Extractor):
     def _add_levels(self, dest, dbirrad, name):
         levels = self.db.get_levels_by_irradname(name)
         for mli in levels:
-            #is level already in dest
+            # is level already in dest
             if dest.get_irradiation_level(name, mli.Level) is None:
                 dest.add_irradiation_level(mli.Level, dbirrad, mli.SampleHolder)
 
-            #add all irradiation positions for this level
+            # add all irradiation positions for this level
             positions = self.db.get_irradiation_positions(name, mli.Level)
             for ip in positions:
-                #is labnumber already in dest
+                # is labnumber already in dest
                 if not dest.get_labnumber(ip.IrradPosition):
                     ln = dest.add_labnumber(ip.IrradPosition)
                     dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
@@ -150,11 +150,11 @@ class MassSpecExtractor(Extractor):
 #    def _import_irradiation(self, dest, msrecord):
 #        #get irradiation position
 #        irrad_position = msrecord.irradiation_position
-##
-##        #get irradiation level
+# #
+# #        #get irradiation level
 #        name, level = irrad_position.IrradiationLevel[:-1], irrad_position.IrradiationLevel[-1:]
-##        if name and level:
-##            irrad_level = self._get_irradiation_level(name, level)
+# #        if name and level:
+# #            irrad_level = self._get_irradiation_level(name, level)
 #        irrad_level = self._get_irradiation_level(msrecord, name=name, level=level)
 #        if irrad_level:
 #
@@ -238,10 +238,10 @@ class ImportManager(DatabaseManager):
     def _import_button_fired(self):
         if self.selected:
             if self.db.connect():
-                #clear imported
+                # clear imported
                 self.imported_names = []
 
-                #get import func from importer
+                # get import func from importer
                 func = getattr(self.importer, 'import_{}'.format(self.import_kind))
                 for si in self.selected:
                     r = func(self.db, si.name)

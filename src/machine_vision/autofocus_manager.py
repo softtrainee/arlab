@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,7 +65,7 @@ class AutofocusManager(Manager):
     autofocus_label = Property(depends_on='autofocusing')
     autofocusing = Bool
 
-    #threading event for cancel signal
+    # threading event for cancel signal
     _evt_autofocusing = None
 
     image = Instance(Image, ())
@@ -206,7 +206,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
     def _cancel_sweep(self, vo):
         if self._evt_autofocusing.isSet():
-            #return to original velocity
+            # return to original velocity
             self.autofocusing = False
             self._reset_velocity(vo)
             return True
@@ -227,21 +227,21 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         '''
 
         self.info('focus sweep start={} end={}'.format(start, end))
-        #move to start position
+        # move to start position
         controller = self.stage_controller
         if controller:
             vo = controller.axes['z'].velocity
             if self._cancel_sweep(vo):
                 return
             self.graph.set_x_limits(min(start, end), max(start, end), pad=2)
-            #sweep 1 and velocity 1
+            # sweep 1 and velocity 1
             self._do_sweep(start, end, velocity=self.parameters.velocity_scalar1)
             fms, focussteps = self._collect_focus_measures(operator, roi)
             if not (fms and focussteps):
                 return
 
-            #reached end of sweep
-            #calculate a nominal focal point    
+            # reached end of sweep
+            # calculate a nominal focal point
             args = self._calculate_nominal_focal_point(fms, focussteps)
             nfocal = args[3]
 
@@ -274,7 +274,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         controller = self.stage_controller
         controller.single_axis_move('z', start, block=True)
         time.sleep(0.05)
-        #explicitly check for motion
+        # explicitly check for motion
         controller.block(axis='z')
 
         if velocity:
@@ -283,7 +283,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             controller.set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
                                                     key='z'))
 
-        #pause before moving to end
+        # pause before moving to end
         time.sleep(0.5)
         controller.single_axis_move('z', end)
 
@@ -324,7 +324,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
         '''
 
-        #need to resize to 640,480. this is the space the roi is in
+        # need to resize to 640,480. this is the space the roi is in
         s = resize(grayspace(src), 640, 480)
         v = crop(s, *roi, mat=False)
 
@@ -447,9 +447,9 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 #                s = self._load_source()
 #                grads.append(self._calculate_focus_measure(operator, roi, src=s))
 #
-##            sgrads = smooth(grads)
-##            fmi = focussteps[argmin(sgrads)]
-##            fma = focussteps[argmax(sgrads)]
+# #            sgrads = smooth(grads)
+# #            fmi = focussteps[argmin(sgrads)]
+# #            fma = focussteps[argmax(sgrads)]
 #        else:
 #    def _passive_focus_2step(self, operator='laplace'):
 #        '''
@@ -529,25 +529,25 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 #            '''
 #             currently the slowest
 #            '''
-#            
-##            fmx = _fm_(v, oper=operator)
-##            fmy = _fm_(v, x=False, oper=operator)
-##            fmh=hypot(fmx,fmy)
-##            fms=fmx+fmy
-##            print 'roberts slow',fmh, fms
-###            
+#
+# #            fmx = _fm_(v, oper=operator)
+# #            fmy = _fm_(v, x=False, oper=operator)
+# #            fmh=hypot(fmx,fmy)
+# #            fms=fmx+fmy
+# #            print 'roberts slow',fmh, fms
+# ##
 #            def roberts(input, axis = -1, output = None, mode = "constant", cval = 0.0):
 #                output, return_value = _ni_support._get_output(output, input)
 #                correlate1d(input, [1, 0], 0, output, mode, cval, 0)
 #                correlate1d(input, [0, -1], 1, output, mode, cval, 0)
-#                
+#
 #                correlate1d(input, [0, -1], 0, output, mode, cval, 0)
 #                correlate1d(input, [1, 0], 1, output, mode, cval, 0)
-#                
+#
 #                return return_value
-#                
-#                
+#
+#
 #            fm =ndsum(generic_gradient_magnitude(v, roberts, mode='constant'))
-#            
+#
 #            print 'roberts fast', fm
 #        print operator, fm

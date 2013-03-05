@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,8 +21,8 @@ from src.processing.argon_calculations import calculate_flux
 from src.database.records.isotope_record import IsotopeRecord
 from uncertainties import ufloat
 from src.regression.ols_regressor import MultipleLinearRegressor
-#from src.graph.graph3D import Graph3D
-#from mayavi import mlab
+# from src.graph.graph3D import Graph3D
+# from mayavi import mlab
 import numpy as np
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -54,10 +54,10 @@ class FluxView(HasTraits):
         positions, ys = zip(*[(pos, mean_j(ans)) for (pos, ans) in analyses.itervalues()])
 
         ys, ye = zip(*ys)
-##        print positions
+# #        print positions
         reg = MultipleLinearRegressor(xs=positions, ys=ys)
-##        p = reg.predict([(0.0, 0.85)]) #0.00484421950062+/-8.3063828332e-06
-##        print p, p - 0.00484421950062
+# #        p = reg.predict([(0.0, 0.85)]) #0.00484421950062+/-8.3063828332e-06
+# #        print p, p - 0.00484421950062
 #        g = Graph3D()
 #        import numpy as np
         x, y = zip(*positions)
@@ -85,12 +85,12 @@ class FluxView(HasTraits):
 
         normalize = False
         if normalize:
-            z *= 1 / z.max()# * w - w / 2.
+            z *= 1 / z.max()  # * w - w / 2.
             z *= 100
             z -= z.min() + (z.max() - z.min()) / 2.
 
     #        w = ys.max() - ys.min()
-            ys *= 1 / ys.max() - ys.min()# * w - w / 2.
+            ys *= 1 / ys.max() - ys.min()  # * w - w / 2.
             ys *= 100
             ys -= ys.min() + (ys.max() - ys.min()) / 2.
 
@@ -192,8 +192,8 @@ if __name__ == '__main__':
 #    xs = [(0, 0), (1, 0), (2, 0)]
 #    ys = [0, 1, 2]
 #    reg = MultipleLinearRegressor(xs=xs, ys=ys)
-##        p = reg.predict([(0.0, 0.85)]) #0.00484421950062+/-8.3063828332e-06
-##        print p, p - 0.00484421950062
+# #        p = reg.predict([(0.0, 0.85)]) #0.00484421950062+/-8.3063828332e-06
+# #        print p, p - 0.00484421950062
 #    g = Graph3D()
 #    import numpy as np
 #    x, y = zip(*xs)
@@ -206,16 +206,16 @@ if __name__ == '__main__':
 #    z = reg.predict(pts)
 #
 #    z = z.reshape((r, c))
-##    z = np.column_stack((xs, ys))
-##        print z
+# #    z = np.column_stack((xs, ys))
+# #        print z
 #
-##    ys = np.ones((3, 3))
-##    zs = ys * z
-##    print x
-##    print y
-##    print zs
+# #    ys = np.ones((3, 3))
+# #    zs = ys * z
+# #    print x
+# #    print y
+# #    print zs
 #    g.plot_surf(z)
-##    g.plot_surf(x, y, ys)
-##    g.plot_surf(x, y, zs)
+# #    g.plot_surf(x, y, ys)
+# #    g.plot_surf(x, y, zs)
 #    g.configure_traits()
 #============= EOF =============================================

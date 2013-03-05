@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,14 +38,14 @@ class AgilentGPActuator(GPActuator):
         '''
         self._communicator.write_terminator = chr(10)
 
-        #clear and record any accumulated errors
+        # clear and record any accumulated errors
         errs = self._get_errors()
         if errs:
             self.warning('\n'.join(errs))
         return True
 
     def _get_errors(self):
-        #maximum of 10 errors so no reason to use a while loop
+        # maximum of 10 errors so no reason to use a while loop
 
         errors = []
         for _i in range(10):
@@ -99,7 +99,7 @@ class AgilentGPActuator(GPActuator):
         if not excl:
             cmd = 'ROUT:CLOSE (@{})'.format(address)
         else:
-            #ensure all channels open before closing 
+            # ensure all channels open before closing
             cmd = 'ROUT:CLOS:EXCL (@{})'.format(address)
         self.tell(cmd)
         if self.simulation:

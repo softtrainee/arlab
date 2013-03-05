@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 from traits.api import Any
 #============= standard library imports ========================
-#from wx import EVT_IDLE, EVT_PAINT
+# from wx import EVT_IDLE, EVT_PAINT
 import wx
 #============= local library imports  ==========================
 from src.lasers.stage_managers.stage_component_editor import LaserComponentEditor, \
@@ -55,9 +55,9 @@ class _VideoComponentEditor(_LaserComponentEditor):
             evt.Skip()
 
 #    def onIdle(self, event):
-##        '''
-##      
-##        '''
+# #        '''
+# #
+# #        '''
 #        if self.control is not None:
 #            self.control.Refresh()
 #            time.sleep(1 / float(self.value.fps))

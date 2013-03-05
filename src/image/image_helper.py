@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,7 +38,7 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
     CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
     sizeof, \
     cvCreateVideoWriter, CV_FOURCC, cvAddS, cvScalarAll, cvCreateCameraCapture
-    #unused
+    # unused
 #    cvClearMemStorage,\
 #    cvSet, cvSet2D, cvFilter2D, cvScalarAll, CV_32FC1, cvGet1D, cvSet1D, \
 #    CV_HOUGH_STANDARD,cvBoundingRect
@@ -118,7 +118,7 @@ def lines(src, thresh=0):
 
     dst = new_dst(src,
                # width = src.width + 1,
-                #height = src.height + 1,
+                # height = src.height + 1,
                 nchannels=3,
                 zero=True
                 )
@@ -174,7 +174,7 @@ def histogram(src):
 
     h_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
     s_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
-    #v_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
+    # v_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
     for chan, plane in [(1, h_plane), (2, s_plane)]:
         cvSetImageCOI(src, chan)
         cvCopy(src, plane)
@@ -221,15 +221,15 @@ def get_polygons(contours, convextest=0, hole=True, **kw):
                       0)
 
         area = abs(cvContourArea(result))
-        #print result.total, area, cvCheckContourConvexity(result), cont.flags
+        # print result.total, area, cvCheckContourConvexity(result), cont.flags
         if hole:
             hole_flag = cont.flags & CV_SEQ_FLAG_HOLE != 0
         else:
             hole_flag = cont.flags & CV_SEQ_FLAG_HOLE == 0
 
         if (result.total >= 4
-            #and area < max_area
-            #and area < 3e6
+            # and area < max_area
+            # and area < 3e6
             and cvCheckContourConvexity(result) == convextest
             and hole_flag
                 ):
@@ -462,7 +462,7 @@ def get_min_max_location(src, region):
     minpt = CvPoint()
     maxpt = CvPoint()
     minval, maxval = cvMinMaxLoc(grayspace(src),
-                #minval,maxval,
+                # minval,maxval,
                                min_loc=minpt,
                                max_loc=maxpt,
                                mask=region
@@ -504,10 +504,10 @@ def smooth(src, inplace=False):
 
 def remove_noise(img, x, y, w, h):
     sz = cvSize(w, h)
-    #sz = cvSize(img.width & -2, img.height & -2)
-    subimage = cvCloneImage(img) # make a copy of input image
+    # sz = cvSize(img.width & -2, img.height & -2)
+    subimage = cvCloneImage(img)  # make a copy of input image
     crop(subimage, x, y, w, h)
-    #gray = cvCreateImage(sz, 8, 1)
+    # gray = cvCreateImage(sz, 8, 1)
     pyr = cvCreateImage(cvSize(int(sz.width / 2), int(sz.height / 2)), 8, 3)
 #    subimage = cvGetSubRect(timg, None, cvRect(0, 0, sz.width, sz.height))
 
@@ -517,8 +517,8 @@ def remove_noise(img, x, y, w, h):
     return subimage
 #    gray = grayspace(src)
 #    lapl = grayspace(src)
-##    print lapl.width, lapl.height
-##    print gray.width, gray.height
+# #    print lapl.width, lapl.height
+# #    print gray.width, gray.height
 #    kernel = cvCreateMat(3, 3, CV_8UC1)
 #    cvSet(kernel, cvScalarAll(-1.0))
 #    cvSet2D(kernel, 1, 1, cvScalarAll(1.0))
@@ -528,7 +528,7 @@ def remove_noise(img, x, y, w, h):
 #    for i in xrange(0, lapl.width * lapl.height - 1):
 #        lapv = cvGet1D(lapl, i).val
 #        v = 255 * lapv[0] / maxv
-        #cvSet1D(src, i, cvScalarAll(v))
+        # cvSet1D(src, i, cvScalarAll(v))
 #    minv, maxv = cvMinMaxLoc(gray)
 #    for i in xrange(0, lapl.width * lapl.height):
 #        lapv = cvGet1D(gray, i).val
@@ -554,7 +554,7 @@ def canny(src, lt, ht):
     else:
         gsrc = src
 
-    #use canny for edge detection
+    # use canny for edge detection
     dst = new_dst(gsrc, nchannels=1)
 
     cvCanny(gsrc, dst, lt, ht, 3)
@@ -587,11 +587,11 @@ def colorspace(src, cs=CV_GRAY2BGR):
     return dst
 
 
-def grayspace(src):#, width = None, height = None):
+def grayspace(src):  # , width = None, height = None):
     '''
     '''
     if src.nChannels > 1:
-        #gsrc=cvCreateImage(cvGetSize(src),8,1)
+        # gsrc=cvCreateImage(cvGetSize(src),8,1)
         dst = new_dst(src, nchannels=1)
 
 #        print src.width, dst.width, src.height, dst.height
@@ -600,9 +600,9 @@ def grayspace(src):#, width = None, height = None):
         cvCvtColor(src, dst, CV_BGR2GRAY)
     else:
         dst = src
-    #dst2 = new_dst(dst)
-    #cvNot(dst, dst2)
-    #return dst2
+    # dst2 = new_dst(dst)
+    # cvNot(dst, dst2)
+    # return dst2
     return dst
 
 
@@ -619,15 +619,15 @@ def save_image(src, path):
     '''
 
     '''
-    #frame=self.get_frame(flag=CV_CVTIMG_SWAP_RB)
+    # frame=self.get_frame(flag=CV_CVTIMG_SWAP_RB)
 #    cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
     def _record_frame():
         cvSaveImage(path, src)
 
     t = Thread(target=_record_frame)
     t.start()
-    #start_new_thread(_record_frame, ())
-    #return path
+    # start_new_thread(_record_frame, ())
+    # return path
 #===========#def angle( pt1, pt2, pt0 ):
 #    dx1 = pt1.x - pt0.x;
 #    dy1 = pt1.y - pt0.y;
@@ -637,7 +637,7 @@ def save_image(src, path):
 
 
 #============================ EOF =================
-#def find_ellipses(src, contours):
+# def find_ellipses(src, contours):
 #    centers = []
 #    for c in contours.hrange():
 #        n = c.total
@@ -647,27 +647,27 @@ def save_image(src, path):
 #        pointarray2d32f = cvCreateMat(1, n, CV_32FC2)
 #        cvCvtSeqToArray(c, pointarray.data.ptr, cvSlice(0, CV_WHOLE_SEQ_END_INDEX))
 #        cvConvert(pointarray, pointarray2d32f)
-#        
+#
 #        box = CvBox2D()
 #        box = cvFitEllipse2(pointarray2d32f)
-#        
+#
 #        w = cvRound(box.size.width / 2.0)
 #        h = cvRound(box.size.height / 2.0)
-#        
+#
 #        cx = cvRound(box.center.x)
 #        cy = cvRound(box.center.y)
 #        centers.append((cx, cy))
-##        draw_rectangle(src, CvPoint(cx - w, cy - h),
-##                       CvPoint(cx + w, cy + h),
-##                       #color=(0, 100, 200)
-##                       )
-#        
-#        
+# #        draw_rectangle(src, CvPoint(cx - w, cy - h),
+# #                       CvPoint(cx + w, cy + h),
+# #                       #color=(0, 100, 200)
+# #                       )
+#
+#
 #    return centers
-#         
-#def find_circles(src):
+#
+# def find_circles(src):
 #    gsrc = grayspace(src)
-#    
+#
 #    circles = cvHoughCircles(gsrc, storage,
 #                             CV_HOUGH_GRADIENT,
 #                             2,
@@ -677,4 +677,4 @@ def save_image(src, path):
 #    circles = circles.asarrayptr(POINTER(CvVect32f))
 #    for c in circles:
 #        pass
-#        
+#

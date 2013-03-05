@@ -1,31 +1,31 @@
 ##===============================================================================
-## Copyright 2012 Jake Ross
-## 
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
-## 
-##   http://www.apache.org/licenses/LICENSE-2.0
-## 
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# # Copyright 2012 Jake Ross
+# #
+# # Licensed under the Apache License, Version 2.0 (the "License");
+# # you may not use this file except in compliance with the License.
+# # You may obtain a copy of the License at
+# #
+# #   http://www.apache.org/licenses/LICENSE-2.0
+# #
+# # Unless required by applicable law or agreed to in writing, software
+# # distributed under the License is distributed on an "AS IS" BASIS,
+# # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# # See the License for the specific language governing permissions and
+# # limitations under the License.
 ##===============================================================================
 #
 ##============= enthought library imports =======================
-#from traits.api import HasTraits, Button, Str, List, Property, \
+# from traits.api import HasTraits, Button, Str, List, Property, \
 #    cached_property, Instance, Dict
-#from traitsui.api import View, Item, TableEditor, EnumEditor, \
+# from traitsui.api import View, Item, TableEditor, EnumEditor, \
 #    HGroup, VGroup, spring, Group
-#from src.database.adapters.isotope_adapter import IsotopeAdapter
-#from src.paths import paths
-#import itertools
+# from src.database.adapters.isotope_adapter import IsotopeAdapter
+# from src.paths import paths
+# import itertools
 ##============= standard library imports ========================
 ##============= local library imports  ==========================
 #
-#class Entry(HasTraits):
+# class Entry(HasTraits):
 #    apply = Button
 #    project = Str('a')
 #    user = Str('b')
@@ -66,7 +66,7 @@
 #            else:
 #                add_item(k, dict())
 #
-##        db.commit()
+# #        db.commit()
 #        self._increment_sample()
 #        self._load_cache()
 #
@@ -143,7 +143,7 @@
 #            func = getattr(self, '_load{}'.format(name))
 #            setattr(self, name, func())
 #            setattr(self, rname, False)
-##
+# #
 #        return getattr(self, name)
 #    def _db_default(self):
 #        db = IsotopeAdapter(kind='sqlite',
@@ -151,7 +151,7 @@
 #                            )
 #        if db.connect():
 #            return db
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    e = Entry()
 #    e.configure_traits()
 #

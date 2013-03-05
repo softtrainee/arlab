@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,12 +22,12 @@ from traitsui.api import View, Item, VGroup, HGroup, Spring, Label, \
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.helpers.traitsui_shortcuts import listeditor
-#from src.processing.blank_config import BlankConfig
+# from src.processing.blank_config import BlankConfig
 from src.database.core.database_adapter import DatabaseAdapter
-#from src.database.orms.isotope_orm import proc_BlanksTable
+# from src.database.orms.isotope_orm import proc_BlanksTable
 from src.loggable import Loggable
 from src.processing.signal import Signal
-#from src.processing.analysis import Signal
+# from src.processing.analysis import Signal
 from src.database.orms.isotope_orm import meas_AnalysisTable, meas_MeasurementTable, \
     gen_AnalysisTypeTable, meas_ExperimentTable
 
@@ -72,7 +72,7 @@ class FitSeriesEditor(Loggable):
         group_ids = [1] * len(names)
         attrs = [dict(dbrecord=ai.dbrecord) for ai in analyses]
 
-        #also load these analyses
+        # also load these analyses
         f.load_analyses(names,
                         groupids=group_ids,
                         attrs=attrs,
@@ -100,7 +100,7 @@ class FitSeriesEditor(Loggable):
         fs = self.fits_figure.fit_series
 #        blanks = self.fits_figure.fit_series
         fit_analyses = [ba for ba in self.fits_figure._analyses
-                            #if ba.analysis_type == sn
+                            # if ba.analysis_type == sn
                             ]
         analyses = self._analyses
 
@@ -129,12 +129,12 @@ class FitSeriesEditor(Loggable):
                 for fa in fit_analyses:
 #                    db.add_blanks_set(ni, fa.dbrecord)
                     func_set(ni, fa.dbrecord)
-                #copy configs from previous histories
+                # copy configs from previous histories
                 self._copy_from_previous(phistory, history, isotope)
 
         db.commit()
         for a in analyses:
-            #reload figure's analyses
+            # reload figure's analyses
             a.load_from_database(dbr=a.dbrecord)
 
         self.figure.refresh()
@@ -194,7 +194,7 @@ class FitSeriesEditor(Loggable):
         sn = self._series_name
         db = self.db
 
-        #copy configs from a previous history
+        # copy configs from a previous history
         bs = getattr(phistory, sn)
         bss = [bi for bi in bs if bi.isotope != isotope]
 
@@ -202,7 +202,7 @@ class FitSeriesEditor(Loggable):
         for bi in bss:
             li = bi.isotope
             if get_config(li).save:
-                #dont copy from history if were going to save
+                # dont copy from history if were going to save
                 continue
 
             uv = bi.user_value
@@ -233,7 +233,7 @@ class FitSeriesEditor(Loggable):
 # handler
 #===============================================================================
     def _fit_fired(self):
-        #open a figure with the default loaded configs
+        # open a figure with the default loaded configs
 #        from figures.fits_figure import BlanksFigure
 #        f = BlanksFigure(db=self.db,
 #                   workspace=self.workspace,

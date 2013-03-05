@@ -15,7 +15,7 @@ class AgilentUnit(CoreDevice):
         '''
         '''
         self.ask('ABORT', verbose=verbose)
-        #time.sleep(0.05)
+        # time.sleep(0.05)
         self.tell('INIT', verbose=verbose)
 #        time.sleep(0.1)
 
@@ -39,14 +39,14 @@ class AgilentUnit(CoreDevice):
 #        '''
 #        '''
 #        #resp = super(AgilentADC, self).read_device()
-##        resp = AnalogDigitalConverter.read_device(self)
-##        if resp is None:
+# #        resp = AnalogDigitalConverter.read_device(self)
+# #        if resp is None:
 #        self._trigger()
-#        
+#
 #        #wait unit points in memory
 #        while not self._points_available():
 #            time.sleep(0.001)
-#            
+#
 
 #        resp = self.ask('DATA:POINTS?')
 #        if resp is not None:

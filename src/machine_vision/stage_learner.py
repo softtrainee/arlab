@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,7 @@ import csv
 import math
 from threading import Thread
 from threading import Event as TEvent
-#from os import path
+# from os import path
 #============= local library imports  ==========================
 from src.loggable import Loggable
 
@@ -101,8 +101,8 @@ class StageLearner(Loggable):
                     if signal.isSet():
                         break
                     self.current_hole = str(h)
-                    #move to the hole
-                    #do and autocenter
+                    # move to the hole
+                    # do and autocenter
     #                sm.linear_move(h.x, h.y, block=True)
 
     #                x = st.x
@@ -111,7 +111,7 @@ class StageLearner(Loggable):
                     y = 0
 
                     r = mv.locate_target(x, y, h)
-                    #record autocenter results
+                    # record autocenter results
                     self._record_result(writer, lv, r, x, y, h)
 
         if not signal.isSet():
@@ -128,7 +128,7 @@ class StageLearner(Loggable):
 #            results = np.array(results, dtype=float)
 #            targets = np.array(targets)
 #
-##            self.print_results(rows, results)
+# #            self.print_results(rows, results)
 #
 #            return results, targets, rows
 
@@ -178,7 +178,7 @@ class StageLearner(Loggable):
 #        kmeans.fit(reduced_data)
 
                 # Step size of the mesh. Decrease to increase the quality of the VQ.
-        h = .02     # point in the mesh [x_min, m_max]x[y_min, y_max].
+        h = .02  # point in the mesh [x_min, m_max]x[y_min, y_max].
 
         # Plot the decision boundary. For that, we will asign a color to each
         x_min, x_max = reduced_data[:, 0].min() + 1, reduced_data[:, 0].max() - 1
@@ -256,7 +256,7 @@ class StageLearner(Loggable):
         bins, values = np.histogram(xs, 3)
         my = values[np.argmax(bins)]
 
-        #calculate the rank
+        # calculate the rank
         ms = []
         ids = []
         cnt = 0
@@ -313,8 +313,8 @@ class StageLearner(Loggable):
                 convextest = int(prepro_ops[3])
 
                 rdata = [lv, holenum, kind,
-                         #rank, # use rank or rankv having both adds unnecessary dimensionality 
-                         #rankv,
+                         # rank, # use rank or rankv having both adds unnecessary dimensionality
+                         # rankv,
                          tl, th,
                          ti, x, y, dx, dy, sdx, sdy,
                          smooth, contrast, sharpen, convextest

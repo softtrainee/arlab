@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -133,13 +133,13 @@ class Eurotherm(CoreDevice):
 
         '''
         if resp is not None:
-            #remove frame chrs
+            # remove frame chrs
             resp = resp[1:-2]
 
-            #remove the mnemonic chrs
+            # remove the mnemonic chrs
             resp = resp[2:]
 
-            #extract the data
+            # extract the data
             try:
                 resp = float(resp)
             except ValueError, e:
@@ -162,7 +162,7 @@ class Eurotherm(CoreDevice):
 
         if params:
             builder = getattr(self, '{}_build_command'.format(self.protocol))
-            #parser = getattr(self, '%s_parse_command_response' % self.protocol)
+            # parser = getattr(self, '%s_parse_command_response' % self.protocol)
 
             for pi in params[1].split(';'):
                 cmd, value = pi.split(',')

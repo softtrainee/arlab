@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,9 +35,9 @@ def calculate_peak_center(x, y, min_peak_height=1.0, percent=80):
         mx = x[max_i]
         my = ma
 
-        #look backward for point that is peak_percent% of max
+        # look backward for point that is peak_percent% of max
         for i in range(max_i, max_i - 50, -1):
-            #this prevent looping around to the end of the list
+            # this prevent looping around to the end of the list
             if i < 1:
                 return 'PeakCenterError: could not find a low pos'
 
@@ -52,7 +52,7 @@ def calculate_peak_center(x, y, min_peak_height=1.0, percent=80):
         lx = x[i] - xstep
         ly = y[i] - (y[i] - y[i - 1]) / 2.
 
-        #look forward for point that is 80% of max
+        # look forward for point that is 80% of max
         for i in range(max_i, max_i + 50, 1):
             try:
                 if y[i] < (ma * (1 - percent / 100.)):
@@ -72,9 +72,9 @@ def calculate_peak_center(x, y, min_peak_height=1.0, percent=80):
         cx = (hx + lx) / 2.0
         cy = ma
 
-        #find index in x closest to cx
+        # find index in x closest to cx
         ccx = abs(x - cx).argmin()
-        #check to see if were on a plateau
+        # check to see if were on a plateau
         yppts = y[ccx - 2:ccx + 2]
 
         slope, _ = polyfit(range(len(yppts)), yppts, 1)
@@ -131,7 +131,7 @@ class PeakCenter(MagnetScan):
 
 #            print center_dac + 0.001, start, end, nsteps
 #            intensities = self._scan_dac(dac_values, self.detector)
-#            self.data = (dac_values, intensities)        
+#            self.data = (dac_values, intensities)
             ok = self._do_scan(start, end, width, directions=self.directions, map_mass=False)
             if ok and self.directions != 'Oscillate':
                 if not self.canceled:
@@ -290,7 +290,7 @@ class PeakCenter(MagnetScan):
 #        if isinstance(center_pos, str):
 #            '''
 #                passing in a mol weight key ie Ar40
-#                get_dac_for_mass can take a str or a float 
+#                get_dac_for_mass can take a str or a float
 #                if str assumes key else assumes mass
 #            '''
 #            center_pos = self.magnet.get_dac_for_mass(center_pos)

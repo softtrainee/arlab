@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -113,7 +113,7 @@ class BaseDataCanvas(DataView):
         if 'view_y_range' not in kw:
             self.view_y_range = (-25, 25)
 
-        #plot=BaseXYPlot
+        # plot=BaseXYPlot
         plot = LinePlot
 
         sp = plot(index=ArrayDataSource(self.y_range), value=ArrayDataSource(self.x_range),
@@ -134,7 +134,7 @@ class BaseDataCanvas(DataView):
         self.index_mapper.on_trait_change(self.update, 'updated')
         self.value_mapper.on_trait_change(self.update, 'updated')
 
-        #set the view range
+        # set the view range
         self.set_mapper_limits('x', self.view_x_range)
         self.set_mapper_limits('y', self.view_y_range)
 
@@ -187,11 +187,11 @@ class BaseDataCanvas(DataView):
                    max_zoom_out_factor=1,
                    max_zoom_in_factor=10000)
 
-        #b=BroadcasterTool()
+        # b=BroadcasterTool()
         # b.tools.append(z)
         self.overlays.append(z)
 
-        #self.tools.append(b)
+        # self.tools.append(b)
 
     def _get_wh(self, w, h):
         '''

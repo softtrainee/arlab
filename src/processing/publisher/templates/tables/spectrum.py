@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -108,7 +108,7 @@ class SpectrumTable(PDFTable):
                                ('LINEBELOW', (0, 1), (-1, 1), 1, colors.black),
 #                            ('ALIGN', (2, 0), (2, 0), 'LEFT'),
                                ('LINEBELOW', (0, 3), (-1, 3), 1.5, colors.black),
-                               #('LINEBELOW', (0, 0), (-1, -1), 1, colors.red),
+                               # ('LINEBELOW', (0, 0), (-1, -1), 1, colors.red),
 
 #                               ('LINEBEFORE', (0, 0), (-1, -1), 1, colors.black),
                                ('ALIGN', (2, 0), (-1, -1), 'CENTER')

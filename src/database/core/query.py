@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -120,7 +120,7 @@ class Query(HasTraits):
             c = get_date()
         elif criterion == 'this month':
             d = datetime.today()
-            today = datetime.today()#.date()#.datetime()
+            today = datetime.today()  # .date()#.datetime()
             if '=' in comp:
                 d = d - timedelta(days=d.day, seconds=d.second, hours=d.hour, minutes=d.minute)
                 query = query.filter(and_(attr <= today,
@@ -231,9 +231,9 @@ class Query(HasTraits):
 #        params = [str(fi.column).split('.')[0].replace('Table', '').lower() for fi in b.__table__.foreign_keys]
 #
 #        params += [str(col) for col in b.__table__.columns]
-##        f = lambda x:[str(col)
-##                           for col in x.__table__.columns]
-##        params = list(f(b))
+# #        f = lambda x:[str(col)
+# #                           for col in x.__table__.columns]
+# #        params = list(f(b))
         params = self.__params__
         if not self.parameter:
             self.parameter = params[0]

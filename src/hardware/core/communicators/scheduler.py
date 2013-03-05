@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,8 @@ from threading import Lock
 #============= local library imports  ==========================
 from src.loggable import Loggable
 
-#SINGLE_ITEM_BUF = True
-#SINGLE_ITEM_BUF=False
+# SINGLE_ITEM_BUF = True
+# SINGLE_ITEM_BUF=False
 class CommunicationScheduler(Loggable):
     '''
     
@@ -49,7 +49,7 @@ class CommunicationScheduler(Loggable):
 #
 #        consumer = Consumer(self._command_queue,
 #                            self._buffer,
-##                            self._condition,
+# #                            self._condition,
 #                            self.collision_delay)
 #        consumer.start()
 
@@ -75,35 +75,35 @@ class CommunicationScheduler(Loggable):
         return r
 
 
-#class Consumer(Thread):
+# class Consumer(Thread):
 #
 #    def __init__(self, q, b, cd):
 #        Thread.__init__(self)
 #        self._q = q
 #        self._buf = b
-##        self.logger = add_console(name='consumer')
-##        self.cond = cond
+# #        self.logger = add_console(name='consumer')
+# #        self.cond = cond
 #        self.cd = cd
 #
 #    def run(self):
 #        while 1:
-##            self.cond.acquire()
+# #            self.cond.acquire()
 #            while self._q.empty():
 #                time.sleep(0.0001)
-##                self.cond.wait(timeout=0.05)
-##            st = time.time()
+# #                self.cond.wait(timeout=0.05)
+# #            st = time.time()
 #            func, args, kwargs = self._q.get()
 #
 #            while SINGLE_ITEM_BUF and not self._buf.empty():
 #                time.sleep(0.0001)
 #
 #            r = func(*args, **kwargs)
-##            self.logger.info(r)
+# #            self.logger.info(r)
 #            self._buf.put(r)
-##            self.cond.release()
+# #            self.cond.release()
 #
-##            time.sleep(self.cd/1000.)
-##            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
+# #            time.sleep(self.cd/1000.)
+# #            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
 
 
 #============= EOF ====================================
