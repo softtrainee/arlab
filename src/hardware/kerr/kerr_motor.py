@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,6 +71,13 @@ class KerrMotor(KerrDevice):
     def _get_display_name(self):
         return self.name.capitalize()
 
+    def _build_hexstr(self, *hxlist):
+        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
+        return map(hexfmt, hxlist)
+
+    def _build_io(self):
+        return '1800'
+
     def _build_gains(self):
         '''
             F6  B004 2003 F401 E803 FF 00 E803 01 01 01
@@ -86,9 +93,10 @@ class KerrMotor(KerrDevice):
         sr = (1, 2)
         db = (1, 2)
         sm = (1, 2)
-
-        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
-        return ''.join(['F6'] + map(hexfmt, [p, d, i, il, ol, cl, el, sr, db, sm]))
+        gains = self._build_hexstr(p, d, i, il, ol, cl, el, sr, db, sm)
+        return 'F6{}'.format(gains)
+#        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
+#        return ''.join(['F6'] + map(hexfmt, [p, d, i, il, ol, cl, el, sr, db, sm]))
 
     def load_additional_args(self, config):
         '''
@@ -133,7 +141,7 @@ class KerrMotor(KerrDevice):
         try:
             self.progress.change_message('{} position = {}'.format(self.name, self.update_position))
         except AttributeError:
-            #self.progress is None
+            # self.progress is None
             pass
 
     def _finish_initialize(self):
@@ -164,11 +172,11 @@ class KerrMotor(KerrDevice):
                 move_to_nominal = self.confirmation_dialog('Would you like to set the {} motor to its nominal pos of {}'.format(self.name.upper(), self.nominal_position))
 
             if move_to_nominal:
-                #move to the home position
+                # move to the home position
                 self._set_data_position(self.nominal_position)
                 self.block(4, progress=self.progress)
 
-        #remove reference to progress
+        # remove reference to progress
         self.progress = None
         self.enabled = True
 
@@ -184,7 +192,7 @@ class KerrMotor(KerrDevice):
 
         addr = self.address
         commands = [(addr, '1706', 100, 'stop motor, turn off amp'),
-                  (addr, '1800', 100, 'configure io pins'),
+                  (addr, self._build_io(), 100, 'configure io pins'),
                   (addr, self._build_gains(), 100, 'set gains'),
                   (addr, '1701', 100, 'turn on amp'),
                   (addr, '00', 100, 'reset position'),
@@ -213,7 +221,7 @@ class KerrMotor(KerrDevice):
         a = self._float_to_hexstr(self.home_acceleration)
         move_cmd = ''.join((cmd, control, v, a))
 
-        cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
+        cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
               (addr, move_cmd, 100, 'Send to Home')]
         self._execute_hex_commands(cmds)
 
@@ -227,7 +235,7 @@ class KerrMotor(KerrDevice):
 
         self.block(4, progress=progress)
 
-        #we are homed and should reset position
+        # we are homed and should reset position
 
         cmds = [(addr, '00', 100, 'reset position')]
 
@@ -301,7 +309,7 @@ class KerrMotor(KerrDevice):
 
 #    def _check_status_byte(self, check_bit):
 #        '''
-#        return bool 
+#        return bool
 #        check bit =0 False
 #        check bit =1 True
 #        '''
@@ -312,7 +320,7 @@ class KerrMotor(KerrDevice):
 #
 #        status_register=map(int,make_bitarray(int(status_byte[:2], 16)))
 #        print status_register
-#        #2 status bytes were returned ?    
+#        #2 status bytes were returned ?
 #        if len(status_byte) > 4:
 #            status_byte = status_byte[-4:-2]
 #
@@ -344,7 +352,7 @@ class KerrMotor(KerrDevice):
 
         pos = self._execute_hex_command(cmd, nbytes=6, **kw)
 
-        #trim off status and checksum bits
+        # trim off status and checksum bits
         if pos is not None:
             pos = pos[2:-2]
             pos = self._hexstr_to_float(pos)
@@ -399,7 +407,7 @@ class KerrMotor(KerrDevice):
 
         else:
             if self.use_hysteresis and not self.doing_hysteresis_correction:
-                    #move to original desired position
+                    # move to original desired position
                     self._set_motor_position_(self._motor_position - self.hysteresis_value)
                     self.doing_hysteresis_correction = True
             else:
@@ -475,7 +483,7 @@ class KerrMotor(KerrDevice):
             npos = int((1 - self.home_position) * self.steps * pos)
             hysteresis = 0
             if self._motor_position < npos:
-                #means we are going forward
+                # means we are going forward
                 if self.use_hysteresis:
                     self.doing_hysteresis_correction = False
                     hysteresis = self.hysteresis_value
