@@ -31,7 +31,6 @@ from src.database.data_warehouse import DataWarehouse
 from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
-from src.led.led_editor import LEDEditor
 # from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
 from src.progress_dialog import MProgressDialog
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager

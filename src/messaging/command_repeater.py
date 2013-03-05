@@ -24,10 +24,9 @@ from random import random
 from threading import Lock
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
-from src.led.led import LED
-from src.led.led_editor import LEDEditor
 from src.remote_hardware.errors import PychronCommErrorCode
 from globals import globalv
+from src.traits_editors.led_editor import LED, LEDEditor
 
 
 class CRHandler(Handler):

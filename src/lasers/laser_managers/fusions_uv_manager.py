@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,14 +29,14 @@ import time
 from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_uv_logic_board import FusionsUVLogicBoard
 from src.hardware.fusions.atl_laser_control_unit import ATLLaserControlUnit
-#from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
+# from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
 from src.monitors.fusions_uv_laser_monitor import FusionsUVLaserMonitor
-#from src.machine_vision.mosaic_manager import MosaicManager
+# from src.machine_vision.mosaic_manager import MosaicManager
 from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 from src.lasers.stage_managers.stage_map import UVStageMap
 from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
 from src.lasers.geometry import calc_point_along_line
-from src.led.led_editor import LEDEditor
+from src.traits_editors.led_editor import LEDEditor
 
 class FusionsUVManager(FusionsLaserManager):
     '''
@@ -58,7 +58,7 @@ class FusionsUVManager(FusionsLaserManager):
     fire_label = Property(depends_on='firing')
     firing = Bool
     mode = Enum('Burst', 'Continuous', 'Single')
-#    single_shot = Bool 
+#    single_shot = Bool
 
     gas_handler = Instance(UVGasHandlerManager)
 #    laseronoff = Event
@@ -160,13 +160,13 @@ class FusionsUVManager(FusionsLaserManager):
         L = 1
 
         x1, y1 = pt.x, pt.y
-        #move to first point
+        # move to first point
         step_func(x1, y1)
         self._is_tracing = True
         self._cancel_tracing = False
         for pi in points[1:]:
             x2, y2 = pi.x, pi.y
-            #step along line until cp >=pi
+            # step along line until cp >=pi
             while not self._cancel_tracing:
                 x1, y1 = calc_point_along_line(x1, y1, x2, y2, L)
                 step_func(x1, y1)
@@ -230,7 +230,7 @@ class FusionsUVManager(FusionsLaserManager):
         return resp
 
     def _disable_hook(self):
-        #pause for the monitor to stop
+        # pause for the monitor to stop
         time.sleep(0.25)
 
         resp = self.laser_controller._disable_laser()

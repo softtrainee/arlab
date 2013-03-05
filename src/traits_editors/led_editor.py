@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,13 +17,39 @@
 
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Property, Int, Callable
+from traitsui.wx.editor import Editor
+from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
-import wx
-#============= local library imports  ==========================
 
-#          RED                      YELLOW                  GREEN                  BLACK  
-COLORS = [wx.Colour(220, 10, 10), wx.Colour(250, 200, 0), wx.Colour(10, 220, 10), wx.Colour(0, 0, 0)]
+#============= local library imports  ==========================
+import wx
+#============= views ===================================
+COLORS = ['red', 'yellow', 'green', 'black']
+class LED(HasTraits):
+    '''
+    '''
+    shape = 'circle'
+    state = Property(depends_on='_state')
+    _state = Int
+    def _set_state(self, v):
+        if isinstance(v, str):
+            self._state = COLORS.index(v)
+        elif isinstance(v, int):
+            self._state = v
+
+        self.trait_property_changed('state', 0)
+
+    def _get_state(self):
+        return self._state
+
+class ButtonLED(LED):
+    callable = Callable
+    def on_action(self):
+        self.callable()
+
+
+WX_COLORS = [wx.Colour(220, 10, 10), wx.Colour(250, 200, 0), wx.Colour(10, 220, 10), wx.Colour(0, 0, 0)]
 def change_intensity(color, fac):
     '''
 
@@ -123,7 +149,7 @@ class wxLED(wx.Control):
         '''
         if self.blink:
             if self._blink % 3 == 0:
-                self._set_led_color(0, color=change_intensity(COLORS[self._state], 0.5))
+                self._set_led_color(0, color=change_intensity(WX_COLORS[self._state], 0.5))
             else:
                 self._set_led_color(self._state)
 
@@ -136,7 +162,7 @@ class wxLED(wx.Control):
 
         '''
         self.blink = False
-        #use negative values for blinking
+        # use negative values for blinking
         if s < 0:
             self.blink = True
             self.timer.Start(200)
@@ -156,18 +182,18 @@ class wxLED(wx.Control):
             color1 = color
             color2 = color
         else:
-            base_color = COLORS[state]
+            base_color = WX_COLORS[state]
             color1 = base_color
             color2 = change_intensity(base_color, 0.5)
 
 
 
-        xpm = ['17 17 3 1', # width height ncolors chars_per_pixel
+        xpm = ['17 17 3 1',  # width height ncolors chars_per_pixel
                '0 c None',
                'X c %s' % color1.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
                '- c %s' % color2.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-               #'= c %s' % shadow_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-               #'* c %s' % highlight_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii')
+               # '= c %s' % shadow_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
+               # '* c %s' % highlight_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii')
                ]
 
         xpm += [s.strip() for s in self.ascii_led.splitlines()]
@@ -181,32 +207,41 @@ class wxLED(wx.Control):
         '''
         dc = wx.PaintDC(self)
         dc.DrawBitmap(self.bmp, 0, 0, True)
+
+
+class _LEDEditor(Editor):
+    def init(self, parent):
+        '''
+
+        '''
+        if self.control is None:
+            self.control = wxLED(parent, self.value, self.value.state)
+#            self.control = self._create_control(parent)
+            self.value.on_trait_change(self.update_object, 'state')
+
+    def update_object(self, obj, name, new):
+        '''
+
+        '''
+        if name == 'state':
+            if self.control is not None:
+                self.control.set_state(new)
+
+#    def update_editor(self, *args, **kw):
+#        '''
+#        '''
+#        self.control = self._create_control(None)
+#        self.value.on_trait_change(self.update_object, 'state')
+
+#    def _create_control(self, parent):
+#        '''
+#
+#        '''
+#        panel = wxLED(parent, self.value, self.value.state)
+#        return panel
+
+class LEDEditor(BasicEditorFactory):
+    '''
+    '''
+    klass = _LEDEditor
 #============= EOF ====================================
-#
-#        ascii_led = '''
-#        000000-----000000      
-#        0000---------0000
-#        000-----------000
-#        00-----XXX----=00
-#        0----XX**XXX-===0
-#        0---X***XXXXX===0
-#        ----X**XXXXXX====
-#        ---X**XXXXXXXX===
-#        ---XXXXXXXXXXX===
-#        ---XXXXXXXXXXX===
-#        ----XXXXXXXXX====
-#        0---XXXXXXXXX===0
-#        0---=XXXXXXX====0
-#        00=====XXX=====00
-#        000===========000
-#        0000=========0000
-#        000000=====000000
-#        '''.strip()
-#        
-#        xpm = ['17 17 5 1', # width height ncolors chars_per_pixel
-#               '0 c None', 
-#               'X c %s' % base_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-#               '- c %s' % light_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-#               '= c %s' % shadow_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-#               '* c %s' % highlight_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii')]
-#

@@ -24,15 +24,30 @@ from numpy import random, char
 
 #=============local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
+from src.traits_editors.color_map_bar_editor import BarGaugeEditor
 
 class Gauge(HasTraits):
     name = Str
-    pressure = Float
+    display_name = Str
+    pressure = Float(1.0)
+    low = 5e-10
+    high = 1e-8
     def traits_view(self):
-        v = View(HGroup(Item('name', show_label=False, style='readonly',
+        v = View(HGroup(Item('display_name', show_label=False, style='readonly',
                              width= -50,
                              ),
-                         Item('pressure', format_str='%0.2e', show_label=False, style='readonly')))
+                         Item('pressure',
+                              format_str='%0.2e',
+                              show_label=False,
+                              style='readonly'
+                              ),
+                        Item('pressure',
+                             show_label=False,
+                             editor=BarGaugeEditor(low=self.low, high=self.high)
+                             )
+
+                        )
+                 )
         return v
 
 class MicroIonController(CoreDevice):
@@ -61,16 +76,27 @@ class MicroIonController(CoreDevice):
 
         ns = self.config_get(config, 'Gauges', 'names')
         if ns:
-            for ni in ns.split(','):
-                print ni
-                self.gauges.append(Gauge(name=ni.strip()))
+            ans = self.config_get(config, 'Gauges', 'display_names', optional=True)
+            if not ans:
+                ans = ns
+
+            for ni, ai in zip(ns.split(','), ans.split(',')):
+                name = ni.strip()
+                ai = ai.strip()
+                g = Gauge(name=name, display_name=ai)
+                if name == 'IG':
+                    g.trait_set(low=5e-10, high=1e-8)
+                else:
+                    g.trait_set(low=5e-3, high=1)
+
+                self.gauges.append(g)
 
         return True
 
     def graph_builder(self, g):
-        CoreDevice.graph_builder(self, g, **{'show_legend':True})
+        super(MicroIonController, self).graph_builder(g, show_legend=True)
         g.new_series()
-        g.set_series_label('IG')
+        g.set_series_label('IG', series=0)
 
         g.new_series()
         g.set_series_label('CG1', series=1)
@@ -79,7 +105,8 @@ class MicroIonController(CoreDevice):
         g.set_series_label('CG2', series=2)
 
     def get_gauge(self, name):
-        return next((gi for gi in self.gauges if gi.name == name), None)
+        return next((gi for gi in self.gauges
+                            if gi.name == name or gi.display_name == name), None)
 
     def _set_gauge_pressure(self, name, v):
         g = self.get_gauge(name)
@@ -159,7 +186,7 @@ class MicroIonController(CoreDevice):
         cmd = self._build_command(key, name)
 
         r = self.ask(cmd, verbose=False)
-        r = self._parse_response(r)
+        r = self._parse_response(r, name)
         return r
 
     def _build_command(self, key, value=None):
@@ -169,18 +196,23 @@ class MicroIonController(CoreDevice):
         # see http://docs.python.org/library/string.html#formatspec
         key = '#{}{}'.format(self.address, key)
         if value is not None:
-#            args = (key, value, CRLF)
             args = (key, value)
         else:
-#            args = (key, CRLF)
             args = (key,)
         c = ' '.join(args)
 
         return  c
 
-    def _parse_response(self, r):
+    def _parse_response(self, r, name):
         if self.simulation or r is None:
-            r = self.get_random_value(0, 10000) / 10000.0
+            from numpy.random import normal
+            if name == 'IG':
+                loc, scale = 1e-9, 5e-10
+            else:
+                loc, scale = 1e-2, 5e-3
+            return abs(normal(loc, scale))
+
+#            r = self.get_random_value(0, 10000) / 10000.0
 
         return r
 

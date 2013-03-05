@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,7 +45,7 @@ from chaco.data_label import DataLabel
 from src.loggable import Loggable
 from src.graph.context_menu_mixin import ContextMenuMixin
 from chaco.plot_graphics_context import PlotGraphicsContext
-#from chaco.tools.pan_tool import PanTool
+# from chaco.tools.pan_tool import PanTool
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
 #               'Times New Roman',
@@ -395,9 +395,7 @@ class Graph(Loggable, ContextMenuMixin):
         legend = self.plots[plotid].legend
         if series is None:
             n = len(self.plots[plotid].plots.keys())
-#            n = len(self.series[plotid])
             series = n - 1
-#            series = len(self.series[plotid]) - 1
 
         if isinstance(series, int):
             series = 'plot{}'.format(series)
@@ -407,15 +405,13 @@ class Graph(Loggable, ContextMenuMixin):
         except Exception, e:
             legend.labels.append(label)
 
-
-        try:
-            plots = self.plots[plotid].plots[series]
-            self.plots[plotid].plots[label] = plots
-            self.plots[plotid].plots.pop(series)
-
-        except:
-            print series
-            print self.plots[plotid].plots.keys()
+#        try:
+        plots = self.plots[plotid].plots[series]
+        self.plots[plotid].plots[label] = plots
+        self.plots[plotid].plots.pop(series)
+#        except Exception,e:
+#            print series
+#            print self.plots[plotid].plots.keys()
 
 
 #        print legend.plots['plot0'][0].visible
@@ -565,7 +561,7 @@ class Graph(Loggable, ContextMenuMixin):
         '''
 
 #        print x, y
-##        x, y = .map_screen([(x, y)])[0]
+# #        x, y = .map_screen([(x, y)])[0]
 #        x, y = self.plots[plotid].map_screen([(x, y)])[0]
 #        print x, y
         c = self.plots[plotid]
@@ -580,7 +576,7 @@ class Graph(Loggable, ContextMenuMixin):
     def add_data_label(self, x, y, plotid=0):
         '''
         '''
-        #print self.plots, plotid
+        # print self.plots, plotid
         plot = self.plots[plotid]
         label = DataLabel(component=plot, data_point=(x, y),
                           label_position="top left", padding=40,
@@ -693,7 +689,7 @@ class Graph(Loggable, ContextMenuMixin):
             plotid = len(self.plots) - 1
         kw['plotid'] = plotid
         plotobj, names, rd = self._series_factory(x, y, yer=None, **kw)
-        #print 'downsample', plotobj.use_downsample
+        # print 'downsample', plotobj.use_downsample
 
 #        plotobj.use_downsample = True
 #        if aux_plot:
@@ -841,7 +837,7 @@ class Graph(Loggable, ContextMenuMixin):
                 plot.data.set_data(name, nd)
 
                 if i == 1:
-                    #y values
+                    # y values
                     mi = min(nd)
                     ma = max(nd)
 
@@ -1014,8 +1010,8 @@ class Graph(Loggable, ContextMenuMixin):
 
         options = dict(
                        bgcolor='white',
-                     #spacing = spacing,
-                     #padding=25,
+                     # spacing = spacing,
+                     # padding=25,
                      padding=5,
 #                     padding=[40, 10, 60, 10],
                      fill_padding=True,
@@ -1028,14 +1024,14 @@ class Graph(Loggable, ContextMenuMixin):
 
         container = c(**kw)
 
-        #add some tools
+        # add some tools
 #        cm=ContextualMenuTool(parent=container,
 #                              component=container
 #                              )
 #        container.tools.append(cm)
-#        
-        #gt = TraitsTool(component = container)
-        #container.tools.append(gt)
+#
+        # gt = TraitsTool(component = container)
+        # container.tools.append(gt)
         return container
 
     def _crosshairs_factory(self, plot=None):
@@ -1211,11 +1207,11 @@ class Graph(Loggable, ContextMenuMixin):
             if type == 'pdf':
                 self._render_to_pdf(filename=path)
             else:
-                #auto add an extension to the filename if not present
-                #extension is necessary for PIL compression
-                #set default save type DEFAULT_IMAGE_EXT='.png'
+                # auto add an extension to the filename if not present
+                # extension is necessary for PIL compression
+                # set default save type DEFAULT_IMAGE_EXT='.png'
 
-                #see http://infohost.nmt.edu/tcc/help/pubs/pil/formats.html
+                # see http://infohost.nmt.edu/tcc/help/pubs/pil/formats.html
                 saved = False
                 for ei in IMAGE_EXTENSIONS:
                     if path.endswith(ei):
@@ -1227,7 +1223,7 @@ class Graph(Loggable, ContextMenuMixin):
                     self._render_to_pic(path + DEFAULT_IMAGE_EXT)
 
 #                base, ext = os.path.splitext(path)
-#                
+#
 #                if not ext in IMAGE_EXTENSIONS:
 #                    path = ''.join((base, DEFAULT_IMAGE_EXT))
 
@@ -1290,9 +1286,9 @@ class Graph(Loggable, ContextMenuMixin):
 #        #gc = PlotGraphicsContext((int(p.outer_width), int(p.outer_height)))
 #        width, height = p.outer_bounds
 #        gc = PlotGraphicsContext((width, height), dpi=72)
-##        p.use_backbuffer = False
+# #        p.use_backbuffer = False
 #        gc.render_component(p)
-##        p.use_backbuffer = True
+# #        p.use_backbuffer = True
 #
 #        # Create a bitmap the same size as the plot
 #        # and copy the plot data to it
@@ -1376,8 +1372,8 @@ class Graph(Loggable, ContextMenuMixin):
                 return
         else:
             if isinstance(pad, str):
-                #interpet pad as a percentage of the range
-                #ie '0.1' => 0.1*(ma-mi)
+                # interpet pad as a percentage of the range
+                # ie '0.1' => 0.1*(ma-mi)
                 if ma is not None and mi is not None:
                     pad = float(pad) * (ma - mi)
                     if abs(pad - 0) < 1e-10:

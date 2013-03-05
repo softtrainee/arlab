@@ -23,12 +23,11 @@ import time
 import os
 #============= local library imports  ==========================
 from src.helpers.timer import Timer
-from src.led.led import ButtonLED
-from src.led.led_editor import LEDEditor
 from src.paths import paths
 from watlow_ezzone import WatlowEZZone
 from src.constants import NULL_STR
 from src.pyscripts.bakeout_pyscript import BakeoutPyScript
+from src.traits_editors.led_editor import ButtonLED, LEDEditor
 
 # class BakeoutMonitor():
 #    pass
