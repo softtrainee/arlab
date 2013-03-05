@@ -188,6 +188,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             x, y = smanager.temp_position
         else:
             x, y = smanager.get_calibrated_xy()
+            
         pos = x, y, z
         return ','.join(['{:0.5f}' .format(i) for i in pos])
 
