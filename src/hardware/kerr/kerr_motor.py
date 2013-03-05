@@ -174,7 +174,7 @@ class KerrMotor(KerrDevice):
             if move_to_nominal:
                 # move to the home position
                 self._set_data_position(self.nominal_position)
-                self.block(4, progress=self.progress)
+                self.block(5, progress=self.progress)
 
         # remove reference to progress
         self.progress = None
