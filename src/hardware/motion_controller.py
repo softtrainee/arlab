@@ -64,15 +64,23 @@ class MotionController(CoreDevice):
     def update_axes(self):
         for a in self.axes:
             pos = self.get_current_position(a)
+#            print 'pos', pos, a
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
+            time.sleep(0.075)
+
+#        x, y, z = self.get_xyz()
+#        print x, y, z
+#        self._x_position = x
+#        self._y_position = y
+#        self._z_position = z
+        self.z_progress = self._z_position
 
 #        def _update():
 #        print self._x_position, self._y_position
         self.parent.canvas.set_stage_position(self._x_position,
                                               self._y_position)
 
-        self.z_progress = self._z_position
 
 #        do_later(_update)
 
@@ -133,8 +141,8 @@ class MotionController(CoreDevice):
     def save_axes_parameters(self):
         pass
 
-    def get_xy(self):
-        return 0, 0
+    def get_xyz(self):
+        return 0, 0, 0
 
     def get_current_position(self, *args, **kw):
         return 0
