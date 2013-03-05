@@ -114,6 +114,9 @@ class CommandProcessor(ConfigLoadable):
         self._manager_lock = Lock()
         self._hosts = []
 
+    def get_response(self, rtype, data, sender):
+        return self._process_request(rtype, data, sender)
+
     def close(self):
         '''
         '''
@@ -160,56 +163,37 @@ class CommandProcessor(ConfigLoadable):
 
         return True
 
-    def _check_system_lock(self, addr):
+    def _listener(self, *args, **kw):
         '''
-            return true if addr is not equal to the system lock address
-            ie this isnt who locked us so we deny access
         '''
-        if self.system_lock:
-            if not addr in [None, 'None']:
-                return self.system_lock_address != addr
-
-    def _stream_listener(self, _input):
-        try:
-            ins, _, _ = select.select(_input, [], [], 5)
-
-            for s in ins:
-                if s == self._sock:
-                    client, _addr = self._sock.accept()
-                    _input.append(client)
+        _input = [self._sock]
+        while self._listen:
+            try:
+                if globalv.ipc_dgram:
+                    self._dgram_listener()
                 else:
-                    data = self._read(s)
-#                    data = s.recv(BUFSIZE)
-                    if data:
-    #                            sender_addr, ptype, payload = data.split('|')
-                        self._process_data(s, data)
-                    else:
-                        s.close()
-                        _input.remove(s)
-        except Exception:
-            pass
+                    self._stream_listener(_input)
 
-    def _read(self, sock):
-        data = sock.recv(BUFSIZE)
-        if data:
-            mlen = int(data[:2], 16)
-            while len(data) < (mlen + 2):
-                data += sock.recv(BUFSIZE)
+            except Exception, err:
+                self.debug('Listener Exception {}'.format(err))
+                import traceback
+                tb = traceback.format_exc()
+                self.debug(tb)
 
-        return data[2:]
+    def _stream_listener(self, isock):
+        ins, _, _ = select.select(isock, [], [], 5)
 
-    def _process_data(self, sock, data):
-        args = data.split('|') + [sock]
-#                            args = client, sender_addr, ptype, payload
-        if len(args):
-            args = args[-4:]
-#                        process request should be blocking
-#                        dont spawn a new thread
-            self._process_request(*args)
-#        else:
-#            self.debug('data = {}'.format(data))
-#            self.debug('too many args {}, {}'.format(len(args), args))
-        return args
+        for s in ins:
+            if s == self._sock:
+                client, _addr = self._sock.accept()
+                isock.append(client)
+            else:
+                data = self._read(s)
+                if data:
+                    self._process(s, data)
+                else:
+                    s.close()
+                    isock.remove(s)
 
     def _dgram_listener(self):
         print 'daga'
@@ -228,51 +212,32 @@ class CommandProcessor(ConfigLoadable):
 # #            else:
 #                self._process_request(*args)
 
+    def _read(self, sock):
+        data = sock.recv(BUFSIZE)
+        if data:
+            mlen = int(data[:2], 16)
+            while len(data) < (mlen + 2):
+                data += sock.recv(BUFSIZE)
 
-    def _listener(self, *args, **kw):
-        '''
-        '''
+            return data[2:]
 
-        _input = [self._sock]
-        while self._listen:
+    def _process(self, sock, data):
+        args = data.split('|')
+        try:
+            request_type, data, sender_addr = args
+        except ValueError, e:
+            self.debug('data = {}'.format(data))
+            self.debug('too many args {}, {}'.format(len(args), args))
             try:
-                if globalv.ipc_dgram:
-                    self._dgram_listener()
-                else:
-                    self._stream_listener(_input)
+                request_type, data, sender_addr = args[-3:]
+            except ValueError:
+                return
 
-            except Exception, err:
-                self.debug('Listener Exception {}'.format(err))
-                import traceback
-                tb = traceback.format_exc()
-                self.debug(tb)
+        resp = self._process_request(request_type, data, sender_addr)
+        if resp:
+            self._end_request(sock, resp)
 
-    def get_response(self, *args):
-        return self._process_request(*args)
-
-    def _authenticate(self, data, sender_addr):
-        if self.use_security:
-            # check sender addr is in hosts
-            if self._hosts:
-                if not sender_addr in self._hosts:
-                    for h in self._hosts:
-                        # match to any computer on the subnet
-                        hargs = h.split('.')
-                        if hargs[-1] == '*':
-                            if sender_addr.split('.')[:-1] == hargs[:-1]:
-                                break
-                    else:
-                        return str(SecurityErrorCode(sender_addr))
-            else:
-                self.warning('hosts not configured, security not enabled')
-
-        if self._check_system_lock(sender_addr):
-            return str(SystemLockErrorCode(self.system_lock_name,
-                                         self.system_lock_address,
-                                         sender_addr, logger=self.logger))
-
-    @end_request
-    def _process_request(self, request_type, data, sender_addr, sock=None):
+    def _process_request(self, request_type, data, sender_addr):
         # self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
 
@@ -291,7 +256,6 @@ class CommandProcessor(ConfigLoadable):
                 return
 
             if request_type == 'test':
-#                result = data
                 return data
 
             handler = None
@@ -318,7 +282,6 @@ class CommandProcessor(ConfigLoadable):
                 handler = self._handlers[klass]
 
             if handler is not None:
-#                    result = self.context_filter.get_response(handler, data)
                 return handler.handle(data, sender_addr, self._manager_lock)
 
         except Exception, err:
@@ -330,8 +293,56 @@ class CommandProcessor(ConfigLoadable):
             self.debug('Process request Exception {}'.format(err))
             traceback.print_exc()
 
+    def _end_request(self, sock, data):
+        if isinstance(data, ErrorCode):
+            data = str(data)
 
+        if globalv.use_ipc:
+            try:
+                if globalv.ipc_dgram:
+                    func = lambda x: sock.sendto(x, self.path)
+                else:
+                    func = lambda x: sock.send(x)
 
+                mlen = len(data)
+                totalsent = 0
+                while totalsent < mlen:
+                    totalsent += func(data[totalsent:])
+
+            except Exception, err:
+                self.debug('End Request Exception: {}'.format(err))
+        else:
+            return data
+
+    def _check_system_lock(self, addr):
+        '''
+            return true if addr is not equal to the system lock address
+            ie this isnt who locked us so we deny access
+        '''
+        if self.system_lock:
+            if not addr in [None, 'None']:
+                return self.system_lock_address != addr
+
+    def _authenticate(self, data, sender_addr):
+        if self.use_security:
+            # check sender addr is in hosts
+            if self._hosts:
+                if not sender_addr in self._hosts:
+                    for h in self._hosts:
+                        # match to any computer on the subnet
+                        hargs = h.split('.')
+                        if hargs[-1] == '*':
+                            if sender_addr.split('.')[:-1] == hargs[:-1]:
+                                break
+                    else:
+                        return str(SecurityErrorCode(sender_addr))
+            else:
+                self.warning('hosts not configured, security not enabled')
+
+        if self._check_system_lock(sender_addr):
+            return str(SystemLockErrorCode(self.system_lock_name,
+                                         self.system_lock_address,
+                                         sender_addr, logger=self.logger))
 # if __name__ == '__main__':
 #    setup('command server')
 #    e = CommandProcessor(name='command_server',

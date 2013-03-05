@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,7 +20,7 @@ from threading import Thread
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors import InvalidArgumentsErrorCode
-#from dummies import DummyLM
+# from dummies import DummyLM
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode
 from pyface.timer.do_later import do_later
@@ -103,7 +103,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
                 if manager.record_lasing_video:
                     manager.stage_manager.start_recording(basename=rid)
             except AttributeError:
-                #not a video stage manager
+                # not a video stage manager
                 pass
 
         t = Thread(target=record)
@@ -145,7 +145,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         except ValueError:
             return InvalidArgumentsErrorCode('SetXY', '{}  {}'.format(data, y))
 
-        #need to remember x,y so we can fool mass spec that we are at position
+        # need to remember x,y so we can fool mass spec that we are at position
         manager.stage_manager.temp_position = x, y
 
         err = manager.stage_manager.set_xy(x, y)
@@ -173,22 +173,23 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def GetPosition(self, manager, *args):
 
         smanager = manager.stage_manager
+
+        '''
+            returns the cached value
+        '''
         z = smanager.get_z()
+        '''
+            mass spec excessively calls GetPosition which calling moving
+            it appears this was wacking out the newport stage controller.
+            moving will only do a hardware query if the stage is actually in motion or
+            use keyword force_query=True
+        '''
         if smanager.temp_position is not None and not smanager.moving():
             x, y = smanager.temp_position
-#            pos = x, y, z
-#            smanager.temp_position = None
-
         else:
             x, y = smanager.get_calibrated_xy()
-#            if smanager.stage_controller.xy_swapped:
-#                pos = y, x, z
-#            else:
         pos = x, y, z
-#        print smanager.temp_position, not smanager.moving(), x, y
-        result = ','.join(['{:0.5f}' .format(i) for i in pos])
-
-        return result
+        return ','.join(['{:0.5f}' .format(i) for i in pos])
 
     def GetDriveMoving(self, manager, *args):
         return manager.stage_manager.moving()
