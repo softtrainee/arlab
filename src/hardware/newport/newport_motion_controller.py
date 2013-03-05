@@ -550,7 +550,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         m = True if self.ask(cmd) == '0' else False
         return m
 
-    def stop(self, ax_key=None):
+    def stop(self, ax_key=None, verbose=False):
 
         if self.timer is not None:
             self.timer.Stop()
@@ -559,14 +559,14 @@ ABLE TO USE THE HARDWARE JOYSTICK
             # check group is moving
             cmd = '1HS'
             while self.group_moving() and not self.simulation:
-                self.tell(cmd)
+                self.tell(cmd, verbose=verbose)
                 time.sleep(0.35)
         else:
             if isinstance(ax_key, str):
                 cmd = self._build_command('ST', xx=self.axes[ax_key].id)
             else:
                 cmd = 'ST'
-            self.tell(cmd)
+            self.tell(cmd, verbose=verbose)
 
     def destroy_group(self, force=False, mode=1):
         '''
