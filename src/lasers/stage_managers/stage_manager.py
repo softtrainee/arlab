@@ -316,8 +316,8 @@ class StageManager(Manager):
         self.stage_controller._block_()
 
     @on_trait_change('stop_button')
-    def stop(self, ax_key=None):
-        self.stage_controller.stop(ax_key=ax_key)
+    def stop(self, ax_key=None, verbose=False):
+        self.stage_controller.stop(ax_key=ax_key, verbose=verbose)
 
     def relative_move(self, *args, **kw):
         self.stage_controller.relative_move(*args, **kw)
