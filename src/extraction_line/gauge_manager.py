@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2011 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,7 +24,7 @@ from src.managers.manager import Manager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-#class Gauge(HasTraits):
+# class Gauge(HasTraits):
 #    name = Str
 #    pressure = Float
 #    def traits_view(self):
@@ -42,7 +42,7 @@ class GaugeManager(Manager):
 #    def finish_loading(self, *args, **kw):
 #        self.load_gauges()
 #        print 'load gm', args, kw
-#        
+#
 #        for k, v in self.traits().items():
 #            if 'gauge_controller' in k:
 #                print v
@@ -65,7 +65,7 @@ class GaugeManager(Manager):
 #            if 'gauge_controller' in k:
 #                print v
 #                v.start_scan()
-##                       
+# #
     def traits_view(self):
 
         v = View(Item('devices', style='custom',
