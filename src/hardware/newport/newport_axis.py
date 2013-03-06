@@ -233,6 +233,8 @@ class NewportAxis(Axis):
 
 
     read_parameters = Button
+    configuring=False
+    
     def _validate_velocity(self, v):
         return self._validate_float(v)
 
@@ -567,7 +569,7 @@ class NewportAxis(Axis):
 #        '''
 #
 #        '''
-        if self.loaded:
+        if self.loaded and self.configuring:
             try:
                 attr = COMMAND_MAP[name]
                 if 'configuration' in name:

@@ -338,9 +338,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
         # calc the displacement
         dx = self._x_position - x
         dy = self._y_position - y
-        tol = 0.0001
-        d = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
-        if abs(dx - 0) < tol:
+        tol = 0.017
+        
+        if abs(dx) < tol:
             if 'grouped_move' in kw:
                 kw.pop('grouped_move')
 
@@ -350,7 +350,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self.single_axis_move('y', y, **kw)
             self._y_position = y
             return
-        if abs(dy - 0) < tol:
+        if abs(dy) < tol:
             if 'grouped_move' in kw:
                 kw.pop('grouped_move')
             self.info('y displacement {} doing a hack axis move'.format(dy))
@@ -364,7 +364,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
             return 'invalid position {},{}'.format(x, y)
-
+       
+        d = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
         tol = 0.001  # should be set to the motion controllers resolution
         if d > tol:
             kw['displacement'] = d
