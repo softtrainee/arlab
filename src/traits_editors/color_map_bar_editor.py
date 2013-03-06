@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float
+from traits.api import Float, Int
 from traitsui.wx.editor import Editor
 
 from traitsui.basic_editor_factory import BasicEditorFactory
@@ -28,6 +28,8 @@ class Bar(wx.Control):
     value = None
     low = 0
     high = 1
+    color_scalar = 1
+
     def __init__(self, parent, ident= -1):
         super(Bar, self).__init__(parent, ident, (0, 0), (100, 15), style=wx.NO_BORDER)
         self.Bind(wx.EVT_PAINT, self._on_paint, self)
@@ -44,7 +46,18 @@ class Bar(wx.Control):
             del dc
 
     def set_value(self, v):
-        nv = v / (self.high - self.low)
+        '''
+            map v to users color scale
+            use power law v=A*x**(1/cs)
+            increase cs increases the rate of change at low values
+            increase cs will make it easier to see small pertubations (more color change) at
+            the low end.  
+
+        '''
+
+        N = 1 / float(self.color_scalar)
+        A = 1 / self.high ** N
+        nv = A * v ** N
         vs = self._cmap(nv)[:3]
         self.value = map(lambda x:x * 255, vs)
         self.Refresh()
@@ -55,6 +68,7 @@ class _BarGaugeEditor(Editor):
         self.control = Bar(parent)
         self.control.low = self.factory.low
         self.control.high = self.factory.high
+        self.control.color_scalar = self.factory.color_scalar
 
     def update_editor(self):
         self.control.set_value(self.value)
@@ -63,4 +77,5 @@ class BarGaugeEditor(BasicEditorFactory):
     klass = _BarGaugeEditor
     low = Float
     high = Float
+    color_scalar = Int
 #============= EOF =============================================

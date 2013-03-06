@@ -26,12 +26,20 @@ from numpy import random, char
 from src.hardware.core.core_device import CoreDevice
 from src.traits_editors.color_map_bar_editor import BarGaugeEditor
 
+# from numpy import linspace
+# def gen():
+#    for xi in linspace(5e-10, 5e-8, 25):
+#        yield xi
+#
+# pgen = gen()
+
 class Gauge(HasTraits):
     name = Str
     display_name = Str
     pressure = Float(1.0)
     low = 5e-10
     high = 1e-8
+    color_scalar = 1
     def traits_view(self):
         v = View(HGroup(Item('display_name', show_label=False, style='readonly',
                              width= -50,
@@ -43,7 +51,10 @@ class Gauge(HasTraits):
                               ),
                         Item('pressure',
                              show_label=False,
-                             editor=BarGaugeEditor(low=self.low, high=self.high)
+                             editor=BarGaugeEditor(low=self.low,
+                                                   high=self.high,
+                                                   color_scalar=self.color_scalar
+                                                   )
                              )
 
                         )
@@ -80,14 +91,30 @@ class MicroIonController(CoreDevice):
             if not ans:
                 ans = ns
 
-            for ni, ai in zip(ns.split(','), ans.split(',')):
-                name = ni.strip()
-                ai = ai.strip()
-                g = Gauge(name=name, display_name=ai)
-                if name == 'IG':
-                    g.trait_set(low=5e-10, high=1e-8)
-                else:
-                    g.trait_set(low=5e-3, high=1)
+            lows = self.config_get(config, 'Gauges', 'lows', optional=True, default='1e-10, 1e-3, 1e-3')
+            highs = self.config_get(config, 'Gauges', 'highs', optional=True, default='1e-6, 1, 1')
+            cs = self.config_get(config, 'Gauges', 'color_scalars', optional=True, default='1, 1, 1')
+
+            for gi in zip(*map(lambda x: x.split(','), (ns, ans, lows, highs, cs))):
+                ni, ai, li, hi, ci = map(str.strip, gi)
+
+                g = Gauge(name=ni, display_name=ai)
+                try:
+                    g.low = float(li)
+                except ValueError, e:
+                    self.warning_dialog('Invalid lows string. {}'.format(e), title=self.config_path)
+                    continue
+
+                try:
+                    g.high = float(hi)
+                except ValueError, e:
+                    self.warning_dialog('Invalid highs string. {}'.format(e), title=self.config_path)
+                    continue
+                try:
+                    g.color_scalar = int(ci)
+                except ValueError, e:
+                    self.warning_dialog('Invalid color_scalar string. {}'.format(e), title=self.config_path)
+                    continue
 
                 self.gauges.append(g)
 
@@ -208,6 +235,7 @@ class MicroIonController(CoreDevice):
             from numpy.random import normal
             if name == 'IG':
                 loc, scale = 1e-9, 5e-10
+#                return pgen.next()
             else:
                 loc, scale = 1e-2, 5e-3
             return abs(normal(loc, scale))
