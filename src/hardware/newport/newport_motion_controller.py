@@ -338,7 +338,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         # calc the displacement
         dx = self._x_position - x
         dy = self._y_position - y
-        tol = 0.017
+        tol = 0.033
         
         if abs(dx) < tol:
             if 'grouped_move' in kw:
