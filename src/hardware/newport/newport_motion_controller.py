@@ -264,21 +264,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         return f
 
-    def relative_move(self, key_direction):
+    def relative_move(self, ax_key, direction):
         # move one pixel in the specified direction
-        if key_direction == 'Left':
-            ax_key = 'x'
-            direction = 1
-        elif key_direction == 'Right':
-            ax_key = 'x'
-            direction = -1
-        elif key_direction == 'Down':
-            ax_key = 'y'
-            direction = 1
-        elif key_direction == 'Up':
-            ax_key = 'y'
-            direction = -1
-
         ax = self.axes[ax_key]
 
         v1 = self.parent.canvas.map_data((0, 0))
@@ -339,7 +326,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         dx = self._x_position - x
         dy = self._y_position - y
         tol = 0.033
-        
+
         if abs(dx) < tol:
             if 'grouped_move' in kw:
                 kw.pop('grouped_move')
@@ -364,7 +351,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
             return 'invalid position {},{}'.format(x, y)
-       
+
         d = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
         tol = 0.001  # should be set to the motion controllers resolution
         if d > tol:
@@ -443,7 +430,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                     self._z_position = value
                     self.z_progress = value
 
-        self._axis_move(cmd, block=block)
+        self._axis_move(cmd, block=block, **kw)
 
     def multiple_axis_move(self, axes_list, block=False):
         '''
@@ -846,12 +833,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self.info('move to {x:0.5f},{y:0.5f} complete'.format(**kwargs))
             self.update_axes()
 
-    def _axis_move(self, com, block=False):
+    def _axis_move(self, com, block=False, verbose=True, **kw):
         '''
         '''
 
         if self.group_commands:
-            self.tell(com)
+            self.tell(com, verbose=verbose)
         else:
             for c in com.split(';'):
                 self.tell(c)

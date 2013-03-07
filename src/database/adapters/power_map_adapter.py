@@ -21,34 +21,44 @@
 
 from src.database.selectors.power_map_selector import PowerMapSelector
 from src.database.orms.power_map_orm import PowerMapTable, PowerMapPathTable
-from src.database.core.database_adapter import DatabaseAdapter
+from src.database.core.database_adapter import DatabaseAdapter, \
+    PathDatabaseAdapter
 from src.paths import paths
+from src.database.migrate.manage_database import manage_database
 
 
-class PowerMapAdapter(DatabaseAdapter):
+class PowerMapAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = PowerMapSelector
     path_table = PowerMapPathTable
+
+    def manage_database(self):
+        manage_database(self.url, 'powermapdb')
+
 #==============================================================================
 #    getters
 #==============================================================================
 
     def get_powermaps(self, **kw):
-        return self._get_items(PowerMapTable, globals(), **kw)
+        return self._retrieve_items(PowerMapTable)
+#        return self._get_items(PowerMapTable, globals(), **kw)
 
 #=============================================================================
 #   adder
 #=============================================================================
     def add_powermap(self, **kw):
-        b = self._add_timestamped_item(PowerMapTable, **kw)
+        b = PowerMapTable(**kw)
+        self._add_item(b)
+#        b = self._add_timestamped_item(PowerMapTable, **kw)
         return b
 
 if __name__ == '__main__':
-    db = PowerMapAdapter(name=paths.co2laser_db,
+    paths.build('_diode')
+    db = PowerMapAdapter(name=paths.powermap_db,
                          kind='sqlite')
     db.connect()
 
-    dbs = PowerMapSelector(_db=db)
+    dbs = PowerMapSelector(db=db)
     dbs.load_recent()
     dbs.configure_traits()
 

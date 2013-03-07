@@ -45,11 +45,12 @@ class PowerMapProcessor:
 
         z, metadata = self._extract_power_map_data(reader)
         x, y, z = self._prep_2D_data(z)
+#        print x, y, z
         w = 300
         h = 300
         bounds = metadata['bounds']
         cplot = cg.new_plot(
-                            # add=False,
+                            add=False,
                             padding_top=15,
                             padding_left=20,
                             padding_right=5,
@@ -59,21 +60,23 @@ class PowerMapProcessor:
         cplot.index_axis.title = 'mm'
         cplot.value_axis.title = 'mm'
 
-        cg.new_series(x=x, y=y, z=z, style='contour',
+        plot, names, rd = cg.new_series(x=x, y=y, z=z, style='contour',
                       xbounds=bounds,
                       ybounds=bounds,
                       cmap=self.color_map,
-                      colorbar=True,
+#                      colorbar=True,
                       levels=self.levels)
 
-        # plot max location
-        from scipy.ndimage import maximum_position
-        xm, ym = maximum_position(z)
-        f = lambda a, i: [a[i] * abs(bounds[0] - bounds[1]) + bounds[0]]
-        cg.new_series(x=f(x, xm), y=f(y, ym), type='scatter',
-                      marker='plus',
-                      color='black')
+        cb = cg.make_colorbar(plot.plots['plot0'][0])
 
+#        # plot max location
+#        from scipy.ndimage import maximum_position
+#        xm, ym = maximum_position(z)
+#        f = lambda a, i: [a[i] * abs(bounds[0] - bounds[1]) + bounds[0]]
+#        cg.new_series(x=f(x, xm), y=f(y, ym), type='scatter',
+#                      marker='plus',
+#                      color='black')
+#
         cpolyplot = cplot.plots['plot0'][0]
         options = dict(style='cmap_scatter',
                      type='cmap_scatter',
@@ -81,7 +84,8 @@ class PowerMapProcessor:
                      color_mapper=cpolyplot.color_mapper
                      )
 
-        p_xaxis = cg.new_plot(add=False,
+        p_xaxis = cg.new_plot(
+                              add=False,
                             padding_bottom=0,
                             padding_left=20,
                             padding_right=5,
@@ -99,17 +103,17 @@ class PowerMapProcessor:
         p_yaxis = cg.new_plot(add=False,
                               orientation='v',
                               padding_left=0,
-                              padding_bottom=60,
+                              padding_bottom=55,
                               resizable='',
                               bounds=[120, h]
                              )
 
         p_yaxis.index_axis.visible = False
         p_yaxis.value_axis.title = 'Power (%)'
-
+#
         cg.new_series(plotid=2, render_style='connectedpoints')
         cg.new_series(plotid=2, **options)
-
+#
         ma = max([max(z[i, :]) for i in range(len(x))])
         mi = min([min(z[i, :]) for i in range(len(x))])
 
@@ -117,17 +121,20 @@ class PowerMapProcessor:
         cg.set_y_limits(min=mi, max=ma, plotid=2)
 
         cg.show_crosshairs()
-
+#
         cpolyplot.index.on_trait_change(cg.metadata_changed,
                                            'metadata_changed')
 
-        container = cg._container_factory(type='v',
+        container = cg._container_factory(kind='v',
                                           bounds=[w, h + 200],
                                           resizable=''
                                           )
+
+# #        print type(container)
         container.add(cplot)
         container.add(p_xaxis)
 
+        cg.plotcontainer.add(cb)
         cg.plotcontainer.add(container)
         cg.plotcontainer.add(p_yaxis)
 

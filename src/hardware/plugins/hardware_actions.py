@@ -20,7 +20,7 @@ from pyface.action.api import Action
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.core.action_helper import open_protocol, open_manager
-from src.database.adapters.hardware_adapter import HardwareAdapter
+from src.database.adapters.device_scan_adapter import DeviceScanAdapter
 from src.hardware.plugins.register_manager import RegisterManager
 
 
@@ -68,7 +68,7 @@ class OpenDeviceScansAction(Action):
 
 #        p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
 #        open_protocol(self.window, p)
-        db = HardwareAdapter(name=paths.device_scan_db,
+        db = DeviceScanAdapter(name=paths.device_scan_db,
                                kind='sqlite',
                                application=self.window.application)
 #        open_selector(db, self.window.application)

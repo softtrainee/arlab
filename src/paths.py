@@ -156,15 +156,18 @@ class Paths():
         db_path = '/usr/local/pychron'
         self.device_scan_root = device_scan_root = join(db_path, 'device_scans')
         self.device_scan_db = join(device_scan_root, 'device_scans.sqlite')
-
         self.bakeout_db_root = bakeout_db_root = join(db_path, 'bakeoutdb')
         self.bakeout_db = join(bakeout_db_root, 'bakeouts.sqlite')
         self.co2laser_db_root = join(db_path, 'co2laserdb')
         self.co2laser_db = join(db_path, 'co2.sqlite')
 
+        self.powermap_db_root = join(db_path, 'powermap')
+        self.powermap_db = join(db_path, 'powermap.sqlite')
+
         self.diodelaser_db_root = join(db_path, 'diodelaserdb')
         self.diodelaser_db = join(db_path, 'diode.sqlite')
         self.isotope_db_root = join(db_path, 'isotopedb')
+
         ROOT = '/Users/ross/Sandbox/pychron_test_data/data'
         self.isotope_db = join(ROOT, 'isotopedb.sqlite')
         #==============================================================================

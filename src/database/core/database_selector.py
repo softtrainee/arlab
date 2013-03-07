@@ -31,8 +31,14 @@ from src.viewable import Viewable
 
 from traits.api import HasTraits
 from src.traits_editors.tabular_editor import myTabularEditor
-from src.database.core.base_results_adapter import BaseResultsAdapter
+# from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.traits_editors.custom_label_editor import CustomLabel
+from traitsui.tabular_adapter import TabularAdapter
+
+class BaseTabularAdapter(TabularAdapter):
+    columns = [('ID', 'record_id'),
+               ('Timestamp', 'timestamp')
+               ]
 
 class ColumnSorterMixin(HasTraits):
     _sort_field = None
@@ -81,7 +87,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #    open_button_label = 'Open'
 
     db = Instance(DatabaseAdapter)
-    tabular_adapter = BaseResultsAdapter
+    tabular_adapter = BaseTabularAdapter
     dbstring = Str
     title = ''
 
@@ -333,9 +339,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.warning(e)
 
     def _record_view_factory(self, dbrecord):
-        d = self.record_view_klass()
-
-        d.create(dbrecord)
+        if hasattr(self, 'record_view_klass'):
+            d = self.record_view_klass()
+            d.create(dbrecord)
+        else:
+            d = self.record_klass(_dbrecord=dbrecord)
 
         return d
 
@@ -405,7 +413,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _record_factory(self, di):
-        pass
+        return di
 #        d = self.record_klass(_dbrecord=di,
 #                                 selector=self,
 #                                 **kw)

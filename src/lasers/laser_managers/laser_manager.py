@@ -167,7 +167,7 @@ class LaserManager(BaseLaserManager):
 
     _power_calibration = None
 
-    dbname = ''
+#    dbname = ''
 
 #===============================================================================
 # public interface
@@ -324,9 +324,14 @@ class LaserManager(BaseLaserManager):
 
     def get_power_map_database(self):
         db = PowerMapAdapter(
-                            name=self.dbname,
-                            kind='sqlite'
+                             name=paths.powermap_db,
+#                            name=self.dbname,
+                            kind='sqlite',
+                            application=self.application
                             )
+        db.manage_database()
+        db.connect()
+
         return db
 #===============================================================================
 # views

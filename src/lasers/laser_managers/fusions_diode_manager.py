@@ -99,6 +99,10 @@ class FusionsDiodeManager(FusionsLaserManager):
         except AttributeError:
             pass
 
+    def map_temperature(self, v):
+        if self.use_calibrated_temperature:
+            v = self.temperature_controller.map_temperature(v)
+        return v
 
     def get_pyrometer_temperature(self, **kw):
         '''

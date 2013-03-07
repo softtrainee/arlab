@@ -604,8 +604,6 @@ class FusionsLaserManager(LaserManager):
 
 #========================= defaults =======================
     def get_power_database(self):
-#        db = PowerAdapter(dbname='co2laserdb',
-#                                   password='Argon')
         db = PowerAdapter(name=self.dbname,
                           kind='sqlite')
         return db
@@ -613,7 +611,7 @@ class FusionsLaserManager(LaserManager):
     def get_power_calibration_database(self):
 
         db = PowerCalibrationAdapter(name=self.dbname,
-                                             kind='sqlite')
+                                     kind='sqlite')
         return db
 #    def _subsystem_default(self):
 #        '''

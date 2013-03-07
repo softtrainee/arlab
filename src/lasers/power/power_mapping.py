@@ -101,7 +101,8 @@ class PowerMapping(Loggable):
     def _load_data_manager(self):
         dm = H5DataManager()
 #        root = '/usr/local/pychron/powermaps'
-        dw = DataWarehouse(root=os.path.join(paths.co2laser_db_root, 'power_map'))
+        dw = DataWarehouse(root=paths.powermap_db_root)
+#                           root=os.path.join(paths.co2laser_db_root, 'power_map'))
 #                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
         dm.new_frame(base_frame_name='powermap-{}'.format(generate_datestamp()),

@@ -38,6 +38,18 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
                                                      canvas=self, space='screen',
                                                      fill=False
                                                      )
+
+    def _calc_relative_move_direction(self, char, direction):
+        '''
+            correct for sense of camera
+        '''
+        if char in ('Left', 'Right'):
+            di = -1 if self.camera.hflip else 1
+        else:
+            di = 1 if self.camera.vflip else -1
+        return direction * di
+
+
 #    def normal_key_pressed(self, event):
 # #        if not self._jog_moving:
 # #            c = event.character

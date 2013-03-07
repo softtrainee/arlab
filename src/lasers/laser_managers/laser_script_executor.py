@@ -77,8 +77,10 @@ class LaserScriptExecutor(Loggable):
         g.new_series(x=[], y=[], plotid=1)
 
         self.laser_manager.open_view(g)
-        self.laser_manager.stage_manager.start_recording()
-        time.sleep(1)
+        record = False
+        if record:
+            self.laser_manager.stage_manager.start_recording()
+            time.sleep(1)
 #        def gfunc(t, v1, v2):
 #            g.add_datum((t, v1))
 #            g.add_datum((t, v2), plotid=1)
@@ -107,13 +109,15 @@ class LaserScriptExecutor(Loggable):
                     break
                 args = self._equilibrate_temp(ti, gfunc, st, mean_tol, std)
                 if args:
+                    self.info('{} equilibrated'.format(ti))
                     py_t, tc_t = args
                     writer.writerow((ti, py_t, tc_t))
                 else:
                     break
 
         self.laser_manager.set_laser_temperature(0)
-        self.laser_manager.stage_manager.stop_recording()
+        if record:
+            self.laser_manager.stage_manager.stop_recording()
         self._executing = False
 
     def _equilibrate_temp(self, temp, func, st, tol, std):
@@ -128,7 +132,8 @@ class LaserScriptExecutor(Loggable):
         n = 15
 
         self.laser_manager.set_laser_temperature(temp)
-        ctemp = self.laser_manager.temperature_controller.map_temperature(temp)
+        ctemp = self.laser_manager.map_temperature(temp)
+#        ctemp = self.laser_manager.temperature_controller.map_temperature(temp)
         while 1:
             if self._cancel:
                 break
@@ -186,7 +191,10 @@ class LaserScriptExecutor(Loggable):
         power_on = yd['power_on']
         power_off = yd['power_off']
         period = yd['period']
-        temp = yd['temp']
+        if yd.has_key('temp'):
+            temp = yd['temp']
+        else:
+            temp = None
 
         g = StreamStackedGraph()
         g.new_plot(scan_delay=1,)

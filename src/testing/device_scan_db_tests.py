@@ -21,7 +21,7 @@
 from os import path
 #============= local library imports  ==========================
 from database_tests import BaseDatabaseTests
-from src.database.adapters.HardwareAdapter import HardwareAdapter
+from src.database.adapters.device_scan_adapter import DeviceScanAdapter
 from src.paths import paths
 
 
@@ -30,7 +30,7 @@ class DeviceScanDBTests(BaseDatabaseTests):
 
     @classmethod
     def _db_factory(self):
-        db = HardwareAdapter(kind='sqlite',
+        db = DeviceScanAdapter(kind='sqlite',
                              name=path.join(paths.test_dir, 'scans_test.sqlite')
                              )
         return db

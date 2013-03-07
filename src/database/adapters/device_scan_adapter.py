@@ -25,7 +25,7 @@ from src.database.orms.hardware_orm import ScanTable, DeviceTable, \
     ScanPathTable
 # from src.database.core.functions import delete_one
 
-class HardwareAdapter(PathDatabaseAdapter):
+class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = DeviceScanSelector
     path_table = ScanPathTable
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     logging_setup('dvs')
 
     from src.paths import paths
-    db = HardwareAdapter(name=paths.device_scan_db,
+    db = DeviceScanAdapter(name=paths.device_scan_db,
                             kind='sqlite')
     db.connect()
 
