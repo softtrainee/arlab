@@ -65,6 +65,10 @@ class BoundsOverlay(AbstractOverlay):
         gc.draw_rect((x1 + 1, y1, w, h), constants.STROKE)
         gc.restore_state()
 
+DIRECTIONS = {'Left':('x', 1), 'Right':('x', -1),
+                 'Down':('y', 1), 'Up':('y', -1)
+                 }
+
 class LaserTrayCanvas(MapCanvas):
     '''
     '''
@@ -401,11 +405,17 @@ class LaserTrayCanvas(MapCanvas):
 #            self.parent.parent.laser_controller.set_motor('zoom', inc, relative=True)
 # #            self.parent.parent.logic_board.set_zoom(inc, relative=True)
 #            event.handled = True
+
     def normal_key_pressed(self, event):
         c = event.character
         if c in ['Left', 'Right', 'Up', 'Down']:
-            self.parent.relative_move(c)
+            ax_key, direction = DIRECTIONS[c]
+            direction = self._calc_relative_move_direction(c, direction)
+            self.parent.relative_move(ax_key, direction)
             event.handled = True
+
+    def _calc_relative_move_direction(self, char, direction):
+        return direction
 
     def normal_key_up(self, event):
         '''

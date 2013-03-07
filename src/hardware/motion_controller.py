@@ -67,7 +67,7 @@ class MotionController(CoreDevice):
 #            print 'pos', pos, a
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
-            time.sleep(0.075)
+#            time.sleep(0.075)
 
 #        x, y, z = self.get_xyz()
 #        print x, y, z
@@ -212,13 +212,14 @@ class MotionController(CoreDevice):
     def _sign_correct(self, val, key, ratio=True):
         '''
         '''
-        axis = self.axes[key]
-        r = 1
-        if ratio:
-            r = axis.drive_ratio
-#            self.info('using drive ratio {}={}'.format(key, r))
+        if val is not None:
+            axis = self.axes[key]
+            r = 1
+            if ratio:
+                r = axis.drive_ratio
+    #            self.info('using drive ratio {}={}'.format(key, r))
 
-        return val * axis.sign * r
+            return val * axis.sign * r
 
     def _block_(self, axis=None, event=None):
         '''
@@ -256,7 +257,8 @@ class MotionController(CoreDevice):
         self._set_axis('y', v)
 
     def _set_z(self, v):
-        self.set_z(v)
+        if v is not None:
+            self.set_z(v)
 
     def _validate_x(self, v):
         return self._validate(v, 'x', self._x_position)

@@ -269,7 +269,8 @@ host={}'.format(self.name, self.username, self.host))
 
     def _add_item(self, obj):
         sess = self.get_session()
-        sess.add(obj)
+        if sess is not None:
+            sess.add(obj)
 
     def _add_unique(self, item, attr, name):
         # test if already exists

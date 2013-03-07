@@ -198,8 +198,8 @@ class ScanableDevice(ViewableDevice):
         self.timer = Timer(sp, self.scan)
 
     def save_scan_to_db(self):
-        from src.database.adapters.hardware_adapter import HardwareAdapter
-        db = HardwareAdapter(name=paths.device_scan_db,
+        from src.database.adapters.device_scan_adapter import DeviceScanAdapter
+        db = DeviceScanAdapter(name=paths.device_scan_db,
                                kind='sqlite')
         db.connect()
         dev = db.add_device(self.name, klass=self.__class__.__name__)

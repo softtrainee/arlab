@@ -87,17 +87,17 @@ class ContourGraph(Graph):
             if 'levels' in kw:
                 contour.levels = kw.get('levels')
 
-        if colorbar:
-            cb = self._colorbar_factory(contour)
-            cb.padding_top = plot.padding_top
-            cb.padding_bottom = plot.padding_bottom
-            cb.padding_right = 50
-            cb.padding_left = 25
-            # cb.plot=p[0]
-            # expand the plotcontainers shape in col space
-#            shape=self.plotcontainer.shape
-#            self.plotcontainer.shape=(shape[0],shape[1]+1)
-            self.plotcontainer.add(cb)
+#        if colorbar:
+#            cb = self._colorbar_factory(contour)
+#            cb.padding_top = plot.padding_top
+#            cb.padding_bottom = plot.padding_bottom
+#            cb.padding_right = 50
+#            cb.padding_left = 25
+#            # cb.plot=p[0]
+#            # expand the plotcontainers shape in col space
+# #            shape=self.plotcontainer.shape
+# #            self.plotcontainer.shape=(shape[0],shape[1]+1)
+#            self.plotcontainer.add(cb)
 
         # self.refresh_editor()
         return plot, names, rd
@@ -150,12 +150,10 @@ class ContourGraph(Graph):
     def container_factory(self):
         '''
         '''
-        return self._container_factory(type='h')
+        return self._container_factory(kind='h', spacing=10)
 
-    def _colorbar_factory(self, cplot):
+    def make_colorbar(self, cplot):
         '''
-            @type cplot: C{str}
-            @param cplot:
         '''
         colormap = cplot.color_mapper
         colorbar = ColorBar(index_mapper=LinearMapper(range=colormap.range),
@@ -164,7 +162,7 @@ class ContourGraph(Graph):
                           orientation='v',
                           resizable='v',
                           width=30,
-                          # padding=20
+                          padding=20
                           )
 
         return colorbar
