@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str
+from traits.api import Any, Str, Property, cached_property
 #============= standard library imports ========================`
 
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 # from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
-    Label, RoughValve, BaseValve, RoundedRectangle
+    Label, RoughValve, BaseValve, RoundedRectangle, BorderLine
 from pyface.wx.dialog import confirmation
 
 W = 2
@@ -38,6 +38,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     show_axes = False
     show_grids = False
     use_zoom = False
+    use_pan = False
     padding_left = 0
     padding_right = 0
     padding_bottom = 0
@@ -47,6 +48,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     aspect_ratio = 4 / 3.
 
     y_range = (-10, 25)
+
+    canvas_parser = None
 
     def __init__(self, *args, **kw):
         '''
@@ -116,30 +119,44 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 #        valves = self._bootstrap(path)
 #        if valves:
 #            self.valves = valves
+    def _get_canvas_parser(self, p=None):
+        if p is not None:
+            from src.helpers.parsers.canvas_parser import CanvasParser
+            cp = CanvasParser(p)
+            self.canvas_parser = cp
+        elif self.canvas_parser:
+            cp = self.canvas_parser
 
-    @staticmethod
-    def _get_canvas_parser(p):
-        from src.helpers.parsers.canvas_parser import CanvasParser
-        cp = CanvasParser(p)
         return cp
 
-    @staticmethod
-    def get_canvas_view_range(p):
+    def _get_canvas_view_range(self):
         xv = (-25, 25)
         yv = (-25, 25)
-        cp = ExtractionLineCanvas2D._get_canvas_parser(p)
-        elm = cp._tree.find('xview')
-        if elm is not None:
-            xv = map(float, elm.text.split(','))
+        cp = self._get_canvas_parser()
+#        cp = ExtractionLineCanvas2D._get_canvas_parser(p)
+        tree = cp.get_tree()
+        if tree:
+            elm = tree.find('xview')
+            if elm is not None:
+                xv = map(float, elm.text.split(','))
 
-        elm = cp._tree.find('yview')
-        if elm is not None:
-            yv = map(float, elm.text.split(','))
+            elm = tree.find('yview')
+            if elm is not None:
+                yv = map(float, elm.text.split(','))
 
         return xv, yv
 
     def load_canvas_file(self, p):
         cp = self._get_canvas_parser(p)
+
+        xv, yv = self._get_canvas_view_range()
+        self.view_x_range = xv
+        self.view_y_range = yv
+#        cp = self._get_canvas_parser(p)
+        tree = cp.get_tree()
+
+        if tree is None:
+            return
 #        def get_translation(elem):
 #            return map(float, elem.find('translation').text.split(','))
 #
@@ -162,7 +179,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                                                 default_color=c)
         color_dict = dict()
         # get default colors
-        for c in cp._tree.findall('color'):
+        for c in tree.findall('color'):
             t = c.text.strip()
             k = c.get('tag')
             co = map(float, t.split(',')) if ',' in t else t
@@ -175,8 +192,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         # get an origin offset
         ox = 0
         oy = 0
-
-        o = cp._tree.find('origin')
+        o = tree.find('origin')
         if o is not None:
             ox, oy = map(float, o.text.split(','))
 
@@ -207,28 +223,13 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             ndict[key] = v
 
         self.valves = ndict
-
-        for b in cp.get_elements('stage'):
-            if 'stage' in color_dict:
-                c = color_dict['stage']
-            else:
-                c = (0.8, 0.8, 0.8)
-            new_rectangle(b, c, bw=5)
-
-        for s in cp.get_elements('spectrometer'):
-            if 'spectrometer' in color_dict:
-                c = color_dict['spectrometer']
-            else:
-                c = (0, 0.8, 0.8)
-            new_rectangle(s, c, bw=5)
-
-        for t in cp.get_elements('turbo'):
-            if 'turbo' in color_dict:
-                c = color_dict['turbo']
-            else:
-                c = (0, 0.5, 0.8)
-            new_rectangle(t, c)
-#            key = t.text.strip()
+        for key in ('stage', 'laser', 'spectrometer', 'turbo', 'getter'):
+            for b in cp.get_elements(key):
+                if key in color_dict:
+                    c = color_dict[key]
+                else:
+                    c = (0.8, 0.8, 0.8)
+                new_rectangle(b, c, bw=5)
 
         for i, l in enumerate(cp.get_elements('label')):
             x, y = map(float, l.find('translation').text.split(','))
@@ -239,15 +240,15 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                       )
             self.markupcontainer['{:03}'.format(i)] = l
 
-        for g in cp.get_elements('getter'):
-            v = self.markupcontainer[g.get('valve')]
-            w, h = 5, 2
-            key = g.text.strip()
-            self.markupcontainer[key] = Rectangle(v.x, v.y + 2.5, width=w, height=h,
-                                                canvas=self,
-                                                name=key,
-                                                line_width=2,
-                                                default_color=(0, 0.5, 0))
+#        for g in cp.get_elements('getter'):
+#            v = self.markupcontainer[g.get('valve')]
+#            w, h = 5, 2
+#            key = g.text.strip()
+#            self.markupcontainer[key] = Rectangle(v.x, v.y + 2.5, width=w, height=h,
+#                                                canvas=self,
+#                                                name=key,
+#                                                line_width=2,
+#                                                default_color=(0, 0.5, 0))
         for g in cp.get_elements('gauge'):
             if 'gauge' in color_dict:
                 c = color_dict['gauge']
@@ -265,25 +266,30 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             except:
                 orient = None
 
-            x = self.markupcontainer[skey].x
-            y = self.markupcontainer[skey].y
+            sanchor = self.markupcontainer[skey]
+            x, y = sanchor.x, sanchor.y
+#            x = self.markupcontainer[skey].x
+#            y = self.markupcontainer[skey].y
             try:
                 ox, oy = map(float, start.get('offset').split(','))
             except:
                 ox = 1
-                oy = 1
+                oy = sanchor.height / 2.0
+
             x += ox
             y += oy
 
-            x1 = self.markupcontainer[ekey].x
-            y1 = self.markupcontainer[ekey].y
+            eanchor = self.markupcontainer[ekey]
+            x1, y1 = eanchor.x, eanchor.y
+#            x1 = self.markupcontainer[ekey].x
+#            y1 = self.markupcontainer[ekey].y
 #            ox, oy = map(float, end.get('offset').split(','))
 
             try:
                 ox, oy = map(float, end.get('offset').split(','))
             except:
                 ox = 1
-                oy = 1
+                oy = eanchor.height / 2.0
 
             x1 += ox
             y1 += oy
@@ -292,12 +298,23 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             elif orient == 'horizontal':
                 y1 = y
 
-            l = Line((x, y), (x1, y1), default_color=(0, 0, 0),
+            klass = BorderLine
+            l = klass((x, y), (x1, y1), default_color=(0.29, 0.29, 0.43),
                      canvas=self, width=10)
             self.markupcontainer[('con{:03}'.format(i), 0)] = l
 
-        self.invalidate_and_redraw()
+        xv, yv = self._get_canvas_view_range()
 
+        x, y = xv[0], yv[0]
+        w = xv[1] - xv[0]
+        h = yv[1] - yv[0]
+
+        brect = Rectangle(x, y, width=w, height=h, canvas=self,
+                          fill=False, line_width=20, default_color=(0, 0, 0.4))
+        self.markupcontainer[('brect', 0)] = brect
+
+        self.invalidate_and_redraw()
+        print 'asdfdf'
     def _over_item(self, event):
         x = event.x
         y = event.y

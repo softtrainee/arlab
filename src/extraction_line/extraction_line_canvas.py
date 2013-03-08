@@ -201,15 +201,16 @@ class ExtractionLineCanvas(HasTraits):
         '''
         '''
         from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
-        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
-        vx, vy = ExtractionLineCanvas2D.get_canvas_view_range(p)
+#        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+#        vx, vy = ExtractionLineCanvas2D.get_canvas_view_range()
 
         e = ExtractionLineCanvas2D(
                                    manager=self.manager,
-                                   view_x_range=vx,
-                                   view_y_range=vy
+#                                   view_x_range=vx,
+#                                   view_y_range=vy
                                    )
-        e.load_canvas_file(p)
+#        e.load_canvas_file(p)
+
         return e
 #
     def _canvas3D_default(self):

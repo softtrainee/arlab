@@ -17,18 +17,18 @@ class AgilentUnit(CoreDevice):
         self.ask('ABORT', verbose=verbose)
         # time.sleep(0.05)
         self.tell('INIT', verbose=verbose)
-#        time.sleep(0.1)
+        time.sleep(0.075)
 
     def _wait(self, n=1000, verbose=False):
         if self.simulation:
             return True
 
-        for _ in range(1000):
+        for _ in range(n):
             if self._points_available(verbose=verbose):
                 return True
-            time.sleep(0.025)
+            time.sleep(0.005)
         else:
-            self.warning('not points in memory')
+            self.warning('no points in memory')
 
     def _points_available(self, verbose=False):
         resp = self.ask('DATA:POINTS?', verbose=verbose)
