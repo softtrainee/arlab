@@ -367,7 +367,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             self.info('displacement of move too small {} < {}'.format(d, tol))
 
-    def single_axis_move(self, key, value, block=False, mode='absolute', update=True, **kw):
+    def single_axis_move(self, key, value, block=False, mode='absolute',
+                         velocity=None, update=True, **kw):
         '''
         '''
         x = None
@@ -411,7 +412,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
             disp = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
 
-            if self._check_motion_parameters(disp, ax):
+            if velocity is not None:
+                ax.velocity = velocity
+                self.set_single_axis_motion_parameters(ax)
+            elif self._check_motion_parameters(disp, ax):
                 self.set_single_axis_motion_parameters(ax)
         else:
             func = self._z_inprogress_update
