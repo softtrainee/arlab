@@ -14,12 +14,12 @@ class AgilentUnit(CoreDevice):
     def _trigger(self, verbose=False):
         '''
         '''
-        self.ask('ABORT', verbose=verbose)
+        self.tell('ABORT', verbose=verbose)
         # time.sleep(0.05)
         self.tell('INIT', verbose=verbose)
         time.sleep(0.075)
 
-    def _wait(self, n=1000, verbose=False):
+    def _wait(self, n=10, verbose=False):
         if self.simulation:
             return True
 
@@ -28,11 +28,12 @@ class AgilentUnit(CoreDevice):
                 return True
             time.sleep(0.005)
         else:
-            self.warning('no points in memory')
+            if verbose:
+                self.warning('no points in memory')
 
     def _points_available(self, verbose=False):
         resp = self.ask('DATA:POINTS?', verbose=verbose)
-        if resp is not None:
+        if resp is not None and resp:
             return int(resp)
 
 #    def read_device(self, **kw):

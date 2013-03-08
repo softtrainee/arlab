@@ -86,7 +86,7 @@ class AgilentMultiplexer(AgilentUnit):
               'FORM:READING:CHANNEL ON',
               'FORM:READING:TIME OFF',
               'FORM:READING:UNIT OFF',
-              'ROUT:CHAN:DELAY {} {}'.format(0.05, self._make_scan_list()),
+              #'ROUT:CHAN:DELAY {} {}'.format(0.05, self._make_scan_list()),
               'ROUT:SCAN {}'.format(self._make_scan_list()),
               'TRIG:COUNT {}'.format(self.trigger_count),
               'TRIG:SOURCE TIMER',
@@ -110,19 +110,21 @@ class AgilentMultiplexer(AgilentUnit):
     def _make_scan_list(self, channels=None):
         if channels is None:
             channels = self.channels
+    
         return '(@{})'.format(','.join([ci.address for ci in channels]))
-
+        
     def channel_scan(self, **kw):
-        self._trigger()
-        if self._wait():
+        verbose=False
+        self._trigger(verbose=verbose)
+        if self._wait(verbose=verbose):
             rs = []
             for ci in self.channels:
-                v = self.ask('DATA:REMOVE? 1', verbose=False)
+                v = self.ask('DATA:REMOVE? 1', verbose=verbose)
                 if v is None:
                     v = self.get_random_value()
                 ci.value = float(v)
                 rs.append(v)
-                if not self._wait():
+                if not self._wait(n=2,verbose=verbose):
                     break
 
             return ','.join(rs)

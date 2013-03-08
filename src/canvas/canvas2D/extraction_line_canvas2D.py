@@ -314,7 +314,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         self.markupcontainer[('brect', 0)] = brect
 
         self.invalidate_and_redraw()
-        print 'asdfdf'
+
     def _over_item(self, event):
         x = event.x
         y = event.y
