@@ -80,18 +80,18 @@ class AgilentMultiplexer(AgilentUnit):
         '''
 
         self._communicator.write_terminator = chr(10)
-        cmds = [
+        cmds = (
               '*CLS',
               'FORM:READING:ALARM OFF',
               'FORM:READING:CHANNEL ON',
               'FORM:READING:TIME OFF',
               'FORM:READING:UNIT OFF',
+              'ROUT:CHAN:DELAY {} {}'.format(0.05, self._make_scan_list()),
+              'ROUT:SCAN {}'.format(self._make_scan_list()),
+              'TRIG:COUNT {}'.format(self.trigger_count),
               'TRIG:SOURCE TIMER',
               'TRIG:TIMER 0',
-              'TRIG:COUNT {}'.format(self.trigger_count),
-              'ROUT:SCAN {}'.format(self._make_scan_list())
-#                  'ROUT:SCAN (@{})'.format(self.address)
-             ]
+             )
 
         for c in cmds:
             self.tell(c)
@@ -115,16 +115,17 @@ class AgilentMultiplexer(AgilentUnit):
     def channel_scan(self, **kw):
         self._trigger()
         if self._wait():
+            rs = []
             for ci in self.channels:
                 v = self.ask('DATA:REMOVE? 1', verbose=False)
                 if v is None:
                     v = self.get_random_value()
                 ci.value = float(v)
-
+                rs.append(v)
                 if not self._wait():
                     break
 
-            return True
+            return ','.join(rs)
 
     def traits_view(self):
         v = View(Item('channels', show_label=False, editor=ListEditor(mutable=False, editor=InstanceEditor(), style='custom')))

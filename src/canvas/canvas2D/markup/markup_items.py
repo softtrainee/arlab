@@ -704,4 +704,25 @@ class Transect(Line):
     step = Float
     points = List
 
+class BorderLine(Line):
+    border_width = 5
+    border_color = (0, 0, 0.15)
+    def _render_(self, gc):
+        gc.save_state()
+        gc.set_line_width(self.width + self.border_width)
+        gc.set_stroke_color(self.border_color)
+        x, y = self.start_point.get_xy()
+        x1, y1 = self.end_point.get_xy()
+        # draw border
+        gc.move_to(x, y)
+        gc.line_to(x1, y1)
+        gc.close_path()
+        gc.draw_path()
+        gc.restore_state()
+
+#        self.set_stroke_color(gc)
+#        self.set_fill_color(gc)
+#        gc.set_line_width(self.line_width)
+        # draw main line
+        super(BorderLine, self)._render_(gc)
 #============= EOF ====================================

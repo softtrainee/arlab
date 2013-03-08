@@ -20,22 +20,30 @@
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from xml.etree.ElementTree import ElementTree, Element
+from xml.etree.ElementTree import ElementTree, Element, ParseError
+from pyface.message_dialog import warning
 #============= local library imports  ==========================
 class XMLParser(object):
     '''
         wrapper for ElementTree
     '''
+    _tree = None
     def __init__(self, path, *args, **kw):
-        self._path = path
-        self._parse_file(path)
+        if path:
+            self._path = path
+            try:
+                self._parse_file(path)
+            except ParseError, e:
+                warning(None, str(e))
+
 
     def _parse_file(self, p):
         tree = ElementTree()
         tree.parse(p)
         self._tree = tree
         return tree
-
+    def get_tree(self):
+        return self._tree
     def save(self):
         self.indent(self._tree.getroot())
         self._tree.write(self._path)

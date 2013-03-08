@@ -147,6 +147,13 @@ class BaseDataCanvas(DataView):
         self.x_grid.visible = self.show_grids
         self.y_grid.visible = self.show_grids
 
+    @on_trait_change('view_x_range')
+    def _update_xrange(self):
+        self.set_mapper_limits('x', self.view_x_range)
+    @on_trait_change('view_y_range')
+    def _update_yrange(self):
+        self.set_mapper_limits('y', self.view_y_range)
+
     @on_trait_change('show_grids')
     def change_grid_visibility(self):
         try:
