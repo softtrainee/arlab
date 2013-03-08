@@ -28,6 +28,8 @@ class MultiplexerManager(Manager):
     title = 'Multiplexer'
     window_width = 500
     window_height = 500
+    id='multiplexer_manager'
+    
     def opened(self):
         self.controller.start_scan()
 
