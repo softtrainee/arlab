@@ -33,7 +33,7 @@ class DatabaseRecord(Saveable):
     title = Property(depends_on='_dbrecord')
     title_str = Str
     summary = Str
-    id = Property
+#    id = Property
 
 #    graph = Instance(Graph)
 

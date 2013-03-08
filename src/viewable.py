@@ -43,7 +43,7 @@ class ViewableHandler(Handler):
 
 class Viewable(Loggable):
     ui = Any
-    id = None
+    id = ''
     handler_klass = ViewableHandler
 
     window_x = Either(Int, Float)
@@ -98,7 +98,7 @@ class Viewable(Loggable):
         if not 'title' in kw:
             kw['title'] = self.title
 
-        if not 'id' in kw:
+        if not 'id' in kw and self.id:
             kw['id'] = self.id
 
         return View(
