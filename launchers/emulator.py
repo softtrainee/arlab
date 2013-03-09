@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,7 +78,7 @@ class Server(Loggable):
 #        server = IPCVerboseServer(host, EmulatorHandler)
 #        server = LinkServer()
         server.info = self.info
-        #server.allow_reuse_address = True
+        # server.allow_reuse_address = True
         self.server = server
 
         server.socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, 1)
@@ -118,7 +118,7 @@ def verbose_all(cls):
 @verbose_all
 class QtegraEmulator(Loggable):
     #===========================================================================
-    # Qtegra Protocol    
+    # Qtegra Protocol
     #===========================================================================
     def handleSetMass(self, mass):
         mass = float(mass)
@@ -136,7 +136,7 @@ class QtegraEmulator(Loggable):
         return '\n'.join([','.join(map('{:0.3f}'.format, r)) for r in d])
 
 #    def GetDataNow(self, *args):
-##        print 'get data now'
+# #        print 'get data now'
 #        return self.GetData(*args)
 
     def handleGetCupConfigurations(self, *args):
@@ -383,7 +383,7 @@ if __name__ == '__main__':
 #    portn = 8000
 #    s = Server()
 
-#    ls = LinkServer()    
+#    ls = LinkServer()
 #    ls.start_server('129.138.12.138', 1070)
 
 #    s.start_server('localhost', portn)
@@ -392,7 +392,7 @@ if __name__ == '__main__':
 #===============================================================================
 # link
 #===============================================================================
-#class LinkServer(Loggable):
+# class LinkServer(Loggable):
 #    def start_server(self, host, port):
 #        self.info('Link Starting server {} {}'.format(host, port))
 #        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -429,7 +429,7 @@ if __name__ == '__main__':
 #                        s.close()
 #                        input.remove(s)
 #        server.close()
-#class LinkEmulator(Emulator):
+# class LinkEmulator(Emulator):
 #    def handle(self):
 #        try:
 #            data = self.request.recv(1024).strip()
@@ -460,12 +460,12 @@ if __name__ == '__main__':
 #            result = 'Error: poorly formatted command %s' % data
 #
 #        return result
-#class LinkHandler(QtegraEmulator):
+# class LinkHandler(QtegraEmulator):
 #    request = None
 #    def handle(self):
 #        new_line = lambda x: '{}\n\r'.format(x)
 #        #udp
-##        data = self.request[0].strip()
+# #        data = self.request[0].strip()
 #
 #        #ipc
 #        print 'handle'

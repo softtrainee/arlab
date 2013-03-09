@@ -18,7 +18,6 @@
 from traits.api import HasTraits, Str, List, Float, Property, Tuple
 from traitsui.api import View, Item, HGroup, ListEditor, InstanceEditor
 #=============standard library imports ========================
-import time
 from numpy import polyval
 from src.hardware.agilent.agilent_unit import AgilentUnit
 #=============local library imports  ==========================
@@ -86,7 +85,7 @@ class AgilentMultiplexer(AgilentUnit):
               'FORM:READING:CHANNEL ON',
               'FORM:READING:TIME OFF',
               'FORM:READING:UNIT OFF',
-              #'ROUT:CHAN:DELAY {} {}'.format(0.05, self._make_scan_list()),
+              # 'ROUT:CHAN:DELAY {} {}'.format(0.05, self._make_scan_list()),
               'ROUT:SCAN {}'.format(self._make_scan_list()),
               'TRIG:COUNT {}'.format(self.trigger_count),
               'TRIG:SOURCE TIMER',
@@ -110,24 +109,46 @@ class AgilentMultiplexer(AgilentUnit):
     def _make_scan_list(self, channels=None):
         if channels is None:
             channels = self.channels
-    
+
         return '(@{})'.format(','.join([ci.address for ci in channels]))
-        
+
     def channel_scan(self, **kw):
-        verbose=False
+        verbose = False
         self._trigger(verbose=verbose)
         if self._wait(verbose=verbose):
             rs = []
-            for ci in self.channels:
+            n = len(self.channels)
+            for i, ci in enumerate(self.channels):
                 v = self.ask('DATA:REMOVE? 1', verbose=verbose)
                 if v is None:
                     v = self.get_random_value()
-                ci.value = float(v)
-                rs.append(v)
-                if not self._wait(n=2,verbose=verbose):
+
+                try:
+                    ci.value = float(v)
+                    rs.append(v)
+                except ValueError:
+                    rs = []
+                    break
+
+                if i == n - 1 or not self._wait(n=5, verbose=verbose):
                     break
 
             return ','.join(rs)
+
+    def read_channel(self, name):
+        # if device is not scanning force a channel scan
+        # otherwise use the last scan value
+        if not self._scanning:
+            self.channel_scan()
+
+        channel = self._get_channel(name)
+        if channel is not None:
+            return channel.value
+
+    def _get_channel(self, name):
+        return next((chan for chan in self.channels
+                            if chan.name == name or \
+                                 chan.address[1:] == name), None)
 
     def traits_view(self):
         v = View(Item('channels', show_label=False, editor=ListEditor(mutable=False, editor=InstanceEditor(), style='custom')))
@@ -145,8 +166,6 @@ class AgilentSingleADC(AgilentUnit):
 
         '''
         super(AgilentSingleADC, self).load_additional_args(config)
-
-
         channel = self.config_get(config, 'General', 'channel', cast='int')
 
         if self.slot is not None and channel is not None:
@@ -181,17 +200,23 @@ class AgilentSingleADC(AgilentUnit):
         '''
         '''
         self._trigger()
-        resp = self.ask('DATA:POINTS?')
-        if resp is not None:
-            n = float(resp)
-            resp = 0
-            if n > 0:
-                resp = self.ask('DATA:REMOVE? {}'.format(float(n)))
-                resp = self._parse_response_(resp)
+        pts = self._wait()
+        if pts:
+            resp = self.ask('DATA:REMOVE? {}'.format(pts))
+            resp = self._parse_response(resp)
+            return resp
+
+#        resp = self.ask('DATA:POINTS?')
+#        if resp is not None:
+#            n = float(resp)
+#            resp = 0
+#            if n > 0:
+#                resp = self.ask('DATA:REMOVE? {}'.format(float(n)))
+#                resp = self._parse_response_(resp)
 
             # self.current_value = resp
-            self.read_voltage = resp
-        return resp
+#            self.read_voltage = resp
+#        return resp
 
     def _parse_response_(self, r):
         '''

@@ -1,6 +1,5 @@
-#!/usr/bin/python
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +14,23 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.hardware.agilent.agilent_multiplexer import AgilentSingleADC, \
+    AgilentMultiplexer
+from src.rpc.query import rpc_query
 
-if __name__ == '__main__':
-    from helpers import build_version
-    build_version('_bakeout', set_path=True)
-    from src.envisage.bakedpy_run import launch
-    from src.helpers.logger_setup import logging_setup
+class RemoteAgilentMultiplexer(AgilentMultiplexer):
+    @rpc_query
+    def read_channel(self, channel):
+        pass
 
-    logging_setup('bakeout', level='DEBUG')
-    launch()
 
-# ============= EOF ====================================
+class RemoteAgilentADC(AgilentSingleADC):
+
+    @rpc_query
+    def read_device(self):
+        pass
+
+#============= EOF =============================================

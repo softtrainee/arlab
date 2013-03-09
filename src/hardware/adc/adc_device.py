@@ -23,30 +23,47 @@ from src.hardware.core.abstract_device import AbstractDevice
 class ADCDevice(AbstractDevice):
 #    scan_func = 'read_voltage'
     _rvoltage = 0
+    channel = None
+
     def load_additional_args(self, config):
         '''
 
         '''
-        adc = self.config_get(config, 'General', 'adc')
 
-        if adc is not None:
-            package = 'src.hardware.adc.analog_digital_converter'
-            factory = self.get_factory(package, adc)
+        if config.has_section('ADC'):
+            klass = self.config_get(config, 'ADC', 'klass')
+            pkgs = ('src.hardware.adc.analog_digital_converter',
+                      'src.hardware.agilent.agilent_multiplexer',
+                      'src.hardware.remote.agilent_multiplexer',
+                      )
 
-            self._cdevice = factory(name=adc,
-                                          configuration_dir_name=self.configuration_dir_name
-                        )
+            for pi in pkgs:
+                factory = self.get_factory(pi, klass)
+                if factory:
+                    break
+
+            self.set_attribute(config, 'channel', 'ADC')
+
+#        adc = self.config_get(config, 'General', 'adc')
+#
+#        if adc is not None:
+
+            self._cdevice = factory(name=klass,
+                                    configuration_dir_name=self.configuration_dir_name
+                                    )
 
             return True
 
     def read_voltage(self, **kw):
         '''
         '''
-        v = 1
         if self._cdevice is not None:
-            v = self._cdevice.read_device(**kw)
+            if self.channel:
+                v = self._cdevice.read_channel(self.channel)
+            else:
+                v = self._cdevice.read_device(**kw)
             self._rvoltage = v
-        return v
+            return v
 
 
 #============= EOF =====================================

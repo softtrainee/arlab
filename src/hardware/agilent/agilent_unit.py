@@ -17,15 +17,16 @@ class AgilentUnit(CoreDevice):
         self.tell('ABORT', verbose=verbose)
         # time.sleep(0.05)
         self.tell('INIT', verbose=verbose)
-        time.sleep(0.075)
+#        time.sleep(0.075)
 
     def _wait(self, n=10, verbose=False):
         if self.simulation:
             return True
 
         for _ in range(n):
-            if self._points_available(verbose=verbose):
-                return True
+            pt = self._points_available(verbose=verbose)
+            if pt:
+                return pt
             time.sleep(0.005)
         else:
             if verbose:
