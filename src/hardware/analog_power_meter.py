@@ -44,13 +44,13 @@ class AnalogPowerMeter(ADCDevice):
                  )
         return v
 
-    def _scan_(self, *args):
-        '''
-        '''
-
-        r = self._cdevice._scan_()
-
-        self.stream_manager.record(r, self.name)
+#    def _scan_(self, *args):
+#        '''
+#        '''
+#
+#        r = self._cdevice._scan_()
+#
+#        self.stream_manager.record(r, self.name)
 
     def read_power_meter(self, *args, **kw):
         '''
