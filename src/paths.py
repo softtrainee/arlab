@@ -160,6 +160,8 @@ class Paths():
         self.bakeout_db = join(bakeout_db_root, 'bakeouts.sqlite')
         self.co2laser_db_root = join(db_path, 'co2laserdb')
         self.co2laser_db = join(db_path, 'co2.sqlite')
+        self.uvlaser_db_root = join(db_path, 'uvlaserdb')
+        self.uvlaser_db = join(db_path, 'uv.sqlite')
 
         self.powermap_db_root = join(db_path, 'powermap')
         self.powermap_db = join(db_path, 'powermap.sqlite')

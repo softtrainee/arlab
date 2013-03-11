@@ -180,7 +180,7 @@ class ATLLaserControlUnit(CoreDevice):
             high = make_bitarray(int(high, 16), width=16)
             low = make_bitarray(int(low, 16), width=16)
             v = int(high + low, 2)
-            do_later(self.trait_set, burst_readback=v)
+#            do_later(self.trait_set, burst_readback=v)
 
         return v
 
@@ -342,7 +342,9 @@ class ATLLaserControlUnit(CoreDevice):
 #            vs=self._parse_response(vs, 1)
 #            print vs
 #        print self.get_process_status()
-        self.get_nburst(verbose=False)
+        b=self.get_nburst(verbose=False)
+        if b is not None:
+            self.burst_readback=b
 #        s=self.get_laser_status(verbose=False)
 #        if s<=3:
 

@@ -86,7 +86,8 @@ class AutofocusManager(Manager):
                     params = pickle.load(f)
                     self.info('loading parameters from {}'.format(p))
                     return params
-                except Exception:
+                except Exception,e:
+                    print e
                     return FocusParameters()
         else:
             return FocusParameters()

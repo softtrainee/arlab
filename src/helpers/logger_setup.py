@@ -129,8 +129,9 @@ def logging_setup(name, **kw):
             hi.setFormatter(logging.Formatter(gFORMAT))
             root.addHandler(hi)
 
-#        #main_logger.setLevel(logging.NOTSET)
-#        add_console(name='main')
+#        main_logger.setLevel(logging.NOTSET)
+#        add_console(name='main')    
+#        new_logger('main')
 
 
 # MAXLEN = 30
@@ -188,14 +189,14 @@ def logging_setup(name, **kw):
 
 def new_logger(name):
     name = '{:<{}}'.format(name, NAME_WIDTH)
-    l = logging.getLogger(name)
+    if name.strip() == 'main':
+        l = logging.getLogger()
+    else:
+        l = logging.getLogger(name)
+#    l = logging.getLogger(name)
     l.setLevel(gLEVEL)
 
     return l
 #    '''
 #    '''
-#    if name.strip() == 'main':
-#        l = logging.getLogger()
-#    else:
-#        l = logging.getLogger(name)
 #    return l

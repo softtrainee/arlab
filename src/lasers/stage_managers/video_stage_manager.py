@@ -27,7 +27,6 @@ from threading import Thread, Condition, Timer
 import os
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
-from src.helpers.media import play_sound
 from src.paths import paths
 from src.machine_vision.autofocus_manager import AutofocusManager
 from src.helpers.archiver import Archiver
@@ -40,6 +39,7 @@ from src.machine_vision.mosaic_manager import MosaicManager
 from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
+from src.helpers.media import load_sound, play_sound
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -207,6 +207,8 @@ class VideoStageManager(StageManager):
             self._drive_yratio = ya
 
         self._update_zoom(0)
+        
+        load_sound('shutter')
 
     def snapshot(self, path=None, name=None, auto=False):
         if path is None:

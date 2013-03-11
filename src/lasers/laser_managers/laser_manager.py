@@ -33,16 +33,24 @@ from src.paths import paths
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
-from src.lasers.laser_managers.extraction_device import IExtractionDevice
+#from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 from src.traits_editors.led_editor import LED, LEDEditor
+from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 
-class ILaserManager(IExtractionDevice):
+class ILaserManager(Interface):
     def trace_path(self, *args, **kw):
         pass
     def drill_point(self, *args, **kw):
         pass
+    def extract(self, *args, **kw):
+        pass
+    def end_extract(self, *args, **kw):
+        pass
+    def move_to_position(self, *args, **kw):
+        pass
+    
 class BaseLaserManager(Manager):
     implements(ILaserManager)
     pattern_executor = Instance(PatternExecutor)
@@ -143,7 +151,7 @@ class LaserManager(BaseLaserManager):
     power_calibration_manager = Instance(PowerCalibrationManager)
     laser_script_executor = Instance(LaserScriptExecutor)
 
-    # use_video = Bool(False)
+#    use_video = Bool(False)
     record_lasing_video = Bool(False)
     record_lasing_power = Bool(False)
 
@@ -173,18 +181,16 @@ class LaserManager(BaseLaserManager):
 # public interface
 #===============================================================================
     def bind_preferences(self, pref_id):
+        
         from apptools.preferences.preference_binding import bind_preference
-
         bind_preference(self, 'use_video', '{}.use_video'.format(pref_id))
         bind_preference(self, 'close_after_minutes', '{}.close_after'.format(pref_id))
         bind_preference(self, 'record_lasing_video', '{}.record_lasing_video'.format(pref_id))
         bind_preference(self, 'record_lasing_power', '{}.record_lasing_power'.format(pref_id))
-
         bind_preference(self, 'window_height', '{}.height'.format(pref_id))
         bind_preference(self, 'window_x', '{}.x'.format(pref_id))
         bind_preference(self, 'window_y', '{}.y'.format(pref_id))
         bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
-
         self.stage_manager.bind_preferences(pref_id)
 
     def set_xy(self, xy, velocity=None):
@@ -402,13 +408,13 @@ class LaserManager(BaseLaserManager):
         else:
 
             self.disable_laser()
-
+    
     def _use_video_changed(self):
         if not self.use_video:
             try:
                 self.stage_manager.video.shutdown()
-            except AttributeError:
-                pass
+            except AttributeError, e:
+                print e
 
         try:
             sm = self._stage_manager_factory(self.stage_args)
@@ -526,11 +532,10 @@ class LaserManager(BaseLaserManager):
     def _stage_manager_factory(self, args):
         self.stage_args = args
         if self.use_video:
-            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
             klass = VideoStageManager
         else:
             klass = StageManager
-
+            
         args['parent'] = self
         sm = klass(**args)
         return sm
