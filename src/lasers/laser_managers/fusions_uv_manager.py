@@ -37,6 +37,7 @@ from src.lasers.stage_managers.stage_map import UVStageMap
 from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
 from src.lasers.geometry import calc_point_along_line
 from src.traits_editors.led_editor import LEDEditor
+from src.paths import paths
 
 class FusionsUVManager(FusionsLaserManager):
     '''
@@ -85,7 +86,10 @@ class FusionsUVManager(FusionsLaserManager):
 
     _is_tracing = False
     _cancel_tracing = False
-
+    
+    dbname = paths.uvlaser_db
+    db_root = paths.uvlaser_db_root
+    
     def goto_named_position(self, pos):
         sm = self.stage_manager._stage_map
         if pos.startswith('p'):

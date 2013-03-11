@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 import os
-from pyglet import media, app
+from pyglet import media
 import time
 
 from src.paths import paths
@@ -23,6 +23,7 @@ from threading import Event, Thread
 def loop_sound(name):
     evt = Event()
     def loop():
+        from pyglet import app
         snd = load_sound(name)
         player = media.Player()
         player.queue(snd)
@@ -55,7 +56,7 @@ def load_sound(name):
     if os.path.isfile(sp):
         return media.load(sp, streaming=False)
 
-DEFAULT_SOUNDS = ['shutter']
-for di in DEFAULT_SOUNDS:
-    # load sound now so quickly available
-    load_sound('{}.wav'.format(di))
+#DEFAULT_SOUNDS = ['shutter']
+#for di in DEFAULT_SOUNDS:
+#    # load sound now so quickly available
+#    load_sound('{}.wav'.format(di))

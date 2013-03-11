@@ -167,9 +167,10 @@ class BaseDataCanvas(DataView):
         '''
         '''
         mapper = getattr(self, '{}_mapper'.format(mapper))
-        mapper.range.low_setting = limits[0] - pad
-        mapper.range.high_setting = limits[1] + pad
-        self.request_redraw()
+        if mapper is not None:
+            mapper.range.low_setting = limits[0] - pad
+            mapper.range.high_setting = limits[1] + pad
+            self.request_redraw()
 
     def get_mapper_limits(self, mapper):
         mapper = getattr(self, '{}_mapper'.format(mapper))
