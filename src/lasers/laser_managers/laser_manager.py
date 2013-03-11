@@ -37,7 +37,6 @@ from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 from src.traits_editors.led_editor import LED, LEDEditor
-from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 
 class ILaserManager(Interface):
     def trace_path(self, *args, **kw):
@@ -532,6 +531,7 @@ class LaserManager(BaseLaserManager):
     def _stage_manager_factory(self, args):
         self.stage_args = args
         if self.use_video:
+            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
             klass = VideoStageManager
         else:
             klass = StageManager
