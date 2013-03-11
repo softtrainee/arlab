@@ -44,6 +44,7 @@ def play_sound(name):
     snd = load_sound(name)
     if snd:
         snd.play()
+        del(snd)
 
 def load_sound(name):
     if not name.endswith('.wav'):

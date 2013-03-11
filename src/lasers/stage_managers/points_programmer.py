@@ -184,7 +184,7 @@ class PointsProgrammer(Manager):
 
             txt = dict()
             pts = [dict(identifier=pi.identifier,
-                      xy=[pi.x, pi.y]
+                      xy=[float(pi.x), float(pi.y)]
                       )
 
                  for pi in self.canvas.points]
@@ -194,7 +194,7 @@ class PointsProgrammer(Manager):
                 segments = []
                 for i, pi in enumerate(li.points):
                     v = li.velocity_segments[i / 2]
-                    segments.append(dict(xy=[pi.x, pi.y], velocity=v))
+                    segments.append(dict(xy=[float(pi.x), float(pi.y)], velocity=v))
                 lines.append(segments)
 
             txt['points'] = pts
@@ -228,7 +228,7 @@ class PointsProgrammer(Manager):
 
 #            self.canvas.save_points(p)
     def _get_program_points_label(self):
-        return 'Hide' if self.is_programming else 'Show'
+        return 'End Program' if self.is_programming else 'Program Positions'
 
     def _mode_default(self):
         return 'transect'  # 'point'

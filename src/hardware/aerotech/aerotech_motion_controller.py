@@ -43,7 +43,7 @@ class AerotechMotionController(MotionController):
         self._communicator.write_terminator = chr(13)
         self._communicator.read_delay = 25
         self.enable()
-        # self.home()
+#        self.home()
 #        for a in self.axes.itervalues():
 #            a.load_parameters()
 
@@ -104,16 +104,18 @@ class AerotechMotionController(MotionController):
             cmd = 'ILI X{} Y{} F{}'.format(nx, ny, xv)
 
         self.ask(cmd, handshake_only=True)
-        self.timer = self.timer_factory()
         if block:
+            self.timer = self.timer_factory()
             self.block()
+        else:
+            self.parent.canvas.set_stage_position(self._x_position, self._y_position)
 
     def set_single_axis_motion_parameters(self, axis=None, pdict=None):
         if pdict is not None:
             key = pdict['key']
             self.axes[key].velocity = pdict['velocity']
 
-    def single_axis_move(self, key, value, block=False):
+    def single_axis_move(self, key, value, block=False, **kw):
         '''
             unidex 511 5-50 Index
         '''
@@ -124,6 +126,17 @@ class AerotechMotionController(MotionController):
         if self._validate(value, nkey, cp) is not None:
             setattr(self, '_{}_position'.format(key), value)
             nv = value - cp
+#            if key == 'x':
+#                x = value
+#                y = self._y_position
+#                o = self._x_position
+#            else:
+#                x = self._x_position
+#                y = value
+#                o = self._y_position
+            x=self._x_position
+            y=self._y_position
+            self.parent.canvas.set_stage_position(x, y)
 
             nv = self._sign_correct(nv, key, ratio=False)
             cmd = 'IIN {}{} {}F{}'.format(name, nv, name, axis.velocity)
@@ -134,10 +147,12 @@ class AerotechMotionController(MotionController):
                 func = self._inprogress_update
 
             self.ask(cmd, handshake_only=True)
-            self.timer = self.timer_factory(func=func)
-
+            
             if block:
+                self.timer = self.timer_factory(func=func)
                 self.block()
+            else:
+                self.parent.canvas.set_stage_position(x, y)
 
     def enqueue_move(self, x, y, v):
         if self.xy_swapped():
@@ -254,7 +269,8 @@ class AerotechMotionController(MotionController):
         time.sleep(1)
         self.block()
         time.sleep(1)
-        self.linear_move(25, 25, sign_correct=False)
+        self.linear_move(25, 25,sign_correct=False)
+        time.sleep(1)
         self.block()
         self.define_home()
 

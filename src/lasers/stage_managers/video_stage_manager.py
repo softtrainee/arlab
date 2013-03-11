@@ -39,7 +39,6 @@ from src.machine_vision.mosaic_manager import MosaicManager
 from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
-from src.helpers.media import load_sound, play_sound
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -208,7 +207,8 @@ class VideoStageManager(StageManager):
 
         self._update_zoom(0)
         
-        load_sound('shutter')
+#        from src.helpers.media import load_sound
+#        load_sound('shutter')
 
     def snapshot(self, path=None, name=None, auto=False):
         if path is None:
@@ -223,9 +223,10 @@ class VideoStageManager(StageManager):
 
         if path:
             self.info('saving snapshot {}'.format(path))
+#            from src.helpers.media import play_sound
 
             # play camera shutter sound
-            play_sound('shutter.wav')
+#            play_sound('shutter.wav')
 
             if self.render_with_markup:
                 from chaco.plot_graphics_context import PlotGraphicsContext
@@ -255,7 +256,7 @@ class VideoStageManager(StageManager):
             for s in self._stage_maps:
                 s.dump_correction_file()
 
-        self.clean_video_archive()
+#        self.clean_video_archive()
 
     def clean_video_archive(self):
         if self.use_video_archiver:
