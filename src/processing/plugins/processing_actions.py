@@ -89,11 +89,13 @@ class ExportPDFFigureAction(ProcessingAction):
 #===============================================================================
 # display
 #===============================================================================
+import os
+ICON_PATH=os.path.join(os.path.dirname(__file__),'images')
 class NewSeriesAction(ProcessingAction):
     accelerator = 'Ctrl+k'
     def _image_default(self):
         im = ImageResource('series.gif',
-                           search_path=[paths.icons, ])
+                           search_path=[ICON_PATH])
         return im
     def perform(self, event):
         man = self._get_manager(event)
@@ -103,7 +105,7 @@ class NewIdeogramAction(ProcessingAction):
     accelerator = 'Ctrl+j'
     def _image_default(self):
         im = ImageResource('ideogram.gif',
-                           search_path=[paths.icons, ])
+                           search_path=[ICON_PATH])
         return im
 
     def perform(self, event):
@@ -113,7 +115,7 @@ class NewIdeogramAction(ProcessingAction):
 class NewSpectrumAction(ProcessingAction):
     def _image_default(self):
         im = ImageResource('spectrum.gif',
-                           search_path=[paths.icons, ])
+                           search_path=[ICON_PATH])
         return im
 
     accelerator = 'Ctrl+u'
@@ -125,7 +127,7 @@ class NewInverseIsochronAction(ProcessingAction):
     accelerator = 'Ctrl+i'
     def _image_default(self):
         im = ImageResource('isochron.gif',
-                           search_path=[paths.icons, ])
+                           search_path=[ICON_PATH])
         return im
     def perform(self, event):
         man = self._get_manager(event)

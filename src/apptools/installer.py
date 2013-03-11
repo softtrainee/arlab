@@ -186,7 +186,7 @@ class Installer(object):
                 shutil.copyfile(os.path.join(root, 'resources', name),
                             resource_path(name)
                             )
-
+            
             # move splash and about into place
             if version_name:
                 for ni, nd in (('splash', 'splashes'), ('about', 'abouts')):
