@@ -46,6 +46,9 @@ class Video(Image):
     _prev_frame = None
     _stop_recording_event = None
     _last_get = None
+    def is_open(self):
+        return self.cap is not None
+    
     def open(self, user=None, identifier=0, force=False):
         '''
 
@@ -89,15 +92,14 @@ class Video(Image):
   
         '''
         if force:
-            del(self.cap)
+            self.cap=None
             return
 
         if user in self.users:
             i = self.users.index(user)
             self.users.pop(i)
             if not self.users:
-                del(self.cap)
-
+                self.cap=None
 
     def set_frame_index(self, ind):
         cap = self.cap

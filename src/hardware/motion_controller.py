@@ -204,6 +204,7 @@ class MotionController(CoreDevice):
         if not self._moving_():
             self.timer.Stop()
             self.parent.canvas.clear_desired_position()
+            self.update_axes()
         else:
             x = self.get_current_position('x')
             y = self.get_current_position('y')
@@ -231,9 +232,14 @@ class MotionController(CoreDevice):
         if self.timer is not None:
             # timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
-
+        
+#        print func, self.timer
         time.sleep(0.25)
-        while func():
+        
+        a=func()
+        while a:
+            a=func()
+#            print a
             time.sleep(0.2)
 
         if event is not None:
