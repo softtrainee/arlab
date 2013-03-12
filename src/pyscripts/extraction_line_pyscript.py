@@ -70,34 +70,34 @@ class ExtractionLinePyScript(ValvePyScript):
 #===============================================================================
 # properties
 #===============================================================================
-#    @property
-#    def pattern(self):
-#        return self.get_context()['pattern']
+    @property
+    def pattern(self):
+        return self.get_context()['pattern']
+
+    @property
+    def analysis_type(self):
+        return self.get_context()['analysis_type']
 #
-#    @property
-#    def analysis_type(self):
-#        return self.get_context()['analysis_type']
+    @property
+    def extract_device(self):
+        return self.get_context()['extract_device']
 #
-#    @property
-#    def extract_device(self):
-#        return self.get_context()['extract_device']
+    @property
+    def tray(self):
+        return self.get_context()['tray']
 #
-#    @property
-#    def tray(self):
-#        return self.get_context()['tray']
+    @property
+    def position(self):
+        '''
+            if position is 0 return None
+        '''
+        pos = self.get_context()['position']
+        if pos:
+            return pos
 #
-#    @property
-#    def position(self):
-#        '''
-#            if position is 0 return None
-#        '''
-#        pos = self.get_context()['position']
-#        if pos:
-#            return pos
-#
-#    @property
-#    def extract_value(self):
-#        return self.get_context()['extract_value']
+    @property
+    def extract_value(self):
+        return self.get_context()['extract_value']
 #===============================================================================
 # commands
 #===============================================================================
@@ -152,8 +152,10 @@ class ExtractionLinePyScript(ValvePyScript):
     def move_to_position(self, position=''):
         if position == '':
             position = self.position
-
-        if position:
+            
+        print 'sdsdfsadf', position, self.extract
+        if position and all(position):
+#            print self.extract_device, 'asdfasfdasdf'
             self.info('{} move to position {}'.format(self.extract_device, position))
             success = self._manager_action([('move_to_position', (position,), {})
                                             ],

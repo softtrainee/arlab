@@ -33,23 +33,24 @@ from src.paths import paths
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.lasers.pattern.pattern_executor import PatternExecutor
 from src.lasers.power.power_calibration_manager import PowerCalibrationManager
-# from src.lasers.laser_managers.extraction_device import IExtractionDevice
+#from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 from src.traits_editors.led_editor import LED, LEDEditor
+from src.lasers.laser_managers.extraction_device import IExtractionDevice
 
-class ILaserManager(Interface):
+class ILaserManager(IExtractionDevice):
     def trace_path(self, *args, **kw):
         pass
     def drill_point(self, *args, **kw):
         pass
-    def extract(self, *args, **kw):
-        pass
-    def end_extract(self, *args, **kw):
-        pass
-    def move_to_position(self, *args, **kw):
-        pass
-
+#    def extract(self, *args, **kw):
+#        pass
+#    def end_extract(self, *args, **kw):
+#        pass
+#    def move_to_position(self, *args, **kw):
+#        pass
+    
 class BaseLaserManager(Manager):
     implements(ILaserManager)
     pattern_executor = Instance(PatternExecutor)
@@ -107,7 +108,9 @@ class BaseLaserManager(Manager):
 
         for pi in pos:
             self._move_to_position(pi)
-
+        
+        return True
+    
     def trace_path(self, *args, **kw):
         pass
     def drill_point(self, *args, **kw):
@@ -180,7 +183,7 @@ class LaserManager(BaseLaserManager):
 # public interface
 #===============================================================================
     def bind_preferences(self, pref_id):
-
+        
         from apptools.preferences.preference_binding import bind_preference
         bind_preference(self, 'use_video', '{}.use_video'.format(pref_id))
         bind_preference(self, 'close_after_minutes', '{}.close_after'.format(pref_id))
@@ -342,7 +345,7 @@ class LaserManager(BaseLaserManager):
 # views
 #===============================================================================
     def get_stage_group(self):
-        return Item('stage_manager', height=0.68, style='custom', show_label=False)
+        return Item('stage_manager', height=0.70, style='custom', show_label=False)
 
     def get_control_group(self):
         return VGroup()
@@ -407,7 +410,7 @@ class LaserManager(BaseLaserManager):
         else:
 
             self.disable_laser()
-
+    
     def _use_video_changed(self):
         if not self.use_video:
             try:
@@ -535,7 +538,7 @@ class LaserManager(BaseLaserManager):
             klass = VideoStageManager
         else:
             klass = StageManager
-
+            
         args['parent'] = self
         sm = klass(**args)
         return sm
