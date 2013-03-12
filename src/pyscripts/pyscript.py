@@ -562,7 +562,7 @@ class PyScript(Loggable):
     def _manager_action(self, func, name=None, protocol=None, *args, **kw):
 #        man = self._get_manager()
         man = self.manager
-
+        
         if protocol is not None and man is not None:
             app = man.application
             if app is not None:
@@ -572,7 +572,6 @@ class PyScript(Loggable):
 
                 man = app.get_service(*args)
 
-#        print man, manager, 'sadf'
         if man is not None:
             if not isinstance(func, list):
                 func = [(func, args, kw)]

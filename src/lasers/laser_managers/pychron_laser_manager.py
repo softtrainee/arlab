@@ -399,7 +399,7 @@ class PychronUVLaserManager(PychronLaserManager):
         pass
 
     def _move_to_position(self, pos):
-
+        
         cmd = 'GoToPoint'
         if isinstance(pos, (str, unicode)):
             if not pos:
