@@ -26,8 +26,10 @@ from sqlalchemy.sql.expression import and_
 
 def compile_query(query):
     from sqlalchemy.sql import compiler
-    from MySQLdb.converters import conversions, escape
-
+    try:
+        from MySQLdb.converters import conversions, escape
+    except ImportError:
+        return 'no sql conversion available'
     dialect = query.session.bind.dialect
     statement = query.statement
     comp = compiler.SQLCompiler(dialect, statement)

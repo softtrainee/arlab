@@ -114,7 +114,7 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def baselines(self, ncounts=1, cycles=5, mass=None, detector='', settling_time=4, calc_time=False):
+    def baselines(self, ncounts=1, cycles=5, mass=None, detector='', peak_hop=False, settling_time=4, calc_time=False):
         '''
             if detector is not none then it is peak hopped
         '''
@@ -134,6 +134,7 @@ class MeasurementPyScript(ValvePyScript):
         if not self._automated_run_call('py_baselines', ncounts, self._time_zero,
                                mass,
                                detector,
+                               peak_hop=peak_hop,
                                settling_time=settling_time,
                                series=self._series_count,
                                nintegrations=cycles):
