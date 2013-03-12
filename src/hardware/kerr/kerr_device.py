@@ -103,12 +103,12 @@ class KerrDevice(ConfigLoadable):
     def _calc_checksum(self, cmd):
         '''
         '''
-        sum = 0
+        s = 0
         for i in range(0, len(cmd), 2):
             bit = cmd[i:i + 2]
-            sum += int(bit, 16)
+            s += int(bit, 16)
 
-        r = '%02X' % sum
+        r = '%02X' % s
         return r[-2:]
 
     def _check_bits(self, bits):

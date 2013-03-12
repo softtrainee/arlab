@@ -140,8 +140,12 @@ class PointsProgrammer(Manager):
         self.canvas.new_line = True
 
     def _accept_point_fired(self):
+        radius = 0.05  # mm or 50 um
+        mask = self.stage_manager.parent.get_motor('mask')
+        if mask:
+            radius = mask.get_discrete_value()
 
-        ptargs = dict(radius=0.05, vline_length=0.1, hline_length=0.1)
+        ptargs = dict(radius=radius, vline_length=0.1, hline_length=0.1)
 
         if not self.canvas.point_exists():
             if self.mode == 'line':

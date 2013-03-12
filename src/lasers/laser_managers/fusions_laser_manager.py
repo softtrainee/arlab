@@ -105,7 +105,10 @@ class FusionsLaserManager(LaserManager):
 
     chiller = Any
 
-
+    @on_trait_change('laser_controller:refresh_canvas')
+    def refresh_canvas(self):
+        if self.stage_manager:
+            self.stage_manager.canvas.request_redraw()
 #===============================================================================
 #   IExtractionDevice interface
 #===============================================================================

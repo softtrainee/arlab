@@ -101,7 +101,7 @@ class LaserTrayCanvas(MapCanvas):
     use_zoom = False
 
     beam_radius = Float(0)
-    crosshairs_kind = Enum('BeamRadius', 'UserRadius')
+    crosshairs_kind = Enum('BeamRadius', 'UserRadius', 'MaskRadius')
     crosshairs_color = Color('maroon')
     crosshairs_offset_color = Color('blue')
 
@@ -360,11 +360,11 @@ class LaserTrayCanvas(MapCanvas):
     def change_indicator_visibility(self):
         self.request_redraw()
 
-    @on_trait_change('parent:parent:beam')
-    def set_beam_radius(self, obj, name, old, new):
-        if new:
-            self.beam_radius = new / 2.0
-            self.request_redraw()
+#    @on_trait_change('parent:parent:beam')
+#    def set_beam_radius(self, obj, name, old, new):
+#        if new:
+#            self.beam_radius = new / 2.0
+#            self.request_redraw()
 
     def valid_position(self, x, y):
         '''
@@ -559,9 +559,13 @@ class LaserTrayCanvas(MapCanvas):
 
         if self.crosshairs_kind == 'BeamRadius':
             r = self.beam_radius
+        elif self.crosshairs_kind == 'MaskRadius':
+            mask = self.parent.parent.get_motor('mask')
+            r = 0
+            if mask is not None:
+                r = mask.get_discrete_value()
         else:
             r = self.crosshairs_radius
-
 
         if r:
             r = self._get_wh(r, 0)[0]

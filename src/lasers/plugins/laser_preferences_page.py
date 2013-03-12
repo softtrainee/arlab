@@ -36,8 +36,10 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     show_desired_position = Bool(True)
     show_map = Bool(False)
 
-    crosshairs_kind = Enum('BeamRadius', 'UserRadius')
+    crosshairs_kind = Enum('BeamRadius', 'UserRadius', 'MaskRadius')
     crosshairs_color = Color('maroon')
+    crosshairs_radius = Range(0.0, 4.0, 1.0)
+
     desired_position_color = Color('green')
     calibration_style = Enum('MassSpec', 'pychron-auto')
     scaling = Range(1.0, 2.0, 1)
@@ -120,6 +122,9 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                      enabled_when='show_desired_position'),
                Item('crosshairs_kind', label='Crosshairs',
                      enabled_when='show_laser_position'),
+               Item('crosshairs_radius',
+                    visible_when='crosshairs_kind=="UserRadius"'
+                    ),
                Item('crosshairs_color', enabled_when='show_laser_position'),
                Item('crosshairs_offset'),
                Item('crosshairs_offset_color', show_label=False,
