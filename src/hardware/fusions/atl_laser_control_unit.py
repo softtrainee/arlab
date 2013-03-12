@@ -214,6 +214,7 @@ class ATLLaserControlUnit(CoreDevice):
         self._send_command(cmd)
 #        self.ask('A'+ENQ)
         self._enabled = True
+        
 
     def laser_off(self):
         '''
@@ -326,17 +327,18 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         # energy and pressure_readback
         vs = self._send_query(8, 4, verbose=False)
+#        print vs
 #        vs=self._send_query(30, 2, verbose=False)
         if vs is not None:
-#            print vs
             vs = self._parse_response(vs, 4)
+#            print vs
             if vs is not None:
                 self.energy_readback = vs[0] / 10.
                 self.pressure_readback = vs[1]
                 self.status_readback = STATUS[vs[2]]
                 self.action_readback = ACTION[vs[3]]
 
-        time.sleep(0.1)
+#        time.sleep(0.1)
 #        vs=self._send_query(12, 1, verbose=False)
 #        if vs is not None:
 #            vs=self._parse_response(vs, 1)
@@ -468,7 +470,7 @@ class ATLLaserControlUnit(CoreDevice):
                 return r[8:-2]
 
     def _parse_response(self, resp, l):
-#        print resp, l, len(resp)==l*4
+#        print resp, l, len(resp),l*4
         if resp is not None and len(resp) == l * 4:
             return [int(resp[i:i + 4], 16) for i in range(0, len(resp) - 3, 4)]
 

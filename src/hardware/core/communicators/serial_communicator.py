@@ -389,7 +389,7 @@ class SerialCommunicator(Communicator):
         return self._read_loop(func, delay, timeout)
 
     def _read_handshake(self, handshake, handshake_only, timeout=1, delay=None):
-        def hfunc(pr):
+        def hfunc(r):
             terminated = False
             ack, r = self._check_handshake(handshake)
             if handshake_only and ack:
@@ -398,7 +398,10 @@ class SerialCommunicator(Communicator):
             elif ack and r is not None:
                 terminated = True
             return r, terminated
+        
         return self._read_loop(hfunc, delay, timeout)
+#        r=self._read_loop(hfunc, delay, timeout)
+#        r=
 
     def _read_terminator(self, timeout=1, delay=None,
               terminator=None):
@@ -466,14 +469,13 @@ class SerialCommunicator(Communicator):
         inw = handle.inWaiting()
         c = min(inw, nchars - len(r))
         r += handle.read(c)
-#        print r, len(r), nchars
         # print 'get n',len(r),nchars, self._prep_str(r),len(r)==nchars
-        return r, len(r) >= nchars
+        return r[:nchars], len(r) >= nchars
 
     def _check_handshake(self, handshake_chrs):
         ack, nak = handshake_chrs
         inw = self.handle.inWaiting()
-        r = self.handle.read(inw)
+        r=self.handle.read(inw)
         if r:
             return ack == r[0], r[1:]
         return False, None
@@ -524,13 +526,12 @@ class SerialCommunicator(Communicator):
             # print func
             try:
                 r, isterminated = func(r)
-#                print r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):
                 import traceback
                 traceback.print_exc()
-            time.sleep(0.005)
+            time.sleep(0.01)
             ct = time.time()
 
         if ct - st > timeout:

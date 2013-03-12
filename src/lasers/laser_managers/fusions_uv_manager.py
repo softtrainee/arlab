@@ -38,6 +38,7 @@ from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecuto
 from src.lasers.geometry import calc_point_along_line
 from src.traits_editors.led_editor import LEDEditor
 from src.paths import paths
+from threading import Thread
 
 class FusionsUVManager(FusionsLaserManager):
     '''
@@ -123,31 +124,65 @@ class FusionsUVManager(FusionsLaserManager):
         self._cancel_tracing = True
 
     def trace_path(self, value, pathname, kind):
+        
         if kind == 'continuous':
-            self._continuous_trace_path(value, pathname)
+            func=self._continuous_trace_path
+#            self._continuous_trace_path(value, pathname)
         else:
-            self._step_trace_path(value, pathname)
+            func=self._step_trace_path
+#            self._step_trace_path(value, pathname)
+        self._is_tracing=True
+        self._cancel_tracing = False
 
+        t=Thread(target=func,args=(value, pathname))
+        t.start()
+        return 'OK'
+    
     def _continuous_trace_path(self, value, path, mode='normal'):
-        if mode=='smooth':
+        if mode=='normal':
             atl = self.atl_controller
-            sm = self.stage_manager._stage_map
-
-            line = sm.get_line(path)
-            pts=line.points
-            pt=pts[0]
-            self.stage_manager.set_z(pt.z, block=True)
-            self.stage_manager.linear_move(pt.x, pt.y, block=True)
+            atl.set_burst_mode(False)
+            sm=self.stage_manager
+            smap = sm._stage_map
+            print 'path',path
+            line = smap.get_line(path)
+            print line
+            
+            seg=line[0]
+            x,y=seg['xy']
+            z=seg['z']
+            sm.set_z(z, block=True)
+            sm.linear_move(x, y, block=True)
             atl.laser_run()
-            for pi in pts[1:]:
-                self.stage_manager.set_z(pi.z, block=False)
-                self.linear_move(pi.x, pi.y, update_hole=False,
-                                       use_calibration=False,
-                                       block=True)
+            for si in line[1:]:
+                if self._cancel_tracing:
+                    break
+                
+                x,y=si['xy']
+                z=si['z']
+                v=si['velocity']
+                sm.set_z(z, block=False)
+                sm.linear_move(x, y,
+                                               velocity=v, 
+                                               update_hole=False,
+                                               use_calibration=False,
+                                               block=True)
             atl.laser_stop()
+                
+#            pts=line.points
+#            pt=pts[0]
+#            self.stage_manager.set_z(pt.z, block=True)
+#            self.stage_manager.linear_move(pt.x, pt.y, block=True)
+#            atl.laser_run()
+#            for pi in pts[1:]:
+#                self.stage_manager.set_z(pi.z, block=False)
+#                self.linear_move(pi.x, pi.y, update_hole=False,
+#                                       use_calibration=False,
+#                                       block=True)
+#            atl.laser_stop()
         else:
-            sm = self.stage_manager._stage_map
-            line = sm.get_line(path)
+            smap = self.stage_manager._stage_map
+            line = smap.get_line(path)
             points = line.points
             pt = points[0]
             self.stage_manager.linear_move(pt.x, pt.y, block=True)
@@ -166,7 +201,8 @@ class FusionsUVManager(FusionsLaserManager):
     
             controller.set_program_mode('relative')
             controller.set_smooth_transitions(False)
-        
+            
+        self._is_tracing=False
 
     def _step_trace_path(self, value, path):
         def step_func(x, y):
@@ -184,8 +220,8 @@ class FusionsUVManager(FusionsLaserManager):
         x1, y1 = pt.x, pt.y
         # move to first point
         step_func(x1, y1)
-        self._is_tracing = True
-        self._cancel_tracing = False
+#        self._is_tracing = True
+#        self._cancel_tracing = False
         for pi in points[1:]:
             x2, y2 = pi.x, pi.y
             # step along line until cp >=pi
