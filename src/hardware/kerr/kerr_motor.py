@@ -241,6 +241,9 @@ class KerrMotor(KerrDevice):
 
         self._execute_hex_commands(cmds)
 
+    def is_moving(self):
+        return self.enabled == False
+
     def block(self, n=3, tolerance=1, progress=None):
         '''
         '''

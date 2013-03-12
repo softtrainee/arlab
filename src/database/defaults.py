@@ -17,6 +17,7 @@ from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 import struct
 import os
 from src.paths import paths
+from pyface.message_dialog import warning
 
 
 def load_isotopedb_defaults(db):
@@ -51,20 +52,23 @@ def load_isotopedb_defaults(db):
 
 
     mdir = os.path.join(paths.setup_dir, 'irradiation_tray_maps')
+    if not os.path.isdir(mdir):
+        warning(None, 'No irradiation_tray_maps directory. add to .../setupfiles')
 
-    for t in os.listdir(mdir):
-        if t.startswith('.'):
-            continue
-        p = os.path.join(mdir, t)
-        if not os.path.isfile(p):
-            continue
+    else:
+        for t in os.listdir(mdir):
+            if t.startswith('.'):
+                continue
+            p = os.path.join(mdir, t)
+            if not os.path.isfile(p):
+                continue
 
-        with open(p, 'r') as f:
-            h = f.readline()
-            nholes, _diam = h.split(',')
-            nholes = int(nholes)
-            holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
-            blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
-            db.add_irradiation_holder(t, geometry=blob)
+            with open(p, 'r') as f:
+                h = f.readline()
+                nholes, _diam = h.split(',')
+                nholes = int(nholes)
+                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
+                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+                db.add_irradiation_holder(t, geometry=blob)
     db.commit()
 

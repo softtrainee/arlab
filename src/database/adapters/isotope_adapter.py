@@ -737,7 +737,8 @@ class IsotopeAdapter(DatabaseAdapter):
         return self._retrieve_items(flux_MonitorTable, **kw)
 
     def get_irradiations(self, **kw):
-        return self._retrieve_items(irrad_IrradiationTable, **kw)
+#        return self._retrieve_items(irrad_IrradiationTable, order=irrad_IrradiationTable.name, ** kw)
+        return self._retrieve_items(irrad_IrradiationTable, order=irrad_IrradiationTable.name.desc(), ** kw)
 
     def get_irradiation_productions(self, **kw):
         return self._retrieve_items(irrad_ProductionTable, **kw)

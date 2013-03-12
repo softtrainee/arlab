@@ -62,6 +62,7 @@ class FusionsLogicBoard(CoreDevice):
 
     motors = List
     _test_comms = True
+    has_pointer = True
 
     def initialize(self, *args, **kw):
         '''
@@ -84,7 +85,8 @@ class FusionsLogicBoard(CoreDevice):
                     os._exit(0)
 
         # turn off pointer
-        self.set_pointer_onoff(False)
+        if self.has_pointer:
+            self.set_pointer_onoff(False)
 
         # initialize Kerr devices
         self.motor_microcontroller.initialize(*args, **kw)
