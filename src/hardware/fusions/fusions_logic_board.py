@@ -426,7 +426,7 @@ class FusionsLogicBoard(CoreDevice):
         return Group(Item('motors', style='custom',
                           height= -100,
                           editor=ListEditor(mutable=False,
-                                      columns=max(1, len(self.motors) / 2),
+                                      columns=max(1, int(round(len(self.motors) / 2.))),
                                       style='custom',
                                       editor=InstanceEditor(view='control_view')),
 

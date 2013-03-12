@@ -676,14 +676,14 @@ class PolyLine(MarkupItem):
     lines = List
     identifier = Str
 #    start_point=None
-    def __init__(self, x, y, identifier='', **kw):
+    def __init__(self, x, y, z=0, identifier='', **kw):
         super(PolyLine, self).__init__(x, y, **kw)
 #        self.start_point=PointIndicator(x,y, **kw)
         self.identifier = identifier
-        self.points.append(PointIndicator(x, y, identifier=identifier, **kw))
+        self.points.append(PointIndicator(x, y, z=z, identifier=identifier, **kw))
 
-    def add_point(self, x, y, point_color=(1, 0, 0), line_color=(1, 0, 0)):
-        p2 = Dot(x, y, canvas=self.canvas, default_color=point_color)
+    def add_point(self, x, y, z=0, point_color=(1, 0, 0), line_color=(1, 0, 0)):
+        p2 = Dot(x, y, z=z,canvas=self.canvas, default_color=point_color)
 
         p1 = self.points[-1]
         self.lines.append(Line(p1, p2, default_color=line_color))

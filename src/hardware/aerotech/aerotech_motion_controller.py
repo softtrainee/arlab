@@ -152,6 +152,9 @@ class AerotechMotionController(MotionController):
                 self.timer = self.timer_factory(func=func)
                 self.block()
             else:
+                if name=='Z':
+                    self.z_progress=value
+                    
                 self.parent.canvas.set_stage_position(x, y)
 
     def enqueue_move(self, x, y, v):
@@ -274,7 +277,7 @@ class AerotechMotionController(MotionController):
         self.block()
         self.define_home()
 
-    def stop(self):
+    def stop(self, **kw):
         '''
             unidex 511 5-13 Abort
         '''

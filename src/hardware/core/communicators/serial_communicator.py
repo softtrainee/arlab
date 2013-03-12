@@ -457,7 +457,7 @@ class SerialCommunicator(Communicator):
 #            d = 1 / 1000.
 #            time.sleep(d)
 #            tt += d
-        return r, len(r) >= nchars
+        return r[:nchars], len(r) >= nchars
 
     def _get_nchars(self, nchars, r):
         '''

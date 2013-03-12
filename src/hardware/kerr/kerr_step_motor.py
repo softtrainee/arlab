@@ -18,6 +18,7 @@
 from traits.api import CInt, Str, Bool, Dict, Float, HasTraits, Any
 from traitsui.api import View, Item, EnumEditor, RangeEditor, Label, Group
 from src.traits_editors.custom_label_editor import CustomLabel
+from src.hardware.core.data_helper import make_bitarray
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -264,6 +265,15 @@ class KerrStepMotor(KerrMotor):
         '''
 
         return int('00010010', 2)
+    
+    def _moving(self, verbose=True):
+        status_byte = self.read_defined_status(verbose=verbose)
+
+        if status_byte == 'simulation':
+            status_byte = 'DFDF'
+
+        status_register = map(int, make_bitarray(int(status_byte[:2], 16)))
+        return status_register[7]
 
     def control_view(self):
         v = View(

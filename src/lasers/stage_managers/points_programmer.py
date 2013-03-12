@@ -46,9 +46,13 @@ class PointsProgrammer(Manager):
 
     def _set_line_entry(self, v):
         pts = self.canvas.lines
+        self.point=None
         pp = next((pi for pi in pts if pi.identifier == str(v)), None)
         if pp is not None:
             self.line = pp
+        else:
+            self.line=None
+
 
     def _get_line_entry(self):
         p = ''
@@ -57,10 +61,13 @@ class PointsProgrammer(Manager):
         return p
 
     def _set_point_entry(self, v):
+        self.line=None
         pts = self.canvas.points
         pp = next((pi for pi in pts if pi.identifier == str(v)), None)
         if pp is not None:
             self.point = pp
+        else:
+            self.point=None
 
     def _get_point_entry(self):
         p = ''
@@ -72,7 +79,6 @@ class PointsProgrammer(Manager):
 #===============================================================================
     def _show_hide_fired(self):
         canvas = self.canvas
-        print self.is_visible
         if self.is_visible:
             canvas.remove_point_overlay()
             canvas.remove_line_overlay()
@@ -144,8 +150,11 @@ class PointsProgrammer(Manager):
         mask = self.stage_manager.parent.get_motor('mask')
         if mask:
             radius = mask.get_discrete_value()
-
-        ptargs = dict(radius=radius, vline_length=0.1, hline_length=0.1)
+        
+        sm = self.stage_manager
+        ptargs = dict(radius=radius, 
+                      z=sm.get_z(),
+                      vline_length=0.1, hline_length=0.1)
 
         if not self.canvas.point_exists():
             if self.mode == 'line':
@@ -160,9 +169,8 @@ class PointsProgrammer(Manager):
                                                **ptargs
                                                )
             else:
-                sm = self.stage_manager
                 npt = self.canvas.new_point(default_color=self.point_color,
-                                            z=sm.get_z(),
+                                            
                                             ** ptargs)
 
                 self.info('added point {}:{:0.5f},{:0.5f} z={:0.5f}'.format(npt.identifier, npt.x, npt.y, npt.z))
@@ -179,19 +187,22 @@ class PointsProgrammer(Manager):
         canvas.lines = []
         canvas.points = []
 
-        ptargs = dict(radius=0.05, vline_length=0.1, hline_length=0.1)
+        ptargs = dict(radius=0.05, 
+                      vline_length=0.1, hline_length=0.1)
         for li in sm.lines:
-            canvas.new_line = True
+            canvas._new_line = True
             for si in li:
                 canvas.new_line_point(xy=si['xy'],
+                                      z=si['z'],
                                       point_color=self.point_color,
                                        line_color=self.point_color,
                                        velocity=si['velocity'],
                                        **ptargs)
-            canvas.new_line = True
+            canvas._new_line = True
 
         for pi in sm.points:
             canvas.new_point(xy=pi['xy'],
+                             z=pi['z'],
                              default_color=self.point_color,
                                     **ptargs)
 
@@ -223,7 +234,9 @@ class PointsProgrammer(Manager):
                 segments = []
                 for i, pi in enumerate(li.points):
                     v = li.velocity_segments[i / 2]
-                    segments.append(dict(xy=[float(pi.x), float(pi.y)], velocity=v))
+                    segments.append(dict(xy=[float(pi.x), float(pi.y)], 
+                                         z=float(pi.z),
+                                         velocity=v))
                 lines.append(segments)
 
             txt['points'] = pts
