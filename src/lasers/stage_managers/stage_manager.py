@@ -94,6 +94,7 @@ class StageManager(Manager):
 
     hole_thread = None
     point_thread = None
+    line_thread = None
 
     hole = String(enter_set=True, auto_set=False)
 #    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
@@ -268,6 +269,9 @@ class StageManager(Manager):
         self._move_to_hole(hole, **kw)
 
     def move_to_point(self, pt):
+        if pt is None:
+            return
+        
         if self.point_thread is not None:
             self.stage_controller.stop()
 
@@ -277,7 +281,16 @@ class StageManager(Manager):
 #        self._move_to_point(pt)
 
     def move_polyline(self, line):
-        self._move_polyline(line)
+        if line is None:
+            return 
+        
+        if self.line_thread is not None:
+            self.stage_controller.stop()
+
+        self.line_thread = Thread(name='stage.move_to_point',
+                                      target=self._move_polyline, args=(line,))
+        self.line_thread.start()
+#        self._move_polyline(line)
 
     def set_x(self, value, **kw):
         return self.stage_controller.single_axis_move('x', value, **kw)
@@ -481,10 +494,17 @@ class StageManager(Manager):
         return sm.get_hole(key)
 
     def _move_polyline(self, line):
-        for pi in line.points:
-            self.linear_move(pi.x, pi.y, update_hole=False,
+        pts=line.points
+        self.linear_move(pts[0].x, pts[0].y, 
+                             update_hole=False,
                                    use_calibration=False,
                                    block=True)
+        for pi,vi in zip(pts[1:], line.velocity_segments):
+            self.linear_move(pi.x, pi.y, 
+                             velocity=vi,
+                                 update_hole=False,
+                                       use_calibration=False,
+                                       block=True)
 
 
     def _move_to_point(self, pt):

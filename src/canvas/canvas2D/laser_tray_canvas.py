@@ -235,7 +235,7 @@ class LaserTrayCanvas(MapCanvas):
 #                           point_color=point_color)
 
 
-    def new_line_point(self, xy=None, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
+    def new_line_point(self, xy=None,z=0, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
         if xy is None:
             xy = self._stage_position
 
@@ -243,7 +243,7 @@ class LaserTrayCanvas(MapCanvas):
             kw['identifier'] = str(len(self.lines) + 1)
             kw['canvas'] = self
 
-            line = VelocityPolyLine(*xy,
+            line = VelocityPolyLine(*xy,z=z,
                           default_color=point_color,
                           **kw
                           )
@@ -254,6 +254,7 @@ class LaserTrayCanvas(MapCanvas):
             line = self.lines[-1]
             line.velocity_segments.append(velocity)
             line.add_point(*xy,
+                           z=z,
                            line_color=line_color,
                            point_color=point_color)
 #        pid='point{}'.format(len(line))

@@ -93,7 +93,6 @@ class KerrCircularStepMotor(KerrStepMotor):
 #        a = self._float_to_hexstr(self.home_acceleration)
         v = '{:02x}'.format(int(self.home_velocity))
         a = '{:02x}'.format(int(self.home_acceleration))
-
         move_cmd = ''.join((cmd, control, v, a))
 
         cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
