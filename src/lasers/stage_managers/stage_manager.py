@@ -221,6 +221,18 @@ class StageManager(Manager):
 #        self.canvas.set_mapper_limits('y', y_range)
 
 
+    def add_stage_map(self, v):
+        sm = self.stage_map_klass(file_path=v)
+        psm = self._get_stage_map_by_name(sm.name)
+        if psm:
+            self._stage_maps.remove(psm)
+
+        self._stage_maps.append(sm)
+#        print v, psm
+#        print self.stage_maps
+#        print self._stage_maps
+
+
     def set_stage_map(self, v):
         return self._set_stage_map(v)
 
@@ -476,8 +488,13 @@ class StageManager(Manager):
 
     def _move_to_point(self, pt):
         pos = pt.x, pt.y
-        self.info('Move to point {}'.format(pt.identifier))
+
+        self.info('Move to point {}: {:0.5f},{:0.5f},{:0.5f}'.format(pt.identifier,
+                                                                     pt.x, pt.y, pt.z))
         self.stage_controller.linear_move(block=True, *pos)
+
+        if hasattr(pt, 'z'):
+            self.stage_controller.set_z(pt.z, block=True)
 
         self._move_to_point_hook()
 
@@ -927,9 +944,10 @@ class StageManager(Manager):
 
     def _points_programmer_default(self):
         pp = PointsProgrammer(canvas=self.canvas,
-                            _stage_maps=self._stage_maps,
-                            stage_map_klass=self.stage_map_klass
-                            )
+#                              _stage_maps=self._stage_maps,
+                              stage_map_klass=self.stage_map_klass,
+                              stage_manager=self,
+                              )
         pp.on_trait_change(self.move_to_point, 'point')
         pp.on_trait_change(self.move_polyline, 'line')
         return pp

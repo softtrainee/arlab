@@ -303,13 +303,13 @@ host={}'.format(self.name, self.username, self.host))
                     if ji != table:
                         q = q.join(ji)
 
-            if filters:
+            if filters is not None:
                 for fi in filters:
                     q = q.filter(fi)
-            if order:
+            if order is not None:
                 q = q.order_by(order)
 
-            if limit:
+            if limit is not None:
                 q = q.limit(limit)
             return q.all()
 

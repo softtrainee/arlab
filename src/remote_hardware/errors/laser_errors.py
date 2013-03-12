@@ -70,3 +70,11 @@ class SetpointErrorCode(ErrorCode):
         self.msg = self.msg.format(sh)
         super(SetpointErrorCode, self).__init__(*args, **kw)
 
+@generate_code
+class InvalidMotorErrorCode(ErrorCode):
+    msg = 'not motor named {} available'
+
+    def __init__(self, sh, *args, **kw):
+        self.msg = self.msg.format(sh)
+        super(InvalidMotorErrorCode, self).__init__(*args, **kw)
+

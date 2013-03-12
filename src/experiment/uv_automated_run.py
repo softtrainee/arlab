@@ -15,22 +15,38 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Str, Enum , Property, List
-from traitsui.api import View, Item, VGroup
+from traits.api import HasTraits, Int, Str, Enum , Property, List, cached_property
+from traitsui.api import View, Item, VGroup, EnumEditor
 from src.experiment.automated_run import AutomatedRun
 from src.constants import NULL_STR
+import os
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class UVAutomatedRun(AutomatedRun):
     reprate = Int
     mask = Str
+    masks = Property
     attenuator = Str
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
+
+    def _get_masks(self):
+        p = os.path.join(paths.device_dir, 'masks')
+        masks = []
+        with open(p, 'r') as fp:
+            for lin in fp:
+                lin = lin.strip()
+                if lin or lin.startswith('#'):
+                    continue
+                masks.append(lin)
+
+        return masks
+
     def _get_supplemental_extract_group(self):
         g = VGroup(Item('reprate'),
-                   Item('mask'),
+                   Item('mask', editor=EnumEditor(name='masks')),
                    Item('attenuator'),
                    label='UV'
                    )

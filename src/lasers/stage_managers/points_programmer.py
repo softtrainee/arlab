@@ -13,12 +13,17 @@ from src.managers.manager import Manager
 '''
 class PointsProgrammer(Manager):
 
+    stage_manager = Any
     canvas = Any
     program_points = Event
+    show_hide = Event
     is_programming = Bool
+    is_visible = Bool
     finish = Button
 
     program_points_label = Property(depends_on='is_programming')
+    show_hide_label = Property(depends_on='is_visible')
+
     load_points = Button
     save_points = Button
     clear = Button
@@ -27,7 +32,8 @@ class PointsProgrammer(Manager):
                     )
     accept_point = Button
     stage_map_klass = Any
-    mode = Enum('transect', 'point', 'line')
+#    mode = Enum('transect', 'point', 'line')
+    mode = Enum('point', 'line', 'transect')
 
     point_color = Color('green')
 
@@ -64,6 +70,19 @@ class PointsProgrammer(Manager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _show_hide_fired(self):
+        canvas = self.canvas
+        print self.is_visible
+        if self.is_visible:
+            canvas.remove_point_overlay()
+            canvas.remove_line_overlay()
+        else:
+            canvas.add_point_overlay()
+            canvas.add_line_overlay()
+
+        canvas.request_redraw()
+        self.is_visible = not self.is_visible
+
     def _transect_step_changed(self):
         if self.transect_step:
             self.canvas.set_transect_step(self.transect_step)
@@ -98,14 +117,17 @@ class PointsProgrammer(Manager):
     def _program_points_fired(self):
         if self.is_programming:
             self.is_programming = False
+            self.is_visible = False
             self.canvas.remove_point_overlay()
             self.canvas.remove_line_overlay()
         else:
             self.is_programming = True
+            self.is_visible = True
 
             self.canvas.add_point_overlay()
             self.canvas.add_line_overlay()
 
+        self.canvas.request_redraw()
 #        if not self.canvas.markup:
 #            self.canvas.tool_state = 'point'
 #        else:
@@ -118,7 +140,9 @@ class PointsProgrammer(Manager):
         self.canvas.new_line = True
 
     def _accept_point_fired(self):
+
         ptargs = dict(radius=0.05, vline_length=0.1, hline_length=0.1)
+
         if not self.canvas.point_exists():
             if self.mode == 'line':
                 self.canvas.new_line_point(point_color=self.point_color,
@@ -132,9 +156,12 @@ class PointsProgrammer(Manager):
                                                **ptargs
                                                )
             else:
+                sm = self.stage_manager
                 npt = self.canvas.new_point(default_color=self.point_color,
-                                            **ptargs)
-                self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
+                                            z=sm.get_z(),
+                                            ** ptargs)
+
+                self.info('added point {}:{:0.5f},{:0.5f} z={:0.5f}'.format(npt.identifier, npt.x, npt.y, npt.z))
 
     def load_stage_map(self, sm):
         if not (hasattr(sm, 'lines') and hasattr(sm, 'points')):
@@ -164,6 +191,7 @@ class PointsProgrammer(Manager):
                              default_color=self.point_color,
                                     **ptargs)
 
+        self.is_visible = True
         canvas.invalidate_and_redraw()
 
     def _load_points_fired(self):
@@ -172,8 +200,6 @@ class PointsProgrammer(Manager):
             sm = self.stage_map_klass(file_path=p)
             self.load_stage_map(sm)
             self.is_programming = True
-
-#            self.canvas.load_points_file(p)
 
     def _save_points_fired(self):
         p = self.save_file_dialog(default_directory=paths.user_points_dir)
@@ -184,10 +210,9 @@ class PointsProgrammer(Manager):
 
             txt = dict()
             pts = [dict(identifier=pi.identifier,
-                      xy=[float(pi.x), float(pi.y)]
-                      )
-
-                 for pi in self.canvas.points]
+                        z=float(pi.z),
+                        xy=[float(pi.x), float(pi.y)]
+                        ) for pi in self.canvas.points]
 
             lines = []
             for li in self.canvas.lines:
@@ -221,17 +246,19 @@ class PointsProgrammer(Manager):
 #                                                                v))
 #                    f.write('\n')
 
-            sm = self.stage_map_klass(file_path=p)
-#
-            self._stage_maps.append(sm)
-
-
+#            sm = self.stage_map_klass(file_path=p)
+#            self._stage_maps.append(sm)
 #            self.canvas.save_points(p)
+            self.stage_manager.add_stage_map(p)
+
     def _get_program_points_label(self):
         return 'End Program' if self.is_programming else 'Program Positions'
 
+    def _get_show_hide_label(self):
+        return 'Hide' if self.is_visible else 'Show'
+
     def _mode_default(self):
-        return 'transect'  # 'point'
+        return 'point'
 
     def _clear_mode_default(self):
         return 'all'
@@ -244,11 +271,16 @@ class PointsProgrammer(Manager):
                        Group(
 
                              Item('mode'),
-                             Item('trace_velocity'),
-                             Item('transect_step'),
+                             Item('trace_velocity', visible_when='mode=="line"'),
+                             Item('transect_step', visible_when='mode=="transect"'),
                              Item('point_color', show_label=False),
-                             Item('program_points', show_label=False,
-                                  editor=ButtonEditor(label_value='program_points_label')),
+                             HGroup(Item('show_hide', show_label=False,
+                                         editor=ButtonEditor(label_value='show_hide_label')
+                                         ),
+                                    Item('program_points', show_label=False,
+                                         editor=ButtonEditor(label_value='program_points_label')
+                                         )
+                                    ),
         #                elf._button_factory('program_points', 'program_points_label'),
                              VGroup(
                                  Item('accept_point', show_label=False),

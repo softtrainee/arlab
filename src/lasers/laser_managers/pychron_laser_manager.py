@@ -195,6 +195,13 @@ class PychronLaserManager(BaseLaserManager):
         self.info('set laser power {}'.format(v))
         return self._ask('SetLaserPower {}'.format(v)) == 'OK'
 
+    def set_motor(self, name, value):
+        self.info('set motor {} to {}'.format(name, value))
+        self._ask('SetMotor {} {}'.format(name, value))
+        time.sleep(0.5)
+        r = self._block(cmd='GetMotorMoving {}'.format(name))
+        return r
+
     def get_position(self):
         xyz = self._ask('GetPosition')
         if xyz:

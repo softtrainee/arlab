@@ -22,7 +22,8 @@ from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors import InvalidArgumentsErrorCode
 # from dummies import DummyLM
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
-    EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode
+    EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode, \
+    InvalidMotorErrorCode
 from pyface.timer.do_later import do_later
 
 
@@ -188,7 +189,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             x, y = smanager.temp_position
         else:
             x, y = smanager.get_calibrated_xy()
-            
+
         pos = x, y, z
         return ','.join(['{:0.5f}' .format(i) for i in pos])
 
@@ -310,8 +311,15 @@ class LaserHandler(BaseRemoteHardwareHandler):
         if manager.set_motor(name, bd, block=False):
             return 'OK'
         else:
-            return 'OK - beam disabled'
+            return 'OK - {} disabled'.format(name)
 
+    def GetMotorMoving(self, manager, name, *args):
+        motor = manager.get_motor(name)
+        if motor is None:
+            r = InvalidMotorErrorCode(name, logger=self)
+        else:
+            r = motor.is_moving()
+        return r
 
     def SetSampleHolder(self, manager, name, *args):
         if name is None:

@@ -27,6 +27,7 @@ from fusions_logic_board import FusionsLogicBoard
 class FusionsUVLogicBoard(FusionsLogicBoard):
     '''
     '''
+    has_pointer = False
     _test_comms = False  # dont test comms on startup. UV doesn't really have logic board only kerr motor controllers
     def _enable_laser(self):
         '''
