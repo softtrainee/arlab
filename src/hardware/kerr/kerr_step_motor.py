@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import CInt, Str, Bool, Dict
+from traits.api import CInt, Str, Bool, Dict, Float, HasTraits, Any
 from traitsui.api import View, Item, EnumEditor, RangeEditor, Label, Group
 from src.traits_editors.custom_label_editor import CustomLabel
 
@@ -40,6 +40,11 @@ from src.hardware.kerr.kerr_motor import KerrMotor
  7= home in progress
  
 '''
+
+class DiscretePosition(HasTraits):
+    position = Float
+    value = Float
+
 class KerrStepMotor(KerrMotor):
 #    min = CInt
 #    max = CInt
@@ -51,7 +56,7 @@ class KerrStepMotor(KerrMotor):
     disable_limits = Bool
     motor_off = Bool
 
-    discrete_position = Str
+    discrete_position = Any
     discrete_positions = Dict
 
     def load_additional_args(self, config):
@@ -74,13 +79,36 @@ class KerrStepMotor(KerrMotor):
                 if option == 'offset':
                     continue
 
-                value = config.getint(section, option)
+                value = config.get(section, option)
                 option = option.replace('_', ' ').capitalize()
-                self.discrete_positions[str(value + off)] = '{:02n}:{}'.format(i + 1, option)
+                if ',' in value:
+                    pos, v = value.split(',')
+                else:
+                    pos, v = value, 0
+
+                pos = int(pos)
+                dp = DiscretePosition(name=option, position=pos + off, value=float(v))
+#                self.discrete_positions[str(value + off)] = '{:02n}:{}'.format(i + 1, option)
+                self.discrete_positions[dp] = '{:02n}:{}'.format(i + 1, option)
 
     def _discrete_position_changed(self):
         if self.discrete_position:
-            self.data_position = int(self.discrete_position)
+            dp = self.discrete_position
+            self.data_position = int(dp.position)
+
+    def get_discrete_value(self, name=None):
+        v = None
+        if name is None:
+            if self.discrete_position:
+                name = self.discrete_position.name
+
+        dp = self.get_discrete_position(name)
+        if dp is not None:
+            v = dp.value
+        return v
+
+    def get_discrete_position(self, name):
+        return next((di for di in self.discrete_positions if di.name == name), None)
 
     def _initialize_(self, *args, **kw):
         addr = self.address
@@ -187,7 +215,6 @@ class KerrStepMotor(KerrMotor):
 #        print self.velocity, self.acceleration
         cmd = ''.join((cmd, control, position, v, a))
         cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
-
         self._execute_hex_command(cmd)
 
     def _load_trajectory_controlbyte(self, reverse=False):
@@ -209,7 +236,7 @@ class KerrStepMotor(KerrMotor):
         cb = '10000111'
         if reverse:
             cb = cb[:4] + '1' + cb[-3:]
-        print reverse, cb
+
         return '{:02x}'.format(int(cb, 2))
 
 #    def _get_velocity(self):

@@ -153,6 +153,7 @@ class StageManager(Manager):
 
         bind_preference(self.canvas, 'crosshairs_kind', '{}.crosshairs_kind'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_color', '{}.crosshairs_color'.format(pref_id))
+        bind_preference(self.canvas, 'crosshairs_radius', '{}.crosshairs_radius'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_offset', '{}.crosshairs_offset'.format(pref_id))
 
         bind_preference(self.canvas, 'scaling', '{}.scaling'.format(pref_id))

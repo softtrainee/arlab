@@ -20,9 +20,9 @@ a combination of the logic board and the kerr microcontroller
 see Photon Machines Logic Board Command Set for additional information
 '''
 #=============enthought library imports=======================
-from traits.api import  Instance, DelegatesTo, Str, Float, List
+from traits.api import  Instance, Str, Float, List, Event
 # from traitsui.api import Item, VGroup, RangeEditor
-from traitsui.api import Item, ListEditor, InstanceEditor, Group, View
+from traitsui.api import Item, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
@@ -30,13 +30,12 @@ from globals import globalv
 # from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.kerr.kerr_microcontroller import KerrMicrocontroller
-from src.hardware.kerr.kerr_motor import KerrMotor
 
 
 class FusionsLogicBoard(CoreDevice):
     '''
     '''
-
+    refresh_canvas = Event
     motor_microcontroller = Instance(KerrMicrocontroller)
 
 #    beam_motor = Instance(KerrMotor, ())
@@ -94,7 +93,7 @@ class FusionsLogicBoard(CoreDevice):
         for m in self.motors:
             if m.use_initialize:
                 m.initialize(*args, **kw)
-
+            m.on_trait_change(lambda: self.trait_set(refresh_canvas=True), 'data_position')
         return True
 
     def _build_command(self, *args):
