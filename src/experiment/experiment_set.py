@@ -53,7 +53,7 @@ class ExperimentSet(BaseSchedule):
     delay_before_analyses = Float(5)
     name = Property(depends_on='path')
     path = Str
-    ok_to_add = Property
+    ok_to_add = Property(depends_on='_ok_to_add')
     _ok_to_add = Bool(False)
 
     dirty = Bool(False)
@@ -61,13 +61,13 @@ class ExperimentSet(BaseSchedule):
     executable = Bool(True)
     auto_increment = Bool(False)
 
-    mass_spectrometer = Str('jan')
-#    mass_spectrometer = Str(NULL_STR)
+#    mass_spectrometer = Str('jan')
+    mass_spectrometer = Str(NULL_STR)
     mass_spectrometers = Property
 #    tray = Str(NULL_STR)
     trays = Property
-    extract_device = Str('Fusions Diode')
-#    extract_device = Str(NULL_STR)
+#    extract_device = Str('Fusions Diode')
+    extract_device = Str(NULL_STR)
     extract_devices = Property
 
     right_clicked = Any
@@ -448,6 +448,8 @@ tray: {}
                 kw['labnumber'] = rid
             if npos:
                 kw['position'] = npos
+#        else:
+#            self._ok_to_add = False
 
         self._add_hook(ar, **kw)
         self.update_aliquots_needed = True
@@ -474,7 +476,6 @@ tray: {}
         arun.run_info.sample = ''
         arun.aliquot = 1
         arun.irrad_level = ''
-
         if labnumber:
 
             # convert labnumber (a, bg, or 10034 etc)
@@ -736,7 +737,7 @@ tray: {}
                  HGroup(
                         VGroup(
                                gparams_grp,
-                               block_grp,
+#                               block_grp,
                                new_analysis,
                                script_grp,
                                HGroup(Item('auto_increment'),

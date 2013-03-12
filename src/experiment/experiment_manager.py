@@ -465,7 +465,7 @@ class ExperimentManager(Manager, Saveable):
 
                     if edit:
                         exp.automated_run = exp.automated_runs[-1].clone_traits()
-                        exp.set_script_names()
+#                        exp.set_script_names()
                 ws = exp._warned_labnumbers
 
             self._update_aliquots()

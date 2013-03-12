@@ -29,6 +29,7 @@ from src.paths import paths
 from src.experiment.script_editable import ScriptEditable
 from src.experiment.runs_table import RunsTable
 from src.experiment.blocks.parser import RunParser, UVRunParser
+from src.experiment.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
 
 
 class RunAdapter(AutomatedRunAdapter):
@@ -155,9 +156,17 @@ post_measurement_script, post_equilibration_script''')
             kw['position'] = ''
             kw['extract_value'] = 0
 
+        if not 'labnumber' in kw:
+            keys = SPECIAL_MAPPING.values()
+            if not ar.labnumber in keys:
+                kw['special_labnumber'] = NULL_STR
+            else:
+                kw['special_labnumber'] = ar.special_labnumber
+
+            kw['labnumber'] = ar.labnumber
+            kw['_labnumber'] = ar._labnumber
+
         self.automated_run.trait_set(**kw)
-        self.automated_run._labnumber = NULL_STR
-        self.automated_run.special_labnumber = NULL_STR
         self._bind_automated_run(self.automated_run)
 
     def update_loaded_scripts(self, new):

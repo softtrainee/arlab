@@ -40,7 +40,7 @@ from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
 from src.experiment.identifier import convert_identifier, get_analysis_type, \
-    SPECIAL_NAMES, convert_special_name
+    SPECIAL_NAMES, convert_special_name, SPECIAL_MAPPING
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
@@ -1562,9 +1562,19 @@ anaylsis_type={}
         if self._labnumber != NULL_STR:
             self.labnumber = self._labnumber
 
+    def _project_changed(self):
+        self._labnumber = NULL_STR
+        self.labnumber = ''
+
+    def _labnumber_changed(self):
+        if self.labnumber != NULL_STR:
+            if not self.labnumber in SPECIAL_MAPPING.values():
+                self.special_labnumber = NULL_STR
+
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
             self.labnumber = convert_special_name(self.special_labnumber)
+            self._labnumber = NULL_STR
 
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
@@ -1921,7 +1931,6 @@ anaylsis_type={}
         else:
             return ALPHAS[self._step - 1]
 
-    @cached_property
     def _get_projects(self):
         prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
         if prs:
