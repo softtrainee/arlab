@@ -546,16 +546,18 @@ class ExperimentExecutor(ExperimentManager):
         if not isAlive():
             return
 
-        arun.state = 'extraction'
-        if not arun.do_extraction():
-            self._alive = False
+        if arun.extraction_script:
+            arun.state = 'extraction'
+            if not arun.do_extraction():
+                self._alive = False
 
         if not isAlive():
             return
 
-        arun.state = 'measurement'
-        if not arun.do_measurement():
-            self._alive = False
+        if arun.measurement_script:
+            arun.state = 'measurement'
+            if not arun.do_measurement():
+                self._alive = False
 
         if not isAlive():
             return

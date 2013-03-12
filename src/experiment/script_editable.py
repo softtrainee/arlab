@@ -25,7 +25,26 @@ from src.pyscripts.pyscript_editor import PyScriptManager
 from src.loggable import Loggable
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class Script(Loggable):
+class ScriptMixin(object):
+    def _clean_script_name(self, name):
+        name = self._remove_mass_spectrometer_name(name)
+        return self._remove_file_extension(name)
+
+    def _remove_file_extension(self, name, ext='.py'):
+        if name is NULL_STR:
+            return NULL_STR
+
+        if name.endswith('.py'):
+            name = name[:-3]
+
+        return name
+
+    def _remove_mass_spectrometer_name(self, name):
+        if self.mass_spectrometer:
+            name = name.replace('{}_'.format(self.mass_spectrometer), '')
+        return name
+
+class Script(Loggable, ScriptMixin):
     application = Any
     label = Str
     name = Str
@@ -64,23 +83,7 @@ class Script(Loggable):
 #        es = [NULL_STR] + es
 #        return es
 
-    def _clean_script_name(self, name):
-        name = self._remove_mass_spectrometer_name(name)
-        return self._remove_file_extension(name)
 
-    def _remove_file_extension(self, name, ext='.py'):
-        if name is NULL_STR:
-            return NULL_STR
-
-        if name.endswith('.py'):
-            name = name[:-3]
-
-        return name
-
-    def _remove_mass_spectrometer_name(self, name):
-        if self.mass_spectrometer:
-            name = name.replace('{}_'.format(self.mass_spectrometer), '')
-        return name
 
     def _load_script_names(self):
         d = self.label.lower().replace(' ', '_')
@@ -102,7 +105,7 @@ class Script(Loggable):
 
         return names
 
-class ScriptEditable(Saveable):
+class ScriptEditable(Saveable, ScriptMixin):
     application = Any
     mass_spectrometer = Str(NULL_STR)
     extract_device = Str(NULL_STR)

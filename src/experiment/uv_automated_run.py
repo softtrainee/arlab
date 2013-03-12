@@ -32,13 +32,14 @@ class UVAutomatedRun(AutomatedRun):
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
 
+    @cached_property
     def _get_masks(self):
-        p = os.path.join(paths.device_dir, 'masks')
+        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
         masks = []
         with open(p, 'r') as fp:
             for lin in fp:
                 lin = lin.strip()
-                if lin or lin.startswith('#'):
+                if not lin or lin.startswith('#'):
                     continue
                 masks.append(lin)
 
