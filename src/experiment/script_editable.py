@@ -169,9 +169,9 @@ class ScriptEditable(Saveable, ScriptMixin):
     def _update_run_script(self, run, sname):
         if run.state == 'not run':
             ssname = '{}_script'.format(sname)
-            name = getattr(self, ssname)
-            if name:
-                setattr(run.script_info, '{}_script_name'.format(sname), name)
+            script = getattr(self, ssname)
+            if script:
+                setattr(run.script_info, '{}_script_name'.format(sname), script.name)
                 setattr(run, '{}_dirty'.format(ssname), True)
 #===============================================================================
 # property get/set

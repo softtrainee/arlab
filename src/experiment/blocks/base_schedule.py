@@ -103,7 +103,8 @@ post_measurement_script, post_equilibration_script''')
                     try:
                         n = self._clean_script_name(getattr(run.script_info, '{}_script_name'.format(si)))
 #                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
-                        setattr(self, '{}_script'.format(si), n)
+                        s=getattr(self, '{}_script'.format(si))
+                        setattr(s, 'name', n)
                     except AttributeError:
                         pass
 

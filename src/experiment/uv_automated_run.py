@@ -36,12 +36,13 @@ class UVAutomatedRun(AutomatedRun):
     def _get_masks(self):
         p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
         masks = []
-        with open(p, 'r') as fp:
-            for lin in fp:
-                lin = lin.strip()
-                if not lin or lin.startswith('#'):
-                    continue
-                masks.append(lin)
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                for lin in fp:
+                    lin = lin.strip()
+                    if not lin or lin.startswith('#'):
+                        continue
+                    masks.append(lin)
 
         return masks
 

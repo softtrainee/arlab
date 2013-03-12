@@ -325,13 +325,13 @@ class AutomatedRun(Loggable):
                                 )
 
     def py_baselines(self, ncounts, starttime, mass, detector,
-                    series=0, nintegrations=5, settling_time=4):
+                    peak_hop=False,series=0, nintegrations=5, settling_time=4):
         if not self._alive:
             return
 
         result = None
         ion = self.ion_optics_manager
-        if not detector:
+        if not peak_hop:
             if self.plot_panel:
                 self.plot_panel._ncounts = ncounts
                 self.plot_panel.isbaseline = True
@@ -339,7 +339,9 @@ class AutomatedRun(Loggable):
 
             if mass:
                 if ion is not None:
-                    ion.position(mass, self._active_detectors[0].name, False)
+                    if detector is None:
+                        detector=self._active_detectors[0].name
+                    ion.position(mass, detector, False)
                     self.info('Delaying {}s for detectors to settle'.format(settling_time))
                     time.sleep(settling_time)
 

@@ -25,11 +25,13 @@ from uncertainties import ufloat
 from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
-import math
 #============= standard library imports ========================
 # from numpy import Inf
 # from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
+
+HEIGHT=250
+
 class PlotPanelHandler(ViewableHandler):
     pass
 class PlotPanel(Viewable):
@@ -81,17 +83,19 @@ class PlotPanel(Viewable):
                     if self.isbaseline:
                         self.baselines[iso] = u
                         if arar_age:
-                            base = arar_age.isotopes[iso].baseline
-                            base.value = vv
-                            base.error = ee
+                            arar_age.set_baseline(iso, (vv,ee))
+#                            base = arar_age.isotopes[iso].baseline
+#                            base.value = vv
+#                            base.error = ee
 
 #                            arar_age.signals['{}bs'.format(iso)] = u
                     else:
                         self.signals[iso] = u
                         if arar_age:
-                            sig = arar_age.isotopes[iso]
-                            sig.value = vv
-                            sig.error = ee
+                            arar_age.set_isotope(iso, (vv, ee))
+#                            sig = arar_age.isotopes[iso]
+#                            sig.value = vv
+#                            sig.error = ee
 #                            arar_age.signals[iso] = u
 
                 except TypeError, e:
@@ -364,14 +368,14 @@ class PlotPanel(Viewable):
 # defaults
 #===============================================================================
     def _fit_display_default(self):
-        return RichTextDisplay(height=220,
+        return RichTextDisplay(height=HEIGHT,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False,
                                bg_color='#FFFFCC'
                                )
     def _summary_display_default(self):
-        return RichTextDisplay(height=220,
+        return RichTextDisplay(height=HEIGHT,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False,
@@ -379,7 +383,7 @@ class PlotPanel(Viewable):
                                )
 
     def _signal_display_default(self):
-        return RichTextDisplay(height=220,
+        return RichTextDisplay(height=HEIGHT,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False,
@@ -387,7 +391,7 @@ class PlotPanel(Viewable):
 #                               width=0.25
                                )
     def _ratio_display_default(self):
-        return RichTextDisplay(height=220,
+        return RichTextDisplay(height=HEIGHT,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False,

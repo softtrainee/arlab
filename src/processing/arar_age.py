@@ -116,6 +116,14 @@ class ArArAge(HasTraits):
 
 #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
         bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+    
+    def set_isotope(self, iso, v):
+        if not self.isotopes.has_key(iso):
+            niso = Isotope(name=iso)
+        else:
+            niso=self.isotopes[iso]
+            
+        niso.set_uvalue(v)
 
     def set_blank(self, iso, v):
         if not self.isotopes.has_key(iso):

@@ -102,9 +102,9 @@ class AnalysisSummary(Summary):
             self._make_isotope(iso, widths, last_line=i == n)
 
         # add corrected signals
-        m = 'Baseline Corrected Signals          Fully Corrected Signals'
+        m = 'Baseline Corrected Signals            Fully Corrected Signals'
         self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
-        widths = [5, 12, 10, 5, 12, 10]
+        widths = [5, 12, 18, 5, 12, 12]
 
         # refresh arar_result
         self.record.calculate_age()
