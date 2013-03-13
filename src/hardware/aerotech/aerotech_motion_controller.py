@@ -134,8 +134,8 @@ class AerotechMotionController(MotionController):
 #                x = self._x_position
 #                y = value
 #                o = self._y_position
-            x=self._x_position
-            y=self._y_position
+            x = self._x_position
+            y = self._y_position
             self.parent.canvas.set_stage_position(x, y)
 
             nv = self._sign_correct(nv, key, ratio=False)
@@ -147,22 +147,38 @@ class AerotechMotionController(MotionController):
                 func = self._inprogress_update
 
             self.ask(cmd, handshake_only=True)
-            
+
             if block:
                 self.timer = self.timer_factory(func=func)
                 self.block()
             else:
-                if name=='Z':
-                    self.z_progress=value
-                    
+                if name == 'Z':
+                    self.z_progress = value
+
                 self.parent.canvas.set_stage_position(x, y)
 
-    def enqueue_move(self, x, y, v):
-        if self.xy_swapped():
-            cmd = 'LI X{} Y{} F{}'.format(y, x, v)
-        else:
-            cmd = 'LI X{} Y{} F{}'.format(x, y, v)
-        self.ask(cmd, handshake_only=True)
+#    def enqueue_move(self, x, y, v):
+#        if self.xy_swapped():
+#            cmd = 'LI X{} Y{} F{}'.format(y, x, v)
+#        else:
+#            cmd = 'LI X{} Y{} F{}'.format(x, y, v)
+#        self.ask(cmd, handshake_only=True)
+    def start_command_buffer(self):
+        self.hold(True)
+
+    def end_command_buffer(self):
+        self.hold(False)
+
+    def execute_command_buffer(self):
+        self.trigger()
+
+    def hold(self, onoff):
+        cmd = 'HD{}'.format(int(onoff))
+        self.ask(cmd)
+
+    def trigger(self):
+        cmd = 'TR'
+        self.ask(cmd)
 
     def set_program_mode(self, mode):
         '''
@@ -272,7 +288,7 @@ class AerotechMotionController(MotionController):
         time.sleep(1)
         self.block()
         time.sleep(1)
-        self.linear_move(25, 25,sign_correct=False)
+        self.linear_move(25, 25, sign_correct=False)
         time.sleep(1)
         self.block()
         self.define_home()

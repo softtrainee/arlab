@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float
+from traits.api import Float, Enum
 from traitsui.api import View, Item, VGroup, HGroup, spring, Spring, Label
 from apptools.preferences.ui.preferences_page import PreferencesPage
 from src.constants import PLUSMINUS
@@ -42,6 +42,9 @@ class ConstantsPreferencesPage(PreferencesPage):
     lambda_Ar39 = Float(7.068e-6)
     lambda_Ar39_error = Float(0)
     abundant_sensitivity = Float(0)
+    Ar37_Ar39_mode = Enum('Normal', 'Fixed')
+    Ar37_Ar39 = Float(0.01)
+    Ar37_Ar39_error = Float(0.01)
 
     def traits_view(self):
         ratios = VGroup(
@@ -52,6 +55,12 @@ class ConstantsPreferencesPage(PreferencesPage):
                                Item('Ar40_Ar36_atm_error', show_label=False)),
                         HGroup(Item('Ar40_Ar38_atm', label='(40Ar/38Ar)atm'),
                                Item('Ar40_Ar38_atm_error', show_label=False)),
+
+                        HGroup(
+                               Item('Ar37_Ar39_mode', label='(37Ar/39Ar)K'),
+                               Item('Ar37_Ar39', show_label=False),
+                               Item('Ar37_Ar39_error', show_label=False)),
+
                         show_border=True,
                         label='Ratios'
                         )

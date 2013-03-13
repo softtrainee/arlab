@@ -271,7 +271,7 @@ class StageManager(Manager):
     def move_to_point(self, pt):
         if pt is None:
             return
-        
+
         if self.point_thread is not None:
             self.stage_controller.stop()
 
@@ -282,8 +282,8 @@ class StageManager(Manager):
 
     def move_polyline(self, line):
         if line is None:
-            return 
-        
+            return
+
         if self.line_thread is not None:
             self.stage_controller.stop()
 
@@ -493,19 +493,34 @@ class StageManager(Manager):
         sm = self._stage_map
         return sm.get_hole(key)
 
-    def _move_polyline(self, line):
-        pts=line.points
-        self.linear_move(pts[0].x, pts[0].y, 
+    def _move_polyline(self, line, start=True, smooth=True):
+        if not isinstance(line, list):
+            pts = [dict(xy=(pi.x, pi.y), z=pi.z, velocity=pi.velocity) for pi in line.points]
+
+        sc = self.stage_controller
+        self.linear_move(pts[0]['xy'][0], pts[0]['xy'][0],
                              update_hole=False,
                                    use_calibration=False,
                                    block=True)
-        for pi,vi in zip(pts[1:], line.velocity_segments):
-            self.linear_move(pi.x, pi.y, 
-                             velocity=vi,
-                                 update_hole=False,
-                                       use_calibration=False,
-                                       block=True)
+        sc.set_z(pts[0]['z'], block=True)
+        if smooth:
+            sc.start_command_buffer()
 
+        for di in zip(pts[1:], line.velocity_segments):
+            xi, yi, zi, vi = di['xy'][0], di['xy'][1], di['z'], di['velocity']
+            sc.set_z(zi)
+            self.linear_move(xi, yi, velocity=vi,
+                             update_hole=False, use_calibration=False,
+                             block=not smooth)
+
+        if start and smooth:
+            sc.execute_command_buffer()
+            sc.end_command_buffer()
+
+    def start_enqueued(self):
+        sc = self.stage_controller
+        sc.execute_command_buffer()
+        sc.end_command_buffer()
 
     def _move_to_point(self, pt):
         pos = pt.x, pt.y

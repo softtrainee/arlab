@@ -147,8 +147,14 @@ class MotionController(CoreDevice):
     def get_current_position(self, *args, **kw):
         return 0
 
-    def enqueue_move(self, *args, **kw):
+    def start_command_buffer(self):
         pass
+    def end_command_buffer(self):
+        pass
+    def execute_command_buffer(self):
+        pass
+#    def enqueue_move(self, *args, **kw):
+#        pass
 
     def set_smooth_transitions(self, *args, **kw):
         pass
@@ -232,13 +238,13 @@ class MotionController(CoreDevice):
         if self.timer is not None:
             # timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
-        
+
 #        print func, self.timer
         time.sleep(0.25)
-        
-        a=func()
+
+        a = func()
         while a:
-            a=func()
+            a = func()
 #            print a
             time.sleep(0.2)
 

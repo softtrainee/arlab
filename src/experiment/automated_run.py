@@ -325,7 +325,7 @@ class AutomatedRun(Loggable):
                                 )
 
     def py_baselines(self, ncounts, starttime, mass, detector,
-                    peak_hop=False,series=0, nintegrations=5, settling_time=4):
+                    peak_hop=False, series=0, nintegrations=5, settling_time=4):
         if not self._alive:
             return
 
@@ -340,7 +340,7 @@ class AutomatedRun(Loggable):
             if mass:
                 if ion is not None:
                     if detector is None:
-                        detector=self._active_detectors[0].name
+                        detector = self._active_detectors[0].name
                     ion.position(mass, detector, False)
                     self.info('Delaying {}s for detectors to settle'.format(settling_time))
                     time.sleep(settling_time)
@@ -1791,11 +1791,24 @@ anaylsis_type={}
 
     def _validate_position(self, pos):
         ps = pos.split(',')
-        try:
-            _ = map(int, ps)
-            return pos
-        except ValueError:
-            return self._position
+#        try:
+        for pi in ps:
+            if not pi:
+                continue
+
+            if pi[0] in ('p', 'l', 'd'):
+                n = pi[1:]
+            else:
+                n = pi
+                try:
+                    _ = int(n)
+                except ValueError:
+                    return self._position
+        return pos
+#            _ = map(int, ps)
+#            return pos
+#        except ValueError:
+#            return self._position
 
 #    @cached_property
 #    def _get_post_measurement_script(self):
