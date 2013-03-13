@@ -475,7 +475,7 @@ class SerialCommunicator(Communicator):
     def _check_handshake(self, handshake_chrs):
         ack, nak = handshake_chrs
         inw = self.handle.inWaiting()
-        r=self.handle.read(inw)
+        r = self.handle.read(inw)
         if r:
             return ack == r[0], r[1:]
         return False, None

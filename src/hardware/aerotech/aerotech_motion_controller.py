@@ -60,7 +60,9 @@ class AerotechMotionController(MotionController):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
 
-    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, mode='relative', **kw):
+    def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, 
+                    set_stage=True,
+                    mode='relative', **kw):
         '''
             unidex 511 5-55 Linear
         '''
@@ -68,8 +70,8 @@ class AerotechMotionController(MotionController):
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
             return 'invalid position {},{}'.format(x, y)
-
-        self.parent.canvas.set_desired_position(x, y)
+        if set_stage:
+            self.parent.canvas.set_desired_position(x, y)
         self._x_position = x
         self._y_position = y
         if mode == 'absolute':
@@ -107,7 +109,7 @@ class AerotechMotionController(MotionController):
         if block:
             self.timer = self.timer_factory()
             self.block()
-        else:
+        elif set_stage:
             self.parent.canvas.set_stage_position(self._x_position, self._y_position)
 
     def set_single_axis_motion_parameters(self, axis=None, pdict=None):
@@ -171,7 +173,9 @@ class AerotechMotionController(MotionController):
 
     def execute_command_buffer(self):
         self.trigger()
-
+        self.timer=self.timer_factory()
+        self.block()
+        
     def hold(self, onoff):
         cmd = 'HD{}'.format(int(onoff))
         self.ask(cmd)
@@ -184,7 +188,7 @@ class AerotechMotionController(MotionController):
         '''
             using metric units
         '''
-        cmd = 'PR ME'
+        cmd = 'IPR ME'
         v = 'AB' if mode == 'absolute' else 'IN'
         cmd = '{} {}'.format(cmd, v)
         self.ask(cmd)
@@ -194,7 +198,7 @@ class AerotechMotionController(MotionController):
             unidex 511 5-57 Velocity mode
         '''
 
-        cmd = 'VE'
+        cmd = 'IVE'
         v = 'ON' if smooth else 'OFF'
         cmd = '{} {}'.format(cmd, v)
         self.ask(cmd, handshake_only=True)
@@ -325,3 +329,4 @@ class AerotechMotionController(MotionController):
 
 
 #============= EOF ====================================
+
