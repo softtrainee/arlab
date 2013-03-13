@@ -114,15 +114,19 @@ class ArArAge(HasTraits):
         bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
         bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
 
+        bind_preference(self.arar_constants, 'k37_39_mode', 'pychron.experiment.constants.Ar37_Ar39_mode')
+        bind_preference(self.arar_constants, 'k37_39_v', 'pychron.experiment.constants.Ar37_Ar39_error')
+        bind_preference(self.arar_constants, 'k37_39_e', 'pychron.experiment.constants.Ar37_Ar39_error')
+
 #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
         bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
-    
+
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
         else:
-            niso=self.isotopes[iso]
-            
+            niso = self.isotopes[iso]
+
         niso.set_uvalue(v)
 
     def set_blank(self, iso, v):

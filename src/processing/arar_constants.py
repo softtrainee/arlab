@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Property, Float
+from traits.api import HasTraits, Property, Float, Enum
 # from apptools.preferences.package_globals import get_default_preferences
 
 from uncertainties import ufloat
@@ -53,6 +53,14 @@ class ArArConstants(HasTraits):
     abundance_40K = 0.000117
     mK = 39.0983
     mO = 15.9994
+
+    k3739_mode = Enum('normal', 'fixed')
+    fixed_k3739 = Property(depends_on='k3739_v, k3739_e')
+    k3739_v = Float(0.01)
+    k3739_e = Float(0.0001)
+
+    def _get_fixed_k3739(self):
+        return self._get_ufloat('k3739')
 
     def _get_atm3836(self):
         return self.atm4036 / self.atm4038

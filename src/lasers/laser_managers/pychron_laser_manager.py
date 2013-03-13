@@ -391,12 +391,13 @@ class PychronUVLaserManager(PychronLaserManager):
 
     def trace_path(self, value, name, kind):
         if isinstance(name, list):
-            name=name[0]
-        
-        name=str(name)
+            name = name[0]
+
+        # traces need to be prefixed with 'l'
+        name = str(name)
         if not name.startswith('l'):
-            name='l{}'.format(name)
-            
+            name = 'l{}'.format(name)
+
         cmd = 'TracePath {} {} {}'.format(value, name, kind)
         self.info('sending {}'.format(cmd))
         self._ask(cmd)
@@ -406,7 +407,7 @@ class PychronUVLaserManager(PychronLaserManager):
         pass
 
     def _move_to_position(self, pos):
-        
+
         cmd = 'GoToPoint'
         if isinstance(pos, (str, unicode)):
             if not pos:

@@ -148,7 +148,11 @@ class AutomatedRunAdapter(TabularAdapter):
         return self._get_number('overlap')
 
     def _get_position_text(self, trait, item):
-        return self._get_number('position')
+#        print self.ite/m.position, 'ndasd'
+
+#        return 'ffff'
+        return self.item.position
+#        return self._get_number('position')
 
     def _get_autocenter_text(self, trait, item):
         return 'yes' if self.item.autocenter else ''
