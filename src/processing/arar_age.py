@@ -114,9 +114,9 @@ class ArArAge(HasTraits):
         bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
         bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
 
-        bind_preference(self.arar_constants, 'k37_39_mode', 'pychron.experiment.constants.Ar37_Ar39_mode')
-        bind_preference(self.arar_constants, 'k37_39_v', 'pychron.experiment.constants.Ar37_Ar39_error')
-        bind_preference(self.arar_constants, 'k37_39_e', 'pychron.experiment.constants.Ar37_Ar39_error')
+        bind_preference(self.arar_constants, 'k3739_mode', 'pychron.experiment.constants.Ar37_Ar39_mode')
+        bind_preference(self.arar_constants, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
+        bind_preference(self.arar_constants, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
 
 #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
         bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')

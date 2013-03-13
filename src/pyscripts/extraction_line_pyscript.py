@@ -152,8 +152,15 @@ class ExtractionLinePyScript(ValvePyScript):
     def move_to_position(self, position=''):
         if position == '':
             position = self.position
-            
-        if position and all(position):
+        
+        if position:
+            position_ok=True
+            if isinstance(position, (list, tuple)):
+                position_ok=all(position)
+        else:
+            position_ok=False
+        
+        if position_ok:
 #            print self.extract_device, 'asdfasfdasdf'
             self.info('{} move to position {}'.format(self.extract_device, position))
             success = self._manager_action([('move_to_position', (position,), {})
@@ -213,7 +220,8 @@ class ExtractionLinePyScript(ValvePyScript):
             name = self.position
         if value == '':
             value = self.extract_value
-
+        
+        name=name.lower()
         self.move_to_position(name)
 
         if name.startswith('p'):

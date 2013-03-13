@@ -172,7 +172,7 @@ class ScriptEditable(Saveable, ScriptMixin):
             script = getattr(self, ssname)
             if script:
                 setattr(run.script_info, '{}_script_name'.format(sname), script.name)
-                setattr(run, '{}_dirty'.format(ssname), True)
+#                setattr(run, '{}_dirty'.format(ssname), True)
 #===============================================================================
 # property get/set
 #===============================================================================

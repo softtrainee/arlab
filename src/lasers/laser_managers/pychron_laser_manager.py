@@ -376,7 +376,7 @@ class PychronUVLaserManager(PychronLaserManager):
 #===============================================================================
     def _position_changed(self):
         if self.position is not None:
-            t = Thread(target=self._move_to_position, args=(self.position))
+            t = Thread(target=self._move_to_position, args=(self.position,))
             t.start()
 #            self._move_to_position(self.position)
 #===============================================================================
@@ -395,6 +395,7 @@ class PychronUVLaserManager(PychronLaserManager):
 
         # traces need to be prefixed with 'l'
         name = str(name)
+        name=name.lower()
         if not name.startswith('l'):
             name = 'l{}'.format(name)
 
@@ -413,7 +414,7 @@ class PychronUVLaserManager(PychronLaserManager):
             if not pos:
                 return
 
-            if pos[0] in ['p', 'l', 'd']:
+            if pos[0].lower() in ['p', 'l', 'd']:
                 cmd = 'GoToNamedPosition'
 
         if cmd:

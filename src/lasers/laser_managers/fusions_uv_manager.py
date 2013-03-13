@@ -93,6 +93,7 @@ class FusionsUVManager(FusionsLaserManager):
 
     def goto_named_position(self, pos):
         sm = self.stage_manager._stage_map
+        pos=pos.lower()
         if pos.startswith('p'):
             pt = sm.get_point(pos)
             self.stage_manager.set_z(pt.z)
