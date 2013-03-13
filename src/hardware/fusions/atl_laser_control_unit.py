@@ -172,7 +172,7 @@ class ATLLaserControlUnit(CoreDevice):
         self._send_command(cmd, lock=lock)
 
     def get_nburst(self, verbose=True):
-        v = 0
+        v = None
         resp = self._send_query(22, 2, verbose=verbose)
         if resp is not None and len(resp) == 8:
             high = resp[4:]

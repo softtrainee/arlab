@@ -92,16 +92,19 @@ class FusionsUVManager(FusionsLaserManager):
     db_root = paths.uvlaser_db_root
 
     def goto_named_position(self, pos):
-        sm = self.stage_manager._stage_map
+        sm=self.stage_manager
+        smap = sm._stage_map
         pos=pos.lower()
         if pos.startswith('p'):
-            pt = sm.get_point(pos)
-            self.stage_manager.set_z(pt.z)
+            pt = smap.get_point(pos)
+            sm.set_z(pt['z'])
+            sm.linear_move(pt['xy'][0],pt['xy'][1], block=False)
         elif pos.startswith('l'):
-            line = sm.get_line(pos)
-            pt = line.points[0]
+            lines = smap.get_line(pos)
+            sm.move_polyline(lines)
+            
+        return 'OK'
 
-        self.stage_manager.linear_move(pt.x, pt.y, block=False)
 
     def goto_point(self, pos):
         sm = self.stage_manager._stage_map
@@ -140,7 +143,7 @@ class FusionsUVManager(FusionsLaserManager):
         t.start()
         return 'OK'
 
-    def _continuous_trace_path(self, value, path, mode='normal'):
+    def _continuous_trace_path(self, value, path, mode='smooth'):
         if mode == 'smooth':
             atl = self.atl_controller
             atl.set_burst_mode(False)
@@ -154,23 +157,28 @@ class FusionsUVManager(FusionsLaserManager):
             sc.set_smooth_transitions(True)
 
             # enqueue all points
-            sm._move_polyline(line, start=False)
-            # fire the laser continuously
-            atl.laser_run()
-
-            # trigger the queued commands
-            sm.start_enqueued()
-
-            # wait until finished moving
-            time.sleep(0.1)
-            sm.block()
-
-            # stop laser firing
-            atl.laser_stop()
+            sm._move_polyline(line,
+                              start_callback=atl.laser_run,
+                              end_callback=atl.laser_stop,                                        
+                              )
+#            # fire the laser continuously
+#            atl.laser_run()
+#
+#            # trigger the queued commands
+#            sm.start_enqueued()
+#
+#            # wait until finished moving
+#            time.sleep(0.1)
+#            sm.block()
+#
+#            # stop laser firing
+#            atl.laser_stop()
 
             # turn off smooth transitions
             sc.set_smooth_transitions(False)
         else:
+            smap = sm._stage_map
+            line = smap.get_line(path)
             seg = line[0]
             x, y = seg['xy']
             z = seg['z']

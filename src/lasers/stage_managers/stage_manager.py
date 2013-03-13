@@ -493,34 +493,47 @@ class StageManager(Manager):
         sm = self._stage_map
         return sm.get_hole(key)
 
-    def _move_polyline(self, line, start=True, smooth=True):
-        if not isinstance(line, list):
-            pts = [dict(xy=(pi.x, pi.y), z=pi.z, velocity=pi.velocity) for pi in line.points]
+    def _move_polyline(self, pts,  start_callback=None, end_callback=None):
+        if not isinstance(pts, list):
+            segs=pts.velocity_segments
+            segs=segs[:1]+segs
+            pts = [dict(xy=(pi.x, pi.y), z=pi.z, velocity=vi) for vi,pi in 
+                   zip(segs,pts.points)]
 
         sc = self.stage_controller
-        self.linear_move(pts[0]['xy'][0], pts[0]['xy'][0],
+        self.linear_move(pts[0]['xy'][0], pts[0]['xy'][1],
                              update_hole=False,
                                    use_calibration=False,
                                    block=True)
         sc.set_z(pts[0]['z'], block=True)
-        if smooth:
-            sc.start_command_buffer()
-
-        for di in zip(pts[1:], line.velocity_segments):
+        
+        sc.set_program_mode('absolute')
+        sc.timer=sc.timer_factory()
+        if start_callback:
+            start_callback()
+            
+        for di in pts[1:]:
             xi, yi, zi, vi = di['xy'][0], di['xy'][1], di['z'], di['velocity']
             sc.set_z(zi)
             self.linear_move(xi, yi, velocity=vi,
-                             update_hole=False, use_calibration=False,
-                             block=not smooth)
+                             block=False,
+                             mode='absolute', #use absolute mode because commands are queued
+                             set_stage=False)
+        
+        #wait until motion complete
+        sc.block()
+        if end_callback:
+            end_callback()
+            
+        sc.set_program_mode('relative')
+#        if start and smooth:
+#            sc.execute_command_buffer()
+#            sc.end_command_buffer()
 
-        if start and smooth:
-            sc.execute_command_buffer()
-            sc.end_command_buffer()
-
-    def start_enqueued(self):
-        sc = self.stage_controller
-        sc.execute_command_buffer()
-        sc.end_command_buffer()
+#    def start_enqueued(self):
+#        sc = self.stage_controller
+#        sc.execute_command_buffer()
+#        sc.end_command_buffer()
 
     def _move_to_point(self, pt):
         pos = pt.x, pt.y
