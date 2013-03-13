@@ -54,7 +54,7 @@ class ArArConstants(HasTraits):
     mK = 39.0983
     mO = 15.9994
 
-    k3739_mode = Enum('normal', 'fixed')
+    k3739_mode = Enum('Normal', 'Fixed')
     fixed_k3739 = Property(depends_on='k3739_v, k3739_e')
     k3739_v = Float(0.01)
     k3739_e = Float(0.0001)

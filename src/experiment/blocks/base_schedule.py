@@ -15,21 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from src.constants import NULL_STR, SCRIPT_KEYS
+from src.experiment.automated_run import AutomatedRun
+from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+from src.experiment.blocks.parser import RunParser, UVRunParser
+from src.experiment.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
+from src.experiment.runs_table import RunsTable
+from src.experiment.script_editable import ScriptEditable
+from src.paths import paths
 from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
     DelegatesTo, on_trait_change, Event
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
-#============= standard library imports ========================
-import yaml
 import os
+import yaml
+#============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.automated_run import AutomatedRun
-from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-from src.constants import NULL_STR, SCRIPT_KEYS
-from src.paths import paths
-from src.experiment.script_editable import ScriptEditable
-from src.experiment.runs_table import RunsTable
-from src.experiment.blocks.parser import RunParser, UVRunParser
-from src.experiment.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
 
 
 class RunAdapter(AutomatedRunAdapter):
@@ -81,17 +81,38 @@ class BaseSchedule(ScriptEditable):
     def _rearranged_fired(self):
         self.update_aliquots_needed = True
 
-    @on_trait_change('''extraction_script, measurement_script,
-post_measurement_script, post_equilibration_script''')
-    def _script_changed(self, name, new):
-        name = name[:-7]
+    @on_trait_change('extraction_script:name')
+    def _extraction_script_changed(self, obj, name, old,new):
+        self._script_changed('extraction')
+        
+    @on_trait_change('measurement_script:name')
+    def _measurement_script_changed(self, obj, name, old,new):
+        self._script_changed('measurement')
+        
+    @on_trait_change('post_equilibration_script:name')
+    def _post_equilibration_script_changed(self, obj, name, old,new):
+        self._script_changed('post_equilibration')
+
+    @on_trait_change('post_measurement_script:name')
+    def _post_measurement_script_changed(self, obj, name, old,new):
+        self._script_changed('post_measurement')
+    
+    def _script_changed(self, sname):
+#        name = name[:-7]
         if self.selected_runs is not None:
             for si in self.selected_runs:
-                self._update_run_script(si, name)
+                self._update_run_script(si, sname)
 
         if self.automated_run is not None:
-            self._update_run_script(self.automated_run, name)
-
+            self._update_run_script(self.automated_run, sname)
+    
+    
+    
+    
+    
+    
+    
+    
     def _selected_changed(self, new):
 #        print new
         self.selected_runs = new

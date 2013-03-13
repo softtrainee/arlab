@@ -1662,14 +1662,16 @@ anaylsis_type={}
 
         elif ',' in pos:
             # interpert as list of holenumbers
-            ps = map(int, pos.split(','))
+#            ps = map(int, pos.split(','))
+            ps = list(pos.split(','))
         else:
-            if pos:
-                pos = int(pos)
+#            if pos:
+#                pos = int(pos)
 
             ps = [pos]
 
         return ps
+    
     def _make_script_name(self, name):
         name = '{}_{}'.format(self.mass_spectrometer, name)
         name = self._add_script_extension(name)
@@ -1796,7 +1798,7 @@ anaylsis_type={}
             if not pi:
                 continue
 
-            if pi[0] in ('p', 'l', 'd'):
+            if pi[0].lower() in ('p', 'l', 'd'):
                 n = pi[1:]
             else:
                 n = pi

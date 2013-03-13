@@ -197,14 +197,15 @@ class CorrectionsManager(Saveable):
 
     @cached_property
     def _get_all_analyses(self):
-        ans = self.analyses
-        prs = self.interpolation_correction.predictors
-        for pi in prs:
-            pi.bgcolor = 0x99CCFF
-
-        ts = ans + prs
-        ts = sorted(ts, key=lambda x: x.timestamp)
-        return ts
+        if self.interpolation_correction:
+            ans = self.analyses
+            prs = self.interpolation_correction.predictors
+            for pi in prs:
+                pi.bgcolor = 0x99CCFF
+    
+            ts = ans + prs
+            ts = sorted(ts, key=lambda x: x.timestamp)
+            return ts
 
     def _get_isotope_names(self):
         keys = None

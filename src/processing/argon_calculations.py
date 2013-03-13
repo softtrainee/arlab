@@ -204,7 +204,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #        k39 = s39dec_cor - ca39
 #        k37 = k3739 * k39
 
-    if arar_constants.k3739_mode == 'normal':
+    if arar_constants.k3739_mode.lower() == 'normal':
         # iteratively calculate 37, 39
         for _ in range(5):
             ca37 = s37dec_cor - k37
@@ -212,21 +212,27 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             k39 = s39dec_cor - ca39
             k37 = k3739 * k39
     else:
-#        k39 = s39dec_cor
-#        k37 = arar_constants.fixed_k3739 * k39
-#        ca37 = ufloat((0, 0))
-#        ca39 = ufloat((0, 0))
-
-        for _ in range(5):
-            ca37 = s37dec_cor - arar_constants.fixed_k3739 * k39
-            ca39 = ca3937 * ca37
-            k39 = s39dec_cor - ca39
-#            k37 = k3739 * k39
-
+        '''
+            x=ca37/k39
+            y=ca37/ca39
+            T=s39dec_cor
+            
+            T=ca39+k39
+            T=ca37/y+ca37/x
+            
+            ca37=(T*x*y)/(x+y)
+        '''
+        x=arar_constants.fixed_k3739
+        y=1/ca3937
+        
+        ca37=(s39dec_cor*x*y)/(x+y)
+        ca39=ca3937*ca37
+        k39=s39dec_cor-ca39
+            
     k38 = k3839 * k39
     ca36 = ca3637 * ca37
     ca38 = ca3837 * ca37
-    ca39 = ca3937 * ca37
+#    ca39 = ca3937 * ca37
 
     '''
         McDougall and Harrison

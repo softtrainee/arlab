@@ -519,6 +519,7 @@ class UVStageMap(StageMap):
 
     def get_line(self, name):
         pos = None
+        name=name.lower()
         if name.startswith('l'):
             v = int(name[1:])
             pos = self.lines[v - 1]
