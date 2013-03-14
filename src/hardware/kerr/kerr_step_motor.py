@@ -96,20 +96,39 @@ class KerrStepMotor(KerrMotor):
         if self.discrete_position:
             dp = self.discrete_position
             self.data_position = int(dp.position)
-
+    
     def get_discrete_value(self, name=None):
         v = None
         if name is None:
             if self.discrete_position:
                 name = self.discrete_position.name
-
+        
         dp = self.get_discrete_position(name)
         if dp is not None:
             v = dp.value
+            
         return v
-
+    
+    def _convert_value(self,value):
+        if value is not None:
+            try:
+                value=int(value)
+            except (TypeError, ValueError):
+                if isinstance(value, (list, tuple)):
+                    value=' '.join(value)
+                value=value.replace('_', ' ')
+                dp=self.get_discrete_position(value)
+                if dp:
+                    value=int(dp.position)
+                print 'disc ', value
+            return value
+    
     def get_discrete_position(self, name):
-        return next((di for di in self.discrete_positions if di.name == name), None)
+        
+#        for di in self.discrete_positions:
+#            print di.name.lower(), name.lower(),di.name.lower()== name.lower
+        if name is not None:
+            return next((di for di in self.discrete_positions if di.name.lower() == name.lower()), None)
 
     def _initialize_(self, *args, **kw):
         addr = self.address

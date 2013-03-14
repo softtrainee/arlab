@@ -25,7 +25,7 @@ from chaco.api import AbstractOverlay
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
 from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
-    VelocityPolyLine, Transect
+    VelocityPolyLine, Transect, Polygon
 
 from kiva import constants
 from src.lasers.geometry import calc_point_along_line
@@ -47,6 +47,12 @@ class LineOverlay(AbstractOverlay):
         with gc:
             gc.clip_to_rect(component.x, component.y, component.width, component.height)
             for li in self.component.lines:
+                li.render(gc)
+class MarkupOverlay(AbstractOverlay):
+    def overlay(self, component, gc, *args, **kw):
+        with gc:
+            gc.clip_to_rect(component.x, component.y, component.width, component.height)
+            for li in self.component.markup_objects:
                 li.render(gc)
 
 
@@ -111,9 +117,13 @@ class LaserTrayCanvas(MapCanvas):
     show_bounds_rect = Bool(True)
     points = List
     transects = List
+    lines = List
+    polygons=List
+    markup_objects=List
+    
     _new_line = True
     _new_transect = True
-    lines = List
+    _new_polygon=True
 
     def __init__(self, *args, **kw):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
@@ -140,27 +150,42 @@ class LaserTrayCanvas(MapCanvas):
     def clear_all(self):
         self.lines = []
         self.points = []
+        self.transects=[]
+        self.polygons=[]
+        self.markup_objects=[]
+        self.reset_markup()
+        
+    def reset_markup(self):
         self._new_line = True
         self._new_transect = True
-
-    def remove_point_overlay(self):
+        self._new_polygon=True
+        
+#    def remove_point_overlay(self):
+#        for o in self.overlays[:]:
+#            if isinstance(o, PointOverlay):
+#                self.overlays.remove(o)
+#
+#    def remove_line_overlay(self):
+#        for o in self.overlays[:]:
+#            if isinstance(o, LineOverlay):
+#                self.overlays.remove(o)
+    def remove_markup_overlay(self):
         for o in self.overlays[:]:
-            if isinstance(o, PointOverlay):
+            if isinstance(o, MarkupOverlay):
                 self.overlays.remove(o)
 
-    def remove_line_overlay(self):
-        for o in self.overlays[:]:
-            if isinstance(o, LineOverlay):
-                self.overlays.remove(o)
+#    def add_point_overlay(self):
+#        po = PointOverlay(component=self)
+#        self.overlays.append(po)
 
-    def add_point_overlay(self):
-        po = PointOverlay(component=self)
-        self.overlays.append(po)
-
-    def add_line_overlay(self):
-        po = LineOverlay(component=self)
-        self.overlays.append(po)
-
+#    def add_line_overlay(self):
+#        po = LineOverlay(component=self)
+#        self.overlays.append(po)
+    
+    def add_markup_overlay(self):
+        mo=MarkupOverlay(component=self)
+        self.overlays.append(mo)
+        
     def point_exists(self, xy=None, tol=1e-5):
         if xy is None:
             xy = self._stage_position
@@ -187,7 +212,23 @@ class LaserTrayCanvas(MapCanvas):
                                   )
         self.request_redraw()
 
+    def new_polygon_point(self, xy=None, line_color=(1, 0, 0), point_color=(1, 0, 0),use_convex_hull=False, **ptargs):
+        if xy is None:
+            xy = self._stage_position
 
+        if self._new_polygon:
+            self._new_polygon=False
+            poly=Polygon([xy],
+                         identifier=str(len(self.polygons) + 1),
+                                canvas=self,
+                                use_convex_hull=use_convex_hull,
+                                default_color=point_color,)
+            self.polygons.append(poly)
+            self.markup_objects.append(poly)
+        else:
+            poly=self.polygons[-1]
+            poly.add_point(xy,default_color=point_color)
+        
     def new_transect_point(self, xy=None, step=1, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
         if xy is None:
             xy = self._stage_position
@@ -248,7 +289,7 @@ class LaserTrayCanvas(MapCanvas):
                           **kw
                           )
             self._new_line = False
-
+            self.markup_objects.append(line)
             self.lines.append(line)
         else:
             line = self.lines[-1]
@@ -274,7 +315,7 @@ class LaserTrayCanvas(MapCanvas):
                 canvas=self,
                 **kw
                 )
-
+        self.markup_objects.append(p)
         self.points.append(p)
 #        p = PointIndicator(*self._stage_position, identifier=pid, canvas=self)
 #        self.markupcontainer[pid] = p

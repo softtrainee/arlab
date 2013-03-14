@@ -51,12 +51,13 @@ Recursively eliminates points that lie inside two neighbouring points until only
         convex hull surrounding points
 '''
 
+    if not isinstance(points[0], (tuple, np.ndarray)):
+        points = [(pi.x, pi.y) for pi in points]
 
-    points = np.asarray(points)
-    points = np.asarray([(pi.x, pi.y) for pi in points])
+    points=np.asarray(points)
     points = points.T
     n_pts = points.shape[1]
-    assert(n_pts > 5)
+    assert(n_pts > 1)
     centre = points.mean(1)
     angles = np.apply_along_axis(_angle_to_point, 0, points, centre)
     pts_ord = points[:, angles.argsort()]

@@ -98,12 +98,14 @@ class KerrCircularStepMotor(KerrStepMotor):
         cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
               (addr, move_cmd, 100, 'Send to Limit')]
         self._execute_hex_commands(cmds)
-        # poll proximity switch
-        while 1:
-            time.sleep(0.05)
-            if self._get_proximity_limit():
-                break
-
+        
+#        cnt=0
+#        # poll proximity switch wait for 2 successess
+#        while cnt<2:
+#            time.sleep(0.05)
+#            if self._get_proximity_limit():
+#                cnt+=1
+        self._proximity_move(True)
         # stop moving when proximity limit set
         cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
                 (addr, '00', 100, 'Reset Position')]
@@ -112,14 +114,16 @@ class KerrCircularStepMotor(KerrStepMotor):
         # start moving
         self._set_motor_position_(100)
 
-        # poll proximity switch
-        while 1:
-            time.sleep(0.05)
-            if not self._get_proximity_limit():
-                break
-        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
-                (addr, '00', 100, 'Reset Position')]
-        self._execute_hex_commands(cmds)
+#        # poll proximity switch
+#        while 1:
+#            time.sleep(0.05)
+#            if not self._get_proximity_limit():
+#                break
+#        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
+#                (addr, '00', 100, 'Reset Position')]
+#        self._execute_hex_commands(cmds)
+        self._proximity_move(False)
+
         # define homing options
         # stop abruptly on home signal
         home_control_byte = self._load_home_control_byte()
@@ -141,7 +145,22 @@ class KerrCircularStepMotor(KerrStepMotor):
         # motor is stopped
         # reset pos
         self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
+    
+    def _proximity_move(self, onoff, n=2):
+        addr=self.address
+        cnt=0
+        # poll proximity switch wait for 2 successess
+        while cnt<2:
+            time.sleep(0.05)
+            lim=self._get_proximity_limit()
+            if (onoff and lim) or  (not onoff and not lim):
+                cnt+=1
 
+        # stop moving when proximity limit set
+        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
+                (addr, '00', 100, 'Reset Position')]
+        self._execute_hex_commands(cmds)
+        
     def _read_limits(self):
         cb = '00001000'
         inb = self.read_status(cb, verbose=True)
