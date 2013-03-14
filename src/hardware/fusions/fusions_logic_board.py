@@ -353,24 +353,28 @@ class FusionsLogicBoard(CoreDevice):
 # motor methods
 #==============================================================================
     def set_motor(self, name, value, block=False,
-                  relative=False):
+                  relative=False,
+                  remote_set=False):
+        
         motor = next((m for m in self.motors if m.name == name), None)
         if motor is None:
             return
 
+        motor.remote_set=remote_set
         if relative:
             value = motor.data_position + value
             if not 0 <= value <= 100:
                 return
 
-        self._enable_motor_(motor, value)
+#        self._enable_motor_(motor, value)
 
-        self.info('setting {} to {:0.1f}'.format(name, value))
+        self.info('setting {} to {}'.format(name, value))
+        return motor.set_value(value, block)
+       
 
-        motor.data_position = value
-
-        if block:
-            self._block_(motor)
+#        if block:
+#            self._block_(motor)
+#        return True
 
     def _block_(self, motor):
         '''

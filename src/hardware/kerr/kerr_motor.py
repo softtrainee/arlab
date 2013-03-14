@@ -67,7 +67,9 @@ class KerrMotor(KerrDevice):
     doing_hysteresis_correction = False
     display_name = Property
     display_name_color = 'brown'
-
+    
+    remote_set=False
+    
     def _get_display_name(self):
         return self.name.capitalize()
 
@@ -97,7 +99,25 @@ class KerrMotor(KerrDevice):
         return 'F6{}'.format(gains)
 #        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
 #        return ''.join(['F6'] + map(hexfmt, [p, d, i, il, ol, cl, el, sr, db, sm]))
-
+    def set_value(self, value, block=False):
+        if self.data_position != value:
+            self.enabled = False
+            value=self._convert_value(value)
+            self.info('setting data position {}'.format(value))
+            self.data_position = value
+            if block:
+                self.info('waiting for move to complete')
+                self.block()
+                self.info('move complete')
+            self.enabled=True
+        else:
+            self.info('not changing pos {}=={}'.format(self.data_position, value))
+        
+        return True
+    
+    def _convert_value(self, value):
+        return value
+    
     def load_additional_args(self, config):
         '''
         '''

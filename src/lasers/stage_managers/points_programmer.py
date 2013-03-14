@@ -6,6 +6,7 @@ from src.paths import paths
 from src.loggable import Loggable
 import yaml
 from src.managers.manager import Manager
+import os
 
 '''
     add transect programming. define two end points, define step distance. 
@@ -33,10 +34,11 @@ class PointsProgrammer(Manager):
     accept_point = Button
     stage_map_klass = Any
 #    mode = Enum('transect', 'point', 'line')
-    mode = Enum('point', 'line', 'transect')
+    mode = Enum('polygon','point', 'line', 'transect')
 
     point_color = Color('green')
 
+    use_convex_hull=Bool(True)
     trace_velocity = Float
     point_entry = Property(Int(enter_set=True, auto_set=False))
     point = Any
@@ -52,7 +54,6 @@ class PointsProgrammer(Manager):
             self.line = pp
         else:
             self.line=None
-
 
     def _get_line_entry(self):
         p = ''
@@ -80,15 +81,22 @@ class PointsProgrammer(Manager):
     def _show_hide_fired(self):
         canvas = self.canvas
         if self.is_visible:
-            canvas.remove_point_overlay()
-            canvas.remove_line_overlay()
+#            canvas.remove_point_overlay()
+#            canvas.remove_line_overlay()
+            canvas.remove_markup_overlay()
         else:
-            canvas.add_point_overlay()
-            canvas.add_line_overlay()
+            canvas.add_markup_overlay()
+#            canvas.add_point_overlay()
+#            canvas.add_line_overlay()
 
         canvas.request_redraw()
         self.is_visible = not self.is_visible
 
+    def _use_convex_hull_changed(self):
+        poly=self.canvas.polygons[-1]
+        poly.use_convex_hull=self.use_convex_hull
+        self.canvas.request_redraw()
+        
     def _transect_step_changed(self):
         if self.transect_step:
             self.canvas.set_transect_step(self.transect_step)
@@ -122,16 +130,18 @@ class PointsProgrammer(Manager):
 
     def _program_points_fired(self):
         if self.is_programming:
+            self.canvas.remove_markup_overlay()
             self.is_programming = False
             self.is_visible = False
-            self.canvas.remove_point_overlay()
-            self.canvas.remove_line_overlay()
+#            self.canvas.remove_point_overlay()
+#            self.canvas.remove_line_overlay()
         else:
+            self.canvas.add_markup_overlay()
             self.is_programming = True
             self.is_visible = True
 
-            self.canvas.add_point_overlay()
-            self.canvas.add_line_overlay()
+#            self.canvas.add_point_overlay()
+#            self.canvas.add_line_overlay()
 
         self.canvas.request_redraw()
 #        if not self.canvas.markup:
@@ -143,17 +153,31 @@ class PointsProgrammer(Manager):
 #                self.canvas.request_redraw()
 #        self.canvas.markup = not self.canvas.markup
     def _finish_fired(self):
-        self.canvas.new_line = True
+        self.canvas.reset_markup()
+#        self.canvas._new_line = True
+#        self.canvas._new_transect = True
+#        self.canvas._new_polygon = True
 
     def _accept_point_fired(self):
         radius = 0.05  # mm or 50 um
-        mask = self.stage_manager.parent.get_motor('mask')
+        sm = self.stage_manager
+        lm=sm.parent
+        mask = lm.get_motor('mask')
+        attenuator = lm.get_motor('attenuator')
+        mask_value,attenuator_value=None, None
         if mask:
             radius = mask.get_discrete_value()
-        
-        sm = self.stage_manager
+            if not radius:
+                radius=0.05
+            mask_value=mask.data_position
+            
+        if attenuator:
+            attenuator_value=attenuator.data_position
+            
         ptargs = dict(radius=radius, 
                       z=sm.get_z(),
+                      mask=mask_value,
+                      attenuator=attenuator_value,
                       vline_length=0.1, hline_length=0.1)
 
         if not self.canvas.point_exists():
@@ -162,12 +186,19 @@ class PointsProgrammer(Manager):
                                            line_color=self.point_color,
                                            velocity=self.trace_velocity,
                                            **ptargs)
-            if self.mode == 'transect':
+            elif self.mode == 'transect':
                 self.canvas.new_transect_point(point_color=self.point_color,
                                                line_color=self.point_color,
                                                step=self.transect_step,
                                                **ptargs
                                                )
+            elif self.mode=='polygon':
+                self.canvas.new_polygon_point(point_color=self.point_color,
+                                               line_color=self.point_color,
+                                               use_convex_hull=self.use_convex_hull,
+                                               **ptargs
+                                               )
+                
             else:
                 npt = self.canvas.new_point(default_color=self.point_color,
                                             
@@ -180,20 +211,27 @@ class PointsProgrammer(Manager):
             return
 
         canvas = self.canvas
-        canvas.remove_point_overlay()
-        canvas.remove_line_overlay()
-        canvas.add_point_overlay()
-        canvas.add_line_overlay()
-        canvas.lines = []
-        canvas.points = []
+#        canvas.remove_point_overlay()
+#        canvas.remove_line_overlay()
+#        canvas.add_point_overlay()
+#        canvas.add_line_overlay()
+        
+        canvas.clear_all()
+        canvas.remove_markup_overlay()
+        canvas.add_markup_overlay()
+#        canvas.lines = []
+#        canvas.points = []
 
         ptargs = dict(radius=0.05, 
                       vline_length=0.1, hline_length=0.1)
         for li in sm.lines:
             canvas._new_line = True
             for si in li:
+                mi=si['mask'] if si.has_key('mask') else 0
+                ai=si['attenuator'] if si.has_key('attenuator') else 0
                 canvas.new_line_point(xy=si['xy'],
                                       z=si['z'],
+                                      mask=mi, attenuator=ai,
                                       point_color=self.point_color,
                                        line_color=self.point_color,
                                        velocity=si['velocity'],
@@ -201,8 +239,11 @@ class PointsProgrammer(Manager):
             canvas._new_line = True
 
         for pi in sm.points:
+            mi=pi['mask'] if pi.has_key('mask') else 0
+            ai=pi['attenuator'] if pi.has_key('attenuator') else 0
             canvas.new_point(xy=pi['xy'],
                              z=pi['z'],
+                             mask=mi, attenuator=ai,
                              default_color=self.point_color,
                                     **ptargs)
 
@@ -226,6 +267,7 @@ class PointsProgrammer(Manager):
             txt = dict()
             pts = [dict(identifier=pi.identifier,
                         z=float(pi.z),
+                        mask=pi.mask,attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)]
                         ) for pi in self.canvas.points]
 
@@ -236,6 +278,8 @@ class PointsProgrammer(Manager):
                     v = li.velocity_segments[i / 2]
                     segments.append(dict(xy=[float(pi.x), float(pi.y)], 
                                          z=float(pi.z),
+                                         mask=pi.mask,
+                                         attenuator=pi.attenuator,
                                          velocity=v))
                 lines.append(segments)
 
@@ -267,6 +311,8 @@ class PointsProgrammer(Manager):
 #            self._stage_maps.append(sm)
 #            self.canvas.save_points(p)
             self.stage_manager.add_stage_map(p)
+            head,_tail=os.path.splitext(os.path.basename(p))
+            self.stage_manager.set_stage_map(head)
 
     def _get_program_points_label(self):
         return 'End Program' if self.is_programming else 'Program Positions'
@@ -275,7 +321,7 @@ class PointsProgrammer(Manager):
         return 'Hide' if self.is_visible else 'Show'
 
     def _mode_default(self):
-        return 'point'
+        return 'polygon'
 
     def _clear_mode_default(self):
         return 'all'
@@ -290,6 +336,7 @@ class PointsProgrammer(Manager):
                              Item('mode'),
                              Item('trace_velocity', visible_when='mode=="line"'),
                              Item('transect_step', visible_when='mode=="transect"'),
+                             Item('use_convex_hull', visible_when='mode=="polygon"'),
                              Item('point_color', show_label=False),
                              HGroup(Item('show_hide', show_label=False,
                                          editor=ButtonEditor(label_value='show_hide_label')

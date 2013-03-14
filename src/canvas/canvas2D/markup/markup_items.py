@@ -15,12 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int
+from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int,\
+    Array
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
 #============= standard library imports ========================
 import math
 from numpy import array
+from src.machine_vision.convex_hull import convex_hull
 #============= local library imports  ==========================
 
 
@@ -725,4 +727,70 @@ class BorderLine(Line):
 #        gc.set_line_width(self.line_width)
         # draw main line
         super(BorderLine, self)._render_(gc)
+        
+        
+class Polygon(MarkupItem):
+    points=List
+    lines=List
+    use_convex_hull=False
+    def __init__(self, points,*args, **kw):
+        x,y=points[0]
+        super(Polygon, self).__init__(x,y,*args, **kw)
+        for x,y in points:
+            self.add_point((x,y), **kw)
+        
+    def add_point(self, pt, **kw):
+        if isinstance(pt, tuple):
+            kw['canvas']=self.canvas
+            pt = Dot(*pt, **kw)
+        
+        
+        self.points.append(pt)
+        
+        
+        #sort points clockwise
+        xy=array([pi.get_xy() for pi in self.points])
+        xs,ys=xy.T
+        cx=xs.mean()
+        cy=ys.mean()
+        
+        
+        angles=[(math.atan2(y-cy, x-cx), pi) for pi,x,y in zip(self.points, xs,ys)]
+        angles=sorted(angles, key=lambda x: x[0])
+        _,pts=zip(*angles)
+        self.points=list(pts)
+        
+        if len(xy)>2:
+            self.convex_hull_pts=convex_hull(xy)
+
+    def _render_(self, gc):
+        with gc:
+            
+            for pi in self.points:
+                pi.render(gc)
+                
+            gc.set_stroke_color((0,0,1))
+            
+            pts=[pi.get_xy() for pi in self.points]
+            if len(pts)==2:
+                x0,y0=pts[0][0], pts[0][1]
+                x1,y1=pts[1][0], pts[1][1]
+                
+                x,y=min(x0, x1),min(y0, y1)
+                w,h=abs(x0-x1),abs(y0-y1)
+                
+                gc.rect(x,y,w,h)
+                
+            else:
+                if len(pts)>2 and self.use_convex_hull:
+                    pts=convex_hull(pts)
+
+                if pts is not None and len(pts)>2:
+                    gc.set_stroke_color((0,0,1))
+                    gc.move_to(pts[0][0],pts[0][1])
+                    for pi in pts[1:]:
+                        gc.line_to(pi[0],pi[1])
+                    gc.line_to(pts[0][0],pts[0][1])   
+                                     
+            gc.stroke_path()
 #============= EOF ====================================

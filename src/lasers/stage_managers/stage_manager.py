@@ -507,19 +507,50 @@ class StageManager(Manager):
                                    block=True)
         sc.set_z(pts[0]['z'], block=True)
         
+        cpos=dict()
+        #set motors
+        for motor in ('mask', 'attenuator'):
+            if pts[0].has_key(motor):
+                self.parent.set_motor(motor, pts[0][motor])
+                cpos[motor]=pts[0][motor]
+                
         sc.set_program_mode('absolute')
         sc.timer=sc.timer_factory()
         if start_callback:
             start_callback()
-            
-        for di in pts[1:]:
+        
+        npts=pts[1:]
+        setmotors=dict()
+        for i,di in enumerate(npts):
             xi, yi, zi, vi = di['xy'][0], di['xy'][1], di['z'], di['velocity']
             sc.set_z(zi)
+            
+            block=False
+            for motor in ('mask', 'attenuator'):
+                #fix next step sets motor should block
+                if i+1< len(npts):
+                    dii=npts[i+1]
+                    if dii.has_key(motor):
+                        if dii[motor]!=cpos[motor]:
+                            m=self.parent.get_motor(motor)
+                            if not m.remote_set:
+                                block=True
+                                setmotors[motor]=dii[motor]
+            
             self.linear_move(xi, yi, velocity=vi,
-                             block=False,
+                             block=block,
                              mode='absolute', #use absolute mode because commands are queued
                              set_stage=False)
-        
+            if block:
+                if end_callback:
+                    end_callback()
+                    
+                for k,v in setmotors.iteritems():
+                    self.parent.set_motor(k, v, block=True)
+                    
+                if start_callback:
+                    start_callback()
+                
         #wait until motion complete
         sc.block()
         if end_callback:
@@ -545,6 +576,12 @@ class StageManager(Manager):
         if hasattr(pt, 'z'):
             self.stage_controller.set_z(pt.z, block=True)
 
+        for motor in ('mask', 'attenuator'):
+            if hasattr(pt, motor):
+                m=self.parent.get_motor(motor)
+                if not m.remote_set:
+                    self.parent.set_motor(motor, getattr(pt, motor), block=True)
+        
         self._move_to_point_hook()
 
         self.info('Move complete')

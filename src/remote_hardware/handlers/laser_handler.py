@@ -303,12 +303,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
 
     def SetMotor(self, manager, name, data, *args):
-        try:
-            bd = float(data)
-        except ValueError:
-            return InvalidArgumentsErrorCode('SetMotor', data, logger=self)
+#        try:
+#            bd = float(data)
+#        except ValueError:
+#            return InvalidArgumentsErrorCode('SetMotor', data, logger=self)
 
-        if manager.set_motor(name, bd, block=False):
+        if manager.set_motor(name, data, block=False, remote_set=True):
             return 'OK'
         else:
             return 'OK - {} disabled'.format(name)
