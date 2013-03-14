@@ -15,8 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, CInt, Str, String, on_trait_change, Button, Float, Property, Event, Bool, Enum
-from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
+from traits.api import Int, CInt, Str, String, on_trait_change, Button, Float, \
+    Property, Event, Bool, Enum, cached_property, Range
+
+from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor, EnumEditor,\
+    TextEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import time
@@ -25,6 +28,8 @@ from threading import Thread
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
 from src.lasers.laser_managers.laser_manager import BaseLaserManager
 from src.helpers.filetools import str_to_bool
+import os
+from src.paths import paths
 
 
 class PychronLaserManager(BaseLaserManager):
@@ -322,66 +327,13 @@ class PychronUVLaserManager(PychronLaserManager):
     mode = Enum('Burst', 'Continuous')
     nburst = Property(depends_on='_nburst')
     _nburst = Int
-
-    def _get_int(self, resp):
-        r = 0
-        if resp is not None:
-            try:
-                r = int(resp)
-            except (ValueError, TypeError):
-                pass
-        return r
-
-    def _opened_hook(self):
-        nb = self._ask('GetNBurst')
-        self._nburst = self._get_int(nb)
-
-        mb = self._ask('GetBurstMode')
-        if mb is not None:
-            self.mode = 'Burst' if mb == '1' else 'Continuous'
-
-    def _fire_fired(self):
-        if self.firing:
-            mode = 'stop'
-            self.firing = False
-        else:
-            if self.mode == 'Continuous':
-                mode = 'continuous'
-            else:
-                mode = 'burst'
-            self.firing = True
-
-        self._ask('Fire {}'.format(mode))
-
-
-    def _validate_nburst(self, v):
-        try:
-            return int(v)
-        except (ValueError, TypeError):
-            pass
-
-    def _set_nburst(self, v):
-        if v is not None:
-            v = int(v)
-            self._ask('SetNBurst {}'.format(v))
-            self._nburst = v
-
-    def _get_nburst(self):
-        return self._nburst
-
-    def _get_fire_label(self):
-        return 'Stop' if self.firing else 'Fire'
-#===============================================================================
-#
-#===============================================================================
-    def _position_changed(self):
-        if self.position is not None:
-            t = Thread(target=self._move_to_position, args=(self.position,))
-            t.start()
-#            self._move_to_position(self.position)
-#===============================================================================
-#
-#===============================================================================
+    
+    mask = Str(enter_set=True, auto_set=False)
+    masks = Property
+    attenuator = Str(enter_set=True, auto_set=False)
+    attenuators = Property
+    zoom=Range(0.0, 100.0)
+    
     def extract(self, power):
         self._set_nburst(power)
         self._ask('Fire burst')
@@ -407,6 +359,53 @@ class PychronUVLaserManager(PychronLaserManager):
     def drill_point(self, value, name):
         pass
 
+#===============================================================================
+#
+#===============================================================================
+    def _fire_fired(self):
+        if self.firing:
+            mode = 'stop'
+            self.firing = False
+        else:
+            if self.mode == 'Continuous':
+                mode = 'continuous'
+            else:
+                mode = 'burst'
+            self.firing = True
+
+        self._ask('Fire {}'.format(mode))
+        
+    def _position_changed(self):
+        if self.position is not None:
+            t = Thread(target=self._move_to_position, args=(self.position,))
+            t.start()
+#            self._move_to_position(self.position)
+
+    @on_trait_change('mask, attenuator, zoom')      
+    def _motor_changed(self, name, new):
+        if new is not None:
+            t=Thread(target=self.set_motor, args=(name, new))
+            t.start()
+            
+#===============================================================================
+#
+#===============================================================================
+    def _opened_hook(self):
+        nb = self._ask('GetNBurst')
+        self._nburst = self._get_int(nb)
+
+        mb = self._ask('GetBurstMode')
+        if mb is not None:
+            self.mode = 'Burst' if mb == '1' else 'Continuous'
+    
+#    def _set_motor(self, name, value):
+#        self.info('setting motor {} to {}'.format(name,value))
+#        cmd='SetMotor {} {}'.format(name, value)
+#        time.sleep(0.5)
+#        self._ask(cmd)
+#        r = self._block(cmd='GetMotorMoving {}'.format(name))
+#        return r
+    
     def _move_to_position(self, pos):
 
         cmd = 'GoToPoint'
@@ -435,6 +434,9 @@ class PychronUVLaserManager(PychronLaserManager):
                             Item('nburst')
                             ),
                      Item('position'),
+                     Item('zoom', style='simple'),
+                     HGroup(Item('mask', editor=EnumEditor(name='masks')), Item('mask', show_label=False)),
+                     HGroup(Item('attenuator', editor=EnumEditor(name='attenuators')), Item('attenuator', show_label=False)),
                      Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
                      Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
                      Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
@@ -444,6 +446,58 @@ class PychronUVLaserManager(PychronLaserManager):
                  handler=self.handler_klass
                  )
         return v
+    
+    
+#===============================================================================
+# property get/set
+#===============================================================================
+    @cached_property
+    def _get_masks(self):
+        return self._get_motor_values('masks')
+    
+    @cached_property
+    def _get_attenuators(self):
+        return self._get_motor_values('attenuators')
+    
+    def _get_motor_values(self, name):
+        p = os.path.join(paths.device_dir, 'uv', '{}.txt'.format(name))
+        values = []
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                for lin in fp:
+                    lin = lin.strip()
+                    if not lin or lin.startswith('#'):
+                        continue
+                    values.append(lin)
+
+        return values
+    
+        
+    def _get_int(self, resp):
+        r = 0
+        if resp is not None:
+            try:
+                r = int(resp)
+            except (ValueError, TypeError):
+                pass
+        return r
+    def _validate_nburst(self, v):
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            pass
+
+    def _set_nburst(self, v):
+        if v is not None:
+            v = int(v)
+            self._ask('SetNBurst {}'.format(v))
+            self._nburst = v
+
+    def _get_nburst(self):
+        return self._nburst
+
+    def _get_fire_label(self):
+        return 'Stop' if self.firing else 'Fire'
 #        else:
 #
 #            return super(PychronUVLaserManager, self)._move_to_position(pos)
