@@ -27,9 +27,10 @@ class BaseMaker(Loggable):
     stage_manager = Any
 
     clear = Button
-    clear_mode = Enum('all', 'all lines', 'all points', 'current line',
-                    'current point', 'last point'
-                    )
+#    clear_mode = Enum('all', 'all lines', 'all points', 'current line',
+#                    'current point', 'last point'
+#                    )
+    clear_mode = Enum('all')  # , 'current point')
     accept_point = Button
 
     point_color = Color
@@ -67,28 +68,33 @@ class BaseMaker(Loggable):
 
     def _clear_fired(self):
         cm = self.clear_mode
-        if cm.startswith('current'):
-            if cm == 'current line':
-                self.canvas.lines.pop(-1)
-            else:
-                self.canvas.points.pop(-1)
-        elif cm.startswith('all'):
-            if cm == 'all':
-                self.canvas.clear_all()
-            elif cm == 'all lines':
-                self.canvas.lines = []
-            else:
-                self.canvas.points = []
-        else:
-            line = self.canvas.lines[-1]
-            if len(line.points):
-                if self.mode == 'line':
-                    line.points.pop(-1)
-                    if line.lines:
-                        line.lines.pop(-1)
-                        line.velocity_segments.pop(-1)
-                else:
-                    self.canvas.points.pop(-1)
+        if cm == 'all':
+            self.canvas.clear_all()
+#        elif cm == 'current point':
+#            self.canvas.points.pop(-1)
+
+#        if cm.startswith('current'):
+#            if cm == 'current line':
+#                self.canvas.lines.pop(-1)
+#            else:
+#                self.canvas.points.pop(-1)
+#        elif cm.startswith('all'):
+#            if cm == 'all':
+#                self.canvas.clear_all()
+#            elif cm == 'all lines':
+#                self.canvas.lines = []
+#            else:
+#                self.canvas.points = []
+#        else:
+#            line = self.canvas.lines[-1]
+#            if len(line.points):
+#                if self.mode == 'line':
+#                    line.points.pop(-1)
+#                    if line.lines:
+#                        line.lines.pop(-1)
+#                        line.velocity_segments.pop(-1)
+#                else:
+#                    self.canvas.points.pop(-1)
 
         self.canvas.request_redraw()
 
@@ -182,19 +188,30 @@ class LineMaker(FinishableMaker):
 class PolygonMaker(FinishableMaker):
     velocity = Float(1.0)
     use_convex_hull = Bool(True)
+    plot_scan = Button
+    scan_size = Int(50)
+    def _plot_scan_fired(self):
+        polygons = self.canvas.polygons
+        if self.polygon_entry is not None and self.scan_size:
+            pp = next((pi for pi in polygons if pi.identifier == self.polygon_entry), None)
+            self.stage_manager._move_polygon(pp,
+                                             scan_size=self.scan_size,
+                                             use_plot=True, use_move=False)
 
     def _get_controls(self):
         g = VGroup(Item('velocity', label='Velocity mm/min'),
-                   Item('use_convex_hull'))
+                   Item('use_convex_hull'),
+                   Item('scan_size', label='Scan H (um)'),
+                   )
         return g
 
     def _save(self):
+        pe = self.stage_manager.points_programmer.polygon_entry
+
+
         polys = dict()
         for i, po in enumerate(self.canvas.polygons):
             pts = []
-
-            p0 = po.points[-1]
-            motors = dict(mask=p0.mask, attenuator=p0.attenuator)
 
             for pi in po.points:
                 d = dict(identifier=pi.identifier,
@@ -203,8 +220,32 @@ class PolygonMaker(FinishableMaker):
                         xy=[float(pi.x), float(pi.y)])
                 pts.append(d)
 
-            polys[str(i)] = dict(velocity=self.velocity, points=pts,
-                                 motors=motors
+#            print int(pe) - 1, i
+            if int(pe) - 1 == i:
+                # save the selected polygon with new values
+                v = self.velocity
+                uch = self.use_convex_hull
+                ss = self.scan_size
+
+                motors = dict()
+                for motor in ('mask', 'attenuator'):
+                    m = self.stage_manager.parent.get_motor(motor)
+                    if m is not None:
+                        motors[motor] = m.data_position
+
+            else:
+                p0 = po.points[-1]
+                motors = dict(mask=p0.mask, attenuator=p0.attenuator)
+                v = po.velocity
+                uch = po.use_convex_hull
+                ss = po.scan_size
+
+            polys[str(i)] = dict(points=pts,
+                                 motors=motors,
+
+                                 velocity=v,
+                                 scan_size=ss,
+                                 use_convex_hull=uch
                                  )
 
         return {'polygons':polys}
@@ -218,6 +259,8 @@ class PolygonMaker(FinishableMaker):
         self.canvas.new_polygon_point(point_color=self.point_color,
                                       line_color=self.point_color,
                                       use_convex_hull=self.use_convex_hull,
+                                      velocity=self.velocity,
+                                      scan_size=self.scan_size,
                                       **ptargs)
 class TransectMaker(FinishableMaker):
     step = Float(1, enter_set=True, auto_set=False)

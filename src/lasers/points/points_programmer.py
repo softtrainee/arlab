@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Color, Button, Event, Property, \
-    Any, List, Bool, Enum, Float, Int, Instance, cached_property
+    Any, List, Bool, Enum, Float, Int, Instance, cached_property, Str
 from traitsui.api import View, Item, ButtonEditor, Group, HGroup, VGroup
 #============= standard library imports ========================
 import yaml
@@ -57,7 +57,11 @@ class PointsProgrammer(Manager):
     line_entry = Property(Int(enter_set=True, auto_set=False))
     line = Any
     polygon_entry = Property(Int(enter_set=True, auto_set=False))
+    _polygon_entry = Int
     polygon = Any
+    scan_size = Int(50)
+    plot_scan = Button('Plot')
+    use_move = Bool(False)
 
     @cached_property
     def _get_maker(self):
@@ -77,7 +81,10 @@ class PointsProgrammer(Manager):
 #            self.line = None
 
     def _set_polygon_entry(self, v):
-        self._set_entry('polygon', v, ['point', 'line'])
+        if self.use_move:
+            self._set_entry('polygon', v, ['point', 'line'])
+        else:
+            self._polygon_entry = v
 
     def _set_line_entry(self, v):
         self._set_entry('line', v, ['point', 'polygon'])
@@ -103,15 +110,28 @@ class PointsProgrammer(Manager):
         setattr(self, name, pp)
 
     def _get_entry_identifer(self, name):
-        p = ''
+        p = self._polygon_entry
         obj = getattr(self, name)
         if obj:
             p = obj.identifier
+
         return p
 
 #===============================================================================
 # handlers
 #===============================================================================
+    def _plot_scan_fired(self):
+        polygons = self.canvas.polygons
+        if self.polygon_entry is not None and self.scan_size:
+            pp = next((pi for pi in polygons if pi.identifier == str(self.polygon_entry)), None)
+            scan_size = None
+            if hasattr(self.maker, 'scan_size'):
+                scan_size = self.maker.scan_size
+
+            self.stage_manager._move_polygon(pp,
+                                             scan_size=scan_size,
+                                             use_plot=True, use_move=False)
+
     def _show_hide_fired(self):
         canvas = self.canvas
         if self.is_visible:
@@ -160,7 +180,6 @@ class PointsProgrammer(Manager):
                                        line_color=point_color,
                                        velocity=si['velocity'],
                                        **ptargs)
-#            canvas._new_line = True
 
         for pi in sm.points:
             mi = pi['mask'] if pi.has_key('mask') else 0
@@ -174,15 +193,19 @@ class PointsProgrammer(Manager):
         for k, po in sm.polygons.iteritems():
             canvas._new_polygon = True
             v = po['velocity']
+            use_convex_hull = po['use_convex_hull']
+            scan_size = po['scan_size']
+            mi = po['mask'] if po.has_key('mask') else 0
+            ai = po['attenuator'] if po.has_key('attenuator') else 0
             for pi in po['points']:
-                mi = pi['mask'] if pi.has_key('mask') else 0
-                ai = pi['attenuator'] if pi.has_key('attenuator') else 0
                 canvas.new_polygon_point(xy=pi['xy'],
                                          z=pi['z'],
                                          velocity=v,
                                          identifier=str(int(k) + 1),
                                          point_color=point_color,
                                          mask=mi, attenuator=ai,
+                                         scan_size=scan_size,
+                                         use_convex_hull=use_convex_hull,
                                          **ptargs)
 
         self.is_visible = True
@@ -225,7 +248,15 @@ class PointsProgrammer(Manager):
         v = View(VGroup(
                        Item('point_entry', label='Point'),
                        Item('line_entry', label='Line'),
-                       Item('polygon_entry', label='Polygon'),
+
+                       HGroup(Item('polygon_entry', label='Polygon'),
+                              Item('use_move',
+                                   tooltip='If checked the polygon rasterization will execute.'),
+                              Item('plot_scan',
+                                   show_label=False,
+                                   tooltip='Display a plot of the calculated scan lines'
+                                   ),
+                              ),
 
                        Item('mode')
                        ),

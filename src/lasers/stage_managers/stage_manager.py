@@ -507,6 +507,10 @@ class StageManager(Manager):
         return sm.get_hole(key)
 
     def _move_polygon(self, pts, velocity=5,
+                      scan_size=None,
+                      use_move=True,
+                      use_plot=False,
+                      use_convex_hull=True,
                       motors=None,
                       start_callback=None, end_callback=None):
         '''
@@ -514,7 +518,13 @@ class StageManager(Manager):
         '''
         if not isinstance(pts, list):
             velocity = pts.velocity
+            use_convex_hull = pts.use_convex_hull
+            if scan_size is None:
+                scan_size = pts.scan_size
             pts = [dict(xy=(pi.x, pi.y), z=pi.z,) for pi in pts.points]
+
+        if scan_size is None:
+            scan_size = 50
 
         # calculate scan lines
         from src.lasers.points.scan_line import raster_polygon
@@ -523,7 +533,6 @@ class StageManager(Manager):
         # convert points to um
         pts = array(pts)
         n = 100
-        step_microns = 50
         pts *= n
         pts = asarray(pts, dtype=int)
 
@@ -534,16 +543,19 @@ class StageManager(Manager):
                     motor will not set if it has been locked using set_motor_lock or 
                     remotely using SetMotorLock 
                 '''
-                self.parent.set_motor(k, v, block=True)
+                if use_move:
+                    self.parent.set_motor(k, v, block=True)
 
         def move(x, y, speed):
-            v = velocity if speed == 'slow' else None
-            self.linear_move(x / float(n), y / float(n), velocity=v)
+            if use_move:
+                v = velocity if speed == 'slow' else None
+                self.linear_move(x / float(n), y / float(n), velocity=v)
 
         raster_polygon(pts,
-                       skip=step_microns,
+                       skip=scan_size,
                        verbose=False,
-                       use_plot=True,
+                       use_plot=use_plot,
+                       use_convex_hull=use_convex_hull,
                        move_callback=move, start_callback=start_callback,
                        end_callback=end_callback,
                        )
