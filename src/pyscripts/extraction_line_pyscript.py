@@ -137,6 +137,17 @@ class ExtractionLinePyScript(ValvePyScript):
             self.info('move to position suceeded')
         return True
 
+
+    @verbose_skip
+    @command_register
+    def set_motor_lock(self, name='', value=''):
+        if name and value is not '':
+            l = 'YES' if value else 'NO'
+            self.info('set motor lock to {}'.format(name, l))
+            self._manager_action([('set_motor_lock', (name, value), {})],
+                                 protocol=ILaserManager,
+                                 name=self.extract_device)
+
     @verbose_skip
     @command_register
     def set_motor(self, name='', value=''):

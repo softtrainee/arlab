@@ -192,13 +192,20 @@ class PolygonMaker(FinishableMaker):
         polys = dict()
         for i, po in enumerate(self.canvas.polygons):
             pts = []
+
+            p0 = po.points[-1]
+            motors = dict(mask=p0.mask, attenuator=p0.attenuator)
+
             for pi in po.points:
                 d = dict(identifier=pi.identifier,
                         z=float(pi.z),
-                        mask=pi.mask, attenuator=pi.attenuator,
+#                        mask=pi.mask, attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)])
                 pts.append(d)
-            polys[str(i)] = dict(velocity=self.velocity, points=pts)
+
+            polys[str(i)] = dict(velocity=self.velocity, points=pts,
+                                 motors=motors
+                                 )
 
         return {'polygons':polys}
 

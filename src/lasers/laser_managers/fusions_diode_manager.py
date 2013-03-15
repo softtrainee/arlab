@@ -217,22 +217,22 @@ class FusionsDiodeManager(FusionsLaserManager):
 #
 #        return True
 
-    def get_degas_manager(self):
-        from degas_manager import DegasManager
-
-#        path = self.open_file_dialog(default_directory = os.path.join(scripts_dir,
-#                                                                      'laserscripts',
-#                                                                      'degas'
-#                                                                      )
-#                                     )
-
-        path = '/Users/pychron/Pychrondata_beta/scripts/laserscripts/degas/puck1.rs'
-        if path:
-            dm = DegasManager()
-            dm.parent = self
-            dm.file_name = path
-            dm.new_script()
-            return dm
+#    def get_degas_manager(self):
+#        from degas_manager import DegasManager
+#
+# #        path = self.open_file_dialog(default_directory = os.path.join(scripts_dir,
+# #                                                                      'laserscripts',
+# #                                                                      'degas'
+# #                                                                      )
+# #                                     )
+#
+#        path = '/Users/pychron/Pychrondata_beta/scripts/laserscripts/degas/puck1.rs'
+#        if path:
+#            dm = DegasManager()
+#            dm.parent = self
+#            dm.file_name = path
+#            dm.new_script()
+#            return dm
 
 
 #    def launch_camera_scan(self):

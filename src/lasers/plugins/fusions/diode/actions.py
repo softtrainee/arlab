@@ -33,13 +33,13 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
 class DiodeMixin(object):
     manager_name = 'fusions_diode'
 
-class DegasAction(DiodeMixin, LocalLaserAction):
-    def perform(self, event):
-        manager = self._get_manager(event)
-        if manager is not None:
-            man = manager.get_degas_manager()
-            app = self.window.application
-            open_manager(app, man)
+# class DegasAction(DiodeMixin, LocalLaserAction):
+#    def perform(self, event):
+#        manager = self._get_manager(event)
+#        if manager is not None:
+#            man = manager.get_degas_manager()
+#            app = self.window.application
+#            open_manager(app, man)
 
 
 class ConfigureWatlowAction(DiodeMixin, LocalLaserAction):

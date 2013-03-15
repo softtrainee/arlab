@@ -162,8 +162,10 @@ class FusionsUVManager(FusionsLaserManager):
         sc.set_smooth_transitions(True)
         print poly
 
-        v, points = poly['velocity'], poly['points']
+        v, points, motors = poly['velocity'], poly['points'], poly['motors']
+
         sm._move_polygon(points, velocity=v,
+                         motors=motors,
                          start_callback=atl.laser_run,
                          end_callback=atl.laser_stop
                          )

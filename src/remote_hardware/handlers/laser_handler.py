@@ -301,6 +301,11 @@ class LaserHandler(BaseRemoteHardwareHandler):
             pos = motor.data_position
         return pos
 
+    def SetMotorLock(self, manager, name, data, *args):
+        if manager.set_motor_lock(name, data):
+            return 'OK'
+        else:
+            return 'OK - {} disabled'.format(name)
 
     def SetMotor(self, manager, name, data, *args):
 #        try:
@@ -308,7 +313,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
 #        except ValueError:
 #            return InvalidArgumentsErrorCode('SetMotor', data, logger=self)
 
-        if manager.set_motor(name, data, block=False, remote_set=True):
+        if manager.set_motor(name, data, block=False):
             return 'OK'
         else:
             return 'OK - {} disabled'.format(name)
