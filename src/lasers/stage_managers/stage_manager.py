@@ -506,7 +506,12 @@ class StageManager(Manager):
         sm = self._stage_map
         return sm.get_hole(key)
 
-    def _move_polygon(self, pts, velocity=5, start_callback=None, end_callback=None):
+    def _move_polygon(self, pts, velocity=5,
+                      motors=None,
+                      start_callback=None, end_callback=None):
+        '''
+            motors is a dict of motor_name:value pairs
+        '''
         if not isinstance(pts, list):
             velocity = pts.velocity
             pts = [dict(xy=(pi.x, pi.y), z=pi.z,) for pi in pts.points]
@@ -518,20 +523,29 @@ class StageManager(Manager):
         # convert points to um
         pts = array(pts)
         n = 100
-        microns = 50
+        step_microns = 50
         pts *= n
         pts = asarray(pts, dtype=int)
+
+        # set motors
+        if motors is not None:
+            for k, v in motors.itervalues():
+                '''
+                    motor will not set if it has been locked using set_motor_lock or 
+                    remotely using SetMotorLock 
+                '''
+                self.parent.set_motor(k, v, block=True)
 
         def move(x, y, speed):
             v = velocity if speed == 'slow' else None
             self.linear_move(x / float(n), y / float(n), velocity=v)
 
         raster_polygon(pts,
-                       skip=microns,
-                       move_callback=move,
-                       start_callback=start_callback, end_callback=end_callback,
+                       skip=step_microns,
                        verbose=False,
-                       use_plot=True
+                       use_plot=True,
+                       move_callback=move, start_callback=start_callback,
+                       end_callback=end_callback,
                        )
 
     def _move_polyline(self, pts, start_callback=None, end_callback=None):
@@ -574,7 +588,7 @@ class StageManager(Manager):
                     if dii.has_key(motor):
                         if dii[motor] != cpos[motor]:
                             m = self.parent.get_motor(motor)
-                            if not m.remote_set:
+                            if not m.locked:
                                 block = True
                                 setmotors[motor] = dii[motor]
 
@@ -619,9 +633,10 @@ class StageManager(Manager):
 
         for motor in ('mask', 'attenuator'):
             if hasattr(pt, motor):
-                m = self.parent.get_motor(motor)
-                if not m.remote_set:
-                    self.parent.set_motor(motor, getattr(pt, motor), block=True)
+#                m = self.parent.get_motor(motor)
+#                if not m.locked:
+#                    self.parent.set_motor(motor, getattr(pt, motor), block=True)
+                self.parent.set_motor(motor, getattr(pt, motor), block=True)
 
         self._move_to_point_hook()
 

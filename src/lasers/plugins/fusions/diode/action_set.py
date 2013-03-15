@@ -36,11 +36,11 @@ class FusionsDiodeActionSet(FusionsActionSet):
 
         actions = [
 
-                Action(name='Degas',
-                       path=laser_path,
-                       class_name='{}DegasAction'.format(self.action_path)
-#                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
-                       ),
+#                Action(name='Degas',
+#                       path=laser_path,
+#                       class_name='{}DegasAction'.format(self.action_path)
+# #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
+#                       ),
                 Action(name='Configure Watlow',
                        path='MenuBar/Lasers/{}'.format(self.name),
                        class_name='{}ConfigureWatlowAction'.format(self.action_path)

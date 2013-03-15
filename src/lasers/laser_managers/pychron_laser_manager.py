@@ -200,6 +200,12 @@ class PychronLaserManager(BaseLaserManager):
         self.info('set laser power {}'.format(v))
         return self._ask('SetLaserPower {}'.format(v)) == 'OK'
 
+    def set_motor_lock(self, name, value):
+        v = 'YES' if value else 'NO'
+        self.info('set motor {} lock to {}'.format(name, v))
+        self._ask('SetMotorLock {} {}'.format(name, int(value)))
+        return True
+
     def set_motor(self, name, value):
         self.info('set motor {} to {}'.format(name, value))
         self._ask('SetMotor {} {}'.format(name, value))

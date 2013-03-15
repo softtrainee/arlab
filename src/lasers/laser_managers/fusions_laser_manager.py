@@ -39,6 +39,7 @@ from src.database.adapters.power_calibration_adapter import PowerCalibrationAdap
 from laser_manager import LaserManager
 from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
 from src.viewable import Viewable
+from src.helpers.filetools import str_to_bool
 
 class OpticsView(Viewable):
 #    title = 'Optics'
@@ -380,6 +381,12 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         self.set_motor('zoom', z, **kw)
+
+    def set_motor_lock(self, name, value):
+        m = self.get_motor(name)
+        if m is not None:
+            m.locked = str_to_bool(value)
+            return True
 
     def set_motor(self, *args, **kw):
         return self.laser_controller.set_motor(*args, **kw)
