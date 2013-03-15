@@ -118,12 +118,12 @@ class LaserTrayCanvas(MapCanvas):
     points = List
     transects = List
     lines = List
-    polygons=List
-    markup_objects=List
-    
+    polygons = List
+    markup_objects = List
+
     _new_line = True
     _new_transect = True
-    _new_polygon=True
+    _new_polygon = True
 
     def __init__(self, *args, **kw):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
@@ -150,16 +150,16 @@ class LaserTrayCanvas(MapCanvas):
     def clear_all(self):
         self.lines = []
         self.points = []
-        self.transects=[]
-        self.polygons=[]
-        self.markup_objects=[]
+        self.transects = []
+        self.polygons = []
+        self.markup_objects = []
         self.reset_markup()
-        
+
     def reset_markup(self):
         self._new_line = True
         self._new_transect = True
-        self._new_polygon=True
-        
+        self._new_polygon = True
+
 #    def remove_point_overlay(self):
 #        for o in self.overlays[:]:
 #            if isinstance(o, PointOverlay):
@@ -181,11 +181,11 @@ class LaserTrayCanvas(MapCanvas):
 #    def add_line_overlay(self):
 #        po = LineOverlay(component=self)
 #        self.overlays.append(po)
-    
+
     def add_markup_overlay(self):
-        mo=MarkupOverlay(component=self)
+        mo = MarkupOverlay(component=self)
         self.overlays.append(mo)
-        
+
     def point_exists(self, xy=None, tol=1e-5):
         if xy is None:
             xy = self._stage_position
@@ -212,23 +212,30 @@ class LaserTrayCanvas(MapCanvas):
                                   )
         self.request_redraw()
 
-    def new_polygon_point(self, xy=None, line_color=(1, 0, 0), point_color=(1, 0, 0),use_convex_hull=False, **ptargs):
+    def new_polygon_point(self, xy=None,
+                          identifier=None,
+                          line_color=(1, 0, 0), point_color=(1, 0, 0), use_convex_hull=False, **ptargs):
         if xy is None:
             xy = self._stage_position
 
+        if identifier is None:
+            identifier = str(len(self.polygons) + 1)
+
         if self._new_polygon:
-            self._new_polygon=False
-            poly=Polygon([xy],
-                         identifier=str(len(self.polygons) + 1),
-                                canvas=self,
-                                use_convex_hull=use_convex_hull,
-                                default_color=point_color,)
+            self._new_polygon = False
+            poly = Polygon([xy],
+                         identifier=identifier,
+                         canvas=self,
+                         use_convex_hull=use_convex_hull,
+                         default_color=point_color,
+                         **ptargs
+                         )
             self.polygons.append(poly)
             self.markup_objects.append(poly)
         else:
-            poly=self.polygons[-1]
-            poly.add_point(xy,default_color=point_color)
-        
+            poly = self.polygons[-1]
+            poly.add_point(xy, default_color=point_color, **ptargs)
+
     def new_transect_point(self, xy=None, step=1, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
         if xy is None:
             xy = self._stage_position
@@ -276,7 +283,7 @@ class LaserTrayCanvas(MapCanvas):
 #                           point_color=point_color)
 
 
-    def new_line_point(self, xy=None,z=0, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
+    def new_line_point(self, xy=None, z=0, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
         if xy is None:
             xy = self._stage_position
 
@@ -284,7 +291,7 @@ class LaserTrayCanvas(MapCanvas):
             kw['identifier'] = str(len(self.lines) + 1)
             kw['canvas'] = self
 
-            line = VelocityPolyLine(*xy,z=z,
+            line = VelocityPolyLine(*xy, z=z,
                           default_color=point_color,
                           **kw
                           )

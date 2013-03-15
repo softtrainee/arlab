@@ -152,14 +152,14 @@ class ExtractionLinePyScript(ValvePyScript):
     def move_to_position(self, position=''):
         if position == '':
             position = self.position
-        
+
         if position:
-            position_ok=True
+            position_ok = True
             if isinstance(position, (list, tuple)):
-                position_ok=all(position)
+                position_ok = all(position)
         else:
-            position_ok=False
-        
+            position_ok = False
+
         if position_ok:
 #            print self.extract_device, 'asdfasfdasdf'
             self.info('{} move to position {}'.format(self.extract_device, position))
@@ -220,8 +220,8 @@ class ExtractionLinePyScript(ValvePyScript):
             name = self.position
         if value == '':
             value = self.extract_value
-        
-        name=name.lower()
+
+        name = name.lower()
         self.move_to_position(name)
 
         if name.startswith('p'):
@@ -248,7 +248,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def trace_path(self, name='', value='',  kind='continuous'):
+    def trace_path(self, name='', value='', kind='continuous'):
         if name == '':
             name = self.position
 

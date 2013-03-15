@@ -18,7 +18,7 @@
 from traits.api import Int, CInt, Str, String, on_trait_change, Button, Float, \
     Property, Event, Bool, Enum, cached_property, Range
 
-from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor, EnumEditor,\
+from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor, EnumEditor, \
     TextEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -327,13 +327,13 @@ class PychronUVLaserManager(PychronLaserManager):
     mode = Enum('Burst', 'Continuous')
     nburst = Property(depends_on='_nburst')
     _nburst = Int
-    
+
     mask = Str(enter_set=True, auto_set=False)
     masks = Property
     attenuator = Str(enter_set=True, auto_set=False)
     attenuators = Property
-    zoom=Range(0.0, 100.0)
-    
+    zoom = Range(0.0, 100.0)
+
     def extract(self, power):
         self._set_nburst(power)
         self._ask('Fire burst')
@@ -347,9 +347,9 @@ class PychronUVLaserManager(PychronLaserManager):
 
         # traces need to be prefixed with 'l'
         name = str(name)
-        name=name.lower()
-        if not name.startswith('l'):
-            name = 'l{}'.format(name)
+        name = name.lower()
+#        if not name.startswith('l'):
+#            name = 'l{}'.format(name)
 
         cmd = 'TracePath {} {} {}'.format(value, name, kind)
         self.info('sending {}'.format(cmd))
@@ -374,19 +374,19 @@ class PychronUVLaserManager(PychronLaserManager):
             self.firing = True
 
         self._ask('Fire {}'.format(mode))
-        
+
     def _position_changed(self):
         if self.position is not None:
             t = Thread(target=self._move_to_position, args=(self.position,))
             t.start()
 #            self._move_to_position(self.position)
 
-    @on_trait_change('mask, attenuator, zoom')      
+    @on_trait_change('mask, attenuator, zoom')
     def _motor_changed(self, name, new):
         if new is not None:
-            t=Thread(target=self.set_motor, args=(name, new))
+            t = Thread(target=self.set_motor, args=(name, new))
             t.start()
-            
+
 #===============================================================================
 #
 #===============================================================================
@@ -397,7 +397,7 @@ class PychronUVLaserManager(PychronLaserManager):
         mb = self._ask('GetBurstMode')
         if mb is not None:
             self.mode = 'Burst' if mb == '1' else 'Continuous'
-    
+
 #    def _set_motor(self, name, value):
 #        self.info('setting motor {} to {}'.format(name,value))
 #        cmd='SetMotor {} {}'.format(name, value)
@@ -405,7 +405,7 @@ class PychronUVLaserManager(PychronLaserManager):
 #        self._ask(cmd)
 #        r = self._block(cmd='GetMotorMoving {}'.format(name))
 #        return r
-    
+
     def _move_to_position(self, pos):
 
         cmd = 'GoToPoint'
@@ -446,19 +446,19 @@ class PychronUVLaserManager(PychronLaserManager):
                  handler=self.handler_klass
                  )
         return v
-    
-    
+
+
 #===============================================================================
 # property get/set
 #===============================================================================
     @cached_property
     def _get_masks(self):
         return self._get_motor_values('masks')
-    
+
     @cached_property
     def _get_attenuators(self):
         return self._get_motor_values('attenuators')
-    
+
     def _get_motor_values(self, name):
         p = os.path.join(paths.device_dir, 'uv', '{}.txt'.format(name))
         values = []
@@ -471,8 +471,8 @@ class PychronUVLaserManager(PychronLaserManager):
                     values.append(lin)
 
         return values
-    
-        
+
+
     def _get_int(self, resp):
         r = 0
         if resp is not None:

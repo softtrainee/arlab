@@ -24,6 +24,7 @@ from apptools.preferences.preference_binding import bind_preference
 import os
 from threading import Thread
 import time
+from numpy import array, asarray
 #=============local library imports  ==========================
 from src.managers.manager import Manager
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
@@ -33,7 +34,7 @@ from src.hardware.motion_controller import MotionController
 from src.paths import paths
 import pickle
 from src.lasers.stage_managers.stage_visualizer import StageVisualizer
-from src.lasers.stage_managers.points_programmer import PointsProgrammer
+from src.lasers.points.points_programmer import PointsProgrammer
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -95,6 +96,7 @@ class StageManager(Manager):
     hole_thread = None
     point_thread = None
     line_thread = None
+    move_thread = None
 
     hole = String(enter_set=True, auto_set=False)
 #    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
@@ -291,6 +293,17 @@ class StageManager(Manager):
                                       target=self._move_polyline, args=(line,))
         self.line_thread.start()
 #        self._move_polyline(line)
+
+    def move_polygon(self, poly):
+        if poly is None:
+            return
+
+        if self.move_thread is not None:
+            self.stage_controller.stop()
+
+        self.move_thread = Thread(name='stage.move_polygon',
+                                      target=self._move_polygon, args=(poly,))
+        self.move_thread.start()
 
     def set_x(self, value, **kw):
         return self.stage_controller.single_axis_move('x', value, **kw)
@@ -493,12 +506,40 @@ class StageManager(Manager):
         sm = self._stage_map
         return sm.get_hole(key)
 
-    def _move_polyline(self, pts,  start_callback=None, end_callback=None):
+    def _move_polygon(self, pts, velocity=5, start_callback=None, end_callback=None):
         if not isinstance(pts, list):
-            segs=pts.velocity_segments
-            segs=segs[:1]+segs
-            pts = [dict(xy=(pi.x, pi.y), z=pi.z, velocity=vi) for vi,pi in 
-                   zip(segs,pts.points)]
+            velocity = pts.velocity
+            pts = [dict(xy=(pi.x, pi.y), z=pi.z,) for pi in pts.points]
+
+        # calculate scan lines
+        from src.lasers.points.scan_line import raster_polygon
+        pts = [pi['xy'] for pi in pts]
+
+        # convert points to um
+        pts = array(pts)
+        n = 100
+        microns = 50
+        pts *= n
+        pts = asarray(pts, dtype=int)
+
+        def move(x, y, speed):
+            v = velocity if speed == 'slow' else None
+            self.linear_move(x / float(n), y / float(n), velocity=v)
+
+        raster_polygon(pts,
+                       skip=microns,
+                       move_callback=move,
+                       start_callback=start_callback, end_callback=end_callback,
+                       verbose=False,
+                       use_plot=True
+                       )
+
+    def _move_polyline(self, pts, start_callback=None, end_callback=None):
+        if not isinstance(pts, list):
+            segs = pts.velocity_segments
+            segs = segs[:1] + segs
+            pts = [dict(xy=(pi.x, pi.y), z=pi.z, velocity=vi) for vi, pi in
+                   zip(segs, pts.points)]
 
         sc = self.stage_controller
         self.linear_move(pts[0]['xy'][0], pts[0]['xy'][1],
@@ -506,56 +547,56 @@ class StageManager(Manager):
                                    use_calibration=False,
                                    block=True)
         sc.set_z(pts[0]['z'], block=True)
-        
-        cpos=dict()
-        #set motors
+
+        cpos = dict()
+        # set motors
         for motor in ('mask', 'attenuator'):
             if pts[0].has_key(motor):
                 self.parent.set_motor(motor, pts[0][motor])
-                cpos[motor]=pts[0][motor]
-                
+                cpos[motor] = pts[0][motor]
+
         sc.set_program_mode('absolute')
-        sc.timer=sc.timer_factory()
+        sc.timer = sc.timer_factory()
         if start_callback:
             start_callback()
-        
-        npts=pts[1:]
-        setmotors=dict()
-        for i,di in enumerate(npts):
+
+        npts = pts[1:]
+        setmotors = dict()
+        for i, di in enumerate(npts):
             xi, yi, zi, vi = di['xy'][0], di['xy'][1], di['z'], di['velocity']
             sc.set_z(zi)
-            
-            block=False
+
+            block = False
             for motor in ('mask', 'attenuator'):
-                #fix next step sets motor should block
-                if i+1< len(npts):
-                    dii=npts[i+1]
+                # fix next step sets motor should block
+                if i + 1 < len(npts):
+                    dii = npts[i + 1]
                     if dii.has_key(motor):
-                        if dii[motor]!=cpos[motor]:
-                            m=self.parent.get_motor(motor)
+                        if dii[motor] != cpos[motor]:
+                            m = self.parent.get_motor(motor)
                             if not m.remote_set:
-                                block=True
-                                setmotors[motor]=dii[motor]
-            
+                                block = True
+                                setmotors[motor] = dii[motor]
+
             self.linear_move(xi, yi, velocity=vi,
                              block=block,
-                             mode='absolute', #use absolute mode because commands are queued
+                             mode='absolute',  # use absolute mode because commands are queued
                              set_stage=False)
             if block:
                 if end_callback:
                     end_callback()
-                    
-                for k,v in setmotors.iteritems():
+
+                for k, v in setmotors.iteritems():
                     self.parent.set_motor(k, v, block=True)
-                    
+
                 if start_callback:
                     start_callback()
-                
-        #wait until motion complete
+
+        # wait until motion complete
         sc.block()
         if end_callback:
             end_callback()
-            
+
         sc.set_program_mode('relative')
 #        if start and smooth:
 #            sc.execute_command_buffer()
@@ -578,10 +619,10 @@ class StageManager(Manager):
 
         for motor in ('mask', 'attenuator'):
             if hasattr(pt, motor):
-                m=self.parent.get_motor(motor)
+                m = self.parent.get_motor(motor)
                 if not m.remote_set:
                     self.parent.set_motor(motor, getattr(pt, motor), block=True)
-        
+
         self._move_to_point_hook()
 
         self.info('Move complete')
@@ -1035,6 +1076,7 @@ class StageManager(Manager):
                               stage_manager=self,
                               )
         pp.on_trait_change(self.move_to_point, 'point')
+        pp.on_trait_change(self.move_polygon, 'polygon')
         pp.on_trait_change(self.move_polyline, 'line')
         return pp
 #===============================================================================

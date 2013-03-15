@@ -504,27 +504,46 @@ class UVStageMap(StageMap):
     def load(self):
         with open(self.file_path, 'r') as fp:
             d = yaml.load(fp.read())
-            self.points = d['points']
-            self.lines = d['lines']
+            for attr in ('points', 'lines', 'polygons'):
+                if d.has_key(attr):
+                    setattr(self, attr, d[attr])
+
+    def get_polygon(self, name):
+        return self._get_item('polygon', 'r', name)
 
     def get_point(self, name):
-        if name.startswith('p'):
-            v = int(name[1:])
-        else:
+        pos = self._get_item('points', 'p', name)
+        if pos is None:
             v = int(name)
-
-        pos = self.points[v - 1]
-
+            pos = self.points[v - 1]
         return pos
+
+#        if name.startswith('p'):
+#            v = int(name[1:])
+#        else:
+#            v = int(name)
+#
+#
+#        return pos
 
     def get_line(self, name):
-        pos = None
-        name=name.lower()
-        if name.startswith('l'):
-            v = int(name[1:])
-            pos = self.lines[v - 1]
-        return pos
+#        pos = None
+#        name = name.lower()
+#        if name.startswith('l'):
+#            v = int(name[1:])
+#            pos = self.lines[v - 1]
+#        return pos
+        return self._get_item('lines', 'l', name)
 
+    def _get_item(self, name, key, value):
+        pos = None
+        value = value.lower()
+        if value.startswith(key):
+            items = getattr(self, name)
+            v = int(value[1:])
+            pos = items[v - 1]
+
+        return pos
 
 #============= EOF =============================================
 #        cspacing = spacing

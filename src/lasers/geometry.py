@@ -18,7 +18,26 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
+from numpy import array
+import math
 #============= local library imports  ==========================
+def sort_clockwise(pts, xy):
+    '''
+        pts = list of points
+        xy = list of corresponding x,y tuples
+    '''
+    xy = array(xy)
+    # sort points clockwise
+    xs, ys = xy.T
+    cx = xs.mean()
+    cy = ys.mean()
+
+
+    angles = [(math.atan2(y - cy, x - cx), pi) for pi, x, y in zip(pts, xs, ys)]
+    angles = sorted(angles, key=lambda x: x[0])
+    _, pts = zip(*angles)
+    return list(pts)
+#    self.points = list(pts)
 
 def calc_point_along_line(x1, y1, x2, y2, L):
     '''
