@@ -214,7 +214,8 @@ class LaserTrayCanvas(MapCanvas):
 
     def new_polygon_point(self, xy=None,
                           identifier=None,
-                          line_color=(1, 0, 0), point_color=(1, 0, 0), use_convex_hull=False, **ptargs):
+                          line_color=(1, 0, 0), point_color=(1, 0, 0),
+                          use_convex_hull=False, **ptargs):
         if xy is None:
             xy = self._stage_position
 

@@ -22,6 +22,7 @@ from traitsui.api import View, Item, TableEditor
 import numpy as np
 from src.lasers.geometry import sort_clockwise
 from pyface.timer.do_later import do_later
+from src.machine_vision.convex_hull import convex_hull
 # from pylab import plot, show, text
 
 def slope(p1, p2):
@@ -165,10 +166,15 @@ def raster_polygon(points, step=1, skip=1,
                    move_callback=None,
                    start_callback=None,
                    end_callback=None,
+                   use_convex_hull=None,
                    use_plot=False,
                    verbose=False):
-#    print points
+
+    if use_convex_hull:
+        points = convex_hull(points)
+
     points = sort_clockwise(points, points)
+
 #    print points
     lines = make_scan_lines(points, step)
     points = points + points[:1]
@@ -257,8 +263,8 @@ def raster_polygon(points, step=1, skip=1,
         end_callback()
 
     if use_plot:
-#        do_later(show)
-        show()
+        do_later(show)
+#        show()
 
 
 if __name__ == '__main__':
