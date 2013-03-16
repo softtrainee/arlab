@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 import math
-from numpy import array, cross, dot
+from numpy import array, cross, dot, hstack, vstack
 #============= local library imports  ==========================
 from src.geometry.geometry import sort_clockwise
 # import euclid as eu
@@ -94,7 +94,10 @@ def getinsetpoint(pt1, pt2, pt3, offset):
 
 def polygon_offset(poly, offset):
     if poly[-1][0] != poly[0][0] and poly[-1][1] != poly[0][1]:
-        poly = poly + poly[:1]
+        if isinstance(poly, list):
+            poly = poly + poly[:1]
+        else:
+            poly=vstack((poly, poly[:1]))
 
     polyinset = []
     lenpolygon = len(poly)
