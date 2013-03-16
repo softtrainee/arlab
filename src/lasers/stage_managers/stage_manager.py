@@ -35,7 +35,7 @@ from src.paths import paths
 import pickle
 from src.lasers.stage_managers.stage_visualizer import StageVisualizer
 from src.lasers.points.points_programmer import PointsProgrammer
-from src.lasers.points.scan_line import make_scan_lines
+from src.geometry.scan_line import make_scan_lines
 from src.geometry.geometry import sort_clockwise
 from src.geometry.convex_hull import convex_hull
 from src.geometry.polygon_offset import polygon_offset
@@ -560,8 +560,12 @@ class StageManager(Manager):
             # calculate new polygon
             offset = 20
             opts = pts[:]
+            
             pts = polygon_offset(pts, offset)
-
+            #polygon offset used 3D vectors.
+            #trim to only x,y
+            pts=pts[:,(0,1)]
+            
             # trace perimeter
             if use_move:
                 p0 = opts[0]
@@ -570,11 +574,15 @@ class StageManager(Manager):
 
                 if start_callback is not None:
                     start_callback()
-
+                
+                buf=[]
                 for pi in opts[1:]:
                     self.linear_move(p0[0], p0[1],
                                      velocity=velocity,
-                                     mode='absolute', set_stage=False)
+                                     mode='absolute', set_stage=False,
+                                     buf=buf
+                                     )
+                    sc.execute_command_buffer(buf)
 
                 # finish at first point
                 self.linear_move(p0[0], p0[1],

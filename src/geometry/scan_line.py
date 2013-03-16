@@ -79,11 +79,10 @@ def split_vertices(points, dy):
     return npts
 
 def get_yminmax(points):
-    pts = np.asarray(points)
-    _, ys = pts[:, 0], pts[:, 1]
+    poly = np.asarray(points)
+    _, ys = poly[:, 0], poly[:, 1]
     ymin = np.min(ys)
     ymax = np.max(ys)
-#    return ymin, ymax
     return map(int, (ymin, ymax))
 
 def make_scan_lines(points, step=1):
@@ -95,20 +94,6 @@ def make_scan_lines(points, step=1):
         google "scan line polygon fill algorithm example"
         www.kau.edu.sa/Files/0053697/.../Polygon%20Filling.ppt
     '''
-
-    # sort clockwise
-#    xy = [pi for pi in points]
-
-#    # sort points clockwise
-#        xs, ys = xy.T
-#        cx = xs.mean()
-#        cy = ys.mean()
-#
-#
-#        angles = [(math.atan2(y - cy, x - cx), pi) for pi, x, y in zip(self.points, xs, ys)]
-#        angles = sorted(angles, key=lambda x: x[0])
-#        _, pts = zip(*angles)
-#        self.points = list(pts)
 
     npts = points[:1]
     for pi in points[1:]:
@@ -138,10 +123,6 @@ def make_scan_lines(points, step=1):
     # copy last column of ET into MET
     MET[:, -1] = ET[:, -1]
 
-#    MET = sorted(MET, key=lambda x: x[0])
-#    MET = sorted(MET, key=lambda x: x[2])
-#    MET = sorted(MET, key=lambda x: x[1])
-
     xintersections = []
     for _ in range(len(scanlines)):
         xs = []
@@ -151,135 +132,91 @@ def make_scan_lines(points, step=1):
 
     for m, eymin, exmin, eymax, ei in MET:
         cnt = 0
-#        print '-----------'
         for xint, si in zip(xintersections, scanlines):
-#            print eymin, si, eymax, eymin <= si <= eymax
             if eymin <= si <= eymax:
                 v = exmin + step * m * cnt
-#                print si, v
                 xint[int(ei)] = v
                 cnt += 1
 
     xs = [sorted([ii for ii in xi if ii is not None]) for xi in xintersections]
     return zip(scanlines, xs)
 
-def raster_polygon(points, step=1, skip=1,
-                   move_callback=None,
-                   start_callback=None,
-                   end_callback=None,
-                   use_convex_hull=None,
-                   use_plot=False,
-                   verbose=False):
-
+def make_raster_polygon(points, step=1, skip=1, use_convex_hull=False, zigzag=False):
     if use_convex_hull:
         points = convex_hull(points)
 
     points = sort_clockwise(points, points)
-
-#    print points
     lines = make_scan_lines(points, step)
-    points = points + points[:1]
 
-    if use_plot:
-        from pylab import plot, text, show
-        # plot outline
-        xs, ys = zip(*points)
-        plot(xs, ys)
-
-    # initialize variables
-    cnt = 0
-    direction = 1
-    lasing = False
-
-    if verbose:
-        print 'start raster'
-
-    # loop thru each scan line
-    for yi, xs in lines[::skip]:
-        if direction == -1:
-            xs = list(reversed(xs))
-
-        # convert odd numbers lists to even
-        n = len(xs)
-        if n % 2 != 0:
-            xs = sorted(list(set(xs)))
-
-        # traverse each x-intersection pair
-        n = len(xs)
-        for i in range(0, n, 2):
-            yy = (yi, yi)
-            if len(xs) <= 1:
-                continue
-
-            xx = (xs[i], xs[i + 1])
-            if abs(xs[i] - xs[i + 1]) > 1e-10:
-                if not lasing:
-                    if verbose:
-                        print 'fast to {} {},{}'.format(cnt, xx[0], yy[0])
-                        print '===================== laser on'
-                    if move_callback is not None:
-                        move_callback(xx[0], yy[0], 'fast')
-                    if start_callback is not None:
-                        start_callback()
-
-                    lasing = True
+    npoints=[]
+    
+    #reorder points
+    if zigzag:
+        pass
+    else:
+        direction = 1
+        # loop thru each scan line
+        for yi, xs in lines[::skip]:
+            if direction == -1:
+                xs = list(reversed(xs))
+            # traverse each x-intersection pair
+            n = len(xs)
+            for i in range(0, n, 2):
+                if len(xs) <= 1:
+                    continue
+                
+                if abs(xs[i] - xs[i + 1]) > 1e-10:
+                    npoints.append(((xs[i], yi),(xs[i+1], yi)))
+                    flip = True
                 else:
-                    if verbose:
-                        print 'slow to {} {},{}'.format(cnt, xx[0], yy[0])
-                    if move_callback is not None:
-                        move_callback(xx[0], yy[0], 'slow')
+                    flip = False
+    
+            if flip:
+                direction *= -1  
+            
+    return npoints
 
-                if verbose:
-                    print 'move to {}a {},{}'.format(cnt, xx[1], yy[1])
-                    print 'wait for move complete'
-
-                if move_callback is not None:
-                    move_callback(xx[1], yy[1], 'slow')
-
-#                if n > 2 and not i * 2 >= n:
-                if i + 2 < n and not xs[i + 1] == xs[i + 2]:
-                    if verbose:
-                        print '===================== laser off'
-                    if end_callback is not None:
-                        end_callback()
-
-                    lasing = False
-                if use_plot:
-                    plot(xx, yy, 'r', linewidth=skip / 4.)
-                    text(xx[0], yy[0], '{}'.format(cnt))
-
-                cnt += 1
-                flip = True
-            else:
-                flip = False
-
-        if flip:
-            direction *= -1
-
-    if verbose:
-        print '===================== laser off'
-        print 'end raster'
-
-    if end_callback is not None:
-        end_callback()
+def graph(poly, opoly,line):
+    from src.graph.graph import Graph
+    
+    g=Graph()
+    g.new_plot()
+    
+    for po in (poly, opoly): 
+        po=np.array(po)
+        try:
+            xs,ys=po.T
+        except ValueError:
+            xs,ys,_=po.T
         
-    if use_plot:
-        do_later(show)
-#        show()
+        g.new_series(xs,ys)
 
+    for i,(p1,p2) in enumerate(lines):
+        xi,yi=(p1[0], p2[0]), (p1[1], p2[1])
+        g.new_series(xi, yi, color='green')
+    g.configure_traits()
 
 if __name__ == '__main__':
-#    pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 7), (5, 5)]
-    pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 0), (5, 5)]
-    pts = np.array(pts)
-    pts *= 100
-    pts = list(pts)
-#    pts = [(8, 15), (2, 7), (4, 12), (16, 9), (11, 5), (5, 5), (8, 7)]
-#    pts = [(1, 1), (2, 5), (5, 4), (8, 7), (10, 4), (10, 2)]
+    poly = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 7), (5, 5), (2,7)]
+#    poly = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 0), (5, 5)]
+    poly = np.array(poly)
+    poly *= 100
+    poly=[tuple(pi) for pi in poly]
+#    poly = list(poly)
+#    poly = [(8, 15), (2, 7), (4, 12), (16, 9), (11, 5), (5, 5), (8, 7)]
+#    poly = [(1, 1), (2, 5), (5, 4), (8, 7), (10, 4), (10, 2)]
 
-#    pts = [(0, 0), (10, 0), (10, 10), (0, 10)]
-    raster_polygon(pts, 1, 50, use_plot=True, verbose=True)
+#    poly = [(0, 0), (10, 0), (10, 10), (0, 10)]
+#    raster_polygon(poly, 1, 50, use_plot=True, verbose=True)
 
+    from src.geometry.polygon_offset import polygon_offset
+    opoly=polygon_offset(poly, 100)
+    opoly=np.array(opoly, dtype=int)
+    opoly=opoly[:,(0,1)]
+    
+    lines=make_raster_polygon(opoly, 1, 50)  
+    graph(poly,opoly, lines)
+    
 #============= EOF =============================================
 #    # sort et on ymin
 #    ET = sorted(ET, key=lambda x: x[1])
@@ -309,3 +246,105 @@ if __name__ == '__main__':
 #                break
 #        else:
 #            AT.append(None)
+#def raster_polygon(points, step=1, skip=1,
+#                   move_callback=None,
+#                   start_callback=None,
+#                   end_callback=None,
+#                   use_convex_hull=None,
+#                   use_plot=False,
+#                   verbose=False):
+#
+#    if use_convex_hull:
+#        points = convex_hull(points)
+#
+#    points = sort_clockwise(points, points)
+#
+##    print points
+#    lines = make_scan_lines(points, step)
+#    points = points + points[:1]
+#    if use_plot:
+#        from pylab import plot, text, show
+#        # plot outline
+#        xs, ys = zip(*points)
+#        plot(xs, ys)
+#
+#    # initialize variables
+#    cnt = 0
+#    direction = 1
+#    lasing = False
+#
+#    if verbose:
+#        print 'start raster'
+#
+#    # loop thru each scan line
+#    for yi, xs in lines[::skip]:
+#        if direction == -1:
+#            xs = list(reversed(xs))
+#
+#        # convert odd numbers lists to even
+#        n = len(xs)
+#        if n % 2 != 0:
+#            xs = sorted(list(set(xs)))
+#
+#        # traverse each x-intersection pair
+#        n = len(xs)
+#        for i in range(0, n, 2):
+#            yy = (yi, yi)
+#            if len(xs) <= 1:
+#                continue
+#
+#            xx = (xs[i], xs[i + 1])
+#            if abs(xs[i] - xs[i + 1]) > 1e-10:
+#                if not lasing:
+#                    if verbose:
+#                        print 'fast to {} {},{}'.format(cnt, xx[0], yy[0])
+#                        print '===================== laser on'
+#                    if move_callback is not None:
+#                        move_callback(xx[0], yy[0], 'fast')
+#                    if start_callback is not None:
+#                        start_callback()
+#
+#                    lasing = True
+#                else:
+#                    if verbose:
+#                        print 'slow to {} {},{}'.format(cnt, xx[0], yy[0])
+#                    if move_callback is not None:
+#                        move_callback(xx[0], yy[0], 'slow')
+#
+#                if verbose:
+#                    print 'move to {}a {},{}'.format(cnt, xx[1], yy[1])
+#                    print 'wait for move complete'
+#
+#                if move_callback is not None:
+#                    move_callback(xx[1], yy[1], 'slow')
+#
+##                if n > 2 and not i * 2 >= n:
+#                if i + 2 < n and not xs[i + 1] == xs[i + 2]:
+#                    if verbose:
+#                        print '===================== laser off'
+#                    if end_callback is not None:
+#                        end_callback()
+#
+#                    lasing = False
+#                if use_plot:
+#                    plot(xx, yy, 'r', linewidth=skip / 4.)
+#                    text(xx[0], yy[0], '{}'.format(cnt))
+#
+#                cnt += 1
+#                flip = True
+#            else:
+#                flip = False
+#
+#        if flip:
+#            direction *= -1
+#
+#    if verbose:
+#        print '===================== laser off'
+#        print 'end raster'
+#
+#    if end_callback is not None:
+#        end_callback()
+#        
+#    if use_plot:
+#        do_later(show)
+##        show()
