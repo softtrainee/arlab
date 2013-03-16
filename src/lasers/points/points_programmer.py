@@ -21,6 +21,7 @@ from traitsui.api import View, Item, ButtonEditor, Group, HGroup, VGroup
 #============= standard library imports ========================
 import yaml
 import os
+from numpy import array
 #============= local library imports  ==========================
 from src.paths import paths
 from src.managers.manager import Manager
@@ -127,10 +128,38 @@ class PointsProgrammer(Manager):
             scan_size = None
             if hasattr(self.maker, 'scan_size'):
                 scan_size = self.maker.scan_size
+            else:
+                scan_size=pp.scan_size
 
-            self.stage_manager._move_polygon(pp,
-                                             scan_size=scan_size,
-                                             use_plot=True, use_move=False)
+            poly=[pi['xy'] for pi in pp.points]
+            
+            from src.geometry.polygon_offset import polygon_offset
+            from src.geometry.scan_line import make_raster_polygon
+            use_offset=True
+            if use_offset:
+                opoly=polygon_offset(poly, 100)
+                opoly=array(opoly, dtype=int)
+                opoly=opoly[:,(0,1)]
+            
+            lines=make_raster_polygon(opoly, skip=scan_size)
+            from src.graph.graph import Graph
+    
+            g=Graph()
+            g.new_plot()
+            
+            for po in (poly, opoly): 
+                po=array(po)
+                try:
+                    xs,ys=po.T
+                except ValueError:
+                    xs,ys,_=po.T                
+                g.new_series(xs,ys)
+        
+            for p1,p2 in lines:
+                xi,yi=(p1[0], p2[0]), (p1[1], p2[1])
+                g.new_series(xi, yi, color='green')
+                
+            g.edit_traits()
 
     def _show_hide_fired(self):
         canvas = self.canvas

@@ -147,11 +147,7 @@ class MotionController(CoreDevice):
     def get_current_position(self, *args, **kw):
         return 0
 
-    def start_command_buffer(self):
-        pass
-    def end_command_buffer(self):
-        pass
-    def execute_command_buffer(self):
+    def execute_command_buffer(self, *args, **kw):
         pass
 #    def enqueue_move(self, *args, **kw):
 #        pass

@@ -59,9 +59,15 @@ class AerotechMotionController(MotionController):
     def xy_swapped(self):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
-
+        
+    def execute_command_buffer(self, buf):
+        if isinstance(buf, (list, tuple)):
+            buf='\n'.join(buf)
+        self.ask(buf, handshake_only=True)
+        
     def linear_move(self, x, y, sign_correct=True, block=False, velocity=None, 
                     set_stage=True,
+                    buf=None,
                     mode='relative', **kw):
         '''
             unidex 511 5-55 Linear
@@ -104,13 +110,16 @@ class AerotechMotionController(MotionController):
             cmd = 'ILI X{} Y{} F{}'.format(ny, nx, xv)
         else:
             cmd = 'ILI X{} Y{} F{}'.format(nx, ny, xv)
-
-        self.ask(cmd, handshake_only=True)
-        if block:
-            self.timer = self.timer_factory()
-            self.block()
-        elif set_stage:
-            self.parent.canvas.set_stage_position(self._x_position, self._y_position)
+        
+        if buf:
+            buf.append(cmd)
+        else:
+            self.ask(cmd, handshake_only=True)
+            if block:
+                self.timer = self.timer_factory()
+                self.block()
+            elif set_stage:
+                self.parent.canvas.set_stage_position(self._x_position, self._y_position)
 
     def set_single_axis_motion_parameters(self, axis=None, pdict=None):
         if pdict is not None:

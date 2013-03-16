@@ -93,7 +93,7 @@ def getinsetpoint(pt1, pt2, pt3, offset):
     return tuple(retval)
 
 def polygon_offset(poly, offset):
-    if poly[-1] != poly[0]:
+    if poly[-1][0] != poly[0][0] and poly[-1][1] != poly[0][1]:
         poly = poly + poly[:1]
 
     polyinset = []
