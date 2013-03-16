@@ -35,7 +35,7 @@ from src.monitors.fusions_uv_laser_monitor import FusionsUVLaserMonitor
 from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 from src.lasers.stage_managers.stage_map import UVStageMap
 from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
-from src.lasers.geometry import calc_point_along_line
+from src.geometry.geometry import calc_point_along_line
 from src.traits_editors.led_editor import LEDEditor
 from src.paths import paths
 from threading import Thread

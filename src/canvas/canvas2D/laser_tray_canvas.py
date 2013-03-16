@@ -28,7 +28,7 @@ from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
     VelocityPolyLine, Transect, Polygon
 
 from kiva import constants
-from src.lasers.geometry import calc_point_along_line
+from src.geometry.geometry import calc_point_along_line
 
 # class Point(HasTraits):
 #    x=Float
