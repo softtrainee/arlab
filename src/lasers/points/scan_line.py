@@ -233,7 +233,7 @@ def raster_polygon(points, step=1, skip=1,
                     print 'wait for move complete'
 
                 if move_callback is not None:
-                    move_callback(xx[0], yy[0], 'slow')
+                    move_callback(xx[1], yy[1], 'slow')
 
 #                if n > 2 and not i * 2 >= n:
                 if i + 2 < n and not xs[i + 1] == xs[i + 2]:
@@ -261,15 +261,15 @@ def raster_polygon(points, step=1, skip=1,
 
     if end_callback is not None:
         end_callback()
-
+        
     if use_plot:
         do_later(show)
 #        show()
 
 
 if __name__ == '__main__':
-    pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 7), (5, 5)]
-#    pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 0), (5, 5)]
+#    pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 7), (5, 5)]
+    pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 0), (5, 5)]
     pts = np.array(pts)
     pts *= 100
     pts = list(pts)
@@ -277,7 +277,7 @@ if __name__ == '__main__':
 #    pts = [(1, 1), (2, 5), (5, 4), (8, 7), (10, 4), (10, 2)]
 
 #    pts = [(0, 0), (10, 0), (10, 10), (0, 10)]
-    raster_polygon(pts, 1, 50, use_plot=True, verbose=False)
+    raster_polygon(pts, 1, 50, use_plot=True, verbose=True)
 
 #============= EOF =============================================
 #    # sort et on ymin

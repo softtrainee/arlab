@@ -516,6 +516,9 @@ class StageManager(Manager):
         '''
             motors is a dict of motor_name:value pairs
         '''
+        if pts is None:
+            return
+        
         if not isinstance(pts, list):
             velocity = pts.velocity
             use_convex_hull = pts.use_convex_hull
@@ -523,16 +526,16 @@ class StageManager(Manager):
                 scan_size = pts.scan_size
             pts = [dict(xy=(pi.x, pi.y), z=pi.z,) for pi in pts.points]
 
+        n = 1000
         if scan_size is None:
-            scan_size = 50
-
+            scan_size = n/2
+        
         # calculate scan lines
         from src.lasers.points.scan_line import raster_polygon
         pts = [pi['xy'] for pi in pts]
 
         # convert points to um
         pts = array(pts)
-        n = 100
         pts *= n
         pts = asarray(pts, dtype=int)
 
@@ -545,11 +548,15 @@ class StageManager(Manager):
                 '''
                 if use_move:
                     self.parent.set_motor(k, v, block=True)
-
+        
+        sc=self.stage_controller
+        sc.set_program_mode('absolute')
+        sc.timer = sc.timer_factory()
         def move(x, y, speed):
             if use_move:
                 v = velocity if speed == 'slow' else None
-                self.linear_move(x / float(n), y / float(n), velocity=v)
+                self.linear_move(x / float(n), y / float(n), velocity=v, 
+                                 mode='absolute',set_stage=False)
 
         raster_polygon(pts,
                        skip=scan_size,
@@ -559,6 +566,11 @@ class StageManager(Manager):
                        move_callback=move, start_callback=start_callback,
                        end_callback=end_callback,
                        )
+        
+        sc.block()
+        sc.set_program_mode('relative')
+
+        print 'finished'
 
     def _move_polyline(self, pts, start_callback=None, end_callback=None):
         if not isinstance(pts, list):
