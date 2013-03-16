@@ -35,6 +35,10 @@ from src.paths import paths
 import pickle
 from src.lasers.stage_managers.stage_visualizer import StageVisualizer
 from src.lasers.points.points_programmer import PointsProgrammer
+from src.lasers.points.scan_line import make_scan_lines
+from src.geometry.geometry import sort_clockwise
+from src.geometry.convex_hull import convex_hull
+from src.geometry.polygon_offset import polygon_offset
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -507,18 +511,20 @@ class StageManager(Manager):
         return sm.get_hole(key)
 
     def _move_polygon(self, pts, velocity=5,
+                      use_outline=False,
                       scan_size=None,
                       use_move=True,
                       use_plot=False,
                       use_convex_hull=True,
                       motors=None,
+                      verbose=True,
                       start_callback=None, end_callback=None):
         '''
             motors is a dict of motor_name:value pairs
         '''
         if pts is None:
             return
-        
+
         if not isinstance(pts, list):
             velocity = pts.velocity
             use_convex_hull = pts.use_convex_hull
@@ -528,16 +534,7 @@ class StageManager(Manager):
 
         n = 1000
         if scan_size is None:
-            scan_size = n/2
-        
-        # calculate scan lines
-        from src.lasers.points.scan_line import raster_polygon
-        pts = [pi['xy'] for pi in pts]
-
-        # convert points to um
-        pts = array(pts)
-        pts *= n
-        pts = asarray(pts, dtype=int)
+            scan_size = n / 2
 
         # set motors
         if motors is not None:
@@ -548,29 +545,148 @@ class StageManager(Manager):
                 '''
                 if use_move:
                     self.parent.set_motor(k, v, block=True)
-        
-        sc=self.stage_controller
+
+        # convert points to um
+        pts = [pi['xy'] for pi in pts]
+        pts = array(pts)
+        n = 100
+        pts *= n
+        pts = asarray(pts, dtype=int)
+
+        sc = self.stage_controller
         sc.set_program_mode('absolute')
-        sc.timer = sc.timer_factory()
-        def move(x, y, speed):
+
+        if use_outline:
+            # calculate new polygon
+            offset = 20
+            opts = pts[:]
+            pts = polygon_offset(pts, offset)
+
+            # trace perimeter
             if use_move:
-                v = velocity if speed == 'slow' else None
-                self.linear_move(x / float(n), y / float(n), velocity=v, 
-                                 mode='absolute',set_stage=False)
+                p0 = opts[0]
+                self.linear_move(p0[0], p0[1], block=True)
+                sc.timer = sc.timer_factory()
 
-        raster_polygon(pts,
-                       skip=scan_size,
-                       verbose=False,
-                       use_plot=use_plot,
-                       use_convex_hull=use_convex_hull,
-                       move_callback=move, start_callback=start_callback,
-                       end_callback=end_callback,
-                       )
-        
-        sc.block()
+                if start_callback is not None:
+                    start_callback()
+
+                for pi in opts[1:]:
+                    self.linear_move(p0[0], p0[1],
+                                     velocity=velocity,
+                                     mode='absolute', set_stage=False)
+
+                # finish at first point
+                self.linear_move(p0[0], p0[1],
+                                 velocity=velocity,
+                                 mode='absolute', set_stage=False)
+
+                sc.block()
+                self.info('polygon perimeter trace complete')
+                '''
+                    have the oppurtunity here to turn off laser and change parameters i.e mask
+                '''
+
+        # calculate and step thru scan lines
+        self._raster(pts, velocity, use_convex_hull,
+                     skip=scan_size, start_callback, end_callback, verbose=verbose)
+
         sc.set_program_mode('relative')
+        if end_callback is not None:
+            end_callback()
+        self.info('polygon raster complete')
 
-        print 'finished'
+    def _raster(self, points, velocity,
+                use_convex_hull=False, step=1, skip=1,
+                start_callback=None, end_callback=None, verbose=False):
+        if use_convex_hull:
+            points = convex_hull(points)
+
+        points = sort_clockwise(points, points)
+        lines = make_scan_lines(points, step)
+
+        # initialize variables
+        cnt = 0
+        direction = 1
+        lasing = False
+        sc = self.stage_controller
+
+        if verbose:
+            self.info('start raster')
+
+        # loop thru each scan line
+        for yi, xs in lines[::skip]:
+            if direction == -1:
+                xs = list(reversed(xs))
+
+            # convert odd numbers lists to even
+            n = len(xs)
+            if n % 2 != 0:
+                xs = sorted(list(set(xs)))
+
+            # traverse each x-intersection pair
+            n = len(xs)
+            for i in range(0, n, 2):
+                yy = (yi, yi)
+                if len(xs) <= 1:
+                    continue
+
+                xx = (xs[i], xs[i + 1])
+                if abs(xs[i] - xs[i + 1]) > 1e-10:
+                    if not lasing:
+                        if verbose:
+                            self.info('fast to {} {},{}'.format(cnt, xx[0], yy[0]))
+
+#                        if move_callback is not None:
+#                            move_callback(xx[0], yy[0], 'fast')
+                        self.linear_move(xx[0], yy[0],
+                                         mode='absolute', set_stage=False,
+                                         block=True)
+                        if start_callback is not None:
+                            start_callback()
+
+                        lasing = True
+                    else:
+                        if verbose:
+                            self.info('slow to {} {},{}'.format(cnt, xx[0], yy[0]))
+
+                        sc.timer = sc.timer_factory()
+                        self.linear_move(xx[0], yy[0],
+                                         mode='absolute', set_stage=False,
+                                         velocity=velocity)
+#                        if move_callback is not None:
+#                            move_callback(xx[0], yy[0], 'slow')
+
+                    if verbose:
+                        self.info('move to {}a {},{}'.format(cnt, xx[1], yy[1]))
+                        self.info('wait for move complete')
+
+                    self.linear_move(xx[1], yy[1], velocity=velocity,
+                                     mode='absolute', set_stage=False,
+                                     block=True)
+
+#                    if move_callback is not None:
+#                        move_callback(xx[1], yy[1], 'slow')
+
+    #                if n > 2 and not i * 2 >= n:
+                    if i + 2 < n and not xs[i + 1] == xs[i + 2]:
+                        if end_callback is not None:
+                            end_callback()
+
+                        lasing = False
+
+                    cnt += 1
+                    flip = True
+                else:
+                    flip = False
+
+            if flip:
+                direction *= -1
+
+        sc.block()
+        if verbose:
+            self.info('end raster')
+
 
     def _move_polyline(self, pts, start_callback=None, end_callback=None):
         if not isinstance(pts, list):

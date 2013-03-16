@@ -13,20 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from src.machine_vision.convex_hull import convex_hull_area
-# def cached_property(function):
-#    name = '{}_cache'.format(function.__name__)
-#    def decorator(self):
-#        result = self.__dict__.get(name, None)
-#        if result is None:
-#            self.__dict__[name] = result = function()
-#        return result
-#
-#    return decorator
+
 #============= enthought library imports =======================
 from traits.api import HasTraits, cached_property, Property
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.geometry.convex_hull import convex_hull_area
 
 class Target(HasTraits):
     centroid_value = None

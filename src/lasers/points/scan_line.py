@@ -15,14 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-#============= standard library imports ========================
-#============= local library imports  ==========================
-import numpy as np
-from src.lasers.geometry import sort_clockwise
+# from traits.api import HasTraits
+# from traitsui.api import View, Item, TableEditor
 from pyface.timer.do_later import do_later
-from src.machine_vision.convex_hull import convex_hull
+#============= standard library imports ========================
+import numpy as np
+#============= local library imports  ==========================
+from src.geometry.geometry import sort_clockwise
+from src.geometry.convex_hull import convex_hull
+
 # from pylab import plot, show, text
 
 def slope(p1, p2):

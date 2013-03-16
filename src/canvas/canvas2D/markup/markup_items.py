@@ -22,8 +22,8 @@ from chaco.data_range_1d import DataRange1D
 #============= standard library imports ========================
 import math
 from numpy import array
-from src.machine_vision.convex_hull import convex_hull
 #============= local library imports  ==========================
+from src.geometry.convex_hull import convex_hull
 
 
 def calc_rotation(x1, y1, x2, y2):

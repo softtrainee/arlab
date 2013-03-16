@@ -28,7 +28,10 @@ def sort_clockwise(pts, xy):
     '''
     xy = array(xy)
     # sort points clockwise
-    xs, ys = xy.T
+    try:
+        xs, ys = xy.T
+    except ValueError:
+        xs, ys, _ = xy.T
     cx = xs.mean()
     cy = ys.mean()
 
