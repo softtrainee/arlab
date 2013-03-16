@@ -155,11 +155,15 @@ def make_raster_polygon(points, step=1, skip=1, use_convex_hull=False, zigzag=Fa
         pass
     else:
         direction = 1
+        flip=False
         # loop thru each scan line
         for yi, xs in lines[::skip]:
             if direction == -1:
                 xs = list(reversed(xs))
             # traverse each x-intersection pair
+            n = len(xs)
+            if n % 2 != 0:
+                xs = sorted(list(set(xs)))
             n = len(xs)
             for i in range(0, n, 2):
                 if len(xs) <= 1:
@@ -188,7 +192,8 @@ def graph(poly, opoly,line):
             xs,ys=po.T
         except ValueError:
             xs,ys,_=po.T
-        
+        xs=np.hstack((xs, xs[0]))                
+        ys=np.hstack((ys, ys[0]))     
         g.new_series(xs,ys)
 
     for i,(p1,p2) in enumerate(lines):
@@ -198,9 +203,16 @@ def graph(poly, opoly,line):
 
 if __name__ == '__main__':
     poly = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 7), (5, 5), (2,7)]
+    
+    
+    poly= [(-0.7131730192833079,0.29423711121333285),
+            (-0.4534451606058192,0.2755541205194436),
+            (-0.2361564945226915,0.39104897208166745),
+            (-0.22427352059627048,0.6509123880966704),
+            (-0.5315332749794434,0.5676881568238916)]
 #    poly = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 0), (5, 5)]
     poly = np.array(poly)
-    poly *= 100
+    poly *= 10000
     poly=[tuple(pi) for pi in poly]
 #    poly = list(poly)
 #    poly = [(8, 15), (2, 7), (4, 12), (16, 9), (11, 5), (5, 5), (8, 7)]
@@ -210,11 +222,10 @@ if __name__ == '__main__':
 #    raster_polygon(poly, 1, 50, use_plot=True, verbose=True)
 
     from src.geometry.polygon_offset import polygon_offset
-    opoly=polygon_offset(poly, 100)
+    opoly=polygon_offset(poly, -100)
     opoly=np.array(opoly, dtype=int)
     opoly=opoly[:,(0,1)]
-    
-    lines=make_raster_polygon(opoly, 1, 50)  
+    lines=make_raster_polygon(opoly, 1, 100)  
     graph(poly,opoly, lines)
     
 #============= EOF =============================================
