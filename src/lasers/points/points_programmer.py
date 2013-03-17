@@ -21,7 +21,7 @@ from traitsui.api import View, Item, ButtonEditor, Group, HGroup, VGroup
 #============= standard library imports ========================
 import yaml
 import os
-from numpy import array,hstack
+from numpy import array, hstack
 #============= local library imports  ==========================
 from src.paths import paths
 from src.managers.manager import Manager
@@ -72,15 +72,6 @@ class PointsProgrammer(Manager):
                                           )
             return maker
 
-#    def _set_line_entry(self, v):
-#        pts = self.canvas.lines
-#        self.point = None
-#        pp = next((pi for pi in pts if pi.identifier == str(v)), None)
-#        if pp is not None:
-#            self.line = pp
-#        else:
-#            self.line = None
-
     def _set_polygon_entry(self, v):
         if self.use_move:
             self._set_entry('polygon', v, ['point', 'line'])
@@ -108,6 +99,8 @@ class PointsProgrammer(Manager):
 
         objs = getattr(self.canvas, '{}s'.format(name))
         pp = next((pi for pi in objs if pi.identifier == str(value)), None)
+
+        # trigger stage_manager move_... event handler
         setattr(self, name, pp)
 
     def _get_entry_identifer(self, name):
@@ -129,40 +122,84 @@ class PointsProgrammer(Manager):
             if hasattr(self.maker, 'scan_size'):
                 scan_size = self.maker.scan_size
             else:
-                scan_size=pp.scan_size
-            
-            poly=[(pi.x*1000, pi.y*1000) for pi in pp.points]
+                scan_size = pp.scan_size
 
-            from src.geometry.polygon_offset import polygon_offset
-            from src.geometry.scan_line import make_raster_polygon
-            use_offset=True
-            if use_offset:
-                opoly=polygon_offset(poly, -10)
-                opoly=array(opoly, dtype=int)
-                opoly=opoly[:,(0,1)]
+            poly = [(pi.x, pi.y) for pi in pp.points]
+            self._plot_raster(poly, scan_size, scale=1000)
 
-#            print opoly, scan_size
-            lines=make_raster_polygon(opoly, skip=scan_size)
-            from src.graph.graph import Graph
-    
-            g=Graph()
-            g.new_plot()
-            
-            for po in (poly, opoly): 
-                po=array(po, dtype=int)
-                try:
-                    xs,ys=po.T
-                except ValueError:
-                    xs,ys,_=po.T
-                xs=hstack((xs, xs[0]))                
-                ys=hstack((ys, ys[0]))                
-                g.new_series(xs,ys)
-        
-            for p1,p2 in lines:
-                xi,yi=(p1[0], p2[0]), (p1[1], p2[1])
-                g.new_series(xi, yi, color='green')
-                
-            g.edit_traits()
+    def _plot_raster(self, poly, scan_size, scale):
+        use_convex_hull = False
+        from src.geometry.scan_line import raster
+        from src.geometry.convex_hull import convex_hull
+        from src.geometry.polygon_offset import polygon_offset
+        from src.geometry.geometry import sort_clockwise
+
+        poly = sort_clockwise(poly, poly)
+        poly = array(poly)
+        poly *= scale
+
+        npoints, lens = raster(poly,
+                         step=200,
+                         offset= -500,
+                         use_convex_hull=use_convex_hull, find_min=True)
+
+        from src.graph.graph import Graph
+        g = Graph(window_height=700,
+                  window_title='Scan Line Minimization',
+                  window_y=30)
+
+        g.plotcontainer.padding = 5
+        g.new_plot(padding=[60, 30, 30, 50],
+                   bounds=[400, 400],
+                   resizable='h',
+                   xtitle='X (microns)',
+                   ytitle='Y (microns)')
+
+        if use_convex_hull:
+            poly = convex_hull(poly)
+            xs, ys = poly.T
+            xs = hstack((xs, xs[0]))
+            ys = hstack((ys, ys[0]))
+        else:
+            xs, ys = poly.T
+            xs = hstack((xs, xs[0]))
+            ys = hstack((ys, ys[0]))
+
+        # plot original
+        g.new_series(xs, ys)
+        g.set_x_limits(min(xs), max(xs), pad='0.1')
+        g.set_y_limits(min(ys), max(ys), pad='0.1')
+        for ps in npoints:
+            for i in range(0, len(ps), 2):
+                p1, p2 = ps[i], ps[i + 1]
+                g.new_series((p1[0], p2[0]),
+                             (p1[1], p2[1]), color='black')
+
+        # plot offset polygon
+        opoly = polygon_offset(poly, -500)
+        if use_convex_hull:
+            opoly = convex_hull(opoly)
+            xs, ys, _ = opoly.T
+            xs = hstack((xs, xs[0]))
+            ys = hstack((ys, ys[0]))
+        else:
+            opoly = array(opoly, dtype=int)
+            xs, ys, _ = opoly.T
+
+        g.new_series(xs, ys)
+
+        # plot theta vs num lines ie the scan line minimization
+        g.new_plot(padding=[50, 30, 30, 30],
+               xtitle='Theta (degrees)',
+               ytitle='Num. Scan Lines',
+               bounds=[400, 100],
+               resizable='h'
+               )
+
+        ts, ls = zip(*lens)
+        g.new_series(ts, ls)
+
+        g.edit_traits()
 
     def _show_hide_fired(self):
         canvas = self.canvas
@@ -315,3 +352,45 @@ class PointsProgrammer(Manager):
         return v
 
 #============= EOF =============================================
+#    def _plot_scan_fired(self):
+#        polygons = self.canvas.polygons
+#        if self.polygon_entry is not None and self.scan_size:
+#            pp = next((pi for pi in polygons if pi.identifier == str(self.polygon_entry)), None)
+#            scan_size = None
+#            if hasattr(self.maker, 'scan_size'):
+#                scan_size = self.maker.scan_size
+#            else:
+#                scan_size = pp.scan_size
+#
+#            poly = [(pi.x * 1000, pi.y * 1000) for pi in pp.points]
+#
+#            from src.geometry.polygon_offset import polygon_offset
+#            from src.geometry.scan_line import make_raster_polygon
+#            use_offset = True
+#            if use_offset:
+#                opoly = polygon_offset(poly, -10)
+#                opoly = array(opoly, dtype=int)
+#                opoly = opoly[:, (0, 1)]
+#
+# #            print opoly, scan_size
+#            lines = make_raster_polygon(opoly, step=scan_size)
+#            from src.graph.graph import Graph
+#
+#            g = Graph()
+#            g.new_plot()
+#
+#            for po in (poly, opoly):
+#                po = array(po, dtype=int)
+#                try:
+#                    xs, ys = po.T
+#                except ValueError:
+#                    xs, ys, _ = po.T
+#                xs = hstack((xs, xs[0]))
+#                ys = hstack((ys, ys[0]))
+#                g.new_series(xs, ys)
+#
+#            for p1, p2 in lines:
+#                xi, yi = (p1[0], p2[0]), (p1[1], p2[1])
+#                g.new_series(xi, yi, color='green')
+#
+#            g.edit_traits()
