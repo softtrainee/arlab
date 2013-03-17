@@ -188,26 +188,22 @@ class LineMaker(FinishableMaker):
 class PolygonMaker(FinishableMaker):
     velocity = Float(1.0)
     use_convex_hull = Bool(True)
-    plot_scan = Button
     scan_size = Int(50)
-    def _plot_scan_fired(self):
-        polygons = self.canvas.polygons
-        if self.polygon_entry is not None and self.scan_size:
-            pp = next((pi for pi in polygons if pi.identifier == self.polygon_entry), None)
-            self.stage_manager._move_polygon(pp,
-                                             scan_size=self.scan_size,
-                                             use_plot=True, use_move=False)
+    use_outline = Bool
+    offset = Int(50)
+    find_min = Bool(True)
 
     def _get_controls(self):
         g = VGroup(Item('velocity', label='Velocity mm/min'),
                    Item('use_convex_hull'),
                    Item('scan_size', label='Scan H (um)'),
+                   Item('find_min', label='Find Min. Lines'),
+                   HGroup(Item('use_outline'), Item('offset', show_label=False, enabled_when='use_outline'))
                    )
         return g
 
     def _save(self):
         pe = self.stage_manager.points_programmer.polygon_entry
-
 
         polys = dict()
         for i, po in enumerate(self.canvas.polygons):
@@ -226,6 +222,9 @@ class PolygonMaker(FinishableMaker):
                 v = self.velocity
                 uch = self.use_convex_hull
                 ss = self.scan_size
+                o = self.offset
+                uo = self.use_outline
+                fm = self.find_min
 
                 motors = dict()
                 for motor in ('mask', 'attenuator'):
@@ -239,13 +238,19 @@ class PolygonMaker(FinishableMaker):
                 v = po.velocity
                 uch = po.use_convex_hull
                 ss = po.scan_size
+                uo = po.use_outline
+                o = po.offset
+                fm = po.find_min
 
             polys[str(i)] = dict(points=pts,
                                  motors=motors,
 
                                  velocity=v,
                                  scan_size=ss,
-                                 use_convex_hull=uch
+                                 use_convex_hull=uch,
+                                 use_outline=uo,
+                                 offset=o,
+                                 find_min=fm
                                  )
 
         return {'polygons':polys}
@@ -261,6 +266,9 @@ class PolygonMaker(FinishableMaker):
                                       use_convex_hull=self.use_convex_hull,
                                       velocity=self.velocity,
                                       scan_size=self.scan_size,
+                                      use_outline=self.use_outline,
+                                      find_min=self.find_min,
+                                      offset=self.offset,
                                       **ptargs)
 class TransectMaker(FinishableMaker):
     step = Float(1, enter_set=True, auto_set=False)

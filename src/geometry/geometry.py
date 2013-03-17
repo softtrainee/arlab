@@ -21,7 +21,7 @@ from traitsui.api import View, Item, TableEditor
 from numpy import array
 import math
 #============= local library imports  ==========================
-def sort_clockwise(pts, xy):
+def sort_clockwise(pts, xy, reverse=False):
     '''
         pts = list of points
         xy = list of corresponding x,y tuples
@@ -35,10 +35,10 @@ def sort_clockwise(pts, xy):
     cx = xs.mean()
     cy = ys.mean()
 
-
     angles = [(math.atan2(y - cy, x - cx), pi) for pi, x, y in zip(pts, xs, ys)]
-    angles = sorted(angles, key=lambda x: x[0])
+    angles = sorted(angles, key=lambda x: x[0], reverse=reverse)
     _, pts = zip(*angles)
+
     return list(pts)
 #    self.points = list(pts)
 
