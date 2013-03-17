@@ -546,14 +546,13 @@ class StageManager(Manager):
                 '''
                 if use_move:
                     self.parent.set_motor(k, v, block=True)
-
-
+                    
         xy = [pi['xy'] for pi in pts]
-        # convert points to um
         n = 1000
         if scan_size is None:
             scan_size = n / 2
-
+        
+        # convert points to um
         pts = array(xy)
         pts *= n
         pts = asarray(pts, dtype=int)
@@ -567,7 +566,9 @@ class StageManager(Manager):
 
         sc = self.stage_controller
         sc.set_program_mode('absolute')
-
+        # do smooth transitions between points
+        sc.set_smooth_transitions(True)
+        
         if use_convex_hull:
             pts = convex_hull(pts)
 

@@ -225,6 +225,7 @@ class ExtractionLinePyScript(ValvePyScript):
             l=Trace path in continuous mode
             s=Trace path in step mode
             d=Drill point
+            r=raster polygon
         '''
 
         if name == '':
