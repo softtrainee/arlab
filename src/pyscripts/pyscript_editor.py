@@ -274,7 +274,7 @@ class PyScriptManager(Manager):
                        )
 
         editor = VGroup(
-                        Item('body', editor=PyScriptCodeEditor(),
+                        Item('body', editor=PyScriptCodeEditor(fontsize=18),
                              show_label=False),
                         help_grp
                         )
@@ -297,7 +297,7 @@ class PyScriptManager(Manager):
                                 enabled_when='object.save_enabled'),
                           Action(name='Save As', action='save_as')
                           ],
-                 width=700,
+                 width=0.5,
                  height=850,
                  handler=ScriptHandler,
                  title=self.title
@@ -305,15 +305,16 @@ class PyScriptManager(Manager):
         return v
 
 if __name__ == '__main__':
+    from launchers.helpers import build_version
+    build_version('_experiment')
     from src.helpers.logger_setup import logging_setup
-
     logging_setup('scripts')
 #    s = PyScriptManager(kind='ExtractionLine')
 #    s = PyScriptManager(kind='Bakeout')
     s = PyScriptManager(kind='Measurement')
-#    p = os.path.join(paths.scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
-
-#    s.open_script(path=p)
+    
+    p = os.path.join(paths.scripts_dir, 'extraction', 'jan_uv_all.py')
+    s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================
 #    def _get_execute_label(self):

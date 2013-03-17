@@ -153,16 +153,15 @@ class FusionsUVManager(FusionsLaserManager):
         atl = self.atl_controller
         atl.set_burst_mode(False)
         sm = self.stage_manager
-        sc = sm.stage_controller
 
         smap = sm._stage_map
         poly = smap.get_polygon(name)
 
-        # do smooth transitions between points
-        sc.set_smooth_transitions(True)
         print poly
         sm._move_polygon(poly['points'], velocity=poly['velocity'],
                          motors=poly['motors'],
+                         use_outline=poly['use_outline'],
+                         offset=poly['offset'],
                          use_convex_hull=poly['use_convex_hull'],
                          scan_size=poly['scan_size'],
                          start_callback=atl.laser_run,

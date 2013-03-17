@@ -1798,7 +1798,7 @@ anaylsis_type={}
             if not pi:
                 continue
 
-            if pi[0].lower() in ('p', 'l', 'd'):
+            if pi[0].lower() in ('p', 'l', 'd','r'):
                 n = pi[1:]
             else:
                 n = pi

@@ -350,5 +350,28 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         manager.set_laser_power(p)
         return result
+    
+#===============================================================================
+# Positioning
+#===============================================================================
+    def GoToNamedPosition(self, manager, pos, *args):
+        result = manager.goto_named_position(pos)
+        return result
+
+    def GoToPoint(self, manager, pos, *args):
+        result = manager.goto_point(pos)
+        return result
+
+    def TracePath(self, manager, value, pathname, kind, *args):
+        result = manager.trace_path(value, pathname, kind)
+        return result
+
+    def IsTracing(self, manager, *args):
+        result = manager.isTracing()
+        return result
+
+    def StopTrace(self, manager, *args):
+        result = manager.stop_trace()
+        return result
 
 #============= EOF ====================================

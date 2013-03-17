@@ -28,27 +28,6 @@ from laser_handler import LaserHandler
 
 class UvHandler(LaserHandler):
     manager_name = 'fusions_uv'
-
-    def GoToNamedPosition(self, manager, pos, *args):
-        result = manager.goto_named_position(pos)
-        return result
-
-    def GoToPoint(self, manager, pos, *args):
-        result = manager.goto_point(pos)
-        return result
-
-    def TracePath(self, manager, value, pathname, kind, *args):
-        result = manager.trace_path(value, pathname, kind)
-        return result
-
-    def IsTracing(self, manager, *args):
-        result = manager.isTracing()
-        return result
-
-    def StopTrace(self, manager, *args):
-        result = manager.stop_trace()
-        return result
-
     def Fire(self, manager, mode, *args):
         result = manager.fire_laser(mode)
         return result
