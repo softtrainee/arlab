@@ -18,7 +18,8 @@
 from traits.api import HasTraits, Str, Int, Color, Button, Any, Instance
 from traitsui.api import View, Item, TableEditor, UItem, Label
 from traitsui.wx.editor import Editor
-from traitsui.wx.basic_editor_factory import BasicEditorFactory
+from traitsui.basic_editor_factory import BasicEditorFactory
+# from traitsui.wx.basic_editor_factory import BasicEditorFactory
 import wx
 import random
 #============= standard library imports ========================
@@ -41,9 +42,9 @@ class _CustomLabelEditor(Editor):
         family = wx.FONTFAMILY_DEFAULT
         style = wx.FONTSTYLE_NORMAL
         weight = wx.FONTWEIGHT_NORMAL
-        font = wx.Font(self.item.font_size, family, style, weight)
+        font = wx.Font(self.item.size, family, style, weight)
         txtctrl.SetFont(font)
-        txtctrl.SetForegroundColour(self.item.font_color)
+        txtctrl.SetForegroundColour(self.item.color)
         self.txtctrl = txtctrl
 
         sizer.Add(txtctrl)
@@ -56,8 +57,8 @@ class CustomLabelEditor(BasicEditorFactory):
 
 class CustomLabel(UItem):
     editor = Instance(CustomLabelEditor, ())
-    font_size = Int
-    font_color = Color('green')
+    size = Int
+    color = Color('green')
 
 #===============================================================================
 # demo
@@ -72,8 +73,8 @@ class Demo(HasTraits):
         v = View(
                  'foo',
                  CustomLabel('a',
-                             font_color='blue',
-                             font_size=10), width=100,
+                             color='blue',
+                             size=10), width=100,
                  height=100)
         return v
 

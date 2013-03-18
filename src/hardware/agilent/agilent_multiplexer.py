@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import HasTraits, Str, List, Float, Property, Tuple
-from traitsui.api import View, Item, HGroup, ListEditor, InstanceEditor
+from traitsui.api import View, Item, HGroup, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 from numpy import polyval
 from src.hardware.agilent.agilent_unit import AgilentUnit
@@ -49,10 +49,12 @@ class Channel(HasTraits):
 
 class AgilentMultiplexer(AgilentUnit):
     channels = List
+
     scan_func = 'channel_scan'
     def load_additional_args(self, config):
         super(AgilentMultiplexer, self).load_additional_args(config)
         # load channels
+        self.channels = []
         for section in config.sections():
             if section.startswith('Channel'):
                 kind = self.config_get(config, section, 'kind', default='DC')
@@ -72,6 +74,7 @@ class AgilentMultiplexer(AgilentUnit):
                            )
                 self.channels.append(ch)
 
+#        self._update_channels = True
         return True
 
     def initialize(self, *args, **kw):
@@ -121,7 +124,7 @@ class AgilentMultiplexer(AgilentUnit):
             for i, ci in enumerate(self.channels):
                 v = self.ask('DATA:REMOVE? 1', verbose=verbose)
                 if v is None:
-                    v = self.get_random_value()
+                    v = str(self.get_random_value())
 
                 try:
                     ci.value = float(v)
@@ -150,8 +153,20 @@ class AgilentMultiplexer(AgilentUnit):
                             if chan.name == name or \
                                  chan.address[1:] == name), None)
 
+#    def _get_channels(self):
+# #        print 'asdfasdfasdfsadfsda', len(self._channels)
+#        return self._channels
+
     def traits_view(self):
-        v = View(Item('channels', show_label=False, editor=ListEditor(mutable=False, editor=InstanceEditor(), style='custom')))
+        v = View(
+                 Group(
+                       Item('channels', show_label=False,
+                            height=400,
+                            editor=ListEditor(mutable=False,
+                                              editor=InstanceEditor(), style='custom')),
+                       show_border=True
+                       )
+                 )
         return v
 
 class AgilentSingleADC(AgilentUnit):
