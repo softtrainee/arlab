@@ -24,36 +24,39 @@ from chaco.api import AbstractOverlay
 # import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
-from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
-    VelocityPolyLine, Transect, Polygon
+# from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
+#    VelocityPolyLine, Transect, Polygon
 
 from kiva import constants
 from src.geometry.geometry import calc_point_along_line
+from src.canvas.canvas2D.scene.primitives import Polygon, Transect, \
+    VelocityPolyLine, PointIndicator
 
 # class Point(HasTraits):
 #    x=Float
 #    y=Float
 #    identifier=Str
 
-class PointOverlay(AbstractOverlay):
-    def overlay(self, component, gc, *args, **kw):
-        with gc:
-            gc.clip_to_rect(component.x, component.y, component.width, component.height)
-            for pt in self.component.points:
-                pt.render(gc)
-
-class LineOverlay(AbstractOverlay):
-    def overlay(self, component, gc, *args, **kw):
-        with gc:
-            gc.clip_to_rect(component.x, component.y, component.width, component.height)
-            for li in self.component.lines:
-                li.render(gc)
-class MarkupOverlay(AbstractOverlay):
-    def overlay(self, component, gc, *args, **kw):
-        with gc:
-            gc.clip_to_rect(component.x, component.y, component.width, component.height)
-            for li in self.component.markup_objects:
-                li.render(gc)
+# class PointOverlay(AbstractOverlay):
+#    def overlay(self, component, gc, *args, **kw):
+#        with gc:
+#            gc.clip_to_rect(component.x, component.y, component.width, component.height)
+#            for pt in self.component.points:
+#                pt.render(gc)
+#
+# class LineOverlay(AbstractOverlay):
+#    def overlay(self, component, gc, *args, **kw):
+#        with gc:
+#            gc.clip_to_rect(component.x, component.y, component.width, component.height)
+#            for li in self.component.lines:
+#                li.render(gc)
+#
+# class MarkupOverlay(AbstractOverlay):
+#    def overlay(self, component, gc, *args, **kw):
+#        with gc:
+#            gc.clip_to_rect(component.x, component.y, component.width, component.height)
+#            for li in self.component.markup_objects:
+#                li.render(gc)
 
 
 class BoundsOverlay(AbstractOverlay):
@@ -129,23 +132,8 @@ class LaserTrayCanvas(MapCanvas):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
         self._add_bounds_rect()
 
-    def _add_bounds_rect(self):
-        if self.show_bounds_rect:
-            self.overlays.append(BoundsOverlay(component=self))
 
-    def _show_bounds_rect_changed(self):
-#        bo = None
-#        for o in self.overlays:
-#            if isinstance(o, BoundsOverlay):
-#                bo = o
-#                break
-        bo = next((o for o in self.overlays if isinstance(o, BoundsOverlay)), None)
-        if bo is None:
-            self._add_bounds_rect()
-        elif not self.show_bounds_rect:
-            self.overlays.remove(bo)
 
-        self.request_redraw()
 
     def clear_all(self):
         self.lines = []
@@ -154,6 +142,7 @@ class LaserTrayCanvas(MapCanvas):
         self.polygons = []
         self.markup_objects = []
         self.reset_markup()
+        self.scene.reset_layers()
 
     def reset_markup(self):
         self._new_line = True
@@ -169,10 +158,10 @@ class LaserTrayCanvas(MapCanvas):
 #        for o in self.overlays[:]:
 #            if isinstance(o, LineOverlay):
 #                self.overlays.remove(o)
-    def remove_markup_overlay(self):
-        for o in self.overlays[:]:
-            if isinstance(o, MarkupOverlay):
-                self.overlays.remove(o)
+#    def remove_markup_overlay(self):
+#        for o in self.overlays[:]:
+#            if isinstance(o, MarkupOverlay):
+#                self.overlays.remove(o)
 
 #    def add_point_overlay(self):
 #        po = PointOverlay(component=self)
@@ -182,9 +171,10 @@ class LaserTrayCanvas(MapCanvas):
 #        po = LineOverlay(component=self)
 #        self.overlays.append(po)
 
-    def add_markup_overlay(self):
-        mo = MarkupOverlay(component=self)
-        self.overlays.append(mo)
+#    def add_markup_overlay(self):
+#        mo = MarkupOverlay(component=self)
+#        self.overlays.append(mo)
+
 
     def point_exists(self, xy=None, tol=1e-5):
         if xy is None:
@@ -213,9 +203,16 @@ class LaserTrayCanvas(MapCanvas):
         self.request_redraw()
 
     def new_polygon_point(self, xy=None,
+                          ptargs=None,
                           identifier=None,
-                          line_color=(1, 0, 0), point_color=(1, 0, 0),
-                          use_convex_hull=False, **ptargs):
+                          line_color=(1, 0, 0),
+                          point_color=(1, 0, 0),
+                          **kw
+#                          use_convex_hull=False,
+                           ):
+        if ptargs is None:
+            ptargs = dict()
+
         if xy is None:
             xy = self._stage_position
 
@@ -226,13 +223,16 @@ class LaserTrayCanvas(MapCanvas):
             self._new_polygon = False
             poly = Polygon([xy],
                          identifier=identifier,
-                         canvas=self,
-                         use_convex_hull=use_convex_hull,
                          default_color=point_color,
-                         **ptargs
+                         ptargs=ptargs,
+                         **kw
+#                         canvas=self,
+#                         use_convex_hull=use_convex_hull,
+#                         **ptargs
                          )
             self.polygons.append(poly)
-            self.markup_objects.append(poly)
+            self.scene.add_item(poly)
+#            self.markup_objects.append(poly)
         else:
             poly = self.polygons[-1]
             poly.add_point(xy, default_color=point_color, **ptargs)
@@ -247,41 +247,16 @@ class LaserTrayCanvas(MapCanvas):
 #            kw['canvas'] = self
             transect = Transect(xy,
                                 identifier=str(len(self.lines) + 1),
-                                canvas=self,
+#                                canvas=self,
                                 default_color=point_color,
                                 step=step,)
-
+            self.scene.add_item(transect)
             self.transects.append(transect)
         else:
             tran = self.transects[-1]
             tran.set_endpoint(xy)
             self._set_transect_points(tran, step, **ptargs)
 
-    def _set_transect_points(self, tran, step, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
-        p1 = tran.start_point
-        p2 = tran.end_point
-
-        x, y = p1.x, p1.y
-        p = self.new_point((x, y), **ptargs)
-        tran.points.append(p)
-        tol = 0.1
-        while 1:
-            x, y = calc_point_along_line(x, y, p2.x, p2.y, step)
-            if abs(p2.x - x) < tol and abs(p2.y - y) < tol:
-                ptargs['use_border'] = True
-                p = self.new_point((x, y), **ptargs)
-                tran.points.append(p)
-                break
-            else:
-                ptargs['use_border'] = False
-                p = self.new_point((x, y),
-                               line_color=line_color, point_color=point_color,
-                               **ptargs)
-                tran.points.append(p)
-
-#            line.add_point(*xy,
-#                           line_color=line_color,
-#                           point_color=point_color)
 
 
     def new_line_point(self, xy=None, z=0, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
@@ -290,14 +265,15 @@ class LaserTrayCanvas(MapCanvas):
 
         if self._new_line:
             kw['identifier'] = str(len(self.lines) + 1)
-            kw['canvas'] = self
+#            kw['canvas'] = self
 
             line = VelocityPolyLine(*xy, z=z,
                           default_color=point_color,
                           **kw
                           )
             self._new_line = False
-            self.markup_objects.append(line)
+            self.scene.add_item(line)
+#            self.markup_objects.append(line)
             self.lines.append(line)
         else:
             line = self.lines[-1]
@@ -320,10 +296,12 @@ class LaserTrayCanvas(MapCanvas):
 
         p = PointIndicator(*xy,
                 identifier=str(len(self.points) + 1),
-                canvas=self,
+#                canvas=self,
                 **kw
                 )
-        self.markup_objects.append(p)
+
+        self.scene.add_item(p)
+#        self.markup_objects.append(p)
         self.points.append(p)
 #        p = PointIndicator(*self._stage_position, identifier=pid, canvas=self)
 #        self.markupcontainer[pid] = p
@@ -397,25 +375,6 @@ class LaserTrayCanvas(MapCanvas):
 #        return v
 
 
-
-    def _get_current_position(self):
-
-        md = self.map_data(self.cur_pos)
-        return  self.cur_pos[0], md[0], self.cur_pos[1], md[1]
-
-    @on_trait_change('''render_map,show_laser_position, show_desired_position,
-                         desired_position_color,
-                         crosshairs_+
-                         ''')
-    def change_indicator_visibility(self):
-        self.request_redraw()
-
-#    @on_trait_change('parent:parent:beam')
-#    def set_beam_radius(self, obj, name, old, new):
-#        if new:
-#            self.beam_radius = new / 2.0
-#            self.request_redraw()
-
     def valid_position(self, x, y):
         '''
         '''
@@ -434,94 +393,10 @@ class LaserTrayCanvas(MapCanvas):
                     pass
 #                if 'x' in p.axes and 'y' in p.axes:
 
-    def normal_left_down(self, event):
-        '''
-        '''
-#        if self.calibrate or self.markup:
-#            super(LaserTrayCanvas, self).normal_left_down(event)
-#
-#        else:
 
-        pos = self.valid_position(event.x, event.y)
-        if pos:
-            self.parent.linear_move(*pos, use_calibration=False)
-            event.handled = True
-
-#    def normal_mouse_wheel(self, event):
-#        enable_mouse_wheel_zoom = False
-#        if enable_mouse_wheel_zoom:
-#            inc = event.mouse_wheel
-# #            self.parent.parent.laser_controller.set_zoom(inc, relative=True)
-#            self.parent.parent.laser_controller.set_motor('zoom', inc, relative=True)
-# #            self.parent.parent.logic_board.set_zoom(inc, relative=True)
-#            event.handled = True
-
-    def normal_key_pressed(self, event):
-        c = event.character
-        if c in ['Left', 'Right', 'Up', 'Down']:
-            ax_key, direction = DIRECTIONS[c]
-            direction = self._calc_relative_move_direction(c, direction)
-            self.parent.relative_move(ax_key, direction)
-            event.handled = True
-
-    def _calc_relative_move_direction(self, char, direction):
-        return direction
-
-    def normal_key_up(self, event):
-        '''
-             this method is not called by the normal interactor dispatcher like for "normal_key_pressed"
-             LaserComponentEditor calls when wx.EVT_KEY_UP is fired. therefore event is not an Enable event
-             but a wx.Event
-        '''
-        c = event.GetKeyCode()
-        if c in (314, 316):  # left, right
-            self.parent.stop(ax_key='x', verbose=False)
-            self.parent.update_axes()
-        elif c in (315, 317):  # up, down
-            self.parent.stop(ax_key='y', verbose=False)
-            self.parent.update_axes()
-
-    def normal_mouse_move(self, event):
-        '''
-        '''
-        self.cur_pos = (event.x, event.y)
-#        if self.calibrate or self.markup:
-#            super(LaserTrayCanvas, self).normal_mouse_move(event)
-#
-#            #both the markup and map canvas can handle this event
-#            MarkupCanvas.normal_mouse_move(self, event)
-#            if not event.handled:
-#                MapCanvas.normal_mouse_move(self, event)
-#        else:
-
-        if self.valid_position(event.x, event.y):
-            event.window.set_pointer(self.cross_pointer)
-        else:
-            event.window.set_pointer(self.normal_pointer)
-
-        event.handled = True
-        self.request_redraw()
-
-    def normal_mouse_enter(self, event):
-        '''
-        '''
-        event.window.set_pointer(self.cross_pointer)
-        event.handled = True
-
-    def normal_mouse_leave(self, event):
-        '''
-        '''
-        event.window.set_pointer(self.normal_pointer)
-        self.request_redraw()
-        event.handled = True
 
     def get_stage_position(self):
         return self._stage_position
-
-    def _get_stage_position(self):
-        '''
-        '''
-        return self.map_screen([self._stage_position])[0]
 
     def set_stage_position(self, x, y):
         '''
@@ -529,14 +404,6 @@ class LaserTrayCanvas(MapCanvas):
         if x is not None and y is not None:
             self._stage_position = (x, y)
             self.invalidate_and_redraw()
-
-    def _get_desired_position(self):
-        '''
-        '''
-
-        if not self._desired_position is None:
-            x, y = self.map_screen([self._desired_position])[0]
-            return x, y
 
     def clear_desired_position(self):
         self._desired_position = None
@@ -573,6 +440,179 @@ class LaserTrayCanvas(MapCanvas):
             nma = val + delta
 
         self.set_mapper_limits(mapper, (nmi, nma))
+
+#===============================================================================
+# interactor
+#===============================================================================
+    def normal_left_down(self, event):
+        '''
+        '''
+#        if self.calibrate or self.markup:
+#            super(LaserTrayCanvas, self).normal_left_down(event)
+#
+#        else:
+
+        pos = self.valid_position(event.x, event.y)
+        if pos:
+            if not self._frozen:
+                self.parent.linear_move(*pos, use_calibration=False)
+                event.handled = True
+
+#    def normal_mouse_wheel(self, event):
+#        enable_mouse_wheel_zoom = False
+#        if enable_mouse_wheel_zoom:
+#            inc = event.mouse_wheel
+# #            self.parent.parent.laser_controller.set_zoom(inc, relative=True)
+#            self.parent.parent.laser_controller.set_motor('zoom', inc, relative=True)
+# #            self.parent.parent.logic_board.set_zoom(inc, relative=True)
+#            event.handled = True
+
+    def normal_key_pressed(self, event):
+        c = event.character
+        if not self._frozen:
+            if c in ['Left', 'Right', 'Up', 'Down']:
+                ax_key, direction = DIRECTIONS[c]
+                direction = self._calc_relative_move_direction(c, direction)
+                self.parent.relative_move(ax_key, direction)
+                event.handled = True
+
+    def normal_key_up(self, event):
+        '''
+             this method is not called by the normal interactor dispatcher like for "normal_key_pressed"
+             LaserComponentEditor calls when wx.EVT_KEY_UP is fired. therefore event is not an Enable event
+             but a wx.Event
+        '''
+        if not self._frozen:
+            c = event.GetKeyCode()
+            if c in (314, 316):  # left, right
+                self.parent.stop(ax_key='x', verbose=False)
+                self.parent.update_axes()
+            elif c in (315, 317):  # up, down
+                self.parent.stop(ax_key='y', verbose=False)
+                self.parent.update_axes()
+
+    def normal_mouse_move(self, event):
+        '''
+        '''
+        self.cur_pos = (event.x, event.y)
+#        if self.calibrate or self.markup:
+#            super(LaserTrayCanvas, self).normal_mouse_move(event)
+#
+#            #both the markup and map canvas can handle this event
+#            MarkupCanvas.normal_mouse_move(self, event)
+#            if not event.handled:
+#                MapCanvas.normal_mouse_move(self, event)
+#        else:
+
+        if self.valid_position(event.x, event.y):
+            event.window.set_pointer(self.cross_pointer)
+        else:
+            event.window.set_pointer(self.normal_pointer)
+
+        event.handled = True
+        self.request_redraw()
+
+    def normal_mouse_enter(self, event):
+        '''
+        '''
+        event.window.set_pointer(self.cross_pointer)
+        event.handled = True
+
+    def normal_mouse_leave(self, event):
+        '''
+        '''
+        event.window.set_pointer(self.normal_pointer)
+        self.request_redraw()
+        event.handled = True
+#===============================================================================
+# private
+#===============================================================================
+    def _calc_relative_move_direction(self, char, direction):
+        return direction
+
+    def _set_transect_points(self, tran, step, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
+        p1 = tran.start_point
+        p2 = tran.end_point
+
+        x, y = p1.x, p1.y
+        p = self.new_point((x, y), **ptargs)
+        tran.points.append(p)
+        tol = 0.1
+        while 1:
+            x, y = calc_point_along_line(x, y, p2.x, p2.y, step)
+            if abs(p2.x - x) < tol and abs(p2.y - y) < tol:
+                ptargs['use_border'] = True
+                p = self.new_point((x, y), **ptargs)
+                tran.points.append(p)
+                break
+            else:
+                ptargs['use_border'] = False
+                p = self.new_point((x, y),
+                               line_color=line_color, point_color=point_color,
+                               **ptargs)
+                tran.points.append(p)
+
+#            line.add_point(*xy,
+#                           line_color=line_color,
+#                           point_color=point_color)
+    def _add_bounds_rect(self):
+        if self.show_bounds_rect:
+            self.overlays.append(BoundsOverlay(component=self))
+
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('''render_map,show_laser_position, show_desired_position,
+                         desired_position_color,
+                         crosshairs_+
+                         ''')
+    def change_indicator_visibility(self):
+        self.request_redraw()
+
+    def _show_bounds_rect_changed(self):
+#        bo = None
+#        for o in self.overlays:
+#            if isinstance(o, BoundsOverlay):
+#                bo = o
+#                break
+        bo = next((o for o in self.overlays if isinstance(o, BoundsOverlay)), None)
+        if bo is None:
+            self._add_bounds_rect()
+        elif not self.show_bounds_rect:
+            self.overlays.remove(bo)
+
+        self.request_redraw()
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_current_position(self):
+
+        md = self.map_data(self.cur_pos)
+        return  self.cur_pos[0], md[0], self.cur_pos[1], md[1]
+
+    def _get_stage_position(self):
+        '''
+        '''
+        return self.map_screen([self._stage_position])[0]
+
+    def _get_desired_position(self):
+        '''
+        '''
+
+        if not self._desired_position is None:
+            x, y = self.map_screen([self._desired_position])[0]
+            return x, y
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _scene_default(self):
+        from src.canvas.canvas2D.scene.laser_mine_scene import LaserMineScene
+        s = LaserMineScene(canvas=self)
+        return s
+#===============================================================================
+# draw
+#===============================================================================
 
     def _draw_hook(self, gc, *args, **kw):
         '''
@@ -715,7 +755,6 @@ class LaserTrayCanvas(MapCanvas):
 #            gc.draw_path()
 #
 #        gc.restore_state()
-
 
 
 #========================EOF============================

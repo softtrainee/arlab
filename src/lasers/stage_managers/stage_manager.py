@@ -44,7 +44,7 @@ from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
 from tray_calibration_manager import TrayCalibrationManager
 from stage_component_editor import LaserComponentEditor
-from src.canvas.canvas2D.markup.markup_items import CalibrationItem
+# from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 # from pattern.pattern_manager import PatternManager
 from stage_map import StageMap
 # from affine import AffineTransform
@@ -416,6 +416,7 @@ class StageManager(Manager):
             rot = ca.rotation
             cpos = ca.center
             t = None
+            from src.canvas.canvas2D.scene.primitives import CalibrationItem
             if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
                 t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])

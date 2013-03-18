@@ -33,7 +33,7 @@ class BaseMaker(Loggable):
     clear_mode = Enum('all')  # , 'current point')
     accept_point = Button
 
-    point_color = Color
+    point_color = Color('blue')
     def save(self):
         d = dict()
         pts = [dict(identifier=pi.identifier,
@@ -244,7 +244,6 @@ class PolygonMaker(FinishableMaker):
 
             polys[str(i)] = dict(points=pts,
                                  motors=motors,
-
                                  velocity=v,
                                  scan_size=ss,
                                  use_convex_hull=uch,
@@ -269,7 +268,7 @@ class PolygonMaker(FinishableMaker):
                                       use_outline=self.use_outline,
                                       find_min=self.find_min,
                                       offset=self.offset,
-                                      **ptargs)
+                                      ptargs=ptargs)
 class TransectMaker(FinishableMaker):
     step = Float(1, enter_set=True, auto_set=False)
     def _save(self):

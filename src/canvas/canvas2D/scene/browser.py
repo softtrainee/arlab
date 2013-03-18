@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,40 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance
-from chaco.api import AbstractOverlay
+from traits.api import HasTraits, List, on_trait_change
+from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from src.image.video import Video
 
-class VideoUnderlay(AbstractOverlay):
-    '''
-    '''
-    video = Instance(Video)
-#    use_backbuffer = True
-#    use_backbuffer = False
-#    swap_rb = True
-#    mirror = False
-#    flip = False
-    pause = False
-    _cached_image = None
-    def overlay(self, component, gc, *args, **kw):
-        '''
+class SceneBrowser(HasTraits):
+    layers = List
+    def _update_layers(self, obj, name, old, new):
+        print obj, name, old, new
 
-        '''
-        with gc:
-            gc.clip_to_rect(component.x, component.y,
-                        component.width, component.height)
+    def _layers_changed(self):
+        print 'layers change'
 
-            if not self.pause:
-                img = self.video.get_image_data()
-            else:
-                img = self._cached_image
+    @on_trait_change('layers, layers[]')
+    def layers_change(self, obj, name, old, new):
+        print obj, name, old, new
 
-            if img is not None:
-                gc.draw_image(img)
-                self._cached_image = img
+    def traits_view(self):
+        v = View()
+        return v
 
-
-#============= EOF ====================================
+#============= EOF =============================================

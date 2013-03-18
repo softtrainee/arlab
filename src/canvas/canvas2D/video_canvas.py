@@ -20,16 +20,26 @@ from traits.api import Event
 #============= local library imports  ==========================
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.video_underlay import VideoUnderlay
+from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
 
 
-class VideoCanvas(BaseDataCanvas):
+class VideoCanvas(SceneCanvas):
     video = None
     camera = None
     padding = 0
     closed_event = Event
+
 #    fps = 5
     def close_video(self):
         self.closed_event = True
+
+    def freeze(self):
+        self.video_underlay.pause = True
+        self._frozen = True
+
+    def thaw(self):
+        self.video_underlay.pause = False
+        self._frozen = False
 
     def __init__(self, *args, **kw):
         '''
