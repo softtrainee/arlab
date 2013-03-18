@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Dict
+from traits.api import HasTraits, Instance, Dict, Color
 from traitsui.api import View, Item, TableEditor
 from src.canvas.canvas2D.scene.scene import Scene
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
@@ -32,6 +32,12 @@ class ExtractionLineScene(Scene):
     def _get_floats(self, elem, name):
         return map(float, elem.find(name).text.split(','))
 
+    def _make_color(self, c):
+        if not isinstance(c, str):
+            c=','.join(map(str,map(int, c)))
+            c='({})'.format(c)
+        return c
+    
     def _new_rectangle(self, elem, c, bw=3, origin=None):
         if origin is None:
             ox, oy = 0, 0
@@ -41,11 +47,14 @@ class ExtractionLineScene(Scene):
         key = elem.text.strip()
         x, y = self._get_floats(elem, 'translation')
         w, h = self._get_floats(elem, 'dimension')
+        
+        c=self._make_color(c)
+        
         rect = RoundedRectangle(x + ox, y + oy, width=w, height=h,
                                             name=key,
                                             border_width=bw,
                                             default_color=c)
-        self.add_item(key, rect, layer=1)
+        self.add_item(rect, layer=1)
 
     def _new_connection(self, conn, key, start, end):
         skey = start.text.strip()
@@ -85,9 +94,10 @@ class ExtractionLineScene(Scene):
             y1 = y
 
         klass = BorderLine
-        l = klass((x, y), (x1, y1), default_color=(0.29, 0.29, 0.43),
+        l = klass((x, y), (x1, y1), default_color=(74, 74, 110),
+                  name=key,
                  width=10)
-        self.add_item(key, l, layer=0)
+        self.add_item(l, layer=0)
 
     def load(self, pathname):
         self.reset_layers()
@@ -111,9 +121,9 @@ class ExtractionLineScene(Scene):
             co = map(float, t.split(',')) if ',' in t else t
 
             if k == 'bgcolor':
-                self.bgcolor = co
+                self.canvas.bgcolor =map(lambda x: x/255., co)
             else:
-                color_dict[k] = co
+                color_dict[k] = self._make_color(co)
 
         # get an origin offset
         ox = 0
@@ -137,14 +147,14 @@ class ExtractionLineScene(Scene):
                 v.state = vv.state
                 v.soft_lock = vv.soft_lock
 
-            self.add_item(key, v, layer=1)
+            self.add_item(v, layer=1)
             ndict[key] = v
 
         for rv in cp.get_elements('rough_valve'):
             key = rv.text.strip()
             x, y = self._get_floats(rv, 'translation')
             v = RoughValve(x + ox, y + oy, name=key)
-            self.add_item(key, v, layer=1)
+            self.add_item(v, layer=1)
             ndict[key] = v
 
         self.valves = ndict
@@ -153,20 +163,28 @@ class ExtractionLineScene(Scene):
                 if key in color_dict:
                     c = color_dict[key]
                 else:
-                    c = (0.8, 0.8, 0.8)
+                    c = (204, 204, 204)
                 self._new_rectangle(b, c, bw=5, origin=origin)
 
         for i, l in enumerate(cp.get_elements('label')):
             x, y = map(float, l.find('translation').text.split(','))
+            if 'label' in color_dict:
+                c = color_dict['label']
+            else:
+                c = (204, 204, 204)
+            
+            c=self._make_color(c)
             l = Label(x + ox, y + oy,
+                      bgcolor=c,
+                      name='{:03}'.format(i),
                       text=l.text.strip())
-            self.add_item('{:03}'.format(i), l, layer=1)
+            self.add_item(l, layer=1)
 
         for g in cp.get_elements('gauge'):
             if 'gauge' in color_dict:
                 c = color_dict['gauge']
             else:
-                c = (0.8, 0.8, 0.8)
+                c = (255, 255, 0)
             self._new_rectangle(g, c, origin=origin)
 
         for i, conn in enumerate(cp.get_elements('connection')):
@@ -181,7 +199,8 @@ class ExtractionLineScene(Scene):
         h = yv[1] - yv[0]
 
         brect = Rectangle(x, y, width=w, height=h,
-                          fill=False, line_width=20, default_color=(0, 0, 0.4))
-        self.add_item('brect', brect)
+                          identifier='bounds_rect',
+                          fill=False, line_width=20, default_color=(0, 0, 102))
+        self.add_item(brect)
 
 #============= EOF =============================================

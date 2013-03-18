@@ -51,7 +51,7 @@ class Primitive(HasTraits):
     selected = False
 
     default_color = Color('red')
-    active_color = Color('green')
+    active_color = Color('(0,255,0)')
     selected_color = Color('blue')
 
     canvas = Any
@@ -86,18 +86,28 @@ class Primitive(HasTraits):
             gc.set_line_width(self.line_width)
             self._render_(gc)
             gc.stroke_path()
-
+    
+    def _convert_color(self, c):
+        f=lambda x:x/255.
+        if not isinstance(c, (list,tuple)):
+            c=c.red, c.green,c.blue
+        c=map(f,c)
+        return c
+    
     def set_stroke_color(self, gc):
         if self.state:
-            gc.set_stroke_color(self.active_color)
+            c=self._convert_color(self.active_color)
         else:
-            gc.set_stroke_color(self.default_color)
+            c=self._convert_color(self.default_color)
+        
+        gc.set_stroke_color(c)
 
     def set_fill_color(self, gc):
         if self.state:
-            gc.set_fill_color(self.active_color)
+            c=self._convert_color(self.active_color)
         else:
-            gc.set_fill_color(self.default_color)
+            c=self._convert_color(self.default_color)
+        gc.set_fill_color(c)
 
     def _render_(self, gc):
         pass
@@ -276,7 +286,18 @@ class RoundedRectangle(Rectangle):
 #                self._render_border(gc, x, y, width, height)
 
             self._render_name(gc, x, y, width, height)
-
+    
+    def _get_border_color(self):
+#        if self.state:
+#            c = list(self.default_color)
+#        else:
+#            c = list(self.active_color)
+#            
+        c = list(self.default_color)
+        c=self._convert_color(c)
+        c = tuple([ci / (2.) for ci in c])
+        return c
+    
     def _render_border(self, gc, x, y, width, height):
         if self.use_border:
 
@@ -284,9 +305,16 @@ class RoundedRectangle(Rectangle):
             with gc:
                 gc.set_alpha(0.75)
                 gc.set_line_width(self.border_width)
-                c = list(self.default_color)
-                c = [ci / 2. for ci in c]
-                gc.set_stroke_color(tuple(c))
+                
+#                if self.state:
+#                    c = list(self.default_color)
+#                else:
+#                    c = list(self.active_color)
+#                    
+#                c=self._convert_color(c)
+#                c = [ci / (2.) for ci in c]
+                c=self._get_border_color()
+                gc.set_stroke_color(c)
 
                 gc.move_to(x + corner_radius, y)
                 gc.arc_to(x + width, y,
@@ -405,7 +433,17 @@ class Valve(RoundedRectangle, BaseValve):
         self._draw_soft_lock(gc, func, args)
 
         self._draw_state_indicator(gc, x, y, w, h)
-
+        
+    def _get_border_color(self):
+        if self.state:
+            c = list(self.active_color)
+        else:
+            c = list(self.default_color)
+#            
+        c=self._convert_color(c)
+        c = [ci / (2.) for ci in c]
+        return c
+    
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:
             gc.set_stroke_color((0, 0, 0))
@@ -648,6 +686,8 @@ class CalibrationItem(Primitive, CalibrationObject):
 class Label(Primitive):
     text = String
     use_border = True
+    bgcolor=Color('white')
+    
     def _text_changed(self):
         self.request_redraw()
 
@@ -656,15 +696,10 @@ class Label(Primitive):
         loffset = 3
         x, y = ox + loffset, oy + loffset
         lines = self.text.split('\n')
+        
         gc.set_stroke_color((0, 0, 0))
-        gc.set_fill_color((0, 0, 0))
-
-        for i, li in enumerate(lines[::-1]):
-            _, h, _, _ = gc.get_full_text_extent(li)
-            gc.set_text_position(x, y + i * h)
-            gc.show_text(li)
-
         if self.use_border:
+            gc.set_fill_color(self._convert_color(self.bgcolor))
             gc.set_line_width(2)
 
             offset = 5
@@ -675,8 +710,14 @@ class Label(Primitive):
                 mw = max(mw, w + 2 * offset + loffset)
                 sh += h
             gc.rect(ox - offset, oy - offset, mw, sh + loffset)
-            gc.stroke_path()
+            gc.draw_path()
 
+        gc.set_fill_color((0,0,0))
+        for i, li in enumerate(lines[::-1]):
+            _, h, _, _ = gc.get_full_text_extent(li)
+            gc.set_text_position(x, y + i * h)
+            gc.show_text(li)
+            
     def _get_group(self):
         g = Item('text', style='custom')
         return g

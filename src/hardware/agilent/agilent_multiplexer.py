@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Str, List, Float, Property, Tuple
+from traits.api import HasTraits, Str, List, Float, Property, Tuple, Bool, Instance
 from traitsui.api import View, Item, HGroup, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 from numpy import polyval
@@ -27,13 +27,35 @@ from src.hardware.agilent.agilent_unit import AgilentUnit
 Agilent requires chr(10) as its communicator terminator
 
 '''
+class Equation(HasTraits):
+    def get_value(self, v):
+        return v
+    
+class Polynomial(Equation):
+    coefficients = Tuple
+    def get_value(self,v):
+        cf=self.coefficients
+        if not cf:
+            cf=(1,0)
+            
+        return polyval(cf, v)
+    
+class Boolean(Equation):
+    threshold=Float
+    inverted_logic=Bool
+    def get_value(self, v):
+        o=v>self.threshold
+        if self.inverted_logic:
+            o=not o
+        return 'ON' if o else 'OFF'
+        
 class Channel(HasTraits):
     address = Str
     name = Str
     value = Float
     process_value = Property(depends_on='value')
-    coefficients = Tuple
     kind = Str('DC')
+    equation=Instance(Equation, ())
     def traits_view(self):
         v = View(HGroup(Item('name', show_label=False, style='readonly', width=200),
                       Item('address', show_label=False, style='readonly', width=75),
@@ -42,10 +64,11 @@ class Channel(HasTraits):
         return v
 
     def _get_process_value(self):
-        value = self.value
-        if self.coefficients:
-            value = polyval(self.coefficients, value)
-        return value
+        return self.equation.get_value(self.value)
+#        value = self.value
+#        if self.coefficients:
+#            value = polyval(self.coefficients, value)
+#        return value
 
 class AgilentMultiplexer(AgilentUnit):
     channels = List
@@ -59,18 +82,26 @@ class AgilentMultiplexer(AgilentUnit):
             if section.startswith('Channel'):
                 kind = self.config_get(config, section, 'kind', default='DC')
                 name = self.config_get(config, section, 'name', default='')
-
-                cs = self.config_get(config, section, 'coefficients', default='1,0')
-                try:
-                    cs = map(float, cs.split(','))
-                except ValueError:
-                    self.warning('invalid coefficients for {}. {}'.format(section, cs))
-                    cs = 1, 0
+                
+                threshold=self.config_get(config, section, 'threshold', cast='float', default=None)
+                if threshold is not None:
+                    inv=self.config_get(config, section, 'inverted_logic', cast='boolean', default=False)
+                    eq=Boolean(threshold=threshold, inverted_logic=inv)
+                else:
+                    cs = self.config_get(config, section, 'coefficients', default='1,0')
+                    try:
+                        cs = map(float, cs.split(','))
+                    except ValueError:
+                        self.warning('invalid coefficients for {}. {}'.format(section, cs))
+                        cs = 1, 0
+                    eq=Polynomial(coefficients=cs)
+                
 
                 ch = Channel(address='{}{:02n}'.format(self.slot, int(section[7:])),
                            kind=kind,
                            name=name,
-                           coefficients=cs
+                           equation=eq
+#                           coefficients=cs
                            )
                 self.channels.append(ch)
 

@@ -41,6 +41,7 @@ class MultiplexerManager(Manager):
     def reload_channels(self):
         self.closed(True)
         self.controller.bootstrap()
+        self.controller.post_initialize()
         self.opened()
 
     def opened(self):

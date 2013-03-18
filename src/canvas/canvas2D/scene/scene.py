@@ -62,8 +62,14 @@ class Scene(HasTraits):
             layers = layers[layer:layer + 1]
 
         for li in layers:
-            if name in li:
-                return li[name]
+            
+            nn=next((ll for ll in li.components if ll.name==name or ll.identifier==name), None)
+            if nn is not None:
+                return nn
+            
+            
+#            if name in li:
+#                return li[name]
 
     def add_item(self, v, layer=None):
         if layer is None:
