@@ -274,8 +274,8 @@ class ImportManager(DatabaseManager):
                                                     multi_select=True
                                                     )),
                  CustomLabel('custom_label1',
-                             font_color='blue',
-                             font_size=10),
+                             color='blue',
+                             size=10),
                  Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
                                                     editable=False,
                                                     )),

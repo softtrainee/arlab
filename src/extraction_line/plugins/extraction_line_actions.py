@@ -123,6 +123,7 @@ class OpenPyScriptEditorAction(ExtractionLineAction):
 
 
 class OpenMultiplexerAction(ExtractionLineAction):
+    accelerator = 'Ctrl+Shift+M'
     def __init__(self, *args, **kw):
         super(OpenMultiplexerAction, self).__init__(*args, **kw)
         manager = self._get_manager(None, app=self.window.application)

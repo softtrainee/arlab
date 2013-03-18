@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from traits.api import Any, Instance, Str
-from traitsui.api import View, Item, HGroup
+
+#============= enthought library imports =======================
+from traits.api import Any, Instance, Str, Button
+from traitsui.api import View, Item, HGroup, spring
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.hardware.core.core_device import CoreDevice
+from src.traits_editors.custom_label_editor import CustomLabel
 
-
+class HeaderLabel(CustomLabel):
+    color = 'maroon'
+    size = 14
 class MultiplexerManager(Manager):
     controller = Instance(CoreDevice)
     hname = Str('Name')
@@ -28,8 +35,14 @@ class MultiplexerManager(Manager):
     title = 'Multiplexer'
     window_width = 500
     window_height = 500
-    id='multiplexer_manager'
-    
+    id = 'multiplexer_manager'
+    reload_channels_button = Button('Reload')
+
+    def reload_channels(self):
+        self.closed(True)
+        self.controller.bootstrap()
+        self.opened()
+
     def opened(self):
         self.controller.start_scan()
 
@@ -41,15 +54,29 @@ class MultiplexerManager(Manager):
         if self.devices:
             self.controller = self.devices[0]
 
+#===============================================================================
+# handlers
+#===============================================================================
+    def _reload_channels_button_fired(self):
+        self.reload_channels()
+
     def traits_view(self):
         v = self.view_factory(
                HGroup(
-                      Item('hname', show_label=False, style='readonly', width=200),
-                      Item('haddress', show_label=False, style='readonly', width=75),
-                      Item('hvalue', show_label=False, style='readonly', width=100),
-                      Item('hprocessvalue', show_label=False, style='readonly', width=100)
+#                      CustomLabel('hname', size=18, color='maroon', width=200),
+                      HeaderLabel('hname', width=200),
+#                      Item('hname', show_label=False, style='readonly', width=200),
+                      HeaderLabel('haddress', width=75),
+
+#                      Item('haddress', show_label=False, style='readonly', width=75),
+                      HeaderLabel('hvalue', width=100),
+#                      Item('hvalue', show_label=False, style='readonly', width=100),
+                      HeaderLabel('hprocessvalue', width=100)
+#                      Item('hprocessvalue', show_label=False, style='readonly', width=100)
                       ),
                Item('controller', style='custom', show_label=False),
+               HGroup(spring, Item('reload_channels_button', show_label=False)),
                )
 
         return v
+#============= EOF =============================================

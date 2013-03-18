@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import CInt, Str, Bool, Dict, Float, HasTraits, Any
 from traitsui.api import View, Item, EnumEditor, RangeEditor, Label, Group
-from src.traits_editors.custom_label_editor import CustomLabel
+# from src.traits_editors.custom_label_editor import CustomLabel
 from src.hardware.core.data_helper import make_bitarray
 
 #============= standard library imports ========================
@@ -96,35 +96,35 @@ class KerrStepMotor(KerrMotor):
         if self.discrete_position:
             dp = self.discrete_position
             self.data_position = int(dp.position)
-    
+
     def get_discrete_value(self, name=None):
         v = None
         if name is None:
             if self.discrete_position:
                 name = self.discrete_position.name
-        
+
         dp = self.get_discrete_position(name)
         if dp is not None:
             v = dp.value
-            
+
         return v
-    
-    def _convert_value(self,value):
+
+    def _convert_value(self, value):
         if value is not None:
             try:
-                value=int(value)
+                value = int(value)
             except (TypeError, ValueError):
                 if isinstance(value, (list, tuple)):
-                    value=' '.join(value)
-                value=value.replace('_', ' ')
-                dp=self.get_discrete_position(value)
+                    value = ' '.join(value)
+                value = value.replace('_', ' ')
+                dp = self.get_discrete_position(value)
                 if dp:
-                    value=int(dp.position)
+                    value = int(dp.position)
                 print 'disc ', value
             return value
-    
+
     def get_discrete_position(self, name):
-        
+
 #        for di in self.discrete_positions:
 #            print di.name.lower(), name.lower(),di.name.lower()== name.lower
         if name is not None:
@@ -284,7 +284,7 @@ class KerrStepMotor(KerrMotor):
         '''
 
         return int('00010010', 2)
-    
+
     def _moving(self, verbose=True):
         status_byte = self.read_defined_status(verbose=verbose)
 

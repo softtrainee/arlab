@@ -472,7 +472,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                             ),
 #                             spring, Item('limit')),
                 VGroup(
-                       CustomLabel('dbstring', font_color='red'),
+                       CustomLabel('dbstring', color='red'),
                        Item('records',
                           style='custom',
                           editor=editor,

@@ -43,8 +43,8 @@ class ScanableDevice(ViewableDevice):
     timer = None
     scan_period = Float(1000, enter_set=True, auto_set=False)
     scan_units = 'ms'
-    record_scan_data = Bool(True)
-    graph_scan_data = Bool(True)
+    record_scan_data = Bool(False)
+    graph_scan_data = Bool(False)
     scan_path = Str
     auto_start = Bool(False)
     scan_root = Str
@@ -62,15 +62,14 @@ class ScanableDevice(ViewableDevice):
 #===============================================================================
 # streamin interface
 #===============================================================================
-
     def setup_scan(self):
         # should get scan settings from the config file not the initialization.xml
 
         config = self.get_configuration()
         if config.has_section('Scan'):
-            enabled = self.config_get(config, 'Scan', 'enabled', optional=True, default=False)
+            enabled = self.config_get(config, 'Scan', 'enabled', optional=True, default=True)
+            self.is_scanable = enabled
             if enabled:
-                self.is_scanable = True
                 self.set_attribute(config, 'auto_start', 'Scan', 'auto_start', cast='boolean', default=True)
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
@@ -196,6 +195,7 @@ class ScanableDevice(ViewableDevice):
 
         sp = self.scan_period * self.time_dict[self.scan_units]
         self.timer = Timer(sp, self.scan)
+        self.info('Scan started')
 
     def save_scan_to_db(self):
         from src.database.adapters.device_scan_adapter import DeviceScanAdapter
@@ -212,6 +212,7 @@ class ScanableDevice(ViewableDevice):
         db.commit()
 
     def stop_scan(self):
+        self.info('Stoppiing scan')
         self._scanning = False
         if self.timer is not None:
             self.timer.Stop()
@@ -227,6 +228,7 @@ class ScanableDevice(ViewableDevice):
         if self.data_manager:
             self.data_manager.close()
         self._auto_started = False
+        self.info('Scan stopped')
 
     def _get_scan_label(self):
         return 'Start' if not self._scanning else 'Stop'
