@@ -177,13 +177,14 @@ def make_raster_polygon(points, step=1,
 
 def find_minimum_orientation(poly, step=1):
     P = poly.T
-    cx = np.mean(P[0])
-    cy = np.mean(P[1])
+#    cx = np.mean(P[0])
+#    cy = np.mean(P[1])
 
+    cx, cy = get_center(poly)
     mlines = np.Inf
-    minlines = None
+#    minlines = None
     lens = []
-    ms = []
+#    ms = []
     for ti in range(-90, 90, 1):
         P_prime = rotate_poly(P, ti, loc=(cx, cy))
         lines = make_raster_polygon(P_prime.T, step)
@@ -191,7 +192,7 @@ def find_minimum_orientation(poly, step=1):
         if ll and ll < mlines:
             mlines = ll
             mintheta = ti
-            minlines = lines
+#            minlines = lines
 
 #        ms.append(lines)
         lens.append((ti, ll))
@@ -232,10 +233,16 @@ def rotate_poly(pts, theta, loc=None):
     P_prime = P_prime + T
     return P_prime
 
+def get_center(pts):
+    P = pts.T
+    cx = np.mean(P[0])
+    cy = np.mean(P[1])
+    return cx, cy
+
 def raster(poly, use_convex_hull=False,
            offset=0,
            step=1,
-           find_min=False):
+           find_min=False, theta=None):
 
     poly = np.array(poly)
     poly = sort_clockwise(poly, poly)
@@ -251,12 +258,19 @@ def raster(poly, use_convex_hull=False,
         opoly = poly
 
     lens = []
+    rtheta = 0
     if find_min:
-        lines, _theta, lens = find_minimum_orientation(opoly, step)
+        lines, rtheta, lens = find_minimum_orientation(opoly, step)
     else:
         lines = make_raster_polygon(opoly, step)
+        print 'sdf', theta
+        if theta is not None:
+            cx, cy = get_center(opoly)
+            P_prime = rotate_poly(opoly.T, theta, loc=(cx, cy))
+            lines = make_raster_polygon(P_prime.T, step)
+            lines = rotate_lines(lines, theta, cx, cy)
 
-    return lines, lens
+    return lines, lens, rtheta
 
 
 if __name__ == '__main__':

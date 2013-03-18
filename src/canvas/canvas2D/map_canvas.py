@@ -19,14 +19,18 @@ from traits.api import Instance, Bool, Enum, Float
 #=============standard library imports ========================
 import math
 #=============local library imports  ==========================
-from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
-    CalibrationObject
+# from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
+#    CalibrationObject
 from src.lasers.stage_managers.stage_map import StageMap
 from src.lasers.stage_managers.affine import AffineTransform
-from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
+# from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
+from src.canvas.canvas2D.scene.primitives import CalibrationItem, \
+    CalibrationObject
+from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
 
 
-class MapCanvas(MarkupCanvas):
+# class MapCanvas(MarkupCanvas):
+class MapCanvas(SceneCanvas):
     _map = Instance(StageMap)
     calibration_item = Instance(CalibrationObject)
     calibrate = Bool(False)

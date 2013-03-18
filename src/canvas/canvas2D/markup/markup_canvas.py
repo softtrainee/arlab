@@ -21,7 +21,8 @@ from numpy import abs
 import collections
 #=============local library imports  ==========================
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
-from src.canvas.canvas2D.markup.markup_items import PointIndicator
+from src.canvas.canvas2D.scene.primitives import PointIndicator
+# from src.canvas.canvas2D.markup.markup_items import PointIndicator
 
 
 class MarkupContainer(collections.MutableMapping):

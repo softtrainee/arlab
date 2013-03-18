@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,40 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance
-from chaco.api import AbstractOverlay
+from traits.api import HasTraits, Str, Color, List, Property, Bool
+from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from src.image.video import Video
+class Layer(HasTraits):
+    name = Str
+    color = Color
+    components = List
+    label = Property(depends_on='name')
+    visible = Bool(True)
 
-class VideoUnderlay(AbstractOverlay):
-    '''
-    '''
-    video = Instance(Video)
-#    use_backbuffer = True
-#    use_backbuffer = False
-#    swap_rb = True
-#    mirror = False
-#    flip = False
-    pause = False
-    _cached_image = None
-    def overlay(self, component, gc, *args, **kw):
-        '''
+    def add_item(self, v):
+        self.components.append(v)
 
-        '''
-        with gc:
-            gc.clip_to_rect(component.x, component.y,
-                        component.width, component.height)
+    def _get_label(self):
+        return 'Layer {}'.format(self.name)
 
-            if not self.pause:
-                img = self.video.get_image_data()
-            else:
-                img = self._cached_image
-
-            if img is not None:
-                gc.draw_image(img)
-                self._cached_image = img
-
-
-#============= EOF ====================================
+    def traits_view(self):
+        v = View(Item('name'),
+                 Item('color'),
+                 Item('visible')
+                 )
+        return v
+#============= EOF =============================================

@@ -21,8 +21,9 @@ from traitsui.api import View, Item, TableEditor
 import weakref
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-from src.canvas.canvas2D.markup.markup_items import Circle, Line, PointIndicator, \
-    Indicator
+from src.canvas.canvas2D.scene.primitives import Circle, Indicator, Line
+# from src.canvas.canvas2D.markup.markup_items import Circle, Line, PointIndicator, \
+#    Indicator
 
 class InfoObject(object):
     pass

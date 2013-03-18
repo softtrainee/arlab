@@ -27,6 +27,7 @@ from src.paths import paths
 from src.managers.manager import Manager
 from src.lasers.points.maker import BaseMaker, LineMaker, PointMaker, \
     PolygonMaker, TransectMaker
+from src.canvas.scene_viewer import SceneViewer
 maker_dict = dict(polygon=PolygonMaker, point=PointMaker, line=LineMaker, transect=TransectMaker)
 
 class PointsProgrammer(Manager):
@@ -63,6 +64,7 @@ class PointsProgrammer(Manager):
     scan_size = Int(50)
     plot_scan = Button('Plot')
     use_move = Bool(False)
+    show_scene_viewer = Button('Scene Viewer')
 
     @cached_property
     def _get_maker(self):
@@ -114,6 +116,17 @@ class PointsProgrammer(Manager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _show_scene_viewer_fired(self):
+        sv = SceneViewer(canvas=self.canvas)
+
+        # freeze the canvas so there isnt excessive updates
+        # the stage will not move so no need to update video
+        # use cached image instead
+        self.canvas.freeze()
+
+        sv.edit_traits(kind='livemodal')
+        self.canvas.thaw()
+
     def _plot_scan_fired(self):
         polygons = self.canvas.polygons
         if self.polygon_entry is not None and self.scan_size:
@@ -179,9 +192,11 @@ class PointsProgrammer(Manager):
         opoly = polygon_offset(poly, -500)
         if use_convex_hull:
             opoly = convex_hull(opoly)
+            opoly = vstack(opoly, opoly[:1])
             xs, ys, _ = opoly.T
-            xs = hstack((xs, xs[0]))
-            ys = hstack((ys, ys[0]))
+
+#            xs = hstack((xs, xs[0]))
+#            ys = hstack((ys, ys[0]))
         else:
             opoly = array(opoly, dtype=int)
             xs, ys, _ = opoly.T
@@ -204,20 +219,24 @@ class PointsProgrammer(Manager):
     def _show_hide_fired(self):
         canvas = self.canvas
         if self.is_visible:
-            canvas.remove_markup_overlay()
+            canvas.hide_all()
+#            canvas.remove_markup_overlay()
         else:
-            canvas.add_markup_overlay()
+            canvas.show_all()
+#            canvas.add_markup_overlay()
 
         canvas.request_redraw()
         self.is_visible = not self.is_visible
 
     def _program_points_fired(self):
         if self.is_programming:
-            self.canvas.remove_markup_overlay()
+            self.canvas.hide_all()
+#            self.canvas.remove_markup_overlay()
             self.is_programming = False
             self.is_visible = False
         else:
-            self.canvas.add_markup_overlay()
+            self.canvas.show_all()
+#            self.canvas.add_markup_overlay()
             self.is_programming = True
             self.is_visible = True
 
@@ -230,8 +249,9 @@ class PointsProgrammer(Manager):
         canvas = self.canvas
 
         canvas.clear_all()
-        canvas.remove_markup_overlay()
-        canvas.add_markup_overlay()
+
+#        canvas.remove_markup_overlay()
+#        canvas.add_markup_overlay()
 
         ptargs = dict(radius=0.05,
                       vline_length=0.1, hline_length=0.1)
@@ -278,6 +298,8 @@ class PointsProgrammer(Manager):
                                          **ptargs)
 
         self.is_visible = True
+
+        canvas.show_all()
         canvas.invalidate_and_redraw()
 
     def _load_points_fired(self):
@@ -315,6 +337,7 @@ class PointsProgrammer(Manager):
 
     def traits_view(self):
         v = View(VGroup(
+                       Item('show_scene_viewer', show_label=False),
                        Item('point_entry', label='Point'),
                        Item('line_entry', label='Line'),
 

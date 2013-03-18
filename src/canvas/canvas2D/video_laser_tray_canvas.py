@@ -18,7 +18,7 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.canvas.canvas2D.video_canvas import VideoCanvas
-from src.canvas.canvas2D.markup.markup_items import Rectangle
+# from src.canvas.canvas2D.markup.markup_items import Rectangle
 from laser_tray_canvas import LaserTrayCanvas
 
 class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
@@ -34,10 +34,15 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
         self.adjust_limits('y', y)
 
     def add_markup_rect(self, x, y, w, h):
-        self.markupcontainer['croprect'] = Rectangle(x=x, y=y, width=w, height=h,
-                                                     canvas=self, space='screen',
-                                                     fill=False
-                                                     )
+        from src.canvas.canvas2D.scene.primitives import Rectangle
+        r = Rectangle(x=x, y=y, width=w, height=h,
+                      space='screen',
+                      fill=False)
+        self.scene.add_item(r)
+#        self.markupcontainer['croprect'] = Rectangle(x=x, y=y, width=w, height=h,
+#                                                     canvas=self, space='screen',
+#                                                     fill=False
+#                                                     )
 
     def _calc_relative_move_direction(self, char, direction):
         '''
