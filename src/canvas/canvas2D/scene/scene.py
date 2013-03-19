@@ -171,6 +171,6 @@ class Scene(HasTraits):
 
     def _scene_browser_default(self):
         sb = SceneBrowser(layers=self.layers)
-        self.on_trait_change(sb._update_layers, 'layers, layers[]')
+#        self.on_trait_change(sb._update_layers, 'layers, layers[]')
         return sb
 #============= EOF =============================================

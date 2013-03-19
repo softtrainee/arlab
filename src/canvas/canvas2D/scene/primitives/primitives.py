@@ -843,12 +843,13 @@ class PolyLine(Primitive):
     points = List
     lines = List
     identifier = Str
+    point_klass=PointIndicator
 #    start_point=None
     def __init__(self, x, y, z=0, identifier='', **kw):
         super(PolyLine, self).__init__(x, y, **kw)
 #        self.start_point=PointIndicator(x,y, **kw)
         self.identifier = identifier
-        p = PointIndicator(x, y, z=z, identifier=identifier, **kw)
+        p = self.point_klass(x, y, z=z, identifier=identifier, **kw)
         self.points.append(p)
         self.primitives.append(p)
 
