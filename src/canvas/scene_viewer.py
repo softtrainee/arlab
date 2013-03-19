@@ -54,15 +54,15 @@ class SceneViewer(Loggable):
         return g
 
 
-    def _canvas_default(self):
-        c = SceneCanvas()
-        s = LaserMineScene(canvas=c)
-
-#        s.load(os.path.join(paths.canvas2D_dir, 'canvas.xml'))
-        s.load(os.path.join(paths.user_points_dir, 'foo.yaml'))
-        c.scene = s
-
-        return c
+#    def _canvas_default(self):
+#        c = SceneCanvas()
+#        s = LaserMineScene(canvas=c)
+#
+##        s.load(os.path.join(paths.canvas2D_dir, 'canvas.xml'))
+#        s.load(os.path.join(paths.user_points_dir, 'foo.yaml'))
+#        c.scene = s
+#
+#        return c
 
 from traits.api import Any, on_trait_change
 from src.graph.graph import Graph
@@ -74,7 +74,6 @@ class CanvasGraphItem(HasTraits):
 
     @on_trait_change('canvas:scene:selected')
     def _selected_changed(self, new):
-
         if isinstance(new, Polygon):
             self._replot_polygon(new)
 
@@ -95,8 +94,8 @@ class CanvasGraphItem(HasTraits):
         use_convex_hull = False
         find_min = poly.find_min
         npoints, lens, theta = raster(pts,
-                         step=200,
-                         offset= -poly.offset * scale if poly.use_outline else 0,
+                         step=poly.scan_size,
+                         offset= -poly.offset if poly.use_outline else 0,
                          use_convex_hull=use_convex_hull,
                          find_min=find_min,
                          theta=poly.theta
@@ -143,7 +142,7 @@ class CanvasGraphItem(HasTraits):
 
         if poly.use_outline:
             from src.geometry.polygon_offset import polygon_offset
-            opoly = polygon_offset(pts, -1 * poly.offset * scale)
+            opoly = polygon_offset(pts, -1 * poly.offset)
             opoly = array(opoly)
             xs, ys, _ = opoly.T
             self.graph.new_series(xs, ys, plotid=0)
@@ -165,14 +164,14 @@ class CanvasGraphItem(HasTraits):
         return v
 
 class LaserMineViewer(SceneViewer):
-    graph = Instance(Graph)
+#    graph = Instance(Graph)
     selected_polygon = Any
     canvas_graph_item = Instance(CanvasGraphItem)
 
-    @on_trait_change('canvas, graph')
+    @on_trait_change('canvas')
     def _update_canvas_graph_item(self):
         self.canvas_graph_item.canvas = self.canvas
-        self.canvas_graph_item.graph = self.graph
+#        self.canvas_graph_item.graph = self.graph
 
     def traits_view(self):
         g = HGroup(Item('object.canvas.scene',

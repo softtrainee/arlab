@@ -21,7 +21,7 @@ from traitsui.api import View, Item, ButtonEditor, Group, HGroup, VGroup
 #============= standard library imports ========================
 import yaml
 import os
-from numpy import array, hstack
+from numpy import array, hstack, vstack
 #============= local library imports  ==========================
 from src.paths import paths
 from src.managers.manager import Manager
@@ -117,15 +117,29 @@ class PointsProgrammer(Manager):
 # handlers
 #===============================================================================
     def _show_scene_viewer_fired(self):
-        sv = SceneViewer(canvas=self.canvas)
-
+#        from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
+        from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
+        img=self.canvas.video.get_image_data()
+        
+        xlim=self.canvas.get_mapper_limits('index')
+        ylim=self.canvas.get_mapper_limits('value')
+        canvas=VideoLaserTrayCanvas(use_pan=False, show_grids=True)
+        canvas.video_underlay._cached_image=img
+        canvas.set_mapper_limits('index',xlim)
+        canvas.set_mapper_limits('value',ylim)
+        canvas.scene=self.canvas.scene.clone_traits()
+        canvas.scene.set_canvas(canvas)
+        
+        from src.canvas.scene_viewer import LaserMineViewer
+        sv = LaserMineViewer(canvas=canvas)
+        
         # freeze the canvas so there isnt excessive updates
         # the stage will not move so no need to update video
         # use cached image instead
-        self.canvas.freeze()
+#        canvas.freeze()
 
         sv.edit_traits(kind='livemodal')
-        self.canvas.thaw()
+#        canvas.thaw()
 
     def _plot_scan_fired(self):
         polygons = self.canvas.polygons

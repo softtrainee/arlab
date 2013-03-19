@@ -33,13 +33,13 @@ class VideoCanvas(SceneCanvas):
     def close_video(self):
         self.closed_event = True
 
-    def freeze(self):
-        self.video_underlay.pause = True
-        self._frozen = True
-
-    def thaw(self):
-        self.video_underlay.pause = False
-        self._frozen = False
+#    def freeze(self):
+#        self.video_underlay.pause = True
+#        self._frozen = True
+#
+#    def thaw(self):
+#        self.video_underlay.pause = False
+#        self._frozen = False
 
     def __init__(self, *args, **kw):
         '''
