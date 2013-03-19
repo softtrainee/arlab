@@ -19,7 +19,9 @@ from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 from src.canvas.canvas2D.scene.scene import Scene
 import yaml
-from src.canvas.canvas2D.scene.primitives import Polygon
+# from src.canvas.canvas2D.scene.primitives.primitives import Polygon, RasterPolygon
+from src.canvas.canvas2D.scene.primitives.laser_primitives import RasterPolygon
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -41,9 +43,11 @@ class LaserMineScene(Scene):
 
     def _new_polygon(self, po, key):
         pts = [pi['xy'] for pi in po['points']]
-        item = Polygon(pts, name=key, identifier=key)
+        item = RasterPolygon(pts, name=key, identifier=key)
         self.add_item(item)
 
+    def _new_transect(self):
+        pass
 
 
 

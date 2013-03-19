@@ -40,10 +40,10 @@ class BaseMaker(Loggable):
                         z=float(pi.z),
                         mask=pi.mask, attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)]
-                        ) for pi in self.canvas.points]
+                        ) for pi in self.canvas.get_points()]
 
         lines = []
-        for li in self.canvas.lines:
+        for li in self.canvas.get_lines():
             segments = []
             for i, pi in enumerate(li.points):
                 v = li.velocity_segments[i / 2]
@@ -206,7 +206,7 @@ class PolygonMaker(FinishableMaker):
         pe = self.stage_manager.points_programmer.polygon_entry
 
         polys = dict()
-        for i, po in enumerate(self.canvas.polygons):
+        for i, po in enumerate(self.canvas.get_polygons()):
             pts = []
 
             for pi in po.points:
@@ -273,7 +273,8 @@ class TransectMaker(FinishableMaker):
     step = Float(1, enter_set=True, auto_set=False)
     def _save(self):
         trans = []
-        for tr in self.canvas.transects:
+        for tr in self.canvas.get_transects():
+#        for tr in self.canvas.transects:
             pts = []
             for pi in tr.points:
                 d = dict(identifier=pi.identifier,
@@ -281,7 +282,14 @@ class TransectMaker(FinishableMaker):
                         mask=pi.mask, attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)])
                 pts.append(d)
-            trans.append(pts)
+
+#            for pi in tr.step_points:
+#                d = dict(identifier=pi.identifier,
+#                        z=float(pi.z),
+#                        mask=pi.mask, attenuator=pi.attenuator,
+#                        xy=[float(pi.x), float(pi.y)])
+#                pts.append(d)
+            trans.append(dict(points=pts, step=tr.step))
 
         return {'transects':trans}
 

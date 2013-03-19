@@ -27,8 +27,9 @@ import os
 from src.canvas.canvas2D.scene.laser_mine_scene import LaserMineScene
 from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
 from src.geometry.geometry import sort_clockwise
-from src.canvas.canvas2D.scene.primitives import Polygon
+# from src.canvas.canvas2D.scene.primitives.primitives import Polygon, RasterPolygon
 from src.geometry.scan_line import raster
+from src.canvas.canvas2D.scene.primitives.laser_primitives import RasterPolygon
 
 class SceneViewer(Loggable):
     canvas = Instance(SceneCanvas)
@@ -58,10 +59,10 @@ class SceneViewer(Loggable):
 #        c = SceneCanvas()
 #        s = LaserMineScene(canvas=c)
 #
-##        s.load(os.path.join(paths.canvas2D_dir, 'canvas.xml'))
+# #        s.load(os.path.join(paths.canvas2D_dir, 'canvas.xml'))
 #        s.load(os.path.join(paths.user_points_dir, 'foo.yaml'))
 #        c.scene = s
-#
+
 #        return c
 
 from traits.api import Any, on_trait_change
@@ -74,14 +75,15 @@ class CanvasGraphItem(HasTraits):
 
     @on_trait_change('canvas:scene:selected')
     def _selected_changed(self, new):
-        if isinstance(new, Polygon):
+
+        if isinstance(new, RasterPolygon):
             self._replot_polygon(new)
 
     @on_trait_change('canvas:_layout_needed')
     def _layout_needed_changed(self, new):
         if new:
             sel = self.canvas.scene.selected
-            if isinstance(sel, Polygon):
+            if isinstance(sel, RasterPolygon):
                 self._replot_polygon(sel)
 
     def _replot_polygon(self, poly):
@@ -164,14 +166,12 @@ class CanvasGraphItem(HasTraits):
         return v
 
 class LaserMineViewer(SceneViewer):
-#    graph = Instance(Graph)
     selected_polygon = Any
     canvas_graph_item = Instance(CanvasGraphItem)
 
     @on_trait_change('canvas')
     def _update_canvas_graph_item(self):
         self.canvas_graph_item.canvas = self.canvas
-#        self.canvas_graph_item.graph = self.graph
 
     def traits_view(self):
         g = HGroup(Item('object.canvas.scene',
@@ -184,7 +184,8 @@ class LaserMineViewer(SceneViewer):
         v = View(g,
                  resizable=True,
                  width=700,
-                 height=600
+                 height=600,
+                 buttons=['OK', 'Cancel']
                  )
         return v
 

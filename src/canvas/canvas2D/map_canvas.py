@@ -24,7 +24,7 @@ import math
 from src.lasers.stage_managers.stage_map import StageMap
 from src.lasers.stage_managers.affine import AffineTransform
 # from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-from src.canvas.canvas2D.scene.primitives import CalibrationItem, \
+from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem, \
     CalibrationObject
 from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
 

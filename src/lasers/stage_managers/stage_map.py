@@ -29,6 +29,7 @@ from src.helpers.filetools import parse_file
 from src.paths import paths
 from src.loggable import Loggable
 from affine import AffineTransform
+from src.regex import TRANSECT_REGEX
 
 class SampleHole(HasTraits):
     id = Str
@@ -504,7 +505,7 @@ class UVStageMap(StageMap):
     def load(self):
         with open(self.file_path, 'r') as fp:
             d = yaml.load(fp.read())
-            for attr in ('points', 'lines', 'polygons'):
+            for attr in ('points', 'lines', 'polygons', 'transects'):
                 if d.has_key(attr):
                     setattr(self, attr, d[attr])
 
@@ -512,11 +513,20 @@ class UVStageMap(StageMap):
         return self._get_item('polygon', 'r', name)
 
     def get_point(self, name):
-        pos = self._get_item('points', 'p', name)
-        if pos is None:
-            v = int(name)
-            pos = self.points[v - 1]
-        return pos
+        if TRANSECT_REGEX.match(name):
+            t, p = map(int, name[1:].split('-'))
+            if t <= len(self.transects) - 1:
+                tran = self.transects[t]
+                pts = tran['points']
+                if p <= len(pts) - 1:
+                    return pts[p]
+        else:
+            pt = self._get_item('points', 'p', name)
+            if pt is None:
+                v = int(name)
+                pt = self.points[v - 1]
+
+            return pt
 
 #        if name.startswith('p'):
 #            v = int(name[1:])
@@ -524,7 +534,7 @@ class UVStageMap(StageMap):
 #            v = int(name)
 #
 #
-#        return pos
+#        return pt
 
     def get_line(self, name):
 #        pos = None

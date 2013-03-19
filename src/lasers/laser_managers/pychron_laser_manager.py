@@ -30,6 +30,7 @@ from src.lasers.laser_managers.laser_manager import BaseLaserManager
 from src.helpers.filetools import str_to_bool
 import os
 from src.paths import paths
+from src.regex import TRANSECT_REGEX
 
 
 class PychronLaserManager(BaseLaserManager):
@@ -415,12 +416,16 @@ class PychronUVLaserManager(PychronLaserManager):
     def _move_to_position(self, pos):
 
         cmd = 'GoToPoint'
-        if isinstance(pos, (str, unicode)):
-            if not pos:
-                return
+        if pos.startswith('t'):
+            if not TRANSECT_REGEX.match(pos):
+                cmd = None
 
-            if pos[0].lower() in ['p', 'l', 'd']:
-                cmd = 'GoToNamedPosition'
+#        if isinstance(pos, (str, unicode)):
+#            if not pos:
+#                return
+#
+#            if pos[0].lower() in ['p', 'l', 'd']:
+#                cmd = 'GoToNamedPosition'
 
         if cmd:
             cmd = '{} {}'.format(cmd, pos)

@@ -34,7 +34,7 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
         self.adjust_limits('y', y)
 
     def add_markup_rect(self, x, y, w, h):
-        from src.canvas.canvas2D.scene.primitives import Rectangle
+        from src.canvas.canvas2D.scene.primitives.primitives import Rectangle
         r = Rectangle(x=x, y=y, width=w, height=h,
                       space='screen',
                       fill=False)

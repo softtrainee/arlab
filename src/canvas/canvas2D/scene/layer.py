@@ -26,6 +26,10 @@ class Layer(HasTraits):
     label = Property(depends_on='name')
     visible = Bool(True)
 
+    def remove_item(self, v):
+        if self.components:
+            self.components.remove(v)
+
     def add_item(self, v):
         self.components.append(v)
 

@@ -416,7 +416,7 @@ class StageManager(Manager):
             rot = ca.rotation
             cpos = ca.center
             t = None
-            from src.canvas.canvas2D.scene.primitives import CalibrationItem
+            from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem
             if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
                 t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])

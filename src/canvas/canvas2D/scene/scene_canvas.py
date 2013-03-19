@@ -29,6 +29,7 @@ class SceneCanvas(BaseDataCanvas):
                                    )
     def freeze(self):
         self._frozen = True
+
     def thaw(self):
         self._frozen = False
 
