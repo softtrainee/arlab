@@ -115,11 +115,16 @@ class BaseMaker(Loggable):
         if attenuator:
             attenuator_value = attenuator.data_position
 
+        
         ptargs = dict(radius=radius,
                       z=sm.get_z(),
-                      mask=mask_value,
-                      attenuator=attenuator_value,
+#                      mask=mask_value,
+#                      attenuator=attenuator_value,
                       vline_length=0.1, hline_length=0.1)
+        if mask_value is not None:
+            ptargs['mask']=mask_value
+        if attenuator_value is not None:
+            ptargs['attenuator']=attenuator_value
 
         if not self.canvas.point_exists():
             self._accept_point(ptargs)
@@ -269,6 +274,7 @@ class PolygonMaker(FinishableMaker):
                                       find_min=self.find_min,
                                       offset=self.offset,
                                       ptargs=ptargs)
+        
 class TransectMaker(FinishableMaker):
     step = Float(1, enter_set=True, auto_set=False)
     def _save(self):
@@ -276,11 +282,19 @@ class TransectMaker(FinishableMaker):
         for tr in self.canvas.get_transects():
 #        for tr in self.canvas.transects:
             pts = []
+            
             for pi in tr.points:
                 d = dict(identifier=pi.identifier,
                         z=float(pi.z),
-                        mask=pi.mask, attenuator=pi.attenuator,
+                        mask=pi.mask, 
+                        attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)])
+
+#                if hasattr(pi, 'mask'):
+#                    d['mask']=pi.mask
+#                if hasattr(pi, 'attenuator'):
+#                    d['attenuator']=pi.attenuator
+                
                 pts.append(d)
 
 #            for pi in tr.step_points:

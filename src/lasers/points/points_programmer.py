@@ -120,13 +120,15 @@ class PointsProgrammer(Manager):
             try:
                 int(v)
                 self.point = canvas.get_point(v)
-            except ValueError:
-                pass
+                print v,self.point 
+            except ValueError,e:
+                print e
 
 #===============================================================================
 # handlers
 #===============================================================================
     def _position_entry_changed(self):
+        print self.position_entry, 'possss'
         self._set_entry(self.position_entry)
 
     def _show_scene_viewer_fired(self):
@@ -323,11 +325,17 @@ class PointsProgrammer(Manager):
             points = ti['points']
             step = ti['step']
             for pi in points:
+                
+                if pi.has_key('mask'):
+                    ptargs['mask']=pi['mask']
+
+                if pi.has_key('attenuator'):
+                    ptargs['attenuator']=pi['attenuator']
+                
                 canvas.new_transect_point(xy=pi['xy'],
                                               z=pi['z'],
                                               step=step,
                                               point_color=point_color,
-                                              mask=pi['mask'], attenuator=pi['attenuator'],
                                               **ptargs
                                               )
     def _get_program_points_label(self):

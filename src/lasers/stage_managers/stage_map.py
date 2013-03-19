@@ -502,6 +502,14 @@ class StageMap(Loggable):
 
 import yaml
 class UVStageMap(StageMap):
+    
+    def dump_correction_file(self):
+        '''
+            dont dump a correction file for a uv stage map
+        '''
+        pass
+    
+    
     def load(self):
         with open(self.file_path, 'r') as fp:
             d = yaml.load(fp.read())
