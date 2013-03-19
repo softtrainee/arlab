@@ -94,36 +94,28 @@ class KerrCircularStepMotor(KerrStepMotor):
         v = '{:02x}'.format(int(self.home_velocity))
         a = '{:02x}'.format(int(self.home_acceleration))
         move_cmd = ''.join((cmd, control, v, a))
-
+#        print self.home_velocity, self.home_acceleration
         cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
               (addr, move_cmd, 100, 'Send to Limit')]
         self._execute_hex_commands(cmds)
         
-#        cnt=0
-#        # poll proximity switch wait for 2 successess
-#        while cnt<2:
-#            time.sleep(0.05)
-#            if self._get_proximity_limit():
-#                cnt+=1
         self._proximity_move(True)
         # stop moving when proximity limit set
+        
         cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
 
         # start moving
-        self._set_motor_position_(100)
-
-#        # poll proximity switch
-#        while 1:
-#            time.sleep(0.05)
-#            if not self._get_proximity_limit():
-#                break
-#        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
-#                (addr, '00', 100, 'Reset Position')]
-#        self._execute_hex_commands(cmds)
+        self._set_motor_position_(100, velocity=20)
+    
+        # stop moving when proximity limit not set
         self._proximity_move(False)
-
+        
+        self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
+        self._set_motor_position_(4, velocity=20)
+        self.block()
+        
         # define homing options
         # stop abruptly on home signal
         home_control_byte = self._load_home_control_byte()
@@ -132,7 +124,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         self._execute_hex_commands(cmds)
 
         # start moving
-        self._set_motor_position_(100)
+        self._set_motor_position_(100, velocity=20)
 
         # wait until home signal is set.
         # wait max of 2 sec
@@ -145,7 +137,12 @@ class KerrCircularStepMotor(KerrStepMotor):
         # motor is stopped
         # reset pos
         self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
-    
+#        ho=self.home_offset
+#        if ho:
+#            self._set_motor_position_(abs(ho), reverse=ho<0)
+#            self.block()
+#            self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
+            
     def _proximity_move(self, onoff, n=2):
         addr=self.address
         cnt=0

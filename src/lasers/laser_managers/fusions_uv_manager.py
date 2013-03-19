@@ -105,14 +105,23 @@ class FusionsUVManager(FusionsLaserManager):
 
         return 'OK'
 
+    def set_motors_for_point(self,pt):
+        for motor in ('mask', 'attenuator'):
+            if hasattr(pt, motor):
+                self.set_motor(motor, getattr(pt, motor), block=True)
 
     def goto_point(self, pos):
-        sm = self.stage_manager._stage_map
-        pt = sm.get_point(pos)
+        sm=self.stage_manager
+        pt=sm.canvas.get_point(pos)
+#        sm = self.stage_manager._stage_map
+#        pt = sm.get_point(pos)
         if pt:
-            x, y = pt['xy']
-            self.info('goto point {}'.format(pos, x, y))
-            self.stage_manager.linear_move(x, y, block=False)
+            self.set_motors_for_point(pt)
+            self.stage_manager.move_to_point(pt)
+#            x,y=pt.x,pt.y
+#            x, y = pt['xy']
+#            self.info('goto point {}'.format(pos, x, y))
+#            self.stage_manager.linear_move(x, y, block=False)
             result = True
         else:
             result = 'Invalid point'

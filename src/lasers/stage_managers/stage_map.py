@@ -519,22 +519,25 @@ class UVStageMap(StageMap):
 
     def get_polygon(self, name):
         return self._get_item('polygon', 'r', name)
-
-    def get_point(self, name):
-        if TRANSECT_REGEX.match(name):
-            t, p = map(int, name[1:].split('-'))
-            if t <= len(self.transects) - 1:
-                tran = self.transects[t]
-                pts = tran['points']
-                if p <= len(pts) - 1:
-                    return pts[p]
-        else:
-            pt = self._get_item('points', 'p', name)
-            if pt is None:
-                v = int(name)
-                pt = self.points[v - 1]
-
-            return pt
+#
+#    def get_point(self, name):
+##        print name, TRANSECT_REGEX.match(name)
+#        if TRANSECT_REGEX.match(name):
+#            t, p = map(int, name[1:].split('-'))
+##            print t, p, len(self.transects)
+#            if t <= len(self.transects):
+#                tran = self.transects[t-1]
+#                pts = tran['points']
+#            
+#                if p <= len(pts)-1:
+#                    return pts[p]
+#        else:
+#            pt = self._get_item('points', 'p', name)
+#            if pt is None:
+#                v = int(name)
+#                pt = self.points[v - 1]
+#
+#            return pt
 
 #        if name.startswith('p'):
 #            v = int(name[1:])

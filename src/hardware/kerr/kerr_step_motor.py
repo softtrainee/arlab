@@ -59,7 +59,7 @@ class KerrStepMotor(KerrMotor):
 
     discrete_position = Any
     discrete_positions = Dict
-
+    home_offset=Float(0)
     def load_additional_args(self, config):
         super(KerrStepMotor, self).load_additional_args(config)
         for section, option in [('Parameters', 'run_current'),
@@ -75,7 +75,7 @@ class KerrStepMotor(KerrMotor):
         section = 'Discrete Positions'
         if config.has_section(section):
             off = self.config_get(config, section, 'offset', cast='int', default=0)
-
+#            self.set_attribute(config, 'home_offset', section, 'offset', cast='int')
             for i, option in enumerate(config.options(section)):
                 if option == 'offset':
                     continue
@@ -89,6 +89,7 @@ class KerrStepMotor(KerrMotor):
 
                 pos = int(pos)
                 dp = DiscretePosition(name=option, position=pos + off, value=float(v))
+#                dp = DiscretePosition(name=option, position=pos, value=float(v))
 #                self.discrete_positions[str(value + off)] = '{:02n}:{}'.format(i + 1, option)
                 self.discrete_positions[dp] = '{:02n}:{}'.format(i + 1, option)
 
@@ -221,16 +222,18 @@ class KerrStepMotor(KerrMotor):
 
         self._execute_hex_commands(cmds)
 #
-    def _set_motor_position_(self, pos, hysteresis=0):
+    def _set_motor_position_(self, pos, hysteresis=0, velocity=None, reverse=False):
         '''
         '''
         self._motor_position = pos + hysteresis
         #============pos is in mm===========
         addr = self.address
         cmd = '74'
-        control = self._load_trajectory_controlbyte()
+        control = self._load_trajectory_controlbyte(reverse=reverse)
         position = self._float_to_hexstr(pos)
-        v = '{:02x}'.format(int(self.velocity))
+        if velocity is None:
+            velocity=self.velocity
+        v = '{:02x}'.format(int(velocity))
         a = '{:02x}'.format(int(self.acceleration))
 #        print self.velocity, self.acceleration
         cmd = ''.join((cmd, control, position, v, a))
