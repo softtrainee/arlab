@@ -31,7 +31,7 @@ class VideoUnderlay(AbstractOverlay):
 #    swap_rb = True
 #    mirror = False
 #    flip = False
-    pause = False
+#    pause = False
     _cached_image = None
     def overlay(self, component, gc, *args, **kw):
         '''
@@ -41,10 +41,13 @@ class VideoUnderlay(AbstractOverlay):
             gc.clip_to_rect(component.x, component.y,
                         component.width, component.height)
 
-            if not self.pause:
+            if self.video:
                 img = self.video.get_image_data()
             else:
-                img = self._cached_image
+                img=self._cached_image
+#            if not self.pause:
+#            else:
+#                img = self._cached_image
 
             if img is not None:
                 gc.draw_image(img)

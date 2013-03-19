@@ -41,6 +41,11 @@ class Scene(HasTraits):
     def _refresh(self):
         self.layout_needed = True
 
+    def set_canvas(self, c):
+        for li in self.layers:
+            for ci in li.components:
+                ci.set_canvas(c)
+                
     def reset_layers(self):
         self.layers = [Layer(name='0'), Layer(name='1')]
 
