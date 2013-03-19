@@ -797,12 +797,10 @@ class StageManager(Manager):
         if hasattr(pt, 'z'):
             self.stage_controller.set_z(pt.z, block=True)
 
-        for motor in ('mask', 'attenuator'):
-            if hasattr(pt, motor):
-#                m = self.parent.get_motor(motor)
-#                if not m.locked:
-#                    self.parent.set_motor(motor, getattr(pt, motor), block=True)
-                self.parent.set_motor(motor, getattr(pt, motor), block=True)
+        self.parent.set_motors_for_point(pt)
+#        for motor in ('mask', 'attenuator'):
+#            if hasattr(pt, motor):
+#                self.parent.set_motor(motor, getattr(pt, motor), block=True)
 
         self._move_to_point_hook()
 

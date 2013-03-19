@@ -106,12 +106,15 @@ class PointsProgrammer(Manager):
             self.line = canvas.get_line(v)
         elif v.startswith('t'):
             if TRANSECT_REGEX.match(v):
-                t, p = v[1:].split('-')
-                tran = canvas.get_transect(t)
-                if tran:
-                    point = tran.get_point(int(p))
-                    if point:
-                        self.point = point
+                point=canvas.get_transect_point(v)
+                if point:
+                    self.point=point
+#                t, p = v[1:].split('-')
+#                tran = canvas.get_transect(t)
+#                if tran:
+#                    point = tran.get_point(int(p))
+#                    if point:
+#                        self.point = point
         elif v.startswith('r'):
             self.polygon = canvas.get_polygon(v[1:])
         elif v.startswith('p'):

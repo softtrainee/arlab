@@ -28,6 +28,7 @@ from src.canvas.canvas2D.map_canvas import MapCanvas
 from kiva import constants
 from src.canvas.canvas2D.scene.primitives.laser_primitives import Transect, \
     VelocityPolyLine, RasterPolygon, LaserPoint
+from src.regex import TRANSECT_REGEX
 
 # class Point(HasTraits):
 #    x=Float
@@ -323,8 +324,17 @@ class LaserTrayCanvas(MapCanvas):
         return self.scene.get_item(v, klass=RasterPolygon)
 
     def get_point(self, v):
-        return self.scene.get_item(v, klass=LaserPoint)
-
+        if TRANSECT_REGEX.match(v):
+            return self.get_transect_point(v)
+        else:
+            return self.scene.get_item(v, klass=LaserPoint)
+    
+    def get_transect_point(self,v):
+        t, p = v[1:].split('-')
+        tran = self.get_transect(t)
+        if tran:
+            return tran.get_point(int(p))
+                        
 #    def clear_points(self):
 #        popkeys = []
 #        self.point_counter = 0
