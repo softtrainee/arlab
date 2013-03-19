@@ -25,6 +25,7 @@ import math
 from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull
+from src.geometry.geometry import calc_point_along_line
 
 
 def calc_rotation(x1, y1, x2, y2):
@@ -86,27 +87,27 @@ class Primitive(HasTraits):
             gc.set_line_width(self.line_width)
             self._render_(gc)
             gc.stroke_path()
-    
+
     def _convert_color(self, c):
-        f=lambda x:x/255.
-        if not isinstance(c, (list,tuple)):
-            c=c.red, c.green,c.blue
-        c=map(f,c)
+        f = lambda x:x / 255.
+        if not isinstance(c, (list, tuple)):
+            c = c.red, c.green, c.blue
+        c = map(f, c)
         return c
-    
+
     def set_stroke_color(self, gc):
         if self.state:
-            c=self._convert_color(self.active_color)
+            c = self._convert_color(self.active_color)
         else:
-            c=self._convert_color(self.default_color)
-        
+            c = self._convert_color(self.default_color)
+
         gc.set_stroke_color(c)
 
     def set_fill_color(self, gc):
         if self.state:
-            c=self._convert_color(self.active_color)
+            c = self._convert_color(self.active_color)
         else:
-            c=self._convert_color(self.default_color)
+            c = self._convert_color(self.default_color)
         gc.set_fill_color(c)
 
     def _render_(self, gc):
@@ -147,6 +148,8 @@ class Primitive(HasTraits):
 
     def set_canvas(self, canvas):
         self.canvas = canvas
+        for pi in self.primitives:
+            pi.set_canvas(canvas)
 
     def set_state(self, state):
         self.state = state
@@ -286,18 +289,18 @@ class RoundedRectangle(Rectangle):
 #                self._render_border(gc, x, y, width, height)
 
             self._render_name(gc, x, y, width, height)
-    
+
     def _get_border_color(self):
 #        if self.state:
 #            c = list(self.default_color)
 #        else:
 #            c = list(self.active_color)
-#            
+#
         c = list(self.default_color)
-        c=self._convert_color(c)
+        c = self._convert_color(c)
         c = tuple([ci / (2.) for ci in c])
         return c
-    
+
     def _render_border(self, gc, x, y, width, height):
         if self.use_border:
 
@@ -305,15 +308,15 @@ class RoundedRectangle(Rectangle):
             with gc:
                 gc.set_alpha(0.75)
                 gc.set_line_width(self.border_width)
-                
+
 #                if self.state:
 #                    c = list(self.default_color)
 #                else:
 #                    c = list(self.active_color)
-#                    
+#
 #                c=self._convert_color(c)
 #                c = [ci / (2.) for ci in c]
-                c=self._get_border_color()
+                c = self._get_border_color()
                 gc.set_stroke_color(c)
 
                 gc.move_to(x + corner_radius, y)
@@ -433,17 +436,17 @@ class Valve(RoundedRectangle, BaseValve):
         self._draw_soft_lock(gc, func, args)
 
         self._draw_state_indicator(gc, x, y, w, h)
-        
+
     def _get_border_color(self):
         if self.state:
             c = list(self.active_color)
         else:
             c = list(self.default_color)
-#            
-        c=self._convert_color(c)
+#
+        c = self._convert_color(c)
         c = [ci / (2.) for ci in c]
         return c
-    
+
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:
             gc.set_stroke_color((0, 0, 0))
@@ -480,31 +483,47 @@ class Line(Primitive):
 
         super(Line, self).__init__(0, 0, *args, **kw)
 
+#        print self.primitives
     def set_endpoint(self, p1, **kw):
         if isinstance(p1, tuple):
             p1 = Point(*p1, **kw)
         self.end_point = p1
+        if p1:
+            if len(self.primitives) == 2:
+                self.primitives[1] = self.end_point
+            else:
+                self.primitives.append(self.end_point)
 
     def set_startpoint(self, p1, **kw):
         if isinstance(p1, tuple):
             p1 = Point(*p1, **kw)
+
         self.start_point = p1
+
+        if p1:
+            if len(self.primitives) > 0:
+                self.primitives[0] = self.start_point
+            else:
+                self.primitives.append(self.start_point)
 
     def set_canvas(self, canvas):
         super(Line, self).set_canvas(canvas)
+
         self.start_point.set_canvas(canvas)
-        self.end_point.set_canvas(canvas)
+        if self.end_point:
+            self.end_point.set_canvas(canvas)
 
     def _render_(self, gc):
 #        gc.begin_path()
         gc.set_line_width(self.width)
-        x, y = self.start_point.get_xy()
-        x1, y1 = self.end_point.get_xy()
+        if self.start_point and self.end_point:
+            x, y = self.start_point.get_xy()
+            x1, y1 = self.end_point.get_xy()
 
-        gc.move_to(x, y)
-        gc.line_to(x1, y1)
-        gc.close_path()
-        gc.draw_path()
+            gc.move_to(x, y)
+            gc.line_to(x1, y1)
+            gc.close_path()
+            gc.draw_path()
 
     def adjust(self, dx, dy):
         self.start_point.adjust(dx, dy)
@@ -686,8 +705,8 @@ class CalibrationItem(Primitive, CalibrationObject):
 class Label(Primitive):
     text = String
     use_border = True
-    bgcolor=Color('white')
-    
+    bgcolor = Color('white')
+
     def _text_changed(self):
         self.request_redraw()
 
@@ -696,7 +715,7 @@ class Label(Primitive):
         loffset = 3
         x, y = ox + loffset, oy + loffset
         lines = self.text.split('\n')
-        
+
         gc.set_stroke_color((0, 0, 0))
         if self.use_border:
             gc.set_fill_color(self._convert_color(self.bgcolor))
@@ -712,12 +731,12 @@ class Label(Primitive):
             gc.rect(ox - offset, oy - offset, mw, sh + loffset)
             gc.draw_path()
 
-        gc.set_fill_color((0,0,0))
+        gc.set_fill_color((0, 0, 0))
         for i, li in enumerate(lines[::-1]):
             _, h, _, _ = gc.get_full_text_extent(li)
             gc.set_text_position(x, y + i * h)
             gc.show_text(li)
-            
+
     def _get_group(self):
         g = Item('text', style='custom')
         return g
@@ -733,6 +752,7 @@ class Indicator(Primitive):
         h = self.vline_length
         self.vline = Line(Point(x, y - h, **kw),
                           Point(x, y + h, **kw), **kw)
+
         self.primitives.append(self.hline)
         self.primitives.append(self.vline)
 
@@ -740,10 +760,10 @@ class Indicator(Primitive):
         self.hline.render(*args, **kw)
         self.vline.render(*args, **kw)
 
-    def set_canvas(self, canvas):
-        super(Indicator, self).set_canvas(canvas)
-        self.hline.set_canvas(canvas)
-        self.vline.set_canvas(canvas)
+#    def set_canvas(self, canvas):
+#        super(Indicator, self).set_canvas(canvas)
+#        self.hline.set_canvas(canvas)
+#        self.vline.set_canvas(canvas)
 
 class PointIndicator(Indicator):
     radius = 10
@@ -764,6 +784,9 @@ class PointIndicator(Indicator):
 
     def set_canvas(self, canvas):
         super(PointIndicator, self).set_canvas(canvas)
+#        for pi in self.primitives:
+#            pi.set_canvas(canvas)
+#
         self.circle.set_canvas(canvas)
         if self.label_item:
             self.label_item.set_canvas(canvas)
@@ -825,29 +848,50 @@ class PolyLine(Primitive):
         super(PolyLine, self).__init__(x, y, **kw)
 #        self.start_point=PointIndicator(x,y, **kw)
         self.identifier = identifier
-        self.points.append(PointIndicator(x, y, z=z, identifier=identifier, **kw))
+        p = PointIndicator(x, y, z=z, identifier=identifier, **kw)
+        self.points.append(p)
+        self.primitives.append(p)
 
-    def add_point(self, x, y, z=0, point_color=(1, 0, 0), line_color=(1, 0, 0)):
-        p2 = Dot(x, y, z=z, canvas=self.canvas, default_color=point_color)
-
+    def _add_point(self, p2, line_color):
         p1 = self.points[-1]
-        self.lines.append(Line(p1, p2, default_color=line_color))
+        l = Line(p1, p2, default_color=line_color)
+        self.primitives.append(l)
+        self.lines.append(l)
+
         self.points.append(p2)
+        self.primitives.append(p2)
+
+    def add_point(self, x, y, z=0, point_color=(1, 0, 0), line_color=(1, 0, 0),
+                   **ptargs):
+        p2 = Dot(x, y, z=z, default_color=point_color, **ptargs)
+        self._add_point(p2, line_color)
+#        p1 = self.points[-1]
+#        l = Line(p1, p2, default_color=line_color)
+#        self.primitives.append(l)
+#        self.lines.append(l)
+#
+#        self.points.append(p2)
+#        self.primitives.append(p2)
 
     def _render_(self, gc):
+        for pi in self.primitives:
+            pi.render(gc)
 #        self.start_point.render(gc)
-        for pt in self.points:
-            pt.render(gc)
+#        for pt in self.points:
+#            pt.render(gc)
+# #
+#        for l in self.lines:
+#            l.render(gc)
 
-        for l in self.lines:
-            l.render(gc)
+#    def set_canvas(self, canvas):
+#        super(PolyLine,self).set_canvas()
+#        for pt in self.points:
+#            pt.set_canvas(canvas)
+# #
+#        for l in self.lines:
+#            l.set_canvas(canvas)
 
-class VelocityPolyLine(PolyLine):
-    velocity_segments = List
 
-class Transect(Line):
-    step = Float
-    points = List
 
 class BorderLine(Line):
     border_width = 5
@@ -875,15 +919,7 @@ class BorderLine(Line):
 class Polygon(Primitive):
     points = List
 #    lines = List
-    use_convex_hull = Bool(False)
-    use_outline = Bool(True)
-    offset = Float(1, enter_set=True, auto_set=False)
 
-    velocity = Float
-    find_min = Bool(True)
-    theta = Property(Float(enter_set=True, auto_set=False),
-                     depends_on='_theta')
-    _theta = Float
     identifier = Str
     indicator = None
 
@@ -933,31 +969,7 @@ class Polygon(Primitive):
 
 #        if len(xy) > 2:
 #            self.convex_hull_pts = convex_hull(xy)
-    def _set_theta(self, v):
-        self._theta = float(v)
-        self.request_redraw()
 
-    def _get_theta(self):
-        return self._theta
-
-    def _find_min_changed(self):
-        self._theta = 0
-        self.request_redraw()
-
-    @on_trait_change('offset, use_outline')
-    def _refresh(self):
-        self.request_redraw()
-
-    def _get_group(self):
-        g = VGroup(HGroup(Item('use_outline'),
-                          Item('offset'),
-                          ),
-                   HGroup(Item('find_min'),
-                          Item('theta')
-                          )
-                   )
-
-        return g
 
     def _render_(self, gc):
         with gc:
@@ -990,4 +1002,6 @@ class Polygon(Primitive):
                     gc.line_to(pts[0][0], pts[0][1])
 
             gc.stroke_path()
+
+
 #============= EOF ====================================

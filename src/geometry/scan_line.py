@@ -263,7 +263,6 @@ def raster(poly, use_convex_hull=False,
         lines, rtheta, lens = find_minimum_orientation(opoly, step)
     else:
         lines = make_raster_polygon(opoly, step)
-        print 'sdf', theta
         if theta is not None:
             cx, cy = get_center(opoly)
             P_prime = rotate_poly(opoly.T, theta, loc=(cx, cy))

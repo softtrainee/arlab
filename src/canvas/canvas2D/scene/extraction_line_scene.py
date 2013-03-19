@@ -19,7 +19,7 @@ from traits.api import HasTraits, Instance, Dict, Color
 from traitsui.api import View, Item, TableEditor
 from src.canvas.canvas2D.scene.scene import Scene
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
-from src.canvas.canvas2D.scene.primitives import RoundedRectangle, Valve, \
+from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, Valve, \
     RoughValve, Label, BorderLine, Rectangle
 #============= standard library imports ========================
 #============= local library imports  ==========================

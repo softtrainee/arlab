@@ -21,7 +21,7 @@ from traitsui.api import View, Item, TreeEditor, TreeNode
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.helpers.parsers.canvas_parser import CanvasParser
-from src.canvas.canvas2D.scene.primitives import Primitive
+from src.canvas.canvas2D.scene.primitives.primitives import Primitive
 from src.canvas.canvas2D.scene.browser import SceneBrowser
 from src.canvas.canvas2D.scene.layer import Layer
 class PrimitiveNode(TreeNode):
@@ -45,7 +45,7 @@ class Scene(HasTraits):
         for li in self.layers:
             for ci in li.components:
                 ci.set_canvas(c)
-                
+
     def reset_layers(self):
         self.layers = [Layer(name='0'), Layer(name='1')]
 
@@ -61,20 +61,30 @@ class Scene(HasTraits):
                     ci.set_canvas(canvas)
                     ci.render(gc)
 
-    def get_item(self, name, layer=None):
+    def get_items(self, klass):
+        return [ci for li in self.layers
+                for ci in li.components
+                    if isinstance(ci, klass)]
+
+    def get_item(self, name, layer=None, klass=None):
+        def test(la):
+            nb = la.name == name
+            ib = la.identifier == name
+            cb = True
+            if klass is not None:
+                cb = isinstance(la, klass)
+
+            return cb and (nb or ib)
+
         layers = self.layers
         if layer is not None:
             layers = layers[layer:layer + 1]
 
         for li in layers:
-            
-            nn=next((ll for ll in li.components if ll.name==name or ll.identifier==name), None)
+            nn = next((ll for ll in li.components if test(ll)), None)
             if nn is not None:
                 return nn
-            
-            
-#            if name in li:
-#                return li[name]
+
 
     def add_item(self, v, layer=None):
         if layer is None:
@@ -86,6 +96,15 @@ class Scene(HasTraits):
 
         layer = self.layers[layer]
         layer.add_item(v)
+
+    def remove_item(self, v, layer=None):
+        if layer is None:
+            layers = self.layers
+        else:
+            layers = (self.layers[layer],)
+
+        for li in layers:
+            li.remove_item(v)
 #        layer[key] = v
 #===============================================================================
 # handlers
@@ -122,6 +141,7 @@ class Scene(HasTraits):
                 yv = map(float, elm.text.split(','))
 
         return xv, yv
+
     def traits_view(self):
         nodes = [TreeNode(node_for=[SceneBrowser],
                           children='layers',
@@ -136,7 +156,7 @@ class Scene(HasTraits):
                  PrimitiveNode(node_for=[Primitive],
                                children='primitives',
                                label='label',
-                               auto_open=True
+#                               auto_open=True
                           ),
                  ]
 

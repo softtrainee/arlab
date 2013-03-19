@@ -21,7 +21,7 @@ from traits.api import Any, Str, Property, cached_property, Dict
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 # from src.canvas.designer.valve import Valve
-from src.canvas.canvas2D.scene.primitives import Rectangle, Valve, Line, \
+from src.canvas.canvas2D.scene.primitives.primitives import Rectangle, Valve, Line, \
     Label, RoughValve, BaseValve, RoundedRectangle, BorderLine
 from pyface.wx.dialog import confirmation
 from src.canvas.scene_viewer import SceneCanvas

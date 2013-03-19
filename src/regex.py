@@ -15,13 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
+from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
+import re
 #============= local library imports  ==========================
-
-class BaseSceneNode(HasTraits):
-    name = Str
-class PolygonNode(BaseSceneNode):
-    pass
+'''
+    use regex to match valid tansect entry
+    e.g t2-3   point 3 of transect 2
+    
+    this re says
+    match any string where 
+    1. [t,T]     the first character is t or T
+    2. [\d,\W]+  followed by at least one digit character and no word characters
+    3. -         followed by - 
+    4. [\d,\W]+  followed by at least one digit character and no word characters
+    5  $         end of string
+'''
+TRANSECT_REGEX = re.compile('[t,T]+[\d,\W]+-+[\d,\W]+$')
 #============= EOF =============================================

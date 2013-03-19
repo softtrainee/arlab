@@ -24,13 +24,10 @@ from chaco.api import AbstractOverlay
 # import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
-# from src.canvas.canvas2D.markup.markup_items import PointIndicator, PolyLine, \
-#    VelocityPolyLine, Transect, Polygon
 
 from kiva import constants
-from src.geometry.geometry import calc_point_along_line
-from src.canvas.canvas2D.scene.primitives import Polygon, Transect, \
-    VelocityPolyLine, PointIndicator
+from src.canvas.canvas2D.scene.primitives.laser_primitives import Transect, \
+    VelocityPolyLine, RasterPolygon, LaserPoint
 
 # class Point(HasTraits):
 #    x=Float
@@ -189,18 +186,12 @@ class LaserTrayCanvas(MapCanvas):
 
     def set_transect_step(self, step):
         transect = self.transects[-1]
-        for pi in transect.points:
-            self.points.remove(pi)
+#        for pi in transect.step_points:
+#            self.remove_point(pi)
 
-        transect.points = []
-        self._set_transect_points(transect, step,
-#                                  line_color=pi.line_color,
-#                                  point_color=pi.point_color,
-                                  hline_length=pi.hline_length,
-                                  vline_length=pi.vline_length,
-                                  radius=pi.radius
-                                  )
+        transect.step = step
         self.request_redraw()
+#        transect.set_step_points()
 
     def new_polygon_point(self, xy=None,
                           ptargs=None,
@@ -221,7 +212,7 @@ class LaserTrayCanvas(MapCanvas):
 
         if self._new_polygon:
             self._new_polygon = False
-            poly = Polygon([xy],
+            poly = RasterPolygon([xy],
                          identifier=identifier,
                          default_color=point_color,
                          ptargs=ptargs,
@@ -245,19 +236,23 @@ class LaserTrayCanvas(MapCanvas):
             self._new_transect = False
 #            kw['identifier'] = str(len(self.lines) + 1)
 #            kw['canvas'] = self
-            transect = Transect(xy,
-                                identifier=str(len(self.lines) + 1),
-#                                canvas=self,
+            transect = Transect(xy[0], xy[1],
+                                identifier=str(len(self.transects) + 1),
+                                canvas=self,
                                 default_color=point_color,
-                                step=step,)
+                                step=step,
+                                **ptargs
+                                )
             self.scene.add_item(transect)
             self.transects.append(transect)
         else:
             tran = self.transects[-1]
-            tran.set_endpoint(xy)
-            self._set_transect_points(tran, step, **ptargs)
 
+            tran.add_point(xy[0], xy[1], **ptargs)
+            tran.set_step_points(**ptargs)
 
+#            tran.set_endpoint(xy)
+#            self._set_transect_points(tran, step, **ptargs)
 
     def new_line_point(self, xy=None, z=0, line_color=(1, 0, 0), point_color=(1, 0, 0), velocity=None, **kw):
         if xy is None:
@@ -289,26 +284,47 @@ class LaserTrayCanvas(MapCanvas):
 #                **kw
 #                )
 
+#    def remove_point(self, pi):
+#        self.scene.remove_item(pi)
+#        self.points.remove(pi)
 
     def new_point(self, xy=None, **kw):
         if xy is None:
             xy = self._stage_position
 
-        p = PointIndicator(*xy,
+        p = LaserPoint(*xy,
                 identifier=str(len(self.points) + 1),
-#                canvas=self,
                 **kw
                 )
 
         self.scene.add_item(p)
-#        self.markup_objects.append(p)
-        self.points.append(p)
-#        p = PointIndicator(*self._stage_position, identifier=pid, canvas=self)
-#        self.markupcontainer[pid] = p
-#        self.point_counter += 1
+#        self.points.append(p)
         self.request_redraw()
         return p
-#
+
+    def get_transects(self):
+        return self.scene.get_items(Transect)
+    def get_lines(self):
+        return self.scene.get_items(VelocityPolyLine)
+
+    def get_points(self):
+        return self.scene.get_items(LaserPoint)
+
+    def get_polygons(self):
+        return self.scene.get_items(RasterPolygon)
+
+    def get_line(self, v):
+        return self.scene.get_item(v, klass=VelocityPolyLine)
+
+    def get_transect(self, v):
+        return self.scene.get_item(v, klass=Transect)
+
+    def get_polygon(self, v):
+        return self.scene.get_item(v, klass=RasterPolygon)
+
+    def get_point(self, v):
+        return self.scene.get_item(v, klass=LaserPoint)
+
 #    def clear_points(self):
 #        popkeys = []
 #        self.point_counter = 0
@@ -456,7 +472,7 @@ class LaserTrayCanvas(MapCanvas):
         if pos:
             if not self._frozen:
                 self.parent.linear_move(*pos, use_calibration=False)
-                event.handled = True
+            event.handled = True
 
 #    def normal_mouse_wheel(self, event):
 #        enable_mouse_wheel_zoom = False
@@ -530,31 +546,40 @@ class LaserTrayCanvas(MapCanvas):
     def _calc_relative_move_direction(self, char, direction):
         return direction
 
-    def _set_transect_points(self, tran, step, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
-        p1 = tran.start_point
-        p2 = tran.end_point
-
-        x, y = p1.x, p1.y
-        p = self.new_point((x, y), **ptargs)
-        tran.points.append(p)
-        tol = 0.1
-        while 1:
-            x, y = calc_point_along_line(x, y, p2.x, p2.y, step)
-            if abs(p2.x - x) < tol and abs(p2.y - y) < tol:
-                ptargs['use_border'] = True
-                p = self.new_point((x, y), **ptargs)
-                tran.points.append(p)
-                break
-            else:
-                ptargs['use_border'] = False
-                p = self.new_point((x, y),
-                               line_color=line_color, point_color=point_color,
-                               **ptargs)
-                tran.points.append(p)
-
-#            line.add_point(*xy,
-#                           line_color=line_color,
-#                           point_color=point_color)
+#    def _set_transect_points(self, tran, step, line_color=(1, 0, 0), point_color=(1, 0, 0), **ptargs):
+#        for pi in tran.step_points:
+#            self.remove_point(pi)
+#
+#        tran.step_points = []
+#
+#        for li in tran.lines:
+#            p1 = li.start_point
+#            p2 = li.end_point
+# #            p1 = tran.start_point
+# #            p2 = tran.end_point
+#
+#            x, y = p1.x, p1.y
+# #            p = self.new_point((x, y), **ptargs)
+# #            tran.step_points.append(p)
+#            tol = step / 3.
+#            while 1:
+#                x, y = calc_point_along_line(x, y, p2.x, p2.y, step)
+#                ptargs['use_border'] = False
+#                if abs(p2.x - x) < tol and abs(p2.y - y) < tol:
+# #                    ptargs['use_border'] = True
+#                    p = self.new_point((p2.x, p2.y), **ptargs)
+#                    tran.step_points.append(p)
+#                    break
+#                else:
+# #                    ptargs['use_border'] = False
+#                    p = self.new_point((x, y),
+#                                   line_color=line_color, point_color=point_color,
+#                                   **ptargs)
+#                    tran.step_points.append(p)
+#
+#    #            line.add_point(*xy,
+#    #                           line_color=line_color,
+#    #                           point_color=point_color)
     def _add_bounds_rect(self):
         if self.show_bounds_rect:
             self.overlays.append(BoundsOverlay(component=self))
@@ -650,10 +675,11 @@ class LaserTrayCanvas(MapCanvas):
         if self.crosshairs_kind == 'BeamRadius':
             r = self.beam_radius
         elif self.crosshairs_kind == 'MaskRadius':
-            mask = self.parent.parent.get_motor('mask')
             r = 0
-            if mask is not None:
-                r = mask.get_discrete_value()
+            if self.parent:
+                mask = self.parent.parent.get_motor('mask')
+                if mask is not None:
+                    r = mask.get_discrete_value()
         else:
             r = self.crosshairs_radius
 
