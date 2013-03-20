@@ -59,12 +59,39 @@ class KerrCircularStepMotor(KerrStepMotor):
 #        bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
 # #        print bs,''.join(bs)
 #        return ''.join(bs)
+    def _get_io_bits(self):
+        return ['0' #bit 4
+                '1'
+                '1'
+                '1'
+                '0'] #bit 0
+    
+    def _set_io_state(self, bit, state):
+        iobits=self._get_io_bits()
+        n=len(iobits)-1
+        iobits[n-bit]=str(int(state))
+        iob=int('000'+''.join(iobits),2)
+        cmd='{}{:02X}'.format('18', iob)
+        cmds=[(self.address, cmd, 100, 'set io {} {}'.format(bit, state))]
+        self._execute_hex_commands(cmds)
 
+    def _build_io(self):
+        cmd='18'
+        iobits=self._get_io_bits()
+        v='000'+''.join(iobits)
+        v='{:02X}'.format(int(v,2))
+        return cmd+v
+    
+    def _make_hexstr(self, args):
+        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
+        bs=map(hexfmt, args)
+        return ''.join(bs)
+    
     def _initialize_(self, *args, **kw):
         addr = self.address
         commands = [
                     (addr, '1706', 100, 'stop motor, turn off amp'),
-#                    (addr, '1804', 100, 'configure io pins'),
+                    (addr, self._build_io(), 100, 'configure io pins'),
                     (addr, self._build_parameters(), 100, 'set parameters'),
                     (addr, '1701', 100, 'turn on amp'),
                     (addr, '00', 100, 'reset position')
@@ -73,13 +100,13 @@ class KerrCircularStepMotor(KerrStepMotor):
 #        time.sleep(5)
 #        self._execute_hex_commands([(addr, '1706', 100, 'stop motor, turn off amp')])
 
-        self._home_motor(*args, **kw)
+#        self._home_motor(*args, **kw)
 
     def _home_motor(self, progress=None, *args, **kw):
         from threading import Event, Thread
-        signal = Event
+        signal = Event()
         t = Thread(target=self.progress_update, args=(progress, signal))
-        t.start()
+#        t.start()
 
         #=======================================================================
         # step 1. move positive until prox switch is on
@@ -100,16 +127,18 @@ class KerrCircularStepMotor(KerrStepMotor):
         for i in range(10):
             self._set_motor_position_(i + 1, velocity=1)
             time.sleep(0.1)
-            if self._get_proximity_limit(False):
-                lim = self._read_limits()
-                if int(lim[2]) == 1:
-                    break
+            lim=self._read_limits()
+            if not int(lim[4]) and int(lim[2]):
+                break
+#            if self._get_proximity_limit(False):
+#                lim = self._read_limits()
+#                if int(lim[2]) == 1:
+#                    break
 
         #=======================================================================
         # step 4. set current position as 0
         #=======================================================================
         self.reset_position(motor_off=False)
-
         signal.set()
         progress.change_message('{} homing complete'.format(self.name))
 

@@ -167,7 +167,7 @@ class KerrStepMotor(KerrMotor):
         rcl = (self.run_current, 2)
         hcl = (self.hold_current, 2)
         tl = (0, 2)
-#        print self.run_current,self.hold_current
+        print self.run_current,self.hold_current
         hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
         bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
         return ''.join(bs)
