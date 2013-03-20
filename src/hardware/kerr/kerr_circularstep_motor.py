@@ -75,96 +75,134 @@ class KerrCircularStepMotor(KerrStepMotor):
 
         self._home_motor(*args, **kw)
 
-    def _home_motor(self, *args, **kw):
-        # start moving
-        progress = self.progress
-        if progress is not None:
-            progress = kw['progress']
-            progress.increase_max()
-            progress.change_message('Homing {}'.format(self.name))
-            progress.increment()
+    def _home_motor(self, progress=None, *args, **kw):
+        from threading import Event, Thread
+        signal = Event
+        t = Thread(target=self.progress_update, args=(progress, signal))
+        t.start()
 
-        addr = self.address
-
-        cmd = '34'
-#        control = 'F6' #'11110110'
-        control = '{:02x}'.format(int('10010110', 2))
-#        v = self._float_to_hexstr(self.home_velocity)
-#        a = self._float_to_hexstr(self.home_acceleration)
-        v = '{:02x}'.format(int(self.home_velocity))
-        a = '{:02x}'.format(int(self.home_acceleration))
-        move_cmd = ''.join((cmd, control, v, a))
-#        print self.home_velocity, self.home_acceleration
-        cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
-              (addr, move_cmd, 100, 'Send to Limit')]
-        self._execute_hex_commands(cmds)
-        
+        #=======================================================================
+        # step 1. move positive until prox switch is on
+        #=======================================================================
+        # set to max pos
+        self._set_motor_position_(self.max, velocity=self.home_velocity)
+        # wait until prox switch is on
         self._proximity_move(True)
-        # stop moving when proximity limit set
-        
-        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
-                (addr, '00', 100, 'Reset Position')]
-        self._execute_hex_commands(cmds)
+        #=======================================================================
+        # step 2.  reset pos, move positive 55
+        #=======================================================================
+        self.reset_position(motor_off=False)
+        self._set_motor_position_(55, velocity=self.home_velocity)
 
-        # start moving
-        self._set_motor_position_(100, velocity=10)
-    
-        # stop moving when proximity limit not set
-        self._proximity_move(False)
-        
-        self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
-        self._set_motor_position_(4, velocity=10)
-        self.block()
-        
-        # define homing options
-        # stop abruptly on home signal
-        home_control_byte = self._load_home_control_byte()
-        home_cmd = '19{:02x}'.format(home_control_byte)
-        cmds = [(addr, home_cmd, 100, 'Set home options')]
-        self._execute_hex_commands(cmds)
+        #=======================================================================
+        # step 3. move 1 step incrementally until home switch set (and proximity not set)
+        #=======================================================================
+        for i in range(10):
+            self._set_motor_position_(i + 1, velocity=1)
+            time.sleep(0.1)
+            if self._get_proximity_limit(False):
+                lim = self._read_limits()
+                if int(lim[2]) == 1:
+                    break
 
-        # start moving
-        self._set_motor_position_(100, velocity=10)
+        #=======================================================================
+        # step 4. set current position as 0
+        #=======================================================================
+        self.reset_position(motor_off=False)
 
-#        # wait until home signal is set.
-#        # wait max of 2 sec
-#        while 1:
-#            time.sleep(0.05)
+        signal.set()
+        progress.change_message('{} homing complete'.format(self.name))
+
+#    def _home_motor2(self, *args, **kw):
+#        # start moving
+#        progress = self.progress
+#        if progress is not None:
+#            progress = kw['progress']
+#            progress.increase_max()
+#            progress.change_message('Homing {}'.format(self.name))
+#            progress.increment()
+#
+#        addr = self.address
+#
+#        cmd = '34'
+# #        control = 'F6' #'11110110'
+#        control = '{:02x}'.format(int('10010110', 2))
+# #        v = self._float_to_hexstr(self.home_velocity)
+# #        a = self._float_to_hexstr(self.home_acceleration)
+#        v = '{:02x}'.format(int(self.home_velocity))
+#        a = '{:02x}'.format(int(self.home_acceleration))
+#        move_cmd = ''.join((cmd, control, v, a))
+# #        print self.home_velocity, self.home_acceleration
+#        cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
+#              (addr, move_cmd, 100, 'Send to Limit')]
+#        self._execute_hex_commands(cmds)
+#
+#        self._proximity_move(True)
+#        # stop moving when proximity limit set
+#
+#        cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
+#                (addr, '00', 100, 'Reset Position')]
+#        self._execute_hex_commands(cmds)
+#
+#        # start moving
+#        self._set_motor_position_(100, velocity=10)
+#
+#        # stop moving when proximity limit not set
+#        self._proximity_move(False)
+#
+#        self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
+#        self._set_motor_position_(4, velocity=10)
+#        self.block()
+#
+#        # define homing options
+#        # stop abruptly on home signal
+#        home_control_byte = self._load_home_control_byte()
+#        home_cmd = '19{:02x}'.format(home_control_byte)
+#        cmds = [(addr, home_cmd, 100, 'Set home options')]
+#        self._execute_hex_commands(cmds)
+#
+#        # start moving
+#        self._set_motor_position_(100, velocity=10)
+#
+# #        # wait until home signal is set.
+# #        # wait max of 2 sec
+# #        while 1:
+# #            time.sleep(0.05)
+# #            lim = self._read_limits()
+# #            if int(lim[2]) == 1:
+# #                break
+#
+#        for i in range(10):
+#            self._set_motor_position_(i + 1, velocity=10)
+#            time.sleep(0.1)
 #            lim = self._read_limits()
 #            if int(lim[2]) == 1:
 #                break
+#
+#        # motor is stopped
+#        # reset pos
+#        self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
+# #        ho=self.home_offset
+# #        if ho:
+# #            self._set_motor_position_(abs(ho), reverse=ho<0)
+# #            self.block()
+# #            self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
 
-        for i in range(10):
-            self._set_motor_position_(i+1, velocity=10)
-            time.sleep(0.1)
-            lim = self._read_limits()
-            if int(lim[2]) == 1:
-                break
-            
-        # motor is stopped
-        # reset pos
-        self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
-#        ho=self.home_offset
-#        if ho:
-#            self._set_motor_position_(abs(ho), reverse=ho<0)
-#            self.block()
-#            self._execute_hex_commands([(addr, '00', 100, 'Reset Position')])
-            
     def _proximity_move(self, onoff, n=2):
-        addr=self.address
-        cnt=0
+        addr = self.address
+        cnt = 0
         # poll proximity switch wait for 2 successess
-        while cnt<2:
+        while cnt < 2:
             time.sleep(0.05)
-            lim=self._get_proximity_limit()
+            lim = self._get_proximity_limit()
             if (onoff and lim) or  (not onoff and not lim):
-                cnt+=1
+                cnt += 1
 
         # stop moving when proximity limit set
         cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-        
+
     def _read_limits(self):
         cb = '00001000'
         inb = self.read_status(cb, verbose=True)
