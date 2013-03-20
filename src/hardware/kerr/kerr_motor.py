@@ -28,6 +28,7 @@ from src.hardware.core.data_helper import make_bitarray
 import time
 from globals import globalv
 from src.traits_editors.custom_label_editor import CustomLabel
+from pyface.timer.do_later import do_later
 
 SIGN = ['negative', 'positive']
 
@@ -138,6 +139,14 @@ class KerrMotor(KerrDevice):
             self.set_attribute(config, key, section, key, cast='float')
 
         if config.has_option('Motion', 'hysteresis'):
+            '''
+                if hysteresis is <0
+                correction is done when moving in the negative direction
+                
+                if hysteresis is >0
+                correction is done when moving in the positive direction
+            '''
+
             self.hysteresis_value = self.config_get(config, 'Motion', 'hysteresis', cast='int')
             self.use_hysteresis = True
         else:
@@ -261,8 +270,26 @@ class KerrMotor(KerrDevice):
 
         self._execute_hex_commands(cmds)
 
+    def reset_position(self, motor_off=True):
+        '''
+            1707 amp on
+            1706 amp off
+        '''
+        addr = self.address
+        b = '6' if  motor_off else '7'
+        cmds = [(addr, '170{}'.format(b), 100, 'Stop motor'),
+                (addr, '00', 100, 'Reset Position')]
+        self._execute_hex_commands(cmds)
+
     def is_moving(self):
         return self.enabled == False
+
+    def progress_update(self, progress, signal):
+        while not signal.is_set():
+            pos = self._get_motor_position(verbose=False)
+            if progress is not None:
+                do_later(progress.change_message, '{} position = {}'.format(self.name, pos))
+            time.sleep(0.1)
 
     def block(self, n=3, tolerance=1, progress=None):
         '''
@@ -430,8 +457,10 @@ class KerrMotor(KerrDevice):
 
         else:
             if self.use_hysteresis and not self.doing_hysteresis_correction:
-                    # move to original desired position
-                    self._set_motor_position_(self._motor_position - self.hysteresis_value)
+                    # move to original desired position at half velocity
+                    self._set_motor_position_(self._motor_position - self.hysteresis_value,
+                                              velocity=self.velocity / 2
+                                              )
                     self.doing_hysteresis_correction = True
             else:
                 self.enabled = True
@@ -505,11 +534,14 @@ class KerrMotor(KerrDevice):
 
             npos = int((1 - self.home_position) * self.steps * pos)
             hysteresis = 0
-            if self._motor_position < npos:
-                # means we are going forward
-                if self.use_hysteresis:
-                    self.doing_hysteresis_correction = False
-                    hysteresis = self.hysteresis_value
+            if self.hysteresis_value < 0:
+                use_hysteresis = self._motor_position > npos
+            else:
+                use_hysteresis = self._motor_position < npos
+
+            if use_hysteresis and self.use_hysteresis:
+                self.doing_hysteresis_correction = False
+                hysteresis = self.hysteresis_value
 
             self._set_motor_position_(npos, hysteresis)
             if not self.parent.simulation:
