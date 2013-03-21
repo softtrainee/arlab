@@ -82,11 +82,6 @@ class KerrCircularStepMotor(KerrStepMotor):
         v='{:02X}'.format(int(v,2))
         return cmd+v
     
-    def _make_hexstr(self, args):
-        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
-        bs=map(hexfmt, args)
-        return ''.join(bs)
-    
     def _initialize_(self, *args, **kw):
         addr = self.address
         commands = [
@@ -100,13 +95,21 @@ class KerrCircularStepMotor(KerrStepMotor):
 #        time.sleep(5)
 #        self._execute_hex_commands([(addr, '1706', 100, 'stop motor, turn off amp')])
 
-#        self._home_motor(*args, **kw)
+        self._home_motor(*args, **kw)
 
-    def _home_motor(self, progress=None, *args, **kw):
+    def _home_motor(self, *args, **kw):
+        # start moving
+        progress = self.progress
+        if progress is not None:
+            progress = kw['progress']
+            progress.increase_max()
+            progress.change_message('Homing {}'.format(self.name))
+            progress.increment()
+            
         from threading import Event, Thread
         signal = Event()
         t = Thread(target=self.progress_update, args=(progress, signal))
-#        t.start()
+        t.start()
 
         #=======================================================================
         # step 1. move positive until prox switch is on
@@ -114,18 +117,19 @@ class KerrCircularStepMotor(KerrStepMotor):
         # set to max pos
         self._set_motor_position_(self.max, velocity=self.home_velocity)
         # wait until prox switch is on
-        self._proximity_move(True)
+        self._proximity_move(True, n=2)
         #=======================================================================
         # step 2.  reset pos, move positive 55
         #=======================================================================
         self.reset_position(motor_off=False)
-        self._set_motor_position_(55, velocity=self.home_velocity)
+        moffset=55
+        self._set_motor_position_(moffset, velocity=self.home_velocity)
 
         #=======================================================================
         # step 3. move 1 step incrementally until home switch set (and proximity not set)
         #=======================================================================
         for i in range(10):
-            self._set_motor_position_(i + 1, velocity=1)
+            self._set_motor_position_(i + 1+moffset, velocity=1)
             time.sleep(0.1)
             lim=self._read_limits()
             if not int(lim[4]) and int(lim[2]):
@@ -221,7 +225,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         addr = self.address
         cnt = 0
         # poll proximity switch wait for 2 successess
-        while cnt < 2:
+        while cnt < n:
             time.sleep(0.05)
             lim = self._get_proximity_limit()
             if (onoff and lim) or  (not onoff and not lim):
