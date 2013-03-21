@@ -40,6 +40,7 @@ class KerrMotor(KerrDevice):
     use_initialize = Bool(True)
     use_hysteresis = Bool(False)
     hysteresis_value = Int(0)
+    _hysteresis_correction = Int(0)
 
     velocity = Property
     _velocity = Float
@@ -66,6 +67,7 @@ class KerrMotor(KerrDevice):
 
     _motor_position = CInt
     doing_hysteresis_correction = False
+    do_hysteresis=False
     display_name = Property
     display_name_color = 'brown'
 
@@ -280,7 +282,8 @@ class KerrMotor(KerrDevice):
         cmds = [(addr, '170{}'.format(b), 100, 'Stop motor'),
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-
+        self._motor_position=0
+        
     def is_moving(self):
         return self.enabled == False
 
@@ -289,7 +292,7 @@ class KerrMotor(KerrDevice):
             pos = self._get_motor_position(verbose=False)
             if progress is not None:
                 do_later(progress.change_message, '{} position = {}'.format(self.name, pos))
-            time.sleep(0.1)
+            time.sleep(1)
 
     def block(self, n=3, tolerance=1, progress=None):
         '''
@@ -427,21 +430,35 @@ class KerrMotor(KerrDevice):
         '''
 
         return '{:02x}'.format(int('10010111', 2))
-
+    
+    def _calculate_hysteresis_position(self, pos, hysteresis):
+        hpos=pos+hysteresis
+        if hpos>self.max:
+            self._hysteresis_correction=hpos-self.max
+            hpos=self.max
+        elif hpos<self.min:
+            self._hysteresis_correction=hpos-self.min
+            hpos=self.min
+        else:
+            self._hysteresis_correction=hysteresis
+        
+        return hpos
     def _set_motor_position_(self, pos, hysteresis=0):
         '''
         '''
-        self._motor_position = pos + hysteresis
+        hpos=self._calculate_hysteresis_position(pos, hysteresis)
+        self._motor_position=hpos
+#        self._motor_position =npos= min(self.max, max(self.min, pos + hysteresis))
         #============pos is in mm===========
         addr = self.address
         cmd = 'D4'
         control = self._load_trajectory_controlbyte()
-        position = self._float_to_hexstr(pos)
+        position = self._float_to_hexstr(hpos)
         v = self._float_to_hexstr(self.velocity)
         a = self._float_to_hexstr(self.acceleration)
 #        print cmd, control, position, v, a
         cmd = ''.join((cmd, control, position, v, a))
-        cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
+        cmd = (addr, cmd, 100, 'setting motor steps {}'.format(hpos))
 
         self._execute_hex_command(cmd)
 
@@ -456,9 +473,12 @@ class KerrMotor(KerrDevice):
 #            self.enabled = False
 
         else:
-            if self.use_hysteresis and not self.doing_hysteresis_correction:
+            if self.use_hysteresis and \
+                not self.doing_hysteresis_correction and\
+                    self.do_hysteresis:
                     # move to original desired position at half velocity
-                    self._set_motor_position_(self._motor_position - self.hysteresis_value,
+#                    print 'mp',self._motor_position, self.hysteresis_value
+                    self._set_motor_position_(self._motor_position - self._hysteresis_correction,
                                               velocity=self.velocity / 2
                                               )
                     self.doing_hysteresis_correction = True
@@ -534,12 +554,14 @@ class KerrMotor(KerrDevice):
 
             npos = int((1 - self.home_position) * self.steps * pos)
             hysteresis = 0
+            self.do_hysteresis=False
             if self.hysteresis_value < 0:
                 use_hysteresis = self._motor_position > npos
             else:
                 use_hysteresis = self._motor_position < npos
 
             if use_hysteresis and self.use_hysteresis:
+                self.do_hysteresis=True
                 self.doing_hysteresis_correction = False
                 hysteresis = self.hysteresis_value
 

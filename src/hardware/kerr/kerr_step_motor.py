@@ -167,11 +167,16 @@ class KerrStepMotor(KerrMotor):
         rcl = (self.run_current, 2)
         hcl = (self.hold_current, 2)
         tl = (0, 2)
-        print self.run_current,self.hold_current
-        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
-        bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
-        return ''.join(bs)
+#        print self.run_current,self.hold_current
+#        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
 
+#        args=self._make_hexstr([op, mps, rcl, hcl, tl])
+#        bs = [cmd ] + map(hexfmt, )
+
+#        return cmd+''.join(args)
+#        return ''.join(bs)
+        return cmd+self._build_hexstr(op, mps, rcl, hcl, tl)
+    
     def _home_motor(self, *args, **kw):
         '''
         '''
@@ -225,19 +230,20 @@ class KerrStepMotor(KerrMotor):
     def _set_motor_position_(self, pos, hysteresis=0, velocity=None, reverse=False):
         '''
         '''
-        self._motor_position = pos + hysteresis
+        hpos=self._calculate_hysteresis_position(pos, hysteresis)
+        self._motor_position=hpos
         #============pos is in mm===========
         addr = self.address
         cmd = '74'
         control = self._load_trajectory_controlbyte(reverse=reverse)
-        position = self._float_to_hexstr(pos)
+        position = self._float_to_hexstr(hpos)
         if velocity is None:
             velocity=self.velocity
         v = '{:02x}'.format(int(velocity))
         a = '{:02x}'.format(int(self.acceleration))
 #        print self.velocity, self.acceleration
         cmd = ''.join((cmd, control, position, v, a))
-        cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
+        cmd = (addr, cmd, 100, 'setting motor steps {}'.format(hpos))
         self._execute_hex_command(cmd)
 
     def _load_trajectory_controlbyte(self, reverse=False):
