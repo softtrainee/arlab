@@ -93,7 +93,7 @@ class FusionsUVManager(FusionsLaserManager):
 
     def prepare(self):
         controller = self.laser_controller
-        controller.start_nitrogen()
+        controller.prepare()
 
     def is_ready(self):
         controller = self.laser_controller

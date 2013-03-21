@@ -42,38 +42,12 @@ class KerrCircularStepMotor(KerrStepMotor):
     min = CInt
     max = CInt
 
-
-
-#            pos = self.discrete_positions[self.discrete_position]
-#            self._set_motor_position_(int(self.discrete_position))
-
-#    def _build_parameters(self):
-#        cmd = '56'
-#        op = (int(self._assemble_options_byte(), 2), 2)#'00001111'
-#        mps = (1, 2)
-#        rcl = (self.run_current, 2)
-#        hcl = (self.hold_current, 2)
-#        tl = (0, 2)
-#
-#        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
-#        bs = [cmd ] + map(hexfmt, [op, mps, rcl, hcl, tl])
-# #        print bs,''.join(bs)
-#        return ''.join(bs)
     def _get_io_bits(self):
-        return ['0' #bit 4
-                '1'
-                '1'
-                '1'
+        return ['1', #bit 4
+                '1',
+                '1',
+                '1',
                 '0'] #bit 0
-    
-    def _set_io_state(self, bit, state):
-        iobits=self._get_io_bits()
-        n=len(iobits)-1
-        iobits[n-bit]=str(int(state))
-        iob=int('000'+''.join(iobits),2)
-        cmd='{}{:02X}'.format('18', iob)
-        cmds=[(self.address, cmd, 100, 'set io {} {}'.format(bit, state))]
-        self._execute_hex_commands(cmds)
 
     def _build_io(self):
         cmd='18'
@@ -92,8 +66,6 @@ class KerrCircularStepMotor(KerrStepMotor):
                     (addr, '00', 100, 'reset position')
                     ]
         self._execute_hex_commands(commands)
-#        time.sleep(5)
-#        self._execute_hex_commands([(addr, '1706', 100, 'stop motor, turn off amp')])
 
         self._home_motor(*args, **kw)
 
