@@ -120,4 +120,20 @@ class KerrDevice(ConfigLoadable):
                 if (bits >> i) & 1 == 1:
                     rbits.append(i)
         return rbits
+    
+    def _get_io_bits(self):
+        return ['0', #bit 4
+                '1',
+                '1',
+                '1',
+                '0'] #bit 0
+    
+    def _set_io_state(self, bit, state):
+        iobits=self._get_io_bits()
+        n=len(iobits)-1
+        iobits[n-bit]=str(int(state))
+        iob=int('000'+''.join(iobits),2)
+        cmd='{}{:02X}'.format('18', iob)
+        cmds=[(self.address, cmd, 100, 'set io {} {}'.format(bit, state))]
+        self._execute_hex_commands(cmds)
 #=========================EOF======================================
