@@ -60,6 +60,13 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
+
+    def is_ready(self):
+        return True
+
+    def prepare(self):
+        pass
+
     def set_motor_lock(self, name, value):
         pass
 
@@ -77,6 +84,7 @@ class BaseLaserManager(Manager):
 
     def enable_laser(self):
         pass
+
     def disable_laser(self):
         pass
 
@@ -121,7 +129,11 @@ class BaseLaserManager(Manager):
 
     def trace_path(self, *args, **kw):
         pass
+
     def drill_point(self, *args, **kw):
+        pass
+
+    def set_motors_for_point(self, pt):
         pass
 
     def get_control_button_group(self):

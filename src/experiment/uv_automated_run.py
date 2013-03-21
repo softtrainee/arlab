@@ -23,6 +23,12 @@ import os
 from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class ImageSpec(HasTraits):
+    name = Str
+    path = Str
+    def tostring(self):
+        pass
+
 
 class UVAutomatedRun(AutomatedRun):
     reprate = Int
@@ -31,6 +37,18 @@ class UVAutomatedRun(AutomatedRun):
     attenuator = Str
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
+    image = Str
+
+    def _save_extraction(self, analysis):
+        ext = super(UVAutomatedRun, self)._save_extraction(analysis)
+        if self.image is not None:
+            dbim = self.db.get_image(self.image.name)
+            if dbim is None:
+                # open image and save to db
+                self.db.add_image(self.image.name, self.image.tostring())
+
+            ext.image = dbim
+        return ext
 
     @cached_property
     def _get_masks(self):

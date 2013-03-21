@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Dict, Bool, on_trait_change, List
+from traits.api import Dict, Bool, on_trait_change, List, Instance
 from apptools.preferences.preference_binding import bind_preference
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
     ListEditor, TableEditor
@@ -30,6 +30,9 @@ from src.messaging.remote_command_server import RemoteCommandServer
 from globals import globalv
 from src.paths import paths
 
+# from src.messaging.directory_server import DirectoryServer
+# from threading import Thread
+
 '''
 #===================================
 @todo
@@ -41,77 +44,15 @@ from src.paths import paths
 
 
 class RemoteHardwareManager(Manager):
-
-#    command_processor = Instance(CommandProcessor)
     processors = Dict
     servers = List(RemoteCommandServer)
 
+#    directory_server = Instance(DirectoryServer, ())
     enable_hardware_server = Bool
+#    enable_directory_server = Bool
     result = None
-#    def __init__(self, *args, **kw):
-#        super(RemoteHardwareManager, self).__init__(*args, **kw)
     system_lock = Bool(False)
-#    def process_server_request(self, rt, data, processor=None):
-#        d = self.processors['diode']
-# #        print rt, data
-#        return d.get_response(rt, data, None)
 
-    def _processors_default(self):
-        ps = dict()
-#    def _get_processors(self):
-#        ps = []
-#        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
-        ip = InitializationParser()
-
-        hosts = []
-        # load the hosts file
-        p = os.path.join(paths.setup_dir, 'hosts')
-        if os.path.isfile(p):
-            with open(p, 'r') as f:
-                hosts = [l.strip() for l in f if l.strip()]
-
-        for pi in ip.get_processors():
-            cp = self._command_processor_factory(path=pi)
-            cp._hosts = hosts
-
-            ps[cp.name] = cp
-
-        return ps
-
-    def bootstrap(self):
-        if self.enable_hardware_server:
-
-            if globalv.use_ipc:
-                for p in self.processors.itervalues():
-                    self.info('bootstrapping {}'.format(p.name))
-                    p.manager = self
-                    p.bootstrap()
-            else:
-                self.load_servers()
-
-    @on_trait_change('enable_hardware_server')
-    def enabled_changed(self):
-        if self.enable_hardware_server:
-            self.bootstrap()
-        else:
-            self.stop()
-
-    def stop(self):
-        for p in self.processors.itervalues():
-            p.close()
-
-    def _command_processor_factory(self, path=None, name=None):
-        if name is None:
-            if path is not None:
-                name = path.split('-')[-1]
-
-        cp = CommandProcessor(application=self.application,
-                              path=path,
-                              name=name)
-
-        self.bind_preferences(cp)
-
-        return cp
 
     def bind_preferences(self, cp):
         try:
@@ -152,6 +93,12 @@ class RemoteHardwareManager(Manager):
         except AttributeError:
             pass
 
+#        ds = self.directory_server
+#        bind_preference(ds, 'host', 'pychron.hardware.directory_server_host')
+#        bind_preference(ds, 'port', 'pychron.hardware.directory_server_port')
+#        bind_preference(ds, 'root', 'pychron.hardware.directory_server_root')
+
+
     def validate_address(self, addr):
 
         if self.system_lock:
@@ -183,7 +130,29 @@ class RemoteHardwareManager(Manager):
     def get_server_response(self):
         return self.result
 
-    def load_servers(self):
+    def bootstrap(self):
+        if self.enable_hardware_server:
+
+            if globalv.use_ipc:
+                for p in self.processors.itervalues():
+                    self.info('bootstrapping {}'.format(p.name))
+                    p.manager = self
+                    p.bootstrap()
+            else:
+                self._load_servers()
+
+#        if self.enable_directory_server:
+#            self._load_directory_server()
+
+    def stop(self):
+        for p in self.processors.itervalues():
+            p.close()
+
+#        self.directory_server.stop()
+#===============================================================================
+# private
+#===============================================================================
+    def _load_servers(self):
         '''
         '''
         # get server names
@@ -203,6 +172,34 @@ class RemoteHardwareManager(Manager):
                        )
                 e.bootstrap()
                 self.servers.append(e)
+
+#    def _load_directory_server(self):
+#        t = Thread(target=self.directory_server.start)
+#        t.start()
+
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('enable_hardware_server')
+    def enabled_changed(self):
+        if self.enable_hardware_server:
+            self.bootstrap()
+        else:
+            self.stop()
+
+    def _command_processor_factory(self, path=None, name=None):
+        if name is None:
+            if path is not None:
+                name = path.split('-')[-1]
+
+        cp = CommandProcessor(application=self.application,
+                              path=path,
+                              name=name)
+
+        self.bind_preferences(cp)
+
+        return cp
+
 
     def traits_view(self):
         '''
@@ -243,6 +240,28 @@ class RemoteHardwareManager(Manager):
                  )
 
         return v
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _processors_default(self):
+        ps = dict()
+        ip = InitializationParser()
+
+        hosts = []
+        # load the hosts file
+        p = os.path.join(paths.setup_dir, 'hosts')
+        if os.path.isfile(p):
+            with open(p, 'r') as f:
+                hosts = [l.strip() for l in f if l.strip()]
+
+        for pi in ip.get_processors():
+            cp = self._command_processor_factory(path=pi)
+            cp._hosts = hosts
+
+            ps[cp.name] = cp
+
+        return ps
 #============= EOF ====================================
 #    def process_server_request(self, request_type, data):
 #        '''

@@ -26,6 +26,7 @@ from src.experiment.experiment_editor import ExperimentEditor
 from src.pyscripts.pyscript_editor import PyScriptManager
 from src.experiment.signal_calculator import SignalCalculator
 from src.experiment.import_manager import ImportManager
+from src.experiment.image_browser import ImageBrowser
 
 
 class ExperimentPlugin(CorePlugin):
@@ -43,30 +44,29 @@ class ExperimentPlugin(CorePlugin):
                           )
         so1 = self.service_offer_factory(
                           protocol=ExperimentExecutor,
-#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=self._executor_factory
                           )
         so2 = self.service_offer_factory(
                           protocol=ExperimentEditor,
-#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=self._editor_factory
                           )
 
         so3 = self.service_offer_factory(
                           protocol=PyScriptManager,
-#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=PyScriptManager
                           )
 
         so4 = self.service_offer_factory(
                           protocol=SignalCalculator,
-#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=self._signal_calculator_factory
                           )
         so5 = self.service_offer_factory(
                           protocol=ImportManager,
-#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=self._import_manager_factory
+                          )
+        so6 = self.service_offer_factory(
+                          protocol=ImageBrowser,
+                          factory=self._image_browser_factory
                           )
 
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
@@ -76,7 +76,9 @@ class ExperimentPlugin(CorePlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so2]
-        return [so, so1, so2, so3, so4, so5]
+        return [so, so1, so2, so3, so4, so5, so6]
+
+
 
     def _manager_factory(self, *args, **kw):
         '''
@@ -111,4 +113,8 @@ class ExperimentPlugin(CorePlugin):
 
     def _import_manager_factory(self):
         return ImportManager(application=self.application)
+
+    def _image_browser_factory(self, *args, **kw):
+        return ImageBrowser(application=self.application)
+
 #============= EOF ====================================

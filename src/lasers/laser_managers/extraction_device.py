@@ -26,4 +26,9 @@ class IExtractionDevice(Interface):
         pass
     def move_to_position(self, *args, **kw):
         pass
+
+    def prepare(self, *args, **kw):
+        pass
+    def is_ready(self, *args, **kw):
+        pass
 #============= EOF =============================================

@@ -91,6 +91,14 @@ class FusionsUVManager(FusionsLaserManager):
     dbname = paths.uvlaser_db
     db_root = paths.uvlaser_db_root
 
+    def prepare(self):
+        controller = self.laser_controller
+        controller.start_nitrogen()
+
+    def is_ready(self):
+        controller = self.laser_controller
+        return controller.is_ready()
+
     def goto_named_position(self, pos):
         sm = self.stage_manager
         smap = sm._stage_map
@@ -105,14 +113,14 @@ class FusionsUVManager(FusionsLaserManager):
 
         return 'OK'
 
-    def set_motors_for_point(self,pt):
+    def set_motors_for_point(self, pt):
         for motor in ('mask', 'attenuator'):
             if hasattr(pt, motor):
                 self.set_motor(motor, getattr(pt, motor), block=True)
 
     def goto_point(self, pos):
-        sm=self.stage_manager
-        pt=sm.canvas.get_point(pos)
+        sm = self.stage_manager
+        pt = sm.canvas.get_point(pos)
 #        sm = self.stage_manager._stage_map
 #        pt = sm.get_point(pos)
         if pt:

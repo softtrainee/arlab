@@ -24,8 +24,10 @@ from src.remote_hardware.errors import InvalidArgumentsErrorCode
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode, \
     InvalidMotorErrorCode
-from pyface.timer.do_later import do_later
-
+# from pyface.timer.do_later import do_later
+# from src.remote_hardware.errors.error import InvalidDirectoryErrorCode
+# from src.paths import paths
+# import os
 
 class LaserHandler(BaseRemoteHardwareHandler):
     _elm = None
@@ -72,6 +74,15 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def GetLaserStatus(self, manager, *args):
         result = 'OK'
+        return result
+
+    def PrepareLaser(self, manager, *args):
+        result = 'OK'
+        manager.prepare_laser()
+        return result
+
+    def LaserReady(self, manager, *args):
+        result = manager.is_laser_ready()
         return result
 
     def Enable(self, manager, *args):
@@ -350,7 +361,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         manager.set_laser_power(p)
         return result
-    
+
 #===============================================================================
 # Positioning
 #===============================================================================
@@ -373,5 +384,36 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def StopTrace(self, manager, *args):
         result = manager.stop_trace()
         return result
+
+
+#===============================================================================
+#
+#===============================================================================
+#    def ListDirectory(self, manager, name, ext, *args):
+#        p = ''
+#        if hasattr(paths, name):
+#            p = getattr(paths, name)
+#        elif hasattr(paths, '{}_dir'.format(name)):
+#            p = getattr(paths, '{}_dir'.format(name))
+#
+#        if os.path.exists(p):
+#            if os.path.isdir(p):
+#                result = 'fooo'
+#                def func(x):
+#                    if x.startswith('.'):
+#                        return
+#                    if ext.startswith('.'):
+#                        return x.endswith(ext)
+#                    else:
+#                        return True
+#                ps = filter(func, os.listdir(p))
+#                result = ','.join(ps)
+#
+#            else:
+#                result = InvalidDirectoryErrorCode(name, style=2)
+#        else:
+#            result = InvalidDirectoryErrorCode(name)
+#
+#        return result
 
 #============= EOF ====================================

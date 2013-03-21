@@ -117,6 +117,9 @@ class LabnumberEntryAction(ExperimentAction):
         lne = manager._labnumber_entry_factory()
         open_manager(event.window.application, lne)
 
+#===============================================================================
+# Utilities
+#===============================================================================
 class SignalCalculatorAction(ExperimentAction):
     def perform(self, event):
         obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
@@ -127,6 +130,12 @@ class OpenImportManagerAction(ExperimentAction):
     def perform(self, event):
         obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
         open_manager(event.window.application, obj)
+
+class OpenImageBrowserAction(ExperimentAction):
+    def perform(self, event):
+        obj = self._get_service(event, 'src.experiment.image_browser.ImageBrowser')
+        if obj.load_remote_directory(''):
+            open_manager(event.window.application, obj)
 
 # class AddProjectAction(Action):
 #    def perform(self, event):

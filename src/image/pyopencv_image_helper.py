@@ -593,10 +593,12 @@ def write_frame(writer, src):
 
 
 def new_video_writer(path, fps, size, use_color=False):
+    print cv.CV_FOURCC('x', '2', '6', '4')
     return cv.VideoWriter(path,
-#                          cv.CV_FOURCC('D', 'I', 'V', 'X'),
-                          cv.CV_FOURCC('H', '2', '6', '4'),
+                          # cv.CV_FOURCC('D', 'I', 'V', 'X'),
+                          cv.CV_FOURCC('x', '2', '6', '4'),
 #                          cv.CV_FOURCC('I', 'Y', 'U', 'V'),
+#                          cv.CV_FOURCC('F', 'L', 'V', '1'),
                           fps, cv.Size(*size), use_color)
 
 def save_image(src, path):

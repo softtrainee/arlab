@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Bool, String, on_trait_change, Dict, List
+from traits.api import Bool, String, on_trait_change, Dict, List, Str, Int
 from traitsui.api import View, Item, EnumEditor, Group, VGroup, HGroup
 from apptools.preferences.ui.api import PreferencesPage
 
@@ -43,6 +43,11 @@ class HardwarePreferencesPage(PreferencesPage):
 
     system_lock_names = List
     system_lock_addresses = Dict
+
+#    enable_directory_server = Bool
+#    directory_server_host = Str
+#    directory_server_port = Int
+#    directory_server_root = Str
 
     @on_trait_change('system_lock_name,enable_system_lock')
     def _update(self, obj, name, new):
@@ -100,6 +105,14 @@ class HardwarePreferencesPage(PreferencesPage):
                            label='Remote Hardware Server',
                            show_border=True
                            ),
+#                     Group(
+#                           Item('enable_directory_server'),
+#                           Item('directory_server_root', enabled_when='enable_directory_server'),
+#                           Item('directory_server_host', enabled_when='enable_directory_server'),
+#                           Item('directory_server_port', enabled_when='enable_directory_server'),
+#                           show_border=True,
+#                           label='Directory Server'
+#                           ),
                      Group(
                            'auto_find_handle',
                            Item('auto_write_handle', enabled_when='auto_find_handle'),

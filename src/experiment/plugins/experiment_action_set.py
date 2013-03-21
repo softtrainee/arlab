@@ -76,6 +76,10 @@ class ExperimentActionSet(WorkbenchActionSet):
                        path=PATH,
                        class_name='{}:LabnumberEntryAction'.format(BASE)
                        ),
+
+#===============================================================================
+# Utilities
+#===============================================================================
                 Action(name='Signal Calculator',
                        path=PATH + '/Utilities',
                        class_name='{}:SignalCalculatorAction'.format(BASE)
@@ -83,6 +87,10 @@ class ExperimentActionSet(WorkbenchActionSet):
                 Action(name='Import...',
                        path=PATH + '/Utilities',
                        class_name='{}:OpenImportManagerAction'.format(BASE)
+                       ),
+                Action(name='Image Browser',
+                       path=PATH + '/Utilities',
+                       class_name='{}:OpenImageBrowserAction'.format(BASE)
                        )
              ]
     def _script_actions(self):

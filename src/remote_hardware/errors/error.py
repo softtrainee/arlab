@@ -20,19 +20,19 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-def code_generator(grp, start=0, step=1):
-    i = start
-    while 1:
-        yield '{}{:02n}'.format(grp, i)
-        i += step
-
-
-def get_code_decorator(code_gen):
-    def decorator(cls):
-        if cls.code is None:
-            cls.code = code_gen.next()
-        return cls
-    return decorator
+# def code_generator(grp, start=0, step=1):
+#    i = start
+#    while 1:
+#        yield '{}{:02n}'.format(grp, i)
+#        i += step
+#
+#
+# def get_code_decorator(code_gen):
+#    def decorator(cls):
+#        if cls.code is None:
+#            cls.code = code_gen.next()
+#        return cls
+#    return decorator
 
 class ErrorCode(object):
     msg = ''
@@ -49,5 +49,15 @@ class ErrorCode(object):
 
         return 'ERROR {} : {}'.format(self.code, self.msg)
 
+
+# class InvalidDirectoryErrorCode(ErrorCode):
+#    msg1 = 'directory {} does not exist'
+#    msg2 = '{} is not a directory {}'
+#    code = '900'
+#    def __init__(self, name, style=1, *args, **kw):
+#        if style == 1:
+#            self.msg = self.msg1.format(name)
+#        else:
+#            self.msg = self.msg2.format(name)
 
 #============= EOF =====================================

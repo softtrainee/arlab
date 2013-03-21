@@ -349,7 +349,8 @@ def new_video_writer(path, fps=None, frame_size=None):
 #                          CV_FOURCC('I', '4', '2', '0'),
 #                          CV_FOURCC('D', 'I', 'B', ' '),
 #                          CV_FOURCC('J', 'P', 'E', 'G'),
-                            CV_FOURCC('F', 'L', 'V', '1'),
+#                            CV_FOURCC('F', 'L', 'V', '1'),
+                            CV_FOURCC('U', '2', '6', '3'),
 
                           fps,
                           CvSize(*frame_size),

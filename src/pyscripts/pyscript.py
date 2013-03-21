@@ -154,6 +154,9 @@ def makeNamedRegistry(cmd_register):
 command_register = makeRegistry()
 named_register = makeNamedRegistry(command_register)
 
+'''
+@todo: cancel script if action fails. eg fatal comm. error
+'''
 class PyScript(Loggable):
     text = Property
     _text = Str
@@ -562,7 +565,7 @@ class PyScript(Loggable):
     def _manager_action(self, func, name=None, protocol=None, *args, **kw):
 #        man = self._get_manager()
         man = self.manager
-        
+
         if protocol is not None and man is not None:
             app = man.application
             if app is not None:
