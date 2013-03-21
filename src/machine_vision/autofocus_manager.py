@@ -86,7 +86,7 @@ class AutofocusManager(Manager):
                     params = pickle.load(f)
                     self.info('loading parameters from {}'.format(p))
                     return params
-                except Exception,e:
+                except Exception, e:
                     print e
                     return FocusParameters()
         else:
@@ -418,10 +418,10 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _configure_button_fired(self):
         self._crop_rect_update()
         self.edit_traits(view='configure_view', kind='livemodal')
-        try:
-            self.canvas.markupcontainer.pop('croprect')
-        except KeyError:
-            pass
+#        try:
+#            self.canvas.markupcontainer.pop('croprect')
+#        except KeyError:
+#            pass
 
     @on_trait_change('parameters:[_crop_width,_crop_height]')
     def _crop_rect_update(self):

@@ -206,7 +206,7 @@ class VideoStageManager(StageManager):
             self._drive_yratio = ya
 
         self._update_zoom(0)
-        
+
 #        from src.helpers.media import load_sound
 #        load_sound('shutter')
 
@@ -295,7 +295,7 @@ class VideoStageManager(StageManager):
             self.info('saving {} to database'.format(basename))
             db.commit()
 
-        self.video.start_recording(path, user=user)
+        self.video.start_recording(path)
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:

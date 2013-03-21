@@ -31,6 +31,7 @@ from src.messaging.remote_command_server import RemoteCommandServer
 from src.managers.manager import Manager, AppHandler
 from src.paths import paths
 from src.helpers.timer import Timer
+from src.messaging.directory_server import DirectoryServer
 
 class RemoteHardwareServerManager(Manager):
     '''
@@ -41,7 +42,7 @@ class RemoteHardwareServerManager(Manager):
     repeater = Instance(CommandRepeater)
 
     repeaters = List(Instance(CommandRepeater))
-
+    directory_server = Instance(DirectoryServer, ())
     def _check_connection(self):
         for ri in self.repeaters:
             if ri:
@@ -58,7 +59,7 @@ class RemoteHardwareServerManager(Manager):
     def load(self):
         '''
         '''
-        names = self.read_configuration()
+        names, de, dh, dp, dr = self.read_configuration()
         if names:
             for s in names:
                 e = RemoteCommandServer(name=s,
@@ -67,6 +68,12 @@ class RemoteHardwareServerManager(Manager):
 
                 e.bootstrap()
                 self.servers.append(e)
+        if de:
+            self.directory_server.host = dh
+            self.directory_server.port = dp
+            self.directory_server.root = dr
+            self.directory_server.start()
+
 
     def opened(self):
         self.edit_traits(
@@ -103,7 +110,19 @@ class RemoteHardwareServerManager(Manager):
         config.read(path)
 
         servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]
-        return servernames
+
+        use_directory_server = False
+        dhost, dport, droot = None, None, None
+
+        section = 'DirectoryServer'
+        if config.has_section(section):
+            if self.config_get(config, section, 'enabled', cast='boolean'):
+                use_directory_server = True
+                dhost = self.config_get(config, section, 'host', default='localhost')
+                dport = self.config_get(config, section, 'port', cast='int', default=8080)
+                droot = self.config_get(config, section, 'root', default='')
+
+        return servernames, use_directory_server, dhost, dport, droot
 
 
     def traits_view(self):

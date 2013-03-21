@@ -116,6 +116,7 @@ class Paths():
     workspace_root_dir = None
     spectrometer_scans_dir = None
     processing_dir = None
+    image_cache_dir = None
     # initialization_dir = None
     # device_creator_dir = None
 
@@ -140,11 +141,11 @@ class Paths():
         self.abouts = join(self.resources, 'abouts')
         self.sounds = join(self.resources, 'sounds')
 #        src_repo_name = 'pychron{}'.format(version)
-        self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
-        self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
-                                             'pychron{}'.format(version),
-                                             'resources'
-                                            )
+#        self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
+#        self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
+#                                             'pychron{}'.format(version),
+#                                             'resources'
+#                                            )
         # _dir suffix ensures the path is checked for existence
         self.root_dir = root
         stable_root = join(HOME, 'Pychrondata')
@@ -227,11 +228,11 @@ class Paths():
         self.processing_dir = join(self.data_dir, 'processing')
         # initialization_dir = join(setup_dir, 'initializations')
         # device_creator_dir = join(device_dir, 'device_creator')
-
+        self.image_cache_dir = join(self.data_dir, 'image_cache')
         #==============================================================================
         # lovera exectuables
         #==============================================================================
-        self.clovera_root = join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
+#        self.clovera_root = join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
 
 
 paths = Paths()

@@ -27,6 +27,10 @@ from cvwrapper import get_capture_device, query_frame, write_frame, \
     new_video_writer, grayspace, get_nframes, \
     set_frame_index, get_fps, set_video_pos, crop
 from globals import globalv
+import os
+import tempfile
+import shutil
+from src.image.pyopencv_image_helper import swapRB
 
 
 class Video(Image):
@@ -48,7 +52,7 @@ class Video(Image):
     _last_get = None
     def is_open(self):
         return self.cap is not None
-    
+
     def open(self, user=None, identifier=0, force=False):
         '''
 
@@ -92,14 +96,14 @@ class Video(Image):
   
         '''
         if force:
-            self.cap=None
+            self.cap = None
             return
 
         if user in self.users:
             i = self.users.index(user)
             self.users.pop(i)
             if not self.users:
-                self.cap=None
+                self.cap = None
 
     def set_frame_index(self, ind):
         cap = self.cap
@@ -152,44 +156,24 @@ class Video(Image):
 
 #        return query_frame(self.cap).ndarray
 
-    def start_recording(self, path, user=None):
+    def start_recording(self, path):
         self._stop_recording_event = Event()
-        def __record():
-            fps = 1 / 8.
-            if self.cap is None:
-                self.open(user=user)
 
-            if self.cap is not None:
-                self._recording = True
-#                if self._frame is None:
-                frame = self.get_frame()
+        use_ffmpeg = True
+        if use_ffmpeg:
+            func = self._ffmpeg_record
+        else:
+            func = self._cv_record
 
-#                size = map(int, self._frame.size())
-                w = 300
-                h = 300
-                size = (w, h)
-                writer = new_video_writer(path, 1 / fps,
-                                          size
-                                          )
-                sleep = time.sleep
-                ctime = time.time
+        fps = 8.
+        if self.cap is None:
+            self.open()
 
-                stop = self._stop_recording_event.isSet
+        if self.cap is not None:
+            self._recording = True
 
-                fsize = frame.size()
-                x = (fsize[0] - size[0]) / 2
-                y = (fsize[1] - size[1]) / 2
-
-                while not stop():
-                    st = ctime()
-                    f = crop(frame.clone(), x, y, w, h)
-#                    write_frame(writer, grayspace(f))
-                    write_frame(writer, f)
-                    dur = ctime() - st
-                    sleep(max(0.001, fps - dur))
-
-        t = Thread(target=__record)
-        t.start()
+            t = Thread(target=func, args=(path, self._stop_recording_event, fps))
+            t.start()
 
     def stop_recording(self):
         '''
@@ -210,4 +194,109 @@ class Video(Image):
 
         return src.clone()
 
+    def _ffmpeg_record(self, path, stop, fps):
+        '''
+            use ffmpeg to stitch a directory of jpegs into a video
+            
+        '''
+        remove_images = True
+        root = os.path.dirname(path)
+        name = os.path.basename(path)
+        name, ext = os.path.splitext(name)
+
+        image_dir = os.path.join(root, '{}-images'.format(name))
+        cnt = 0
+        while os.path.exists(image_dir):
+            image_dir = os.path.join(root, '{}-images-{:03n}'.format(name, cnt))
+            cnt += 1
+
+        os.mkdir(image_dir)
+
+        cnt = 0
+#        new_frame = lambda : self.get_frame(swap_rb=False)
+#        frame = self.get_frame(swap_rb=False)
+        frame = self.get_frame()
+        save = lambda x: self.save(x, src=swapRB(frame))
+        while not stop.is_set():
+            st = time.time()
+            pn = os.path.join(image_dir, 'image_{:05n}.jpg'.format(cnt))
+            save(pn)
+            cnt += 1
+            time.sleep(max(0.001, 1 / fps - (time.time() - st)))
+
+        self._convert_to_video(image_dir, fps, name_filter='image_%05d.jpg', output=path)
+
+        if remove_images:
+            shutil.rmtree(image_dir)
+
+    def _convert_to_video(self, path, fps, name_filter='snapshot%03d.jpg', output=None):
+        '''
+            path: path to directory containing list of images 
+            
+            commandline
+            $ ffmpeg -r 25 -codec x264 -i /snapshot%03d.jpg -o output.avi
+            
+            
+        '''
+        import subprocess
+        if output is None:
+            output = os.path.join(path, '{}.avi'.format(path))
+
+        if os.path.exists(output):
+            return
+
+        frame_rate = '{}'.format(fps)
+        codec = '{}'.format('x264')  # H.264
+        path = '{}'.format(os.path.join(path, name_filter))
+
+        ffmpeg_path = '/usr/local/bin'
+        ffmpeg = os.path.join(ffmpeg_path, 'ffmpeg')
+
+        subprocess.call([ffmpeg, '-r', frame_rate, '-i', path, output, '-codec', codec])
+
+
+    def _cv_record(self, path, stop, fps):
+        '''
+            use OpenCV VideoWriter to save video file
+            !!on mac seems only raw video can saved. playable avi file but
+            bad internally. No format
+        '''
+#        fps = 1 / 8.
+#        if self.cap is None:
+#            self.open()
+#
+#        if self.cap is not None:
+#            self._recording = True
+# #                if self._frame is None:
+        frame = self.get_frame()
+
+#                size = map(int, self._frame.size())
+        w = 300
+        h = 300
+        size = (w, h)
+
+        '''
+            @todo: change video writing scheme
+            
+            create a new directory
+            save jpegs into directory
+            use ffmpeg to stitch into a video
+        '''
+        writer = new_video_writer(path, fps,
+                                  size
+                                  )
+        sleep = time.sleep
+        ctime = time.time
+
+        fsize = frame.size()
+        x = (fsize[0] - size[0]) / 2
+        y = (fsize[1] - size[1]) / 2
+
+        while not stop.is_set():
+            st = ctime()
+            f = crop(frame.clone(), x, y, w, h)
+#                    write_frame(writer, grayspace(f))
+            write_frame(writer, f)
+            dur = ctime() - st
+            sleep(max(0.001, 1 / fps - dur))
 #=================== EOF =================================================

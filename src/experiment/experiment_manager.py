@@ -34,6 +34,7 @@ from src.managers.manager import Manager, SaveableManagerHandler
 from pyface.timer.do_later import do_later
 from src.helpers.alphas import ALPHAS
 from src.saveable import Saveable
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -49,11 +50,12 @@ class ExperimentManagerHandler(SaveableManagerHandler):
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
-class ExperimentManager(Manager, Saveable):
+
+class ExperimentManager(IsotopeDatabaseManager, Saveable):
     handler_klass = ExperimentManagerHandler
     experiment_set = Instance(ExperimentSet)
     set_selector = Instance(SetSelector)
-    db = Instance(IsotopeAdapter)
+#    db = Instance(IsotopeAdapter)
 #    repository = Instance(Repository)
 
 #    repo_kind = Str
@@ -241,28 +243,28 @@ class ExperimentManager(Manager, Saveable):
                 load_isotopedb_defaults(db)
 
     def bind_preferences(self):
-        if self.db is None:
-            self.db = self._db_factory()
-
-        prefid = 'pychron.experiment'
-
-        bind_preference(self, 'username', '{}.username'.format(prefid))
-#        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
-
-#        if self.repo_kind == 'FTP':
-#            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-#            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-#            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-#            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
-
-        bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
-        if self.db.kind == 'mysql':
-            bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
-            bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
-            bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
-
-        bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
-
+#        if self.db is None:
+#            self.db = self._db_factory()
+#
+#        prefid = 'pychron.experiment'
+#
+#        bind_preference(self, 'username', '{}.username'.format(prefid))
+# #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+#
+# #        if self.repo_kind == 'FTP':
+# #            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+# #            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+# #            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+# #            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
+#
+#        bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
+#        if self.db.kind == 'mysql':
+#            bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
+#            bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
+#            bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
+#
+#        bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
+        super(ExperimentManager, self).bind_preferences()
         if not self.db.connect():
             self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
             self.db = None
@@ -519,9 +521,9 @@ class ExperimentManager(Manager, Saveable):
         lne = LabnumberEntry(db=self.db)
         return lne
 
-    def _db_factory(self):
-        db = IsotopeAdapter(application=self.application)
-        return db
+#    def _db_factory(self):
+#        db = IsotopeAdapter(application=self.application)
+#        return db
 
 #===============================================================================
 # defaults
@@ -535,8 +537,8 @@ class ExperimentManager(Manager, Saveable):
                         )
         return s
 
-    def _db_default(self):
-        return self._db_factory()
+#    def _db_default(self):
+#        return self._db_factory()
 
 #    def _repository_default(self):
 #        if self.repo_kind == 'local':
