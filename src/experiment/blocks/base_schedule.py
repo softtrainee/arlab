@@ -74,12 +74,12 @@ class BaseSchedule(ScriptEditable):
     add = Button
     copy_button = Button('copy')
     paste_button = Button('paste')
-
+    update_aliquots=Button('Update aliquots')
+    
     _copy_cache = Any
     parser = None
     update_aliquots_needed = Event
-    def _rearranged_fired(self):
-        self.update_aliquots_needed = True
+    
 
     @on_trait_change('extraction_script:name')
     def _extraction_script_changed(self, obj, name, old,new):
@@ -105,13 +105,6 @@ class BaseSchedule(ScriptEditable):
 
         if self.automated_run is not None:
             self._update_run_script(self.automated_run, sname)
-    
-    
-    
-    
-    
-    
-    
     
     def _selected_changed(self, new):
 #        print new
@@ -174,9 +167,9 @@ class BaseSchedule(ScriptEditable):
         self._set_script_info(ar.script_info)
         self.automated_run = ar.clone_traits()
         # if analysis type is bg, b- or a overwrite a few defaults
-        if not ar.analysis_type == 'unknown':
-            kw['position'] = ''
-            kw['extract_value'] = 0
+#        if not ar.analysis_type == 'unknown':
+#            kw['position'] = ''
+#            kw['extract_value'] = 0
 
         if not 'labnumber' in kw:
             keys = SPECIAL_MAPPING.values()
@@ -356,7 +349,12 @@ class BaseSchedule(ScriptEditable):
 # handlers
 #===============================================================================
     def _copy_button_fired(self):
-        self._copy_cache = [a.clone_traits() for a in self.selected]
+        def factory(ai):
+            na=ai.clone_traits()
+            na.labnumber=ai.labnumber
+            return na
+        
+        self._copy_cache = [factory(a) for a in self.selected]
 
     def _paste_button_fired(self):
         ind = None
@@ -370,7 +368,14 @@ class BaseSchedule(ScriptEditable):
             for ri in _rcopy_cache:
                 self.automated_runs.insert(ind + 1, ri)
         self.selected = []
+        
+        self.update_aliquots_needed=True 
+        
+    def _update_aliquots_fired(self):
+        self.update_aliquots_needed = True
 
+    def _rearranged_fired(self):
+        self.update_aliquots_needed = True
 #===============================================================================
 # views
 #===============================================================================
@@ -403,6 +408,7 @@ class BaseSchedule(ScriptEditable):
         return HGroup(
              Item('copy_button', enabled_when='object.selected'),
              Item('paste_button', enabled_when='object._copy_cache'),
+             Item('update_aliquots'),
               show_labels=False)
 
 #============= EOF =============================================

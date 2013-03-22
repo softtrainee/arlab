@@ -385,7 +385,13 @@ class LaserHandler(BaseRemoteHardwareHandler):
         result = manager.stop_trace()
         return result
 
-
+    def Prepare(self, manager,*args):
+        result=manager.prepare()
+        return result
+    
+    def IsReady(self, manager, *args):
+        result=manager.is_ready()
+        return result
 #===============================================================================
 #
 #===============================================================================

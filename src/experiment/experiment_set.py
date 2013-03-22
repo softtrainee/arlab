@@ -275,83 +275,8 @@ class ExperimentSet(BaseSchedule):
 
                 return
 
-        aruns = self._add_frequency_runs(meta, aruns)
+#        aruns = self._add_frequency_runs(meta, aruns)
         return aruns
-
-    def _add_frequency_runs(self, meta, runs):
-        nruns = []
-        i = 0
-
-        names = dict()
-        setter = lambda sk, sc:names.__setitem__(sk, sc)
-        def _make_script_name(_meta, li, name):
-            na = _meta['scripts'][name]
-            if na is None:
-                na = ''
-            elif na.startswith('_'):
-                na = meta['mass_spectrometer'] + na
-
-            if not na:
-                self._load_default_scripts(setter=setter, key=li)
-                ni = names[name]
-                if ni != NULL_STR:
-                    na = self._add_mass_spectromter_name(ni)
-
-            if na and not na.endswith('.py'):
-                na = na + '.py'
-
-            return na
-
-        cextract_group = None
-        for ai in runs:
-            nruns.append(ai)
-            try:
-                int(ai.labnumber)
-                i += 1
-            except ValueError:
-                continue
-
-            for name, ln in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
-                try:
-                    _meta = meta[name]
-                    freq = _meta['frequency']
-                    if not freq:
-                        continue
-                except KeyError:
-                    continue
-
-                make_script_name = lambda x: _make_script_name(_meta, ln, x)
-                params = dict()
-                params['labnumber'] = '{}'.format(ln)
-                params['configuration'] = self._build_configuration(make_script_name)
-
-                if isinstance(freq, int):
-                    freq = [freq]
-
-                for fi in freq:
-                    arun = self._automated_run_factory(**params)
-                    if isinstance(fi, int):
-                        if i % freq == 0:
-                            nruns.append(arun)
-                    else:
-                        if ai.extract_group:
-                            if cextract_group == ai.extract_group:
-                                # if this is the last run dont continue
-                                if ai != runs[-1]:
-                                    continue
-                            else:
-                                cextract_group = ai.extract_group
-
-                        if fi.lower() == 'before' and ai != runs[-1]:
-                            if len(nruns) >= 2:
-                                if nruns[-2].labnumber != ln:
-                                    nruns.insert(-1, arun)
-                            else:
-                                nruns.insert(-1, arun)
-                        elif fi.lower() == 'after':
-                            nruns.append(arun)
-
-        return nruns
 
     def _auto_increment(self, m):
 
@@ -419,9 +344,20 @@ tray: {}
         b.edit_traits(kind='livemodal')
 
     def _add_fired(self):
-
+        
+        
         ars = self.automated_runs
         ar = self.automated_run
+        nar=ar.clone_traits()
+
+        #labnumber is a property so its not cloned by clone_traits        
+        nar.labnumber=ar.labnumber
+#        nar.aliquot=ar.aliquot
+        
+        if ar.analysis_type.startswith('blank') or ar.analysis_type=='background':
+            nar.extract_value=0
+            nar.extract_units=''
+            
         if self.schedule_block and self.schedule_block != NULL_STR:
 #            print self.schedule_block
             block = self._block_factory(self.schedule_block)
@@ -430,6 +366,8 @@ tray: {}
             self._current_group_id += 1
 
         else:
+            
+            
 #            rid = self._auto_increment(ar.labnumber)
 #            position = None
 #            if ar.position:
@@ -438,7 +376,11 @@ tray: {}
 #            if not self._add_new_run(ar):
 #                return
 #            else:
-            ars.append(ar)
+            if self.selected:
+                ind=self.automated_runs.index(self.selected[-1])
+                ars.insert(ind+1, nar)
+            else:
+                ars.append(nar)
 
         kw = dict()
         if self.auto_increment:
@@ -814,6 +756,80 @@ tray: {}
 #
 #                fo[ai.identifier] = ai.aliquot
 #============= EOF =============================================
+#    def _add_frequency_runs(self, meta, runs):
+#        nruns = []
+#        i = 0
+#
+#        names = dict()
+#        setter = lambda sk, sc:names.__setitem__(sk, sc)
+#        def _make_script_name(_meta, li, name):
+#            na = _meta['scripts'][name]
+#            if na is None:
+#                na = ''
+#            elif na.startswith('_'):
+#                na = meta['mass_spectrometer'] + na
+#
+#            if not na:
+#                self._load_default_scripts(setter=setter, key=li)
+#                ni = names[name]
+#                if ni != NULL_STR:
+#                    na = self._add_mass_spectromter_name(ni)
+#
+#            if na and not na.endswith('.py'):
+#                na = na + '.py'
+#
+#            return na
+#
+#        cextract_group = None
+#        for ai in runs:
+#            nruns.append(ai)
+#            try:
+#                int(ai.labnumber)
+#                i += 1
+#            except ValueError:
+#                continue
+#
+#            for name, ln in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
+#                try:
+#                    _meta = meta[name]
+#                    freq = _meta['frequency']
+#                    if not freq:
+#                        continue
+#                except KeyError:
+#                    continue
+#
+#                make_script_name = lambda x: _make_script_name(_meta, ln, x)
+#                params = dict()
+#                params['labnumber'] = '{}'.format(ln)
+#                params['configuration'] = self._build_configuration(make_script_name)
+#
+#                if isinstance(freq, int):
+#                    freq = [freq]
+#
+#                for fi in freq:
+#                    arun = self._automated_run_factory(**params)
+#                    if isinstance(fi, int):
+#                        if i % freq == 0:
+#                            nruns.append(arun)
+#                    else:
+#                        if ai.extract_group:
+#                            if cextract_group == ai.extract_group:
+#                                # if this is the last run dont continue
+#                                if ai != runs[-1]:
+#                                    continue
+#                            else:
+#                                cextract_group = ai.extract_group
+#
+#                        if fi.lower() == 'before' and ai != runs[-1]:
+#                            if len(nruns) >= 2:
+#                                if nruns[-2].labnumber != ln:
+#                                    nruns.insert(-1, arun)
+#                            else:
+#                                nruns.insert(-1, arun)
+#                        elif fi.lower() == 'after':
+#                            nruns.append(arun)
+#
+#        return nruns
 # def _automated_run_editor(self, update=''):
 #        r = myTabularEditor(adapter=AutomatedRunAdapter(),
 #                            operations=['delete',

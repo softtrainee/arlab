@@ -383,8 +383,8 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
     def _modify_aliquots(self, ans):
         offset = 0
-        if self.experiment_set and self.experiment_set.selected:
-            offset = len(self.experiment_set.selected)
+#        if self.experiment_set and self.experiment_set.selected:
+#            offset = len(self.experiment_set.selected)
 
         db = self.db
         # update the aliquots
@@ -396,7 +396,6 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
             arunid = arun.labnumber
             c = 1
-#            print arunid, idcnt_dict.keys()
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
                 if not arun.extract_group:

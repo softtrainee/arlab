@@ -53,6 +53,7 @@ from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 
 from traits.api import HasTraits
+from src.regex import TRANSECT_REGEX, POSITION_REGEX
 class RunInfo(HasTraits):
     sample = Str
     irrad_level = Str
@@ -121,7 +122,7 @@ class AutomatedRun(Loggable):
     extract_device = Str
 
     tray = Str
-    position = Property
+    position = Property(String(enter_set=True, auto_set=False))
     _position = Str
     endposition = Int
     multiposition = Bool
@@ -1791,22 +1792,43 @@ anaylsis_type={}
     def _set_position(self, pos):
         self._position = pos
 
-    def _validate_position(self, pos):
+    def _validate_position(self, pos): 
+        if not pos.strip():
+            return ''
+               
         ps = pos.split(',')
 #        try:
+        ok=False
         for pi in ps:
             if not pi:
                 continue
-
-            if pi[0].lower() in ('p', 'l', 'd','r'):
-                n = pi[1:]
-            else:
-                n = pi
-                try:
-                    _ = int(n)
-                except ValueError:
-                    return self._position
+            
+            ok=False
+            if TRANSECT_REGEX.match(pi):
+                ok=True
+                
+            elif POSITION_REGEX.match(pi):
+                ok=True
+                
+        if not ok:
+            pos= self._position
         return pos
+        
+            
+            
+#            
+#            elif POSITION_REGEX.match(pi):
+#                return pos
+#            
+#            if pi[0].lower() in ('p', 'l', 'd','r'):
+#                n = pi[1:]
+#            else:
+#                n = pi
+#            try:
+#                _ = int(n)
+#            except ValueError:
+#                return self._position
+#        return pos
 #            _ = map(int, ps)
 #            return pos
 #        except ValueError:
@@ -1987,7 +2009,7 @@ anaylsis_type={}
                               ),
 #                         Item('multiposition', label='Multi. position run'),
 #                         Item('endposition'),
-#                         show_border=True,
+                         show_border=True,
                          label='Position'
                      )
         return grp
@@ -2065,10 +2087,11 @@ anaylsis_type={}
                              label='Extract'
                              )
         pos_grp = self._get_position_group()
-        extract_grp = Group(extract_grp, pos_grp, layout='tabbed')
+#        extract_grp = Group(extract_grp, pos_grp, layout='tabbed')
         sup = self._get_supplemental_extract_group()
         if sup:
-            extract_grp.content.append(sup)
+            extract_grp = Group(extract_grp, sup, layout='tabbed')
+        extract_grp = VGroup(extract_grp, pos_grp)
 
         v = View(
                  Group(

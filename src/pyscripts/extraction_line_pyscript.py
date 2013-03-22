@@ -406,6 +406,12 @@ class ExtractionLinePyScript(ValvePyScript):
         return self._manager_action([('disable_device', (), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)
+    @verbose_skip
+    @command_register
+    def prepare(self):
+        return self._manager_action([('prepare', (), {})],
+                             protocol=ILaserManager,
+                             name=self.extract_device)
 
 #============= EOF ====================================
 #    @verbose_skip

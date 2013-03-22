@@ -109,7 +109,7 @@ class _TabularEditor(wxTabularEditor):
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
-    drag_move = Bool(True)
+    drag_move = Bool(False)
     rearranged = Str
     def _get_klass(self):
         return _TabularEditor
