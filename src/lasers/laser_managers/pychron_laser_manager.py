@@ -175,6 +175,36 @@ class PychronLaserManager(BaseLaserManager):
 #===============================================================================
 #
 #===============================================================================
+    def prepare(self):
+        self.info('Prepare laser')
+        self._ask('Prepare')
+        
+        cnt = 0
+        tries = 0
+        maxtries = 200  # timeout after 50 s
+        nsuccess = 1
+        self._cancel_blocking=False
+        ask=self._ask
+        period=1
+        cmd='IsReady'
+        while tries < maxtries and cnt < nsuccess:
+            if self._cancel_blocking:
+                break
+            time.sleep(period)
+            resp = ask(cmd)
+            if resp is not None:
+                try:
+                    if not str_to_bool(resp):
+                        cnt += 1
+                except:
+                    cnt = 0
+            else:
+                cnt = 0
+            tries += 1
+
+        return cnt >= nsuccess
+        
+        
     def _move_to_position(self, pos):
         cmd = 'GoToHole {}'.format(pos)
         if isinstance(pos, tuple):

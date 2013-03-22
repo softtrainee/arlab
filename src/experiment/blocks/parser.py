@@ -19,13 +19,14 @@ from src.constants import NULL_STR
 from src.helpers.filetools import str_to_bool
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class RunParser(object):
+from src.loggable import Loggable
+class RunParser(Loggable):
     def parse(self, header, line, meta, delim='\t'):
         params = dict()
         if not isinstance(line, list):
             line = line.split(delim)
 
-        print len(line)
+#        print len(line)
         args = map(str.strip, line)
 
         script_info = dict()
@@ -37,7 +38,7 @@ class RunParser(object):
             try:
                 script_info[attr] = args[header.index(attr)]
             except IndexError, e:
-                print 'base schedule _run_parser ', e, attr
+                self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         # load strings
         for attr in ['labnumber',
@@ -51,7 +52,7 @@ class RunParser(object):
             try:
                 params[attr] = args[header.index(attr)]
             except IndexError, e:
-                print 'base schedule _run_parser ', e, attr
+                self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         # load booleans
         for attr in ['autocenter', 'disable_between_positions']:
@@ -79,7 +80,7 @@ class RunParser(object):
                 pass
 
         # default extract_units to watts
-        print header.index('extract_value'), len(args)
+#        print header.index('extract_value'), len(args)
         extract_value = args[header.index('extract_value')]
         extract_units = args[header.index('extract_units')]
         if not extract_units:
