@@ -15,17 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance
+from traits.api import Instance, Any
 from chaco.api import AbstractOverlay
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.image.video import Video
+# from src.image.video import Video
 
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
-    video = Instance(Video)
+    video = Any
+#    video = Instance(Video)
 #    use_backbuffer = True
 #    use_backbuffer = False
 #    swap_rb = True

@@ -46,5 +46,7 @@ TRANSECT_REGEX = re.compile('[tT]+[\d\W]+-+[\d\W]+$')
     4. [\d\W]$  at least one digit character and no word characters
     
 '''
-POSITION_REGEX=re.compile('[pPlLrRdD\d]+[\d\W]$|[\d\W]$')
+POSITION_REGEX = re.compile('[pPlLrRdD\d]+[\d\W]$|[\d\W]$')
+
+XY_REGEX = re.compile('\d+.*\d+,\d+.*\d*')
 #============= EOF =============================================

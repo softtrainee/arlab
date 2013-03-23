@@ -36,9 +36,12 @@ class _CustomLabelEditor(Editor):
 
     def _create_control(self, parent):
         panel = wx.Panel(parent, -1)
-
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        txtctrl = wx.StaticText(panel, label=self.value)
+        size = None
+        if self.item.width > 1 and self.item.height > 1:
+            size = (self.item.width, self.item.height)
+        txtctrl = wx.StaticText(panel, label=self.value,
+                                size=size
+                                )
         family = wx.FONTFAMILY_DEFAULT
         style = wx.FONTSTYLE_NORMAL
         weight = wx.FONTWEIGHT_NORMAL
@@ -47,9 +50,36 @@ class _CustomLabelEditor(Editor):
         txtctrl.SetForegroundColour(self.item.color)
         self.txtctrl = txtctrl
 
-        sizer.Add(txtctrl)
+        vsizer = wx.BoxSizer(wx.VERTICAL)
+#
+        if self.item.top_padding is not None:
+            self.add_linear_space(vsizer, self.item.top_padding)
+#
+        vsizer.Add(txtctrl)
+#
+        if self.item.bottom_padding is not None:
+            self.add_linear_space(vsizer, self.item.bottom_padding)
+        sizer = vsizer
+
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        if self.item.left_padding is not None:
+            self.add_linear_space(hsizer, self.item.left_padding)
+
+        hsizer.Add(sizer)
+        if self.item.right_padding is not None:
+            self.add_linear_space(hsizer, self.item.right_padding)
+        sizer = hsizer
+
         panel.SetSizer(sizer)
         return panel
+
+
+    def add_linear_space(self, sizer, pad):
+        orientation = sizer.GetOrientation()
+        if orientation == wx.HORIZONTAL:
+            sizer.Add((pad, 0))
+        else:
+            sizer.Add((0, pad))
 
 class CustomLabelEditor(BasicEditorFactory):
     klass = _CustomLabelEditor
@@ -59,7 +89,10 @@ class CustomLabel(UItem):
     editor = Instance(CustomLabelEditor, ())
     size = Int
     color = Color('green')
-
+    top_padding = Int(5)
+    bottom_padding = Int(5)
+    left_padding = Int(5)
+    right_padding = Int(5)
 #===============================================================================
 # demo
 #===============================================================================
@@ -71,10 +104,14 @@ class Demo(HasTraits):
 
     def traits_view(self):
         v = View(
-                 'foo',
+#                 'foo',
                  CustomLabel('a',
                              color='blue',
-                             size=10), width=100,
+                             size=15,
+                             top_padding=10,
+                             left_padding=10,
+                             ),
+                  width=100,
                  height=100)
         return v
 

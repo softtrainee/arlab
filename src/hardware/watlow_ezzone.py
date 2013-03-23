@@ -494,7 +494,7 @@ class WatlowEZZone(CoreDevice):
         self.info('setting closed loop setpoint = {:0.3f}'.format(setpoint))
 
         self.write(2160, setpoint, nregisters=2, **kw)
-        time.sleep(0.025)
+#        time.sleep(0.025)
         sp = self.read_closed_loop_setpoint()
         try:
             e = abs(sp - setpoint) > 0.01
@@ -815,11 +815,13 @@ class WatlowEZZone(CoreDevice):
     def read_closed_loop_setpoint(self, **kw):
         '''
         '''
-        return self.read(2160, nregisters=2, **kw)
+        self.debug('read closed loop setpoint')
+        return self.read(2160, nregisters=2, nbytes=9, **kw)
 
     def read_open_loop_setpoint(self, **kw):
         '''
         '''
+        self.debug('read open loop setpoint')
         return self.read(2162, nregisters=2, **kw)
 
     def read_analog_input_sensor_type(self, input, **kw):
@@ -925,7 +927,9 @@ class WatlowEZZone(CoreDevice):
         return self.read(1904, nregisters=2, **kw)
 
     def read_autotune_setpoint(self, **kw):
-        r = self.read(1998, nregisters=2, **kw)
+        self.debug('read autotune setpoint')
+#        r = self.read(1998, nregisters=2, **kw)
+        r = self.read(1998, nregisters=2, nbytes=9, **kw)
         return r
 
     def read_autotune_aggressiveness(self, **kw):

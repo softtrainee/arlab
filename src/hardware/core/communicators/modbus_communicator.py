@@ -63,8 +63,11 @@ class ModbusCommunicator(SerialCommunicator):
     def read(self, register, response_type='float', nregisters=1, **kw):
         '''
         '''
-        if response_type == 'int':
-            kw['nbytes'] = 7
+        if not kw.has_key('nbytes'):
+            if response_type == 'int':
+                kw['nbytes'] = 7
+            elif response_type == 'float':
+                kw['nbytes'] = 8
 
         return self.read_holding_register(register,
                                           nregisters, response_type, **kw)
