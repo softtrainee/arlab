@@ -39,15 +39,15 @@ from src.geometry.scan_line import make_scan_lines
 from src.geometry.geometry import sort_clockwise
 from src.geometry.convex_hull import convex_hull
 from src.geometry.polygon_offset import polygon_offset
+from src.lasers.stage_managers.calibration.tray_calibration_manager import TrayCalibrationManager
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
-from tray_calibration_manager import TrayCalibrationManager
+# from tray_calibration_manager import TrayCalibrationManager
 from stage_component_editor import LaserComponentEditor
 # from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 # from pattern.pattern_manager import PatternManager
 from stage_map import StageMap
-# from affine import AffineTransform
 
 
 class StageManager(Manager):
@@ -112,7 +112,7 @@ class StageManager(Manager):
 
     canvas_editor_klass = LaserComponentEditor
 
-    tray_calibration_manager = Instance(TrayCalibrationManager, ())
+    tray_calibration_manager = Instance(TrayCalibrationManager)
 
     motion_profiler = DelegatesTo('stage_controller')
 
@@ -416,9 +416,9 @@ class StageManager(Manager):
             rot = ca.rotation
             cpos = ca.center
             t = None
-            from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem
-            if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
-                t = ca.tweak_dict[key]
+#            from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem
+#            if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
+#                t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])
             pos = smap.map_to_calibration(pos, cpos, rot, translate=t)
 
@@ -547,12 +547,12 @@ class StageManager(Manager):
                 '''
                 if use_move:
                     self.parent.set_motor(k, v, block=True)
-                    
+
         xy = [pi['xy'] for pi in pts]
         n = 1000
         if scan_size is None:
             scan_size = n / 2
-        
+
         # convert points to um
         pts = array(xy)
         pts *= n
@@ -569,7 +569,7 @@ class StageManager(Manager):
         sc.set_program_mode('absolute')
         # do smooth transitions between points
         sc.set_smooth_transitions(True)
-        
+
         if use_convex_hull:
             pts = convex_hull(pts)
 
@@ -826,9 +826,9 @@ class StageManager(Manager):
                     self.info('using previously calculated corrected position')
 
             self.stage_controller.linear_move(block=True, *pos)
-            if self.tray_calibration_manager.calibration_style == 'MassSpec':
-                if not self.tray_calibration_manager.isCalibrating():
-                    self._move_to_hole_hook(key, correct_position)
+#            if self.tray_calibration_manager.calibration_style == 'MassSpec':
+            if not self.tray_calibration_manager.isCalibrating():
+                self._move_to_hole_hook(key, correct_position)
             else:
                 self._move_to_hole_hook(key, correct_position)
 

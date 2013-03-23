@@ -32,17 +32,18 @@ def calc_rotation(x1, y1, x2, y2):
     rise = y2 - y1
     run = x2 - x1
 
-    r = math.pow((math.pow(run, 2) + math.pow(rise, 2)), 0.5)  # (x ** 2 + y ** 2) ** 0.5
-    if r == 0:
-        return 0
-
-    if run >= 0:
-        angle = math.asin(rise / r)
-    else:
-        angle = -math.asin(rise / r) + math.pi
-
-    da = math.degrees(angle)
-    return da if da >= 0 else 360 + da
+#    r = math.pow((math.pow(run, 2) + math.pow(rise, 2)), 0.5)  # (x ** 2 + y ** 2) ** 0.5
+#    if r == 0:
+#        return 0
+#
+#    if run >= 0:
+#        angle = math.asin(rise / r)
+#    else:
+#        angle = -math.asin(rise / r) + math.pi
+#
+#    da = math.degrees(angle)
+#    return da if da >= 0 else 360 + da
+    return math.degrees(math.atan2(rise, run))
 
 class Primitive(HasTraits):
     identifier = Str
@@ -640,66 +641,11 @@ class CalibrationObject(HasTraits):
         self.cx = x
         self.cy = y
 
-    def set_canvas(self, canvas):
-        self.canvas = canvas
+#    def set_canvas(self, canvas):
+#        self.canvas = canvas
 
 
-class CalibrationItem(Primitive, CalibrationObject):
-    center = None
-    right = None
-    line = None
-    tool_state = 'move'
 
-#    tweak_dict = Dict
-    def __init__(self, x, y, rotation, *args, **kw):
-        super(CalibrationItem, self).__init__(x, y, *args, **kw)
-
-        self.center = Circle(x, y, 30, canvas=self.canvas)
-
-        r = 10
-        rx = x + r * math.cos(rotation)
-        ry = y + r * math.cos(rotation)
-
-        self.right = Circle(rx, ry, 19, default_color=(1, 1, 1), canvas=self.canvas)
-        self.line = Line(Point(x, y, canvas=self.canvas),
-                          Point(rx, ry, canvas=self.canvas),
-                          default_color=(1, 1, 1),
-                          canvas=self.canvas)
-
-    def _get_rotation(self):
-        return self.line.data_rotation
-
-    def _get_center(self):
-        return self.center.x, self.center.y
-
-    def set_canvas(self, canvas):
-        self.center.set_canvas(canvas)
-        self.right.set_canvas(canvas)
-        self.line.set_canvas(canvas)
-
-    def adjust(self, dx, dy):
-        if self.tool_state == 'move':
-            self.center.adjust(dx, dy)
-            self.right.adjust(dx, dy)
-            self.line.adjust(dx, dy)
-        else:
-            self.right.adjust(dx, dy)
-            self.line.end_point.adjust(dx, dy)
-            self.line.calculate_rotation()
-
-    def _render_(self, gc):
-        self.center.render(gc)
-        self.right.render(gc)
-        self.line.render(gc)
-
-    def is_in(self, event):
-        if self.center.is_in(event):
-            self.tool_state = 'move'
-            return True
-
-        elif self.right.is_in(event):
-            self.tool_state = 'rotate'
-            return True
 
 
 class Label(Primitive):
@@ -843,7 +789,7 @@ class PolyLine(Primitive):
     points = List
     lines = List
     identifier = Str
-    point_klass=PointIndicator
+    point_klass = PointIndicator
 #    start_point=None
     def __init__(self, x, y, z=0, identifier='', **kw):
         super(PolyLine, self).__init__(x, y, **kw)
@@ -1006,3 +952,59 @@ class Polygon(Primitive):
 
 
 #============= EOF ====================================
+# class CalibrationItem(Primitive, CalibrationObject):
+#    center = None
+#    right = None
+#    line = None
+#    tool_state = 'move'
+#
+# #    tweak_dict = Dict
+#    def __init__(self, x, y, rotation, *args, **kw):
+#        super(CalibrationItem, self).__init__(x, y, *args, **kw)
+#
+#        self.center = Circle(x, y, 30, canvas=self.canvas)
+#
+#        r = 10
+#        rx = x + r * math.cos(rotation)
+#        ry = y + r * math.cos(rotation)
+#
+#        self.right = Circle(rx, ry, 19, default_color=(1, 1, 1), canvas=self.canvas)
+#        self.line = Line(Point(x, y, canvas=self.canvas),
+#                          Point(rx, ry, canvas=self.canvas),
+#                          default_color=(1, 1, 1),
+#                          canvas=self.canvas)
+#
+#    def _get_rotation(self):
+#        return self.line.data_rotation
+#
+#    def _get_center(self):
+#        return self.center.x, self.center.y
+#
+#    def set_canvas(self, canvas):
+#        self.center.set_canvas(canvas)
+#        self.right.set_canvas(canvas)
+#        self.line.set_canvas(canvas)
+#
+#    def adjust(self, dx, dy):
+#        if self.tool_state == 'move':
+#            self.center.adjust(dx, dy)
+#            self.right.adjust(dx, dy)
+#            self.line.adjust(dx, dy)
+#        else:
+#            self.right.adjust(dx, dy)
+#            self.line.end_point.adjust(dx, dy)
+#            self.line.calculate_rotation()
+#
+#    def _render_(self, gc):
+#        self.center.render(gc)
+#        self.right.render(gc)
+#        self.line.render(gc)
+#
+#    def is_in(self, event):
+#        if self.center.is_in(event):
+#            self.tool_state = 'move'
+#            return True
+#
+#        elif self.right.is_in(event):
+#            self.tool_state = 'rotate'
+#            return True

@@ -582,10 +582,10 @@ def query_frame(device, frame=None):
     if frame is None:
         frame = cv.Mat()
 
-    device.retrieve(frame)
-    return frame
-#    device >> frame
+#    device.retrieve(frame)
 #    return frame
+    device >> frame
+    return frame
 
 
 def write_frame(writer, src):

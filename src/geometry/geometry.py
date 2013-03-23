@@ -89,4 +89,51 @@ def calc_point_along_line(x1, y1, x2, y2, L):
         x, y = x2, y2
 
     return x, y
+
+def calculate_reference_frame_center(r1, r2, R1, R2):
+    '''
+        r1=x,y p1 in frame 1 (data space)
+        r2=x,y p2 in frame 1 
+        R1=x,y p1 in frame 2 (screen space)
+        R2=x,y p2 in frame 2
+        
+        given r1, r2, R1, R2 calculate center of frame 1 in frame 2 space
+    '''
+    # calculate delta rotation for r1 in R2
+    a1 = calc_angle(R1, R2)
+    a2 = calc_angle(r1, r2)
+    rot = a1 - a2
+
+    # rotate r1 to convert to frame 2
+    r1Rx, r1Ry = rotate_pt(r1, -rot)
+
+    # calculate scaling i.e px/mm
+    rL = calc_length(r1, r2)
+    RL = calc_length(R1, R2)
+    rperR = abs(RL / rL)
+
+    # calculate center
+    cx = R1[0] - r1Rx * rperR
+    cy = R1[1] - r1Ry * rperR
+
+    return cx, cy, rot
+
+
+def rotate_pt(pt, theta):
+    pt = array([[pt[0]], [pt[1]]])
+
+    co = math.cos(math.radians(theta))
+    si = math.sin(math.radians(theta))
+    R = array([[co, -si], [si, co]])
+    npt = R.dot(pt)
+    return npt[0, 0], npt[1, 0]
+
+def calc_length(p1, p2):
+    return ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2) ** 0.5
+
+def calc_angle(p1, p2):
+    dx = float(p1[0] - p2[0])
+    dy = float(p1[1] - p2[1])
+    return math.degrees(math.atan2(dy, dx))
+
 #============= EOF =============================================

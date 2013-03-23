@@ -328,13 +328,13 @@ class LaserTrayCanvas(MapCanvas):
             return self.get_transect_point(v)
         else:
             return self.scene.get_item(v, klass=LaserPoint)
-    
-    def get_transect_point(self,v):
+
+    def get_transect_point(self, v):
         t, p = v[1:].split('-')
         tran = self.get_transect(t)
         if tran:
             return tran.get_point(int(p))
-                        
+
 #    def clear_points(self):
 #        popkeys = []
 #        self.point_counter = 0
@@ -419,7 +419,8 @@ class LaserTrayCanvas(MapCanvas):
                     pass
 #                if 'x' in p.axes and 'y' in p.axes:
 
-
+    def get_stage_screen_position(self):
+        return self.map_screen([self._stage_position])[0]
 
     def get_stage_position(self):
         return self._stage_position

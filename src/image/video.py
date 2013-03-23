@@ -125,8 +125,10 @@ class Video(Image):
                     return f
 #                f = self.current_frame.clone()
                 else:
-                    self.source_frame = query_frame(cap, frame=self.source_frame)
-                    return self.source_frame
+                    return query_frame(cap)
+#                    pass
+#                    self.source_frame = query_frame(cap, frame=self.source_frame)
+#                    return self.source_frame
 
     def get_image_data(self, cmap=None, **kw):
         frame = self.get_frame(**kw)

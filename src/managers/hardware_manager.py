@@ -36,13 +36,12 @@ class HardwareManager(Manager):
 
     def load_devices(self):
         self.devices = self.application.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice',
-
                                                          "display==True"
                                                          )
         self.devices.sort()
 
     def _selected_changed(self):
-        if self.selected is not None:
+        if self.ui and self.selected is not None:
             self.current_device = self.selected
 
     def current_device_view(self):

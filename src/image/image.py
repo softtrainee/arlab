@@ -131,15 +131,42 @@ class Image(HasTraits):
 
         return flipud(a)  # [lx / 4:-lx / 4, ly / 4:-ly / 4]
 
-    def get_frame(self, vflip=None, hflip=None , gray=False, swap_rb=None,
-                  clone=False, croprect=None, size=None, **kw):
+    def get_frame(self, **kw):
 #        try:
 #            del self._frame
 #        except AttributeError:
 #            pass
 
         frame = self._get_frame(**kw)
+        frame = self.modify_frame(frame, **kw)
+        return frame
 
+    def get_image(self, **kw):
+        frame = self.get_frame(**kw)
+        return frame.to_pil_image()
+
+
+    def get_bitmap(self, **kw):  # flip = False, swap_rb = False, mirror = True):
+        '''
+
+        '''
+#        kw = dict()
+#        if swap_rb:
+#            kw['flag'] = CV_CVTIMG_SWAP_RB
+#        print kw
+        frame = self.get_frame(**kw)
+        try:
+            return frame.to_wx_bitmap()
+        except AttributeError:
+            if frame is not None:
+#                self._frame = frame
+                return wx.BitmapFromBuffer(frame.width,
+                                       frame.height,
+                                       frame.data_as_string()
+                                        )
+
+    def modify_frame(self, frame, vflip=None, hflip=None , gray=False, swap_rb=None,
+                  clone=False, croprect=None, size=None):
         if frame is not None:
             def _get_param(param, p):
                 if param is None:
@@ -186,32 +213,8 @@ class Image(HasTraits):
                 elif hflip:
                     cvFlip(frame, 1)
 
-#            self._frame = frame
-            return frame
+        return frame
 
-    def get_image(self, **kw):
-        frame = self.get_frame(**kw)
-        return frame.to_pil_image()
-
-
-    def get_bitmap(self, **kw):  # flip = False, swap_rb = False, mirror = True):
-        '''
-
-        '''
-#        kw = dict()
-#        if swap_rb:
-#            kw['flag'] = CV_CVTIMG_SWAP_RB
-#        print kw
-        frame = self.get_frame(**kw)
-        try:
-            return frame.to_wx_bitmap()
-        except AttributeError:
-            if frame is not None:
-#                self._frame = frame
-                return wx.BitmapFromBuffer(frame.width,
-                                       frame.height,
-                                       frame.data_as_string()
-                                        )
 #    @memoized
 #    def render_images(self, src):
     def render(self):

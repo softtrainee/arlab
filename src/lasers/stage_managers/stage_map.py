@@ -28,8 +28,8 @@ import pickle
 from src.helpers.filetools import parse_file
 from src.paths import paths
 from src.loggable import Loggable
-from affine import AffineTransform
-from src.regex import TRANSECT_REGEX
+# from src.regex import TRANSECT_REGEX
+from src.geometry.affine import AffineTransform
 
 class SampleHole(HasTraits):
     id = Str
@@ -301,7 +301,7 @@ class StageMap(Loggable):
         a.rotate(-rot)
         a.translate(-cpos[0], -cpos[1])
 
-        pos = a.transformPt(pos)
+        pos = a.transform(*pos)
         return pos
 
     def map_to_calibration(self, pos, cpos=None, rot=None, translate=None):
@@ -316,7 +316,7 @@ class StageMap(Loggable):
         a.translate(-cpos[0], -cpos[1])
         a.translate(*cpos)
 
-        pos = a.transformPt(pos)
+        pos = a.transform(*pos)
         return pos
 
     def get_hole(self, key):
@@ -502,14 +502,14 @@ class StageMap(Loggable):
 
 import yaml
 class UVStageMap(StageMap):
-    
+
     def dump_correction_file(self):
         '''
             dont dump a correction file for a uv stage map
         '''
         pass
-    
-    
+
+
     def load(self):
         with open(self.file_path, 'r') as fp:
             d = yaml.load(fp.read())
@@ -521,14 +521,14 @@ class UVStageMap(StageMap):
         return self._get_item('polygon', 'r', name)
 #
 #    def get_point(self, name):
-##        print name, TRANSECT_REGEX.match(name)
+# #        print name, TRANSECT_REGEX.match(name)
 #        if TRANSECT_REGEX.match(name):
 #            t, p = map(int, name[1:].split('-'))
-##            print t, p, len(self.transects)
+# #            print t, p, len(self.transects)
 #            if t <= len(self.transects):
 #                tran = self.transects[t-1]
 #                pts = tran['points']
-#            
+#
 #                if p <= len(pts)-1:
 #                    return pts[p]
 #        else:

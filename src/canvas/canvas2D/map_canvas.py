@@ -19,17 +19,11 @@ from traits.api import Instance, Bool, Enum, Float
 #=============standard library imports ========================
 import math
 #=============local library imports  ==========================
-# from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
-#    CalibrationObject
 from src.lasers.stage_managers.stage_map import StageMap
-from src.lasers.stage_managers.affine import AffineTransform
-# from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem, \
-    CalibrationObject
 from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
+from src.canvas.canvas2D.scene.primitives.primitives import CalibrationObject
+from src.geometry.affine import AffineTransform
 
-
-# class MapCanvas(MarkupCanvas):
 class MapCanvas(SceneCanvas):
     _map = Instance(StageMap)
     calibration_item = Instance(CalibrationObject)
@@ -81,7 +75,8 @@ class MapCanvas(SceneCanvas):
                 aff.translate(*cpos)
 
                 mpos = self.mp.get_hole_pos(self.current_hole)
-                dpos = aff.transformPt(mpos)
+#                dpos = aff.transformPt(mpos)
+                dpos = aff.transform(*mpos)
                 spos = self.map_data((event.x, event.y))
 
                 # not much point in adding an indicator because the hole
@@ -124,11 +119,14 @@ class MapCanvas(SceneCanvas):
             self.current_hole = None
             super(MapCanvas, self).normal_mouse_move(event)
 
-    def new_calibration_item(self, x, y, rotation, kind='pychron'):
-        if kind in ['MassSpec', 'pychron-auto']:
-            ci = CalibrationObject()
-        else:
-            ci = CalibrationItem(x, y, rotation, canvas=self)
+#    def new_calibration_item(self, x, y, rotation):
+    def new_calibration_item(self):
+#        if kind in ['MassSpec', 'pychron-auto']:
+#            ci = CalibrationObject()
+#        else:
+#            ci = CalibrationItem(x, y, rotation, canvas=self)
+
+        ci = CalibrationObject()
         self.calibration_item = ci
         return ci
 
@@ -174,10 +172,10 @@ class MapCanvas(SceneCanvas):
                 if hole.render.lower() == 'x' or tweaked or not self.use_valid_holes:
 
                     tweak = None
-                    if ca is not None:
+#                    if ca is not None:
 
-                        if str(hole.id) in ca.tweak_dict and isinstance(ca, CalibrationItem):
-                            tweak = ca.tweak_dict[str(hole.id)]
+#                        if str(hole.id) in ca.tweak_dict and isinstance(ca, CalibrationItem):
+#                            tweak = ca.tweak_dict[str(hole.id)]
 
                     x, y = map_screen([(hole.x, hole.y)])[0]
 
