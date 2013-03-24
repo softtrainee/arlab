@@ -131,13 +131,15 @@ class OpenImportManagerAction(ExperimentAction):
         obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
         open_manager(event.window.application, obj)
 
-class OpenMediaBrowserAction(ExperimentAction):
+class OpenImageBrowserAction(ExperimentAction):
     def perform(self, event):
         browser = self._get_service(event, 'src.media_server.browser.MediaBrowser')
         client = self._get_service(event, 'src.media_server.client.MediaClient')
         browser.client = client
-        if browser.load_remote_directory(''):
+        if browser.load_remote_directory('images'):
             open_manager(event.window.application, browser)
+
+
 
 # class AddProjectAction(Action):
 #    def perform(self, event):

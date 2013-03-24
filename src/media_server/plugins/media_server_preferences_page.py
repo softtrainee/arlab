@@ -29,7 +29,7 @@ class MediaServerPreferencesPage(PreferencesPage):
     auto_upload = Bool
     use_cache = Bool
     cache_dir = Directory
-    category = 'Data'
+#    category = 'Data'
     name = 'Media Server'
     id = 'pychron.media_server.preferences'
     preferences_path = 'pychron.media_server'

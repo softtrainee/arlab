@@ -344,20 +344,20 @@ tray: {}
         b.edit_traits(kind='livemodal')
 
     def _add_fired(self):
-        
-        
+
+
         ars = self.automated_runs
         ar = self.automated_run
-        nar=ar.clone_traits()
+        nar = ar.clone_traits()
 
-        #labnumber is a property so its not cloned by clone_traits        
-        nar.labnumber=ar.labnumber
+        # labnumber is a property so its not cloned by clone_traits
+        nar.labnumber = ar.labnumber
 #        nar.aliquot=ar.aliquot
-        
-        if ar.analysis_type.startswith('blank') or ar.analysis_type=='background':
-            nar.extract_value=0
-            nar.extract_units=''
-            
+
+        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
+            nar.extract_value = 0
+            nar.extract_units = ''
+
         if self.schedule_block and self.schedule_block != NULL_STR:
 #            print self.schedule_block
             block = self._block_factory(self.schedule_block)
@@ -366,8 +366,8 @@ tray: {}
             self._current_group_id += 1
 
         else:
-            
-            
+
+
 #            rid = self._auto_increment(ar.labnumber)
 #            position = None
 #            if ar.position:
@@ -377,8 +377,8 @@ tray: {}
 #                return
 #            else:
             if self.selected:
-                ind=self.automated_runs.index(self.selected[-1])
-                ars.insert(ind+1, nar)
+                ind = self.automated_runs.index(self.selected[-1])
+                ars.insert(ind + 1, nar)
             else:
                 ars.append(nar)
 
@@ -578,7 +578,9 @@ tray: {}
         else:
             klass = AutomatedRun
 
-        a = klass(scripts=self.loaded_scripts, **params)
+        a = klass(scripts=self.loaded_scripts,
+                  application=self.application,
+                  **params)
 
         for k, v in script_params.iteritems():
             setattr(a.script_info, '{}_script_name'.format(k), v)

@@ -81,8 +81,17 @@ class LabnumberEntry(DBEntry):
 
     selected = Any
 
-#    def __init__(self, *args, **kw):
-#        super(LabnumberEntry, self).__init__(*args, **kw)
+    def __init__(self, *args, **kw):
+        super(LabnumberEntry, self).__init__(*args, **kw)
+        self.populate_default_tables()
+
+    def populate_default_tables(self):
+        db = self.db
+        if self.db:
+            if db.connect():
+
+                from src.database.defaults import load_isotopedb_defaults
+                load_isotopedb_defaults(db)
 #        self._load_default_holders()
 
 #    def _load_default_holders(self):

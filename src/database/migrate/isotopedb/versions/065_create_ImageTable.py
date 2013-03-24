@@ -2,7 +2,8 @@ from sqlalchemy import *
 from migrate import *
 meta = MetaData()
 
-t = Table('gen_ImageTable', meta,
+# t = Table('med_ImageTable', meta,
+t = Table('med_ImageTable', meta,
 Column('id', Integer, primary_key=True),
 Column('name', String(80)),
 Column('create_date', DateTime),

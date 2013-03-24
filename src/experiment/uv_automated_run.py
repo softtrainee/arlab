@@ -15,20 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Str, Enum , Property, List, cached_property
-from traitsui.api import View, Item, VGroup, EnumEditor
+from traits.api import HasTraits, Int, Str, Enum , Property, List, cached_property, \
+    Button
+from traitsui.api import View, Item, VGroup, EnumEditor, HGroup
 from src.experiment.automated_run import AutomatedRun
 from src.constants import NULL_STR
 import os
 from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class ImageSpec(HasTraits):
-    name = Str
-    path = Str
-    def tostring(self):
-        pass
-
 
 class UVAutomatedRun(AutomatedRun):
     reprate = Int
@@ -38,19 +33,22 @@ class UVAutomatedRun(AutomatedRun):
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
     image = Str
+    browser_button = Button('Browse')
 
     def _save_extraction(self, analysis):
         ext = super(UVAutomatedRun, self)._save_extraction(analysis)
         if self.image is not None:
-            dbim = self.db.get_image(self.image.name)
+            ext.image
+            dbim = self.db.get_image(self.image)
             if dbim is None:
-                # open image and save to db
-                self.db.add_image(self.image.name, self.image.tostring())
+                # use media server so only save path of file
+                # secondary option- open image and save to db
+                dbim = self.db.add_image(self.image,
+#                                  image=self.image.tostring()
+                                  )
 
             ext.image = dbim
         return ext
-
-    image_id = Str
 
     @cached_property
     def _get_masks(self):
@@ -70,7 +68,7 @@ class UVAutomatedRun(AutomatedRun):
         g = VGroup(Item('reprate'),
                    Item('mask', editor=EnumEditor(name='masks')),
                    Item('attenuator'),
-                   Item('image'),
+                   HGroup(Item('image', springy=True), Item('browser_button', show_label=False)),
                    label='UV'
                    )
         return g
@@ -83,7 +81,22 @@ class UVAutomatedRun(AutomatedRun):
                           )
         return obj
 
+    def _image_browser_factory(self):
+        b = self.application.get_service('src.media_server.browser.MediaBrowser')
+        if b is not None:
+            c = self.application.get_service('src.media_server.client.MediaClient')
+            b.client = c
 
+        return b
+#===============================================================================
+# handlers
+#===============================================================================
+    def _browser_button_fired(self):
+        browser = self._image_browser_factory()
+        browser.load_remote_directory('images')
+        info = browser.edit_traits(view='modal_view', kind='livemodal')
+        if info.result:
+            self.image = browser.get_selected_image_name()
 #    @cached_property
 #    def _get_post_measurement_script(self):
 #        self._post_measurement_script = self._load_script('post_measurement')

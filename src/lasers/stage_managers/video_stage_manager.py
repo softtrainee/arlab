@@ -263,7 +263,7 @@ class VideoStageManager(StageManager):
 
     def _upload(self, path):
         if self.use_media_server and self.auto_upload:
-            client = self.application.get_service('src.media_server.media_client')
+            client = self.application.get_service('src.media_server.media_client.MediaClient')
             if client is not None:
                 url = client.url()
                 self.info('uploading {} to {}'.format(path, url))
