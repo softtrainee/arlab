@@ -15,22 +15,19 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Any, Bool, Float, List
+from traits.api import  Any, Bool, Float, List, Str
 #=============standard library imports ========================
 from threading import Thread, Lock, Event
 import time
-# from numpy import array, hsplit, array_split, asarray, transpose, hstack, rot90, swapaxes
-# from matplotlib import cm
+import os
+import shutil
 #=============local library imports ===========================
 from src.image.image import Image
+from src.image.pyopencv_image_helper import swapRB
 from cvwrapper import get_capture_device, query_frame, write_frame, \
     new_video_writer, grayspace, get_nframes, \
     set_frame_index, get_fps, set_video_pos, crop
 from globals import globalv
-import os
-import tempfile
-import shutil
-from src.image.pyopencv_image_helper import swapRB
 
 
 class Video(Image):
@@ -50,6 +47,11 @@ class Video(Image):
     _prev_frame = None
     _stop_recording_event = None
     _last_get = None
+
+    output_path = Str
+    output_mode = Str('MPEG')
+    ffmpeg_path = Str
+
     def is_open(self):
         return self.cap is not None
 
@@ -158,11 +160,11 @@ class Video(Image):
 
 #        return query_frame(self.cap).ndarray
 
-    def start_recording(self, path):
+    def start_recording(self, path, renderer=None):
         self._stop_recording_event = Event()
+        self.output_path = path
 
-        use_ffmpeg = True
-        if use_ffmpeg:
+        if self.output_mode == 'MPEG':
             func = self._ffmpeg_record
         else:
             func = self._cv_record
@@ -174,7 +176,7 @@ class Video(Image):
         if self.cap is not None:
             self._recording = True
 
-            t = Thread(target=func, args=(path, self._stop_recording_event, fps))
+            t = Thread(target=func, args=(path, self._stop_recording_event, fps, renderer))
             t.start()
 
     def stop_recording(self):
@@ -196,7 +198,7 @@ class Video(Image):
 
         return src.clone()
 
-    def _ffmpeg_record(self, path, stop, fps):
+    def _ffmpeg_record(self, path, stop, fps, renderer=None):
         '''
             use ffmpeg to stitch a directory of jpegs into a video
             
@@ -204,7 +206,7 @@ class Video(Image):
         remove_images = True
         root = os.path.dirname(path)
         name = os.path.basename(path)
-        name, ext = os.path.splitext(name)
+        name, _ext = os.path.splitext(name)
 
         image_dir = os.path.join(root, '{}-images'.format(name))
         cnt = 0
@@ -217,8 +219,13 @@ class Video(Image):
         cnt = 0
 #        new_frame = lambda : self.get_frame(swap_rb=False)
 #        frame = self.get_frame(swap_rb=False)
-        frame = self.get_frame()
-        save = lambda x: self.save(x, src=swapRB(frame))
+
+        if renderer is None:
+            frame = self.get_frame()
+            save = lambda x: self.save(x, src=swapRB(frame))
+        else:
+            save = lambda x:renderer(x)
+
         while not stop.is_set():
             st = time.time()
             pn = os.path.join(image_dir, 'image_{:05n}.jpg'.format(cnt))
@@ -251,13 +258,13 @@ class Video(Image):
         codec = '{}'.format('x264')  # H.264
         path = '{}'.format(os.path.join(path, name_filter))
 
-        ffmpeg_path = '/usr/local/bin'
-        ffmpeg = os.path.join(ffmpeg_path, 'ffmpeg')
+        ffmpeg = '/usr/local/bin/ffmpeg'
+        if self.ffmpeg_path:
+            ffmpeg = self.ffmpeg_path
 
         subprocess.call([ffmpeg, '-r', frame_rate, '-i', path, output, '-codec', codec])
 
-
-    def _cv_record(self, path, stop, fps):
+    def _cv_record(self, path, stop, fps, renderer=None):
         '''
             use OpenCV VideoWriter to save video file
             !!on mac seems only raw video can saved. playable avi file but

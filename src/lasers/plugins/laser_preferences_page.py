@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Int
+from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Int, File
 from traitsui.api import  Item, Group, VGroup
 
 #============= standard library imports ========================
@@ -27,6 +27,9 @@ from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
 class LaserPreferencesPage(ManagerPreferencesPage):
 
     use_video = Bool(False)
+    video_output_mode = Enum('MPEG', 'Raw')
+    ffmpeg_path = File
+
     video_identifier = Enum(1, 2)
     use_video_server = Bool(False)
     video_server_port = Int(1084)
@@ -103,6 +106,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                           VGroup(
 #                         Item('video_identifier', label='ID',
 #                               enabled_when='use_video'),
+                         Item('video_output_mode', label='Output Mode'),
+                         Item('ffmpeg_path', label='FFmpeg Location'),
                          Item('use_autocenter', label='Auto Center'),
                          Item('render_with_markup', label='Render Snapshot with markup'),
                          recgrp,

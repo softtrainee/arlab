@@ -50,25 +50,24 @@ PACKAGE_DICT = dict(
                    DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
                    ExperimentPlugin='src.experiment.plugins.experiment_plugin',
                    ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
-                   ScriptPlugin='src.scripts.plugins.script_plugin',
-                   ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
+#                   ScriptPlugin='src.scripts.plugins.script_plugin',
+#                   ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
                    ExtractionLinePlugin='src.extraction_line.plugins.extraction_line_plugin',
                    ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
-                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
-                   CanvasDesignerUIPlugin='src.canvas.plugins.canvas_designer_ui_plugin',
+#                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
+#                   CanvasDesignerUIPlugin='src.canvas.plugins.canvas_designer_ui_plugin',
                    MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
                    MDDModelerUIPlugin='src.modeling.plugins.mdd_modeler_ui_plugin',
-                   SVNPlugin='src.svn.plugins.svn_plugin',
-                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
+
+#                   SVNPlugin='src.svn.plugins.svn_plugin',
+#                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
 
                    FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
                    FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
                    FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
                    FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
-
                    FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
                    FusionsUVUIPlugin='src.lasers.plugins.fusions.uv.ui_plugin',
-
 
                    SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
                    SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
@@ -76,19 +75,19 @@ PACKAGE_DICT = dict(
                    SpectrometerPlugin='src.spectrometer.plugins.spectrometer_plugin',
                    SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
 
-                   GraphPlugin='src.graph.plugins.graph_plugin',
-                   GraphUIPlugin='src.graph.plugins.graph_ui_plugin',
+#                   GraphPlugin='src.graph.plugins.graph_plugin',
+#                   GraphUIPlugin='src.graph.plugins.graph_ui_plugin',
 
                    TwitterPlugin='src.social.plugins.twitter_plugin',
                    TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
                    EmailPlugin='src.social.plugins.email_plugin',
                    EmailUIPlugin='src.social.plugins.email_ui_plugin',
 
-#                   ArArPlugin='src.arar.plugins.arar_plugin',
-#                   ArArUIPlugin='src.arar.plugins.arar_ui_plugin'
+                   ProcessingPlugin='src.processing.plugins.processing_plugin',
+                   ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin',
 
-                    ProcessingPlugin='src.processing.plugins.processing_plugin',
-                    ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin'
+                   MediaServerPlugin='src.media_server.plugins.media_server_plugin',
+                   MediaServerUIPlugin='src.media_server.plugins.media_server_ui_plugin'
                  )
 
 class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):
