@@ -39,6 +39,7 @@ from src.machine_vision.mosaic_manager import MosaicManager
 from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
+from chaco.plot_graphics_context import PlotGraphicsContext
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -96,6 +97,9 @@ class VideoStageManager(StageManager):
     use_video_server = Bool(False)
     video_server = Instance(VideoServer)
 
+    use_media_server = Bool(False)
+    auto_upload = Bool(False)
+
     camera = Instance(Camera)
 
     render_with_markup = Bool(False)
@@ -105,6 +109,8 @@ class VideoStageManager(StageManager):
 
         bind_preference(self, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
         bind_preference(self, 'render_with_markup', '{}.render_with_markup'.format(pref_id))
+        bind_preference(self, 'auto_upload', 'pychron.media_server.auto_upload')
+        bind_preference(self, 'use_media_server', 'pychron.media_server.use_media_server')
 #        bind_preference(self.pattern_manager,
 #                        'record_patterning',
 #                         '{}.record_patterning'.format(pref_id))
@@ -138,6 +144,10 @@ class VideoStageManager(StageManager):
                         '{}.video_directory'.format(pref_id)
                         )
 
+        bind_preference(self.video, 'output_mode', '{}.video_output_mode'.format(pref_id))
+        bind_preference(self.video, 'ffmpeg_path', '{}.ffmpeg_path'.format(pref_id))
+
+
     def start_recording(self, new_thread=True, **kw):
         '''
         '''
@@ -155,25 +165,20 @@ class VideoStageManager(StageManager):
         def close():
             self.is_recording = False
             self.info('stop video recording')
-    #        self.stop()
+
             self.video.stop_recording()
-#            time.sleep(1)
-#            self.video.close(user=user)
+            self._upload(self.video.output_path)
 
             # clean the video directory
             self.clean_video_archive()
 
-            # delay briefly before deleting the capture object
-#            t = Timer(4, self.video.close, kwargs=dict(user=user))
-#            t.start()
         if self.video._recording:
             if delay:
                 t = Timer(delay, close)
                 t.start()
             else:
                 close()
-#        self.video.close(user=user)
-#    @on_trait_change('camera:focus_z,camera:calibration_data:[xcoeff_str, ycoeff_str]')
+
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
             self.focus_z = new
@@ -187,13 +192,9 @@ class VideoStageManager(StageManager):
 #        if self.use_video_server:
 #            self.video_server.start()
 
-
     def initialize_stage(self):
         super(VideoStageManager, self).initialize_stage()
-#        print self.video_identifier - 1
-#        self.video.open(identifier=self.video_identifier - 1,
-#                        user='underlay')
-#        print self.video
+
         if self.video:
             self.video.open()
 
@@ -229,18 +230,15 @@ class VideoStageManager(StageManager):
 #            play_sound('shutter.wav')
 
             if self.render_with_markup:
-                from chaco.plot_graphics_context import PlotGraphicsContext
-                c = self.canvas
-                gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
-                gc.render_component(c)
-                gc.save(path)
+                self._render_with_markup(path)
             else:
                 self.video.record_frame(path, swap_rb=False)
+
+            self._upload(path)
 
     def kill(self):
         '''
         '''
-
 
         super(VideoStageManager, self).kill()
         if self.camera:
@@ -263,6 +261,25 @@ class VideoStageManager(StageManager):
             self.info('Cleaning video directory')
             self.video_archiver.clean()
 
+    def _upload(self, path):
+        if self.use_media_server and self.auto_upload:
+            client = self.application.get_service('src.media_server.media_client')
+            if client is not None:
+                url = client.url()
+                self.info('uploading {} to {}'.format(path, url))
+                if not client.upload(path):
+                    self.warning('failed to upload {} to media server at {}'.format(path, url))
+                    self.warning_dialog('Failed to Upload {}. Media Server at {} unavailable'.format(path, url))
+            else:
+                self.warning('Media client unavailable')
+                self.warning_dialog('Media client unavailable')
+
+    def _render_with_markup(self, path):
+        c = self.canvas
+        gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+        gc.render_component(c)
+        gc.save(path)
+
     def _start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote',):
         self.info('start video recording ')
@@ -284,10 +301,8 @@ class VideoStageManager(StageManager):
 
         self.info('saving recording to path {}'.format(path))
 
-#        self.use_db = True
         if self.use_db:
             db = self.get_video_database()
-#            db = VideoAdapter(name=co2laser_db, kind='sqlite')
             db.connect()
 
             v = db.add_video_record(rid=basename)
@@ -295,7 +310,11 @@ class VideoStageManager(StageManager):
             self.info('saving {} to database'.format(basename))
             db.commit()
 
-        self.video.start_recording(path)
+        renderer = None
+        if self.render_with_markup:
+            renderer = self._render_with_markup
+
+        self.video.start_recording(path, renderer)
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:

@@ -49,9 +49,9 @@ class UVAutomatedRun(AutomatedRun):
 
             ext.image = dbim
         return ext
-    
-    image_id=Str
-    
+
+    image_id = Str
+
     @cached_property
     def _get_masks(self):
         p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
@@ -70,6 +70,7 @@ class UVAutomatedRun(AutomatedRun):
         g = VGroup(Item('reprate'),
                    Item('mask', editor=EnumEditor(name='masks')),
                    Item('attenuator'),
+                   Item('image'),
                    label='UV'
                    )
         return g

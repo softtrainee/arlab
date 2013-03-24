@@ -166,32 +166,32 @@ class ImageBrowser(IsotopeDatabaseManager):
         self._conn = conn
         return conn
 
-    def _get(self, name):
-        conn = self._connection_factory()
-        conn.request('GET', '/{}'.format(name))
-        return conn.getresponse()
+#    def _get(self, name):
+#        conn = self._connection_factory()
+#        conn.request('GET', '/{}'.format(name))
+#        return conn.getresponse()
 
-    def _get_remote_file(self, name):
-        self.info('retrieve {} from remote directory'.format(name))
-        resp = self._get(name)
-
-        buf = StringIO()
-        buf.write(resp.read())
-        buf.seek(0)
-        im = Image.open(buf)
-        im = im.convert('RGB')
-
-        if self.use_cache:
-            buf.seek(0)
-            if os.path.isdir(self.cache_dir):
-                with open(os.path.join(self.cache_dir, name), 'w') as fp:
-                    fp.write(buf.read())
-            else:
-                self.info('cache directory does not exist. {}'.format(self.cache_dir))
-
-        buf.close()
-
-        return array(im)
+#    def _get_remote_file(self, name):
+#        self.info('retrieve {} from remote directory'.format(name))
+#        resp = self._get(name)
+#
+#        buf = StringIO()
+#        buf.write(resp.read())
+#        buf.seek(0)
+#        im = Image.open(buf)
+#        im = im.convert('RGB')
+#
+#        if self.use_cache:
+#            buf.seek(0)
+#            if os.path.isdir(self.cache_dir):
+#                with open(os.path.join(self.cache_dir, name), 'w') as fp:
+#                    fp.write(buf.read())
+#            else:
+#                self.info('cache directory does not exist. {}'.format(self.cache_dir))
+#
+#        buf.close()
+#
+#        return array(im)
 
     def _get_cached(self, name):
         self.info('retrieve {} from cache directory'.format(name))

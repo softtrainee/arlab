@@ -117,6 +117,7 @@ class Paths():
     spectrometer_scans_dir = None
     processing_dir = None
     image_cache_dir = None
+    default_cache = None
     # initialization_dir = None
     # device_creator_dir = None
 
@@ -229,6 +230,7 @@ class Paths():
         # initialization_dir = join(setup_dir, 'initializations')
         # device_creator_dir = join(device_dir, 'device_creator')
         self.image_cache_dir = join(self.data_dir, 'image_cache')
+        self.default_cache = join(self.data_dir, 'cache')
         #==============================================================================
         # lovera exectuables
         #==============================================================================

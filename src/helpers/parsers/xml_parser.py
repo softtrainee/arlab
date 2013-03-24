@@ -28,7 +28,7 @@ class XMLParser(object):
         wrapper for ElementTree
     '''
     _tree = None
-    def __init__(self, path, *args, **kw):
+    def __init__(self, path=None, *args, **kw):
         if path:
             self._path = path
             try:
@@ -36,12 +36,18 @@ class XMLParser(object):
             except ParseError, e:
                 warning(None, str(e))
 
+    def load(self, fp):
+        '''
+            path or file-like object
+        '''
+        return self._parse_file(fp)
 
     def _parse_file(self, p):
         tree = ElementTree()
         tree.parse(p)
         self._tree = tree
         return tree
+
     def get_tree(self):
         return self._tree
     def save(self):
