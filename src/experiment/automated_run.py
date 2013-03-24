@@ -1672,7 +1672,7 @@ anaylsis_type={}
             ps = [pos]
 
         return ps
-    
+
     def _make_script_name(self, name):
         name = '{}_{}'.format(self.mass_spectrometer, name)
         name = self._add_script_extension(name)
@@ -1792,34 +1792,34 @@ anaylsis_type={}
     def _set_position(self, pos):
         self._position = pos
 
-    def _validate_position(self, pos): 
+    def _validate_position(self, pos):
         if not pos.strip():
             return ''
-               
+
         ps = pos.split(',')
 #        try:
-        ok=False
+        ok = False
         for pi in ps:
             if not pi:
                 continue
-            
-            ok=False
+
+            ok = False
             if TRANSECT_REGEX.match(pi):
-                ok=True
-                
+                ok = True
+
             elif POSITION_REGEX.match(pi):
-                ok=True
-                
+                ok = True
+
         if not ok:
-            pos= self._position
+            pos = self._position
         return pos
-        
-            
-            
-#            
+
+
+
+#
 #            elif POSITION_REGEX.match(pi):
 #                return pos
-#            
+#
 #            if pi[0].lower() in ('p', 'l', 'd','r'):
 #                n = pi[1:]
 #            else:
@@ -2091,6 +2091,9 @@ anaylsis_type={}
         sup = self._get_supplemental_extract_group()
         if sup:
             extract_grp = Group(extract_grp, sup, layout='tabbed')
+        else:
+            extract_grp.show_border = True
+
         extract_grp = VGroup(extract_grp, pos_grp)
 
         v = View(

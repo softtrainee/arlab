@@ -108,6 +108,13 @@ class WorkbenchPlugin(ETSWorkbenchPlugin):
     def _my_preferences_pages_default(self):
         return [WorkbenchPreferencesPage]
 
+    def _create_preferences_manager_service(self, **properties):
+        from src.envisage.plugins.pychron_preferences_manager import PychronPreferencesManager
+        preferences_manager = PychronPreferencesManager(
+            pages=[factory() for factory in self.preferences_pages]
+        )
+
+        return preferences_manager
 
 def get_module_name(klass):
     words = []

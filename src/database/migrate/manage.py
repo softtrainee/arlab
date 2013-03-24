@@ -16,7 +16,7 @@ if __name__ == '__main__':
     url = 'mysql://root:Argon@localhost/isotopedb_dev_migrate?connect_timeout=3'
 #    url = 'mysql://root:Argon@localhost/isotopedb_FC2?connect_timeout=3'
     # url = 'mysql://massspec:DBArgon@129.138.12.131/isotopedb_dev_mod?connect_timeout=3'
-    url = 'mysql://root:DBArgon@129.138.12.160/pychrondata?connect_timeout=3'
+#    url = 'mysql://root:DBArgon@129.138.12.160/pychrondata?connect_timeout=3'
 
 #     url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
     main(url=url , debug='False', repository='isotopedb/')

@@ -15,33 +15,35 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from chaco.abstract_overlay import AbstractOverlay
+from traits.api import HasTraits, Float, String
+from traitsui.api import View, HGroup
 #============= standard library imports ========================
-import Image
-from numpy import array
 #============= local library imports  ==========================
+from src.traits_editors.custom_label_editor import CustomLabel
 
-class ImageUnderlay(AbstractOverlay):
-    _cached_img = None
-    def __init__(self, component, path=None, *args, **kw):
-        if path is not None:
-            if hasattr(path, 'seek'):
-                # if path is a stringio seek back to the beginning
-                path.seek(0)
+HELP_TAG = '''Enter the x, y for this point {:0.3f},{:0.3f}
+in data space i.e mm
+'''
 
-            im = Image.open(path)
-            im = im.convert('RGB')
-            self._cached_img = array(im)
+class ReferencePoint(HasTraits):
+    x = Float
+    y = Float
+    help_tag = String(HELP_TAG)
+    def __init__(self, pt, *args, **kw):
+        self.help_tag = HELP_TAG.format(*pt)
+        super(ReferencePoint, self).__init__(*args, **kw)
 
-        super(ImageUnderlay, self).__init__(component, *args, **kw)
-
-    def overlay(self, component, gc, view_bounds, mode):
-        with gc:
-            if self._cached_img is not None:
-                _x, _y, w, h = view_bounds
-                sw = (component.width) / float(w)
-                sh = (component.height) / float(h)
-                gc.scale_ctm(sw, sh)
-                gc.draw_image(self._cached_img)
-
+    def traits_view(self):
+        v = View(
+                 CustomLabel('help_tag',
+                             top_padding=10,
+                             left_padding=10,
+#                             align='center',
+                             color='maroon'),
+                 HGroup('x', 'y'),
+                 buttons=['OK', 'Cancel'],
+                 kind='modal',
+                 title='Reference Point'
+                 )
+        return v
 #============= EOF =============================================

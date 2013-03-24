@@ -300,7 +300,7 @@ class meas_ExtractionTable(Base, BaseMixin):
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
     script_id = foreignkey('meas_ScriptTable')
     experiment_blob_id = foreignkey('meas_ScriptTable')
-    image_id = foreignkey('gen_ImageTable')
+    image_id = foreignkey('med_ImageTable')
 
     analyses = relationship('meas_AnalysisTable', backref='extraction')
     positions = relationship('meas_PositionTable', backref='extraction')
@@ -447,15 +447,17 @@ class irrad_ChronologyTable(Base, BaseMixin):
 #===============================================================================
 #
 #===============================================================================
-
+#===============================================================================
+# media
+#===============================================================================
+class med_ImageTable(Base, NameMixin):
+    create_date = Column(DateTime, default=func.now())
+    image = Column(BLOB)
+    extractions = relationship('meas_ExtractionTable', backref='image')
 #===============================================================================
 # general
 #===============================================================================
 
-class gen_ImageTable(Base, NameMixin):
-    create_date = Column(DateTime, default=func.now())
-    image = Column(BLOB)
-    extractions = relationship('meas_ExtractionTable', backref='image')
 
 class gen_AnalysisTypeTable(Base, NameMixin):
     measurements = relationship('meas_MeasurementTable', backref='analysis_type')

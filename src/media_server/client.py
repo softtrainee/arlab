@@ -93,8 +93,12 @@ class MediaClient(Loggable):
             !remember to close it!
         '''
         buf = None
+        is_local = False
         if self.use_cache:
             buf = self._retrieve_local(name)
+            if buf is not None:
+                self.info('Using cached copy of {}'.format(name))
+                is_local = True
 
         if buf is None:
             buf = self._retrieve_remote(name)
@@ -106,23 +110,30 @@ class MediaClient(Loggable):
                 with open(output, 'wb') as fp:
                     fp.write(buf.read())
 
-            if self.use_cache:
+            if self.use_cache and not is_local:
                 if not os.path.isdir(self.cache_dir):
                     nc = paths.default_cache
                     self.warning('Invalid cache directory {}. using default {}'.format(self.cache_dir, nc))
                     self.cache_dir = nc
 
-                with open(os.path.join(self.cache_dir, name), 'wb') as fp:
-                    fp.write(buf.read())
+                self.cache(name, buf)
+
             return buf
+
+    def cache(self, path, buf=None):
+        if buf is None:
+            buf = open(path, 'r')
+
+        with open(os.path.join(self.cache_dir, os.path.basename(path)), 'w') as fp:
+            fp.write(buf.read())
 
     def _retrieve_local(self, name):
         if not os.path.isdir(self.cache_dir):
             self.cache_dir = paths.default_cache
 
-        path = os.path.join(paths.default_cache, name)
+        path = os.path.join(self.cache_dir, os.path.basename(name))
         if os.path.isfile(path):
-            return open(path, 'rb')
+            return open(path, 'r')
 
     def _retrieve_remote(self, name):
         self.info('retrieve {} from remote directory'.format(name))
@@ -142,7 +153,6 @@ class MediaClient(Loggable):
 
     def _get(self, name):
         conn = self._new_connection()
-        print name
         conn.request('GET', '/{}'.format(name))
         return conn.getresponse()
 

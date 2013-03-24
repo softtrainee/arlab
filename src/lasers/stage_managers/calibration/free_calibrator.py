@@ -20,34 +20,19 @@ from traitsui.api import View, Item, HGroup
 from src.traits_editors.custom_label_editor import CustomLabel
 from src.geometry.geometry import calculate_reference_frame_center
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
+from src.geometry.reference_point import ReferencePoint
 #============= standard library imports ========================
 #============= local library imports  ==========================
-HELP_TAG = '''Enter the x, y for this point {:0.3f},{:0.3f}
-in data space i.e mm
-'''
+
+
 class FreeCalibrator(TrayCalibrator):
-    x = Float
-    y = Float
 #    accept_point = Button
 #    finished = Button
 #    calibrating = Bool(False)
     manager = Any
     point1 = None
     point2 = None
-    help_tag = String(HELP_TAG)
-    def _point_enter_view(self):
-        v = View(
-                 CustomLabel('help_tag',
-                             top_padding=10,
-                             left_padding=10,
-#                             align='center',
-                             color='maroon'),
-                 HGroup('x', 'y'),
-                 buttons=['OK', 'Cancel'],
-                 kind='modal',
-                 title='Reference Point'
-                 )
-        return v
+
 
 #    def get_controls(self):
 #        cg = HGroup(Item('object.calibrator.accept_point',
@@ -75,10 +60,10 @@ class FreeCalibrator(TrayCalibrator):
             return 'Calibrate', cx, cy, rot
 
     def _set_point(self, sp):
-        self.help_tag = HELP_TAG.format(sp[0], sp[1])
-        info = self.edit_traits(view='_point_enter_view')
+        rp = ReferencePoint(point=sp)
+        info = rp.edit_traits()
         if info.result:
-            dp = self.x, self.y
+            dp = rp.x, rp.y
             if self.point1 is None:
                 self.point1 = (dp, sp)
             else:

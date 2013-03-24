@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, List, Instance, String, on_trait_change, \
-    Button, Bool, Enum, Event, Int, Float, Tuple
+    Button, Bool, Enum, Event, Int, Float, Tuple, Str
 from traitsui.api import View, Item, HSplit, TreeEditor, ListStrEditor, HGroup, spring, VGroup, \
     ButtonEditor
 from chaco.api import HPlotContainer, ArrayPlotData, Plot
@@ -32,21 +32,46 @@ from src.helpers.parsers.xml_parser import XMLParser
 from src.traits_editors.custom_label_editor import CustomLabel
 from src.graph.tools.xy_inspector import XYInspectorOverlay, XYInspector
 from src.graph.image_underlay import ImageUnderlay
+from src.geometry.reference_point import ReferencePoint
+from chaco.abstract_overlay import AbstractOverlay
+from pyface.file_dialog import FileDialog
+from pyface.constant import OK
 
-class ReferencePoint(HasTraits):
-    x = Float
-    y = Float
-    def traits_view(self):
-        v = View(HGroup('x', 'y'),
-                 buttons=['OK', 'Cancel']
-                 )
-        return v
 
 class ReferencePointsTool(BaseTool):
     current_position = Tuple
+    points = List
     def normal_left_down(self, event):
         pos = event.x, event.y
         self.current_position = pos
+#        dp = self.component.map_data(pos, all_values=True)
+        self.points.append(pos)
+
+class ReferencePointsOverlay(AbstractOverlay):
+    tool = Any
+    _cached_points = None
+
+#    def do_layout(self):
+#        self._cached_points = None
+
+    def overlay(self, component, gc, *args, **kw):
+        if self.tool.points:
+            with gc:
+                if self._cached_points is None:
+    #                    print self.tool.points
+                    self._cached_points = self.tool.points  # self.component.map_screen(self.tool.points)
+    #                    self._cached_points = component.map_data(self.tool.points, all_values=True)
+                elif len(self._cached_points) != len(self.tool.points):
+                        self._cached_points = self.tool.points  # self.component.map_screen(self.tool.points)
+
+                if self._cached_points is not None:
+                    gc.set_stroke_color((1, 1, 0))
+                    gc.set_fill_color((1, 1, 0))
+                    for x, y in self._cached_points:
+                        gc.arc(x, y, 3, 0, 360)
+                        gc.draw_path()
+
+
 
 class Hierarchy(HasTraits):
     files = List
@@ -69,6 +94,7 @@ class Viewer(HasTraits):
     container = Instance(HPlotContainer, ())
     name = String
     plot = Any
+    open_button = Button
     define_points = Button
     define_points_label = String
     _defining_points = False
@@ -120,9 +146,10 @@ class Viewer(HasTraits):
              assumes no rotation of the reference frames
              only scale and translate
         '''
-        rp = ReferencePoint()
-        info = rp.edit_traits(kind='modal')
+        rp = ReferencePoint(pt)
+        info = rp.edit_traits()
         if info.result:
+            plot = self.plot
             if not self.reference_pt1:
                 self.reference_pt1 = (rp.x, rp.y), pt
             else:
@@ -130,7 +157,6 @@ class Viewer(HasTraits):
                 dp1, sp1 = self.reference_pt1
                 dp2, sp2 = (rp.x, rp.y), pt
 
-                plot = self.plot
 
                 w = plot.width
                 h = plot.height
@@ -159,7 +185,9 @@ class Viewer(HasTraits):
                 plot.index_range.high_setting = hi
                 plot.value_range.low_setting = lv
                 plot.value_range.high_setting = hv
-                plot.request_redraw()
+
+            plot.request_redraw()
+
 
     def _define_points_fired(self):
         if self.plot:
@@ -168,14 +196,16 @@ class Viewer(HasTraits):
                 st = ReferencePointsTool(plot)
                 st.on_trait_change(self._set_reference_point, 'current_position')
                 self.points_tool = st
-                self.scale_tool = st
                 plot.tools.insert(0, st)
                 self.define_points_label = 'Finish'
+
+                plot.overlays.append(ReferencePointsOverlay(tool=st, component=plot))
 
             else:
                 self.define_points_label = 'Define Points'
                 self.points_tool.on_trait_change(self._set_reference_point, 'current_position', remove=True)
                 plot.tools.pop(0)
+                plot.overlays.pop(-1)
 
             self._defining_points = not self._defining_points
 
@@ -183,6 +213,7 @@ class Viewer(HasTraits):
     def traits_view(self):
         v = View(VGroup(
                         HGroup(
+                               Item('open_button', show_label=False),
                                Item('define_points',
                                     enabled_when='plot',
                                     editor=ButtonEditor(label_value='define_points_label'),
@@ -199,6 +230,11 @@ class MediaBrowser(Loggable):
     client = Any
     hierarchy = Instance(Hierarchy, ())
     viewer = Instance(Viewer, ())
+    root = 'images'
+    def get_selected_image_name(self):
+        sel = self.hierarchy.selected
+        if sel is not None:
+            return '/{}/{}'.format(self.root, sel)
 
     def load_remote_directory(self, name, ext=None):
         import re
@@ -210,8 +246,12 @@ class MediaBrowser(Loggable):
         pattern = re.compile(regex)
 
         client = self.client
+        try:
+            resp = client.propfind(name)
+        except Exception, e:
+            self.warning_dialog('Could not connect to Media server at {}:{}'.format(self.client.host, self.client.port))
+            return
 
-        resp = client.propfind('images')
         parser = XMLParser()
         tree = parser.load(resp)
         name = '{{DAV:}}{}'.format
@@ -228,26 +268,52 @@ class MediaBrowser(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
+
+    @on_trait_change('viewer:open_button')
+    def _open_fired(self):
+        print 'asdfasdf'
+        dlg = FileDialog(action='open')
+        if dlg.open() == OK:
+            with open(dlg.path, 'rb') as fp:
+                self.viewer.set_image(fp)
+                self.hierarchy.files.append(os.path.basename(dlg.path))
+
+            self.client.cache(dlg.path)
+
     @on_trait_change('hierarchy:selected')
     def _update_selection(self, name):
-        root = 'images/{}'
+        root = '{}/{}'.format(self.root, name)
         buf = self.client.retrieve(root.format(name))
-        self.viewer.set_image(buf)
+        if buf:
+            buf.seek(0)
+            self.viewer.set_image(buf)
+
+    def modal_view(self):
+        return self._view_factory(buttons=['OK', 'Cancel'])
 
     def traits_view(self):
+        return self._view_factory()
+    def _view_factory(self, **kw):
         v = View(HSplit(
-                        Item('hierarchy', width=0.3, style='custom', show_label=False),
-                        Item('viewer', width=0.7, style='custom', show_label=False)
+                        Item('hierarchy', width=0.25, style='custom', show_label=False),
+                        Item('viewer', width=0.75, style='custom', show_label=False)
                         ),
-                    width=500,
-                    height=400,
-                    resizable=True
+                    width=800,
+                    height=650,
+                    resizable=True,
+                    title='Image Browser', **kw
                  )
         return v
 
 if __name__ == '__main__':
+
     from src.media_server.client import MediaClient
-    mc = MediaClient(host='localhost', port=8008)
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('media')
+    mc = MediaClient(host='localhost',
+                     use_cache=True,
+                     cache_dir='/Users/ross/Sandbox/cache',
+                     port=8008)
     mb = MediaBrowser(client=mc)
     mb.load_remote_directory('images')
     mb.configure_traits()

@@ -138,7 +138,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
-        self.populate_default_tables()
+#        self.populate_default_tables()
 
     def _reload_from_disk(self):
 #        if not self._alive:
@@ -234,36 +234,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
         return True
 
-    def populate_default_tables(self):
-        db = self.db
-        if self.db:
-            if db.connect():
-
-                from src.database.defaults import load_isotopedb_defaults
-                load_isotopedb_defaults(db)
-
     def bind_preferences(self):
-#        if self.db is None:
-#            self.db = self._db_factory()
-#
-#        prefid = 'pychron.experiment'
-#
-#        bind_preference(self, 'username', '{}.username'.format(prefid))
-# #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
-#
-# #        if self.repo_kind == 'FTP':
-# #            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-# #            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-# #            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-# #            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
-#
-#        bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
-#        if self.db.kind == 'mysql':
-#            bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
-#            bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
-#            bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
-#
-#        bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         super(ExperimentManager, self).bind_preferences()
         if not self.db.connect():
             self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
