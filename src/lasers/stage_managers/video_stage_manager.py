@@ -40,6 +40,7 @@ from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
 from chaco.plot_graphics_context import PlotGraphicsContext
+from src.helpers.media import play_sound
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -208,8 +209,9 @@ class VideoStageManager(StageManager):
 
         self._update_zoom(0)
 
-#        from src.helpers.media import load_sound
+#        from src.helpers.media import load_sound, play_sound
 #        load_sound('shutter')
+#        play_sound('shutter')
 
     def snapshot(self, path=None, name=None, auto=False):
         if path is None:
@@ -227,7 +229,7 @@ class VideoStageManager(StageManager):
 #            from src.helpers.media import play_sound
 
             # play camera shutter sound
-#            play_sound('shutter.wav')
+            play_sound('shutter')
 
             if self.render_with_markup:
                 self._render_with_markup(path)
@@ -263,11 +265,11 @@ class VideoStageManager(StageManager):
 
     def _upload(self, path):
         if self.use_media_server and self.auto_upload:
-            client = self.application.get_service('src.media_server.media_client.MediaClient')
+            client = self.application.get_service('src.media_server.client.MediaClient')
             if client is not None:
                 url = client.url()
                 self.info('uploading {} to {}'.format(path, url))
-                if not client.upload(path):
+                if not client.upload(path, dest='images'):
                     self.warning('failed to upload {} to media server at {}'.format(path, url))
                     self.warning_dialog('Failed to Upload {}. Media Server at {} unavailable'.format(path, url))
             else:

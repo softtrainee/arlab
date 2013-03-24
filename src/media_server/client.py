@@ -50,10 +50,9 @@ class MediaClient(Loggable):
 
 
     def upload(self, path, dest=None):
+        name = os.path.basename(path)
         if dest is not None:
-            name = os.path.join(dest, path)
-        else:
-            name = os.path.basename(path)
+            name = os.path.join(dest, name)
 
         with open(path, 'rb') as fp:
             try:
