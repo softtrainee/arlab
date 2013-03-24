@@ -18,7 +18,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
-from pyface.message_dialog import information, warning as nonmodal_warning
+from pyface.message_dialog import information, warning as nonmodal_warning, \
+    MessageDialog
 # from pyface.api import confirm
 from pyface.wx.dialog import confirmation, warning
 
@@ -67,13 +68,22 @@ class Loggable(HasTraits):
         self.logcolor = c
 
     def warning_dialog(self, msg, sound=None, title=''):
+        dialog = MessageDialog(
+                               parent=None, message=msg, title=title,
+                               severity='warning'
+                               )
         if sound:
             from src.helpers.media import loop_sound
-            evt = loop_sound('alarm1')
-            warning(None, msg, title=title)
-            evt.set()
-        else:
-            nonmodal_warning(None, msg, title=title)
+            evt = loop_sound(sound)
+            dialog.close = lambda: self._close_warning(evt)
+
+        dialog.open()
+
+
+    def _close_warning(self, evt):
+        print evt
+        evt.set()
+        return True
 
     def confirmation_dialog(self, msg, title=''):
         result = confirmation(None, msg, title=title)

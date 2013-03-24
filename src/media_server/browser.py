@@ -240,7 +240,7 @@ class MediaBrowser(Loggable):
         import re
 
         if ext is None:
-            ext = ('png', 'tif')
+            ext = ('png', 'tif', 'gif', 'jpeg', 'jpg', 'pct')
 
         regex = '[\d\w-]+\.({})'.format('|'.join(ext))
         pattern = re.compile(regex)
@@ -271,7 +271,6 @@ class MediaBrowser(Loggable):
 
     @on_trait_change('viewer:open_button')
     def _open_fired(self):
-        print 'asdfasdf'
         dlg = FileDialog(action='open')
         if dlg.open() == OK:
             with open(dlg.path, 'rb') as fp:
@@ -293,6 +292,7 @@ class MediaBrowser(Loggable):
 
     def traits_view(self):
         return self._view_factory()
+
     def _view_factory(self, **kw):
         v = View(HSplit(
                         Item('hierarchy', width=0.25, style='custom', show_label=False),
