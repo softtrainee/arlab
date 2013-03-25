@@ -137,7 +137,8 @@ class AgilentMultiplexer(AgilentUnit):
         for tag, chs in (('VOLT:DC', self._get_dc_channels()),
                           ('TEMP:TC', self._get_tc_channels()),
                           ):
-            self.tell('CONF:{} {}'.format(tag, self.make_scan_list(chs)))
+            if chs:
+                self.tell('CONF:{} {}'.format(tag, self.make_scan_list(chs)))
 
         return True
 

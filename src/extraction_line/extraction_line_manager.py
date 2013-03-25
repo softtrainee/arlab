@@ -147,6 +147,7 @@ class ExtractionLineManager(Manager):
         return True
 
     def opened(self):
+        print 'opened'
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
         p = os.path.join(paths.hidden_dir, 'show_explanantion')
@@ -156,11 +157,14 @@ class ExtractionLineManager(Manager):
                     self.show_explanation = pickle.load(f)
                 except pickle.PickleError:
                     pass
-
+        
+        print 'mdds', self.mode
         if self.mode == 'client':
             self.start_status_monitor()
         else:
+            print self.gauge_manager
             if self.gauge_manager:
+                self.info('start gauge scans')
                 self.gauge_manager.start_scans()
 
     def start_status_monitor(self):
@@ -225,7 +229,6 @@ class ExtractionLineManager(Manager):
         self.valve_manager.claim_section(name.split('_')[0], value.lower)
 
     def reload_scene_graph(self):
-
         iddict = dict()
         # remember the explanation settings
         exp = self.explanation
@@ -238,9 +241,8 @@ class ExtractionLineManager(Manager):
             if self.canvas.style == '2D':
                 p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
                 self.canvas.load_canvas_file(p)
-            else:
-                self.canvas.canvas3D.setup()  # canvas3D_dir, 'extractionline3D.txt')
-
+#            else:
+#                self.canvas.canvas3D.setup()  # canvas3D_dir, 'extractionline3D.txt')
 #        if self.canvas.style == '2D':
 # #            self.canvas.invalidate_and_redraw()
 #        else:
@@ -259,8 +261,9 @@ class ExtractionLineManager(Manager):
                             vc.identify = iddict[vc.name]
                         except:
                             pass
-            self.canvas.Refresh()
-            self.view_controller = self._view_controller_factory()
+
+#            self.canvas.Refresh()
+#            self.view_controller = self._view_controller_factory()
 
     def load_canvas(self):
         '''
