@@ -39,8 +39,8 @@ class KerrMotor(KerrDevice):
     '''
     use_initialize = Bool(True)
     use_hysteresis = Bool(False)
-    hysteresis_value = Int(0)
-    _hysteresis_correction = Int(0)
+    hysteresis_value = Float(0)
+    _hysteresis_correction = Float(0)
 
     velocity = Property
     _velocity = Float
@@ -67,7 +67,7 @@ class KerrMotor(KerrDevice):
 
     _motor_position = CInt
     doing_hysteresis_correction = False
-    do_hysteresis=False
+    do_hysteresis = False
     display_name = Property
     display_name_color = 'brown'
 
@@ -282,8 +282,8 @@ class KerrMotor(KerrDevice):
         cmds = [(addr, '170{}'.format(b), 100, 'Stop motor'),
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
-        self._motor_position=0
-        
+        self._motor_position = 0
+
     def is_moving(self):
         return self.enabled == False
 
@@ -430,24 +430,24 @@ class KerrMotor(KerrDevice):
         '''
 
         return '{:02x}'.format(int('10010111', 2))
-    
+
     def _calculate_hysteresis_position(self, pos, hysteresis):
-        hpos=pos+hysteresis
-        if hpos>self.max:
-            self._hysteresis_correction=hpos-self.max
-            hpos=self.max
-        elif hpos<self.min:
-            self._hysteresis_correction=hpos-self.min
-            hpos=self.min
+        hpos = pos + hysteresis
+        if hpos > self.max:
+            self._hysteresis_correction = hpos - self.max
+            hpos = self.max
+        elif hpos < self.min:
+            self._hysteresis_correction = hpos - self.min
+            hpos = self.min
         else:
-            self._hysteresis_correction=hysteresis
-        
+            self._hysteresis_correction = hysteresis
+
         return hpos
     def _set_motor_position_(self, pos, hysteresis=0):
         '''
         '''
-        hpos=self._calculate_hysteresis_position(pos, hysteresis)
-        self._motor_position=hpos
+        hpos = self._calculate_hysteresis_position(pos, hysteresis)
+        self._motor_position = hpos
 #        self._motor_position =npos= min(self.max, max(self.min, pos + hysteresis))
         #============pos is in mm===========
         addr = self.address
@@ -554,14 +554,14 @@ class KerrMotor(KerrDevice):
 
             npos = int((1 - self.home_position) * self.steps * pos)
             hysteresis = 0
-            self.do_hysteresis=False
+            self.do_hysteresis = False
             if self.hysteresis_value < 0:
                 use_hysteresis = self._motor_position > npos
             else:
                 use_hysteresis = self._motor_position < npos
 
             if use_hysteresis and self.use_hysteresis:
-                self.do_hysteresis=True
+                self.do_hysteresis = True
                 self.doing_hysteresis_correction = False
                 hysteresis = self.hysteresis_value
 
@@ -590,7 +590,7 @@ class KerrMotor(KerrDevice):
     def control_view(self):
         return View(
 #                    CustomLabel('display_name', font_color=self.display_name_color),
-                    Group(
+#                    Group(
                         Item('data_position', show_label=False,
                              editor=RangeEditor(mode='slider',
                                                 format='%0.3f',
@@ -603,9 +603,9 @@ class KerrMotor(KerrDevice):
                                                 low_name='min',
                                                 high_name='max', enabled=False),
                              ),
-                          show_border=True,
-                          label=self.display_name,
-                          )
+#                          show_border=True,
+#                          label=self.display_name,
+#                          )
                     )
 
     def traits_view(self):

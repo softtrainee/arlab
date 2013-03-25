@@ -19,7 +19,7 @@ from traits.api import Any, Str, Property, cached_property, Dict
 #============= standard library imports ========================`
 
 #============= local library imports  ==========================
-from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
+# from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 # from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.scene.primitives.primitives import Rectangle, Valve, Line, \
     Label, RoughValve, BaseValve, RoundedRectangle, BorderLine
@@ -137,8 +137,8 @@ class ExtractionLineCanvas2D(SceneCanvas):
         pass
     def OnCycle(self, event):
         pass
-    def OnProperties(self, event):
-        pass
+#    def OnProperties(self, event):
+#        pass
 #    def OnSample(self, event):
 #        self.manager.sample(self.active_item.name, mode='normal')
 #
@@ -146,8 +146,8 @@ class ExtractionLineCanvas2D(SceneCanvas):
 #        self.manager.cycle(self.active_item.name, mode='normal')
 
 #
-#    def OnProperties(self, event):
-#        self.manager.show_valve_properties(self.active_item.name)
+    def OnProperties(self, event):
+        self.manager.show_valve_properties(self.active_item.name)
 
     def _show_menu(self, event, obj):
         enabled = True

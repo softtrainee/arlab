@@ -17,10 +17,9 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Str, Any, Bool, List, Float, Int, DelegatesTo, Property
+from traits.api import  Str, Any, Bool, List, Float, Int, Property
 from traitsui.api import View, Item, VGroup
 #============= standard library imports ========================
-from copy import copy
 #============= local library imports  ==========================
 from state_machine.valve_FSM_sm import Valve_sm
 from src.loggable import Loggable
@@ -48,12 +47,13 @@ class HardwareValve(Loggable):
     cycle_n = Int(10)
     sample_period = Float(1)
 
-    actuator_name = DelegatesTo('actuator', prefix='name')
+    actuator_name = Property(depends_on='actuator')
+#    actuator_name = DelegatesTo('actuator', prefix='name')
 
     canvas_valve = Any
     position = Property
-    shaft_low = Property
-    shaft_high = Property
+#    shaft_low = Property
+#    shaft_high = Property
 
     query_state = Bool(True)
     description = Str
@@ -180,13 +180,13 @@ class HardwareValve(Loggable):
             r = True
         return r
 
-    def _get_shaft_low(self):
-        if self.canvas_valve:
-            return self.canvas_valve.low_side.orientation
-
-    def _get_shaft_high(self):
-        if self.canvas_valve:
-            return self.canvas_valve.high_side.orientation
+#    def _get_shaft_low(self):
+#        if self.canvas_valve:
+#            return self.canvas_valve.low_side.orientation
+#
+#    def _get_shaft_high(self):
+#        if self.canvas_valve:
+#            return self.canvas_valve.high_side.orientation
 
     def _get_position(self):
         if self.canvas_valve:
@@ -197,6 +197,12 @@ class HardwareValve(Loggable):
 
     def _get_display_software_lock(self):
         return 'Yes' if self.software_lock else 'No'
+
+    def _get_actuator_name(self):
+        name = ''
+        if self.actuator:
+            name = self.actuator.name
+        return name
 
     def traits_view(self):
         info = VGroup(
@@ -221,15 +227,15 @@ class HardwareValve(Loggable):
                    )
         geometry = VGroup(
                           Item('position', style='readonly'),
-                          Item('shaft_low', style='readonly'),
-                          Item('shaft_high', style='readonly'),
+#                          Item('shaft_low', style='readonly'),
+#                          Item('shaft_high', style='readonly'),
                           label='Geometry',
                           show_border=True
                           )
         return View(
                     VGroup(info, sample, cycle, geometry),
 
-                    buttons=['OK', 'Cancel'],
+#                    buttons=['OK', 'Cancel'],
                     title='{} Properties'.format(self.name)
                     )
 

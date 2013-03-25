@@ -59,7 +59,7 @@ class KerrStepMotor(KerrMotor):
 
     discrete_position = Any
     discrete_positions = Dict
-    home_offset=Float(0)
+    home_offset = Float(0)
     def load_additional_args(self, config):
         super(KerrStepMotor, self).load_additional_args(config)
         for section, option in [('Parameters', 'run_current'),
@@ -175,8 +175,8 @@ class KerrStepMotor(KerrMotor):
 
 #        return cmd+''.join(args)
 #        return ''.join(bs)
-        return cmd+self._build_hexstr(op, mps, rcl, hcl, tl)
-    
+        return cmd + self._build_hexstr(op, mps, rcl, hcl, tl)
+
     def _home_motor(self, *args, **kw):
         '''
         '''
@@ -230,15 +230,15 @@ class KerrStepMotor(KerrMotor):
     def _set_motor_position_(self, pos, hysteresis=0, velocity=None, reverse=False):
         '''
         '''
-        hpos=self._calculate_hysteresis_position(pos, hysteresis)
-        self._motor_position=hpos
+        hpos = self._calculate_hysteresis_position(pos, hysteresis)
+        self._motor_position = hpos
         #============pos is in mm===========
         addr = self.address
         cmd = '74'
         control = self._load_trajectory_controlbyte(reverse=reverse)
         position = self._float_to_hexstr(hpos)
         if velocity is None:
-            velocity=self.velocity
+            velocity = self.velocity
         v = '{:02x}'.format(int(velocity))
         a = '{:02x}'.format(int(self.acceleration))
 #        print self.velocity, self.acceleration
@@ -305,7 +305,7 @@ class KerrStepMotor(KerrMotor):
 
     def control_view(self):
         v = View(
-                 Group(
+#                 Group(
                      Item('discrete_position', show_label=False,
                           editor=EnumEditor(name='discrete_positions'),
                           defined_when='discrete_positions'
@@ -320,9 +320,9 @@ class KerrStepMotor(KerrMotor):
                                             low_name='min',
                                             high_name='max', enabled=False),
                          ),
-                       label=self.display_name,
-                       show_border=True
-                       )
+#                       label=self.display_name,
+#                       show_border=True
+#                       )
 
                  )
         return v
