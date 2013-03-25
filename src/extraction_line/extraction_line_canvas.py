@@ -25,150 +25,56 @@ import os
 from src.canvas.canvas3D.canvas3D_editor import Canvas3DEditor
 
 from src.paths import paths
-class ExtractionLineCanvas3DDummy(HasTraits):
-    '''
-    '''
-    canvas = Any
-    scene_graph = Property(depends_on='canvas')
-    user_views = Property(depends_on='canvas')
-    interactor_state = Property(depends_on='canvas')
-
-    manager = None
-
-    def setup(self, *args, **kw):
-        '''
-        '''
-        if self.canvas is not None:
-            self.canvas.setup(*args, **kw)
-            self.load_valve_states()
-
-    def _canvas_changed(self):
-        self.load_valve_states()
-
-    def load_valve_states(self):
-        '''
-        '''
-        vm = self.manager.valve_manager
-        if vm is not None:
-            for v in vm.explanable_items:
-                self.update_valve_state(v.name, v.state)
-
-    def toggle_item_identify(self, name):
-        '''
-        '''
-        v = self._get_object_by_name(name)
-        if v is not None:
-            v.toggle_identify()
-
-        # self.canvas.Refresh()
-    def lock_valve(self, name):
-        '''
-        '''
-        va = self._get_object_by_name(name)
-        if va is not None:
-            va.soft_lock = True
-
-    def unlock_valve(self, name):
-        '''
-        '''
-        va = self._get_object_by_name(name)
-        if va is not None:
-            va.unlock()
-
-    def update_valve_state(self, name, state):
-        '''
-        '''
-
-        va = self._get_object_by_name(name)
-        if va is not None:
-            if state:
-                va.finish_state_change(True)
-            else:
-                va.finish_state_change(False)
-
-
-    def _get_object_by_name(self, name):
-        '''
-        '''
-        if self.canvas:
-            return self.canvas._get_object_by_name(name)
-
-    def _get_scene_graph(self):
-        '''
-        '''
-        if hasattr(self.canvas, 'scene_graph'):
-            return self.canvas.scene_graph
-
-    def _set_user_views(self, v):
-        '''
-        '''
-        if hasattr(self.canvas, 'user_views'):
-            self.canvas.user_views = v
-
-    def _set_user_view(self, v):
-        if hasattr(self.canvas, 'user_views'):
-            self.canvas._set_view(v)
-
-    def Refresh(self):
-        '''
-        '''
-        if self.canvas:
-            self.canvas.Refresh()
-
-    def Update(self):
-        '''
-        '''
-        if self.canvas:
-            self.canvas.Update()
 
 
 class ExtractionLineCanvas(HasTraits):
     '''
     '''
     canvas2D = Any
-    canvas3D = Any
+#    canvas3D = Any
     manager = Any
     style = Enum('2D', '3D')
     width = Float(300)
     height = Float(500)
 
-    def __init__(self, *args, **kw):
-        '''
-        '''
-        super(ExtractionLineCanvas, self).__init__(*args, **kw)
+#    def __init__(self, *args, **kw):
+#        '''
+#        '''
+#        super(ExtractionLineCanvas, self).__init__(*args, **kw)
 
-        exp = self.manager.explanation
-        if exp:
-            for c in exp.explanable_items:
-                c.canvas = self
+#        exp = self.manager.explanation
+#        if exp:
+#            for c in exp.explanable_items:
+#                c.canvas = self
 
     def toggle_item_identify(self, name):
         '''
         '''
         if self.canvas2D is not None:
             self.canvas2D.toggle_item_identify(name)
-        if self.canvas3D is not None:
-            self.canvas3D.toggle_item_identify(name)
+
+#        if self.canvas3D is not None:
+#            self.canvas3D.toggle_item_identify(name)
 
     def Refresh(self):
         '''
         '''
-        if self.canvas3D:
-            self.canvas3D.Refresh()
+#        if self.canvas3D:
+#            self.canvas3D.Refresh()
         if self.canvas2D:
             self.canvas2D.request_redraw()
 
-    def Update(self):
-        '''
-        '''
-        if self.canvas3D:
-            self.canvas3D.Update()
+#    def Update(self):
+#        '''
+#        '''
+#        if self.canvas3D:
+#            self.canvas3D.Update()
 
     def get_object(self, name):
         if self.style == '2D':
             obj = self.canvas2D._get_object_by_name(name)
-        else:
-            obj = self.canvas3D._get_object_by_name(name)
+#        else:
+#            obj = self.canvas3D._get_object_by_name(name)
         return obj
 
     def load_canvas_file(self, path):
@@ -184,8 +90,8 @@ class ExtractionLineCanvas(HasTraits):
         if self.canvas2D:
             self.canvas2D.update_valve_state(name, state)
 
-        if self.canvas3D:
-            self.canvas3D.update_valve_state(name, state)
+#        if self.canvas3D:
+#            self.canvas3D.update_valve_state(name, state)
 
     def update_valve_lock_state(self, name, state, *args, **kw):
         '''
@@ -213,12 +119,12 @@ class ExtractionLineCanvas(HasTraits):
 
         return e
 #
-    def _canvas3D_default(self):
-        '''
-        '''
-        return
-#        e = ExtractionLineCanvas3DDummy(manager=self.manager)
-#        return e
+#    def _canvas3D_default(self):
+#        '''
+#        '''
+#        return
+# #        e = ExtractionLineCanvas3DDummy(manager=self.manager)
+# #        return e
 
     def _get_canvas_size(self):
         '''
@@ -247,29 +153,124 @@ class ExtractionLineCanvas(HasTraits):
                 )
         return g
 
-    def _canvas3D_group(self):
-        '''
-        '''
-        w, h = self._get_canvas_size()
-        g = Item('canvas3D',
-                    style='custom',
-                    show_label=False,
-                    # visible_when = 'not twod_canvas',
-                    editor=Canvas3DEditor(),
-                    width=w,
-                    height=h,
-                    label='3D'
-                    )
-
-        return g
+#    def _canvas3D_group(self):
+#        '''
+#        '''
+#        w, h = self._get_canvas_size()
+#        g = Item('canvas3D',
+#                    style='custom',
+#                    show_label=False,
+#                    # visible_when = 'not twod_canvas',
+#                    editor=Canvas3DEditor(),
+#                    width=w,
+#                    height=h,
+#                    label='3D'
+#                    )
+#
+#        return g
 
     def traits_view(self):
         '''
         '''
         if self.style == '2D':
             c = self._canvas2D_group()
-        else:
-            c = self._canvas3D_group()
+#        else:
+#            c = self._canvas3D_group()
         v = View(c)
         return v
 #============= EOF ====================================
+# class ExtractionLineCanvas3DDummy(HasTraits):
+#    '''
+#    '''
+#    canvas = Any
+#    scene_graph = Property(depends_on='canvas')
+#    user_views = Property(depends_on='canvas')
+#    interactor_state = Property(depends_on='canvas')
+#
+#    manager = None
+#
+#    def setup(self, *args, **kw):
+#        '''
+#        '''
+#        if self.canvas is not None:
+#            self.canvas.setup(*args, **kw)
+#            self.load_valve_states()
+#
+#    def _canvas_changed(self):
+#        self.load_valve_states()
+#
+#    def load_valve_states(self):
+#        '''
+#        '''
+#        vm = self.manager.valve_manager
+#        if vm is not None:
+#            for v in vm.explanable_items:
+#                self.update_valve_state(v.name, v.state)
+#
+#    def toggle_item_identify(self, name):
+#        '''
+#        '''
+#        v = self._get_object_by_name(name)
+#        if v is not None:
+#            v.toggle_identify()
+#
+#        # self.canvas.Refresh()
+#    def lock_valve(self, name):
+#        '''
+#        '''
+#        va = self._get_object_by_name(name)
+#        if va is not None:
+#            va.soft_lock = True
+#
+#    def unlock_valve(self, name):
+#        '''
+#        '''
+#        va = self._get_object_by_name(name)
+#        if va is not None:
+#            va.unlock()
+#
+#    def update_valve_state(self, name, state):
+#        '''
+#        '''
+#
+#        va = self._get_object_by_name(name)
+#        if va is not None:
+#            if state:
+#                va.finish_state_change(True)
+#            else:
+#                va.finish_state_change(False)
+#
+#
+#    def _get_object_by_name(self, name):
+#        '''
+#        '''
+#        if self.canvas:
+#            return self.canvas._get_object_by_name(name)
+#
+#    def _get_scene_graph(self):
+#        '''
+#        '''
+#        if hasattr(self.canvas, 'scene_graph'):
+#            return self.canvas.scene_graph
+#
+#    def _set_user_views(self, v):
+#        '''
+#        '''
+#        if hasattr(self.canvas, 'user_views'):
+#            self.canvas.user_views = v
+#
+#    def _set_user_view(self, v):
+#        if hasattr(self.canvas, 'user_views'):
+#            self.canvas._set_view(v)
+#
+#    def Refresh(self):
+#        '''
+#        '''
+#        if self.canvas:
+#            self.canvas.Refresh()
+#
+#    def Update(self):
+#        '''
+#        '''
+#        if self.canvas:
+#            self.canvas.Update()

@@ -394,51 +394,34 @@ class FusionsLogicBoard(CoreDevice):
         if motor.data_position != pos:
             motor.enabled = False
 
-#    def set_zoom(self, zoom, block=False, relative=False):
-#        '''
-#
-#        '''
-#        motor = self.zoom_motor
-#
-#        if relative:
-#            zoom = motor.data_position + zoom
-#            if not 0 <= zoom <= 100:
-#                return
-#
-#        self._enable_motor_(motor, zoom)
-#
-#        self.info('setting zoom to {:0.1f}'.format(zoom))
-#
-#        motor.data_position = zoom
-#
-#        if block:
-#            self._block_(motor)
-#
-#    def set_beam_diameter(self, pos, block=True):
-#        '''
-#
-#        '''
-#        motor = self.beam_motor
-#
-#        self._enable_motor_(motor, pos)
-#
-#        self.info('setting beam position {:0.3f}'.format(pos))
-#
-#        motor.data_position = pos
-#
-#        if block == True:
-#            self._block_(motor)
-
     def get_control_group(self):
-        return Group(Item('motors', style='custom',
+        return Group(
+                     Item('motors', style='custom',
                           height= -100,
-                          editor=ListEditor(mutable=False,
-                                      columns=max(1, int(round(len(self.motors) / 2.))),
-                                      style='custom',
-                                      editor=InstanceEditor(view='control_view')),
-
-                                      show_label=False),
+                          editor=ListEditor(
+                                            view='control_view',
+#                                            mutable=False,
+#                                            columns=max(1, int(round(len(self.motors) / 2.))),
+                                            use_notebook=True,
+                                            page_name='.name',
+                                            style='custom',
+                                            ),
+#                                            editor=InstanceEditor(view='control_view')),
+                            show_label=False)
                      )
+    '''
+        listeditor multi column
+    '''
+#    def get_control_group(self):
+#        return Group(Item('motors', style='custom',
+#                          height= -100,
+#                          editor=ListEditor(mutable=False,
+#                                      columns=max(1, int(round(len(self.motors) / 2.))),
+#                                      style='custom',
+#                                      editor=InstanceEditor(view='control_view')),
+#
+#                                      show_label=False),
+#                     )
 
 
 

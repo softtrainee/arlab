@@ -161,7 +161,8 @@ class StageManager(Manager):
         bind_preference(self.canvas, 'crosshairs_kind', '{}.crosshairs_kind'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_color', '{}.crosshairs_color'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_radius', '{}.crosshairs_radius'.format(pref_id))
-        bind_preference(self.canvas, 'crosshairs_offset', '{}.crosshairs_offset'.format(pref_id))
+        bind_preference(self.canvas, 'crosshairs_offsetx', '{}.crosshairs_offsetx'.format(pref_id))
+        bind_preference(self.canvas, 'crosshairs_offsety', '{}.crosshairs_offsety'.format(pref_id))
 
         bind_preference(self.canvas, 'scaling', '{}.scaling'.format(pref_id))
 
@@ -169,7 +170,8 @@ class StageManager(Manager):
         bind_preference(self.canvas, 'show_bounds_rect',
                         '{}.show_bounds_rect'.format(pref_id))
 
-        self.canvas.change_indicator_visibility()
+        self.canvas.request_redraw()
+#        self.canvas.change_indicator_visibility()
 
     def load(self):
         self._stage_maps = []
@@ -883,7 +885,6 @@ class StageManager(Manager):
 #===============================================================================
 # view groups
 #===============================================================================
-
     def _hole__group__(self):
         g = Group(HGroup(Item('hole'), spring))
         return g
@@ -922,12 +923,12 @@ class StageManager(Manager):
 #                           show_label=False, style='custom'
 #                          ),
 
-#                     Group(
-#                           Item('canvas', show_label=False,
-#                                editor=InstanceEditor(view='config_view'),
-#                                 style='custom'
-#                                 ),
-#                           label='Canvas'),
+                     Group(
+                           Item('canvas', show_label=False,
+                                 editor=InstanceEditor(view='config_view'),
+                                 style='custom'
+                                 ),
+                           label='Canvas'),
 
 #                     Group(Item('motion_controller_manager', editor=InstanceEditor(view='configure_view'),
 #                                 style='custom', show_label=False),

@@ -34,10 +34,10 @@ class ExtractionLineScene(Scene):
 
     def _make_color(self, c):
         if not isinstance(c, str):
-            c=','.join(map(str,map(int, c)))
-            c='({})'.format(c)
+            c = ','.join(map(str, map(int, c)))
+            c = '({})'.format(c)
         return c
-    
+
     def _new_rectangle(self, elem, c, bw=3, origin=None):
         if origin is None:
             ox, oy = 0, 0
@@ -47,9 +47,9 @@ class ExtractionLineScene(Scene):
         key = elem.text.strip()
         x, y = self._get_floats(elem, 'translation')
         w, h = self._get_floats(elem, 'dimension')
-        
-        c=self._make_color(c)
-        
+
+        c = self._make_color(c)
+
         rect = RoundedRectangle(x + ox, y + oy, width=w, height=h,
                                             name=key,
                                             border_width=bw,
@@ -118,12 +118,14 @@ class ExtractionLineScene(Scene):
         for c in tree.findall('color'):
             t = c.text.strip()
             k = c.get('tag')
-            co = map(float, t.split(',')) if ',' in t else t
+
+            t = map(float, t.split(',')) if ',' in t else t
+            co = self._make_color(t)
 
             if k == 'bgcolor':
-                self.canvas.bgcolor =map(lambda x: x/255., co)
+                self.canvas.bgcolor = co
             else:
-                color_dict[k] = self._make_color(co)
+                color_dict[k] = co
 
         # get an origin offset
         ox = 0
@@ -141,6 +143,7 @@ class ExtractionLineScene(Scene):
 #                                    canvas=self,
                                     border_width=3
                                     )
+            v.translate = x + ox, y + oy
             # sync the states
             if key in self.valves:
                 vv = self.valves[key]
@@ -172,8 +175,8 @@ class ExtractionLineScene(Scene):
                 c = color_dict['label']
             else:
                 c = (204, 204, 204)
-            
-            c=self._make_color(c)
+
+            c = self._make_color(c)
             l = Label(x + ox, y + oy,
                       bgcolor=c,
                       name='{:03}'.format(i),

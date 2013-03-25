@@ -279,17 +279,15 @@ class ExtractionLineManager(Manager):
 #            self.canvas.update_pressure(o.name, n, o.state)
     def update_valve_state(self, *args, **kw):
         if self.canvas:
-#            do_later(self.canvas.update_valve_state, *args, **kw)
             self.canvas.update_valve_state(*args, **kw)
 
     def update_valve_lock_state(self, *args, **kw):
         if self.canvas:
-#            do_later(self.canvas.update_valve_lock_state, *args, **kw)
             self.canvas.update_valve_lock_state(*args, **kw)
 
-    def update_canvas2D(self, *args):
-        if self.canvas:
-            self.canvas.canvas2D.update_valve_state(*args)
+#    def update_canvas2D(self, *args):
+#        if self.canvas:
+#            self.canvas.canvas2D.update_valve_state(*args)
 
     def show_valve_properties(self, name):
         if self.valve_manager is not None:
@@ -450,8 +448,8 @@ class ExtractionLineManager(Manager):
             # valve state show as changed if even it didnt actuate
 #            if result:
             if change:
-                do_later(self.canvas.update_valve_state, name, True if action == 'open' else False)
-#                self.canvas.update_valve_state(name, True if action == 'open' else False)
+#                do_later(self.canvas.update_valve_state, name, True if action == 'open' else False)
+                self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 
         return result, change

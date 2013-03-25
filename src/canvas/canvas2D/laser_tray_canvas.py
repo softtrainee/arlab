@@ -16,19 +16,20 @@
 
 #=============enthought library imports=======================
 from traits.api import Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
-    Enum, List
-# from traitsui.api import View, Item, VGroup
+    Enum, List, Int
+from traitsui.api import View, Item, VGroup, HGroup
 from chaco.api import AbstractOverlay
+from kiva import constants
 
 #=============standard library imports ========================
 # import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
 
-from kiva import constants
 from src.canvas.canvas2D.scene.primitives.laser_primitives import Transect, \
     VelocityPolyLine, RasterPolygon, LaserPoint
 from src.regex import TRANSECT_REGEX
+from src.canvas.canvas2D.crosshairs_overlay import CrosshairsOverlay
 
 # class Point(HasTraits):
 #    x=Float
@@ -76,6 +77,7 @@ DIRECTIONS = {'Left':('x', 1), 'Right':('x', -1),
                  'Down':('y', 1), 'Up':('y', -1)
                  }
 
+
 class LaserTrayCanvas(MapCanvas):
     '''
     '''
@@ -113,7 +115,9 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_offset_color = Color('blue')
 
     crosshairs_radius = Range(0.0, 4.0, 1.0)
-    crosshairs_offset = Tuple(0, 0)
+#    crosshairs_offset = Tuple(0, 0)
+    crosshairs_offsetx = Int
+    crosshairs_offsety = Int
 #    _jog_moving = False
     show_bounds_rect = Bool(True)
     points = List
@@ -129,9 +133,7 @@ class LaserTrayCanvas(MapCanvas):
     def __init__(self, *args, **kw):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
         self._add_bounds_rect()
-
-
-
+        self._add_crosshairs()
 
     def clear_all(self):
         self.lines = []
@@ -335,70 +337,26 @@ class LaserTrayCanvas(MapCanvas):
         if tran:
             return tran.get_point(int(p))
 
-#    def clear_points(self):
-#        popkeys = []
-#        self.point_counter = 0
-#        for k, v in self.markupcontainer.iteritems():
-#            if isinstance(v, PointIndicator):
-#                popkeys.append(k)
-#        for p in popkeys:
-#            self.markupcontainer.pop(p)
-#        self.request_redraw()
-#
-#    def load_points_file(self, p):
-#        self.point_counter = 0
-#        with open(p, 'r') as f:
-#            for line in f:
-#                identifier, x, y = line.split(',')
-#                pt = self.point_exists(float(x), float(y))
-#                if pt is not None:
-#                    self.markupcontainer.pop(pt.identifier)
-#
-#                self.markupcontainer[identifier] = PointIndicator(float(x), float(y), identifier=identifier, canvas=self)
-#                self.point_counter += 1
-#
-#        self.request_redraw()
-#
-#    def get_points(self):
-#        pts=[]
-#        for _k, v in self.markupcontainer.iteritems():
-#            if isinstance(v, PointIndicator):
-#
-#                pts.append((v.identifier, v.x, v.y))
-#
-# #                lines.append(','.join(map(str, )))
-#        pts=sorted(pts, key=lambda x: x[0])
-#        return pts
-#    def save_points(self, p):
-#        lines = []
-#        for _k, v in self.markupcontainer.iteritems():
-#            if isinstance(v, PointIndicator):
-#                lines.append(','.join(map(str, (v.identifier, v.x, v.y))))
-#
-#        with open(p, 'w') as f:
-#            f.write('\n'.join(lines))
-
-#    def config_view(self):
-#        v = View(
-#                VGroup(
-#               Item('show_bounds_rect'),
-#               Item('render_map'),
-#               Item('show_grids'),
-#               Item('show_desired_position'),
-#               Item('desired_position_color', show_label=False,
-#                    enabled_when='1'
-# #                    enabled_when='object.show_desired_position'
-#                    ),
-#               Item('show_laser_position'),
-#               Item('crosshairs_kind',
-# #                    enabled_when='object.show_laser_position'
-#                    ),
-# #               Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
-# #               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind=="UserRadius"'),
-#               Item('crosshairs_offset'),
-# #               Item('crosshairs_offset_color', show_label=False, enabled_when='object.crosshairs_offset!=(0,0)'),
-#               ))
-#        return v
+    def config_view(self):
+        v = View(
+                VGroup(
+                       Item('show_bounds_rect'),
+#                       Item('render_map'),
+                       Item('show_grids'),
+                       HGroup(Item('show_laser_position'),
+                              Item('crosshairs_color', springy=True, show_label=False)),
+                       Item('crosshairs_kind'),
+                       Item('crosshairs_radius'),
+                       HGroup(
+                              Item('crosshairs_offsetx', label='Offset'),
+                              Item('crosshairs_offsety', show_label=False)
+                              ),
+                       Item('crosshairs_offset_color'),
+                       HGroup(Item('show_desired_position'),
+                              Item('desired_position_color', springy=True, show_label=False)),
+                       )
+            )
+        return v
 
 
     def valid_position(self, x, y):
@@ -595,22 +553,22 @@ class LaserTrayCanvas(MapCanvas):
         if self.show_bounds_rect:
             self.overlays.append(BoundsOverlay(component=self))
 
+    def _add_crosshairs(self):
+        ch = CrosshairsOverlay(component=self)
+        self.overlays.append(ch)
+        self.crosshairs_overlay = ch
+
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('''render_map,show_laser_position, show_desired_position,
+    @on_trait_change('''show_laser_position, show_desired_position,
                          desired_position_color,
                          crosshairs_+
                          ''')
-    def change_indicator_visibility(self):
+    def change_indicator_visibility(self, name, new):
         self.request_redraw()
 
     def _show_bounds_rect_changed(self):
-#        bo = None
-#        for o in self.overlays:
-#            if isinstance(o, BoundsOverlay):
-#                bo = o
-#                break
         bo = next((o for o in self.overlays if isinstance(o, BoundsOverlay)), None)
         if bo is None:
             self._add_bounds_rect()
@@ -618,6 +576,7 @@ class LaserTrayCanvas(MapCanvas):
             self.overlays.remove(bo)
 
         self.request_redraw()
+
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -646,78 +605,81 @@ class LaserTrayCanvas(MapCanvas):
         from src.canvas.canvas2D.scene.laser_mine_scene import LaserMineScene
         s = LaserMineScene(canvas=self)
         return s
+
+#========================EOF====================================================
+
 #===============================================================================
 # draw
 #===============================================================================
 
-    def _draw_hook(self, gc, *args, **kw):
-        '''
-        '''
-        if self.show_desired_position and self.desired_position is not None:
-            # draw the place you want the laser to be
-            self._draw_crosshairs(gc, self.desired_position, color=self.desired_position_color, kind=2)
+#    def _draw_hook(self, gc, *args, **kw):
+#        '''
+#        '''
+#        if self.show_desired_position and self.desired_position is not None:
+#            # draw the place you want the laser to be
+#            self._draw_crosshairs(gc, self.desired_position, color=self.desired_position_color, kind=2)
+#
+#        if self.show_laser_position:
+#            # draw where the laser is
+#            # laser indicator is always the center of the screen
+#            pos = (self.x + (self.x2 - self.x) / 2.0  , self.y + (self.y2 - self.y) / 2.0)
+#
+# #            #add the offset
+# #            if self.crosshairs_offset is not (0, 0):
+# #                pos_off = pos[0] + self.crosshairs_offset[0], pos[1] + self.crosshairs_offset[1]
+# #                self._draw_crosshairs(gc, pos_off, color=self.crosshairs_offset_color, kind=5)
+#
+#
+# #            self._draw_crosshairs(gc, pos, color = colors1f[self.crosshairs_color])
+#            self._draw_crosshairs(gc, pos, color=self.crosshairs_color)
+#
+#        super(LaserTrayCanvas, self)._draw_hook(gc, *args, **kw)
 
-        if self.show_laser_position:
-            # draw where the laser is
-            # laser indicator is always the center of the screen
-            pos = (self.x + (self.x2 - self.x) / 2.0  , self.y + (self.y2 - self.y) / 2.0)
-
-#            #add the offset
-#            if self.crosshairs_offset is not (0, 0):
-#                pos_off = pos[0] + self.crosshairs_offset[0], pos[1] + self.crosshairs_offset[1]
-#                self._draw_crosshairs(gc, pos_off, color=self.crosshairs_offset_color, kind=5)
-
-
-#            self._draw_crosshairs(gc, pos, color = colors1f[self.crosshairs_color])
-            self._draw_crosshairs(gc, pos, color=self.crosshairs_color)
-
-        super(LaserTrayCanvas, self)._draw_hook(gc, *args, **kw)
-
-    def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
-        '''
-        '''
-
-        gc.save_state()
-        gc.set_stroke_color(color)
-        mx, my = xy
-        mx += 1
-        my += 1
-
-        if self.crosshairs_kind == 'BeamRadius':
-            r = self.beam_radius
-        elif self.crosshairs_kind == 'MaskRadius':
-            r = 0
-            if self.parent:
-                mask = self.parent.parent.get_motor('mask')
-                if mask is not None:
-                    r = mask.get_discrete_value()
-        else:
-            r = self.crosshairs_radius
-
-        if r:
-            r = self._get_wh(r, 0)[0]
-            gc.arc(mx, my, r, 0, 360)
-
-            gc.move_to(self.x, my)
-            gc.line_to(mx - r, my)
-
-            gc.move_to(mx + r, my)
-            gc.line_to(self.x2, my)
-
-            gc.move_to(mx, self.y)
-            gc.line_to(mx, my - r)
-            gc.move_to(mx, my + r)
-            gc.line_to(mx, self.y2)
-            gc.stroke_path()
-
-        b = 4
-        gc.move_to(mx - b, my)
-        gc.line_to(mx + b, my)
-        gc.move_to(mx, my - b)
-        gc.line_to(mx, my + b)
-        gc.stroke_path()
-
-        gc.restore_state()
+#    def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
+#        '''
+#        '''
+#
+#        gc.save_state()
+#        gc.set_stroke_color(color)
+#        mx, my = xy
+#        mx += 1
+#        my += 1
+#
+#        if self.crosshairs_kind == 'BeamRadius':
+#            r = self.beam_radius
+#        elif self.crosshairs_kind == 'MaskRadius':
+#            r = 0
+#            if self.parent:
+#                mask = self.parent.parent.get_motor('mask')
+#                if mask is not None:
+#                    r = mask.get_discrete_value()
+#        else:
+#            r = self.crosshairs_radius
+#
+#        if r:
+#            r = self._get_wh(r, 0)[0]
+#            gc.arc(mx, my, r, 0, 360)
+#
+#            gc.move_to(self.x, my)
+#            gc.line_to(mx - r, my)
+#
+#            gc.move_to(mx + r, my)
+#            gc.line_to(self.x2, my)
+#
+#            gc.move_to(mx, self.y)
+#            gc.line_to(mx, my - r)
+#            gc.move_to(mx, my + r)
+#            gc.line_to(mx, self.y2)
+#            gc.stroke_path()
+#
+#        b = 4
+#        gc.move_to(mx - b, my)
+#        gc.line_to(mx + b, my)
+#        gc.move_to(mx, my - b)
+#        gc.line_to(mx, my + b)
+#        gc.stroke_path()
+#
+#        gc.restore_state()
 #===============================================================================
 #
 #           1 |
@@ -795,4 +757,45 @@ class LaserTrayCanvas(MapCanvas):
 
 
 #========================EOF============================
-
+#    def clear_points(self):
+#        popkeys = []
+#        self.point_counter = 0
+#        for k, v in self.markupcontainer.iteritems():
+#            if isinstance(v, PointIndicator):
+#                popkeys.append(k)
+#        for p in popkeys:
+#            self.markupcontainer.pop(p)
+#        self.request_redraw()
+#
+#    def load_points_file(self, p):
+#        self.point_counter = 0
+#        with open(p, 'r') as f:
+#            for line in f:
+#                identifier, x, y = line.split(',')
+#                pt = self.point_exists(float(x), float(y))
+#                if pt is not None:
+#                    self.markupcontainer.pop(pt.identifier)
+#
+#                self.markupcontainer[identifier] = PointIndicator(float(x), float(y), identifier=identifier, canvas=self)
+#                self.point_counter += 1
+#
+#        self.request_redraw()
+#
+#    def get_points(self):
+#        pts=[]
+#        for _k, v in self.markupcontainer.iteritems():
+#            if isinstance(v, PointIndicator):
+#
+#                pts.append((v.identifier, v.x, v.y))
+#
+# #                lines.append(','.join(map(str, )))
+#        pts=sorted(pts, key=lambda x: x[0])
+#        return pts
+#    def save_points(self, p):
+#        lines = []
+#        for _k, v in self.markupcontainer.iteritems():
+#            if isinstance(v, PointIndicator):
+#                lines.append(','.join(map(str, (v.identifier, v.x, v.y))))
+#
+#        with open(p, 'w') as f:
+#            f.write('\n'.join(lines))

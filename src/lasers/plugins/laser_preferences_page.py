@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Int, File
-from traitsui.api import  Item, Group, VGroup
+from traitsui.api import  Item, Group, VGroup, HGroup
 
 #============= standard library imports ========================
 
@@ -49,7 +49,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
 
     use_autocenter = Bool(False)
     render_with_markup = Bool(False)
-    crosshairs_offset = Tuple(0, 0)
+    crosshairs_offsetx = Int(0)
+    crosshairs_offsety = Int(0)
     crosshairs_offset_color = Color('blue')
 
     show_patterning = Bool(True)
@@ -131,9 +132,12 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                     visible_when='crosshairs_kind=="UserRadius"'
                     ),
                Item('crosshairs_color', enabled_when='show_laser_position'),
-               Item('crosshairs_offset'),
+               HGroup(
+                      Item('crosshairs_offsetx', label='Offset'),
+                      Item('crosshairs_offsety', show_label=False),
+                      ),
                Item('crosshairs_offset_color', show_label=False,
-                    enabled_when='crosshairs_offset!=(0,0)'),
+                    ),
                Item('calibration_style'),
                Item('scaling'),
                label='Canvas',

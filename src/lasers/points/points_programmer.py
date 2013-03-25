@@ -15,20 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Color, Button, Event, Property, \
-    Any, List, Bool, Enum, Float, Int, Instance, cached_property, Str, String
-from traitsui.api import View, Item, ButtonEditor, Group, HGroup, VGroup
+from traits.api import  Button, Event, Property, \
+    Any, Bool, Enum, Instance, cached_property, String
+from traitsui.api import View, Item, ButtonEditor, HGroup, VGroup
 #============= standard library imports ========================
 import yaml
 import os
-from numpy import array, hstack, vstack
-import re
 #============= local library imports  ==========================
 from src.paths import paths
 from src.managers.manager import Manager
 from src.lasers.points.maker import BaseMaker, LineMaker, PointMaker, \
     PolygonMaker, TransectMaker
-from src.canvas.scene_viewer import SceneViewer, LaserMineViewer
+# from src.canvas.scene_viewer import LaserMineViewer
 from src.regex import TRANSECT_REGEX
 maker_dict = dict(polygon=PolygonMaker, point=PointMaker, line=LineMaker, transect=TransectMaker)
 
@@ -62,23 +60,13 @@ class PointsProgrammer(Manager):
     line = Any
     polygon = Any
 
-#    point_entry = Property(Int(enter_set=True, auto_set=False))
-#    line_entry = Property(Int(enter_set=True, auto_set=False))
-#    polygon_entry = Property(Int(enter_set=True, auto_set=False))
-#    _polygon_entry = Int
-#    scan_size = Int(50)
-#    plot_scan = Button('Plot')
-#    use_move = Bool(False)
-
     position_entry = String(enter_set=True, auto_set=False)
 
-    show_scene_viewer = Button('Scene Viewer')
+#    show_scene_viewer = Button('Scene Viewer')
 
     _path = None
 
     def load_stage_map(self, sm):
-#        if not (hasattr(sm, 'lines') and hasattr(sm, 'points') and hasattr(sm, 'polygons')):
-#            return
 
         canvas = self.canvas
         canvas.clear_all()
@@ -106,15 +94,10 @@ class PointsProgrammer(Manager):
             self.line = canvas.get_line(v)
         elif v.startswith('t'):
             if TRANSECT_REGEX.match(v):
-                point=canvas.get_transect_point(v)
+                point = canvas.get_transect_point(v)
                 if point:
-                    self.point=point
-#                t, p = v[1:].split('-')
-#                tran = canvas.get_transect(t)
-#                if tran:
-#                    point = tran.get_point(int(p))
-#                    if point:
-#                        self.point = point
+                    self.point = point
+
         elif v.startswith('r'):
             self.polygon = canvas.get_polygon(v[1:])
         elif v.startswith('p'):
@@ -123,48 +106,15 @@ class PointsProgrammer(Manager):
             try:
                 int(v)
                 self.point = canvas.get_point(v)
-                print v,self.point 
-            except ValueError,e:
+                print v, self.point
+            except ValueError, e:
                 print e
 
 #===============================================================================
 # handlers
 #===============================================================================
     def _position_entry_changed(self):
-        print self.position_entry, 'possss'
         self._set_entry(self.position_entry)
-
-    def _show_scene_viewer_fired(self):
-#        from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
-
-        xlim = self.canvas.get_mapper_limits('index')
-        ylim = self.canvas.get_mapper_limits('value')
-
-        canvas = self.canvas.__class__(use_pan=False, show_grids=True)
-        if hasattr(self.canvas, 'video'):
-            img = self.canvas.video.get_image_data()
-            canvas.video_underlay._cached_image = img
-
-        canvas.set_mapper_limits('index', xlim)
-        canvas.set_mapper_limits('value', ylim)
-        canvas.scene = self.canvas.scene.clone_traits()
-        canvas.scene.set_canvas(canvas)
-
-        sv = LaserMineViewer(canvas=canvas)
-
-        sv.canvas.freeze()
-        info = sv.edit_traits(kind='livemodal')
-        if info.result:
-            save = True
-            if self._path is None:
-                save = self.confirmation_dialog('Would you like to save these points?', title='Save Changes')
-
-            if save:
-                self.maker.canvas = canvas
-                self._dump(self._path)
-                self.canvas.scene = canvas.scene
-        self.maker.canvas = self.canvas
-        del sv
 
     def _show_hide_fired(self):
         canvas = self.canvas
@@ -232,44 +182,6 @@ class PointsProgrammer(Manager):
                                           )
             return maker
 
-#    def _set_polygon_entry(self, v):
-#        if self.use_move:
-#            self._set_entry('polygon', v, ['point', 'line'])
-#        else:
-#            self._polygon_entry = v
-#
-#    def _set_line_entry(self, v):
-#        self._set_entry('line', v, ['point', 'polygon'])
-#
-#    def _set_point_entry(self, v):
-#        self._set_entry('point', v, ['line', 'polygon'])
-#
-#    def _get_line_entry(self):
-#        return self._get_entry_identifer('line')
-#
-#    def _get_point_entry(self):
-#        return self._get_entry_identifer('point')
-#
-#    def _get_polygon_entry(self):
-#        return self._get_entry_identifer('polygon')
-#
-#    def _set_entry(self, name, value, onames):
-#        for oi in onames:
-#            setattr(self, oi, None)
-#
-#        objs = getattr(self.canvas, '{}s'.format(name))
-#        pp = next((pi for pi in objs if pi.identifier == str(value)), None)
-#
-#        # trigger stage_manager move_... event handler
-#        setattr(self, name, pp)
-
-#    def _get_entry_identifer(self, name):
-#        p = self._polygon_entry
-#        obj = getattr(self, name)
-#        if obj:
-#            p = obj.identifier
-#
-#        return p
     def _load_lines(self, lines, ptargs):
         canvas = self.canvas
         point_color = self.maker.point_color
@@ -328,13 +240,13 @@ class PointsProgrammer(Manager):
             points = ti['points']
             step = ti['step']
             for pi in points:
-                
+
                 if pi.has_key('mask'):
-                    ptargs['mask']=pi['mask']
+                    ptargs['mask'] = pi['mask']
 
                 if pi.has_key('attenuator'):
-                    ptargs['attenuator']=pi['attenuator']
-                
+                    ptargs['attenuator'] = pi['attenuator']
+
                 canvas.new_transect_point(xy=pi['xy'],
                                               z=pi['z'],
                                               step=step,
@@ -355,21 +267,8 @@ class PointsProgrammer(Manager):
 
     def traits_view(self):
         v = View(VGroup(
-                       Item('show_scene_viewer', show_label=False),
+#                       Item('show_scene_viewer', show_label=False),
                        Item('position_entry', label='Position'),
-#                       Item('point_entry', label='Point'),
-#                       Item('line_entry', label='Line'),
-#                       Item('polygon_entry', label='Polygon'),
-
-#                       HGroup(Item('polygon_entry', label='Polygon'),
-#                              Item('use_move',
-#                                   tooltip='If checked the polygon rasterization will execute.'),
-#                              Item('plot_scan',
-#                                   show_label=False,
-#                                   tooltip='Display a plot of the calculated scan lines'
-#                                   ),
-#                              ),
-
                        Item('mode')
                        ),
                 HGroup(Item('show_hide', show_label=False,
@@ -395,6 +294,37 @@ class PointsProgrammer(Manager):
         return v
 
 #============= EOF =============================================
+#    def _show_scene_viewer_fired(self):
+# #        from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
+#
+#        xlim = self.canvas.get_mapper_limits('index')
+#        ylim = self.canvas.get_mapper_limits('value')
+#
+#        canvas = self.canvas.__class__(use_pan=False, show_grids=True)
+#        if hasattr(self.canvas, 'video'):
+#            img = self.canvas.video.get_image_data()
+#            canvas.video_underlay._cached_image = img
+#
+#        canvas.set_mapper_limits('index', xlim)
+#        canvas.set_mapper_limits('value', ylim)
+#        canvas.scene = self.canvas.scene.clone_traits()
+#        canvas.scene.set_canvas(canvas)
+#
+#        sv = LaserMineViewer(canvas=canvas)
+#
+#        sv.canvas.freeze()
+#        info = sv.edit_traits(kind='livemodal')
+#        if info.result:
+#            save = True
+#            if self._path is None:
+#                save = self.confirmation_dialog('Would you like to save these points?', title='Save Changes')
+#
+#            if save:
+#                self.maker.canvas = canvas
+#                self._dump(self._path)
+#                self.canvas.scene = canvas.scene
+#        self.maker.canvas = self.canvas
+#        del sv
 #    def _plot_scan_fired(self):
 #        polygons = self.canvas.polygons
 #        if self.polygon_entry is not None and self.scan_size:
