@@ -120,12 +120,12 @@ class ExtractionLineScene(Scene):
             k = c.get('tag')
 
             t = map(float, t.split(',')) if ',' in t else t
-            co = self._make_color(t)
-
+#            co = self._make_color(t)
+            
             if k == 'bgcolor':
-                self.canvas.bgcolor = co
+                self.canvas.bgcolor = t
             else:
-                color_dict[k] = co
+                color_dict[k] = t
 
         # get an origin offset
         ox = 0

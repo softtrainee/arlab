@@ -59,6 +59,7 @@ class GaugeManager(Manager):
                 k.stop_scan()
 
     def start_scans(self):
+        self.info('starting gauge scans')
         for k in self.devices:
             if k.is_scanable:
                 k.start_scan()
