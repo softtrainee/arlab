@@ -59,8 +59,14 @@ class CrosshairsOverlay(AbstractOverlay):
         gc.line_to(mx, my + length)
         gc.stroke_path()
 
+
     def _draw_radius_ch(self, gc, pt, radius, color=None, circle_only=False):
         if color is not None:
+            rgb=lambda x: 0<=x<=1.
+            if not all(map(rgb, color)):
+                f=lambda x:x/255.
+                color=map(f, color)
+            
             gc.set_stroke_color(color)
 
         mx, my = pt

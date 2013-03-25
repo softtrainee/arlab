@@ -44,7 +44,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     crosshairs_radius = Range(0.0, 4.0, 1.0)
 
     desired_position_color = Color('green')
-    calibration_style = Enum('MassSpec', 'pychron-auto')
+    calibration_style = Enum('Tray', 'Free')
     scaling = Range(1.0, 2.0, 1)
 
     use_autocenter = Bool(False)
