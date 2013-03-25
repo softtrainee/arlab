@@ -166,7 +166,7 @@ class StageManager(Manager):
 
         bind_preference(self.canvas, 'scaling', '{}.scaling'.format(pref_id))
 
-        bind_preference(self.tray_calibration_manager, 'calibration_style', '{}.calibration_style'.format(pref_id))
+        bind_preference(self.tray_calibration_manager, 'style', '{}.calibration_style'.format(pref_id))
         bind_preference(self.canvas, 'show_bounds_rect',
                         '{}.show_bounds_rect'.format(pref_id))
 
