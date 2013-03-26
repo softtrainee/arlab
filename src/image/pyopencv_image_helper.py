@@ -16,7 +16,7 @@
 
 import pyopencv as cv
 from numpy import array, ones, zeros
-from src.image.centroid.calculate_centroid import calculate_centroid
+from src.geometry.centroid.calculate_centroid import calculate_centroid
 
 #
 # def clone(src):
@@ -50,13 +50,15 @@ def frompil(src):
 # def resetImageROI(*args):
 #    return cv.ResetImageROI(*args)
 
+def cv_swap_rb(frame):
+    cv.convertImage(frame, frame, cv.CV_CVTIMG_SWAP_RB)
 
 def load_image(path, swap=False):
     '''
     '''
     frame = cv.imread(path, 1)
-#    if swap:
-#        cv.convertImage(frame, frame, cv.CV_CVTIMG_SWAP_RB)
+    if swap:
+        cv.convertImage(frame, frame, cv.CV_CVTIMG_SWAP_RB)
     return frame
 
 
@@ -214,6 +216,7 @@ def contour(src):
     '''
 #    c, h = cv.findContours(src.clone(), cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
 #    c, h = cv.findContours(src.clone(), cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
+#    c, h = cv.findContours(src.clone(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
     c, h = cv.findContours(src.clone(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     return c, h
@@ -492,6 +495,7 @@ def draw_contour_list(src, clist, hierarchy=None,
                       ):
     '''
     '''
+
 #    print 'ncont', len(clist)
 #    p = cv.vector_vector_Point2i()
 #    p.create(clist)

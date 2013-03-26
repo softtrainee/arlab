@@ -29,7 +29,7 @@ try:
     from cvwrapper import swapRB, grayspace, cvFlip, \
     draw_lines, new_dst, \
     resize, asMat, save_image, load_image, \
-    get_size
+    get_size, cv_swap_rb
 except ImportError:
     pass
 # class GraphicsContainer(object):
@@ -69,20 +69,25 @@ class Image(HasTraits):
 #    mirror = Bool(False)
     panel_size = Int(300)
 
-#    def new_graphics_container(self):
-#        self.graphics_container = GraphicsContainer()
-
-#    def load(self, img, swap_rb=True):
-#    def swap_rb(self):
-#        cvConvertImage(self.source_frame, self.source_frame, CV_CVTIMG_SWAP_RB)
-#        self.frames[0] = self.source_frame
-
-    def load(self, img, swap_rb=False, nchannels=3):
+    @classmethod
+    def new_frame(cls, img, swap_rb=False):
         if isinstance(img, (str, unicode)):
             img = load_image(img, swap_rb)
 
         elif isinstance(img, ndarray):
             img = asMat(asarray(img, dtype='uint8'))
+
+        if swap_rb:
+            cv_swap_rb(img)
+
+        return img
+
+    def load(self, img, swap_rb=False, nchannels=3):
+#        if isinstance(img, (str, unicode)):
+#            img = load_image(img, swap_rb)
+#
+#        elif isinstance(img, ndarray):
+#            img = asMat(asarray(img, dtype='uint8'))
 #            img = colorspace(img)
 #            img = cvCreateImageFromNumpyArray(img)
 #            print fromarray(img)
@@ -98,8 +103,11 @@ class Image(HasTraits):
 #        if swap_rb:
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
 #        print img
-
+#        if swap_rb:
+#            cv_swap_rb(img)
 #        print img.reshape(960, 960)
+
+        img = self.new_frame(img, swap_rb)
         self.source_frame = img
 #        self.current_frame = img.clone()
         self.frames = [img.clone()]
@@ -339,8 +347,8 @@ class StandAloneImage(HasTraits):
             do_later(self.ui.dispose)
         self.ui = None
 
-    def load(self, src):
-        self._image.load(src)
+    def load(self, src, **kw):
+        self._image.load(src, **kw)
 
     @property
     def source_frame(self):
@@ -350,6 +358,8 @@ class StandAloneImage(HasTraits):
         self._image.frames = fs
 
     def set_frame(self, i, src):
+        if isinstance(src, ndarray):
+            src = asMat(src)
         self._image.frames[i] = colorspace(src)
 
     def get_frame(self, i):

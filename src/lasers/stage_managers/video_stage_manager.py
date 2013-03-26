@@ -28,19 +28,21 @@ import os
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
 from src.paths import paths
-from src.machine_vision.autofocus_manager import AutofocusManager
+# from src.machine_vision.autofocus_manager import AutofocusManager
 from src.helpers.archiver import Archiver
 from src.image.video_server import VideoServer
 from src.image.video import Video
 from src.canvas.canvas2D.camera import Camera
-from src.machine_vision.autocenter_manager import AutocenterManager
-from src.machine_vision.mosaic_manager import MosaicManager
+# from src.machine_vision.autocenter_manager import AutocenterManager
+# from src.machine_vision.mosaic_manager import MosaicManager
 
 from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
 from chaco.plot_graphics_context import PlotGraphicsContext
 from src.helpers.media import play_sound
+from src.mv.autocenter_manager import AutoCenterManager
+from src.mv.focus.autofocus_manager import AutoFocusManager
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -79,9 +81,9 @@ class VideoStageManager(StageManager):
     autocenter_button = Button('AutoCenter')
     configure_autocenter_button = Button('Configure')
 
-    mosaic_manager = Instance(MosaicManager)
-    autofocus_manager = Instance(AutofocusManager)
-    autocenter_manager = Instance(AutocenterManager)
+#    mosaic_manager = Instance(MosaicManager)
+    autofocus_manager = Instance(AutoFocusManager)
+    autocenter_manager = Instance(AutoCenterManager)
 
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
@@ -342,10 +344,12 @@ class VideoStageManager(StageManager):
             time.sleep(0.75)
             for _t in range(max(1, ntries)):
                 # use machine vision to calculate positioning error
-                rpos = self.autocenter_manager.locate_target(
+#                rpos = self.autocenter_manager.locate_target(
+                rpos = self.autocenter_manager.locate_center(
                         self.stage_controller.x,
                         self.stage_controller.y,
-                        holenum
+                        holenum,
+                        dim=self._stage_map.g_dimension
                         )
                 if rpos:
                     self.linear_move(*rpos, block=True,
@@ -635,23 +639,24 @@ class VideoStageManager(StageManager):
 #        return CameraCalibrationManager()
 
     def _autocenter_manager_default(self):
-        return AutocenterManager(video=self.video,
-                                    stage_controller=self.stage_controller,
-                                    laser_manager=self.parent,
-                                    parent=self,
-                                    application=self.application
-                                    )
-    def _mosaic_manager_default(self):
-        return MosaicManager(
-                             video=self.video,
-                                    stage_controller=self.stage_controller,
-                                    laser_manager=self.parent,
-                                    parent=self,
-                                    application=self.application
-                             )
+        return AutoCenterManager(video=self.video,
+                                 pxpermm=self.pxpercmx / 10.,
+#                                    stage_controller=self.stage_controller,
+#                                    laser_manager=self.parent,
+#                                    parent=self,
+                                 application=self.application
+                                )
+#    def _mosaic_manager_default(self):
+#        return MosaicManager(
+#                             video=self.video,
+#                                    stage_controller=self.stage_controller,
+#                                    laser_manager=self.parent,
+#                                    parent=self,
+#                                    application=self.application
+#                             )
 
     def _autofocus_manager_default(self):
-        return AutofocusManager(video=self.video,
+        return AutoFocusManager(video=self.video,
                                 laser_manager=self.parent,
                                 stage_controller=self.stage_controller,
                                 canvas=self.canvas,

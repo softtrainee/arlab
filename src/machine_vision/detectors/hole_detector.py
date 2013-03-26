@@ -207,7 +207,6 @@ class HoleDetector(Detector):
 
         # calculate the data position to move to nx,ny
         dxmm = (dx) / float(self.pxpermm)
-
         dymm = (dy) / float(self.pxpermm)
         nx = cx - dxmm
         ny = cy + dymm

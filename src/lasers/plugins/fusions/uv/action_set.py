@@ -31,21 +31,22 @@ class FusionsUvActionSet(FusionsActionSet):
     name = 'UV'
     action_path = 'src.lasers.plugins.fusions.uv.actions:'
     def _actions_default(self):
-        laser_path = 'MenuBar/Lasers/{}'.format(self.name)
+#        laser_path = 'MenuBar/Lasers/{}'.format(self.name)
 
-        actions = [Action(name='Gas Handling',
-                          path=laser_path,
-                          class_name='{}OpenGasHandlingAction'.format(self.action_path)),
+        actions = [
+#                   Action(name='Gas Handling',
+#                          path=laser_path,
+#                          class_name='{}OpenGasHandlingAction'.format(self.action_path)),
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
 #                       ),
 #                Action(name='Configure Watlow',
 #                       path='MenuBar/Lasers/{}'.format(self.name),
 #                       class_name='{}ConfigureWatlowAction'.format(self.action_path)
 #                       ),
-                   Action(name='Collect',
-                       path='MenuBar/Lasers/{}/Mosaic'.format(self.name),
-                       class_name='{}MosaicCollectAction'.format(self.action_path)
-                       )
+#                   Action(name='Collect',
+#                       path='MenuBar/Lasers/{}/Mosaic'.format(self.name),
+#                       class_name='{}MosaicCollectAction'.format(self.action_path)
+#                       )
                    ]
 
         return super(FusionsUvActionSet, self)._actions_default() + actions
