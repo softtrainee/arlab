@@ -125,6 +125,7 @@ class UVRunParser(RunParser):
         _set('reprate', int)
         _set('attenuator', str)
         _set('mask', str)
+        _set('image',str)
 
         return params
 #============= EOF =============================================

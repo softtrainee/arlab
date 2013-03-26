@@ -49,4 +49,11 @@ TRANSECT_REGEX = re.compile('[tT]+[\d\W]+-+[\d\W]+$')
 POSITION_REGEX = re.compile('[pPlLrRdD\d]+[\d\W]$|[\d\W]$')
 
 XY_REGEX = re.compile('\d+.*\d+,\d+.*\d*')
+
+def make_image_regex(ext):
+    if ext is None:
+        ext = ('png', 'tif', 'gif', 'jpeg', 'jpg', 'pct')
+    s = '[\d\w-]+\.({})'.format('|'.join(ext))
+    return re.compile(s)    
+    
 #============= EOF =============================================

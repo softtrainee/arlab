@@ -122,9 +122,12 @@ class MediaClient(Loggable):
     def cache(self, path, buf=None):
         if buf is None:
             buf = open(path, 'r')
-
-        with open(os.path.join(self.cache_dir, os.path.basename(path)), 'w') as fp:
-            fp.write(buf.read())
+            
+        if os.path.isdir(self.cache_dir):
+            with open(os.path.join(self.cache_dir, os.path.basename(path)), 'w') as fp:
+                fp.write(buf.read())
+        else:
+            self.warning('No cache directory available. {}'.format(self.cache_dir))
 
     def _retrieve_local(self, name):
         if not os.path.isdir(self.cache_dir):
@@ -145,15 +148,20 @@ class MediaClient(Loggable):
 
     def _post(self, name, buf):
         conn = self._new_connection()
-        conn.request('PUT', '/{}'.format(name), buf)
+        conn.request('PUT', self._make_dest_path(name), buf)
         resp = conn.getresponse()
         if not (200 <= resp.status < 300):
             raise Exception(resp.read())
 
     def _get(self, name):
         conn = self._new_connection()
-        conn.request('GET', '/{}'.format(name))
+        conn.request('GET', self._make_dest_path(name))
         return conn.getresponse()
+    
+    def _make_dest_path(self, name):
+        if not name.startswith('/'):
+            name='/{}'.format(name)
+        return name
 
 if __name__ == '__main__':
 

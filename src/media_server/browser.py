@@ -36,6 +36,7 @@ from src.geometry.reference_point import ReferencePoint
 from chaco.abstract_overlay import AbstractOverlay
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
+from src.regex import make_image_regex
 
 
 class ReferencePointsTool(BaseTool):
@@ -237,14 +238,7 @@ class MediaBrowser(Loggable):
             return '/{}/{}'.format(self.root, sel)
 
     def load_remote_directory(self, name, ext=None):
-        import re
-
-        if ext is None:
-            ext = ('png', 'tif', 'gif', 'jpeg', 'jpg', 'pct')
-
-        regex = '[\d\w-]+\.({})'.format('|'.join(ext))
-        pattern = re.compile(regex)
-
+        self.root=name
         client = self.client
         try:
             resp = client.propfind(name)
@@ -260,9 +254,11 @@ class MediaBrowser(Loggable):
             path = href.text.strip()
             return os.path.basename(path)
 
+        im_regex=make_image_regex(ext)
         files = [get_file_name(ri) for ri in tree.findall(name('response'))]
-        files = filter(lambda x: pattern.match(x), files)
+        files = filter(lambda x: im_regex.match(x), files)
         self.hierarchy.files = files
+        
         return True
 
 #===============================================================================
