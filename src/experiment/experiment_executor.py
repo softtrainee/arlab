@@ -245,9 +245,14 @@ class ExperimentExecutor(ExperimentManager):
 
         if exp.extract_device != NULL_STR:
             extract_device = exp.extract_device.replace(' ', '_').lower()
-            if not self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device)):
+            man=self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
+            if not man:
                 if not globalv.experiment_debug:
                     nonfound.append(extract_device)
+            elif man.mode=='client':
+                if not man.test_connection():
+                    nonfound.append(extract_device)
+                    
 
         if self.spectrometer_manager is None:
             if not globalv.experiment_debug:

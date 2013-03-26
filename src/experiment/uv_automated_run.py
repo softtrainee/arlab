@@ -37,8 +37,7 @@ class UVAutomatedRun(AutomatedRun):
 
     def _save_extraction(self, analysis):
         ext = super(UVAutomatedRun, self)._save_extraction(analysis)
-        if self.image is not None:
-            ext.image
+        if self.image:
             dbim = self.db.get_image(self.image)
             if dbim is None:
                 # use media server so only save path of file
@@ -49,7 +48,7 @@ class UVAutomatedRun(AutomatedRun):
 
             ext.image = dbim
         return ext
-
+    
     @cached_property
     def _get_masks(self):
         p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
@@ -93,7 +92,8 @@ class UVAutomatedRun(AutomatedRun):
 #===============================================================================
     def _browser_button_fired(self):
         browser = self._image_browser_factory()
-        browser.load_remote_directory('images')
+#        browser.root='images/fusions_uv'
+        browser.load_remote_directory('images/fusions_uv')
         info = browser.edit_traits(view='modal_view', kind='livemodal')
         if info.result:
             self.image = browser.get_selected_image_name()

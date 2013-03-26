@@ -320,8 +320,9 @@ class BaseSchedule(ScriptEditable):
                   ]
 
         if self.extract_device == 'Fusions UV':
-            header.extend(('reprate', 'mask', 'attenuator'))
-            attrs.extend(('reprate', 'mask', 'attenuator'))
+            header.extend(('reprate', 'mask', 'attenuator','image'))
+            attrs.extend(('reprate', 'mask', 'attenuator', 'image'))
+            
 #        else:
 #            header.extend(['beam'])
 #            attrs.extend(['beam'])
