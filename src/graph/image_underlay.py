@@ -28,11 +28,14 @@ class ImageUnderlay(AbstractOverlay):
             if hasattr(path, 'seek'):
                 # if path is a stringio seek back to the beginning
                 path.seek(0)
-
-            im = Image.open(path)
-            im = im.convert('RGB')
-            self._cached_img = array(im)
-
+            try:
+                im = Image.open(path)
+                im = im.convert('RGB')
+                self._cached_img = array(im)
+            except IOError, e:
+                print e
+                
+            
         super(ImageUnderlay, self).__init__(component, *args, **kw)
 
     def overlay(self, component, gc, view_bounds, mode):

@@ -138,7 +138,9 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
-#        self.populate_default_tables()
+        
+    def load(self):
+        return self.populate_default_tables()
 
     def _reload_from_disk(self):
 #        if not self._alive:
@@ -234,6 +236,14 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
         return True
 
+    def populate_default_tables(self):
+        db = self.db
+        if self.db:
+            if db.connect():                
+                from src.database.defaults import load_isotopedb_defaults
+                load_isotopedb_defaults(db)
+                return True
+
     def bind_preferences(self):
         super(ExperimentManager, self).bind_preferences()
         if not self.db.connect():
@@ -327,15 +337,17 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
                 ln = db.get_labnumber(arunid)
                 if ln is not None:
-                    an = ln.analyses[-1]
-                    if an.aliquot != arun.aliquot:
-                        st = 0
-                    else:
-                        try:
-                            st = an.step
-                            st = list(ALPHAS).index(st) + 1
-                        except (IndexError, ValueError):
+                    st=0
+                    if ln.analyses:
+                        an = ln.analyses[-1]
+                        if an.aliquot != arun.aliquot:
                             st = 0
+                        else:
+                            try:
+                                st = an.step
+                                st = list(ALPHAS).index(st) + 1
+                            except (IndexError, ValueError):
+                                st = 0
                 else:
                     st = stdict[arunid] if arunid in stdict else 0
 

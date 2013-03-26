@@ -79,8 +79,9 @@ class NewExperimentSetAction(ExperimentAction):
         '''
         '''
         manager = self._get_editor(event)
-        manager.new_experiment_set()
-        open_manager(event.window.application, manager)
+        if manager.load():
+            manager.new_experiment_set()
+            open_manager(event.window.application, manager)
 
 
 class OpenExperimentSetAction(ExperimentAction):
@@ -93,9 +94,10 @@ class OpenExperimentSetAction(ExperimentAction):
         '''
         '''
         manager = self._get_editor(event)
-#        if manager.load_experiment_set(set_names=True):
-        if manager.load_experiment_set(saveable=True):
-            open_manager(event.window.application, manager)
+        if manager.load():
+    #        if manager.load_experiment_set(set_names=True):
+            if manager.load_experiment_set(saveable=True):
+                open_manager(event.window.application, manager)
 
 
 class OpenRecentTableAction(ExperimentAction):

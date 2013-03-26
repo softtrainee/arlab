@@ -72,7 +72,10 @@ class ExtractionLineManager(Manager):
     _monitoring_valve_status = False
     _valve_state_frequency = 3
     _valve_lock_frequency = 10
-
+    
+    def test_connection(self):
+        return self.get_valve_states() is not None
+        
     def get_subsystem_module(self, subsystem, module):
         '''
         '''

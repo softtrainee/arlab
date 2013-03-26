@@ -120,11 +120,11 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_offsety = Int
 #    _jog_moving = False
     show_bounds_rect = Bool(True)
-    points = List
+#     points = List
     transects = List
     lines = List
     polygons = List
-    markup_objects = List
+#     markup_objects = List
 
     _new_line = True
     _new_transect = True
@@ -136,11 +136,12 @@ class LaserTrayCanvas(MapCanvas):
         self._add_crosshairs()
 
     def clear_all(self):
+        self._point_count=1
         self.lines = []
-        self.points = []
+#         self.points = []
         self.transects = []
         self.polygons = []
-        self.markup_objects = []
+#         self.markup_objects = []
         self.reset_markup()
         self.scene.reset_layers()
 
@@ -180,12 +181,16 @@ class LaserTrayCanvas(MapCanvas):
         if xy is None:
             xy = self._stage_position
         x, y = xy
-        for p in self.points:
-#        for p in self.markupcontainer.itervalues():
-#            if isinstance(p, PointIndicator):
-            if abs(p.x - x) < tol and abs(p.y - y) < tol:
-                # point already in the markup dict
-                return p
+        '''
+            reimplement with scene
+        '''
+        return False
+#         for p in self.points:
+# #        for p in self.markupcontainer.itervalues():
+# #            if isinstance(p, PointIndicator):
+#             if abs(p.x - x) < tol and abs(p.y - y) < tol:
+#                 # point already in the markup dict
+#                 return p
 
     def set_transect_step(self, step):
         transect = self.transects[-1]
@@ -296,10 +301,10 @@ class LaserTrayCanvas(MapCanvas):
             xy = self._stage_position
 
         p = LaserPoint(*xy,
-                identifier=str(len(self.points) + 1),
+                identifier=str(self._point_count),#str(len(self.points) + 1),
                 **kw
                 )
-
+        self._point_count+=1
         self.scene.add_item(p)
 #        self.points.append(p)
         self.request_redraw()
@@ -460,6 +465,8 @@ class LaserTrayCanvas(MapCanvas):
                 direction = self._calc_relative_move_direction(c, direction)
                 self.parent.relative_move(ax_key, direction)
                 event.handled = True
+            elif c in ('a','A'):
+                self.parent.accept_point()
 
     def normal_key_up(self, event):
         '''

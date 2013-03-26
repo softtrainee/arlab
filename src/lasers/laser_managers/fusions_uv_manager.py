@@ -93,11 +93,17 @@ class FusionsUVManager(FusionsLaserManager):
 
     def prepare(self):
         controller = self.laser_controller
-        controller.prepare()
+        return controller.prepare()
 
     def is_ready(self):
         controller = self.laser_controller
-        return controller.is_ready()
+        atl=self.atl_controller
+        #is nitrogen purged and flowing
+        lc=controller.is_ready()
+        
+        #is atl on and warmed up
+        ac=atl.is_enabled()
+        return lc and ac
 
     def goto_named_position(self, pos):
         sm = self.stage_manager
@@ -263,7 +269,7 @@ class FusionsUVManager(FusionsLaserManager):
 
     def fire_laser(self, action):
         atl = self.atl_controller
-        if atl.isEnabled():
+        if atl.is_enabled():
             if action == 'burst':
                 atl.set_burst_mode(True)
                 atl.laser_run()
@@ -385,7 +391,7 @@ class FusionsUVManager(FusionsLaserManager):
                              ),
                       HGroup(self._button_factory('fire_button', 'fire_label'),
                              Item('mode', show_label=False),
-                             enabled_when='object.enabled'
+                             enabled_when='object.enabled and object.status_readback=="Laser On"'
                              ),
                       HGroup(
                              Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),

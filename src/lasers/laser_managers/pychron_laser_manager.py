@@ -69,13 +69,17 @@ class PychronLaserManager(BaseLaserManager):
     _y = Float
     _z = Float
     connected = Bool
-    test_connection = Button('Test Connection')
+    test_connection_button = Button('Test Connection')
 
-    def _test_connection_fired(self):
-        self.connected = self._communicator.open()
+    def _test_connection_button_fired(self):
+        self.test_connection()
         if self.connected:
             self.opened()
-
+        
+    def test_connection(self):
+        self.connected = self._communicator.open()
+        return self.connected
+            
     def bind_preferences(self, pref_id):
         pass
 
@@ -194,7 +198,7 @@ class PychronLaserManager(BaseLaserManager):
             resp = ask(cmd)
             if resp is not None:
                 try:
-                    if not str_to_bool(resp):
+                    if str_to_bool(resp):
                         cnt += 1
                 except:
                     cnt = 0
@@ -323,7 +327,7 @@ class PychronLaserManager(BaseLaserManager):
 
     def traits_view(self):
         v = View(
-                 Item('test_connection', show_label=False),
+                 Item('test_connection_button', show_label=False),
                  self.get_control_button_group(),
                  Item('position'),
                  Item('x', editor=RangeEditor(low= -25.0, high=25.0)),

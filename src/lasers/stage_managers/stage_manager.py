@@ -242,7 +242,9 @@ class StageManager(Manager):
 #        print self.stage_maps
 #        print self._stage_maps
 
-
+    def accept_point(self):
+        self.points_programmer.accept_point()
+        
     def set_stage_map(self, v):
         return self._set_stage_map(v)
 
