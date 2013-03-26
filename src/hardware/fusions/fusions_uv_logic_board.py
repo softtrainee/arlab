@@ -23,7 +23,7 @@ from traitsui.api import View, Item, VGroup, ButtonEditor, HGroup, Spring
 import time
 #============= local library imports  ==========================
 from fusions_logic_board import FusionsLogicBoard
-from threading import Timer, Thread, Event as TEvent
+from threading import Timer, Thread, Lock, Event as TEvent
 from src.hardware.kerr.kerr_device import KerrDevice
 from src.traits_editors.led_editor import LEDEditor, LED
 from pyface.timer.do_later import do_later
@@ -38,7 +38,9 @@ class NitrogenFlower(KerrDevice):
     _ready_signal = None
     _timeout_timer = None
     _delay_timer = None
-    _cancel = False
+    _lock=None
+    _cancel_signal=None
+#     _cancel = False
 
     flow_button = Event
     flow_label = Property(depends_on='_flow_state')
@@ -47,7 +49,7 @@ class NitrogenFlower(KerrDevice):
     led = Instance(LED, ())
 
     message = Str
-
+    
     def _flow_button_fired(self):
 #        print self._flowing, 'asdfasdfsa'
         if self._flow_state in ('on', 'purge'):
@@ -59,25 +61,47 @@ class NitrogenFlower(KerrDevice):
         return FLOW_STATES[self._flow_state]
 
     def start(self):
-        if self._ready_signal is None or \
-            not self._ready_signal.is_set():
+        
+        if self._ready_signal is None:
+            self._ready_signal=TEvent()
+        
+        if self._lock is None:
+            self._lock=Lock()
+        
+        if self._cancel_signal is None:
+            self._cancel_signal=TEvent()
+            
+        if not self._ready_signal.is_set():
             self._start_delay_timer()
-
-        self.led.state = 1
-        do_later(self.trait_set, _flow_state='purge',
-                 message='Purging for {}s'.format(self.delay)
-                 )
-
+            self.led.state=1
+            do_later(self.trait_set, _flow_state='purge',
+                     message='Purging for {}s'.format(self.delay)
+                     )
+        else:
+            #cancel current timeout timer 
+#             self._cancel_signal.set()
+#             time.sleep(1)
+            #reset timer
+            
+            with self._lock:
+                self._timeout_timer=0
+#             self._start_timeout_timer()
+        
+        
     def stop(self):
         if self._delay_timer:
             self._delay_timer.cancel()
         if self._timeout_timer:
             self._timeout_timer.cancel()
+            
+        self._cancel_signal.set()
+        self._ready_signal.clear()
 
         self._stop_flow()
         self.led.state = 0
         do_later(self.trait_set, _flow_state='off',
-                                message='', _cancel=True
+                                message='', 
+#                                 _cancel=True
                                 )
 #        self._flow_state='off'
 
@@ -95,20 +119,23 @@ class NitrogenFlower(KerrDevice):
         t.start()
 
     def _start_timeout_timer(self):
-
-        def _loop():
-            cnt = 0
-            while cnt < self.timeout and not self._cancel:
-                v = self.timeout - cnt
+        def _loop(lock, cancel):
+            with lock:
+                self._timeout_cnt = 0
+            
+            while self._timeout_cnt < self.timeout and not cancel.is_set():
+                v = self.timeout - self._timeout_cnt
                 do_later(self.trait_set, message='Timeout after {}s ({}s) '.format(self.timeout, v))
-                cnt += 1
+                with lock:
+                    self._timeout_cnt += 1
+                
                 time.sleep(1)
-
-
-            do_later(self.trait_set, message='Timed out after {}s'.format(self.timeout))
-            self.set_ready(False)
-
-        t = Thread(target=_loop)
+            
+            if self._timeout_cnt>=self.timeout:
+                do_later(self.trait_set, message='Timed out after {}s'.format(self.timeout))
+                self.set_ready(False)
+            
+        t=Thread(target=_loop, args=(self._lock,self._cancel_signal))
         t.start()
 #        if self._timeout_timer:
 #            self._timeout_timer.cancel()
@@ -123,6 +150,7 @@ class NitrogenFlower(KerrDevice):
             do_later(self.trait_set, _flow_state='on',
                      message='Timeout after {}s'.format(self.timeout)
                      )
+            
             self._start_timeout_timer()
         else:
             self.stop()
@@ -171,12 +199,11 @@ class FusionsUVLogicBoard(FusionsLogicBoard):
         return True
 
     def prepare(self):
-        self.flower.start()
-
+        self.nitrogen_flower.start()
+        return True
 
     def is_ready(self):
-
-        pass
+        return self.nitrogen_flower.is_ready()
 
 
 #    attenuator_motor = Instance(KerrMotor, ())

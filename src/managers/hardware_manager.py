@@ -41,7 +41,7 @@ class HardwareManager(Manager):
         self.devices.sort()
 
     def _selected_changed(self):
-        if self.ui and self.selected is not None:
+        if self.selected is not None:
             self.current_device = self.selected
 
     def current_device_view(self):

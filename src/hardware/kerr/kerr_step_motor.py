@@ -92,7 +92,21 @@ class KerrStepMotor(KerrMotor):
 #                dp = DiscretePosition(name=option, position=pos, value=float(v))
 #                self.discrete_positions[str(value + off)] = '{:02n}:{}'.format(i + 1, option)
                 self.discrete_positions[dp] = '{:02n}:{}'.format(i + 1, option)
+    
+    def _get_io_bits(self):
+        return ['0', #bit 4
+                '1',
+                '1',
+                '1',
+                '0'] #bit 0
 
+    def _build_io(self):
+        cmd='18'
+        iobits=self._get_io_bits()
+        v='000'+''.join(iobits)
+        v='{:02X}'.format(int(v,2))
+        return cmd+v
+    
     def _discrete_position_changed(self):
         if self.discrete_position:
             dp = self.discrete_position
@@ -136,6 +150,7 @@ class KerrStepMotor(KerrMotor):
         commands = [
                     (addr, '1706', 100, 'stop motor, turn off amp'),
                     (addr, self._build_parameters(), 100, 'set parameters'),
+                    (addr, self._build_io(), 100, 'set io'),
                     (addr, '1701', 100, 'turn on amp'),
                     (addr, '00', 100, 'reset position')
                     ]
