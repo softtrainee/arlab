@@ -269,7 +269,7 @@ class VideoStageManager(StageManager):
             if client is not None:
                 url = client.url()
                 self.info('uploading {} to {}'.format(path, url))
-                if not client.upload(path, dest='images'):
+                if not client.upload(path, dest='images/{}'.format(self.parent.name)):
                     self.warning('failed to upload {} to media server at {}'.format(path, url))
                     self.warning_dialog('Failed to Upload {}. Media Server at {} unavailable'.format(path, url))
             else:
