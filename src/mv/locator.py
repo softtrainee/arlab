@@ -103,7 +103,7 @@ class Locator(Loggable):
 
         seg = RegionSegmenter()
         if start is None:
-            start = int(src.ndarray.mean()) - w
+            start = int(src.ndarray.mean()) - 3*w
 
         fa = self._get_filter_target_area(dim)
 #        print '----------------------'
@@ -112,7 +112,7 @@ class Locator(Loggable):
             seg.threshold_low = start + i * step - w
             seg.threshold_high = start + i * step + w
             nsrc = seg.segment(src)
-            print seg.threshold_low, seg.threshold_high, src.ndarray.mean()
+#            print seg.threshold_low, seg.threshold_high, src.ndarray.mean()
 
             # convert to Mat
             nsrc = asMat(nsrc)
@@ -210,9 +210,12 @@ class Locator(Loggable):
 
                 src = image.get_frame(0)
                 draw_polygons(src, [tar.poly_points], color=(0, 255, 255))
-
+                
+                wh=get_size(src)
+#                print wh, src.ndarray.shape
                 # make image with polygon
-                im = zeros(self.croppixels)
+#                im = zeros(self.croppixels)
+                im = zeros(wh)
                 points = asarray(tar.poly_points)
 
                 points = asarray([(pi.x, pi.y) for pi in points])
@@ -258,7 +261,7 @@ class Locator(Loggable):
 
                 img = asMat(nimage)
 
-                tars = self._find_targets(image, img, dim, start=0, w=1, n=2)
+                tars = self._find_targets(image, img, dim, start=5, w=4, n=2)
                 # locate new polygon from the segmented image
 #                tars = self._locate_targets(img)
 #                tars = self._locate_targets(img)
