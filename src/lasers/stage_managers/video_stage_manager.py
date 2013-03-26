@@ -640,7 +640,7 @@ class VideoStageManager(StageManager):
 
     def _autocenter_manager_default(self):
         return AutoCenterManager(video=self.video,
-                                 pxpermm=self.pxpercmx / 10.,
+#                                 pxpermm=self.pxpercmx / 10.,
 #                                    stage_controller=self.stage_controller,
 #                                    laser_manager=self.parent,
 #                                    parent=self,

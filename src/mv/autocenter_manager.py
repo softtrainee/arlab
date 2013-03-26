@@ -30,13 +30,16 @@ class AutoCenterManager(MachineVisionManager):
         self.view_image(im)
 
         loc = self.new_co2_locator()
-        cw = ch = dim * 2.5
+        cw = ch = dim*3
         frame = self._crop_image(self.target_image.source_frame, cw, ch)
+#        loc.croppixels=(cw,ch)
         dx, dy = loc.find(self.target_image, frame, dim=dim * self.pxpermm)
         if dx and dy:
-            self.info('calculated deviation {:0.3f},{:0.3f}'.format(dx, dy))
+            mdx=dx/self.pxpermm
+            mdy=dy/self.pxpermm
+            self.info('calculated deviation px={:n},{:n}, mm={:0.3f},{:0.3f}'.format(round(dx), round(dy),
+                                                                                     mdx,mdy))
 
-            return  cx + dx, cy + dy
-
+            return  cx + mdx, cy + mdy
 
 #============= EOF =============================================

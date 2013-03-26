@@ -434,14 +434,15 @@ class KerrMotor(KerrDevice):
 
     def _calculate_hysteresis_position(self, pos, hysteresis):
         hpos = pos + hysteresis
-        if hpos > self.max:
-            self._hysteresis_correction = hpos - self.max
-            hpos = self.max
-        elif hpos < self.min:
-            self._hysteresis_correction = hpos - self.min
-            hpos = self.min
-        else:
-            self._hysteresis_correction = hysteresis
+        if hysteresis:
+            if hpos > self.max:
+                self._hysteresis_correction = hpos - self.max
+                hpos = self.max
+            elif hpos < self.min:
+                self._hysteresis_correction = hpos - self.min
+                hpos = self.min
+            else:
+                self._hysteresis_correction = hysteresis
 
         return hpos
     def _set_motor_position_(self, pos, hysteresis=0, velocity=None):
@@ -568,7 +569,7 @@ class KerrMotor(KerrDevice):
                 self.do_hysteresis = True
                 self.doing_hysteresis_correction = False
                 hysteresis = self.hysteresis_value
-
+            
             self._set_motor_position_(npos, hysteresis)
             if not self.parent.simulation:
                 time.sleep(0.250)
