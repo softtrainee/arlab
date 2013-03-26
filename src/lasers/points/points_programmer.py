@@ -260,7 +260,7 @@ class PointsProgrammer(Manager):
         return 'Hide' if self.is_visible else 'Show'
 
     def _mode_default(self):
-        return 'transect'
+        return 'point'
 
     def _clear_mode_default(self):
         return 'all'

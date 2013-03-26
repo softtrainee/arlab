@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import CInt
 #============= standard library imports ========================
+from pyface.timer.api import do_later
 #============= local library imports  ==========================
 from src.hardware.kerr.kerr_step_motor import KerrStepMotor
 import time
@@ -48,26 +49,19 @@ class KerrCircularStepMotor(KerrStepMotor):
                 '1',
                 '1',
                 '0'] #bit 0
-
-    def _build_io(self):
-        cmd='18'
-        iobits=self._get_io_bits()
-        v='000'+''.join(iobits)
-        v='{:02X}'.format(int(v,2))
-        return cmd+v
     
-    def _initialize_(self, *args, **kw):
-        addr = self.address
-        commands = [
-                    (addr, '1706', 100, 'stop motor, turn off amp'),
-                    (addr, self._build_io(), 100, 'configure io pins'),
-                    (addr, self._build_parameters(), 100, 'set parameters'),
-                    (addr, '1701', 100, 'turn on amp'),
-                    (addr, '00', 100, 'reset position')
-                    ]
-        self._execute_hex_commands(commands)
-
-        self._home_motor(*args, **kw)
+#     def _initialize_(self, *args, **kw):
+#         addr = self.address
+#         commands = [
+#                     (addr, '1706', 100, 'stop motor, turn off amp'),
+#                     (addr, self._build_io(), 100, 'configure io pins'),
+#                     (addr, self._build_parameters(), 100, 'set parameters'),
+#                     (addr, '1701', 100, 'turn on amp'),
+#                     (addr, '00', 100, 'reset position')
+#                     ]
+#         self._execute_hex_commands(commands)
+# 
+#         self._home_motor(*args, **kw)
 
     def _home_motor(self, *args, **kw):
         # start moving
@@ -80,6 +74,7 @@ class KerrCircularStepMotor(KerrStepMotor):
             
         from threading import Event, Thread
         signal = Event()
+#         do_later(self.progress_update, progress, signal)
         t = Thread(target=self.progress_update, args=(progress, signal))
         t.start()
 
@@ -89,7 +84,7 @@ class KerrCircularStepMotor(KerrStepMotor):
         # set to max pos
         self._set_motor_position_(self.max, velocity=self.home_velocity)
         # wait until prox switch is on
-        self._proximity_move(True, n=2)
+        self._proximity_move(True, n=1)
         #=======================================================================
         # step 2.  reset pos, move positive 55
         #=======================================================================
@@ -196,25 +191,30 @@ class KerrCircularStepMotor(KerrStepMotor):
     def _proximity_move(self, onoff, n=2):
         addr = self.address
         cnt = 0
+        period=0.0125
+        tc=0
+        totalcnts=30/period
         # poll proximity switch wait for 2 successess
-        while cnt < n:
-            time.sleep(0.05)
+        while cnt < n and tc<totalcnts:
+            time.sleep(period)
             lim = self._get_proximity_limit()
             if (onoff and lim) or  (not onoff and not lim):
                 cnt += 1
-
+            tc+=1
+        
         # stop moving when proximity limit set
         cmds = [(addr, '1707', 100, 'Stop motor'),  # leave amp on
                 (addr, '00', 100, 'Reset Position')]
         self._execute_hex_commands(cmds)
+        if tc>=totalcnts:
+            self.warning_dialog('Failed Homing motor')
 
-    def _read_limits(self):
+    def _read_limits(self, verbose=False):
         cb = '00001000'
-        inb = self.read_status(cb, verbose=True)
-        inb = inb[2:-2]
+        inb = self.read_status(cb, verbose=False)
         if inb:
             # resp_byte consists of input_byte
-            ba = make_bitarray(int(inb, 16))  # , self._hexstr_to_float(rb)
+            ba = make_bitarray(int(inb[2:-2], 16))  # , self._hexstr_to_float(rb)
             return ba
 
     def _get_proximity_limit(self):

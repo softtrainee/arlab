@@ -28,7 +28,7 @@ from src.hardware.core.data_helper import make_bitarray
 import time
 from globals import globalv
 from src.traits_editors.custom_label_editor import CustomLabel
-from pyface.timer.do_later import do_later
+from pyface.timer.api import do_after
 
 SIGN = ['negative', 'positive']
 
@@ -291,8 +291,9 @@ class KerrMotor(KerrDevice):
         while not signal.is_set():
             pos = self._get_motor_position(verbose=False)
             if progress is not None:
-                do_later(progress.change_message, '{} position = {}'.format(self.name, pos))
-            time.sleep(1)
+                progress.change_message('{} position= {}'.format(self.name, pos))
+#                 do_after(25,progress.change_message, '{} position = {}'.format(self.name, pos))
+            time.sleep(0.5)
 
     def block(self, n=3, tolerance=1, progress=None):
         '''
@@ -443,7 +444,7 @@ class KerrMotor(KerrDevice):
             self._hysteresis_correction = hysteresis
 
         return hpos
-    def _set_motor_position_(self, pos, hysteresis=0):
+    def _set_motor_position_(self, pos, hysteresis=0, velocity=None):
         '''
         '''
         hpos = self._calculate_hysteresis_position(pos, hysteresis)
@@ -454,7 +455,10 @@ class KerrMotor(KerrDevice):
         cmd = 'D4'
         control = self._load_trajectory_controlbyte()
         position = self._float_to_hexstr(hpos)
-        v = self._float_to_hexstr(self.velocity)
+        if velocity is None:
+            velocity =self.velocity
+        v = self._float_to_hexstr(velocity)
+        
         a = self._float_to_hexstr(self.acceleration)
 #        print cmd, control, position, v, a
         cmd = ''.join((cmd, control, position, v, a))
