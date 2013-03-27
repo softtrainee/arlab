@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Float, Button, Bool, Any, String
 from traitsui.api import View, Item, HGroup
 from src.traits_editors.custom_label_editor import CustomLabel
-from src.geometry.geometry import calculate_reference_frame_center
+from src.geometry.geometry import calculate_reference_frame_center, calc_length
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
 from src.geometry.reference_point import ReferencePoint
 #============= standard library imports ========================
@@ -49,23 +49,38 @@ class FreeCalibrator(TrayCalibrator):
             return 'Set Point1', None, None, None
         elif step == 'Set Point1':
             self._set_point((x, y))
+#             canvas.calibration_item.cx = x
+#             canvas.calibration_item.cy = y
             return 'Set Point2', None, None, None
         elif step == 'Set Point2':
+#             canvas.calibration_item.ry = y
+#             canvas.calibration_item.rx = x
             self._set_point((x, y))
+            r1 = self.point1[0]
+            r2 = self.point2[0]
+            R1 = self.point1[1]
+            R2 = self.point2[1]
+            cx, cy, rot = calculate_reference_frame_center(r1, r2, R1, R2)
 
-            cx, cy, rot = calculate_reference_frame_center(self.point1[0],
-                                                           self.point2[0],
-                                                           self.point1[1],
-                                                           self.point2[1])
+            rd = calc_length(r1, r2)
+            Rd = calc_length(R1, R2)
+
+            scale = rd / Rd
+            print scale
+            ca = canvas.calibration_item
+            ca.cx, ca.cy = cx, cy
+            ca.rotation = rot
+            ca.scale = scale
             return 'Calibrate', cx, cy, rot
 
     def _set_point(self, sp):
-        rp = ReferencePoint(point=sp)
+        rp = ReferencePoint(sp)
         info = rp.edit_traits()
         if info.result:
             dp = rp.x, rp.y
             if self.point1 is None:
                 self.point1 = (dp, sp)
+
             else:
                 self.point2 = (dp, sp)
 

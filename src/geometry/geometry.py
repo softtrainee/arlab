@@ -45,23 +45,23 @@ def sort_clockwise(pts, xy, reverse=False):
 def calc_point_along_line(x1, y1, x2, y2, L):
     '''
         calculate pt (x,y) that is L units from x1, y1
-        
+
         if calculated pt is past endpoint use endpoint
-        
-        
+
+
                     * x2,y2
-                  /  
+                  /
                 /
           L--- * x,y
           |  /
           *
         x1,y1
-        
+
         L**2=(x-x1)**2+(y-y1)**2
         y=m*x+b
-        
+
         0=(x-x1)**2+(m*x+b-y1)**2-L**2
-        
+
         solve for x
     '''
     run = (x2 - x1)
@@ -93,30 +93,34 @@ def calc_point_along_line(x1, y1, x2, y2, L):
 def calculate_reference_frame_center(r1, r2, R1, R2):
     '''
         r1=x,y p1 in frame 1 (data space)
-        r2=x,y p2 in frame 1 
+        r2=x,y p2 in frame 1
         R1=x,y p1 in frame 2 (screen space)
         R2=x,y p2 in frame 2
-        
+
         given r1, r2, R1, R2 calculate center of frame 1 in frame 2 space
     '''
     # calculate delta rotation for r1 in R2
     a1 = calc_angle(R1, R2)
     a2 = calc_angle(r1, r2)
-    rot = a1 - a2
+    print a1, a2
+    rot = 0
+#     rot = a1 - a2
 
     # rotate r1 to convert to frame 2
-    r1Rx, r1Ry = rotate_pt(r1, -rot)
+    r1Rx, r1Ry = rotate_pt(r1, rot)
 
     # calculate scaling i.e px/mm
     rL = calc_length(r1, r2)
     RL = calc_length(R1, R2)
     rperR = abs(RL / rL)
 
+    print 'rrrr', rL, RL
+    print r1, r2, R1, R2
     # calculate center
     cx = R1[0] - r1Rx * rperR
     cy = R1[1] - r1Ry * rperR
 
-    return cx, cy, rot
+    return cx, cy, 180 - rot
 
 
 def rotate_pt(pt, theta):

@@ -56,13 +56,14 @@ class TrayCalibrator(Loggable):
     @classmethod
     def load(cls, name):
         path = cls._get_path(name)
+        print os.path.isfile(path), path
         if os.path.isfile(path):
             with open(path, 'rb') as f:
                 try:
                     obj = pickle.load(f)
                     return obj
-                except pickle.PickleError:
-                    pass
+                except pickle.PickleError, e:
+                    print e
 
     @classmethod
     def _get_path(cls, name):

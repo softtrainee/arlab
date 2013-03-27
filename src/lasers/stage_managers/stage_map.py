@@ -156,8 +156,8 @@ class StageMap(Loggable):
 
     def _calculated_interpolated_position(self, h, search_distance):
         '''
-            search distance is a scalar in hole units. it defines how many 
-            holes away to 
+            search distance is a scalar in hole units. it defines how many
+            holes away to
         '''
 
 
@@ -233,7 +233,7 @@ class StageMap(Loggable):
                     iholes.append(found[j])
 
     def _interpolate_triangulation(self, hole, found, nxs, nys, iholes):
-        '''           
+        '''
             try interpolating using "triangulation"
         '''
         rad = hole.dimension
@@ -304,7 +304,9 @@ class StageMap(Loggable):
         pos = a.transform(*pos)
         return pos
 
-    def map_to_calibration(self, pos, cpos=None, rot=None, translate=None):
+    def map_to_calibration(self, pos, cpos=None, rot=None,
+                           scale=None,
+                           translate=None):
         cpos, rot = self._get_calibration_params(cpos, rot)
 
         a = AffineTransform()
@@ -316,6 +318,8 @@ class StageMap(Loggable):
         a.translate(-cpos[0], -cpos[1])
         a.translate(*cpos)
 
+        if scale:
+            a.scale(scale, scale)
         pos = a.transform(*pos)
         return pos
 

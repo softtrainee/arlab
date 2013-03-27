@@ -61,6 +61,7 @@ class StageVisualizationCanvas(MarkupCanvas):
         xma = -100
         ymi = 100
         yma = -100
+        si = None
         for si in sm.sample_holes:
             x, y = sm.map_to_calibration(si.nominal_position,
                                       cpos, rot)
@@ -81,9 +82,13 @@ class StageVisualizationCanvas(MarkupCanvas):
             if si.has_correction():
                 self.record_correction(si, si.x_cor, si.y_cor)
 
-
-        self.set_mapper_limits('x', (xmi, xma), pad=si.dimension)
-        self.set_mapper_limits('y', (ymi, yma), pad=si.dimension)
+        pa = 0
+        if si is not None:
+            pa = si.dimension
+#         self.set_mapper_limits('x', (xmi, xma), pad=si.dimension)
+#         self.set_mapper_limits('y', (ymi, yma), pad=si.dimension)
+        self.set_mapper_limits('x', (xmi, xma), pad=pa)
+        self.set_mapper_limits('y', (ymi, yma), pad=pa)
         self.invalidate_and_redraw()
 
 #    def map_dimension(self, d):

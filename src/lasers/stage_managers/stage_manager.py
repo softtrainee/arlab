@@ -244,7 +244,7 @@ class StageManager(Manager):
 
     def accept_point(self):
         self.points_programmer.accept_point()
-        
+
     def set_stage_map(self, v):
         return self._set_stage_map(v)
 
@@ -271,7 +271,9 @@ class StageManager(Manager):
 
         pos = (x, y)
         if use_calibration:
+            print 'pre', pos
             pos = self.get_calibrated_position(pos)
+            print 'post', pos
 
         self.stage_controller.linear_move(*pos, **kw)
 
@@ -415,16 +417,21 @@ class StageManager(Manager):
 
         canvas = self.canvas
         ca = canvas.calibration_item
-
+#         print 'caca', ca
         if ca:
             rot = ca.rotation
             cpos = ca.center
             t = None
+            print 'caca', rot, cpos, ca.scale
+            scale = 1 / ca.scale
+            rot = 0
 #            from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem
 #            if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
 #                t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])
-            pos = smap.map_to_calibration(pos, cpos, rot, translate=t)
+            pos = smap.map_to_calibration(pos, cpos, rot,
+                                          scale=scale,
+                                          translate=t)
 
         return pos
 
@@ -546,8 +553,8 @@ class StageManager(Manager):
         if motors is not None:
             for k, v in motors.itervalues():
                 '''
-                    motor will not set if it has been locked using set_motor_lock or 
-                    remotely using SetMotorLock 
+                    motor will not set if it has been locked using set_motor_lock or
+                    remotely using SetMotorLock
                 '''
                 if use_move:
                     self.parent.set_motor(k, v, block=True)
@@ -564,7 +571,7 @@ class StageManager(Manager):
         '''
             sort clockwise ensures consistent offset behavior
             a polygon gain have a inner or outer sense depending on order of vertices
-            
+
             always use sort_clockwise prior to any polygon manipulation
         '''
         pts = sort_clockwise(pts, pts)
@@ -1005,6 +1012,7 @@ class StageManager(Manager):
         else:
             r = 'Calibrate Stage'
         return r
+
     def _get_program_points_label(self):
         return 'Program Points' if not self.canvas.markup else 'End Program'
 
