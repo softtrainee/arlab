@@ -14,6 +14,8 @@
 # limitations under the License.
 #===============================================================================
 from numpy import array, identity, sin, cos, radians
+from scipy import linalg
+import math
 class AffineTransform(object):
     '''
         affine transform 
@@ -90,6 +92,60 @@ class AffineTransform(object):
 
     def new_vector(self, x, y):
         return array([[x], [y], [1]])
+
+
+'''
+    Programming Computer Vision with Python:
+    Tools and algorithms for analyzing images
+'''
+def calculate_rigid_transform(refpoints, points):
+    '''
+        A=[[x1 -y1  1 0]
+           [y1  x1  0 1]           
+           [x2 -y2  1 0]
+           ...
+           [yn  xn  0 1]]
+        
+        y=[[x1]
+           [y1]
+           [x2]
+           [y2]
+           ...
+           [xn]           
+           [yn]           
+           ]
+           
+        return 
+            s: scale
+            theta: angle of rotation in degrees
+            
+            T: translation vector (tx,ty).  float tuple
+             
+    '''
+
+
+    rows = []
+    ys = []
+    for (rx, ry), (x, y) in zip(refpoints, points):
+        row = [x, -y, 1, 0]
+        rows.append(row)
+        row = [y, x, 0, 1]
+        rows.append(row)
+        ys.append([rx])
+        ys.append([ry])
+
+    A = array(rows)
+    y = array(ys)
+#    print A
+#    print y
+    a, b, tx, ty = linalg.lstsq(A, y)[0]
+#    R = array([[a, -b], [b, a]])
+    scale = (a ** 2 + b ** 2) ** 0.5
+    theta = math.degrees(math.acos(a / scale))
+    print scale, float(scale)
+    return float(scale), theta, map(float, (tx, ty))
+
+
 
 #============= EOF ====================================
 # import math

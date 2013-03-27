@@ -313,10 +313,11 @@ class StageMap(Loggable):
         if translate:
             a.translate(*translate)
 
+
         a.translate(*cpos)
         a.rotate(rot)
-        a.translate(-cpos[0], -cpos[1])
-        a.translate(*cpos)
+#        a.translate(-cpos[0], -cpos[1])
+#        a.translate(*cpos)
 
         if scale:
             a.scale(scale, scale)

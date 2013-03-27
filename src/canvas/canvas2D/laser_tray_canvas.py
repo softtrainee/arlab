@@ -136,7 +136,7 @@ class LaserTrayCanvas(MapCanvas):
         self._add_crosshairs()
 
     def clear_all(self):
-        self._point_count=1
+        self._point_count = 1
         self.lines = []
 #         self.points = []
         self.transects = []
@@ -301,10 +301,10 @@ class LaserTrayCanvas(MapCanvas):
             xy = self._stage_position
 
         p = LaserPoint(*xy,
-                identifier=str(self._point_count),#str(len(self.points) + 1),
+                identifier=str(self._point_count),  # str(len(self.points) + 1),
                 **kw
                 )
-        self._point_count+=1
+        self._point_count += 1
         self.scene.add_item(p)
 #        self.points.append(p)
         self.request_redraw()
@@ -396,8 +396,10 @@ class LaserTrayCanvas(MapCanvas):
             self.invalidate_and_redraw()
 
     def clear_desired_position(self):
-        self._desired_position = None
-        self.request_redraw()
+        pass
+#    def clear_desired_position(self):
+#        self._desired_position = None
+#        self.request_redraw()
 
     def set_desired_position(self, x, y):
         '''
@@ -465,7 +467,7 @@ class LaserTrayCanvas(MapCanvas):
                 direction = self._calc_relative_move_direction(c, direction)
                 self.parent.relative_move(ax_key, direction)
                 event.handled = True
-            elif c in ('a','A'):
+            elif c in ('a', 'A'):
                 self.parent.accept_point()
 
     def normal_key_up(self, event):
