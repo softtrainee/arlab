@@ -15,77 +15,84 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Button, Bool, Any, String
+from traits.api import HasTraits, Float, Button, Bool, Any, String, List
 from traitsui.api import View, Item, HGroup
-from src.traits_editors.custom_label_editor import CustomLabel
-from src.geometry.geometry import calculate_reference_frame_center, calc_length
+# from src.traits_editors.custom_label_editor import CustomLabel
+# from src.geometry.geometry import calculate_reference_frame_center, calc_length
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
 from src.geometry.reference_point import ReferencePoint
+from src.geometry.affine import calculate_rigid_transform
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class FreeCalibrator(TrayCalibrator):
-#    accept_point = Button
-#    finished = Button
-#    calibrating = Bool(False)
+    accept_point = Button
+    finished = Button
+    calibrating = Bool(False)
+
     manager = Any
-    point1 = None
-    point2 = None
 
-
-#    def get_controls(self):
-#        cg = HGroup(Item('object.calibrator.accept_point',
-#                         enabled_when='object.calibrator.calibrating',
-#                       show_label=False),
-#                  Item('object.calibrator.finished', show_label=False))
-#        return cg
+    points = List
+    append_current_calibration = Bool(False)
+    def get_controls(self):
+        cg = HGroup(Item('object.calibrator.accept_point',
+                         enabled_when='object.calibrator.calibrating',
+                       show_label=False),
+                    Item('object.calibrator.append_current_calibration',
+                         label='Append Points',
+                         tooltip='Should points be appended to the current calibration or a new calibration started?'
+                         )
+                    )
+        return cg
 
     def handle(self, step, x, y, canvas):
         if step == 'Calibrate':
-            canvas.new_calibration_item()
-#            self.calibrating = True
-            self.point1 = None
-            return 'Set Point1', None, None, None
-        elif step == 'Set Point1':
-            self._set_point((x, y))
-#             canvas.calibration_item.cx = x
-#             canvas.calibration_item.cy = y
-            return 'Set Point2', None, None, None
-        elif step == 'Set Point2':
-#             canvas.calibration_item.ry = y
-#             canvas.calibration_item.rx = x
-            self._set_point((x, y))
-            r1 = self.point1[0]
-            r2 = self.point2[0]
-            R1 = self.point1[1]
-            R2 = self.point2[1]
-            cx, cy, rot = calculate_reference_frame_center(r1, r2, R1, R2)
+            self.calibrating = True
+            if self.append_current_calibration:
+                if not self.points:
+                    self.points = []
+                    canvas.new_calibration_item()
+            else:
+                canvas.new_calibration_item()
+                self.points = []
 
-            rd = calc_length(r1, r2)
-            Rd = calc_length(R1, R2)
+            return 'End Calibrate', None, None, None, None
 
-            scale = rd / Rd
-            print scale
+        elif step == 'End Calibrate':
+            self.calibrating = False
+
+            refpoints, points = zip(*self.points)
+
+            scale, theta, (tx, ty) = calculate_rigid_transform(refpoints,
+                                                               points)
+
+            # set canvas calibration
             ca = canvas.calibration_item
-            ca.cx, ca.cy = cx, cy
-            ca.rotation = rot
-            ca.scale = scale
-            return 'Calibrate', cx, cy, rot
+            ca.cx, ca.cy = tx, ty
+            ca.rotation = theta
+            ca.scale = 1 / scale
+            return 'Calibrate', tx, ty, theta, 1 / scale
 
-    def _set_point(self, sp):
+    def _accept_point(self):
+        sp = self.manager.get_current_position()
+        npt = self._get_point(sp)
+        if npt:
+            self.points.append(npt)
+
+    def _get_point(self, sp):
         rp = ReferencePoint(sp)
         info = rp.edit_traits()
         if info.result:
-            dp = rp.x, rp.y
-            if self.point1 is None:
-                self.point1 = (dp, sp)
+            refp = rp.x, rp.y
+            return refp, sp
 
-            else:
-                self.point2 = (dp, sp)
+#===============================================================================
+# handlers
+#===============================================================================
+    def _accept_point_fired(self):
+        self._accept_point()
 
 
-#    def _finished(self):
-#        self.manager.calibration_step = 'Calibrate'
-#        self.calibrating = False
+
 #============= EOF =============================================

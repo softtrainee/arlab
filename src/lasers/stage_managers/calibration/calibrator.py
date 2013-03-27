@@ -39,14 +39,14 @@ class TrayCalibrator(Loggable):
     def handle(self, step, x, y, canvas):
         if step == 'Calibrate':
             canvas.new_calibration_item()
-            return 'Locate Center', None, None, None
+            return 'Locate Center', None, None, None, 1
         elif step == 'Locate Center':
             canvas.calibration_item.set_center(x, y)
-            return 'Locate Right', x, y, None
+            return 'Locate Right', x, y, None, 1
         elif step == 'Locate Right':
             canvas.calibration_item.set_right(x, y)
             self.save(canvas.calibration_item)
-            return 'Calibrate', None, None, canvas.calibration_item.rotation
+            return 'Calibrate', None, None, canvas.calibration_item.rotation, 1
 
     def save(self, obj):
         p = self._get_path(self.name)

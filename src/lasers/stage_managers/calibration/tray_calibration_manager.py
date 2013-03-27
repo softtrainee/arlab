@@ -30,8 +30,8 @@ from src.paths import paths
 TRAY_HELP = '''1. Locate center hole
 2. Locate right hole
 '''
-FREE_HELP = '''1. Move to Point1, Enter Reference Position
-2. Move to Point2, Enter Reference Position
+FREE_HELP = '''1. Move to Point, Enter Reference Position. Repeat at least 2X
+2. Hit End Calibrate to finish and compute parameters
 '''
 from src.regex import XY_REGEX
 
@@ -40,6 +40,7 @@ class TrayCalibrationManager(Manager):
     x = Float
     y = Float
     rotation = Float
+    scale = Float
     calibrate = Event
     calibration_step = String('Calibrate')
     calibration_help = String(TRAY_HELP)
@@ -64,7 +65,6 @@ class TrayCalibrationManager(Manager):
         '''
             go to a calibrated position
         '''
-        print en, XY_REGEX.match(en)
         if XY_REGEX.match(en):
             x, y = map(float, en.split(','))
             self.parent.linear_move(x, y, use_calibration=True, block=False)
@@ -75,45 +75,51 @@ class TrayCalibrationManager(Manager):
             except ValueError:
                 pass
 
+    def get_current_position(self):
+        x = self.parent.stage_controller.x
+        y = self.parent.stage_controller.y
+        return x, y
+
     def _calibrate_fired(self):
         '''
         '''
-        x = self.parent.stage_controller.x
-        y = self.parent.stage_controller.y
-
+        x, y = self.get_current_position()
         self.rotation = 0
 
-        self.calibration_step, cx, cy, rot = self.calibrator.handle(self.calibration_step,
-                                                                    x, y, self.canvas)
-        if cx is not None and cy is not None:
-            self.x, self.y = cx, cy
-            self.save_calibration()
-        if rot is not None:
-            self.rotation = rot
-            self.save_calibration()
+        args = self.calibrator.handle(self.calibration_step,
+                                      x, y, self.canvas)
+        if args:
+            cstep, cx, cy, rot, scale = args
+            if cstep is not None:
+                self.calibration_step = cstep
+            if cx is not None and cy is not None:
+                self.x, self.y = cx, cy
+            if scale is not None:
+                self.scale = scale
+            if rot is not None:
+                self.rotation = rot
+                self.save_calibration()
 
     def load_calibration(self, stage_map=None):
-        print 'asdfsdfa'
         if stage_map is None:
             stage_map = self.parent.stage_map
 
         calobj = TrayCalibrator.load(stage_map)
-        print 'ccc', calobj
         if calobj is not None:
             self.canvas.calibration_item = calobj
-            print 'ccc', calobj.cx, calobj.cy
-
             self.x, self.y = calobj.cx, calobj.cy
             self.rotation = calobj.rotation
+            self.scale = calobj.scale
+            self.style = calobj.style
+            # force style change update
+            self._style_changed()
 
     def save_calibration(self):
         PICKLE_PATH = p = os.path.join(paths.hidden_dir, '{}_stage_calibration')
         # delete the corrections file
         stage_map_name = self.parent.stage_map
         ca = self.canvas.calibration_item
-        print ca
         if  ca is not None:
-            print ca, ca.cx, ca.cy
             self.parent._stage_map.clear_correction_file()
             ca.style = self.style
             p = PICKLE_PATH.format(stage_map_name)
@@ -131,6 +137,7 @@ class TrayCalibrationManager(Manager):
                     HGroup(Item('x', format_str='%0.3f', style='readonly'),
                            Item('y', format_str='%0.3f', style='readonly')),
                     Item('rotation', format_str='%0.3f', style='readonly'),
+                    Item('scale', format_str='%0.3f', style='readonly'),
                     )
         ad = self.get_additional_controls()
         if ad is not None:

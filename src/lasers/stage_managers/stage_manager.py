@@ -271,9 +271,9 @@ class StageManager(Manager):
 
         pos = (x, y)
         if use_calibration:
-            print 'pre', pos
             pos = self.get_calibrated_position(pos)
-            print 'post', pos
+            f = lambda x:'{:0.5f},{:0.5f}'.format(*x)
+            self.debug('%%%%%%%%%%%%%%%%% mapped {} to {}'.format(f((x, y)), f(pos)))
 
         self.stage_controller.linear_move(*pos, **kw)
 
@@ -421,17 +421,17 @@ class StageManager(Manager):
         if ca:
             rot = ca.rotation
             cpos = ca.center
-            t = None
-            print 'caca', rot, cpos, ca.scale
-            scale = 1 / ca.scale
-            rot = 0
+            scale = ca.scale
+#            print 'caca', rot, cpos, ca.scale
+#            scale = 1 / ca.scale
+#            rot = 0
 #            from src.canvas.canvas2D.scene.primitives.primitives import CalibrationItem
 #            if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
 #                t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])
+            self.debug('Calibration parameters: rot={:0.3f}, cpos={:0.5f}, {:0.5f} scale={:0.3f}'.format(rot, cpos, scale))
             pos = smap.map_to_calibration(pos, cpos, rot,
-                                          scale=scale,
-                                          translate=t)
+                                          scale=scale)
 
         return pos
 
@@ -1097,7 +1097,7 @@ class StageManager(Manager):
 
     def __stage_map_changed(self):
         self.canvas.set_map(self._stage_map)
-        self.tray_calibration_manager.load_calibration(stage_map=self._stage_map)
+        self.tray_calibration_manager.load_calibration(stage_map=self.stage_map)
         self.canvas.request_redraw()
 
     def _ejoystick_fired(self):

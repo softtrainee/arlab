@@ -68,12 +68,6 @@ class MotionController(CoreDevice):
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
 #            time.sleep(0.075)
-
-#        x, y, z = self.get_xyz()
-#        print x, y, z
-#        self._x_position = x
-#        self._y_position = y
-#        self._z_position = z
         self.z_progress = self._z_position
 
 #        def _update():
