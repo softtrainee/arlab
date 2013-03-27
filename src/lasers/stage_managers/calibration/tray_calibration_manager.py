@@ -17,12 +17,15 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Event, String, Bool, Any, Enum, Property, cached_property
 from traitsui.api import View, Item, VGroup, HGroup, spring, Group
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.traits_editors.custom_label_editor import CustomLabel
 from src.lasers.stage_managers.calibration.free_calibrator import FreeCalibrator
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
+import os
+from src.paths import paths
 
 TRAY_HELP = '''1. Locate center hole
 2. Locate right hole
@@ -61,6 +64,7 @@ class TrayCalibrationManager(Manager):
         '''
             go to a calibrated position
         '''
+        print en, XY_REGEX.match(en)
         if XY_REGEX.match(en):
             x, y = map(float, en.split(','))
             self.parent.linear_move(x, y, use_calibration=True, block=False)
@@ -83,19 +87,39 @@ class TrayCalibrationManager(Manager):
                                                                     x, y, self.canvas)
         if cx is not None and cy is not None:
             self.x, self.y = cx, cy
+            self.save_calibration()
         if rot is not None:
             self.rotation = rot
+            self.save_calibration()
 
     def load_calibration(self, stage_map=None):
+        print 'asdfsdfa'
         if stage_map is None:
             stage_map = self.parent.stage_map
 
         calobj = TrayCalibrator.load(stage_map)
+        print 'ccc', calobj
         if calobj is not None:
             self.canvas.calibration_item = calobj
+            print 'ccc', calobj.cx, calobj.cy
 
             self.x, self.y = calobj.cx, calobj.cy
             self.rotation = calobj.rotation
+
+    def save_calibration(self):
+        PICKLE_PATH = p = os.path.join(paths.hidden_dir, '{}_stage_calibration')
+        # delete the corrections file
+        stage_map_name = self.parent.stage_map
+        ca = self.canvas.calibration_item
+        print ca
+        if  ca is not None:
+            print ca, ca.cx, ca.cy
+            self.parent._stage_map.clear_correction_file()
+            ca.style = self.style
+            p = PICKLE_PATH.format(stage_map_name)
+            self.info('saving calibration {}'.format(p))
+            with open(p, 'wb') as f:
+                pickle.dump(ca, f)
 
     def get_additional_controls(self):
         return self.calibrator.get_controls()
