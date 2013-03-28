@@ -134,7 +134,7 @@ class KerrMotor(KerrDevice):
               ('Homing', 'home_velocity'),
               ('Homing', 'home_acceleration'),
               ('Homing', 'home_position'),
-              ('Homing', 'home_at_startup')
+              ('Homing', 'home_at_startup'),
               ('General', 'min'),
               ('General', 'max'),
               ('General', 'nominal_position')

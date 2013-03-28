@@ -90,6 +90,7 @@ class LaserTrayCanvas(MapCanvas):
     desired_position = Property(depends_on='_desired_position')
     _desired_position = Any
 
+    bgcolor = 'mediumturquoise'
 #    map = StageMap
     show_axes = True
     current_position = Property(depends_on='cur_pos')

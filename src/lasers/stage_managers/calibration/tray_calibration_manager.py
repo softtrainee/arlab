@@ -33,7 +33,7 @@ TRAY_HELP = '''1. Locate center hole
 FREE_HELP = '''1. Move to Point, Enter Reference Position. Repeat at least 2X
 2. Hit End Calibrate to finish and compute parameters
 '''
-from src.regex import XY_REGEX
+# from src.regex import XY_REGEX
 
 
 class TrayCalibrationManager(Manager):
@@ -48,7 +48,7 @@ class TrayCalibrationManager(Manager):
     canvas = Any
     calibrator = Property(depends_on='style')
 
-    position_entry = String(enter_set=True, auto_set=False)
+#    position_entry = String(enter_set=True, auto_set=False)
 
     def isCalibrating(self):
         return self.calibration_step != 'Calibrate'
@@ -61,19 +61,19 @@ class TrayCalibrationManager(Manager):
         else:
             self.calibration_help = TRAY_HELP
 
-    def _position_entry_changed(self, en):
-        '''
-            go to a calibrated position
-        '''
-        if XY_REGEX.match(en):
-            x, y = map(float, en.split(','))
-            self.parent.linear_move(x, y, use_calibration=True, block=False)
-        else:
-            try:
-                h = int(en)
-                self.parent.move_to_hole(h)
-            except ValueError:
-                pass
+#    def _position_entry_changed(self, en):
+#        '''
+#            go to a calibrated position
+#        '''
+#        if XY_REGEX.match(en):
+#            x, y = map(float, en.split(','))
+#            self.parent.linear_move(x, y, use_calibration=True, block=False)
+#        else:
+#            try:
+#                h = int(en)
+#                self.parent.move_to_hole(h)
+#            except ValueError:
+#                pass
 
     def get_current_position(self):
         x = self.parent.stage_controller.x
@@ -149,11 +149,12 @@ class TrayCalibrationManager(Manager):
                     CustomLabel('calibration_help',
                                 color='green',
                                 height=75, width=300),
-                    Group(Item('position_entry',
-                               show_label=False,
-                               tooltip='Enter a positon e.g 1 for a hole, or 3,4 for X,Y'
-                               ), label='Position',
-                          show_border=True)
+#                    Group(
+#                          Item('position_entry',
+#                               show_label=False,
+#                               tooltip='Enter a positon e.g 1 for a hole, or 3,4 for X,Y'
+#                               ), label='Position',
+#                          show_border=True)
                 )
         return v
 #===============================================================================
