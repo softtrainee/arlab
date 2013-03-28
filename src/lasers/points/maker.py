@@ -30,7 +30,7 @@ class BaseMaker(Loggable):
 #    clear_mode = Enum('all', 'all lines', 'all points', 'current line',
 #                    'current point', 'last point'
 #                    )
-    clear_mode = Enum('all')  # , 'current point')
+    clear_mode = Enum('all', 'current point')
     accept_point = Button
 
     point_color = Color('blue')
@@ -41,10 +41,13 @@ class BaseMaker(Loggable):
 
     def save(self):
         d = dict()
+
+
         pts = [dict(identifier=pi.identifier,
                         z=float(pi.z),
                         mask=pi.mask, attenuator=pi.attenuator,
-                        xy=[float(pi.x), float(pi.y)]
+                        xy=[float(pi.x), float(pi.y)],
+                        calibrated_xy=[float(pi.calibrated_x), float(pi.calibrated_y)]
                         ) for pi in self.canvas.get_points()]
 
         lines = []
@@ -75,6 +78,9 @@ class BaseMaker(Loggable):
         cm = self.clear_mode
         if cm == 'all':
             self.canvas.clear_all()
+        elif cm == 'current point':
+            self.canvas.pop_point(-1)
+
 #        elif cm == 'current point':
 #            self.canvas.points.pop(-1)
 
@@ -119,12 +125,15 @@ class BaseMaker(Loggable):
 
         if attenuator:
             attenuator_value = attenuator.data_position
-
-        print self.spot_color
+        x, y = self.canvas.get_stage_position()
+        cx, cy = sm.get_uncalibrated_xy((x, y))
         ptargs = dict(radius=radius,
                       z=sm.get_z(),
+                      calibrated_x=cx,
+                      calibrated_y=cy,
                       spot_color=self.spot_color,
                       spot_size=self.spot_size,
+                      use_simple_render=self.use_simple_render,
 #                      mask=mask_value,
 #                      attenuator=attenuator_value,
                       vline_length=0.1, hline_length=0.1)
