@@ -169,6 +169,9 @@ class PointsProgrammer(Manager):
 
             self.stage_manager.add_stage_map(p)
             head, _tail = os.path.splitext(os.path.basename(p))
+
+            self.stage_manager.save_calibration(head)
+
             self.stage_manager.set_stage_map(head)
 
 #===============================================================================

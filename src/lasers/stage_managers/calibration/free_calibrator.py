@@ -62,6 +62,8 @@ class FreeCalibrator(TrayCalibrator):
         elif step == 'End Calibrate':
             self.calibrating = False
 
+            print len(self.points)
+            print self.points
             refpoints, points = zip(*self.points)
 
             scale, theta, (tx, ty) = calculate_rigid_transform(refpoints,

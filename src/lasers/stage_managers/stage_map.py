@@ -310,17 +310,17 @@ class StageMap(Loggable):
         cpos, rot = self._get_calibration_params(cpos, rot)
 
         a = AffineTransform()
-        if translate:
-            a.translate(*translate)
-
-
-        a.translate(*cpos)
-        a.rotate(rot)
-#        a.translate(-cpos[0], -cpos[1])
-#        a.translate(*cpos)
+#         if translate:
+#             a.translate(*translate)
 
         if scale:
             a.scale(scale, scale)
+#         a.translate(*cpos)
+
+#         print cpos, rot, scale
+        a.rotate(rot)
+        a.translate(-cpos[0], -cpos[1])
+#        a.translate(*cpos)
         pos = a.transform(*pos)
         return pos
 

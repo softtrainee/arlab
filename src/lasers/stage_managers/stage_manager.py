@@ -229,7 +229,8 @@ class StageManager(Manager):
 #        print x_range
 #        self.canvas.set_mapper_limits('x', x_range)
 #        self.canvas.set_mapper_limits('y', y_range)
-
+    def save_calibration(self, name):
+        self.tray_calibration_manager.save_calibration(name=name)
 
     def add_stage_map(self, v):
         sm = self.stage_map_klass(file_path=v)
@@ -429,7 +430,8 @@ class StageManager(Manager):
 #            if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
 #                t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])
-            self.debug('Calibration parameters: rot={:0.3f}, cpos={:0.5f}, {:0.5f} scale={:0.3f}'.format(rot, cpos, scale))
+#             print type(rot), type(cpos), type(scale)
+            self.debug('Calibration parameters: rot={:0.3f}, cpos={} scale={:0.3f}'.format(rot, cpos, scale))
             pos = smap.map_to_calibration(pos, cpos, rot,
                                           scale=scale)
 

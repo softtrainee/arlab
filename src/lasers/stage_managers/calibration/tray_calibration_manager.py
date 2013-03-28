@@ -114,15 +114,17 @@ class TrayCalibrationManager(Manager):
             # force style change update
             self._style_changed()
 
-    def save_calibration(self):
+    def save_calibration(self, name=None):
         PICKLE_PATH = p = os.path.join(paths.hidden_dir, '{}_stage_calibration')
+        if name is None:
         # delete the corrections file
-        stage_map_name = self.parent.stage_map
+            name = self.parent.stage_map
+
         ca = self.canvas.calibration_item
         if  ca is not None:
             self.parent._stage_map.clear_correction_file()
             ca.style = self.style
-            p = PICKLE_PATH.format(stage_map_name)
+            p = PICKLE_PATH.format(name)
             self.info('saving calibration {}'.format(p))
             with open(p, 'wb') as f:
                 pickle.dump(ca, f)

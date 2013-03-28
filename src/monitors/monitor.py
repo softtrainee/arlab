@@ -79,6 +79,8 @@ class Monitor(ConfigLoadable):
                 t = Thread(target=self._monitor_, args=(self._stop_signal,))
                 t.start()
                 return True
+        else:
+            return True
 
     def reset_start_time(self):
         '''
