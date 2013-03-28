@@ -28,9 +28,9 @@ from src.hardware.kerr.kerr_motor import KerrMotor
     status byte
     0 1 2 3 4 5 6 7
   1 0 0 0 0 0 0 0 1
-  
+
  18 0 0 0 1 0 0 1 0
- 
+
  0= moving
  1= comm err
  2= amp enable output signal is HIGH
@@ -39,7 +39,7 @@ from src.hardware.kerr.kerr_motor import KerrMotor
  5= vel prof mode
  6= trap prof mode
  7= home in progress
- 
+
 '''
 
 class DiscretePosition(HasTraits):
@@ -92,21 +92,21 @@ class KerrStepMotor(KerrMotor):
 #                dp = DiscretePosition(name=option, position=pos, value=float(v))
 #                self.discrete_positions[str(value + off)] = '{:02n}:{}'.format(i + 1, option)
                 self.discrete_positions[dp] = '{:02n}:{}'.format(i + 1, option)
-    
+
     def _get_io_bits(self):
-        return ['0', #bit 4
+        return ['0',  # bit 4
                 '1',
                 '1',
                 '1',
-                '0'] #bit 0
+                '0']  # bit 0
 
     def _build_io(self):
-        cmd='18'
-        iobits=self._get_io_bits()
-        v='000'+''.join(iobits)
-        v='{:02X}'.format(int(v,2))
-        return cmd+v
-    
+        cmd = '18'
+        iobits = self._get_io_bits()
+        v = '000' + ''.join(iobits)
+        v = '{:02X}'.format(int(v, 2))
+        return cmd + v
+
     def _discrete_position_changed(self):
         if self.discrete_position:
             dp = self.discrete_position
@@ -228,9 +228,9 @@ class KerrStepMotor(KerrMotor):
 
 
         '''
-            this is a hack. Because the home move is in velocity profile mode we cannot use the 0bit of the status byte to 
+            this is a hack. Because the home move is in velocity profile mode we cannot use the 0bit of the status byte to
             determine when the move is complete (0bit indicates when motor has reached requested velocity).
-            
+
             instead we will poll the motor position until n successive positions are equal ie at a limt
         '''
 
@@ -266,7 +266,7 @@ class KerrStepMotor(KerrMotor):
            control byte
                 7 6 5 4 3 2 1 0
             97- 1 0 0 1 0 1 1 1
-            
+
             0=load pos
             1=load vel
             2=load acce
@@ -275,7 +275,7 @@ class KerrStepMotor(KerrMotor):
             5=not used
             6=not used
             7=start motion now
-            
+
         '''
         cb = '10000111'
         if reverse:
@@ -293,21 +293,7 @@ class KerrStepMotor(KerrMotor):
 #        return result
 
 
-    def _load_home_control_byte(self):
-        '''
-           control byte
-                7 6 5 4 3 2 1 0
-            97- 1 0 0 1 0 1 1 1
-            0=capture home on limit1
-            1=capture home on limit2
-            2=turn motor off on home
-            3=capture home on home
-            4=stop abruptly
-            5=stop smoothly
-            6,7=not used- clear to 0
-        '''
 
-        return int('00010010', 2)
 
     def _moving(self, verbose=True):
         status_byte = self.read_defined_status(verbose=verbose)

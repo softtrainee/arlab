@@ -35,7 +35,7 @@ SIGN = ['negative', 'positive']
 class KerrMotor(KerrDevice):
     '''
         Base class for motors controller by a kerr microcontroller board
-        
+
     '''
     use_initialize = Bool(True)
     use_hysteresis = Bool(False)
@@ -49,6 +49,7 @@ class KerrMotor(KerrDevice):
     home_velocity = Float
     home_acceleration = Float
     home_position = Float(0)
+    home_at_startup = Bool(True)
     min = Float(0)
     max = Float(100)
     steps = Float(137500)
@@ -89,8 +90,8 @@ class KerrMotor(KerrDevice):
             cmd p    d    i    il   ol cl el   sr db sm
         '''
         p = (45060, 4)
-        i = (8195, 4)
-        d = (62465, 4)
+        d = (8195, 4)
+        i = (62465, 4)
         il = (59395, 4)
         ol = (255, 2)
         cl = (0, 2)
@@ -133,6 +134,7 @@ class KerrMotor(KerrDevice):
               ('Homing', 'home_velocity'),
               ('Homing', 'home_acceleration'),
               ('Homing', 'home_position'),
+              ('Homing', 'home_at_startup')
               ('General', 'min'),
               ('General', 'max'),
               ('General', 'nominal_position')
@@ -144,7 +146,7 @@ class KerrMotor(KerrDevice):
             '''
                 if hysteresis is <0
                 correction is done when moving in the negative direction
-                
+
                 if hysteresis is >0
                 correction is done when moving in the positive direction
             '''
@@ -220,18 +222,21 @@ class KerrMotor(KerrDevice):
     def _initialize_(self, *args, **kw):
         '''
         '''
-
         addr = self.address
-        commands = [(addr, '1706', 100, 'stop motor, turn off amp'),
-                  (addr, self._build_io(), 100, 'configure io pins'),
-                  (addr, self._build_gains(), 100, 'set gains'),
-                  (addr, '1701', 100, 'turn on amp'),
-                  (addr, '00', 100, 'reset position'),
-                  (addr, '0b', 100, 'clear bits')
-                  ]
-        self._execute_hex_commands(commands)
-
-        self._home_motor(*args, **kw)
+        if self.home_at_startup:
+            commands = [(addr, '1706', 100, 'stop motor, turn off amp'),
+                        (addr, self._build_io(), 100, 'configure io pins'),
+                        (addr, self._build_gains(), 100, 'set gains'),
+                        (addr, '1701', 100, 'turn on amp'),
+                        (addr, '00', 100, 'reset position'),
+    #                     (addr, '1201', 100, 'set status')
+    #                   (addr, '0b', 100, 'clear bits')
+                      ]
+            self._execute_hex_commands(commands)
+            self._home_motor(*args, **kw)
+        else:
+            commands = [(addr, '1701', 100, 'turn on amp'), ]
+            self._execute_hex_commands(commands)
 
     def _home_motor(self, *args, **kw):
         '''
@@ -252,15 +257,19 @@ class KerrMotor(KerrDevice):
         a = self._float_to_hexstr(self.home_acceleration)
         move_cmd = ''.join((cmd, control, v, a))
 
-        cmds = [  # (addr,home_cmd,10,'=======Set Homing===='),
-              (addr, move_cmd, 100, 'Send to Home')]
+#         home_control_byte = self._load_home_control_byte()
+#         home_cmd = '19{:02x}'.format(home_control_byte)
+
+        cmds = [
+#                 (addr, home_cmd, 100, '=======Set Homing===='),
+                (addr, move_cmd, 100, 'Send to Home')]
         self._execute_hex_commands(cmds)
 
 
         '''
-            this is a hack. Because the home move is in velocity profile mode we cannot use the 0bit of the status byte to 
+            this is a hack. Because the home move is in velocity profile mode we cannot use the 0bit of the status byte to
             determine when the move is complete (0bit indicates when motor has reached requested velocity).
-            
+
             instead we will poll the motor position until n successive positions are equal ie at a limt
         '''
 
@@ -292,7 +301,7 @@ class KerrMotor(KerrDevice):
             pos = self._get_motor_position(verbose=False)
             if progress is not None:
                 progress.change_message('{} position= {}'.format(self.name, pos))
-#                 do_after(25,progress.change_message, '{} position = {}'.format(self.name, pos))
+#                 do_after(25, progress.change_message, '{} position = {}'.format(self.name, pos))
             time.sleep(0.5)
 
     def block(self, n=3, tolerance=1, progress=None):
@@ -303,8 +312,8 @@ class KerrMotor(KerrDevice):
 
         while not self.parent.simulation:
 
-            pos = self._get_motor_position(verbose=False)
-
+            pos = self._get_motor_position(verbose=True)
+#             print 'ffff', pos
             if progress is not None:
                 progress.change_message('{} position = {}'.format(self.name, pos))
 
@@ -413,12 +422,28 @@ class KerrMotor(KerrDevice):
 #            self._motor_position = pos
             return pos
 
+    def _load_home_control_byte(self):
+        '''
+           control byte
+                7 6 5 4 3 2 1 0
+            97- 1 0 0 1 0 1 1 1
+            0=capture home on limit1
+            1=capture home on limit2
+            2=turn motor off on home
+            3=capture home on home
+            4=stop abruptly
+            5=stop smoothly
+            6,7=not used- clear to 0
+        '''
+
+        return int('00010011', 2)
+
     def _load_trajectory_controlbyte(self):
         '''
            control byte
                 7 6 5 4 3 2 1 0
             97- 1 0 0 1 0 1 1 1
-            
+
             0=load pos
             1=load vel
             2=load acce
@@ -427,7 +452,7 @@ class KerrMotor(KerrDevice):
             5=profile mode 0=trap 1=vel
             6=direction trap mode 0=abs 1=rel vel mode 0=for. 1=back
             7=start motion now
-            
+
         '''
 
         return '{:02x}'.format(int('10010111', 2))
@@ -445,6 +470,7 @@ class KerrMotor(KerrDevice):
                 self._hysteresis_correction = hysteresis
 
         return hpos
+
     def _set_motor_position_(self, pos, hysteresis=0, velocity=None):
         '''
         '''
@@ -457,9 +483,9 @@ class KerrMotor(KerrDevice):
         control = self._load_trajectory_controlbyte()
         position = self._float_to_hexstr(hpos)
         if velocity is None:
-            velocity =self.velocity
+            velocity = self.velocity
         v = self._float_to_hexstr(velocity)
-        
+
         a = self._float_to_hexstr(self.acceleration)
 #        print cmd, control, position, v, a
         cmd = ''.join((cmd, control, position, v, a))
@@ -515,38 +541,38 @@ class KerrMotor(KerrDevice):
 
     def _set_data_position(self, pos):
         '''
-           
-            this is a better solution than al deinos (mass spec) for handling positioning of a 
+
+            this is a better solution than al deinos (mass spec) for handling positioning of a
             linear drive.  Al sets the focused position from 0-100. this means if you change the drive sign
-            (in affect changing the homing position +tive or -tive) you also have to change the focused position 
-            
-            example 
+            (in affect changing the homing position +tive or -tive) you also have to change the focused position
+
+            example
             drive sign =-1
             home pos= 99
-            
+
             drive sign =1
             home pos = 1
-            
+
             this seems wrong. the solution that follows sets the focused position in % distance from home
-            
+
             focus_beam_pos=0.01 #1%
             dr_sign=1
-            
+
             #normalize the input value to 1
-            pos=pos/(max-min)  
-            
+            pos=pos/(max-min)
+
             if dr_sign==-1:
                 pos=1-pos
-            
+
             #scale pos to the total number of motor steps ** minus the focused position in motor steps **
             focus_pos_msteps=motor_steps*focus_pos
-            
+
             pos_msteps= (motor_steps-focus_pos_msteps) * pos
-            
-        
+
+
             drive a few steps past desired position then back to desired position
             this takes out any lash in the gears
-            
+
         '''
         self.info('setting motor in data space {:0.3f}'.format(float(pos)))
         if self._data_position != pos:
@@ -569,7 +595,7 @@ class KerrMotor(KerrDevice):
                 self.do_hysteresis = True
                 self.doing_hysteresis_correction = False
                 hysteresis = self.hysteresis_value
-            
+
             self._set_motor_position_(npos, hysteresis)
             if not self.parent.simulation:
                 time.sleep(0.250)
@@ -580,6 +606,7 @@ class KerrMotor(KerrDevice):
     def _float_to_hexstr(self, f, endianness='little'):
         '''
         '''
+        f = max(0, f)
         fmt = '%sI' % ('<' if endianness == 'little' else '>')
         return binascii.hexlify(struct.pack(fmt, int(f)))
 
