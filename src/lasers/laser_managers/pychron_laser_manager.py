@@ -471,7 +471,7 @@ class PychronUVLaserManager(PychronLaserManager):
             return r
 
     def traits_view(self):
-        v = View(Item('test_connection', show_label=False),
+        v = View(Item('test_connection_button', show_label=False),
                  VGroup(
                      self.get_control_button_group(),
                      HGroup(self._button_factory('fire', 'fire_label', enabled='enabled'),
