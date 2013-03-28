@@ -352,6 +352,7 @@ tray: {}
 
         # labnumber is a property so its not cloned by clone_traits
         nar.labnumber = ar.labnumber
+        nar.position=ar.position
 #        nar.aliquot=ar.aliquot
 
         if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
