@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import  Button, Event, Property, \
-    Any, Bool, Enum, Instance, cached_property, String
+    Any, Bool, Enum, Instance, cached_property, String, Color, Int
 from traitsui.api import View, Item, ButtonEditor, HGroup, VGroup
 #============= standard library imports ========================
 import yaml
@@ -50,6 +50,9 @@ class PointsProgrammer(Manager):
     program_points_label = Property(depends_on='is_programming')
     show_hide_label = Property(depends_on='is_visible')
 
+#    use_simple_render = Bool(False)
+#    spot_color = Color('yellow')
+#    spot_size = Int
     load_points = Button
     save_points = Button
 
@@ -143,6 +146,7 @@ class PointsProgrammer(Manager):
 
     def _save_points_fired(self):
         self._dump()
+
 #===============================================================================
 # persistence
 #===============================================================================
@@ -205,6 +209,7 @@ class PointsProgrammer(Manager):
     def _load_points(self, points, ptargs):
         canvas = self.canvas
         point_color = self.maker.point_color
+        ptargs['spot_color'] = self.maker.spot_color
         for pi in points:
             mi = pi['mask'] if pi.has_key('mask') else 0
             ai = pi['attenuator'] if pi.has_key('attenuator') else 0
@@ -271,7 +276,7 @@ class PointsProgrammer(Manager):
     def traits_view(self):
         v = View(VGroup(
 #                       Item('show_scene_viewer', show_label=False),
-                       Item('position_entry', label='Position'),
+                       Item('position_entry', label='Position'),  # @todo: move to stage manager
                        Item('mode')
                        ),
                 HGroup(Item('show_hide', show_label=False,
@@ -279,7 +284,7 @@ class PointsProgrammer(Manager):
                          ),
                     Item('program_points', show_label=False,
                          editor=ButtonEditor(label_value='program_points_label')
-                         )
+                         ),
                        ),
                 Item('maker', style='custom',
                      enabled_when='is_programming',

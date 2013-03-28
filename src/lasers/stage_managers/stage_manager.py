@@ -40,6 +40,7 @@ from src.geometry.geometry import sort_clockwise
 from src.geometry.convex_hull import convex_hull
 from src.geometry.polygon_offset import polygon_offset
 from src.lasers.stage_managers.calibration.tray_calibration_manager import TrayCalibrationManager
+from src.regex import TRANSECT_REGEX, XY_REGEX
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -102,7 +103,8 @@ class StageManager(Manager):
     line_thread = None
     move_thread = None
 
-    hole = String(enter_set=True, auto_set=False)
+
+#    hole = String(enter_set=True, auto_set=False)
 #    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
 #    _hole = String
 
@@ -123,6 +125,9 @@ class StageManager(Manager):
     linear_move_history = List
 
     keyboard_focus = Event
+
+    calibrated_position_entry = String(enter_set=True, auto_set=False)
+
     def __init__(self, *args, **kw):
         '''
 
@@ -229,6 +234,7 @@ class StageManager(Manager):
 #        print x_range
 #        self.canvas.set_mapper_limits('x', x_range)
 #        self.canvas.set_mapper_limits('y', y_range)
+
     def save_calibration(self, name):
         self.tray_calibration_manager.save_calibration(name=name)
 
@@ -453,8 +459,9 @@ class StageManager(Manager):
                             if _filter(si, x, y)
                       ), None)
 
-    def _hole_changed(self):
-        self._set_hole(self.hole)
+
+#    def _hole_changed(self):
+#        self._set_hole(self.hole)
 
     def _load_previous_stage_map(self):
         p = os.path.join(paths.hidden_dir, 'stage_map')
@@ -896,8 +903,20 @@ class StageManager(Manager):
 #===============================================================================
 # view groups
 #===============================================================================
-    def _hole__group__(self):
-        g = Group(HGroup(Item('hole'), spring))
+#    def _hole__group__(self):
+#        g = Group(HGroup(Item('hole'), spring))
+#        return g
+    def _position__group__(self):
+        g = Group(HGroup(Item('calibrated_position_entry', label='Position',
+                              tooltip='Enter a x,y point in reference frame space',
+                              ), spring))
+
+        g = Group(
+                  Item('calibrated_position_entry',
+                       show_label=False,
+                       tooltip='Enter a positon e.g 1 for a hole, or 3,4 for X,Y'
+                       ), label='Calibrated Position',
+                  show_border=True)
         return g
 
     def _button__group__(self):
@@ -1029,6 +1048,16 @@ class StageManager(Manager):
 
         return nv
 
+    def _set_calibrated_position(self, v):
+        if XY_REGEX.match(v):
+            self._set_to_calibrated_position(v)
+        else:
+            self._move_to_hole(v)
+
+    def _move_to_calibrated_position(self, pos):
+        x, y = map(float, pos.split(','))
+        self.linear_move(x, y, use_calibration=True, block=False)
+
     def _set_hole(self, v):
         if v is None:
             return
@@ -1091,6 +1120,7 @@ class StageManager(Manager):
 #===============================================================================
         '''
         '''
+
     def _back_button_fired(self):
         pos, kw = self.linear_move_history.pop(-1)
         t = Thread(target=self.stage_controller.linear_move, args=pos, kwargs=kw)

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int, \
-    Array, Color, on_trait_change, String
+    Array, Color, on_trait_change, String, Enum
 from traitsui.api import View, VGroup, HGroup, Item, Group
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
@@ -694,6 +694,10 @@ class Label(Primitive):
 class Indicator(Primitive):
     hline_length = 0.5
     vline_length = 0.5
+    use_simple_render = Bool(False)
+    use_simple_render = Bool(True)
+    spot_size = Int(8)
+    spot_color = Color('yellow')
     def __init__(self, x, y, *args, **kw):
         super(Indicator, self).__init__(x, y, *args, **kw)
         w = self.hline_length
@@ -707,8 +711,24 @@ class Indicator(Primitive):
         self.primitives.append(self.vline)
 
     def _render_(self, *args, **kw):
-        self.hline.render(*args, **kw)
-        self.vline.render(*args, **kw)
+        if self.use_simple_render:
+            # render a simple square at the current location
+            gc = args[0]
+            with gc:
+                if self.spot_color:
+                    gc.set_fill_color(self.spot_color)
+                    gc.set_stroke_color(self.spot_color)
+
+                l = self.spot_size
+                x, y = self.get_xy()
+                hl = l / 2.
+                x, y = x - hl, y - hl
+                gc.rect(x, y, l, l)
+                gc.draw_path()
+
+        else:
+            self.hline.render(*args, **kw)
+            self.vline.render(*args, **kw)
 
 #    def set_canvas(self, canvas):
 #        super(Indicator, self).set_canvas(canvas)
@@ -762,19 +782,20 @@ class PointIndicator(Indicator):
     def _render_(self, gc):
         super(PointIndicator, self)._render_(gc)
 
-        self.circle.render(gc)
+        if not self.use_simple_render:
+            self.circle.render(gc)
 
-        if self.label_item and self.show_label:
-            self.label_item.render(gc)
+            if self.label_item and self.show_label:
+                self.label_item.render(gc)
 
-        x, y = self.get_xy()
+            x, y = self.get_xy()
 
-        if self.state:
-            gc.rect(x - self.radius - 1,
-                    y - self.radius - 1,
-                    2 * self.radius + 1,
-                    2 * self.radius + 1
-                    )
+            if self.state:
+                gc.rect(x - self.radius - 1,
+                        y - self.radius - 1,
+                        2 * self.radius + 1,
+                        2 * self.radius + 1
+                        )
     def _show_label_changed(self):
         self.request_redraw()
 

@@ -34,6 +34,11 @@ class BaseMaker(Loggable):
     accept_point = Button
 
     point_color = Color('blue')
+
+    use_simple_render = Bool(False)
+    spot_color = Color('yellow')
+    spot_size = Int(8)
+
     def save(self):
         d = dict()
         pts = [dict(identifier=pi.identifier,
@@ -115,20 +120,40 @@ class BaseMaker(Loggable):
         if attenuator:
             attenuator_value = attenuator.data_position
 
-        
+        print self.spot_color
         ptargs = dict(radius=radius,
                       z=sm.get_z(),
+                      spot_color=self.spot_color,
+                      spot_size=self.spot_size,
 #                      mask=mask_value,
 #                      attenuator=attenuator_value,
                       vline_length=0.1, hline_length=0.1)
         if mask_value is not None:
-            ptargs['mask']=mask_value
+            ptargs['mask'] = mask_value
         if attenuator_value is not None:
-            ptargs['attenuator']=attenuator_value
+            ptargs['attenuator'] = attenuator_value
 
         if not self.canvas.point_exists():
             self._accept_point(ptargs)
             self.canvas.request_redraw()
+
+    def _use_simple_render_changed(self):
+        pts = self.canvas.get_points()
+        for pi in pts:
+            pi.use_simple_render = not self.use_simple_render
+        self.canvas.request_redraw()
+
+    def _spot_color_changed(self):
+        pts = self.canvas.get_points()
+        for pi in pts:
+            pi.spot_color = self.spot_color
+        self.canvas.request_redraw()
+
+    def _spot_size_changed(self):
+        pts = self.canvas.get_points()
+        for pi in pts:
+            pi.spot_size = self.spot_size
+        self.canvas.request_redraw()
 
     def _get_controls(self):
         pass
@@ -137,6 +162,13 @@ class BaseMaker(Loggable):
         g = VGroup(
                  Item('accept_point', show_label=False),
                  HGroup(Item('clear'), Item('clear_mode'), show_labels=False),
+                 Item('use_simple_render', label='Display Labels',
+                     tooltip='Display labels or only a small spot'
+                     ),
+                Item('spot_color', label='Spot Color',
+                     tooltip='Color for the point indicator spot'
+                     ),
+                Item('spot_size', label='Spot Size'),
 #                 Item('finish', show_label=False,
 #                      enabled_when='mode=="line" and object.is_programming'),
 #                 enabled_when='object.is_programming'
@@ -274,7 +306,7 @@ class PolygonMaker(FinishableMaker):
                                       find_min=self.find_min,
                                       offset=self.offset,
                                       ptargs=ptargs)
-        
+
 class TransectMaker(FinishableMaker):
     step = Float(1, enter_set=True, auto_set=False)
     def _save(self):
@@ -282,11 +314,11 @@ class TransectMaker(FinishableMaker):
         for tr in self.canvas.get_transects():
 #        for tr in self.canvas.transects:
             pts = []
-            
+
             for pi in tr.points:
                 d = dict(identifier=pi.identifier,
                         z=float(pi.z),
-                        mask=pi.mask, 
+                        mask=pi.mask,
                         attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)])
 
@@ -294,7 +326,7 @@ class TransectMaker(FinishableMaker):
 #                    d['mask']=pi.mask
 #                if hasattr(pi, 'attenuator'):
 #                    d['attenuator']=pi.attenuator
-                
+
                 pts.append(d)
 
 #            for pi in tr.step_points:
