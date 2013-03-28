@@ -393,18 +393,19 @@ class StageManager(Manager):
     def get_z(self):
         return self.stage_controller._z_position
 
-    def get_uncalibrated_xy(self):
-
-        pos = (self.stage_controller._x_position, self.stage_controller._y_position)
-        if self.stage_controller.xy_swapped():
-            pos = pos[1], pos[0]
+    def get_uncalibrated_xy(self, pos=None):
+        if pos is None:
+            pos = (self.stage_controller._x_position, self.stage_controller._y_position)
+            if self.stage_controller.xy_swapped():
+                pos = pos[1], pos[0]
 
         canvas = self.canvas
         ca = canvas.calibration_item
         if ca:
             pos = self._stage_map.map_to_uncalibration(pos,
                                                        ca.center,
-                                                       ca.rotation)
+                                                       ca.rotation,
+                                                       ca.scale)
 
         return pos
 

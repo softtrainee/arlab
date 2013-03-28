@@ -285,21 +285,25 @@ class StageMap(Loggable):
                 iholes.append(found[i])
                 iholes.append(found[j])
 
-    def _get_calibration_params(self, cpos, rot):
+    def _get_calibration_params(self, cpos, rot, scale):
         if cpos is None:
             cpos = self.cpos if self.cpos else (0, 0)
         if rot is None:
             rot = self.rotation if self.rotation else 0
-        return cpos, rot
+        if scale is None:
+            scale = 1
+        return cpos, rot, scale
 
-    def map_to_uncalibration(self, pos, cpos=None, rot=None):
-        cpos, rot = self._get_calibration_params(cpos, rot)
-
+    def map_to_uncalibration(self, pos, cpos=None, rot=None, scale=None):
+        cpos, rot, scale = self._get_calibration_params(cpos, rot, scale)
         a = AffineTransform()
-        a.translate(-cpos[0], -cpos[1])
-        a.translate(*cpos)
+        a.scale(1 / scale, 1 / scale)
         a.rotate(-rot)
-        a.translate(-cpos[0], -cpos[1])
+        a.translate(cpos[0], cpos[1])
+#        a.translate(-cpos[0], -cpos[1])
+#        a.translate(*cpos)
+#        a.rotate(-rot)
+#        a.translate(-cpos[0], -cpos[1])
 
         pos = a.transform(*pos)
         return pos
@@ -307,14 +311,14 @@ class StageMap(Loggable):
     def map_to_calibration(self, pos, cpos=None, rot=None,
                            scale=None,
                            translate=None):
-        cpos, rot = self._get_calibration_params(cpos, rot)
+        cpos, rot, scale = self._get_calibration_params(cpos, rot, scale)
 
         a = AffineTransform()
 #         if translate:
 #             a.translate(*translate)
 
-        if scale:
-            a.scale(scale, scale)
+#        if scale:
+        a.scale(scale, scale)
 #         a.translate(*cpos)
 
 #         print cpos, rot, scale

@@ -29,7 +29,10 @@ class LaserPoint(PointIndicator):
     z = Float
     mask = Float
     attenuator = Float
-   
+    calibrated_xy = Float
+    calibrated_y = Float
+
+
 class RasterPolygon(Polygon):
     use_convex_hull = Bool(False)
     use_outline = Bool(True)
@@ -71,8 +74,8 @@ class Transect(PolyLine):
     step = Float
     step_points = List
     _cached_ptargs = None
-    point_klass=LaserPoint
-    
+    point_klass = LaserPoint
+
     def add_point(self, x, y, z=0, point_color=(1, 0, 0), line_color=(1, 0, 0),
                    **ptargs):
 
