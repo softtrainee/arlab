@@ -1291,6 +1291,7 @@ anaylsis_type={}
         return rsignals, peak_center
 
     def _save_sensitivity(self, extraction, measurement):
+        self.info('saving sensitivity')
         # get the lastest sensitivity entry for this spectrometr
         spec = measurement.mass_spectrometer
         if spec:
@@ -1299,6 +1300,7 @@ anaylsis_type={}
                 extraction.sensitivity = sens[-1]
 
     def _save_peak_center(self, analysis, tab):
+        self.info('saving peakcenter')
         if tab is not None:
             db = self.db
             packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
@@ -1310,6 +1312,7 @@ anaylsis_type={}
             return pc
 
     def _save_measurement(self, analysis):
+        self.info('saving measurement')
         db = self.db
 
         meas = db.add_measurement(
@@ -1326,6 +1329,7 @@ anaylsis_type={}
         return meas
 
     def _save_extraction(self, analysis):
+        self.info('saving extraction')
         db = self.db
         ext = db.add_extraction(analysis,
 #                          self.extraction_script.name,
@@ -1362,6 +1366,7 @@ anaylsis_type={}
         return ext
 
     def _save_spectrometer_info(self, meas):
+        self.info('saving spectrometer info')
         db = self.db
 
         if self.spectrometer_manager:
@@ -1372,6 +1377,7 @@ anaylsis_type={}
                 db.add_deflection(meas, det, deflection)
 
     def _save_blank_info(self, analysis):
+        self.info('saving blank info')
         self._save_history_info(analysis, 'blanks')
 
     def _save_history_info(self, analysis, name):
@@ -1401,6 +1407,7 @@ anaylsis_type={}
             func(history, user_value=uv, user_error=ue, isotope=isotope)
 
     def _save_isotope_info(self, analysis, signals):
+        self.info('saving isotope info')
         db = self.db
 
         # add fit history
@@ -1435,6 +1442,7 @@ anaylsis_type={}
 #        if globalv.experiment_savedb:
 #            db.commit()
     def _save_monitor_info(self, analysis):
+        self.info('saving monitor info')
         if self.monitor:
             for ci in self.monitor.checks:
                 data = ''.join([struct.pack('>ff', x, y) for x, y in ci.data])
@@ -1527,6 +1535,8 @@ anaylsis_type={}
                                             rs_name,  # runscript
                                             rs_text
                                             )
+        
+        self.info('analysis added to mass spec database')
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=['extraction', 'post_equilibration', 'post_measurement'])

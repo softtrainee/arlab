@@ -199,7 +199,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            r = int(args[0])
 #            d = int(args[1]) if len(args) == 2 else None
             rd = self.get_detector(refdetlabel)
-
+            refid,label=0,''
+            if rd:
+                refid=rd.DetectorID
+                label=rd.Label
+                
             # query the IrradiationPositionTable
             irradpos = self.get_irradiation_position(irradpos)
             params = dict(RID=rid,
@@ -208,8 +212,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                          LoginSessionID=1,
                          SpecRunType=runtype,
                          Increment=step,
-                         RefDetID=rd.DetectorID,
-                         ReferenceDetectorLabel=rd.Label
+                         RefDetID=refid,
+                         ReferenceDetectorLabel=label
                          )
 
             # IrradPosition cannot be null
