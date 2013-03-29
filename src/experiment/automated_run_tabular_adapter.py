@@ -19,6 +19,7 @@ from traits.api import Property, Int, Str
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
+from src.paths import paths
 #============= local library imports  ==========================
 def get_name(func):
     def _get_name(obj, trait, item):
@@ -177,13 +178,19 @@ class AutomatedRunAdapter(TabularAdapter):
             elif self.item.state == 'truncate':
                 im = 'blue'
 
-            # get the source path
-            root = os.path.split(__file__)[0]
-            while not root.endswith('src'):
-                root = os.path.split(root)[0]
-
-            root = os.path.split(root)[0]
-            root = os.path.join(root, 'resources')
+        if paths.app_resources:
+            root=paths.app_resources
+#        else:
+##            # get the source path
+#            root = os.path.split(__file__)[0]
+#            while not root.endswith('src'):
+#                root = os.path.split(root)[0]
+#
+#            root = os.path.split(root)[0]
+#            root = os.path.join(root, 'resources')
+#        
+#        self.item.info(os.path.join(root, '{}_ball.png'.format(im)))
+#        print os.path.join(root, '{}_ball.png'.format(im))
             return os.path.join(root, '{}_ball.png'.format(im))
 #            return os.path.join(root, 'bullet_{}.png'.format(im))
 
