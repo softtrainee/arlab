@@ -1249,6 +1249,7 @@ anaylsis_type={}
         self._save_to_massspec()
 
     def _preliminary_processing(self, p):
+        self.info('organizing data for database save')
         dm = self.data_manager
         dm.open_data(p)
         signals = [(iso, detname)

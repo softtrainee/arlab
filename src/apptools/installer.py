@@ -179,22 +179,30 @@ class Installer(object):
                             resource_path('globals.py')
                             )
 
-            # copy pngs
-            for name in map('{}.png'.format, ['red_ball',
-                                              'gray_ball', 'green_ball',
-                                              'orange_ball', 'yellow_ball']):
-                shutil.copyfile(os.path.join(root, 'resources', name),
-                            resource_path(name)
-                            )
+#            # copy pngs
+#            for name in map('{}.png'.format, ['red_ball',
+#                                              'gray_ball', 'green_ball',
+#                                              'orange_ball', 'yellow_ball']):
+#                shutil.copyfile(os.path.join(root, 'resources', name),
+#                            resource_path(name)
+#                            )
             
             # move splash and about into place
             if version_name:
-                for ni, nd in (('splash', 'splashes'), ('about', 'abouts')):
+                for ni, nd in (('splash', 'splashes'), ('about', 'abouts'),
+                               ):
                     sname = '{}_{}.png'.format(ni, version_name)
                     shutil.copyfile(os.path.join(root, 'resources', nd, sname),
                                     resource_path(sname)
                                 )
-
+                    
+            for bi in ('blue','red','green','yellow','orange','gray'):
+                name='{}_ball.png'.format(bi)
+#                print os.path.join(root, 'resources','balls',name)
+                shutil.copyfile(os.path.join(root, 'resources','balls',name),
+                                resource_path(name)
+                                )
+                
 
 
 

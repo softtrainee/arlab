@@ -49,6 +49,8 @@ class Pychron(WorkbenchApplication, Loggable):
     def _splash_screen_default(self):
         from src.paths import paths
         p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        paths.app_resources=p
+        
         sp = SplashScreen(
                           image=ImageResource(name='splash{}.png'.format(paths.version),
                                               search_path=[p, paths.splashes]
