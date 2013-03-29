@@ -29,7 +29,7 @@ class LaserPoint(PointIndicator):
     z = Float
     mask = Float
     attenuator = Float
-    calibrated_xy = Float
+    calibrated_x = Float
     calibrated_y = Float
 
 

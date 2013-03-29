@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Int, Property, Instance, \
-    Button, List, String, Event, Bool, on_trait_change
+    Button, List, String, Event, Bool, on_trait_change, Str
 from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, spring, \
      EnumEditor, InstanceEditor
 from apptools.preferences.preference_binding import bind_preference
@@ -126,7 +126,8 @@ class StageManager(Manager):
 
     keyboard_focus = Event
 
-    calibrated_position_entry = String(enter_set=True, auto_set=False)
+    calibrated_position_entry = Property(String(enter_set=True, auto_set=False))
+    _calibrated_position = Str
 
     def __init__(self, *args, **kw):
         '''
@@ -1049,9 +1050,13 @@ class StageManager(Manager):
 
         return nv
 
-    def _set_calibrated_position(self, v):
+    def _get_calibrated_position_entry(self):
+        return self._calibrated_position
+
+    def _set_calibrated_position_entry(self, v):
+        self._calibrated_position = v
         if XY_REGEX.match(v):
-            self._set_to_calibrated_position(v)
+            self._move_to_calibrated_position(v)
         else:
             self._move_to_hole(v)
 
