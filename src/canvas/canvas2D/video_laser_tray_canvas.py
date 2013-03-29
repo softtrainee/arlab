@@ -24,7 +24,7 @@ from laser_tray_canvas import LaserTrayCanvas
 class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
     '''
     '''
-
+    bgcolor = 'lightgray'
 
     def set_stage_position(self, x, y):
         '''

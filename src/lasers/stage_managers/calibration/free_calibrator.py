@@ -60,21 +60,24 @@ class FreeCalibrator(TrayCalibrator):
             return 'End Calibrate', None, None, None, None
 
         elif step == 'End Calibrate':
-            self.calibrating = False
+            if self.points:
+                self.calibrating = False
 
-            print len(self.points)
-            print self.points
-            refpoints, points = zip(*self.points)
+                print len(self.points)
+                print self.points
+                refpoints, points = zip(*self.points)
 
-            scale, theta, (tx, ty) = calculate_rigid_transform(refpoints,
-                                                               points)
+                scale, theta, (tx, ty) = calculate_rigid_transform(refpoints,
+                                                                   points)
 
-            # set canvas calibration
-            ca = canvas.calibration_item
-            ca.cx, ca.cy = tx, ty
-            ca.rotation = theta
-            ca.scale = 1 / scale
-            return 'Calibrate', tx, ty, theta, 1 / scale
+                # set canvas calibration
+                ca = canvas.calibration_item
+                ca.cx, ca.cy = tx, ty
+                ca.rotation = theta
+                ca.scale = 1 / scale
+                return 'Calibrate', tx, ty, theta, 1 / scale
+            else:
+                return 'Calibrate', None, None, None, None
 
     def _accept_point(self):
         sp = self.manager.get_current_position()
