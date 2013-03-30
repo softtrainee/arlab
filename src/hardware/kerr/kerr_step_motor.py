@@ -110,7 +110,7 @@ class KerrStepMotor(KerrMotor):
     def _discrete_position_changed(self):
         if self.discrete_position:
             dp = self.discrete_position
-            self.data_position = int(dp.position)
+            self.data_position = float(dp.position)
 
     def get_discrete_value(self, name=None):
         v = None

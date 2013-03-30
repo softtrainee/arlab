@@ -142,7 +142,7 @@ def calculate_rigid_transform(refpoints, points):
 #    R = array([[a, -b], [b, a]])
     scale = (a ** 2 + b ** 2) ** 0.5
     theta = math.degrees(math.acos(a / scale))
-    print scale, float(scale)
+#    print scale, float(scale)
     return float(scale), theta, map(float, (tx, ty))
 
 

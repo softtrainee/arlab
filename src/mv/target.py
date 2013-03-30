@@ -15,38 +15,47 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, cached_property, Property
+from traits.api import HasTraits, cached_property, Property, Tuple, Any, Float
 #============= standard library imports ========================
+from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull_area
+from src.geometry.centroid.calculate_centroid import calculate_centroid
 
 class Target(HasTraits):
-    centroid_value = None
-    poly_points = None
-    bounding_rect = None
-    threshold = None
-    area = None
+    poly_points = Any
+    bounding_rect = Any
+#    threshold = None
+    area = Float
+
+    origin = Tuple
     convexity = Property
+    centroid = Property
 
     @property
     def dev_centroid(self):
-        return ((self.origin[0] - self.centroid_value[0]),
-                (self.origin[1] - self.centroid_value[1]))
-
-    @property
-    def dev_br(self):
-        return ((self.origin[0] - self.bounding_rect[0]),
-                (self.origin[1] - self.bounding_rect[1]))
+        return ((self.origin[0] - self.centroid[0]),
+                (self.origin[1] - self.centroid[1]))
 
     @property
     def aspect_ratio(self):
         return self.bounding_rect.width / float(self.bounding_rect.height)
 
-    @property
-    def bounding_area(self):
-        return self.bounding_rect.width * self.bounding_rect.height
-
     @cached_property
     def _get_convexity(self):
         return self.area / convex_hull_area(self.poly_points)
+
+    @cached_property
+    def _get_centroid(self):
+        pts = array([(pt.x, pt.y) for pt in self.poly_points], dtype=float)
+        return calculate_centroid(pts)
+
+    #    @property
+#    def dev_br(self):
+#        return ((self.origin[0] - self.bounding_rect[0]),
+#                (self.origin[1] - self.bounding_rect[1]))
+#    @property
+#    def bounding_area(self):
+#        return self.bounding_rect.width * self.bounding_rect.height
+
 #============= EOF =============================================
