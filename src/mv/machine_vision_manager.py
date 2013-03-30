@@ -85,22 +85,68 @@ class MachineVisionManager(Manager):
         return im
 
     def _test(self):
-        frame = self.new_image_frame()
-        im = self.new_image(frame)
+        paths = (
+#                 ('/Users/ross/Sandbox/pos_err/snapshot007.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-005.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_207_0-002.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_209_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_210_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_220_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-002.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-003.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-004.jpg', 1.25),
+#
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_200_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_200_0-002.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_201_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_202_0-001.jpg', 1.25),
+                 ('/Users/ross/Sandbox/pos_err/pos_err_203_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_204_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_206_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_206_1-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_207_0-001.jpg', 1.25),
+                )
+        fails = 0
+        times = []
+        for p, dim in paths:
+            from globals import globalv
+            # force video to reload test image
+            self.video.source_frame = None
+            globalv.video_test_path = p
 
-        self.view_image(im)
+            frame = self.new_image_frame()
+            im = self.new_image(frame)
 
-        loc = self.new_co2_locator()
+            self.view_image(im)
 
-        dim = 2.25
-        cw = ch = dim * 2.5
-        frame = self._crop_image(self.target_image.source_frame, cw, ch)
+            loc = self.new_co2_locator()
 
-        loc.croppixels = (cw * self.pxpermm, ch * self.pxpermm)
+            cw = ch = dim * 2.5
+            frame = self._crop_image(self.target_image.source_frame, cw, ch)
 
-        dx, dy = loc.find(self.target_image, frame, dim * self.pxpermm)
-        if dx and dy:
-            self.info('calculated deviation {:0.3f},{:0.3f}'.format(dx, dy))
+            loc.croppixels = (cw * self.pxpermm, ch * self.pxpermm)
+
+            st = time.time()
+            dx, dy = loc.find(self.target_image, frame, dim * self.pxpermm)
+            times.append(time.time() - st)
+            if dx and dy:
+                self.info('SUCCESS path={}'.format(p))
+                self.info('calculated deviation {:0.3f},{:0.3f}'.format(dx, dy))
+            else:
+                fails += 1
+                self.info('FAIL    path={}'.format(p))
+#            time.sleep(0.5)
+
+        n = len(paths)
+        self.info('failed to find center {}/{} times'.format(fails, n))
+        self.info('execution times: min={} max={} avg={}'.format(min(times), max(times), sum(times) / n))
+
+        def foo():
+            from pylab import show, plot
+            plot(times)
+            show()
+        do_later(foo)
 
     def _test_fired(self):
         from threading import Thread
@@ -114,7 +160,9 @@ def test():
     from globals import globalv
     globalv.video_test = True
     globalv.video_test_path = '/Users/ross/Sandbox/pos_err/snapshot007.jpg'
-    globalv.video_test_path = '/Users/ross/Sandbox/pos_err/pos_err_53002.jpg'
+#    globalv.video_test_path = '/Users/ross/Sandbox/pos_err/pos_err_53002.jpg'
+    globalv.video_test_path = '/Users/ross/Sandbox/pos_err/pos_err_221_0-005.jpg'
+
 #    globalv.video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
     video = Video()
     video.open()

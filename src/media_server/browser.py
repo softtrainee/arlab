@@ -30,13 +30,14 @@ from numpy import array
 from src.loggable import Loggable
 from src.helpers.parsers.xml_parser import XMLParser
 from src.traits_editors.custom_label_editor import CustomLabel
-from src.graph.tools.xy_inspector import XYInspectorOverlay, XYInspector
-from src.graph.image_underlay import ImageUnderlay
+# from src.graph.tools.xy_inspector import XYInspectorOverlay, XYInspector
+# from src.graph.image_underlay import ImageUnderlay
 from src.geometry.reference_point import ReferencePoint
 from chaco.abstract_overlay import AbstractOverlay
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.regex import make_image_regex
+from src.media_server.image_viewer import ImageViewer
 
 
 class ReferencePointsTool(BaseTool):
@@ -91,134 +92,135 @@ class Hierarchy(HasTraits):
         return v
 
 
-class Viewer(HasTraits):
-    container = Instance(HPlotContainer, ())
+
+class Viewer(ImageViewer):
+#    container = Instance(HPlotContainer, ())
     name = String
-    plot = Any
+#    plot = Any
     open_button = Button
-    define_points = Button
-    define_points_label = String
-    _defining_points = False
+#    define_points = Button
+#    define_points_label = String
+#    _defining_points = False
     reference_pt1 = None
 
-    def set_image(self, buf):
-        '''
-            buf is a file-like object
-        '''
-        self.container = HPlotContainer()
-        pd = ArrayPlotData(x=[0, 640],
-                           y=[0, 480])
-        plot = Plot(data=pd, padding=[30, 5, 5, 30],
-#                    default_origin=''
-                    )
-        self.plot = plot.plot(('x', 'y'),)[0]
-        self.plot.index.sort_order = 'ascending'
-        imo = ImageUnderlay(self.plot, path=buf)
-        self.plot.overlays.append(imo)
-
-        self._add_tools(self.plot)
-
-        self.container.add(plot)
-        self.container.request_redraw()
-
-    def _add_tools(self, plot):
-        inspector = XYInspector(plot)
-        plot.tools.append(inspector)
-        plot.overlays.append(XYInspectorOverlay(inspector=inspector,
-                                                component=plot,
-                                                align='ul',
-                                                bgcolor=0xFFFFD2
-                                                ))
-
-#        zoom = ZoomTool(component=plot,
-#                        enable_wheel=False,
-#                        tool_mode="box", always_on=False)
-#        pan = PanTool(component=plot, restrict_to_data=True)
-#        plot.tools.append(pan)
+#    def set_image(self, buf):
+#        '''
+#            buf is a file-like object
+#        '''
+#        self.container = HPlotContainer()
+#        pd = ArrayPlotData(x=[0, 640],
+#                           y=[0, 480])
+#        plot = Plot(data=pd, padding=[30, 5, 5, 30],
+# #                    default_origin=''
+#                    )
+#        self.plot = plot.plot(('x', 'y'),)[0]
+#        self.plot.index.sort_order = 'ascending'
+#        imo = ImageUnderlay(self.plot, path=buf)
+#        self.plot.overlays.append(imo)
 #
-#        plot.overlays.append(zoom)
+#        self._add_tools(self.plot)
+#
+#        self.container.add(plot)
+#        self.container.request_redraw()
+#
+#    def _add_tools(self, plot):
+#        inspector = XYInspector(plot)
+#        plot.tools.append(inspector)
+#        plot.overlays.append(XYInspectorOverlay(inspector=inspector,
+#                                                component=plot,
+#                                                align='ul',
+#                                                bgcolor=0xFFFFD2
+#                                                ))
+#
+# #        zoom = ZoomTool(component=plot,
+# #                        enable_wheel=False,
+# #                        tool_mode="box", always_on=False)
+# #        pan = PanTool(component=plot, restrict_to_data=True)
+# #        plot.tools.append(pan)
+# #
+# #        plot.overlays.append(zoom)
 
-#===============================================================================
-# handlers
-#===============================================================================
-
-    def _set_reference_point(self, pt):
-        '''
-             assumes no rotation of the reference frames
-             only scale and translate
-        '''
-        rp = ReferencePoint(pt)
-        info = rp.edit_traits()
-        if info.result:
-            plot = self.plot
-            if not self.reference_pt1:
-                self.reference_pt1 = (rp.x, rp.y), pt
-            else:
-                # calculate bounds
-                dp1, sp1 = self.reference_pt1
-                dp2, sp2 = (rp.x, rp.y), pt
-
-
-                w = plot.width
-                h = plot.height
-                if sp1[0] < sp2[0]:
-                    sx1, sx2 = sp1[0], sp2[0]
-                    x1, x2 = dp1[0], dp2[0]
-                else:
-                    sx2, sx1 = sp1[0], sp2[0]
-                    x2, x1 = dp1[0], dp2[0]
-
-                if sp1[1] < sp2[1]:
-                    sy1, sy2 = sp1[1], sp2[1]
-                    y1, y2 = dp1[1], dp2[1]
-                else:
-                    sy2, sy1 = sp1[1], sp2[1]
-                    y2, y1 = dp1[1], dp2[1]
-
-                pxperunit = abs((sx2 - sx1) / (x2 - x1))
-
-                li = x1 - sx1 / pxperunit
-                hi = x2 + (w - sx2) / pxperunit
-                lv = y1 - sy1 / pxperunit
-                hv = y2 + (h - sy2) / pxperunit
-
-                plot.index_range.low_setting = li
-                plot.index_range.high_setting = hi
-                plot.value_range.low_setting = lv
-                plot.value_range.high_setting = hv
-
-            plot.request_redraw()
-
-
-    def _define_points_fired(self):
-        if self.plot:
-            plot = self.plot
-            if not self._defining_points:
-                st = ReferencePointsTool(plot)
-                st.on_trait_change(self._set_reference_point, 'current_position')
-                self.points_tool = st
-                plot.tools.insert(0, st)
-                self.define_points_label = 'Finish'
-
-                plot.overlays.append(ReferencePointsOverlay(tool=st, component=plot))
-
-            else:
-                self.define_points_label = 'Define Points'
-                self.points_tool.on_trait_change(self._set_reference_point, 'current_position', remove=True)
-                plot.tools.pop(0)
-                plot.overlays.pop(-1)
-
-            self._defining_points = not self._defining_points
+##===============================================================================
+# # handlers
+##===============================================================================
+#
+#    def _set_reference_point(self, pt):
+#        '''
+#             assumes no rotation of the reference frames
+#             only scale and translate
+#        '''
+#        rp = ReferencePoint(pt)
+#        info = rp.edit_traits()
+#        if info.result:
+#            plot = self.plot
+#            if not self.reference_pt1:
+#                self.reference_pt1 = (rp.x, rp.y), pt
+#            else:
+#                # calculate bounds
+#                dp1, sp1 = self.reference_pt1
+#                dp2, sp2 = (rp.x, rp.y), pt
+#
+#
+#                w = plot.width
+#                h = plot.height
+#                if sp1[0] < sp2[0]:
+#                    sx1, sx2 = sp1[0], sp2[0]
+#                    x1, x2 = dp1[0], dp2[0]
+#                else:
+#                    sx2, sx1 = sp1[0], sp2[0]
+#                    x2, x1 = dp1[0], dp2[0]
+#
+#                if sp1[1] < sp2[1]:
+#                    sy1, sy2 = sp1[1], sp2[1]
+#                    y1, y2 = dp1[1], dp2[1]
+#                else:
+#                    sy2, sy1 = sp1[1], sp2[1]
+#                    y2, y1 = dp1[1], dp2[1]
+#
+#                pxperunit = abs((sx2 - sx1) / (x2 - x1))
+#
+#                li = x1 - sx1 / pxperunit
+#                hi = x2 + (w - sx2) / pxperunit
+#                lv = y1 - sy1 / pxperunit
+#                hv = y2 + (h - sy2) / pxperunit
+#
+#                plot.index_range.low_setting = li
+#                plot.index_range.high_setting = hi
+#                plot.value_range.low_setting = lv
+#                plot.value_range.high_setting = hv
+#
+#            plot.request_redraw()
+#
+#
+#    def _define_points_fired(self):
+#        if self.plot:
+#            plot = self.plot
+#            if not self._defining_points:
+#                st = ReferencePointsTool(plot)
+#                st.on_trait_change(self._set_reference_point, 'current_position')
+#                self.points_tool = st
+#                plot.tools.insert(0, st)
+#                self.define_points_label = 'Finish'
+#
+#                plot.overlays.append(ReferencePointsOverlay(tool=st, component=plot))
+#
+#            else:
+#                self.define_points_label = 'Define Points'
+#                self.points_tool.on_trait_change(self._set_reference_point, 'current_position', remove=True)
+#                plot.tools.pop(0)
+#                plot.overlays.pop(-1)
+#
+#            self._defining_points = not self._defining_points
 
 
     def traits_view(self):
         v = View(VGroup(
                         HGroup(
                                Item('open_button', show_label=False),
-                               Item('define_points',
-                                    enabled_when='plot',
-                                    editor=ButtonEditor(label_value='define_points_label'),
-                                    show_label=False),
+#                               Item('define_points',
+#                                    enabled_when='plot',
+#                                    editor=ButtonEditor(label_value='define_points_label'),
+#                                    show_label=False),
                                spring, CustomLabel('name', color='maroon', size=16,
                                                    height= -25,
                                                    width=100,
@@ -238,13 +240,15 @@ class MediaBrowser(Loggable):
             return '/{}/{}'.format(self.root, sel)
 
     def load_remote_directory(self, name, ext=None):
-        self.root=name
+        self.root = name
         client = self.client
         try:
             resp = client.propfind(name)
         except Exception, e:
             self.warning_dialog('Could not connect to Media server at {}:{}'.format(self.client.host, self.client.port))
             return
+
+        print resp.read()
 
         parser = XMLParser()
         tree = parser.load(resp)
@@ -254,11 +258,14 @@ class MediaBrowser(Loggable):
             path = href.text.strip()
             return os.path.basename(path)
 
-        im_regex=make_image_regex(ext)
+
+#        tree.findall()
+
+        im_regex = make_image_regex(ext)
         files = [get_file_name(ri) for ri in tree.findall(name('response'))]
         files = filter(lambda x: im_regex.match(x), files)
         self.hierarchy.files = files
-        
+
         return True
 
 #===============================================================================

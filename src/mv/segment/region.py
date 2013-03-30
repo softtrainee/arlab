@@ -18,28 +18,58 @@
 from traits.api import HasTraits, Bool
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import zeros_like, invert
+from numpy import zeros_like, invert, percentile, ones_like
 from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
 from src.mv.segment.base import BaseSegmenter
+# from skimage.exposure.exposure import rescale_intensity
+# from scipy.ndimage.morphology import binary_closing
 
+cnt = 0
 class RegionSegmenter(BaseSegmenter):
-    use_adaptive_threshold = Bool(False)
+    use_adaptive_threshold = Bool(True)
     threshold_low = 0
     threshold_high = 255
+    block_size = 20
+
     def segment(self, src):
+        '''
+            src: preprocessing cv.Mat
+        '''
         image = src.ndarray[:]
+
+
         if self.use_adaptive_threshold:
-            block_size = 25
-            markers = threshold_adaptive(image, block_size) * 255
-            markers = invert(markers)
+#            block_size = 25
+            markers = threshold_adaptive(image, self.block_size)
+
+            n = markers[:].astype('uint8')
+            n[markers == True] = 255
+            n[markers == False] = 1
+            markers = n
+#            print markers
+#            markers = markers.astype('uint8')
+#            n = ones_like(markers)
+#            n[markers] = 255
+#            print n
+#            markers[markers] = 255
+#            markers[not markers] = 1
+#            print markers
+#            markers = n.astype('uint8')
+#            markers = invert(markers).astype('uint8')
 
         else:
             markers = zeros_like(image)
             markers[image < self.threshold_low] = 1
             markers[image > self.threshold_high] = 255
 
+#        global cnt
+#        # remove holes
+#        if cnt % 2 == 0:
+#            markers = binary_closing(markers).astype('uint8') * 255
+#        cnt += 1
+#        print markers
         elmap = sobel(image, mask=image)
         wsrc = watershed(elmap, markers, mask=image)
         return invert(wsrc)
