@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports=======================
-from traits.api import Property, Int, Str
+from traits.api import Property, Int, Str, Bool
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
@@ -36,6 +36,8 @@ def get_name(func):
     return _get_name
 
 class AutomatedRunAdapter(TabularAdapter):
+    show_state=Bool(True)
+    
     state_width = Int(20)
     aliquot_width = Int(50)
 
@@ -106,7 +108,7 @@ class AutomatedRunAdapter(TabularAdapter):
 #        hp = ('Temp', 'extract_value')
 #        if self.kind == 'watts':
 #            hp =
-
+        
         cols = [('', 'state'),
                  ('Labnumber', 'labnumber'),
                  ('Aliquot', 'aliquot'),
@@ -124,7 +126,9 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Post equilibration', 'post_equilibration_script'),
                  ('Post Measurement', 'post_measurement_script'),
                  ]
-
+        if not self.show_state:
+            cols.pop(0)
+            
         return cols
 
     def _get_sample_text(self):
