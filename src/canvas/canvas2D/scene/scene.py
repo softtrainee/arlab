@@ -103,8 +103,12 @@ class Scene(HasTraits):
         else:
             layers = (self.layers[layer],)
 
-        for li in layers:
-            li.remove_item(v)
+        if isinstance(v, str):
+            v = self.get_item(v)
+
+        if v:
+            for li in layers:
+                li.remove_item(v)
 
     def pop_item(self, v, layer=None, klass=None):
         if layer is None:

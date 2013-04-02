@@ -15,15 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Float
-from traitsui.api import View, Item, TableEditor
+from traits.api import Float
 from pyface.timer.do_later import do_later
 
 # from src.geometry.centroid import centroid
 #============= standard library imports ========================
 import time
-from numpy import array, histogram, argmax, zeros, asarray, delete, ones_like, invert, \
-    interp
+from numpy import array, histogram, argmax, zeros, asarray, delete, ones_like, invert
 from skimage.morphology.watershed import is_local_maximum
 from skimage.morphology import watershed
 from skimage.draw import polygon
@@ -37,12 +35,16 @@ from src.image.cvwrapper import grayspace, draw_contour_list, contour, asMat, \
     draw_polygons
 from src.mv.target import Target
 from src.image.image import StandAloneImage
+from src.geometry.geometry import sort_clockwise, approximate_polygon_center, \
+    calc_length
+from src.geometry.convex_hull import convex_hull
+import math
+
 
 class Locator(Loggable):
-#    cropwidth = Int(3)
-#    cropheight = Int(3)
     pxpermm = Float
     use_histogram = False
+    use_circle_minimization = True
     def find(self, image, frame, dim):
         '''
             image is a stand alone image
@@ -64,17 +66,42 @@ class Locator(Loggable):
         if targets:
             self.info('found {} potential targets'.format(len(targets)))
 
-            # calculate error
-            dx, dy = self._calculate_error(targets)
-
             # draw center indicator
             src = image.get_frame(0)
-            self._draw_center_indicator(src, size=2, shape='rect')
+            self._draw_center_indicator(src, size=2, shape='rect', radius=int(dim))
 
             # draw targets
             self._draw_targets(src, targets)
 
+            if self.use_circle_minimization:
+                # calculate circle_minimization position
+                dx, dy = self._circle_minimization(src, targets[0], dim)
+            else:
+                # calculate error
+                dx, dy = self._calculate_error(targets)
+
         return dx, dy
+
+    def _circle_minimization(self, src, target, dim):
+        '''
+            find cx,cy of a circle with r radius using the arc center method
+    
+            only preform if target has high convexity 
+            convexity is simply defined as ratio of area to convex hull area
+            
+        '''
+        tol = 0.98
+        if target.convexity < tol:
+            tx, ty = self._get_frame_center(src)
+            pts = array([(p.x - tx, p.y - ty) for p in target.poly_points], dtype=float)
+            cx, cy = approximate_polygon_center(pts, dim)
+            self._draw_indicator(src, (cx + tx, cy + ty), color=(255, 0, 128), shape='rect')
+            draw_circle(src, (cx + tx, cy + ty), int(dim), color=(255, 0, 128),)
+
+        else:
+            cx, cy = self._calculate_error([target])
+
+        return cx, cy
 
     def _calculate_error(self, targets):
         '''
@@ -152,23 +179,20 @@ class Locator(Loggable):
             if filter_targets:
                 targets = self._filter_targets(image, frame, dim, targets, fa)
 
-#            time.sleep(0.5)
             if targets:
-#                print 'would return'
                 return targets
 
     def _make_targets(self, pargs, origin):
+        '''
+         convenience function for assembling target list
+        '''
         targets = []
         for pi, br, ai in zip(*pargs):
             if len(pi) < 4:
                 continue
 
-#            pts = array([(pt.x, pt.y) for pt in pi], dtype=float)
-#            cx, cy = calculate_centroid(pts)
-
             tr = Target()
             tr.origin = origin
-#            tr.centroid_value = cx, cy
             tr.poly_points = pi
             tr.bounding_rect = br
             tr.area = ai
@@ -178,6 +202,9 @@ class Locator(Loggable):
         return targets
 
     def _get_frame_center(self, src):
+        '''
+            convenience function for geting center of image in c,r from
+        '''
         w, h = get_size(src)
         x = float(w / 2)
         y = float(h / 2)
@@ -187,18 +214,37 @@ class Locator(Loggable):
 # filter
 #===============================================================================
     def _filter_targets(self, image, frame, dim, targets, fa, threshold=0.8):
+        '''
+            filter targets using the _filter_test function
+            
+            return list of Targets that pass _filter_test
+        '''
         test_target = self._filter_test
         ts = [test_target(image, frame, ti, dim, threshold, fa[0], fa[1]) for ti in targets]
         return [ta[0] for ta in ts if ta[1]]
 
     def _near_center(self, xy, frame, tol=0.75):
-        cx, cy = self._get_frame_center(frame)
-        x, y = xy
+        '''
+            is the point xy within tol distance of the center
+        '''
+#        cx, cy = self._get_frame_center(frame)
+#        x, y = xy
+#        tol *= self.pxpermm
+#        return abs(x - cx) < tol and abs(y - cy) < tol
+        from scipy.spatial.distance import cdist
+        cxy = self._get_frame_center(frame)
+        d = calc_length(xy, cxy)
         tol *= self.pxpermm
-        return abs(x - cx) < tol and abs(y - cy) < tol
+
+        return d < tol
+
 
     def _get_filter_target_area(self, dim):
-        miholedim = 0.6 * dim
+        '''
+            calculate min and max bounds of valid polygon areas
+        '''
+
+        miholedim = 0.8 * dim
         maholedim = 1.25 * dim
         mi = miholedim ** 2 * 3.1415
         ma = maholedim ** 2 * 3.1415
@@ -217,7 +263,7 @@ class Locator(Loggable):
             ctest = ti.convexity > cthreshold
             centtest = self._near_center(ti.centroid, frame)
             atest = ma > ti.area > mi
-#                print fa[1], ti.area, fa[0]
+#            print ma, ti.area, mi
 #                print ctest, centtest, atest
             return ctest, centtest, atest
 
@@ -291,21 +337,36 @@ class Locator(Loggable):
 # drawing
 #===============================================================================
     def _draw_targets(self, src, targets):
+        '''
+            draw a crosshairs indicator and the target's polygon
+        '''
+
         for ta in targets:
-            self._draw_indicator(src, new_point(*ta.centroid),
+            pt = new_point(*ta.centroid)
+            self._draw_indicator(src, pt,
                                  color=(0, 255, 0),
                                  size=10,
                                  shape='crosshairs')
             draw_polygons(src, [ta.poly_points])
 
-    def _draw_center_indicator(self, src, color=(0, 0, 255), shape='crosshairs', size=10):
-        self._draw_indicator(src, new_point(*self._get_frame_center(src)),
+    def _draw_center_indicator(self, src, color=(0, 0, 255), shape='crosshairs',
+                               size=10, radius=1):
+        '''
+            draw indicator at center of frame
+        '''
+        cpt = self._get_frame_center(src)
+        self._draw_indicator(src, new_point(*cpt),
 #                             shape='crosshairs',
                              shape=shape,
                              color=color,
                              size=size)
 
+        draw_circle(src, cpt, radius, color=color, thickness=1)
+
     def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
+        '''
+            convenience function for drawing indicators
+        '''
         if isinstance(center, tuple):
             center = new_point(*center)
         r = size
@@ -354,10 +415,11 @@ class Locator(Loggable):
         # preprocess
         if denoise:
             src = self._denoise(src, weight=denoise)
+
         if contrast:
             src = self._contrast_equalization(src)
 
-        frm = asMat(src[:])
+        frm = asMat(src)
 
         if display:
             # open preprocessed
@@ -369,21 +431,99 @@ class Locator(Loggable):
         return frm
 
     def _denoise(self, img, weight):
+        '''
+            use TV-denoise to remove noise
+            
+            http://scipy-lectures.github.com/advanced/image_processing/
+            http://en.wikipedia.org/wiki/Total_variation_denoising
+        '''
         from skimage.filter import tv_denoise
         return tv_denoise(img, weight=weight).astype('uint8')
 
     def _contrast_equalization(self, img):
-#        from numpy import percentile
+        '''
+            rescale intensities to maximize contrast
+        '''
         from skimage.exposure.exposure import rescale_intensity
+#        from numpy import percentile
         # Contrast stretching
 #        p2 = percentile(img, 2)
 #        p98 = percentile(img, 98)
-        return rescale_intensity(img,
-#                                 in_range=(p2, p98)
-                                 )
+        return rescale_intensity(img).astype('uint8')
 
 
 #============= EOF =============================================
+#        from numpy import linspace, pi, cos, sin, radians
+#        from math import atan2
+#        from scipy.optimize import fmin
+# #        dx, dy = None, None
+# #        for ta in targets:
+#        pts = array([(p.x, p.y) for p in target.poly_points], dtype=float)
+#        pts = sort_clockwise(pts, pts)
+#        pts = convex_hull(pts)
+#        cx, cy = target.centroid
+#        px, py = pts.T
+#
+#        tx, ty = self._get_frame_center(src)
+#        px -= cx
+#        py -= cy
+#
+#        r = dim * 0.5
+#        ts = array([atan2(p[1] - cx, p[0] - cy) for p in pts])
+# #        ts += 180
+#        n = len(ts)
+#        hidx = n / 2
+#        h1 = ts[:hidx]
+#
+#        offset = 0 if n % 2 == 0 else 1
+#
+# #        h1 = array([ti for ti in ts if ti < 180])
+# #        h1 = radians(h1)
+# #        hidx = len(h1)
+# #        print len(ts), hidx
+# #        offset = 0
+#        def cost(p0):
+#            '''
+#                cost function
+#
+#                A-D: chord of the polygon
+#                B-C: radius of fit circle
+#
+#                A  B             C  D
+#
+#                try to minimize difference fit circle and polygon approx
+#                cost=dist(A,B)+dist(C,D)
+#            '''
+# #            r = p0[2]
+#            # northern hemicircle
+#            cix1, ciy1 = p0[0] - cx + r * cos(h1), p0[1] - cy + r * sin(h1)
+#
+#            # southern hemicircle
+#            cix2, ciy2 = p0[0] - cx + r * cos(h1 + pi), p0[1] - cy + r * sin(h1 + pi)
+#
+#            dx, dy = px[:hidx] - cix1, py[:hidx] - ciy1
+#            p1 = (dx ** 2 + dy ** 2) ** 0.5
+#
+# #            dx, dy = cix2 - px[hidx + offset:], ciy2 - py[hidx + offset:]
+#            dx, dy = px[hidx + offset:] - cix2, py[hidx + offset:] - ciy2
+#            p2 = (dx ** 2 + dy ** 2) ** 0.5
+# #            print 'p1', p1
+# #            print 'p2', p2
+#            return ((p2 - p1) ** 2).sum()
+# #            return (p1 + p2).mean()
+# #            return p2.sum() + p1.sum()
+#
+#        # minimize the cost function
+#        dx, dy = fmin(cost, x0=[0, 0], disp=False)  # - ta.centroid
+#        print dx, dy, ty, cy
+# #        dy -= cy
+# #        dx -= cx
+#
+# #        print ty + cy, dy
+#        self._draw_indicator(src, (dx, dy), shape='rect')
+#        draw_circle(src, (dx, dy), int(r))
+#
+#        return dx - target.origin[0], dy - target.origin[1]
 # def debug_show(image, distance, wsrc, nimage):
 #
 #    import matplotlib.pyplot as plt

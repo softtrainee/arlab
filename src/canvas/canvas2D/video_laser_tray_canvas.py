@@ -36,10 +36,11 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
         self._desired_position = None
         self.request_redraw()
 
-    def add_markup_rect(self, x, y, w, h):
+    def add_markup_rect(self, x, y, w, h, name=''):
         from src.canvas.canvas2D.scene.primitives.primitives import Rectangle
         r = Rectangle(x=x, y=y, width=w, height=h,
                       space='screen',
+                      name=name,
                       fill=False)
         self.scene.add_item(r)
 #        self.markupcontainer['croprect'] = Rectangle(x=x, y=y, width=w, height=h,

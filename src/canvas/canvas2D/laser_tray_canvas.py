@@ -296,6 +296,9 @@ class LaserTrayCanvas(MapCanvas):
 #    def remove_point(self, pi):
 #        self.scene.remove_item(pi)
 #        self.points.remove(pi)
+    def remove_item(self, name):
+        self.scene.remove_item(name)
+
     def pop_point(self, idx):
         if idx == -1:
             self._point_count -= 1

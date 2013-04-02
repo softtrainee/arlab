@@ -86,7 +86,12 @@ class AutoFocusManager(Manager):
                 try:
                     params = pickle.load(f)
                     self.info('loading parameters from {}'.format(p))
+
+                    if not isinstance(params, FocusParameters):
+                        self.info('out of date parameters file. using default')
+                        params = FocusParameters()
                     return params
+
                 except Exception, e:
                     print e
                     return FocusParameters()
@@ -375,7 +380,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _add_focus_area_rect(self, cx, cy, w, h):
         pl = self.canvas.padding_left
         pb = self.canvas.padding_bottom
-        self.canvas.add_markup_rect(cx + pl, cy + pb, w, h)
+        self.canvas.add_markup_rect(cx + pl, cy + pb, w, h, name='croprect')
 
     def _autofocus_button_fired(self):
         if not self.autofocusing:
@@ -391,6 +396,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _configure_button_fired(self):
         self._crop_rect_update()
         self.edit_traits(view='configure_view', kind='livemodal')
+        self.canvas.remove_item('croprect')
 #        try:
 #            self.canvas.markupcontainer.pop('croprect')
 #        except KeyError:

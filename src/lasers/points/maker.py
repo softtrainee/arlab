@@ -349,7 +349,7 @@ class TransectMaker(FinishableMaker):
         return {'transects':trans}
 
     def _get_controls(self):
-        return Item('step', label='Step (um)')
+        return Item('step', label='Step (mm)')
 
     def _step_changed(self):
         if self.step:

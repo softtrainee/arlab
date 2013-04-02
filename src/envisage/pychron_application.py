@@ -24,14 +24,14 @@ import copy
 #============= local library imports  ==========================
 from src.loggable import Loggable
 import os
-from kiva.fonttools.font import Font
+# from kiva.fonttools.font import Font
 
 class Pychron(WorkbenchApplication, Loggable):
 # class Pychron(TasksApplication):
     '''
     '''
-    id = 'pychron'
-    name = 'pyExperiment'
+    id = 'pychron.uv'
+    name = 'pyUV'
 
     uis = List
     def _about_dialog_default(self):

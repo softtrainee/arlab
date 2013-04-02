@@ -214,6 +214,8 @@ class VideoStageManager(StageManager):
 #        from src.helpers.media import load_sound, play_sound
 #        load_sound('shutter')
 #        play_sound('shutter')
+    def autocenter(self, *args, **kw):
+        return self._autocenter(*args, **kw)
 
     def snapshot(self, path=None, name=None, auto=False):
         if path is None:
@@ -233,10 +235,11 @@ class VideoStageManager(StageManager):
             # play camera shutter sound
             play_sound('shutter')
 
-            if self.render_with_markup:
-                self._render_with_markup(path)
-            else:
-                self.video.record_frame(path, swap_rb=False)
+            self._render_snapshot(path)
+#            if self.render_with_markup:
+#                self._render_with_markup(path)
+#            else:
+#                self.video.record_frame(path, swap_rb=False)
 
             self._upload(path)
 
@@ -278,11 +281,28 @@ class VideoStageManager(StageManager):
                 self.warning('Media client unavailable')
                 self.warning_dialog('Media client unavailable')
 
-    def _render_with_markup(self, path):
+    def _render_snapshot(self, path):
         c = self.canvas
+        p = None
+        was_visible = False
+        if not self.render_with_markup:
+            p = c.show_laser_position
+            c.show_laser_position = False
+            if self.points_programmer.is_visible:
+                c.hide_all()
+                was_visible = True
+
         gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
         gc.render_component(c)
         gc.save(path)
+
+        if p is not None:
+            c.show_laser_position = p
+
+        if was_visible:
+            c.show_all()
+#            self.points_programmer._show_hide_fired()
+
 
     def _start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote',):
@@ -322,24 +342,29 @@ class VideoStageManager(StageManager):
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:
-            sm = self._stage_map
+#            sm = self._stage_map
             pos, interp = self._autocenter(holenum=holenum, ntries=1)
-            if pos:
-                # add an adjustment value to the stage map
-                sm.set_hole_correction(holenum, *pos)
-                sm.dump_correction_file()
+            self._update_visualizer(holenum, pos, interp)
 
-                f = 'interpolation' if interp else 'correction'
-            else:
-                f = 'uncorrected'
-                pos = sm.get_hole(holenum).nominal_position
-            func = getattr(self.visualizer, 'record_{}'.format(f))
-            func(holenum, *pos)
+    def _update_visualizer(self, holenum, pos, interp):
+        if pos:
+#                # add an adjustment value to the stage map
+#                sm.set_hole_correction(holenum, *pos)
+#                sm.dump_correction_file()
+#
+            f = 'interpolation' if interp else 'correction'
+        else:
+            f = 'uncorrected'
+#                pos = sm.get_hole(holenum).nominal_position
 
+        func = getattr(self.visualizer, 'record_{}'.format(f))
+        func(holenum, *pos)
 
-    def _autocenter(self, holenum=None, ntries=1):
+    def _autocenter(self, holenum=None, ntries=1, save=False, use_interpolation=False):
         rpos = None
         interp = False
+        sm = self._stage_map
+
         if self.use_autocenter:
             time.sleep(0.75)
             for _t in range(max(1, ntries)):
@@ -362,19 +387,31 @@ class VideoStageManager(StageManager):
                                   name='pos_err_{}_{}-'.format(holenum, _t))
                     break
 
-            if self.use_auto_center_interpolation and rpos is None:
+#            if self.use_auto_center_interpolation and rpos is None:
+            if use_interpolation and rpos is None:
                 self.info('trying to get interpolated position')
-                rpos = self._stage_map.get_interpolated_position(holenum)
+                rpos = sm.get_interpolated_position(holenum)
                 if rpos:
                     s = '{:0.3f},{:0.3f}'
 #                    self.visualizer.record_interpolation(holenum, *rpos)
                     interp = True
                 else:
                     s = 'None'
-
                 self.info('interpolated position= {}'.format(s))
 
-        return rpos, interp
+        if rpos:
+            corrected = True
+            # add an adjustment value to the stage map
+            if save:
+                sm.set_hole_correction(holenum, *rpos)
+                sm.dump_correction_file()
+#            f = 'interpolation' if interp else 'correction'
+        else:
+            corrected = False
+#            f = 'uncorrected'
+            rpos = sm.get_hole(holenum).nominal_position
+
+        return rpos, corrected, interp
 
     def _calculate_indicator_positions(self, shift=None):
         ccm = self.camera_calibration_manager
@@ -490,9 +527,7 @@ class VideoStageManager(StageManager):
                 self.camera.set_limits_by_zoom(new, s.x, s.y)
 
     def _autocenter_button_fired(self):
-
-        t = Thread(name='stage.autocenter', target=self._autocenter)
-        t.start()
+        self.autocenter()
 
     def _configure_autocenter_button_fired(self):
         info = self.autocenter_manager.edit_traits(view='configure_view',

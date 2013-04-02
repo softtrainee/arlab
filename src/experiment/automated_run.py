@@ -326,7 +326,9 @@ class AutomatedRun(Loggable):
                                 )
 
     def py_baselines(self, ncounts, starttime, mass, detector,
-                    peak_hop=False, series=0, nintegrations=5, settling_time=4):
+                    peak_hop=False, series=0, nintegrations=5, settling_time=4,
+                    fit='average_SEM'
+                    ):
         if not self._alive:
             return
 
@@ -347,7 +349,7 @@ class AutomatedRun(Loggable):
                     time.sleep(settling_time)
 
             gn = 'baseline'
-            fits = ['average_SEM', ] * len(self._active_detectors)
+            fits = [fit, ] * len(self._active_detectors)
             self._build_tables(gn, fits=fits)
             check_conditions = False
             result = self._measure_iteration(gn,
@@ -1536,7 +1538,7 @@ anaylsis_type={}
                                             rs_name,  # runscript
                                             rs_text
                                             )
-        
+
         self.info('analysis added to mass spec database')
 
     def _assemble_extraction_blob(self):

@@ -18,8 +18,10 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import array
+from numpy import array, vstack, mean, average, hstack
 import math
+from src.geometry.centroid.calculate_centroid import calculate_centroid
+
 #============= local library imports  ==========================
 def sort_clockwise(pts, xy, reverse=False):
     '''
@@ -140,4 +142,129 @@ def calc_angle(p1, p2):
     dy = float(p1[1] - p2[1])
     return math.degrees(math.atan2(dy, dx))
 
+
+def arc_cost_func(p, p1, p2, r):
+    x0, y0 = p1
+    x1, y1 = p2
+    e1 = (p[0] - x0) ** 2 + (p[1] - y0) ** 2 - r ** 2
+    e2 = (p[0] - x1) ** 2 + (p[1] - y1) ** 2 - r ** 2
+    return [e1, e2]
+
+def find_arc_center(p1, p2, r):
+    '''
+        given p1, p2 of an arc with radius r find the center cx,cy of the arc
+        
+        p1: x,y
+        p2: x,y
+        r: radius float
+        
+        return:
+            cx,cy
+    '''
+
+    from scipy.optimize import fsolve
+    cx, cy = fsolve(arc_cost_func, [0, 0 ], args=(p1, p2, r))
+    return cx, cy
+
+def approximate_polygon_center(pts, r, weight=True):
+    '''
+        given a list of polygon vertices and a known radius
+        approximate the center of the polygon using the mean of xs,ys 
+        where xs,ys are the arc centers for different arc segments of the polygon
+        
+        if weight is true calculate a weighted mean 
+        where the weigthts 1/d**2 and d= distance from pt to centroid
+    '''
+
+    n = len(pts)
+    cxs = []
+    cys = []
+
+    pts = array(pts)
+    pts = vstack((pts, pts))
+    for i in range(2 * n - 5):
+        p1 = pts[i]
+        p2 = pts[i + 4]
+        cx, cy = find_arc_center(p1, p2, r)
+        cxs.append(cx)
+        cys.append(cy)
+
+    mcx = mean(cxs)
+    mcy = mean(cys)
+
+    if weight:
+        pts = sort_clockwise(pts, pts)
+#        cenx, ceny = calculate_centroid(array(pts))
+        cxs = array(cxs)
+        cys = array(cys)
+        # weight each arc center by the inverse distance to the centroid
+#        ws = ((cxs - cenx) ** 2 + (cys - ceny) ** 2) ** -0.5
+        # weight each arc center by the inverse distance to the mean
+        ws = ((cxs - mcx) ** 2 + (cys - mcy) ** 2) ** -2
+        mcx = average(cxs, weights=ws)
+        mcy = average(cys, weights=ws)
+
+    return mcx, mcy
+
+
+def approximate_polygon_center2(pts, r=None):
+    '''
+        this is the ideal solution however it doesnt work as well 
+        as approximage_polygon_center when there are outliers
+     
+        iteratively remove points that are R from the xm,ym
+        
+        is faster and prefered approximate_polygon_center
+    '''
+
+    from scipy.optimize import fmin
+    from numpy import linalg
+
+    def err(p, X, Y):
+        w, v , r = p
+        npts = [linalg.norm([(x - w, y - v)]) - r for x, y in zip(X, Y)]
+        return (array(npts) ** 4).sum()
+
+    def fixed_radius(p, e, X, Y):
+        w, v = p
+        npts = [linalg.norm([(x - w, y - v)]) - r for x, y in zip(X, Y)]
+        return (array(npts) ** 2).sum()
+
+    def make_new_point_list(p, r, tol=1):
+        '''
+            filter points 
+        '''
+        X, Y = p.T
+        xm = X.mean()
+        ym = Y.mean()
+
+        def dist(pt):
+            return ((pt[0] - xm) ** 2 + (pt[1] - ym) ** 2) ** 0.5
+
+        mask = array([dist(pp) - r < tol for pp in p], dtype=bool)
+#        print mask
+        return p[mask]
+
+    pxs = array([])
+    pys = array([])
+    for i in range(1000):
+        # make new point list
+
+        X, Y = pts.T
+        xm = X.mean()
+        ym = Y.mean()
+        if r is not None:
+            xf, yf = fmin(fixed_radius, [xm, ym], args=(r, X, Y), disp=False)
+        else:
+            xf, yf, r = fmin(err, [xm, ym, 1], args=(X, Y), disp=False)
+
+        pts = make_new_point_list(pts, r)
+        if i > 5:
+            if abs(pxs.mean() - xf) < 1e-5 and abs(pys.mean() - yf) < 1e-5:
+                return xf, yf, r
+
+        pxs = hstack((pxs[-5:], xf))
+        pys = hstack((pys[-5:], yf))
+
+    return xf, yf, r
 #============= EOF =============================================
