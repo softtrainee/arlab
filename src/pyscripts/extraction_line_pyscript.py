@@ -98,6 +98,10 @@ class ExtractionLinePyScript(ValvePyScript):
     @property
     def extract_value(self):
         return self.get_context()['extract_value']
+
+    @property
+    def extract_units(self):
+        return self.get_context()['extract_units']
 #===============================================================================
 # commands
 #===============================================================================
@@ -273,12 +277,14 @@ class ExtractionLinePyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def extract(self, power=''):
+    def extract(self, power='', units=''):
         if power == '':
             power = self.extract_value
-
-        self.info('extract sample to power {}'.format(power))
-        self._manager_action([('extract', (power,), {})],
+        if units=='':
+            units=self.extract_units
+            
+        self.info('extract sample to {} ({})'.format(power, units))
+        self._manager_action([('extract', (power,), {'units':units})],
                              protocol=ILaserManager,
                              name=self.extract_device)
 

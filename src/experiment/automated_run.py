@@ -1587,8 +1587,11 @@ anaylsis_type={}
 
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
-            self.labnumber = convert_special_name(self.special_labnumber)
-            self._labnumber = NULL_STR
+            ln=convert_special_name(self.special_labnumber)
+            if ln:
+                self.labnumber=ln
+                self._labnumber = NULL_STR
+                
 
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:

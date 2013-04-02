@@ -54,10 +54,11 @@ class RunsTable(HasTraits):
         tklass = AutomatedRunAdapter
         if self.extract_device == 'Fusions UV':
             tklass = UVAutomatedRunAdapter
-
+        
+        ad=tklass(show_state=False)
         v = View(Item('automated_runs',
                       show_label=False,
-                      editor=myTabularEditor(adapter=tklass(),
+                      editor=myTabularEditor(adapter=ad,
                                             operations=['delete',
                                                         'move',
 #                                                                        'edit'
