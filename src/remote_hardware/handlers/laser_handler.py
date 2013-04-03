@@ -361,7 +361,17 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         manager.set_laser_power(p)
         return result
-
+    
+    def SetLaserOutput(self, manager, value, units, *args):
+        result='OK'
+        try:
+            p = float(value)
+        except:
+            return InvalidArgumentsErrorCode('SetLaserOutput', value, logger=self)
+        
+        manager.set_laser_output(p, units)
+        return result
+    
 #===============================================================================
 # Positioning
 #===============================================================================
