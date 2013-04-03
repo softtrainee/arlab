@@ -16,7 +16,6 @@
 #=============enthought library imports=======================
 from traits.api import  Instance
 from traitsui.api import View, Item, VSplit
-from pyface.timer.do_later import do_later
 #=============standard library imports ========================
 import os
 import time
@@ -72,10 +71,10 @@ class ExtractionLineManager(Manager):
     _monitoring_valve_status = False
     _valve_state_frequency = 3
     _valve_lock_frequency = 10
-    
+
     def test_connection(self):
         return self.get_valve_states() is not None
-        
+
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -160,7 +159,7 @@ class ExtractionLineManager(Manager):
                     self.show_explanation = pickle.load(f)
                 except pickle.PickleError:
                     pass
-        
+
         print 'mdds', self.mode
         if self.mode == 'client':
             self.start_status_monitor()
@@ -454,7 +453,6 @@ class ExtractionLineManager(Manager):
             # valve state show as changed if even it didnt actuate
 #            if result:
             if change:
-#                do_later(self.canvas.update_valve_state, name, True if action == 'open' else False)
                 self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 

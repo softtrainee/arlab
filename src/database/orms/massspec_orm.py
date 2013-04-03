@@ -39,6 +39,8 @@ class AnalysesChangeableItemsTable(Base):
     StatusLevel = Column(Integer, default=0)
     SignalNormalizationFactor = Column(Float, default=1)
     PreferencesSetID = Column(Integer, ForeignKey('PreferencesTable.PreferencesSetID'))
+    Comment = Column(String(255))
+
 
 class AnalysisPositionTable(Base):
     __tablename__ = 'AnalysisPositionTable'

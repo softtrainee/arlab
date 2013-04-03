@@ -33,15 +33,23 @@ class Timer(Thread):
         self.start()
 
     def run(self):
-        t = None
-        ww = self._period
-        while not self._flag.isSet():
-            if t is not None:
-                ww = self._period - (time.time() - t) - 0.005
-            w = max(0, ww)
-            self._func(*self._args, **self._kwargs)
-            self._flag.wait(w)
-            t = time.time()
+        p = self._period
+        func = self._func
+        flag = self._flag
+        args = self._args
+        kwargs = self._kwargs
+
+        while not flag.isSet():
+#            if t is not None:
+#                ww = self._period - (time.time() - t) - 0.005
+#
+#            w = max(0, ww)
+
+            st = time.time()
+            func(*args, **kwargs)
+            flag.wait(max(0, p - time.time() - st))
+
+#            t = time.time()
 
     def Stop(self):
         self._flag.set()

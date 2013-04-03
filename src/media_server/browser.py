@@ -38,6 +38,7 @@ from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.regex import make_image_regex
 from src.media_server.image_viewer import ImageViewer
+from src.media_server.finder import Finder
 
 
 class ReferencePointsTool(BaseTool):
@@ -75,22 +76,21 @@ class ReferencePointsOverlay(AbstractOverlay):
 
 
 
-class Hierarchy(HasTraits):
-    files = List
-    directories = List
-    selected = String
-#===============================================================================
-# handlers
-#===============================================================================
-    def traits_view(self):
-        v = View(Item('files',
-                      show_label=False,
-                      editor=ListStrEditor(editable=False,
-                                           operations=[],
-                                           selected='selected'
-                                           )))
-        return v
-
+# class Hierarchy(HasTraits):
+#    files = List
+#    directories = List
+#    selected = String
+##===============================================================================
+# # handlers
+##===============================================================================
+#    def traits_view(self):
+#        v = View(Item('files',
+#                      show_label=False,
+#                      editor=ListStrEditor(editable=False,
+#                                           operations=[],
+#                                           selected='selected'
+#                                           )))
+#        return v
 
 
 class Viewer(ImageViewer):
@@ -231,11 +231,13 @@ class Viewer(ImageViewer):
 
 class MediaBrowser(Loggable):
     client = Any
-    hierarchy = Instance(Hierarchy, ())
+    finder = Instance(Finder)
+#    hierarchy = Instance(Hierarchy, ())
     viewer = Instance(Viewer, ())
     root = 'images'
     def get_selected_image_name(self):
-        sel = self.hierarchy.selected
+        sel = self.finder.selected
+#        sel = self.hierarchy.selected
         if sel is not None:
             return '/{}/{}'.format(self.root, sel)
 
@@ -248,23 +250,25 @@ class MediaBrowser(Loggable):
             self.warning_dialog('Could not connect to Media server at {}:{}'.format(self.client.host, self.client.port))
             return
 
-        print resp.read()
+#        print resp.read()
 
-        parser = XMLParser()
-        tree = parser.load(resp)
-        name = '{{DAV:}}{}'.format
-        def get_file_name(elem):
-            href = elem.find(name('href'))
-            path = href.text.strip()
-            return os.path.basename(path)
+#        parser = XMLParser()
+#        tree = parser.load(resp)
+#        name = '{{DAV:}}{}'.format
+#        def get_file_name(elem):
+#            href = elem.find(name('href'))
+#            path = href.text.strip()
+#            return os.path.basename(path)
+#
+#
+# #        tree.findall()
+#
+#        im_regex = make_image_regex(ext)
+#        files = [get_file_name(ri) for ri in tree.findall(name('response'))]
+#        files = filter(lambda x: im_regex.match(x), files)
+#        self.hierarchy.files = files
 
-
-#        tree.findall()
-
-        im_regex = make_image_regex(ext)
-        files = [get_file_name(ri) for ri in tree.findall(name('response'))]
-        files = filter(lambda x: im_regex.match(x), files)
-        self.hierarchy.files = files
+        self.finder.load(resp)
 
         return True
 
@@ -282,10 +286,12 @@ class MediaBrowser(Loggable):
 
             self.client.cache(dlg.path)
 
-    @on_trait_change('hierarchy:selected')
+#    @on_trait_change('hierarchy:selected')
+    @on_trait_change('finder:selected')
     def _update_selection(self, name):
-        root = '{}/{}'.format(self.root, name)
-        buf = self.client.retrieve(root.format(name))
+#        root = '{}/{}'.format(self.root, name)
+#        buf = self.client.retrieve(root.format(name))
+        buf = self.client.retrieve(name)
         if buf:
             buf.seek(0)
             self.viewer.set_image(buf)
@@ -298,7 +304,7 @@ class MediaBrowser(Loggable):
 
     def _view_factory(self, **kw):
         v = View(HSplit(
-                        Item('hierarchy', width=0.25, style='custom', show_label=False),
+                        Item('finder', width=0.25, style='custom', show_label=False),
                         Item('viewer', width=0.75, style='custom', show_label=False)
                         ),
                     width=800,
@@ -307,6 +313,10 @@ class MediaBrowser(Loggable):
                     title='Image Browser', **kw
                  )
         return v
+
+    def _finder_default(self):
+        f = Finder(filesystem=self.client)
+        return f
 
 if __name__ == '__main__':
 

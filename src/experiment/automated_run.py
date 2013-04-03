@@ -1167,16 +1167,8 @@ anaylsis_type={}
 
         cp = self.data_manager.get_current_path()
 
-#        uuid, _ext = os.path.splitext(os.path.basename(cp))
-
-        # commit repository
-#        self.repository.add_file(cp)
-
         # close h5 file
         self.data_manager.close()
-
-
-#        np = self.repository.get_file_path(cp)
 
         ln = self.labnumber
         ln = convert_identifier(ln)
@@ -1189,7 +1181,6 @@ anaylsis_type={}
         ldb.add_analysis(labnumber=ln,
                          aliquot=aliquot,
                          collection_path=cp,
-#                         repository_path=np,
                          )
         ldb.commit()
 
@@ -1221,10 +1212,6 @@ anaylsis_type={}
             # save sensitivity info to extraction
             self._save_sensitivity(ext, meas)
 
-            # use a path relative to the repo repo
-#            np = os.path.relpath(np, self.repository.root)
-#            db.add_analysis_path(np, analysis=a)
-
             self._save_spectrometer_info(meas)
 
             # do preliminary processing of data
@@ -1232,7 +1219,8 @@ anaylsis_type={}
             ss, pc = self._preliminary_processing(cp)
             self._processed_signals_dict = ss
             # add selected history
-            _sh = db.add_selected_histories(a)
+
+            db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
 
             # save blanks
@@ -1536,7 +1524,9 @@ anaylsis_type={}
                                             0,  # second stage delay
 
                                             rs_name,  # runscript
-                                            rs_text
+                                            rs_text,
+
+                                            self.comment,  # comment
                                             )
 
         self.info('analysis added to mass spec database')
