@@ -26,6 +26,7 @@ from src.loggable import Loggable
 from apptools.preferences.preference_binding import bind_preference
 from src.paths import paths
 from src.helpers.parsers.xml_parser import XMLParser
+from src.regex import make_image_regex
 
 class MediaClient(Loggable):
     host = Str
@@ -38,6 +39,24 @@ class MediaClient(Loggable):
     def __init__(self, *args, **kw):
         super(MediaClient, self).__init__(*args, **kw)
         self.bind_preferences()
+
+#===============================================================================
+# filesystem
+#===============================================================================
+    def _parse_propfind(self, resp):
+        parser = XMLParser()
+        tree = parser.load(resp)
+        name = '{{DAV:}}{}'.format
+        def get_response_name(elem):
+            href = elem.find(name('href'))
+            path = href.text.strip()
+            return os.path.basename(path)
+
+        return [get_response_name(ri) for ri in tree.findall(name('response'))]
+
+    def ls(self, uri):
+        resp = self.propfind(uri)
+        return self._parse_propfind(resp)
 
     def bind_preferences(self):
         try:
@@ -122,7 +141,7 @@ class MediaClient(Loggable):
     def cache(self, path, buf=None):
         if buf is None:
             buf = open(path, 'r')
-            
+
         if os.path.isdir(self.cache_dir):
             with open(os.path.join(self.cache_dir, os.path.basename(path)), 'w') as fp:
                 fp.write(buf.read())
@@ -157,10 +176,10 @@ class MediaClient(Loggable):
         conn = self._new_connection()
         conn.request('GET', self._make_dest_path(name))
         return conn.getresponse()
-    
+
     def _make_dest_path(self, name):
         if not name.startswith('/'):
-            name='/{}'.format(name)
+            name = '/{}'.format(name)
         return name
 
 if __name__ == '__main__':

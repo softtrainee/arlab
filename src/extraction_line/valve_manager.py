@@ -67,6 +67,8 @@ class ValveManager(Manager):
 
     use_explanation = True
 
+    _prev_keys = None
+
     def show_valve_properties(self, name):
         v = self.get_valve_by_name(name)
         if v is not None:
@@ -225,76 +227,112 @@ class ValveManager(Manager):
         return ','.join(['{}{}'.format(k, int(v.software_lock)) for k, v in self.valves.iteritems()])
 #        return ''.join(locks)
 
-    def _get_states(self, times_up_event, sq):
-
-        def _gstate(ki):
-            sq.put(ki)
-            s = self.get_state_by_name(ki)
-            sq.put('1' if s else '0')
-
-        dv = []
-        for k, v in self.valves.iteritems():
-#        for k, _ in self.valves.items():
-            if v.query_state:
-                dv.append(k)
-                continue
-
-            if times_up_event.isSet():
-                break
-
-            _gstate(k)
-
-        if times_up_event.isSet():
-            return
-
-        for k in dv:
-            if times_up_event.isSet():
-                break
-            _gstate(k)
-
     def get_states(self, timeout=1):
         '''
-            use event and timer to allow for partial responses
-            the timer t will set the event in timeout seconds
-
-            after the timer is started _get_states is called
-            _get_states loops thru the valves querying their state
-
-            each iteration the times_up_event is checked to see it
-            has fired if it has the the loop breaks and returns the
-            states word
+            get as many valves states before time expires
+            remember last set of valves returned. 
         
-            to prevent the communicator from blocking longer then the times up event
-            the _gs_thread is joined and timeouts out after 1.01s 
+            if last set of valves less than total return 
+            states for the remainder valves
+            
         '''
-
-        states_queue = Queue()
-        times_up_event = Event()
-        t = Timer(1, lambda: times_up_event.set())
-        t.start()
-        try:
-
-            _gs_thread = Thread(name='valves.get_states',
-                                target=self._get_states, args=(times_up_event, states_queue))
-            _gs_thread.start()
-            _gs_thread.join(timeout=1.01)
-        except (Exception,), e:
-            pass
-
-        # ensure word has even number of elements
-        s = ''
-        i = 0
-        n = states_queue.qsize()
-        if n % 2 != 0:
-            c = n / 2 * 2
+        st = time.time()
+        states = []
+        keys = []
+        if self._prev_keys and len(self._prev_keys) < len(self.valves.keys()):
+            prev_keys = self._prev_keys
         else:
-            c = n
+            prev_keys = []
 
-        while not states_queue.empty() and i < c:
-            s += states_queue.get_nowait()
-            i += 1
+        for k, v in self.valves.iteritems():
+            '''
+                querying a lot of valves can add up hence timeout.
+                
+                most valves are not queried by default which also helps shorten
+                execution time for get_states. 
+                
+            '''
+            if k in prev_keys:
+                continue
 
-        return s
+            keys.append(k)
+            state = '{}{}'.format(k, int(self._get_state_by(v)))
+            states.append(state)
+            if time.time() - st > timeout:
+                break
+
+        self._prev_keys = keys
+        return ','.join(states)
+
+#    def _get_states(self, times_up_event, sq):
+#
+#        def _gstate(ki):
+#            sq.put(ki)
+#            s = self.get_state_by_name(ki)
+#            sq.put('1' if s else '0')
+#
+#        dv = []
+#        for k, v in self.valves.iteritems():
+# #        for k, _ in self.valves.items():
+#            if v.query_state:
+#                dv.append(k)
+#                continue
+#
+#            if times_up_event.isSet():
+#                break
+#
+#            _gstate(k)
+#
+#        if times_up_event.isSet():
+#            return
+#
+#        for k in dv:
+#            if times_up_event.isSet():
+#                break
+#            _gstate(k)
+#    def get_states2(self, timeout=1):
+#        '''
+#            use event and timer to allow for partial responses
+#            the timer t will set the event in timeout seconds
+#
+#            after the timer is started _get_states is called
+#            _get_states loops thru the valves querying their state
+#
+#            each iteration the times_up_event is checked to see it
+#            has fired if it has the the loop breaks and returns the
+#            states word
+#
+#            to prevent the communicator from blocking longer then the times up event
+#            the _gs_thread is joined and timeouts out after 1.01s
+#        '''
+#
+#        states_queue = Queue()
+#        times_up_event = Event()
+#        t = Timer(1, lambda: times_up_event.set())
+#        t.start()
+#        try:
+#
+#            _gs_thread = Thread(name='valves.get_states',
+#                                target=self._get_states, args=(times_up_event, states_queue))
+#            _gs_thread.start()
+#            _gs_thread.join(timeout=1.01)
+#        except (Exception,), e:
+#            pass
+#
+#        # ensure word has even number of elements
+#        s = ''
+#        i = 0
+#        n = states_queue.qsize()
+#        if n % 2 != 0:
+#            c = n / 2 * 2
+#        else:
+#            c = n
+#
+#        while not states_queue.empty() and i < c:
+#            s += states_queue.get_nowait()
+#            i += 1
+#
+#        return s
 
     def get_valve_by_address(self, a):
         '''
