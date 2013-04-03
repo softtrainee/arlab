@@ -113,6 +113,8 @@ def get_analysis_type(idn):
         return 'air'
     elif idn.startswith('c'):
         return 'cocktail'
+    elif idn.startswith('dg'):
+        return 'degas'
     else:
         return 'unknown'
 

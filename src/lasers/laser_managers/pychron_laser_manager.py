@@ -46,7 +46,7 @@ class PychronLaserManager(BaseLaserManager):
     The communicators connection arguments are set in initialization.xml
     
     use a communicator block
-    <plugin enabled="true" mode="client">FusionsDiode
+    <plugin enabled="true" fire_mode="client">FusionsDiode
         ...
         <communications>
           <host>129.138.12.153</host>
@@ -70,7 +70,9 @@ class PychronLaserManager(BaseLaserManager):
     _z = Float
     connected = Bool
     test_connection_button = Button('Test Connection')
-
+    
+    mode='client'
+    
     def _test_connection_button_fired(self):
         self.test_connection()
         if self.connected:
@@ -369,7 +371,7 @@ class PychronUVLaserManager(PychronLaserManager):
     fire = Event
     fire_label = Property(depends_on='firing')
     firing = Bool
-    mode = Enum('Burst', 'Continuous')
+    fire_mode = Enum('Burst', 'Continuous')
     nburst = Property(depends_on='_nburst')
     _nburst = Int
 
@@ -412,7 +414,7 @@ class PychronUVLaserManager(PychronLaserManager):
             mode = 'stop'
             self.firing = False
         else:
-            if self.mode == 'Continuous':
+            if self.fire_mode == 'Continuous':
                 mode = 'continuous'
             else:
                 mode = 'burst'
@@ -441,7 +443,7 @@ class PychronUVLaserManager(PychronLaserManager):
 
         mb = self._ask('GetBurstMode')
         if mb is not None:
-            self.mode = 'Burst' if mb == '1' else 'Continuous'
+            self.fire_mode = 'Burst' if mb == '1' else 'Continuous'
 
 #    def _set_motor(self, name, value):
 #        self.info('setting motor {} to {}'.format(name,value))
@@ -479,7 +481,7 @@ class PychronUVLaserManager(PychronLaserManager):
                  VGroup(
                      self.get_control_button_group(),
                      HGroup(self._button_factory('fire', 'fire_label', enabled='enabled'),
-                            Item('mode', show_label=False),
+                            Item('fire_mode', show_label=False),
                             Item('nburst')
                             ),
                      Item('position'),
