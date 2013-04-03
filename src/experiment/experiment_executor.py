@@ -224,9 +224,9 @@ class ExperimentExecutor(ExperimentManager):
             # check for blank before starting the thread
             exp = self.experiment_sets[0]
             if self._has_preceeding_blank_or_background(exp):
-                if self.extraction_line_manager:
-                    # start the extraction line manager's valve state monitor
-                    self.extraction_line_manager.start_status_monitor()
+#                 if self.extraction_line_manager:
+#                     # start the extraction line manager's valve state monitor
+#                     self.extraction_line_manager.start_status_monitor()
 
                 t = Thread(target=self._execute_experiment_sets)
                 t.start()

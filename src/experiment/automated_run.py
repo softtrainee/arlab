@@ -617,7 +617,8 @@ anaylsis_type={}
             self._total_counts = 0
 
             # setup the scripts
-            self.measurement_script.reset(self)
+            if self.measurement_script:
+                self.measurement_script.reset(self)
 
             for si in ('extraction', 'post_measurement', 'post_equilibration'):
                 script = getattr(self, '{}_script'.format(si))
@@ -1631,7 +1632,7 @@ anaylsis_type={}
 #                    setattr(self, '_{}_script'.format(name), None)
         else:
             valid = False
-            self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
+            self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else fname))
 
         self.valid_scripts[name] = valid
         return s

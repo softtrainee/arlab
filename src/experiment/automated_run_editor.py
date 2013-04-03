@@ -44,7 +44,8 @@ class AutomatedRunEditor(ScriptEditable):
             sc = getattr(run, sname)
             if sc:
                 n = self._clean_script_name(sc.name)
-                setattr(self, sname, n)
+                setattr(getattr(self, sname), 'name', n)
+#                 setattr(self, sname, n)
 
     def traits_view(self):
 #        v = VGroup(Item('extract_value'))

@@ -354,7 +354,6 @@ tray: {}
         nar.labnumber = ar.labnumber
         nar.position=ar.position
 #        nar.aliquot=ar.aliquot
-
         if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
             nar.extract_value = 0
             nar.extract_units = ''
@@ -605,7 +604,8 @@ tray: {}
                     self._warned_labnumbers.append(labnumber)
                 a._executable = False
             else:
-                a.run_info.sample = ln.sample.name
+                if ln.sample:
+                    a.run_info.sample = ln.sample.name
                 a.run_info.irrad_level = self._make_irrad_level(ln)
 #            else:
 #                self._bind_automated_run(a)
