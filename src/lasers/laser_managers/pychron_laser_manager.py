@@ -104,7 +104,7 @@ class PychronLaserManager(BaseLaserManager):
     def update_position(self):
         self.trait_set(**dict(zip(('_x', '_y', '_z'),
                                   self.get_position())))
-
+    
 #===============================================================================
 # patterning
 #===============================================================================
@@ -222,7 +222,11 @@ class PychronLaserManager(BaseLaserManager):
         r = self._block()
         self.update_position()
         return r
-
+    
+    def extract(self, value, units=''):
+        self.info('set laser output')
+        return self._ask('SetLaserOutput {} {}'.format(value, units))=='OK'
+        
     def enable_laser(self, *args, **kw):
         self.info('enabling laser')
         return self._ask('Enable') == 'OK'

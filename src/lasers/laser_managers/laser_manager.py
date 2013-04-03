@@ -276,7 +276,15 @@ class LaserManager(BaseLaserManager):
         self._requested_power = 0
 
         return enabled
-
+    
+    def set_laser_output(self, *args, **kw):
+        '''
+            by default set_laser_output simply uses set_laser_power
+            but subclasses can override for different units
+        '''
+        self.set_laser_power(*args, **kw)
+        
+        
     def set_laser_power(self, power,
                         verbose=True,
                          *args, **kw):
