@@ -169,8 +169,9 @@ class VideoStageManager(StageManager):
             self.is_recording = False
             self.info('stop video recording')
 
-            self.video.stop_recording()
-            self._upload(self.video.output_path)
+            if self.video.stop_recording(wait=True):
+                self._upload(self.video.output_path)
+
 
             # clean the video directory
             self.clean_video_archive()
