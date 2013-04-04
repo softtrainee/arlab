@@ -46,6 +46,7 @@ class Video(Image):
     _lock = None
     _prev_frame = None
     _stop_recording_event = None
+    _save_ok_event = None
     _last_get = None
 
     output_path = Str
@@ -179,12 +180,21 @@ class Video(Image):
             t = Thread(target=func, args=(path, self._stop_recording_event, fps, renderer))
             t.start()
 
-    def stop_recording(self):
+    def _ready_to_save(self):
+        if self._save_ok_event:
+            while not self._save_ok_event.is_set():
+                time.sleep(0.5)
+            return True
+
+    def stop_recording(self, wait=False):
         '''
         '''
         if self._stop_recording_event is not None:
             self._stop_recording_event.set()
         self._recording = False
+        if wait:
+            self._save_ok_event = Event()
+            return self._ready_to_save()
 
     def record_frame(self, path, crop=None, **kw):
         '''
@@ -237,6 +247,9 @@ class Video(Image):
 
         if remove_images:
             shutil.rmtree(image_dir)
+
+        if self._save_ok_event:
+            self._save_ok_event.set()
 
     def _convert_to_video(self, path, fps, name_filter='snapshot%03d.jpg', output=None):
         '''

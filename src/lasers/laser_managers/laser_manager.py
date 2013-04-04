@@ -276,15 +276,15 @@ class LaserManager(BaseLaserManager):
         self._requested_power = 0
 
         return enabled
-    
+
     def set_laser_output(self, *args, **kw):
         '''
             by default set_laser_output simply uses set_laser_power
             but subclasses can override for different units
         '''
         self.set_laser_power(*args, **kw)
-        
-        
+
+
     def set_laser_power(self, power,
                         verbose=True,
                          *args, **kw):
@@ -322,13 +322,13 @@ class LaserManager(BaseLaserManager):
     def emergency_shutoff(self, reason):
         ''' 
         '''
+        self.disable_laser()
+
         if reason is not None:
             self.warning('EMERGENCY SHUTOFF reason: {}'.format(reason))
             self.warning_dialog(reason, sound='alarm1', title='AUTOMATIC LASER SHUTOFF')
             from src.remote_hardware.errors.laser_errors import LaserMonitorErrorCode
             self.error_code = LaserMonitorErrorCode(reason)
-
-        self.disable_laser()
 
     def start_power_recording(self, *args, **kw):
         pass
