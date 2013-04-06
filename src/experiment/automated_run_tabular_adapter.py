@@ -182,22 +182,25 @@ class AutomatedRunAdapter(TabularAdapter):
             elif self.item.state == 'truncate':
                 im = 'blue'
 
+        def debug_path(img):
+            root = os.path.split(__file__)[0]
+            while not root.endswith('src'):
+                root = os.path.split(root)[0]
+
+            root = os.path.split(root)[0]
+            root = os.path.join(root, 'resources','balls')
+            return os.path.join(root, '{}_ball.png'.format(img))
+            
         if paths.app_resources:
             root=paths.app_resources
-#        else:
-##            # get the source path
-#            root = os.path.split(__file__)[0]
-#            while not root.endswith('src'):
-#                root = os.path.split(root)[0]
-#
-#            root = os.path.split(root)[0]
-#            root = os.path.join(root, 'resources')
-#        
-#        self.item.info(os.path.join(root, '{}_ball.png'.format(im)))
-#        print os.path.join(root, '{}_ball.png'.format(im))
-            return os.path.join(root, '{}_ball.png'.format(im))
-#            return os.path.join(root, 'bullet_{}.png'.format(im))
-
+            p=os.path.join(root, '{}_ball.png'.format(im))
+            if not os.path.isfile(p):
+                p=debug_path(im)
+        else:
+            p=debug_path(im)
+                        
+        return p
+            
     def _get_extraction_script_text(self):
         return self._get_script_name('extraction')
 

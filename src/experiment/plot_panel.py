@@ -280,8 +280,12 @@ class PlotPanel(Viewable):
 
             v = pad('{:0.5f}'.format(vv))
             e = pad('{:0.6f}'.format(ee), n=6)
-            v = v + u' {}'.format(PLUSMINUS) + e + self._get_pee(uv)
-            return '{}{}={:>10s}'.format(iso, name, v)
+            pe=self._get_pee(uv)
+#             v = v + u' {}'.format(PLUSMINUS) + e + self._get_pee(uv)
+            
+            return '{}{}={} {}{} {}'.format(iso, name, v, PLUSMINUS, e, pe)
+            
+#             return '{}{}={:>10s}'.format(iso, name, v)
 
         ts = [func(iso) for iso in self.isotopes]
         self.add_text(display, '\n'.join(ts))

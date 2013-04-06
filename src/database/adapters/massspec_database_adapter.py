@@ -192,7 +192,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         '''
         '''
 
-        rid = '{}-{}'.format(rid, aliquot)
+        rid = '{}-{}{}'.format(rid, aliquot,step)
         analysis = self.get_analysis(rid)
         if analysis is None:
 #            rid, aliquot = rid.split('-')

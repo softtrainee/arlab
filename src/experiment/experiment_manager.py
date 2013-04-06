@@ -298,7 +298,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                     for ai in ei.automated_runs]
 
     def _update_aliquots(self):
-
+        self.debug('update aliquots')
         ans = self._get_all_automated_runs()
         # update the aliquots
         self._modify_aliquots(ans)
@@ -399,7 +399,9 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #                    st = stdict[arunid]
 #                else:
 #                    st = 0
-            arun.aliquot = st + c - offset
+#             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
+            if not arun.aliquot:
+                arun.aliquot = st + c - offset
 #            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st

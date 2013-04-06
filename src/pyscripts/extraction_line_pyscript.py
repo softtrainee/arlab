@@ -190,7 +190,7 @@ class ExtractionLinePyScript(ValvePyScript):
                 self.info('move to position suceeded')
                 return True
         else:
-            self.info('not move required position is None')
+            self.info('move not required. position is None')
             return True
 
     @verbose_skip

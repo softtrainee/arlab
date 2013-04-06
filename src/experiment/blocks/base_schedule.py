@@ -290,6 +290,7 @@ class BaseSchedule(ScriptEditable):
 #
     def _get_dump_attrs(self):
         header = ['labnumber',
+                  'aliquot',
                   'pattern',
                   'position',
                   'overlap',
@@ -304,6 +305,7 @@ class BaseSchedule(ScriptEditable):
                   'weight', 'comment'
                   ]
         attrs = ['labnumber',
+                  'aliquot',
                   'pattern',
                   'position',
                   'overlap',
