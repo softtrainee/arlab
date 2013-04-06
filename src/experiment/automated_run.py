@@ -1511,7 +1511,7 @@ anaylsis_type={}
                                             fits,
 #                                            self.regression_results,
 
-                                            self.mass_spectrometer,
+                                            'Pychron {}'.format(self.mass_spectrometer), #
                                             self.extract_device,
                                             self.tray,
                                             self.position,

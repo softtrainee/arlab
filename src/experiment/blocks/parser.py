@@ -51,7 +51,7 @@ class RunParser(Loggable):
                      ]:
             try:
                 params[attr] = args[header.index(attr)]
-            except IndexError, e:
+            except (IndexError,ValueError), e:
                 self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         # load booleans
@@ -69,6 +69,7 @@ class RunParser(Loggable):
 
         # load numbers
         for attr in ['duration', 'overlap', 'cleanup',
+                     'aliquot',
                      'extract_group',
                      'weight'
                      ]:
@@ -76,7 +77,7 @@ class RunParser(Loggable):
                 param = args[header.index(attr)].strip()
                 if param:
                     params[attr] = float(param)
-            except IndexError:
+            except (IndexError, ValueError):
                 pass
 
         # default extract_units to watts
