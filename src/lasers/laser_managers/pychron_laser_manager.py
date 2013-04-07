@@ -70,18 +70,18 @@ class PychronLaserManager(BaseLaserManager):
     _z = Float
     connected = Bool
     test_connection_button = Button('Test Connection')
-    
-    mode='client'
-    
+
+    mode = 'client'
+
     def _test_connection_button_fired(self):
         self.test_connection()
         if self.connected:
             self.opened()
-        
+
     def test_connection(self):
         self.connected = self._communicator.open()
         return self.connected
-            
+
     def bind_preferences(self, pref_id):
         pass
 
@@ -106,7 +106,7 @@ class PychronLaserManager(BaseLaserManager):
     def update_position(self):
         self.trait_set(**dict(zip(('_x', '_y', '_z'),
                                   self.get_position())))
-    
+
 #===============================================================================
 # patterning
 #===============================================================================
@@ -179,20 +179,24 @@ class PychronLaserManager(BaseLaserManager):
         self._cancel_blocking = True
 
 #===============================================================================
-#
+# pyscript commands
 #===============================================================================
+    def take_snapshot(self, name):
+        self.info('Take snapshot')
+        self._ask('Snapshot {}'.format(name))
+
     def prepare(self):
         self.info('Prepare laser')
         self._ask('Prepare')
-        
+
         cnt = 0
         tries = 0
         maxtries = 200  # timeout after 50 s
         nsuccess = 1
-        self._cancel_blocking=False
-        ask=self._ask
-        period=1
-        cmd='IsReady'
+        self._cancel_blocking = False
+        ask = self._ask
+        period = 1
+        cmd = 'IsReady'
         while tries < maxtries and cnt < nsuccess:
             if self._cancel_blocking:
                 break
@@ -209,26 +213,11 @@ class PychronLaserManager(BaseLaserManager):
             tries += 1
 
         return cnt >= nsuccess
-        
-        
-    def _move_to_position(self, pos):
-        cmd = 'GoToHole {}'.format(pos)
-        if isinstance(pos, tuple):
-            cmd = 'SetXY {}'.format(pos[:2])
-#            if len(pos) == 3:
-#                cmd = 'SetZ {}'.format(pos[2])
 
-        self.info('sending {}'.format(cmd))
-        self._ask(cmd)
-        time.sleep(0.5)
-        r = self._block()
-        self.update_position()
-        return r
-    
     def extract(self, value, units=''):
         self.info('set laser output')
-        return self._ask('SetLaserOutput {} {}'.format(value, units))=='OK'
-        
+        return self._ask('SetLaserOutput {} {}'.format(value, units)) == 'OK'
+
     def enable_laser(self, *args, **kw):
         self.info('enabling laser')
         return self._ask('Enable') == 'OK'
@@ -266,6 +255,22 @@ class PychronLaserManager(BaseLaserManager):
 
         if self._communicator.simulation:
             return 0, 0, 0
+#===============================================================================
+# pyscript private
+#===============================================================================
+    def _move_to_position(self, pos):
+        cmd = 'GoToHole {}'.format(pos)
+        if isinstance(pos, tuple):
+            cmd = 'SetXY {}'.format(pos[:2])
+#            if len(pos) == 3:
+#                cmd = 'SetZ {}'.format(pos[2])
+
+        self.info('sending {}'.format(cmd))
+        self._ask(cmd)
+        time.sleep(0.5)
+        r = self._block()
+        self.update_position()
+        return r
 
     def _block(self, cmd='GetDriveMoving', position_callback=None):
 

@@ -44,6 +44,8 @@ class ILaserManager(IExtractionDevice):
         pass
     def drill_point(self, *args, **kw):
         pass
+    def take_snapshot(self, *args, **kw):
+        pass
 #    def extract(self, *args, **kw):
 #        pass
 #    def end_extract(self, *args, **kw):
@@ -63,6 +65,9 @@ class BaseLaserManager(Manager):
 
     def is_ready(self):
         return True
+
+    def take_snapshot(self, *args, **kw):
+        pass
 
     def prepare(self):
         pass

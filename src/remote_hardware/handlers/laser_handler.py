@@ -76,6 +76,18 @@ class LaserHandler(BaseRemoteHardwareHandler):
         result = 'OK'
         return result
 
+    def Snapshot(self, manager, name, *args):
+        '''
+            name: base name for file. saved in default directory
+            
+            returns: abs path to saved file in the media server 
+        '''
+
+        sm = manager.stage_manager
+        if hasattr(sm, 'video'):
+            _p, upath = sm.snapshot(name=name)
+            return upath
+
     def PrepareLaser(self, manager, *args):
         result = 'OK'
         manager.prepare_laser()
@@ -361,17 +373,17 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         manager.set_laser_power(p)
         return result
-    
+
     def SetLaserOutput(self, manager, value, units, *args):
-        result='OK'
+        result = 'OK'
         try:
             p = float(value)
         except:
             return InvalidArgumentsErrorCode('SetLaserOutput', value, logger=self)
-        
+
         manager.set_laser_output(p, units)
         return result
-    
+
 #===============================================================================
 # Positioning
 #===============================================================================
@@ -395,12 +407,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
         result = manager.stop_trace()
         return result
 
-    def Prepare(self, manager,*args):
-        result=manager.prepare()
+    def Prepare(self, manager, *args):
+        result = manager.prepare()
         return result
-    
+
     def IsReady(self, manager, *args):
-        result=manager.is_ready()
+        result = manager.is_ready()
         return result
 #===============================================================================
 #

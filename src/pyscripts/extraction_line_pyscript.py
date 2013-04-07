@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import List
 #============= standard library imports ========================
 import time
 from numpy import linspace
@@ -37,6 +38,8 @@ command_register = makeRegistry()
 class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
     info_color = 'red'
+    snapshot_paths = List
+
     def get_command_register(self):
         cm = super(ExtractionLinePyScript, self).get_command_register()
         return command_register.commands.items() + cm
@@ -66,6 +69,7 @@ class ExtractionLinePyScript(ValvePyScript):
                            ramp_rate='',
                            duration=0,
                            cleanup=0,
+                           run_identifier='default_runid'
                            )
 #===============================================================================
 # properties
@@ -105,6 +109,19 @@ class ExtractionLinePyScript(ValvePyScript):
 #===============================================================================
 # commands
 #===============================================================================
+    @verbose_skip
+    @command_register
+    def snapshot(self, format_str=''):
+        if format_str == '':
+            format_str = '{}'
+
+        name = format_str.format(self.run_identifier)
+
+        ps = self._manager_action(['take_snapshot', (name,), {}],
+                             name=self.extract_device,
+                             protocol=ILaserManager)
+        if ps:
+            self.snapshot_paths.append(ps[0])
 
     @verbose_skip
     @command_register
@@ -280,9 +297,9 @@ class ExtractionLinePyScript(ValvePyScript):
     def extract(self, power='', units=''):
         if power == '':
             power = self.extract_value
-        if units=='':
-            units=self.extract_units
-            
+        if units == '':
+            units = self.extract_units
+
         self.info('extract sample to {} ({})'.format(power, units))
         self._manager_action([('extract', (power,), {'units':units})],
                              protocol=ILaserManager,
