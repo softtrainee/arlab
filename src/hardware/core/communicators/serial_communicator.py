@@ -398,7 +398,7 @@ class SerialCommunicator(Communicator):
             elif ack and r is not None:
                 terminated = True
             return r, terminated
-        
+
         return self._read_loop(hfunc, delay, timeout)
 #        r=self._read_loop(hfunc, delay, timeout)
 #        r=
@@ -469,7 +469,7 @@ class SerialCommunicator(Communicator):
         inw = handle.inWaiting()
         c = min(inw, nchars - len(r))
         r += handle.read(c)
-        # print 'get n',len(r),nchars, self._prep_str(r),len(r)==nchars
+#        print 'get n', len(r), nchars, self._prep_str(r), len(r) == nchars
         return r[:nchars], len(r) >= nchars
 
     def _check_handshake(self, handshake_chrs):
@@ -526,6 +526,7 @@ class SerialCommunicator(Communicator):
             # print func
             try:
                 r, isterminated = func(r)
+#                print 'rrr', r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):

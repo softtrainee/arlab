@@ -29,8 +29,6 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.ncd.ncd_device import NCDDevice
-EIGHT_BIT_BANKS = [195, 203, 208]
-TWELVE_BIT_BANKS = [199, 207, 209]
 
 class ProXADCExpansion(NCDDevice):
     def read_channel(self, channel, nbits=8):
@@ -45,6 +43,10 @@ class ProXADCExpansion(NCDDevice):
         resp = self.ask(cmdstr, nbytes=nbytes)
         return int(resp, 16)
 
+
+EIGHT_BIT_BANKS = [195, 203, 208]
+TWELVE_BIT_BANKS = [199, 207, 209]
+
 class MultiBankADCExpansion(NCDDevice):
     def read_channel(self, channel, nbits=8):
         channel = int(channel)
@@ -56,8 +58,8 @@ class MultiBankADCExpansion(NCDDevice):
 #            self._read_eight_bit(channel)
             bank = EIGHT_BIT_BANKS
             nbytes = 1
-        bank_idx = bank[channel / 3]
-        channel_idx = channel % 8
+        bank_idx = bank[channel / 16]
+        channel_idx = channel % 16
         cmdstr = self._make_cmdstr(254, bank_idx, channel_idx)
 
         resp = self.ask(cmdstr, nbytes=nbytes)
@@ -69,6 +71,7 @@ class MultiBankADCExpansion(NCDDevice):
             resp = resp[2:] + resp[:2]
 
         return int(resp, 16)
+
     def read_all(self):
         pass
 
