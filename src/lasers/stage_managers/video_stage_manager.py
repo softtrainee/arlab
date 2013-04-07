@@ -219,6 +219,16 @@ class VideoStageManager(StageManager):
         return self._autocenter(*args, **kw)
 
     def snapshot(self, path=None, name=None, auto=False):
+        '''
+            path: abs path to use
+            name: base name to use if auto saving in default dir
+            auto: force auto save
+            
+            returns:
+                    path: local abs path
+                    upath: remote abs path
+        '''
+
         if path is None:
             if self.auto_save_snapshot or auto:
 
@@ -242,7 +252,9 @@ class VideoStageManager(StageManager):
 #            else:
 #                self.video.record_frame(path, swap_rb=False)
 
-            self._upload(path)
+            upath = self._upload(path)
+            return path, upath
+
 
     def kill(self):
         '''
@@ -275,9 +287,14 @@ class VideoStageManager(StageManager):
             if client is not None:
                 url = client.url()
                 self.info('uploading {} to {}'.format(path, url))
+                dest = 'images/{}'.format(self.parent.name)
+                path = '{}/{}'.format(dest, path)
                 if not client.upload(path, dest='images/{}'.format(self.parent.name)):
                     self.warning('failed to upload {} to media server at {}'.format(path, url))
                     self.warning_dialog('Failed to Upload {}. Media Server at {} unavailable'.format(path, url))
+                else:
+                    return path
+
             else:
                 self.warning('Media client unavailable')
                 self.warning_dialog('Media client unavailable')

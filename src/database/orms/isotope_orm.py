@@ -304,6 +304,7 @@ class meas_ExtractionTable(Base, BaseMixin):
 
     analyses = relationship('meas_AnalysisTable', backref='extraction')
     positions = relationship('meas_PositionTable', backref='extraction')
+    snapshots = relationship('med_SnapshotTable', backref='extraction')
 
 
 class meas_PositionTable(Base, BaseMixin):
@@ -454,6 +455,13 @@ class med_ImageTable(Base, NameMixin):
     create_date = Column(DateTime, default=func.now())
     image = Column(BLOB)
     extractions = relationship('meas_ExtractionTable', backref='image')
+
+class med_SnapshotTable(Base, BaseMixin):
+    path = stringcolumn(200)
+    create_date = Column(DateTime, default=func.now())
+    image = Column(BLOB)
+    extraction_id = foreignkey('meas_ExtractionTable')
+
 #===============================================================================
 # general
 #===============================================================================
