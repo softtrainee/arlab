@@ -54,6 +54,7 @@ from src.processing.isotope import IsotopicMeasurement
 
 from traits.api import HasTraits
 from src.regex import TRANSECT_REGEX, POSITION_REGEX
+from src.experiment.export.export_spec import ExportSpec
 class RunInfo(HasTraits):
     sample = Str
     irrad_level = Str
@@ -63,6 +64,33 @@ class ScriptInfo(HasTraits):
     extraction_script_name = Str
     post_measurement_script_name = Str
     post_equilibration_script_name = Str
+
+def assemble_script_blob(scripts, kinds=None):
+    '''
+        make one blob of all the script text
+        
+        return csv-list of names, blob
+    '''
+    if kinds is None:
+        kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
+
+    ts = []
+#        names = []
+    for (name, blob), kind in zip(scripts, kinds):
+#        script = getattr(self, '{}_script'.format(kind))
+
+#        blob, name = None, None
+#        if script is not None:
+#            name = script.name
+#            blob = script.toblob()
+
+        ts.append('#' + '=' * 79)
+        ts.append('# {} SCRIPT {}'.format(kind.replace('_', ' ').upper(), name))
+        ts.append('#' + '=' * 79)
+        if blob:
+            ts.append(blob)
+
+    return 'Pychron Script', '\n'.join(ts)
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
@@ -668,6 +696,7 @@ anaylsis_type={}
         self.info('======== Extraction Started ========')
         self.state = 'extraction'
         self.extraction_script.manager = self.experiment_manager
+        self.extraction_script.run_identifier = self.runid
 
 #        self._pre_extraction_save()
         if self.extraction_script.execute():
@@ -1490,78 +1519,117 @@ anaylsis_type={}
                 sig_ints[iso] = si.uvalue
                 base_ints[iso] = bi.uvalue
 
-        intercepts = [sig_ints, base_ints]
-#        intercepts = [self.plot_panel.signals, self.plot_panel.baselines]
+#        intercepts = [sig_ints, base_ints]
+        signal_fits = dict(zip([ni.isotope for ni in self._active_detectors], self.fits))
+        baseline_fits = dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])
 
-        fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
-                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
+#        intercepts = [sig_ints, base_ints]
+#        fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
+#                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
+        rs_name, rs_text = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
+                                                 (self.measurement_script.name, self.measurement_script.toblob()),
+                                                 (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
+                                                 (self.post_measurement_script.name, self.post_measurement_script.toblob())]
+                                                )
 
-        rs_name, rs_text = self._assemble_script_blob()
+        exp = ExportSpec(rid=self.labnumber,
+                         runscript_name=rs_name,
+                         runscript_text=rs_text,
+                         signal_fits=signal_fits,
+                         baseline_fits=baseline_fits,
+                         signal_intercepts=sig_ints,
+                         baseline_intercepts=base_ints,
+#                         intercepts=intercepts,
+#                         fits=fits,
+                         spectrometer='Pychron {}'.format(self.mass_spectrometer.capitalize()),
+                         baselines=baselines,
+                         signals=signals,
+                         blanks=blanks,
+                         detectors=detectors,
+                         )
 
-        self.massspec_importer.add_analysis(self.labnumber,
-                                            self.aliquot,
-                                            self.step,
-                                            self.labnumber,
+        exp.load_record(self)
+#        attrs = [('rid', 'labnumber'), ('aliquot', 'aliquot'),
+#                 ('step', 'step'), ('irradpos', 'labnumber'),
+#                 ('extract_device', 'extract_device'), ('tray', 'tray'),
+#                 ('position', 'position'), ('power_requested', 'extract_value'),
+#                 ('power_achieved', 'extract_value'), ('duration', 'duration'),
+#                 ('duration_at_request', 'duration'), ('first_stage_delay', 'cleanup'),
+#                 ('comment', 'comment')
+#                 ]
+#
+#        for exp_attr, run_attr in attrs:
+#            setattr(exp, exp_attr, getattr(self, run_attr))
 
-                                            baselines,
-                                            signals,
-                                            blanks,
-                                            detectors,
-                                            intercepts,
-                                            fits,
-#                                            self.regression_results,
-
-                                            'Pychron {}'.format(self.mass_spectrometer), #
-                                            self.extract_device,
-                                            self.tray,
-                                            self.position,
-                                            self.extract_value,  # power requested
-                                            self.extract_value,  # power achieved,
-
-                                            self.duration,  # total extraction
-                                            self.duration,  # time at extract_value
-
-                                            self.cleanup,  # first stage delay
-                                            0,  # second stage delay
-
-                                            rs_name,  # runscript
-                                            rs_text,
-
-                                            self.comment,  # comment
-                                            )
+        self.massspec_importer.add_analysis(exp)
+#        self.massspec_importer.add_analysis(
+# #                                            self.labnumber,
+# #                                            self.aliquot,
+# #                                            self.step,
+# #                                            self.labnumber,
+#
+#                                            baselines,
+#                                            signals,
+#                                            blanks,
+#                                            detectors,
+# #                                            intercepts,
+# #                                            fits,
+# #                                            self.regression_results,
+#
+# #                                            'Pychron {}'.format(self.mass_spectrometer),  #
+# #                                            self.extract_device,
+# #                                            self.tray,
+# #                                            self.position,
+# #                                            self.extract_value,  # power requested
+# #                                            self.extract_value,  # power achieved,
+#
+# #                                            self.duration,  # total extraction
+# #                                            self.duration,  # time at extract_value
+#
+# #                                            self.cleanup,  # first stage delay
+# #                                            0,  # second stage delay
+#
+# #                                            rs_name,  # runscript
+# #                                            rs_text,
+#
+# #                                            self.comment,  # comment
+#                                            )
 
         self.info('analysis added to mass spec database')
 
     def _assemble_extraction_blob(self):
-        _names, txt = self._assemble_script_blob(kinds=['extraction', 'post_equilibration', 'post_measurement'])
+        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
+                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
+                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
+                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
         return txt
 
-    def _assemble_script_blob(self, kinds=None):
-        '''
-            make one blob of all the script text
-            
-            return csv-list of names, blob
-        '''
-        if kinds is None:
-            kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
-
-        ts = []
-#        names = []
-        for kind in kinds:
-            script = getattr(self, '{}_script'.format(kind))
-
-            blob, name = None, None
-            if script is not None:
-                name = script.name
-                blob = script.toblob()
-
-            ts.append('#' + '=' * 79)
-            ts.append('# {} SCRIPT {}'.format(kind.replace('_', ' ').upper(), name))
-            ts.append('#' + '=' * 79)
-            if blob:
-                ts.append(blob)
-
-        return 'Pychron Script', '\n'.join(ts)
+#    def _assemble_script_blob(self, kinds=None):
+#        '''
+#            make one blob of all the script text
+#
+#            return csv-list of names, blob
+#        '''
+#        if kinds is None:
+#            kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
+#
+#        ts = []
+# #        names = []
+#        for kind in kinds:
+#            script = getattr(self, '{}_script'.format(kind))
+#
+#            blob, name = None, None
+#            if script is not None:
+#                name = script.name
+#                blob = script.toblob()
+#
+#            ts.append('#' + '=' * 79)
+#            ts.append('# {} SCRIPT {}'.format(kind.replace('_', ' ').upper(), name))
+#            ts.append('#' + '=' * 79)
+#            if blob:
+#                ts.append(blob)
+#
+#        return 'Pychron Script', '\n'.join(ts)
 #===============================================================================
 # handlers
 #===============================================================================
@@ -1580,11 +1648,11 @@ anaylsis_type={}
 
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
-            ln=convert_special_name(self.special_labnumber)
+            ln = convert_special_name(self.special_labnumber)
             if ln:
-                self.labnumber=ln
+                self.labnumber = ln
                 self._labnumber = NULL_STR
-                
+
 
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:

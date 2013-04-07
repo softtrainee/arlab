@@ -88,6 +88,10 @@ class ExperimentActionSet(WorkbenchActionSet):
                        path=PATH + '/Utilities',
                        class_name='{}:OpenImportManagerAction'.format(BASE)
                        ),
+                Action(name='Export...',
+                       path=PATH + '/Utilities',
+                       class_name='{}:OpenExportManagerAction'.format(BASE)
+                       ),
                 Action(name='Image Browser',
                        path=PATH + '/Utilities',
                        class_name='{}:OpenImageBrowserAction'.format(BASE)

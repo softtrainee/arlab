@@ -332,7 +332,7 @@ host={}'.format(self.name, self.username, self.host))
 
 
     def _retrieve_item(self, table, value, key='name'):
-        if not isinstance(value, (str, int, unicode, long, float)):
+        if not isinstance(value, (str, int, unicode, long, float, list, tuple)):
             return value
 
         sess = self.get_session()
@@ -340,18 +340,26 @@ host={}'.format(self.name, self.username, self.host))
             return
 
         q = sess.query(table)
-        q = q.filter(getattr(table, key) == value)
+        if not isinstance(value, (list, tuple)):
+            value = (value,)
+        if not isinstance(key, (list, tuple)):
+            key = (key,)
+
+        for k, v in zip(key, value):
+            q = q.filter(getattr(table, k) == v)
 
         try:
             return q.one()
         except SQLAlchemyError, e:
-#            print 'get_one, e1', e
+            print 'get_one, e1', e, table, key, value
             try:
-                q = q.order_by(table.id.desc())
+                if hasattr(table, 'id'):
+                    q = q.order_by(table.id.desc())
+
                 return q.limit(1).all()[-1]
             except (SQLAlchemyError, IndexError, AttributeError), e:
                 pass
-    #            print 'get_one, e2', e
+                print 'get_one, e2', e, table, key, value
 
 
 

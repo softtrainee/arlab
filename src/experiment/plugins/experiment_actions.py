@@ -133,6 +133,12 @@ class OpenImportManagerAction(ExperimentAction):
         obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
         open_manager(event.window.application, obj)
 
+class OpenExportManagerAction(ExperimentAction):
+    accelerator = 'Ctrl+Shift+e'
+    def perform(self, event):
+        obj = self._get_service(event, 'src.experiment.export_manager.ExportManager')
+        open_manager(event.window.application, obj)
+
 class OpenImageBrowserAction(ExperimentAction):
     def perform(self, event):
         browser = self._get_service(event, 'src.media_server.browser.MediaBrowser')

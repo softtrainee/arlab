@@ -30,7 +30,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable, proc_FigureTable, \
     proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable, \
-    proc_NotesTable, meas_MonitorTable
+    proc_NotesTable, meas_MonitorTable, med_SnapshotTable
 
 # med_
 from src.database.orms.isotope_orm import med_ImageTable
@@ -124,6 +124,11 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return item
 
+    def add_snapshot(self, path, **kw):
+        dbsnap = med_SnapshotTable(path, **kw)
+        self._add_item(dbsnap)
+        return dbsnap
+
     def add_image(self, name, image=None):
         if image is not None:
             if not isinstance(image, str):
@@ -134,7 +139,6 @@ class IsotopeAdapter(DatabaseAdapter):
         dbim = med_ImageTable(name=name, image=image)
         self._add_item(dbim)
         return dbim
-
 
     def add_monitor(self, analysis, **kw):
         dbm = meas_MonitorTable(**kw)

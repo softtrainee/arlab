@@ -42,7 +42,7 @@ class MeasurementSummary(ScriptSummary):
     def _get_script_text(self):
         txt = None
         try:
-            txt = self.record.dbrecord.measurement.script.blob
+            txt = self.record.measurement.script.blob
         except AttributeError:
             pass
 
@@ -57,7 +57,7 @@ class ExtractionSummary(ScriptSummary):
     def _get_script_text(self):
         txt = None
         try:
-            txt = self.record.dbrecord.extraction.script.blob
+            txt = self.record.extraction.script.blob
         except AttributeError, e:
             print e
 
@@ -71,7 +71,7 @@ class ExperimentSummary(ScriptSummary):
     def _get_script_text(self):
         txt = None
         try:
-            txt = self.record.dbrecord.extraction.experiment.blob
+            txt = self.record.extraction.experiment.blob
         except AttributeError:
             pass
 

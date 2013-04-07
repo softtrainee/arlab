@@ -25,7 +25,7 @@ import shelve
 from src.paths import paths
 from src.database.core.database_selector import ColumnSorterMixin
 from src.processing.search.previous_selection import PreviousSelection
-from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
+from src.database.records.isotope_record import IsotopeRecordView
 from src.processing.analysis import Marker
 from src.helpers.color_generators import colornames
 import hashlib
@@ -319,18 +319,20 @@ class SelectedView(ColumnSorterMixin):
     def traits_view(self):
         grouping_grp = VGroup(
                               Item('clear_group', show_label=False),
-                              HGroup(Item('set_group',
+                              VGroup(Item('set_group',
                                           tooltip='Highlight a set of runs then Set Group',
                                           show_label=False),
                                      Item('group_by_labnumber', show_label=False,
                                           tooltip='Group analyses based on Labnumber'),
                                      Item('group_by_aliquot', show_label=False,
-                                          tooltip='Group analyses based on Labnumber')
+                                          tooltip='Group analyses based on Labnumber'),
+                                     show_border=True,
                                      ),
-                              HGroup(Item('set_graph', show_label=False,
+                              VGroup(Item('set_graph', show_label=False,
                                           tooltip='Highlight a set of runs to group in to multiple graphs'),
                                      Item('graph_by_labnumber', show_label=False,
-                                          tooltip='Group analyses into graphes bases on Labnumber')
+                                          tooltip='Group analyses into graphes bases on Labnumber'),
+                                     show_border=True,
                                     )
                               )
 

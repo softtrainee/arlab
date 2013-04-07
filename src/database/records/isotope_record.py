@@ -152,6 +152,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     extract_duration = Property
     cleanup_duration = Property
     experiment = Property
+    extraction = Property
+    measurement = Property
 
     changed = Event
 
@@ -270,7 +272,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # database record
 #===============================================================================
-    def load(self):
+    def load_isotopes(self):
         for iso in self.dbrecord.isotopes:
             if iso.kind == 'signal':
                 result = iso.results[-1]
@@ -290,6 +292,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 fit = self._get_db_fit(name, 'baseline')
                 r.set_fit(fit)
                 i.baseline = r
+
+    def load(self):
+        self.load_isotopes()
 
         self._make_signal_graph()
         self._make_baseline_graph()
@@ -985,6 +990,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     def _get_experiment(self):
         return self._get_dbrecord_value('experiment')
+    def _get_extraction(self):
+        return self._get_dbrecord_value('extraction')
+    def _get_measurement(self):
+        return self._get_dbrecord_value('measurement')
 #===============================================================================
 # factories
 #===============================================================================

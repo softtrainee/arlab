@@ -47,8 +47,17 @@ class UVAutomatedRun(AutomatedRun):
                                   )
 
             ext.image = dbim
+
+        # save snapshot recorded by pyscript
+        if self.extraction_script:
+            sps = self.extraction_script.snapshot_paths
+            if sps:
+                for sp in sps:
+                    dbsnap = self.db.add_snapshot(sp)
+                    ext.snapshots.append(dbsnap)
+
         return ext
-    
+
     @cached_property
     def _get_masks(self):
         p = os.path.join(paths.device_dir, 'uv', 'masks.txt')

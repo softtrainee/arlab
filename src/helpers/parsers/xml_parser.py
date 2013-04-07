@@ -20,15 +20,67 @@
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from xml.etree.ElementTree import ElementTree, Element, ParseError
+# from xml.etree.ElementTree import ElementTree, Element, ParseError
+from lxml.etree import ElementTree, Element, ParseError, XML
 from pyface.message_dialog import warning
+import os
 #============= local library imports  ==========================
+
 class XMLParser(object):
+    def __init__(self, path=None, *args, **kw):
+        if path:
+            self._path = path
+            try:
+                self._parse_file(path)
+            except ParseError, e:
+                warning(None, str(e))
+        else:
+            self._root = Element('root')
+
+    def _parse_file(self, p):
+        if os.path.isfile(p):
+            if isinstance(p, str):
+                p = open(p, 'r')
+
+            self._root = XML(p.read())
+
+    def load(self, fp):
+        self._parse_file(fp)
+
+    def add(self, tag, value, root, **kw):
+        if root is None:
+            root = self._root
+        elem = self.new_element(tag, value, **kw)
+        root.append(elem)
+        return elem
+
+    def new_element(self, tag, value, **kw):
+        e = Element(tag, attrib=kw)
+        if value:
+            e.text = str(value)
+        return e
+
+    def get_tree(self):
+        return ElementTree(self._root)
+
+    def save(self, p=None, pretty_print=True):
+        if p is None:
+            p = self._path
+
+        if p and os.path.isdir(os.path.dirname(p)):
+            tree = self.get_tree()
+            tree.write(p,
+                       xml_declaration=True,
+                       method='xml',
+                       pretty_print=pretty_print)
+
+class XMLParser2(object):
     '''
         wrapper for ElementTree
     '''
     _tree = None
     def __init__(self, path=None, *args, **kw):
+        self._tree = ElementTree()
         if path:
             self._path = path
             try:
@@ -43,34 +95,43 @@ class XMLParser(object):
         return self._parse_file(fp)
 
     def _parse_file(self, p):
-        tree = ElementTree()
-        tree.parse(p)
-        self._tree = tree
-        return tree
+        self._tree.parse(p)
 
     def get_tree(self):
         return self._tree
-    def save(self):
-        self.indent(self._tree.getroot())
-        self._tree.write(self._path)
 
-    def indent(self, elem, level=0):
-        i = '\n' + level * '  '
-        if len(elem):
-            if not elem.text or not elem.text.strip():
-                elem.text = i + '  '
-            if not elem.tail or not elem.tail.strip():
-                elem.tail = i
-            for elem in elem:
-                self.indent(elem, level + 1)
-            if not elem.tail or not elem.tail.strip():
-                elem.tail = i
-        else:
-            if level and (not elem.tail or not elem.tail.strip()):
-                elem.tail = i
+    def save(self, p=None):
+        if p is None:
+            p = self._path
 
-    def new_element(self, tag, value, ** kw):
+        if p and os.path.isdir(os.path.dirname(p)):
+#        self.indent(self._tree.getroot())
+            self._tree.write(p, pretty_print=True)
+
+#    def indent(self, elem, level=0):
+#        i = '\n' + level * '  '
+#        if len(elem):
+#            if not elem.text or not elem.text.strip():
+#                elem.text = i + '  '
+#            if not elem.tail or not elem.tail.strip():
+#                elem.tail = i
+#            for elem in elem:
+#                self.indent(elem, level + 1)
+#            if not elem.tail or not elem.tail.strip():
+#                elem.tail = i
+#        else:
+#            if level and (not elem.tail or not elem.tail.strip()):
+#                elem.tail = i
+    def add_element(self, tag, value, root, **kw):
+        if root is None:
+            root = self._tree.getroot()
+        elem = self.new_element(tag, value, **kw)
+        root.append(elem)
+        return elem
+
+    def new_element(self, tag, value, **kw):
         e = Element(tag, attrib=kw)
-        e.text = value
+#        if value:
+#            e.text = value
         return e
 #============= EOF ====================================
