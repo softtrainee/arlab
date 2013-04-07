@@ -71,7 +71,7 @@ class ExperimentPlugin(CorePlugin):
                           )
         so7 = self.service_offer_factory(
                           protocol=ExportManager,
-                          factory=self._import_manager_factory
+                          factory=self._export_manager_factory
                           )
 
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
@@ -120,7 +120,9 @@ class ExperimentPlugin(CorePlugin):
         return ImportManager(application=self.application)
 
     def _export_manager_factory(self):
-        return ExportManager(application=self.application)
+        exp = ExportManager(application=self.application)
+        exp.bind_preferences()
+        return exp
 
     def _image_browser_factory(self, *args, **kw):
         return ImageBrowser(application=self.application)

@@ -21,6 +21,7 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
 import shelve
+import hashlib
 #============= local library imports  ==========================
 from src.paths import paths
 from src.database.core.database_selector import ColumnSorterMixin
@@ -28,7 +29,6 @@ from src.processing.search.previous_selection import PreviousSelection
 from src.database.records.isotope_record import IsotopeRecordView
 from src.processing.analysis import Marker
 from src.helpers.color_generators import colornames
-import hashlib
 
 
 class SelectedrecordsAdapter(TabularAdapter):
@@ -60,10 +60,6 @@ class SelectedrecordsAdapter(TabularAdapter):
     def _get_aliquot_text(self, trait, item):
         return '{}{}'.format(self.item.aliquot, self.item.step)
 
-# class Marker(HasTraits):
-#    color = 'white'
-#    def __getattr__(self, attr):
-#        return ' '
 
 class SelectedView(ColumnSorterMixin):
     selector = Any
@@ -88,26 +84,13 @@ class SelectedView(ColumnSorterMixin):
     previous_selection = Any  # Instance(PreviousSelection)
     previous_selections = List(PreviousSelection)
 
+
     def _open_shelve(self):
         p = os.path.join(paths.hidden_dir, 'stored_selections')
         d = shelve.open(p)
         return d
 
     def load_previous_selections(self):
-#        ps = []
-#        p = os.path.join(paths.hidden_dir, 'stored_selections')
-#        if os.path.isdir(p):
-#            for si in os.listdir(p):
-#                if si.startswith('.'):
-#                    continue
-#                with open(os.path.join(p, si), 'r') as fp:
-#                    try:
-#                        ss = pickle.load(fp)
-#                        ps.append(ss)
-#                    except Exception:
-#                        pass
-#        self.previous_selections = ps
-
         d = self._open_shelve()
         keys = sorted(d.keys(), reverse=True)
         self.previous_selections = [d[ki] for ki in keys]
@@ -229,7 +212,7 @@ class SelectedView(ColumnSorterMixin):
 # handlers
 #===============================================================================
     def _previous_selection_changed(self):
-        print self.previous_selection
+#        print self.previous_selection
         if self.previous_selection:
             db = self.selector.db
             def func(pi):
@@ -248,7 +231,8 @@ class SelectedView(ColumnSorterMixin):
             self._set_grouping('group_id')
 
     def _dclicked_changed(self):
-        self.selector.open_record(self.selected)
+        if self.dclicked:
+            self.selector.open_record(self.selected)
 
     def _group_by_labnumber_fired(self):
         if self._grouped_by_labnumber:
@@ -359,7 +343,7 @@ class SelectedView(ColumnSorterMixin):
                  VGroup(
                         selected_grp,
                         grouping_grp
-                        )
+                        ),
                  )
         return v
 #============= EOF =============================================

@@ -15,23 +15,29 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import HasTraits, Str, Password
+from traitsui.api import View, Item, VGroup
 #============= standard library imports ========================
-from xml_parser import XMLParser
 #============= local library imports  ==========================
 
+class DBConnectionSpec(HasTraits):
+    database = Str('massspecdata')
+    username = Str('massspec')
+    password = Password('DBArgon')
+    host = Str('129.138.12.131')
+    def make_url(self):
+        return '{}:{}@{}/{}'.format(self.username, self.password, self.host, self.database)
 
-class ValveParser(XMLParser):
-    def get_groups(self, element=True):
-        tree = self.get_root()
-#        tree = self._tree
-        return [g if element else g.text.strip()
-                for g in tree.findall('group')]
+    def make_connection_dict(self):
+        return dict(name=self.database, username=self.username, password=self.password, host=self.host)
 
-    def get_valves(self, group=None, element=True):
-        if group is None:
-            group = self.get_root()
-        return [v if element else v.text.strip()
-                for v in group.findall('valve')]
+    def traits_view(self):
+        return View(VGroup(
+                           Item('host'),
+                           Item('database'),
+                           Item('username'),
+                           Item('password'),
+                           )
+                    )
 
 #============= EOF =============================================
-

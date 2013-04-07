@@ -23,6 +23,7 @@ from src.processing.database_manager import DatabaseManager
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from src.traits_editors.custom_label_editor import CustomLabel
 from src.loggable import Loggable
+from src.database.database_connection_spec import DBConnectionSpec
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ImportName(HasTraits):
@@ -34,22 +35,23 @@ class Extractor(Loggable):
         pass
 
 class MassSpecExtractor(Extractor):
-    database = Str('massspecdata')
-    username = Str('massspec')
-    password = Password('DBArgon')
-    host = Str('129.138.12.131')
+#    database = Str('massspecdata')
+#    username = Str('massspec')
+#    password = Password('DBArgon')
+#    host = Str('129.138.12.131')
+    dbconn_spec = Instance(DBConnectionSpec, ())
     connect_button = Button('Connect')
     db = Instance(MassSpecDatabaseAdapter, ())
     def _connect_button_fired(self):
-        self.db.name = self.database
-        self.db.username = self.username
-        self.db.password = self.password
-        self.db.host = self.host
-        self.db.kind = 'mysql'
-        self.db.connect()
+        self.connect()
 
     def connect(self):
-        self._connect_button_fired()
+        self.db.name = self.dbconn_spec.database
+        self.db.username = self.dbconn_spec.username
+        self.db.password = self.dbconn_spec.password
+        self.db.host = self.dbconn_spec.host
+        self.db.kind = 'mysql'
+        self.db.connect()
 
     def import_irradiation(self, dest, name):
         self.connect()
@@ -141,7 +143,7 @@ class MassSpecExtractor(Extractor):
         return irs
 
     def traits_view(self):
-        cred_grp = VGroup(Item('database'), Item('username'), Item('password'), Item('host'),
+        cred_grp = VGroup(Item('dbconn_spec', style='custom', show_label=False),
                           Item('connect_button', show_label=False)
                           )
         v = View(cred_grp)
