@@ -39,14 +39,17 @@ class TrayCalibrator(Loggable):
     def handle(self, step, x, y, canvas):
         if step == 'Calibrate':
             canvas.new_calibration_item()
-            return 'Locate Center', None, None, None, 1
+            return dict(calibration_step='Locate Center')
+#            return 'Locate Center', None, None, None, 1
         elif step == 'Locate Center':
             canvas.calibration_item.set_center(x, y)
-            return 'Locate Right', x, y, None, 1
+            return dict(calibration_step='Locate Right', cx=x, cy=y)
+#            return 'Locate Right', x, y, None, 1
         elif step == 'Locate Right':
             canvas.calibration_item.set_right(x, y)
             self.save(canvas.calibration_item)
-            return 'Calibrate', None, None, canvas.calibration_item.rotation, 1
+#            return 'Calibrate', None, None, canvas.calibration_item.rotation, 1
+            return dict(calibration_step='Calibrate', rotation=canvas.calibration_item.rotation)
 
     def save(self, obj):
         p = self._get_path(self.name)
@@ -56,14 +59,14 @@ class TrayCalibrator(Loggable):
     @classmethod
     def load(cls, name):
         path = cls._get_path(name)
-        print os.path.isfile(path), path
+#        print os.path.isfile(path), path
         if os.path.isfile(path):
             with open(path, 'rb') as f:
                 try:
                     obj = pickle.load(f)
                     return obj
                 except pickle.PickleError, e:
-                    print e
+                    cls.debug(e)
 
     @classmethod
     def _get_path(cls, name):

@@ -41,6 +41,8 @@ class TrayCalibrationManager(Manager):
     y = Float
     rotation = Float
     scale = Float
+    error = Float
+
     calibrate = Event
     calibration_step = String('Calibrate')
     calibration_help = String(TRAY_HELP)
@@ -89,16 +91,23 @@ class TrayCalibrationManager(Manager):
         args = self.calibrator.handle(self.calibration_step,
                                       x, y, self.canvas)
         if args:
-            cstep, cx, cy, rot, scale = args
-            if cstep is not None:
-                self.calibration_step = cstep
-            if cx is not None and cy is not None:
-                self.x, self.y = cx, cy
-            if scale is not None:
-                self.scale = scale
-            if rot is not None:
-                self.rotation = rot
-                self.save_calibration()
+            for a in ('calibration_step', 'cx', 'cy', 'scale', 'error', 'rotation'):
+                if args.has_key(a):
+                    setattr(self, a, args[a])
+                    if a == 'rotation':
+                        self.save_calibration()
+
+#            cstep, cx, cy, rot, scale, err = args
+#            if cstep is not None:
+#                self.calibration_step = cstep
+#            if cx is not None and cy is not None:
+#                self.x, self.y = cx, cy
+#            if scale is not None:
+#                self.scale = scale
+#            if rot is not None:
+#                self.rotation = rot
+#                self.save_calibration()
+
 
     def load_calibration(self, stage_map=None):
         if stage_map is None:
@@ -139,7 +148,8 @@ class TrayCalibrationManager(Manager):
                     HGroup(Item('x', format_str='%0.3f', style='readonly'),
                            Item('y', format_str='%0.3f', style='readonly')),
                     Item('rotation', format_str='%0.3f', style='readonly'),
-                    Item('scale', format_str='%0.3f', style='readonly'),
+                    Item('scale', format_str='%0.4f', style='readonly'),
+                    Item('error', format_str='%0.2f', style='readonly')
                     )
         ad = self.get_additional_controls()
         if ad is not None:
