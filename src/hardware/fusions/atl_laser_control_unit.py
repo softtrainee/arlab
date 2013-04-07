@@ -116,9 +116,9 @@ class ATLLaserControlUnit(CoreDevice):
         self._communicator.write_terminator = None
         return r
 
-                
+
     def is_enabled(self):
-        return self.status_readback=='Laser On'
+        return self.status_readback == 'Laser On'
 
 #    def laser_burst(self, n):
         # get process status
@@ -214,8 +214,8 @@ class ATLLaserControlUnit(CoreDevice):
         cmd = self._build_command(11, 1)
         self._send_command(cmd)
 #        self.ask('A'+ENQ)
-        #self._enabled = True
-        
+        # self._enabled = True
+
 
     def laser_off(self):
         '''
@@ -345,9 +345,9 @@ class ATLLaserControlUnit(CoreDevice):
 #            vs=self._parse_response(vs, 1)
 #            print vs
 #        print self.get_process_status()
-        b=self.get_nburst(verbose=False)
+        b = self.get_nburst(verbose=False)
         if b is not None:
-            self.burst_readback=b
+            self.burst_readback = b
 #        s=self.get_laser_status(verbose=False)
 #        if s<=3:
 

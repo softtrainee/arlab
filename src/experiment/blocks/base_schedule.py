@@ -74,29 +74,29 @@ class BaseSchedule(ScriptEditable):
     add = Button
     copy_button = Button('copy')
     paste_button = Button('paste')
-    update_aliquots=Button('Update aliquots')
-    
+    update_aliquots = Button('Update aliquots')
+
     _copy_cache = Any
     parser = None
     update_aliquots_needed = Event
-    
+
 
     @on_trait_change('extraction_script:name')
-    def _extraction_script_changed(self, obj, name, old,new):
+    def _extraction_script_changed(self, obj, name, old, new):
         self._script_changed('extraction')
-        
+
     @on_trait_change('measurement_script:name')
-    def _measurement_script_changed(self, obj, name, old,new):
+    def _measurement_script_changed(self, obj, name, old, new):
         self._script_changed('measurement')
-        
+
     @on_trait_change('post_equilibration_script:name')
-    def _post_equilibration_script_changed(self, obj, name, old,new):
+    def _post_equilibration_script_changed(self, obj, name, old, new):
         self._script_changed('post_equilibration')
 
     @on_trait_change('post_measurement_script:name')
-    def _post_measurement_script_changed(self, obj, name, old,new):
+    def _post_measurement_script_changed(self, obj, name, old, new):
         self._script_changed('post_measurement')
-    
+
     def _script_changed(self, sname):
 #        name = name[:-7]
         if self.selected_runs is not None:
@@ -105,7 +105,7 @@ class BaseSchedule(ScriptEditable):
 
         if self.automated_run is not None:
             self._update_run_script(self.automated_run, sname)
-    
+
     def _selected_changed(self, new):
 #        print new
         self.selected_runs = new
@@ -117,7 +117,7 @@ class BaseSchedule(ScriptEditable):
                     try:
                         n = self._clean_script_name(getattr(run.script_info, '{}_script_name'.format(si)))
 #                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
-                        s=getattr(self, '{}_script'.format(si))
+                        s = getattr(self, '{}_script'.format(si))
                         setattr(s, 'name', n)
                     except AttributeError:
                         pass
@@ -322,9 +322,9 @@ class BaseSchedule(ScriptEditable):
                   ]
 
         if self.extract_device == 'Fusions UV':
-            header.extend(('reprate', 'mask', 'attenuator','image'))
+            header.extend(('reprate', 'mask', 'attenuator', 'image'))
             attrs.extend(('reprate', 'mask', 'attenuator', 'image'))
-            
+
 #        else:
 #            header.extend(['beam'])
 #            attrs.extend(['beam'])
@@ -353,10 +353,10 @@ class BaseSchedule(ScriptEditable):
 #===============================================================================
     def _copy_button_fired(self):
         def factory(ai):
-            na=ai.clone_traits()
-            na.labnumber=ai.labnumber
+            na = ai.clone_traits()
+            na.labnumber = ai.labnumber
             return na
-        
+
         self._copy_cache = [factory(a) for a in self.selected]
 
     def _paste_button_fired(self):
@@ -371,9 +371,9 @@ class BaseSchedule(ScriptEditable):
             for ri in _rcopy_cache:
                 self.automated_runs.insert(ind + 1, ri)
         self.selected = []
-        
-        self.update_aliquots_needed=True 
-        
+
+        self.update_aliquots_needed = True
+
     def _update_aliquots_fired(self):
         self.update_aliquots_needed = True
 

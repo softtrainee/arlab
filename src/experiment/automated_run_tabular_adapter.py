@@ -36,8 +36,8 @@ def get_name(func):
     return _get_name
 
 class AutomatedRunAdapter(TabularAdapter):
-    show_state=Bool(True)
-    
+    show_state = Bool(True)
+
     state_width = Int(20)
     aliquot_width = Int(50)
 
@@ -108,7 +108,7 @@ class AutomatedRunAdapter(TabularAdapter):
 #        hp = ('Temp', 'extract_value')
 #        if self.kind == 'watts':
 #            hp =
-        
+
         cols = [('', 'state'),
                  ('Labnumber', 'labnumber'),
                  ('Aliquot', 'aliquot'),
@@ -128,7 +128,7 @@ class AutomatedRunAdapter(TabularAdapter):
                  ]
         if not self.show_state:
             cols.pop(0)
-            
+
         return cols
 
     def _get_sample_text(self):
@@ -188,19 +188,19 @@ class AutomatedRunAdapter(TabularAdapter):
                 root = os.path.split(root)[0]
 
             root = os.path.split(root)[0]
-            root = os.path.join(root, 'resources','balls')
+            root = os.path.join(root, 'resources', 'balls')
             return os.path.join(root, '{}_ball.png'.format(img))
-            
+
         if paths.app_resources:
-            root=paths.app_resources
-            p=os.path.join(root, '{}_ball.png'.format(im))
+            root = paths.app_resources
+            p = os.path.join(root, '{}_ball.png'.format(im))
             if not os.path.isfile(p):
-                p=debug_path(im)
+                p = debug_path(im)
         else:
-            p=debug_path(im)
-                        
+            p = debug_path(im)
+
         return p
-            
+
     def _get_extraction_script_text(self):
         return self._get_script_name('extraction')
 

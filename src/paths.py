@@ -45,7 +45,7 @@ class Paths():
     splashes = None
     abouts = None
     sounds = None
-    app_resources=None
+    app_resources = None
     # _dir suffix ensures the path is checked for existence
     root_dir = root
     stable_root = None
@@ -142,7 +142,7 @@ class Paths():
         self.splashes = join(self.resources, 'splashes')
         self.abouts = join(self.resources, 'abouts')
         self.sounds = join(self.resources, 'sounds')
-        self.bullets=join(self.resources,'bullets')
+        self.bullets = join(self.resources, 'bullets')
 #        src_repo_name = 'pychron{}'.format(version)
 #        self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
 #        self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',

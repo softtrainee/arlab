@@ -51,7 +51,7 @@ class RunParser(Loggable):
                      ]:
             try:
                 params[attr] = args[header.index(attr)]
-            except (IndexError,ValueError), e:
+            except (IndexError, ValueError), e:
                 self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         # load booleans
@@ -126,7 +126,7 @@ class UVRunParser(RunParser):
         _set('reprate', int)
         _set('attenuator', str)
         _set('mask', str)
-        _set('image',str)
+        _set('image', str)
 
         return params
 #============= EOF =============================================

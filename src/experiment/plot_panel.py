@@ -30,7 +30,7 @@ from src.constants import PLUSMINUS
 # from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 
-HEIGHT=250
+HEIGHT = 250
 
 class PlotPanelHandler(ViewableHandler):
     pass
@@ -83,7 +83,7 @@ class PlotPanel(Viewable):
                     if self.isbaseline:
                         self.baselines[iso] = u
                         if arar_age:
-                            arar_age.set_baseline(iso, (vv,ee))
+                            arar_age.set_baseline(iso, (vv, ee))
 #                            base = arar_age.isotopes[iso].baseline
 #                            base.value = vv
 #                            base.error = ee
@@ -280,11 +280,11 @@ class PlotPanel(Viewable):
 
             v = pad('{:0.5f}'.format(vv))
             e = pad('{:0.6f}'.format(ee), n=6)
-            pe=self._get_pee(uv)
+            pe = self._get_pee(uv)
 #             v = v + u' {}'.format(PLUSMINUS) + e + self._get_pee(uv)
-            
+
             return '{}{}={} {}{} {}'.format(iso, name, v, PLUSMINUS, e, pe)
-            
+
 #             return '{}{}={:>10s}'.format(iso, name, v)
 
         ts = [func(iso) for iso in self.isotopes]

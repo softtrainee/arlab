@@ -155,13 +155,13 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         self.temperature_controller.set_control_mode('open')
         self.temperature_controller.set_open_loop_setpoint(0.0)
-        
+
     def set_laser_output(self, value, units):
-        if units=='temp':
+        if units == 'temp':
             self.set_laser_temperature(value)
         else:
             self.set_laser_power(value)
-            
+
     def set_laser_temperature(self, temp):
         return self._set_laser_power_hook(temp, mode='closed', use_calibration=self.use_calibrated_temperature)
 

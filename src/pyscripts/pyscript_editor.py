@@ -312,7 +312,7 @@ if __name__ == '__main__':
 #    s = PyScriptManager(kind='ExtractionLine')
 #    s = PyScriptManager(kind='Bakeout')
     s = PyScriptManager(kind='Measurement')
-    
+
     p = os.path.join(paths.scripts_dir, 'extraction', 'jan_uv_all.py')
     s.open_script(path=p)
     s.configure_traits()

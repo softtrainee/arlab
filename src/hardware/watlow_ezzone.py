@@ -957,7 +957,7 @@ class WatlowEZZone(CoreDevice):
     def read_high_power_scale(self, output=2, **kw):
         self.info('read high power scale')
         register = 898 if output == 1 else 928
-        r = self.read(register, nregisters=2, nbytes=9,**kw)
+        r = self.read(register, nregisters=2, nbytes=9, **kw)
         return r
 #    def read_cool_power(self,**kw):
 #        register=1906

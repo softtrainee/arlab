@@ -121,7 +121,7 @@ class ExtractionLineScene(Scene):
 
             t = map(float, t.split(',')) if ',' in t else t
 #            co = self._make_color(t)
-            
+
             if k == 'bgcolor':
                 self.canvas.bgcolor = t
             else:

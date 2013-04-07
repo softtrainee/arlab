@@ -33,22 +33,22 @@ class _CodeEditor(SourceEditor):
 
         if PythonDropTarget is not None:
             self.control.SetDropTarget(PythonDropTarget(self))
-        
-        keywords='''and del from not while as elif global or with assert else if  
+
+        keywords = '''and del from not while as elif global or with assert else if  
             pass yield break except import print class exec in raise continue finally is return def for lambda try'''
         if self.factory.keywords:
-            keywords=' '.join((keywords, self.factory.keywords))
+            keywords = ' '.join((keywords, self.factory.keywords))
         self.control.SetKeyWords(0, keywords)
 
         self.change_default_style()
-                    
+
     def change_default_style(self):
         from wx import stc
         self.control.SetEdgeMode(stc.STC_EDGE_LINE)
         self.control.SetEdgeColumn(200)
 
         self.set_style(stc.STC_P_DEFAULT, "#000000", "#ffffff")
-        
+
         # Comment
         self.set_style(stc.STC_P_COMMENTLINE, "#007f00", "#ffffff")
 
@@ -87,24 +87,24 @@ class _CodeEditor(SourceEditor):
 
         # End of line where string is not closed
         self.set_style(stc.STC_P_STRINGEOL, "#000000", "#ffffff")
-        
-        
+
+
     def set_style(self, n, fore, back):
-        fontname='courier new'
+        fontname = 'courier new'
         if self.factory.fontname:
-            fontname=self.factory.fontname
-            
-        fontsize=12
+            fontname = self.factory.fontname
+
+        fontsize = 12
         if self.factory.fontsize:
-            fontsize=self.factory.fontsize
-            
+            fontsize = self.factory.fontsize
+
         self.control.StyleSetForeground(n, fore)
-        #self.StyleSetBackground(n, '#c0c0c0')
-        #self.StyleSetBackground(n, '#ffffff')
+        # self.StyleSetBackground(n, '#c0c0c0')
+        # self.StyleSetBackground(n, '#ffffff')
         self.control.StyleSetBackground(n, back)
         self.control.StyleSetFaceName(n, fontname)
         self.control.StyleSetSize(n, fontsize)
-        
+
     def wx_dropped_on(self, x, y, data, result):
         control = self.control
         p = control.PositionFromPoint(wx.Point(x, y))
@@ -118,10 +118,10 @@ class _CodeEditor(SourceEditor):
 
 class PyScriptCodeEditor(BasicEditorFactory):
     klass = _CodeEditor
-    
-    fontsize=Int(12)
-    fontname=Str('helvetica')
-    keywords=''
+
+    fontsize = Int(12)
+    fontname = Str('helvetica')
+    keywords = ''
     #---------------------------------------------------------------------------
     #  Trait definitions:
     #---------------------------------------------------------------------------

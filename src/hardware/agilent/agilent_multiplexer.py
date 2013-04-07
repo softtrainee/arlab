@@ -29,25 +29,25 @@ Agilent requires chr(10) as its communicator terminator
 class Equation(HasTraits):
     def get_value(self, v):
         return v
-    
+
 class Polynomial(Equation):
     coefficients = Tuple
-    def get_value(self,v):
-        cf=self.coefficients
-        if not cf:
-            cf=(1,0)
-            
-        return polyval(cf, v)
-    
-class Boolean(Equation):
-    threshold=Float
-    inverted_logic=Bool
     def get_value(self, v):
-        o=v>self.threshold
+        cf = self.coefficients
+        if not cf:
+            cf = (1, 0)
+
+        return polyval(cf, v)
+
+class Boolean(Equation):
+    threshold = Float
+    inverted_logic = Bool
+    def get_value(self, v):
+        o = v > self.threshold
         if self.inverted_logic:
-            o=not o
+            o = not o
         return 'ON' if o else 'OFF'
-        
+
 
 class Channel(HasTraits):
     address = Str
@@ -55,7 +55,7 @@ class Channel(HasTraits):
     value = Float
     process_value = Property(depends_on='value')
     kind = Str('DC')
-    equation=Instance(Equation, ())
+    equation = Instance(Equation, ())
     def traits_view(self):
         v = View(HGroup(Item('name', show_label=False, style='readonly', width=200),
                       Item('address', show_label=False, style='readonly', width=75),
@@ -82,11 +82,11 @@ class AgilentMultiplexer(AgilentUnit):
             if section.startswith('Channel'):
                 kind = self.config_get(config, section, 'kind', default='DC')
                 name = self.config_get(config, section, 'name', default='')
-                
-                threshold=self.config_get(config, section, 'threshold', cast='float', default=None)
+
+                threshold = self.config_get(config, section, 'threshold', cast='float', default=None)
                 if threshold is not None:
-                    inv=self.config_get(config, section, 'inverted_logic', cast='boolean', default=False)
-                    eq=Boolean(threshold=threshold, inverted_logic=inv)
+                    inv = self.config_get(config, section, 'inverted_logic', cast='boolean', default=False)
+                    eq = Boolean(threshold=threshold, inverted_logic=inv)
                 else:
                     cs = self.config_get(config, section, 'coefficients', default='1,0')
                     try:
@@ -94,8 +94,8 @@ class AgilentMultiplexer(AgilentUnit):
                     except ValueError:
                         self.warning('invalid coefficients for {}. {}'.format(section, cs))
                         cs = 1, 0
-                    eq=Polynomial(coefficients=cs)
-                
+                    eq = Polynomial(coefficients=cs)
+
 
                 ch = Channel(address='{}{:02n}'.format(self.slot, int(section[7:])),
                            kind=kind,
@@ -186,9 +186,9 @@ class AgilentMultiplexer(AgilentUnit):
 # view
 #===============================================================================
     def traits_view(self):
-        v = View(Item('channels', show_label=False, 
+        v = View(Item('channels', show_label=False,
                       height=400,
-                      editor=ListEditor(mutable=False, 
+                      editor=ListEditor(mutable=False,
                                         editor=InstanceEditor(), style='custom')))
         return v
 

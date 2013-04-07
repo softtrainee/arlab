@@ -23,7 +23,7 @@ except (ImportError, AttributeError), e:
     from pyopencv_image_helper import *
 
 
-#def get_size(src):
+# def get_size(src):
 #    try:
 #        return src.size()
 #    except AttributeError:
