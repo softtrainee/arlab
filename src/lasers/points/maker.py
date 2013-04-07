@@ -321,7 +321,6 @@ class TransectMaker(FinishableMaker):
     def _save(self):
         trans = []
         for tr in self.canvas.get_transects():
-#        for tr in self.canvas.transects:
             pts = []
 
             for pi in tr.points:
@@ -330,21 +329,20 @@ class TransectMaker(FinishableMaker):
                         mask=pi.mask,
                         attenuator=pi.attenuator,
                         xy=[float(pi.x), float(pi.y)])
-
-#                if hasattr(pi, 'mask'):
-#                    d['mask']=pi.mask
-#                if hasattr(pi, 'attenuator'):
-#                    d['attenuator']=pi.attenuator
-
                 pts.append(d)
 
-#            for pi in tr.step_points:
-#                d = dict(identifier=pi.identifier,
-#                        z=float(pi.z),
-#                        mask=pi.mask, attenuator=pi.attenuator,
-#                        xy=[float(pi.x), float(pi.y)])
-#                pts.append(d)
-            trans.append(dict(points=pts, step=tr.step))
+            spts = []
+            for pi in tr.step_points:
+                d = dict(identifier=pi.identifier,
+                        z=float(pi.z),
+                        mask=pi.mask,
+                        attenuator=pi.attenuator,
+                        xy=[float(pi.x), float(pi.y)])
+                spts.append(d)
+
+            trans.append(dict(points=pts,
+                              step_points=spts,
+                              step=tr.step))
 
         return {'transects':trans}
 

@@ -240,7 +240,7 @@ class MassSpecDatabaseImporter(Loggable):
 #                     runscript_text,
 #                     comment
 #                     ):
-    def add_analysis(self, spec):
+    def add_analysis(self, spec, commit=True):
 
         db = self.db
 
@@ -398,7 +398,8 @@ class MassSpecDatabaseImporter(Loggable):
 
 #        if not DEBUG:
 #            db.commit()
-        db.commit()
+        if commit:
+            db.commit()
 
     def _build_timeblob(self, t, v):
         '''

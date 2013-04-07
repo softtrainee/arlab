@@ -126,21 +126,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #            print 'ffoasdf'
 #        evt.Skip()
 
-    @on_trait_change('db.[name,host]')
-    def _dbstring_change(self):
-        if self.db.kind == 'mysql':
-            self.dbstring = 'Database: {} at {}'.format(self.db.name, self.db.host)
-        else:
-            self.dbstring = 'Database: {}'.format(self.db.name)
-
-
-    def _selected_changed(self):
-        if self.selected:
-            sel = self.selected
-            if self.style != 'single':
-                sel = sel[0]
-            self.selected_row = self.records.index(sel)
-            self.update = True
 
     def __init__(self, *args, **kw):
         super(DatabaseSelector, self).__init__(*args, **kw)
@@ -153,6 +138,14 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #
 #    def _selected_changed(self):
 #        print self.selected
+    def load_records(self, dbs, load=True, append=False):
+        if not append:
+            self.records = []
+
+        self._load_records(dbs)
+#        self._sort_columns(self.records)
+
+        self.scroll_to_row = len(self.records)
 
     def query_factory(self, **kw):
         return self._query_factory(**kw)
@@ -187,20 +180,14 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 # private
 #===============================================================================
     def _get_recent(self):
-        # param = '{}.{}'.format(self.query_table.__tablename__, self.date_str)
-#        comp = '='
         criterion = 'this month'
         q = self.queries[0]
         q.parameter = self.date_str
         q.comparator = '='
-#        q.criterion = criterion
         q.trait_set(criterion=criterion, trait_change_notify=False)
 
         return self._execute_query(queries=[q])
 
-#    def _generate_filter_str(self):
-#        qs = 'and '.join([q.get_filter_str() for q in self.queries])
-#        return qs
     def _assemble_query(self, q, queries, lookup):
         joined = []
         for qi in queries:
@@ -233,22 +220,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                 len(dbs) if dbs else 0))
         return dbs
 
-    def load_records(self, dbs, load=True, append=False):
-        if not append:
-            self.records = []
-
-        self._load_records(dbs)
-#        self._sort_columns(self.records)
-
-        self.scroll_to_row = len(self.records)
-
     def _load_records(self, records):
         if records:
-            import time
-            st = time.time()
-#            print [self._record_view_factory(di) for di in records]
+            '''
+                using a IsotopeRecordView is significantly faster than loading a IsotopeRecord directly
+            '''
             self.records.extend([self._record_view_factory(di) for di in records])
-            print time.time() - st
 
 #    def _changed(self, new):
 #        db = self.db
@@ -265,49 +242,20 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if not isinstance(records, (list, tuple)):
             records = [records]
 
+        self.debug('open record')
         self._open_selected(records)
 
     def _open_selected(self, records=None):
+        self.debug('open selected')
         if records is None:
             records = self.selected
 
         if records is not None:
             self._open_individual(records[0])
 
-#            if self.multi_select_graph:
-#                self._open_multiple(records)
-#            else:
-#                self._open_individual(records)
-
-#    def _open_multiple(self, s):
-#        graph = None
-#        xoffset = 0
-#        for si in s:
-#            if not si.loadable:
-#                continue
-#
-#            if graph is None:
-#                graph = si._graph_factory(klass=TimeSeriesGraph)
-#                graph.new_plot(xtitle='Time',
-#                               ytitle='Signal')
-#
-#            xoffset += si.load_graph(graph=graph, xoffset=xoffset)
-#
-#        wid = '.'.join([str(si.rid) for si in s])
-#        did = ', '.join([str(si.rid) for si in s])
-#        graph.window_title = '{} {}'.format(si.title_str, did)
-#
-#        info = graph.edit_traits()
-#
-#        self._open_window(wid, info)
-
-
     def _open_individual(self, si):
         si = self._record_factory(si)
-#        if not isinstance(s, (list, tuple)):
-#            s = (s,)
 
-#        for si in s:
         if isinstance(si, str):
             si = self._record_factory(si)
         else:
@@ -317,12 +265,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             return
 
         sid = si.record_id
-#
-#            if sid in self.opened_windows:
-#                c = self.opened_windows[sid].control
-#                if c is not None:
-#                    do_later(c.Raise)
-#            else:
         try:
             si.load_graph()
             si.window_x = self.wx
@@ -346,7 +288,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             d = self.record_klass(_dbrecord=dbrecord)
 
         return d
-
 
     def _open_window(self, wid, ui):
         self.opened_windows[wid] = ui
@@ -388,10 +329,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 # handlers
 #===============================================================================
     def _dclicked_changed(self):
+        self.debug('dclicked changed {}'.format(self.dclicked))
         if self.dclicked:
             self._open_selected()
 
     def _open_button_fired(self):
+        self.debug('open button fired')
         self._open_selected()
 
     def _search_fired(self):
@@ -400,6 +343,21 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _limit_changed(self):
         self.execute_query(load=False)
 
+    @on_trait_change('db.[name,host]')
+    def _dbstring_change(self):
+        if self.db.kind == 'mysql':
+            self.dbstring = 'Database: {} at {}'.format(self.db.name, self.db.host)
+        else:
+            self.dbstring = 'Database: {}'.format(self.db.name)
+
+
+    def _selected_changed(self):
+        if self.selected:
+            sel = self.selected
+            if self.style != 'single':
+                sel = sel[0]
+            self.selected_row = self.records.index(sel)
+            self.update = True
 #===============================================================================
 # factories
 #===============================================================================
@@ -413,18 +371,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _record_factory(self, di):
+        di.on_trait_change(self._record_closed, 'closed_event')
         return di
-#        d = self.record_klass(_dbrecord=di,
-#                                 selector=self,
-#                                 **kw)
-
-#        d = self.record_view_klass(labnumber=str(di.labnumber.labnumber))
-#        if load:
-#            d.load()
-#
-# #        d.on_trait_change(self._changed, 'changed')
-#        d.on_trait_change(self._record_closed, 'close_event')
-#        return d
 #===============================================================================
 # views
 #===============================================================================

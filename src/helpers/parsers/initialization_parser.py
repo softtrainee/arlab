@@ -62,15 +62,14 @@ class InitializationParser(XMLParser):
             sys.exit()
 
     def add_plugin(self, category, name):
-
-        tree = self._tree
-
+        tree = self.get_root()
         cat = tree.find(category)
         cat.append(self.new_element('plugin', name, enabled='false'))
         self.save()
 
     def get_plugins(self, category=None, all=False, element=False):
-        tree = self._tree.find('plugins')
+        tree = self.get_root()
+        tree = tree.find('plugins')
         if category:
             cat = tree.find(category)
             if cat is not None:
@@ -90,7 +89,8 @@ class InitializationParser(XMLParser):
 #        if cat is not None:
 #            return cat.findall('plugin')
     def get_global(self, tag):
-        elem = self._tree.find('globals')
+        root = self.get_root()
+        elem = root.find('globals')
         if elem is not None:
             g = elem.find(tag)
             if g is not None:
@@ -259,12 +259,15 @@ class InitializationParser(XMLParser):
         return man
 
     def get_categories(self):
-        tree = self._tree.find('plugins')
+        root = self.get_root()
+        tree = root.find('plugins')
         s = lambda x: x.tag
         return map(s, set([c for c in tree.iter() if lower(c.get('enabled')) != 'false']))
 
     def _get_element(self, category, name, tag='plugin'):
-        tree = self._tree.find('plugins')
+        root = self.get_root()
+        tree = root.find('plugins')
+
         if category is None:
             iterator = lambda:tree.iter(tag=tag)
 #            return next((p for p in tree.iter(tag=tag) if p.text.strip() == name), None)

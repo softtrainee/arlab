@@ -60,6 +60,9 @@ class XMLParser(object):
             e.text = str(value)
         return e
 
+    def get_root(self):
+        return self._root
+
     def get_tree(self):
         return ElementTree(self._root)
 

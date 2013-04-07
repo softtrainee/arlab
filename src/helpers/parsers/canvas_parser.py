@@ -61,7 +61,7 @@ class CanvasParser(XMLParser):
 
     def _get_elements(self, group, element, name):
         if group is None:
-            group = self._tree
+            group = self.get_root()
         return [v if element else v.text.strip()
                 for v in group.findall(name)]
 

@@ -24,33 +24,48 @@ import struct
 import base64
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class Exporter(Loggable):
+    def export(self, *args, **kw):
+        raise NotImplementedError
 
-class MassSpecExporter(Loggable):
-    def export(self, spec, destination=None):
-        '''
-            spec: ExportSpec 
-            destination: either path or dict. 
-                if path export to xml/csv 
-                if dict, required keys are (username, password, host, name)
-        '''
-        if isinstance(destination, dict):
-            self.export_import(spec, destination)
-        else:
-            self.export_xml(spec, destination)
 
-    def export_import(self, spec, destination):
+class MassSpecExporter(Exporter):
+    def __init__(self, destination, *args, **kw):
         '''
-            import spec into dest 
-            use massspecdatabase_importer for import
+            destination: dict. 
+                dict, required keys are (username, password, host, name)
         '''
+
         importer = MassSpecDatabaseImporter()
         db = importer.db
         for k in ('username', 'password', 'host', 'name'):
             setattr(db, k, destination[k])
 
+        self.importer = importer
         db.connect()
-        # add analysis
-        importer.add_analysis(spec)
+
+    def export(self):
+        self.info('committing current session to database')
+        self.importer.db.commit()
+        self.info('commit successful')
+
+    def add(self, spec):
+        self.importer.add_analysis(spec, commit=False)
+
+class XMLExporter(Exporter):
+    def __init__(self, destination, *args, **kw):
+        super(XMLExporter, self).__init__(*args, **kw)
+        from src.helpers.parsers.xml_parser import XMLParser
+        xmlp = XMLParser()
+        self._parser = xmlp
+        self.destination = destination
+
+    def add(self, spec):
+        self._make_xml_analysis(self._parser, spec)
+
+    def export(self):
+        if os.path.isdir(os.path.dirname(self.destination)):
+            self._parser.save(self.destination)
 
     def _make_timeblob(self, t, v):
         blob = ''
@@ -58,12 +73,7 @@ class MassSpecExporter(Loggable):
             blob += struct.pack('>ff', float(vi), float(ti))
         return blob
 
-    def export_xml(self, spec, path):
-        '''
-            
-        '''
-        from src.helpers.parsers.xml_parser import XMLParser
-        xmlp = XMLParser()
+    def _make_xml_analysis(self, xmlp, spec):
         an = xmlp.add('analysis', '', None)
         meta = xmlp.add('metadata', '', an)
         xmlp.add('RID', spec.rid, meta)
@@ -106,14 +116,4 @@ class MassSpecExporter(Loggable):
             xmlp.add('value', ublank.nominal_value, iso)
             xmlp.add('error', ublank.std_dev(), iso)
 
-        if os.path.isdir(os.path.dirname(path)):
-            xmlp.save(path)
-
-
-class Exporter(Loggable):
-    def export(self, kind='MassSpec'):
-        if kind == 'MassSpec':
-            klass = MassSpecExporter
-        exp = klass()
-        exp.export()
 #============= EOF =============================================

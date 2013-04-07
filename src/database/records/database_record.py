@@ -57,7 +57,7 @@ class DatabaseRecord(Saveable):
     group_id = Int
     graph_id = Int
 
-    close_event = Event
+    closed_event = Event
     def to_string(self):
         return str(self.record_id)
 
@@ -71,7 +71,7 @@ class DatabaseRecord(Saveable):
         self.show()
 
     def closed(self, isok):
-        self.close_event = True
+        self.closed_event = True
 #    def load(self):
 #        dbr = self._dbrecord
 #        if dbr is not None:
