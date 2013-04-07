@@ -36,14 +36,17 @@ class SemiautoCalibrator(TrayCalibrator):
     def handle(self, step, x, y, canvas):
         if step == 'Calibrate':
             self._alive = True
-            return 'Locate Center', None, None, None, None
+            return dict(calibration_step='Locate Center')
+#            return 'Locate Center', None, None, None, None
         elif step == 'Locate Center':
-            return 'Locate Right', None, None, None, None
+            return dict(calibration_step='Locate Right')
+#            return 'Locate Right', None, None, None, None
         elif step == 'Cancel':
             self._alive = False
-            return 'Calibrate', None, None, None, None
+            return dict(calibration_step='Calibrate')
+#            return 'Calibrate', None, None, None, None
 
-    def _tranverse(self, holes):
+    def _traverse(self, holes):
         '''
             visit each hole in holes 
             record autocenter position

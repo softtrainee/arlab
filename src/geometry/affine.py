@@ -120,6 +120,7 @@ def calculate_rigid_transform(refpoints, points):
             theta: angle of rotation in degrees
             
             T: translation vector (tx,ty).  float tuple
+            err: root mean square error 
              
     '''
 
@@ -138,13 +139,48 @@ def calculate_rigid_transform(refpoints, points):
     y = array(ys)
 #    print A
 #    print y
-    a, b, tx, ty = linalg.lstsq(A, y)[0]
+    soln = linalg.lstsq(A, y)
+#    print soln
+    a, b, tx, ty = soln[0]
+    tx = tx[0]
+    ty = ty[0]
+    sum_residuals = soln[1][0]
+
 #    R = array([[a, -b], [b, a]])
     scale = (a ** 2 + b ** 2) ** 0.5
     theta = math.degrees(math.acos(a / scale))
+    err = (sum_residuals / len(points)) ** 0.5 / float(scale)
+#    print err
 #    print scale, float(scale)
-    return float(scale), theta, map(float, (tx, ty))
+    return float(scale), theta, map(float, (tx, ty)), err
 
+
+import unittest
+class RigidTransformTest(unittest.TestCase):
+    def testtransfrom(self):
+        dpt1, spt1 = (-5.933, -6.22), (-19686, 21622)
+        dpt2, spt2 = (-4.604, -5.393), (-18026, 21886)
+        dpt3, spt3 = (-4.604, -5.393), (-18026, 21885)
+
+        dpt1, spt1 = (-1, 1), (-100, 100)
+        dpt2, spt2 = (0, 1), (0, 100)
+        dpt3, spt3 = (1, 1), (100, 100)
+
+        dpt4, spt4 = (1, 0), (100, 0)
+        dpt5, spt5 = (0, 0), (0, 0)
+        dpt6, spt6 = (-1, 0), (-100, 0)
+
+        dpt7, spt7 = (-1, -1), (-100, -100)
+        dpt8, spt8 = (0, -1), (0, -100)
+        dpt9, spt9 = (1, -1), (100, -101)
+
+
+        refpoints = [spt1, spt2, spt3, spt4, spt5, spt6, spt7, spt8, spt9]
+        points = [dpt1, dpt2, dpt3, dpt4, dpt5, dpt6, dpt7, dpt8, dpt9]
+#        refpoints = list(map(lambda a: (a[0] / 10., a[1] / 10.), refpoints))
+#        print points
+        f, t, c, e = calculate_rigid_transform(refpoints, points)
+        self.assertLess(e, 1e-10)
 
 
 #============= EOF ====================================

@@ -35,6 +35,8 @@ class FreeCalibrator(TrayCalibrator):
 
     points = List
     append_current_calibration = Bool(False)
+
+
     def get_controls(self):
         cg = HGroup(Item('object.calibrator.accept_point',
                          enabled_when='object.calibrator.calibrating',
@@ -56,18 +58,16 @@ class FreeCalibrator(TrayCalibrator):
             else:
                 canvas.new_calibration_item()
                 self.points = []
-
-            return 'End Calibrate', None, None, None, None
+            return dict(calibration_step='End Calibrate')
+#            return 'End Calibrate', None, None, None, None, None
 
         elif step == 'End Calibrate':
+            self.calibrating = False
+            d = dict(calibration_step='Calibrate')
             if self.points:
-                self.calibrating = False
-
-                print len(self.points)
-                print self.points
                 refpoints, points = zip(*self.points)
 
-                scale, theta, (tx, ty) = calculate_rigid_transform(refpoints,
+                scale, theta, (tx, ty), err = calculate_rigid_transform(refpoints,
                                                                    points)
 
                 # set canvas calibration
@@ -75,9 +75,13 @@ class FreeCalibrator(TrayCalibrator):
                 ca.cx, ca.cy = tx, ty
                 ca.rotation = theta
                 ca.scale = 1 / scale
-                return 'Calibrate', tx, ty, theta, 1 / scale
-            else:
-                return 'Calibrate', None, None, None, None
+                d.update(dict(cx=tx, cy=ty, rotation=theta, scale=1 / scale, error=err
+                            ))
+            return d
+#                return 'Calibrate', tx, ty, theta, 1 / scale, err
+#            else:
+#                return dict(calibration_step='Calibrate')
+#                return 'Calibrate', None, None, None, None, None
 
     def _accept_point(self):
         sp = self.manager.get_current_position()
