@@ -30,8 +30,8 @@ from src.geometry.centroid.calculate_centroid import calculate_centroid
 #    return cv.asMat(src[x:]
 
 def get_size(src):
-    r,c=src.ndarray.shape[:2]
-    return c,r
+    r, c = src.ndarray.shape[:2]
+    return c, r
 
 def resize(src, w, h, dst=None):
     if dst is None:

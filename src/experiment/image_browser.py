@@ -39,7 +39,7 @@ from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 
 PORT = 8083
-#TEST_IMAGE = Image.open(open('/Users/ross/Sandbox/snapshot001.jpg'))
+# TEST_IMAGE = Image.open(open('/Users/ross/Sandbox/snapshot001.jpg'))
 # TEST_IMAGE = ImageData.fromfile('/Users/ross/Sandbox/foo.png')
 class ImageContainer(HasTraits):
     container = Instance(HPlotContainer, ())

@@ -54,7 +54,7 @@ Recursively eliminates points that lie inside two neighbouring points until only
     if not isinstance(points[0], (tuple, np.ndarray)):
         points = [(pi.x, pi.y) for pi in points]
 
-    points=np.asarray(points)
+    points = np.asarray(points)
     points = points.T
     n_pts = points.shape[1]
     assert(n_pts > 1)

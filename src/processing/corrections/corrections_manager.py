@@ -202,7 +202,7 @@ class CorrectionsManager(Saveable):
             prs = self.interpolation_correction.predictors
             for pi in prs:
                 pi.bgcolor = 0x99CCFF
-    
+
             ts = ans + prs
             ts = sorted(ts, key=lambda x: x.timestamp)
             return ts

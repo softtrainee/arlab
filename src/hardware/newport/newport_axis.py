@@ -233,8 +233,8 @@ class NewportAxis(Axis):
 
 
     read_parameters = Button
-    configuring=False
-    
+    configuring = False
+
     def _validate_velocity(self, v):
         return self._validate_float(v)
 

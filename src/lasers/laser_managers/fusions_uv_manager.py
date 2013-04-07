@@ -97,12 +97,12 @@ class FusionsUVManager(FusionsLaserManager):
 
     def is_ready(self):
         controller = self.laser_controller
-        atl=self.atl_controller
-        #is nitrogen purged and flowing
-        lc=controller.is_ready()
-        
-        #is atl on and warmed up
-        ac=atl.is_enabled()
+        atl = self.atl_controller
+        # is nitrogen purged and flowing
+        lc = controller.is_ready()
+
+        # is atl on and warmed up
+        ac = atl.is_enabled()
         return lc and ac
 
     def goto_named_position(self, pos):

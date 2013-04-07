@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Enum, Property, \
-    Str, File, Any, Button, Int, List
+    Str, Any, Button, List
 from traitsui.api import View, Item, InstanceEditor, UItem, ListStrEditor, \
     Group, HGroup
 from pyface.file_dialog import FileDialog
@@ -24,7 +24,6 @@ from pyface.constant import OK
 #============= standard library imports ========================
 import time
 #============= local library imports  ==========================
-# from src.experiment.export.exporter import MassSpecExporter
 from src.experiment.export.export_spec import ExportSpec
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.identifier import convert_special_name
@@ -53,13 +52,15 @@ class XMLDestination(HasTraits):
         dlg = FileDialog(action='save as')
         if dlg.open() == OK:
             self.destination = dlg.path
-#    destination = File('/Users/ross/Sandbox/exporttest2.xml')
+
     def traits_view(self):
         return View(HGroup(UItem('destination', width=0.75),
                            UItem('browse_button', width=0.25)))
     @property
     def url(self):
         return self.destination
+
+
 class ExportManager(IsotopeDatabaseManager):
     selector_manager = Instance(SelectorManager)
     kind = Enum('XML', 'MassSpec')

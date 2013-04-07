@@ -90,7 +90,7 @@ class ExportPDFFigureAction(ProcessingAction):
 # display
 #===============================================================================
 import os
-ICON_PATH=os.path.join(os.path.dirname(__file__),'images')
+ICON_PATH = os.path.join(os.path.dirname(__file__), 'images')
 class NewSeriesAction(ProcessingAction):
     accelerator = 'Ctrl+k'
     def _image_default(self):

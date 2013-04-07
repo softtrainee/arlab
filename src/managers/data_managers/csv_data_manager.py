@@ -23,8 +23,8 @@ from data_manager import DataManager
 import csv
 from numpy import loadtxt
 
-#import time
-#from matplotlib.dates import num2date
+# import time
+# from matplotlib.dates import num2date
 import os
 #============= local library imports  ==========================
 class CSVDataManager(DataManager):
@@ -107,7 +107,7 @@ class CSVDataManager(DataManager):
 #        return self._writer
 
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    d = CSVDataManager()
 #    d.new_frame()
 #    for i in range(3):

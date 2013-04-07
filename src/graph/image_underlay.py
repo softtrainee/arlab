@@ -34,8 +34,8 @@ class ImageUnderlay(AbstractOverlay):
                 self._cached_img = array(im)
             except IOError, e:
                 print e
-                
-            
+
+
         super(ImageUnderlay, self).__init__(component, *args, **kw)
 
     def overlay(self, component, gc, view_bounds, mode):

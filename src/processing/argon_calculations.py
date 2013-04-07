@@ -222,13 +222,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             
             ca37=(T*x*y)/(x+y)
         '''
-        x=arar_constants.fixed_k3739
-        y=1/ca3937
-        
-        ca37=(s39dec_cor*x*y)/(x+y)
-        ca39=ca3937*ca37
-        k39=s39dec_cor-ca39
-            
+        x = arar_constants.fixed_k3739
+        y = 1 / ca3937
+
+        ca37 = (s39dec_cor * x * y) / (x + y)
+        ca39 = ca3937 * ca37
+        k39 = s39dec_cor - ca39
+
     k38 = k3839 * k39
     ca36 = ca3637 * ca37
     ca38 = ca3837 * ca37

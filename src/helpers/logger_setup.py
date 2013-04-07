@@ -130,7 +130,7 @@ def logging_setup(name, **kw):
             root.addHandler(hi)
 
 #        main_logger.setLevel(logging.NOTSET)
-#        add_console(name='main')    
+#        add_console(name='main')
 #        new_logger('main')
 
 

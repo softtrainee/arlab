@@ -45,7 +45,7 @@ class VideoUnderlay(AbstractOverlay):
             if self.video:
                 img = self.video.get_image_data()
             else:
-                img=self._cached_image
+                img = self._cached_image
 #            if not self.pause:
 #            else:
 #                img = self._cached_image
