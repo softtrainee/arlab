@@ -31,8 +31,14 @@ from src.hardware.core.core_device import CoreDevice
 #============= local library imports  ==========================
 
 class NCDDevice(CoreDevice):
+    def initialize(self, *args, **kw):
+        super(NCDDevice, self).initialize(*args, **kw)
+        self._communicator.write_terminator = None
+
+
     def _make_cmdstr(self, *args):
-        formatter = lambda x:'{:02X}'.format
+#        formatter = lambda x:'{:02X}'.format
+        formatter = lambda x:chr(x)
         return ''.join(map(formatter, args))
 
 #============= EOF =============================================
