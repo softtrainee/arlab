@@ -97,29 +97,32 @@ class ArArAge(HasTraits):
     arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
-        bind_preference(self, 'age_units', 'pychron.experiment.general_age.age_units')
-        bind_preference(self.arar_constants, 'lambda_b_v', 'pychron.experiment.constants.lambda_b')
-        bind_preference(self.arar_constants, 'lambda_b_e', 'pychron.experiment.constants.lambda_b_error')
-        bind_preference(self.arar_constants, 'lambda_e_v', 'pychron.experiment.constants.lambda_e')
-        bind_preference(self.arar_constants, 'lambda_e_e', 'pychron.experiment.constants.lambda_e_error')
-        bind_preference(self.arar_constants, 'lambda_Cl36_v', 'pychron.experiment.constants.lambda_Cl36')
-        bind_preference(self.arar_constants, 'lambda_Cl36_e', 'pychron.experiment.constants.lambda_Cl36_error')
-        bind_preference(self.arar_constants, 'lambda_Ar37_v', 'pychron.experiment.constants.lambda_Ar37')
-        bind_preference(self.arar_constants, 'lambda_Ar37_e', 'pychron.experiment.constants.lambda_Ar37_error')
-        bind_preference(self.arar_constants, 'lambda_Ar39_v', 'pychron.experiment.constants.lambda_Ar39')
-        bind_preference(self.arar_constants, 'lambda_Ar39_e', 'pychron.experiment.constants.lambda_Ar39_error')
+        try:
+            bind_preference(self, 'age_units', 'pychron.experiment.general_age.age_units')
+            bind_preference(self.arar_constants, 'lambda_b_v', 'pychron.experiment.constants.lambda_b')
+            bind_preference(self.arar_constants, 'lambda_b_e', 'pychron.experiment.constants.lambda_b_error')
+            bind_preference(self.arar_constants, 'lambda_e_v', 'pychron.experiment.constants.lambda_e')
+            bind_preference(self.arar_constants, 'lambda_e_e', 'pychron.experiment.constants.lambda_e_error')
+            bind_preference(self.arar_constants, 'lambda_Cl36_v', 'pychron.experiment.constants.lambda_Cl36')
+            bind_preference(self.arar_constants, 'lambda_Cl36_e', 'pychron.experiment.constants.lambda_Cl36_error')
+            bind_preference(self.arar_constants, 'lambda_Ar37_v', 'pychron.experiment.constants.lambda_Ar37')
+            bind_preference(self.arar_constants, 'lambda_Ar37_e', 'pychron.experiment.constants.lambda_Ar37_error')
+            bind_preference(self.arar_constants, 'lambda_Ar39_v', 'pychron.experiment.constants.lambda_Ar39')
+            bind_preference(self.arar_constants, 'lambda_Ar39_e', 'pychron.experiment.constants.lambda_Ar39_error')
 
-        bind_preference(self.arar_constants, 'atm4036_v', 'pychron.experiment.constants.Ar40_Ar36_atm')
-        bind_preference(self.arar_constants, 'atm_4036_e', 'pychron.experiment.constants.Ar40_Ar36_atm_error')
-        bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
-        bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
+            bind_preference(self.arar_constants, 'atm4036_v', 'pychron.experiment.constants.Ar40_Ar36_atm')
+            bind_preference(self.arar_constants, 'atm_4036_e', 'pychron.experiment.constants.Ar40_Ar36_atm_error')
+            bind_preference(self.arar_constants, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
+            bind_preference(self.arar_constants, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
 
-        bind_preference(self.arar_constants, 'k3739_mode', 'pychron.experiment.constants.Ar37_Ar39_mode')
-        bind_preference(self.arar_constants, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
-        bind_preference(self.arar_constants, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
+            bind_preference(self.arar_constants, 'k3739_mode', 'pychron.experiment.constants.Ar37_Ar39_mode')
+            bind_preference(self.arar_constants, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
+            bind_preference(self.arar_constants, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
 
-#        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
-        bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+    #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
+            bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+        except AttributeError, e:
+            self.debug(e)
 
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):

@@ -27,6 +27,7 @@ from src.pyscripts.pyscript_editor import PyScriptManager
 from src.experiment.signal_calculator import SignalCalculator
 from src.experiment.import_manager import ImportManager
 from src.experiment.image_browser import ImageBrowser
+from src.experiment.export_manager import ExportManager
 
 
 class ExperimentPlugin(CorePlugin):
@@ -68,6 +69,10 @@ class ExperimentPlugin(CorePlugin):
                           protocol=ImageBrowser,
                           factory=self._image_browser_factory
                           )
+        so7 = self.service_offer_factory(
+                          protocol=ExportManager,
+                          factory=self._import_manager_factory
+                          )
 
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
 #                           factory='src.experiments.process_view.ProcessView'
@@ -76,7 +81,7 @@ class ExperimentPlugin(CorePlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so2]
-        return [so, so1, so2, so3, so4, so5, so6]
+        return [so, so1, so2, so3, so4, so5, so6, so7]
 
 
 
@@ -113,6 +118,9 @@ class ExperimentPlugin(CorePlugin):
 
     def _import_manager_factory(self):
         return ImportManager(application=self.application)
+
+    def _export_manager_factory(self):
+        return ExportManager(application=self.application)
 
     def _image_browser_factory(self, *args, **kw):
         return ImageBrowser(application=self.application)

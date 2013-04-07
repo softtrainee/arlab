@@ -54,17 +54,25 @@ def convert_special_name(name, output='shortname'):
     '''
         input name output shortname
         
-        name='Background', return 4
+        name='Background'
+        returns:
+            
+            if output=='shortname'
+                return 'bg'
+            else
+                return 4 #identifier
     '''
-    name = name.lower()
-    name = name.replace(' ', '_')
+    if isinstance(name, str):
+        name = name.lower()
+        name = name.replace(' ', '_')
 
-    if name in SPECIAL_MAPPING:
-        sn = SPECIAL_MAPPING[name]
-        if output == 'labnumber':
-            sn = convert_identifier(sn)
-        return sn
-
+        if name in SPECIAL_MAPPING:
+            sn = SPECIAL_MAPPING[name]
+            if output == 'labnumber':
+                sn = convert_identifier(sn)
+            return sn
+    else:
+        return name
 
 def convert_labnumber(ln):
     '''

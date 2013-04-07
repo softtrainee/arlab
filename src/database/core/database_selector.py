@@ -484,7 +484,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                           qgrp,
                           button_grp,
                     ),
-                 title=' ',
                  resizable=True,
                  handler=SelectorHandler
                  )

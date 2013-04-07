@@ -37,6 +37,7 @@ class InstanceUItem(UItem):
     """Convenience class for including an Instance in a View"""
     style = Str('custom')
     editor = Instance(InstanceEditor, ())
+    label = ''
 
 
 class SelectorManager(SearchManager):

@@ -50,6 +50,9 @@ class MassSpecDatabaseImporter(Loggable):
     data_reduction_session_id = None
     login_session_id = None
 
+    def connect(self):
+        return self.db.connect()
+
     def _test_fired(self):
         import numpy as np
         self.db.connect()
@@ -218,29 +221,35 @@ class MassSpecDatabaseImporter(Loggable):
         self.data_reduction_session_id = None
         self.login_session_id = None
 
-    def add_analysis(self, rid, aliquot, step, irradpos,
-                     baselines, signals, blanks, keys,
-#                     regression_results,
-                     intercepts,
-                     fits,
-                     spectrometer,
-                     heating_device_name,
-                     tray,
-                     position,
-                     power_requested,
-                     power_achieved,
-                     duration,
-                     duration_at_request,
-                     first_stage_delay,
-                     second_stage_delay,
-                     runscript_name,
-                     runscript_text,
-                     comment
-                     ):
-        self.create_import_session(spectrometer, tray)
+#    def add_analysis(self, rid, aliquot, step, irradpos,
+#                     baselines, signals, blanks, keys,
+# #                     regression_results,
+#                     intercepts,
+#                     fits,
+#                     spectrometer,
+#                     heating_device_name,
+#                     tray,
+#                     position,
+#                     power_requested,
+#                     power_achieved,
+#                     duration,
+#                     duration_at_request,
+#                     first_stage_delay,
+#                     second_stage_delay,
+#                     runscript_name,
+#                     runscript_text,
+#                     comment
+#                     ):
+    def add_analysis(self, spec):
 
         db = self.db
 
+        spectrometer = spec.spectrometer
+        tray = spec.tray
+        self.create_import_session(spectrometer, tray)
+
+        irradpos = spec.irradpos
+        rid = spec.rid
         trid = rid.lower()
         if trid.startswith('b'):
             runtype = 'Blank'
@@ -274,42 +283,55 @@ class MassSpecDatabaseImporter(Loggable):
                 sample_id = db_irradpos.SampleID
 
         # add runscript
-        rs = db.add_runscript(runscript_name, runscript_text)
+        rs = db.add_runscript(spec.runscript_name, spec.runscript_text)
         db.flush()
-
-        analysis = db.add_analysis(rid, aliquot, step,
+#        print irradpos, runtype
+        analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
                                    'H1',
                                    RedundantSampleID=sample_id,
-                                   HeatingItemName=heating_device_name,
-                                   PwrAchieved_Max=power_achieved,
+                                   HeatingItemName=spec.extract_device,
+                                   PwrAchieved_Max=spec.power_achieved,
                                    PwrAchievedSD=0,
-                                   FinalSetPwr=power_requested,
-                                   TotDurHeating=duration,
-                                   TotDurHeatingAtReqPwr=duration_at_request,
-                                   FirstStageDly=first_stage_delay,
-                                   SecondStageDly=second_stage_delay,
+                                   FinalSetPwr=spec.power_requested,
+                                   TotDurHeating=spec.duration,
+                                   TotDurHeatingAtReqPwr=spec.duration_at_request,
+                                   FirstStageDly=spec.first_stage_delay,
+                                   SecondStageDly=spec.second_stage_delay,
                                    )
         analysis.SampleLoadingID = self.sample_loading_id
         analysis.LoginSessionID = self.login_session_id
         analysis.RunScriptID = rs.RunScriptID
 
-        db.add_analysis_positions(analysis, position)
+        db.add_analysis_positions(analysis, spec.position)
 
         db.flush()
         #=======================================================================
         # add changeable items
         #=======================================================================
         item = db.add_changeable_items(analysis, self.data_reduction_session_id)
-        item.comment = comment
+        item.comment = spec.comment
         db.flush()
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-        signal_dict, baseline_dict = intercepts
-        signal_fits, baseline_fits = fits
-        for ((det, isok), si, bi, ublank) in zip(keys, signals, baselines, blanks):
+#        signal_dict, baseline_dict = spec.intercepts
+#        signal_fits, baseline_fits = spec.signal_fits, spec.baseline_fits
+
+#        for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in zip(spec.detectors,
+#                                                 spec.signals,
+#                                                 spec.baselines,
+#                                                 spec.blanks,
+#                                                 spec.signal_intercepts,
+#                                                 spec.baseline_intercepts,
+#                                                 spec.signal_fits,
+#                                                 spec.baseline_fits
+#                                                 ):
+
+
+        for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
+
 
             #===================================================================
             # isotopes
@@ -324,11 +346,14 @@ class MassSpecDatabaseImporter(Loggable):
             ncnts = len(tb)
             db_baseline = db.add_baseline(blob, label, ncnts, db_iso)
 
-            baseline = baseline_dict[isok]
+#            baseline = baseline_dict[isok]
 
             sem = baseline.std_dev() / (ncnts) ** 0.5
             infoblob = self._make_infoblob(baseline.nominal_value, sem)
-            db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id, baseline_fits[isok], infoblob)
+            db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
+                                                            bfit,
+#                                                            baseline_fits[isok],
+                                                            infoblob)
 
             # baseline and baseline changeable items need matching BslnID
             db.flush()
@@ -353,21 +378,21 @@ class MassSpecDatabaseImporter(Loggable):
             blob2 = [struct.pack('>f', float(v)) for v in vb]
             db.add_peaktimeblob(blob1, blob2, db_iso)
 
-            intercept = signal_dict[isok]
-            fit = signal_fits[isok]
+#            intercept = signal_dict[isok]
+#            fit = signal_fits[isok]
             # in mass spec the intercept is alreay baseline corrected
             # mass spec also doesnt propograte baseline errors
 
             if runtype == 'Blank':
-                ublank = intercept - baseline
+                ublank = signal - baseline
 
             db.add_isotope_result(db_iso, self.data_reduction_session_id,
 #                                      ufloat((i, ierr)),
-                                  intercept,
+                                  signal,
                                   baseline,
 #                                      ufloat((baseline, baseline_err)),
                                   ublank,
-                                  fit
+                                  sfit
                                   )
 
 

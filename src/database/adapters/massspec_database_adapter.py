@@ -96,8 +96,17 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_login_session(self, value):
         return self._retrieve_item(LoginSessionTable, value, key='LoginSessionID')
 
-    def get_analysis(self, value):
-        return self._retrieve_item(AnalysesTable, value, key='RID')
+    def get_analysis(self, value, aliquot=None, step=None):
+        key = 'RID'
+        if aliquot:
+            value = ('{}-{}'.format(value, aliquot), aliquot)
+            key = ('RID', 'Aliquot')
+            if step:
+                value = value + (step,)
+                key = key + ('Increment',)
+
+        return self._retrieve_item(AnalysesTable, value,
+                                   key=key)
 
     def get_irradiation_position(self, value):
         return self._retrieve_item(IrradiationPositionTable, value, key='IrradPosition')
@@ -192,44 +201,47 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         '''
         '''
 
-        rid = '{}-{}{}'.format(rid, aliquot,step)
-        analysis = self.get_analysis(rid)
-        if analysis is None:
+#        if analysis is None:
 #            rid, aliquot = rid.split('-')
 #            r = int(args[0])
 #            d = int(args[1]) if len(args) == 2 else None
-            rd = self.get_detector(refdetlabel)
-            refid,label=0,''
-            if rd:
-                refid=rd.DetectorID
-                label=rd.Label
-                
-            # query the IrradiationPositionTable
-            irradpos = self.get_irradiation_position(irradpos)
-            params = dict(RID=rid,
-                         Aliquot=aliquot,
-                         RunDateTime=func.current_timestamp(),
-                         LoginSessionID=1,
-                         SpecRunType=runtype,
-                         Increment=step,
-                         RefDetID=refid,
-                         ReferenceDetectorLabel=label
-                         )
+        rd = self.get_detector(refdetlabel)
+        refid, label = 0, ''
+        if rd:
+            refid = rd.DetectorID
+            label = rd.Label
 
-            # IrradPosition cannot be null
-            if irradpos is not None:
-                ip = irradpos.IrradPosition
-                sa = irradpos.SampleID
-            else:
-                ip = -2
-                sa = 0
+        # query the IrradiationPositionTable
+        irradpos = self.get_irradiation_position(irradpos)
+        params = dict(RID='{}-{}'.format(rid, aliquot),
+                     Aliquot=aliquot,
+                     RunDateTime=func.current_timestamp(),
+                     LoginSessionID=1,
+                     SpecRunType=runtype,
+                     Increment=step,
+                     RefDetID=refid,
+                     ReferenceDetectorLabel=label
+                     )
 
-            params['RedundantSampleID'] = sa
-            params['IrradPosition'] = ip
-            params.update(kw)
+        # IrradPosition cannot be null
+        if irradpos is not None:
+            ip = irradpos.IrradPosition
+            sa = irradpos.SampleID
+        else:
+            ip = -2
+            sa = 0
+
+        params['RedundantSampleID'] = sa
+        params['IrradPosition'] = ip
+        params.update(kw)
+
+        analysis = self.get_analysis(rid, aliquot, step)
+        if analysis is None:
             analysis = AnalysesTable(**params)
-
             self._add_item(analysis)
+        else:
+            for k, v in params.iteritems():
+                setattr(analysis, k, v)
 
         return analysis
 

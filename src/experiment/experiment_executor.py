@@ -245,14 +245,14 @@ class ExperimentExecutor(ExperimentManager):
 
         if exp.extract_device != NULL_STR:
             extract_device = exp.extract_device.replace(' ', '_').lower()
-            man=self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
+            man = self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
             if not man:
                 if not globalv.experiment_debug:
                     nonfound.append(extract_device)
-            elif man.mode=='client':
+            elif man.mode == 'client':
                 if not man.test_connection():
                     nonfound.append(extract_device)
-                    
+
 
         if self.spectrometer_manager is None:
             if not globalv.experiment_debug:
@@ -265,7 +265,7 @@ class ExperimentExecutor(ExperimentManager):
         self.stats.start_timer()
         self.stats.nruns_finished = 0
 
-        if not self.massspec_importer.db.connect():
+        if not self.massspec_importer.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
                 self._alive = False
                 return
