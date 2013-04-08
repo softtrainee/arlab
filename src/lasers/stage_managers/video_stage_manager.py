@@ -311,6 +311,7 @@ class VideoStageManager(StageManager):
                 was_visible = True
 
         gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+        c.layout_needed = True
         gc.render_component(c)
         gc.save(path)
 

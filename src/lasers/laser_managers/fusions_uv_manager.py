@@ -104,20 +104,24 @@ class FusionsUVManager(FusionsLaserManager):
         # is atl on and warmed up
         ac = atl.is_enabled()
         return lc and ac
-
-    def goto_named_position(self, pos):
-        sm = self.stage_manager
-        smap = sm._stage_map
-        pos = pos.lower()
-        if pos.startswith('p'):
-            pt = smap.get_point(pos)
-            sm.set_z(pt['z'])
-            sm.linear_move(pt['xy'][0], pt['xy'][1], block=False)
-        elif pos.startswith('l'):
-            lines = smap.get_line(pos)
-            sm.move_polyline(lines)
-
-        return 'OK'
+#
+#    def goto_named_position(self, pos):
+#        sm = self.stage_manager
+# #        smap = sm._stage_map
+#        pos = pos.lower()
+# #        if pos.startswith('p'):
+# #            pt = smap.get_point(pos)
+# #            sm.set_z(pt['z'])
+# #            sm.linear_move(pt['xy'][0], pt['xy'][1], block=False)
+# #        elif pos.startswith('l'):
+# #            lines = smap.get_line(pos)
+# #            sm.move_polyline(lines)
+# #        elif pos.startswith('d'):
+# #            pt = smap.get_point(pos)
+#
+#        if pos.startswith('d'):
+#            sm.canvas.get_
+#        return 'OK'
 
     def set_motors_for_point(self, pt):
         for motor in ('mask', 'attenuator'):
@@ -142,7 +146,7 @@ class FusionsUVManager(FusionsLaserManager):
         return result
 
     def drill_point(self, value, name):
-        pass
+        self.stage_manager.drill_point()
 
     def isTracing(self):
         return self._is_tracing

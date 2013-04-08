@@ -323,6 +323,17 @@ class StageManager(Manager):
                                       target=self._move_polygon, args=(poly,))
         self.move_thread.start()
 
+    def drill_point(self, pt):
+        if pt is None:
+            return
+
+        if self.move_thread is not None:
+            self.stage_controller.stop()
+
+        self.move_thread = Thread(name='stage.drill_point',
+                                      target=self._drill_point, args=(pt,))
+        self.move_thread.start()
+
     def set_x(self, value, **kw):
         return self.stage_controller.single_axis_move('x', value, **kw)
 
@@ -533,6 +544,21 @@ class StageManager(Manager):
         sm = self._stage_map
         return sm.get_hole(key)
 
+#===============================================================================
+# special move
+#===============================================================================
+    def _drill_point(self, pt):
+        zend = pt.zend
+        vel = pt.velocity
+
+        # assume already at zstart
+        st = time.time()
+        self.info('start drilling. move to {}. velocity={}'.format(zend, vel))
+        self.set_z(zend, velocity=vel, block=True)
+        et = time.time() - st
+
+        self.info('drilling complete. drilled for {}s'.format(et))
+
     def _move_polygon(self, pts, velocity=5,
                       offset=50,
                       use_outline=True,
@@ -558,7 +584,6 @@ class StageManager(Manager):
             offset = pts.offset
             find_min = pts.find_min
             pts = [dict(xy=(pi.x, pi.y), z=pi.z,) for pi in pts.points]
-
 
         # set motors
         if motors is not None:

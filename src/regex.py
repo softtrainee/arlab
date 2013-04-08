@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import re
 #============= local library imports  ==========================
@@ -48,7 +46,18 @@ TRANSECT_REGEX = re.compile('[tT]+[\d\W]+-+[\d\W]+$')
 '''
 POSITION_REGEX = re.compile('[pPlLrRdD\d]+[\d\W]$|[\d\W]$')
 
+'''
+    e.g. 1.00,3.01
+'''
 XY_REGEX = re.compile('[-,\d+].*\d*,[-,\d+].*\d*')
+
+
+'''
+    e.g d1
+        d2    
+        D34
+'''
+DRILL_REGEX = re.compile('[dD]\d+$')
 
 def make_image_regex(ext):
     if ext is None:

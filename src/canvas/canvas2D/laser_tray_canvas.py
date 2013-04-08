@@ -27,8 +27,8 @@ from kiva import constants
 from src.canvas.canvas2D.map_canvas import MapCanvas
 
 from src.canvas.canvas2D.scene.primitives.laser_primitives import Transect, \
-    VelocityPolyLine, RasterPolygon, LaserPoint
-from src.regex import TRANSECT_REGEX
+    VelocityPolyLine, RasterPolygon, LaserPoint, DrillPoint
+from src.regex import TRANSECT_REGEX, DRILL_REGEX
 from src.canvas.canvas2D.crosshairs_overlay import CrosshairsOverlay
 
 # class Point(HasTraits):
@@ -338,9 +338,14 @@ class LaserTrayCanvas(MapCanvas):
     def get_polygon(self, v):
         return self.scene.get_item(v, klass=RasterPolygon)
 
+    def get_drill(self, v):
+        return self.scene.get_item(v, klass=DrillPoint)
+
     def get_point(self, v):
         if TRANSECT_REGEX.match(v):
             return self.get_transect_point(v)
+        elif DRILL_REGEX.match(v):
+            return self.get_drill_point(v)
         else:
             return self.scene.get_item(v, klass=LaserPoint)
 
@@ -349,6 +354,10 @@ class LaserTrayCanvas(MapCanvas):
         tran = self.get_transect(t)
         if tran:
             return tran.get_point(int(p))
+
+    def get_drill_point(self, v):
+        drill = self.get_drill(v)
+        return drill
 
     def config_view(self):
         v = View(

@@ -409,7 +409,7 @@ class PychronUVLaserManager(PychronLaserManager):
         return self._block(cmd='IsTracing')
 
     def drill_point(self, value, name):
-        pass
+        cmd = 'DrillPoint'
 
 #===============================================================================
 #
@@ -465,12 +465,12 @@ class PychronUVLaserManager(PychronLaserManager):
             if not TRANSECT_REGEX.match(pos):
                 cmd = None
 
-#        if isinstance(pos, (str, unicode)):
-#            if not pos:
-#                return
-#
-#            if pos[0].lower() in ['p', 'l', 'd']:
-#                cmd = 'GoToNamedPosition'
+        if isinstance(pos, (str, unicode)):
+            if not pos:
+                return
+
+            if pos[0].lower() in ['t', 'l', 'd']:
+                cmd = 'GoToNamedPosition'
 
         if cmd:
             cmd = '{} {}'.format(cmd, pos)
