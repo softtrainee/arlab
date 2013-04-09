@@ -1507,35 +1507,36 @@ anaylsis_type={}
                 blanks.append(ufloat((0, 0)))
 
 #        signals=self._processed_signals_dict
-        sig_ints = dict()
-        base_ints = dict()
+#        sig_ints = dict()
+#        base_ints = dict()
+        sig_ints=[]
+        base_ints=[]
 #        for k,v in self._processed_signals_dict:
         psignals = self._processed_signals_dict
         for iso, _, kind in self._save_isotopes:
             if kind == 'signal':
                 si = psignals['{}signal'.format(iso)]
                 bi = psignals['{}baseline'.format(iso)]
+                sig_ints.append(si.uvalue)
+                base_ints.append(bi.uvalue)
+#                sig_ints[iso] = si.uvalue
+#                base_ints[iso] = bi.uvalue
 
-                sig_ints[iso] = si.uvalue
-                base_ints[iso] = bi.uvalue
-
+        baseline_fits=['Average Y',]*len(self._active_detectors)
+            
 #        intercepts = [sig_ints, base_ints]
-        signal_fits = dict(zip([ni.isotope for ni in self._active_detectors], self.fits))
-        baseline_fits = dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])
+#        signal_fits = dict(zip([ni.isotope for ni in self._active_detectors], self.fits))
+#        baseline_fits = dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])
 
 #        intercepts = [sig_ints, base_ints]
 #        fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
 #                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
-        rs_name, rs_text = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
-                                                 (self.measurement_script.name, self.measurement_script.toblob()),
-                                                 (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
-                                                 (self.post_measurement_script.name, self.post_measurement_script.toblob())]
-                                                )
-
+        rs_name, rs_text=self._assemble_script_blob()
+        
         exp = ExportSpec(rid=self.labnumber,
                          runscript_name=rs_name,
                          runscript_text=rs_text,
-                         signal_fits=signal_fits,
+                         signal_fits=self.fits,
                          baseline_fits=baseline_fits,
                          signal_intercepts=sig_ints,
                          baseline_intercepts=base_ints,
@@ -1598,12 +1599,36 @@ anaylsis_type={}
         self.info('analysis added to mass spec database')
 
     def _assemble_extraction_blob(self):
-        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
-                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
-                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
-                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
+        _names,txt=self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
+#        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
+#                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
+#                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
+#                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
         return txt
-
+    
+    def _assemble_script_blob(self, kinds=None):
+        if kinds is None:
+            kinds='extraction', 'measurement', 'post_equilibration', 'post_measurement'
+        okinds=[]
+        bs=[]
+        for s in kinds:#('extraction', 'post_equilibration', 'post_measurement'):
+            sc=getattr(self, '{}_script'.format(s))
+            if sc is not None:
+                bs.append((sc.name, sc.toblob()))
+                okinds.append(s)
+        
+        return assemble_script_blob(bs, kinds=okinds)
+#        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
+#                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
+#                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
+#                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
+#        return txt
+#        rs_name, rs_text = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
+#                                                 (self.measurement_script.name, self.measurement_script.toblob()),
+#                                                 (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
+#                                                 (self.post_measurement_script.name, self.post_measurement_script.toblob())]
+#                                                )
+        
 #    def _assemble_script_blob(self, kinds=None):
 #        '''
 #            make one blob of all the script text
