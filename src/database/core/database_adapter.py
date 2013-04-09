@@ -105,7 +105,6 @@ class DatabaseAdapter(Loggable):
                     self.info('connecting to database {}'.format(url))
                     engine = create_engine(url)
                     self.session_factory = sessionmaker(bind=engine,
-                                                        twophase=True,
                                                         autoflush=False)
                     if test:
                         self.connected = self._test_db_connection()
