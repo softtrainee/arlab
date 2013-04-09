@@ -97,7 +97,7 @@ class InitializationParser(XMLParser):
                 return g.text.strip()
 
     def get_plugin_groups(self, elem=False):
-        plugin = self._tree.find('plugins')
+        plugin = self.get_root().find('plugins')
         return [t if elem else t.tag for t in list(plugin)]
 
     def get_plugin_group(self, name):
@@ -107,9 +107,9 @@ class InitializationParser(XMLParser):
 
 
     def get_groups(self):
-        tree = self._tree
-        root = tree.getroot()
-        return [t.tag for t in list(root)]
+        tree = self.get_root()
+#        root = tree.getroot()
+        return [t.tag for t in list(tree)]
 
     def get_parameter(self, subtree, name, all=True, **kw):
         pa = self._get_paramaters(subtree, name, all=all, **kw)
