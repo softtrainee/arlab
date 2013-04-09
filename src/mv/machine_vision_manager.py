@@ -31,7 +31,7 @@ import time
 class MachineVisionManager(Manager):
     video = Instance(Video)
     target_image = Instance(StandAloneImage)
-    pxpermm = Float(18)
+    pxpermm = Float(23)
 
     def new_co2_locator(self):
         from src.mv.co2_locator import CO2Locator

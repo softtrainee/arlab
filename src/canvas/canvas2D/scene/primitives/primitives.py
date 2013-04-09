@@ -622,7 +622,7 @@ class CalibrationObject(HasTraits):
     ry = Float
 
     rotation = Property(depends_on='rx,ry,_rotation')
-    rotation = Float
+    _rotation = Float
     center = Property(depends_on='cx,cy')
     scale = Float(1)
     def _set_rotation(self, rot):

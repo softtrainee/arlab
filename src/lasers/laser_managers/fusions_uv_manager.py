@@ -427,7 +427,8 @@ class FusionsUVManager(FusionsLaserManager):
         args = dict(name='stage',
                             configuration_dir_name='uv',
                              stage_controller_class='Aerotech',
-                             stage_map_klass=UVStageMap
+                             stage_map_klass=UVStageMap,
+                             use_modified=False
                              )
 
 #        if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:

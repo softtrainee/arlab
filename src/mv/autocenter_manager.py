@@ -40,6 +40,6 @@ class AutoCenterManager(MachineVisionManager):
             self.info('calculated deviation px={:n},{:n}, mm={:0.3f},{:0.3f}'.format(round(dx), round(dy),
                                                                                      mdx, mdy))
 
-            return  cx + mdx, cy + mdy
+            return  cx + mdx, cy -  mdy
 
 #============= EOF =============================================

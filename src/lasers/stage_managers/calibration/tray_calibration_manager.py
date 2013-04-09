@@ -115,11 +115,16 @@ class TrayCalibrationManager(Manager):
 
         calobj = TrayCalibrator.load(stage_map)
         if calobj is not None:
+            try:
+                self.x, self.y = calobj.cx, calobj.cy
+                self.rotation = calobj.rotation
+                self.scale = calobj.scale
+                self.style = calobj.style
+            except AttributeError:
+                self.debug('calibration file is an older incompatible version')
+                return 
+            
             self.canvas.calibration_item = calobj
-            self.x, self.y = calobj.cx, calobj.cy
-            self.rotation = calobj.rotation
-            self.scale = calobj.scale
-            self.style = calobj.style
             # force style change update
             self._style_changed()
 

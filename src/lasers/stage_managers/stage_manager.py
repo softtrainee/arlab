@@ -129,6 +129,7 @@ class StageManager(Manager):
     calibrated_position_entry = Property(String(enter_set=True, auto_set=False))
     _calibrated_position = Str
 
+    use_modified=Bool(True) #set true to use modified affine calculation
     def __init__(self, *args, **kw):
         '''
 
@@ -286,7 +287,12 @@ class StageManager(Manager):
         self.stage_controller.linear_move(*pos, **kw)
 
     def move_to_hole(self, hole, **kw):
-        self._move_to_hole(hole, **kw)
+        if self.move_thread:
+            self.stage_controller.stop()
+            
+        self.move_thread=Thread(name='stage.move_to_hole',
+                                target=self._move_to_hole,args=(hole,), kwargs=kw)
+        self.move_thread.start()
 
     def move_to_point(self, pt):
         if pt is None:
@@ -452,7 +458,8 @@ class StageManager(Manager):
 #             print type(rot), type(cpos), type(scale)
             self.debug('Calibration parameters: rot={:0.3f}, cpos={} scale={:0.3f}'.format(rot, cpos, scale))
             pos = smap.map_to_calibration(pos, cpos, rot,
-                                          scale=scale)
+                                          scale=scale,
+                                          use_modified=self.use_modified)
 
         return pos
 
@@ -1083,7 +1090,7 @@ class StageManager(Manager):
         if XY_REGEX.match(v):
             self._move_to_calibrated_position(v)
         else:
-            self._move_to_hole(v)
+            self.move_to_hole(v)
 
     def _move_to_calibrated_position(self, pos):
         x, y = map(float, pos.split(','))

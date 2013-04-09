@@ -311,7 +311,7 @@ class VideoStageManager(StageManager):
                 was_visible = True
 
         gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
-        c.layout_needed = True
+        c.do_layout()
         gc.render_component(c)
         gc.save(path)
 
@@ -362,7 +362,7 @@ class VideoStageManager(StageManager):
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:
 #            sm = self._stage_map
-            pos, interp = self._autocenter(holenum=holenum, ntries=1)
+            pos, corrected, interp = self._autocenter(holenum=holenum, ntries=1)
             self._update_visualizer(holenum, pos, interp)
 
     def _update_visualizer(self, holenum, pos, interp):
