@@ -149,7 +149,6 @@ class ExtractionLineManager(Manager):
         return True
 
     def opened(self):
-        print 'opened'
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
         p = os.path.join(paths.hidden_dir, 'show_explanantion')
@@ -160,11 +159,9 @@ class ExtractionLineManager(Manager):
                 except pickle.PickleError:
                     pass
 
-        print 'mdds', self.mode
         if self.mode == 'client':
             self.start_status_monitor()
         else:
-            print self.gauge_manager
             if self.gauge_manager:
                 self.info('start gauge scans')
                 self.gauge_manager.start_scans()

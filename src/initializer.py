@@ -128,7 +128,7 @@ class Initializer(Loggable):
             mp = parser.get_manager(name, plugin_name)
 
         if mp is None:
-            mp = parser._tree.find('plugins/{}'.format(name))
+            mp = parser.get_root().find('plugins/{}'.format(name))
 
         ns = 0
         if mp is not None:
@@ -178,7 +178,7 @@ class Initializer(Loggable):
             mp = parser.get_manager(name, plugin_name)
 
         if mp is None:
-            mp = parser._tree.find('plugins/{}'.format(name))
+            mp = parser.get_root().find('plugins/{}'.format(name))
 
         if mp is not None:
             if not globalv.ignore_required:
