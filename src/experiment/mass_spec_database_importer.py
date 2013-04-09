@@ -28,6 +28,7 @@ from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
 from src.experiment.info_blob import encode_infoblob
+import time
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 
@@ -221,36 +222,18 @@ class MassSpecDatabaseImporter(Loggable):
         self.data_reduction_session_id = None
         self.login_session_id = None
 
-#    def add_analysis(self, rid, aliquot, step, irradpos,
-#                     baselines, signals, blanks, keys,
-# #                     regression_results,
-#                     intercepts,
-#                     fits,
-#                     spectrometer,
-#                     heating_device_name,
-#                     tray,
-#                     position,
-#                     power_requested,
-#                     power_achieved,
-#                     duration,
-#                     duration_at_request,
-#                     first_stage_delay,
-#                     second_stage_delay,
-#                     runscript_name,
-#                     runscript_text,
-#                     comment
-#                     ):
     def add_analysis(self, spec, commit=True):
+        gst = time.time()
 
         db = self.db
 
         spectrometer = spec.spectrometer
         tray = spec.tray
-        self.create_import_session(spectrometer, tray)
 
         irradpos = spec.irradpos
         rid = spec.rid
         trid = rid.lower()
+
         if trid.startswith('b'):
             runtype = 'Blank'
             irradpos = -1
@@ -259,12 +242,12 @@ class MassSpecDatabaseImporter(Loggable):
             irradpos = -2
         elif trid.startswith('c'):
             runtype = 'Unknown'
-            if spectrometer.lower() == 'obama':
-                rid = '4318'
-                irradpos = '4318'
+            if spectrometer.lower() in ('obama', 'pychron obama'):
+                rid = '4358'
+                irradpos = '4358'
             else:
-                rid = '4319'
-                irradpos = '4319'
+                rid = '4359'
+                irradpos = '4359'
         else:
             runtype = 'Unknown'
 
@@ -281,11 +264,16 @@ class MassSpecDatabaseImporter(Loggable):
             db_irradpos = db.get_irradiation_position(irradpos)
             if db_irradpos:
                 sample_id = db_irradpos.SampleID
+            else:
+                self.warning('no irradiation position found for {}. not importing analysis {}'.format(irradpos, spec.record_id))
+                return
 
         # add runscript
         rs = db.add_runscript(spec.runscript_name, spec.runscript_text)
-        db.flush()
+#        db.flush()
 #        print irradpos, runtype
+        self.create_import_session(spectrometer, tray)
+
         analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
@@ -316,27 +304,17 @@ class MassSpecDatabaseImporter(Loggable):
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-#        signal_dict, baseline_dict = spec.intercepts
-#        signal_fits, baseline_fits = spec.signal_fits, spec.baseline_fits
-
-#        for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in zip(spec.detectors,
-#                                                 spec.signals,
-#                                                 spec.baselines,
-#                                                 spec.blanks,
-#                                                 spec.signal_intercepts,
-#                                                 spec.baseline_intercepts,
-#                                                 spec.signal_fits,
-#                                                 spec.baseline_fits
-#                                                 ):
-
-
+        from src.simple_timeit import timethis
         for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
-
 
             #===================================================================
             # isotopes
             #===================================================================
+
+#            db_iso = timethis(db.add_isotope, args=(analysis, det, isok),
+#                              msg='add_isotope', log=self.debug, decorate='^')
             db_iso = db.add_isotope(analysis, det, isok)
+
             #===================================================================
             # baselines
             #===================================================================
@@ -358,7 +336,6 @@ class MassSpecDatabaseImporter(Loggable):
             # baseline and baseline changeable items need matching BslnID
             db.flush()
             db_changeable.BslnID = db_baseline.BslnID
-
             #===================================================================
             # peak time
             #===================================================================
@@ -370,7 +347,6 @@ class MassSpecDatabaseImporter(Loggable):
                 blob 2
                 y list
             '''
-
             tb, vb = zip(*si)
             vb = array(vb) - baseline.nominal_value
             blob1 = self._build_timeblob(tb, vb)
@@ -399,7 +375,11 @@ class MassSpecDatabaseImporter(Loggable):
 #        if not DEBUG:
 #            db.commit()
         if commit:
+            self.debug('commit')
             db.commit()
+
+        t = time.time() - gst
+        self.debug('{} added analysis time {}s'.format(spec.record_id, t))
 
     def _build_timeblob(self, t, v):
         '''

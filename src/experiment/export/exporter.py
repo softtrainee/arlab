@@ -27,7 +27,8 @@ import base64
 class Exporter(Loggable):
     def export(self, *args, **kw):
         raise NotImplementedError
-
+    def rollback(self):
+        pass
 
 class MassSpecExporter(Exporter):
     def __init__(self, destination, *args, **kw):
@@ -35,6 +36,7 @@ class MassSpecExporter(Exporter):
             destination: dict. 
                 dict, required keys are (username, password, host, name)
         '''
+        super(MassSpecExporter, self).__init__(*args, **kw)
 
         importer = MassSpecDatabaseImporter()
         db = importer.db
@@ -48,9 +50,34 @@ class MassSpecExporter(Exporter):
         self.info('committing current session to database')
         self.importer.db.commit()
         self.info('commit successful')
+#        self.importer.db.close()
+
+    def rollback(self):
+        '''
+            Mass Spec schema doesn't allow rollback
+        '''
+#        self.info('rollback')
+#        self.importer.db.rollback()
+#        self.importer.db.reset()
 
     def add(self, spec):
-        self.importer.add_analysis(spec, commit=False)
+        db = self.importer.db
+
+        rid = spec.rid
+        # convert rid
+        if rid == 'c':
+            if spec.spectrometer == 'Pychron Jan':
+                rid = '4359'
+            else:
+                rid = '4358'
+
+        if db.get_analysis(rid, spec.aliquot, spec.step):
+            self.debug('analysis {} already exists in database'.format(spec.record_id))
+        else:
+            self.importer.add_analysis(spec)
+            self.importer.db.reset()
+            return True
+
 
 class XMLExporter(Exporter):
     def __init__(self, destination, *args, **kw):
@@ -62,6 +89,7 @@ class XMLExporter(Exporter):
 
     def add(self, spec):
         self._make_xml_analysis(self._parser, spec)
+        return True
 
     def export(self):
         if os.path.isdir(os.path.dirname(self.destination)):

@@ -225,7 +225,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             '''
                 using a IsotopeRecordView is significantly faster than loading a IsotopeRecord directly
             '''
-            self.records.extend([self._record_view_factory(di) for di in records])
+            rs = [self._record_view_factory(di) for di in records]
+            rs = [ri for ri in rs if ri]
+            self.records.extend(rs)
 
 #    def _changed(self, new):
 #        db = self.db
@@ -283,11 +285,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _record_view_factory(self, dbrecord):
         if hasattr(self, 'record_view_klass'):
             d = self.record_view_klass()
-            d.create(dbrecord)
+            if d.create(dbrecord):
+                return d
         else:
-            d = self.record_klass(_dbrecord=dbrecord)
-
-        return d
+            return self.record_klass(_dbrecord=dbrecord)
 
     def _open_window(self, wid, ui):
         self.opened_windows[wid] = ui
