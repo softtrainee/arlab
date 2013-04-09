@@ -21,10 +21,11 @@ from traitsui.api import View, Item, VGroup
 #============= local library imports  ==========================
 
 class DBConnectionSpec(HasTraits):
-    database = Str('massspecdata')
-    username = Str('massspec')
-    password = Password('DBArgon')
-    host = Str('129.138.12.131')
+    database = Str('massspecdata_import')
+    username = Str('root')
+    password = Password('Argon')
+#    host = Str('129.138.12.131')
+    host = Str('localhost')
     def make_url(self):
         return '{}:{}@{}/{}'.format(self.username, self.password, self.host, self.database)
 

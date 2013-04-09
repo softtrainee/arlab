@@ -109,4 +109,8 @@ class ExportSpec(Loggable):
                    self.signal_fits,
                    self.baseline_fits)
 
+    @property
+    def record_id(self):
+        return '{}-{}{}'.format(self.rid, self.aliquot, self.step)
+
 #============= EOF =============================================

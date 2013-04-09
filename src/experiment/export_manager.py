@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Enum, Property, \
-    Str, Any, Button, List
+    Str, Any, Button, List, Bool, Int
 from traitsui.api import View, Item, InstanceEditor, UItem, ListStrEditor, \
     Group, HGroup
 from pyface.file_dialog import FileDialog
@@ -31,6 +31,24 @@ from src.experiment.automated_run import assemble_script_blob
 from src.processing.search.selector_manager import SelectorManager
 from src.database.database_connection_spec import DBConnectionSpec
 from src.progress_dialog import MProgressDialog
+import csv
+from src.database.records.isotope_record import IsotopeRecordView
+from threading import Thread
+from src.traits_editors.tabular_editor import myTabularEditor
+from traitsui.tabular_adapter import TabularAdapter
+
+class ExportedAdapter(TabularAdapter):
+    columns = [('', 'n'), ('RID', 'rid')]
+    def get_bg_color(self, *args, **kw):
+        if self.item.skipped:
+            return 'red'
+        else:
+            return 'lightgray'
+
+class Exported(HasTraits):
+    rid = Str
+    n = Int
+    skipped = Bool(False)
 
 class MassSpecDestination(HasTraits):
     destination = Property
@@ -63,16 +81,23 @@ class XMLDestination(HasTraits):
 
 class ExportManager(IsotopeDatabaseManager):
     selector_manager = Instance(SelectorManager)
-    kind = Enum('XML', 'MassSpec')
+#    kind = Enum('XML', 'MassSpec')
+    kind = Enum('MassSpec', 'XML')
     destination = Any
 
     export_button = Button('Export')
+    select_data = Button('Select Data')
+    data_kind = Enum('CSV', 'Database')
+
+    records = List
+    nexports = Property(Int, depends_on='records')
     exported = List
+    dry_run = Bool(False)
 
 #===============================================================================
 # private
 #===============================================================================
-    def _export(self, records):
+    def _export(self):
         from src.database.records.isotope_record import IsotopeRecord
         src = self.db
 
@@ -87,33 +112,56 @@ class ExportManager(IsotopeDatabaseManager):
             from src.experiment.export.exporter import XMLExporter
             exp = XMLExporter(dest)
 
+        from pyface.timer.do_later import do_later
+        records = self.records
         n = len(records)
         pd = MProgressDialog(max=n + 1, size=(550, 15))
-        pd.open()
-        pd.center()
+        def open_progress():
+            pd.open()
+            pd.center()
+
+        do_later(open_progress)
+        time.sleep(0.25)
 
         # make an IsotopeRecord for convenient attribute retrieval
         record = IsotopeRecord()
         st = time.time()
         for i, rec in enumerate(records):
             self.info('adding {} {} to export queue'.format(rec.record_id, rec.uuid))
-            pd.change_message('Adding {}/{} {}    {}'.format(i + 1, n, rec.record_id, rec.uuid))
+
+#            pd.change_message('Adding {}/{} {}    {}'.format(i + 1, n, rec.record_id, rec.uuid))
+            do_later(pd.change_message, 'Adding {}/{} {}    {}'.format(i + 1, n, rec.record_id, rec.uuid))
 
             # reusing the record object is 45% faster than making a new one each iteration
             # get a dbrecord for this analysis
             record._dbrecord = src.get_analysis_uuid(rec.uuid)
+            e = Exported(rid=rec.record_id, n=i + 1)
+            if record.load_isotopes():
+                spec = self._make_spec(record)
+                if spec:
+                    if not exp.add(spec):
+                        e.skipped = True
+            else:
+                e.skipped = True
+                self.info('skipping {} {}'.format(rec.record_id, rec.uuid))
 
-            record.load_isotopes()
-            spec = self._make_spec(record)
-            exp.add(spec)
-            self.exported.append('{:04n} {}'.format(i + 1, rec.record_id))
-            pd.increment()
+            self.exported.append(e)
+            do_later(pd.increment)
 
-        pd.change_message('Exporting...')
+
+        do_later(pd.change_message, 'Exporting...')
+#        pd.change_message('Exporting...')
         self.info('exporting to {}'.format(self.destination.url))
-        exp.export()
-        pd.increment()
+        if self.dry_run:
+            # database rollback doesnt work. Mass Spec requirements break true transaction paradigm
+            # and numerous flushes are required for each analysis added
+            self.info('dry run... export would happen here')
+            exp.rollback()
+        else:
+            exp.export()
 
+        pd.increment()
+#
         t = time.time() - st
         self.info('export complete. exported {} analyses in {:0.2f}s'.format(n, t))
 
@@ -133,8 +181,15 @@ class ExportManager(IsotopeDatabaseManager):
         scriptname, scripttxt = assemble_script_blob(scripts, kinds)
 
         # make a new ExportSpec
+
+        if rec.mass_spectrometer:
+            spectrometer = 'Pychron {}'.format(rec.mass_spectrometer.capitalize())
+        else:
+            self.info('no mass spectrometer specified. Cannot import {}-{}{}'.format(rec.labnumber, rec.aliquot, rec.step))
+            return
+
         es = ExportSpec(rid=convert_special_name(rec.labnumber),
-                        spectrometer='Pychron {}'.format(rec.mass_spectrometer.capitalize()),
+                        spectrometer=spectrometer,
                         runscript_name=scriptname,
                         runscript_text=scripttxt
                         )
@@ -170,12 +225,34 @@ class ExportManager(IsotopeDatabaseManager):
             klass = XMLDestination
         self.destination = klass()
 
+    def _select_data_fired(self):
+        if self.data_kind == 'Database':
+            d = self.selector_manager
+            if self.db.connect():
+                info = d.edit_traits(kind='livemodal')
+                if info.result:
+                    self.records = d.selected_records
+#                    d.selected_records = []
+        else:
+            p = '/Users/ross/Sandbox/exportruns.csv'
+            with open(p, 'r') as fp:
+                reader = csv.reader(fp, delimiter=',')
+                header = reader.next()
+
+                uuid_idx = header.index('uuid')
+                record_id_idx = header.index('RID')
+#                for row in reader:
+                self.records = [IsotopeRecordView(uuid=row[uuid_idx],
+                                                  record_id=row[record_id_idx],
+                                                  ) for row in reader][:20]
+
+
+
     def _export_button_fired(self):
-        d = self.selector_manager
-        if self.db.connect():
-            info = d.edit_traits(kind='livemodal')
-            if info.result:
-                self._export(d.selected_records)
+        if self.records:
+            t = Thread(target=self._export)
+            t.start()
+#            self._export(self.records)
         else:
             self.warning_dialog('Not connected to a source database')
 
@@ -190,22 +267,37 @@ class ExportManager(IsotopeDatabaseManager):
                  UItem('destination',
                       editor=InstanceEditor(),
                       style='custom',),
+                 HGroup(UItem('select_data'), UItem('data_kind')),
+                 Item('nexports', format_str='%05i', style='readonly', label='Num. Analyses to Export'),
                  Group(
                        UItem('exported',
-                             editor=ListStrEditor(editable=False,
-                                                  drag_move=True,
-                                                  operations=[],
-                                                  horizontal_lines=True),
+                             editor=myTabularEditor(adapter=ExportedAdapter(),
+                                                    editable=False, operations=[])
+#                             editor=ListStrEditor(editable=False,
+#                                                  drag_move=True,
+#                                                  operations=[],
+#                                                  horizontal_lines=True),
                              ),
                        show_border=True,
                        label='Exported'
                        ),
+                 Group(
+                       Item('dry_run'),
+                       show_border=True,
+                       label='Options'),
                  UItem('export_button'),
                  height=500,
                  width=400,
+                 title='Exporter',
                  resizable=True
                  )
         return v
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_nexports(self):
+        return len(self.records)
+
 #===============================================================================
 # defaults
 #===============================================================================
@@ -213,16 +305,24 @@ class ExportManager(IsotopeDatabaseManager):
         db = self.db
         d = SelectorManager(db=db)
         return d
+
     def _destination_default(self):
-        return XMLDestination()
+        if self.kind == 'MassSpec':
+            klass = MassSpecDestination
+        else:
+            klass = XMLDestination
+        return klass()
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('em')
 
     em = ExportManager()
+    em.kind = 'MassSpec'
+#    em.dry_run = True
+
     em.db.kind = 'mysql'
-    em.db.name = 'isotopedb_bt'
+    em.db.name = 'pychrondata'
     em.db.host = 'localhost'
     em.db.username = 'root'
     em.db.password = 'Argon'

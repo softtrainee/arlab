@@ -15,33 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Int, Long, Any
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+import time
 
-class TempAnalysis(HasTraits):
-    uuid = Any
-    group_id = Int
-    graph_id = Int
+def timethis(func, msg=None, log=None, args=None, kwargs=None, decorate='$'):
+    if args is None:
+        args = tuple()
+    if kwargs is None:
+        kwargs = dict()
 
-class PreviousSelection(HasTraits):
-    analysis_ids = List(TempAnalysis)
-    name = Str
-    hash_str = Str
-    def __init__(self, records, **kw):
-        super(PreviousSelection, self).__init__(**kw)
+    st = time.time()
+    r = func(*args, **kwargs)
+    s = '{}s'.format(time.time() - st)
 
-        ps = []
-        for ai in records:
-            ps.append(TempAnalysis(uuid=ai.uuid,
-                                   group_id=ai.group_id,
-                                   graph_id=ai.graph_id
-                                   ))
+    if msg:
+        s = '{} {}'.format(msg, s)
+    if decorate:
+        s = '{} {}'.format(decorate * 20, s)
 
-        self.analysis_ids = ps
+    if log:
+        log(s)
+    else:
+        print s
 
-    def __repr__(self):
-        return self.name
-
-
+    return r
 #============= EOF =============================================

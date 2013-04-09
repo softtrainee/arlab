@@ -70,6 +70,7 @@ class SelectedView(ColumnSorterMixin):
     group_by_labnumber = Button('Group By Labnumber')
     group_by_aliquot = Button('Group By Aliquot')
     clear_group = Button('Clear Grouping')
+    export_csv = Button('Export CSV')
     _grouped_by_labnumber = Bool(False)
     _graphed_by_labnumber = Bool(False)
     group_cnt = 0
@@ -84,6 +85,16 @@ class SelectedView(ColumnSorterMixin):
     previous_selection = Any  # Instance(PreviousSelection)
     previous_selections = List(PreviousSelection)
 
+    def _export_csv(self):
+        import csv
+
+        p = '/Users/ross/Sandbox/exportruns.csv'
+        with open(p, 'w') as fp:
+            writer = csv.writer(fp)
+            header = ['RID', 'uuid', ]
+            writer.writerow(header)
+            for r in self.selected_records:
+                writer.writerow([r.record_id, r.uuid])
 
     def _open_shelve(self):
         p = os.path.join(paths.hidden_dir, 'stored_selections')
@@ -221,10 +232,11 @@ class SelectedView(ColumnSorterMixin):
                               group_id=pi.group_id
                               )
                 dbrecord = db.get_analysis_uuid(pi.uuid)
-                iso.create(dbrecord)
-                return iso
+                if iso.create(dbrecord):
+                    return iso
 
             ps = [func(si) for si in self.previous_selection.analysis_ids]
+            ps = [pi for pi in ps if pi]
 
             self.selected_records = ps
             self._set_grouping('graph_id')
@@ -300,6 +312,9 @@ class SelectedView(ColumnSorterMixin):
     def _clear_group_fired(self):
         self._reset_grouping('group_id')
 
+    def _export_csv_fired(self):
+        self._export_csv()
+
     def traits_view(self):
         grouping_grp = VGroup(
                               Item('clear_group', show_label=False),
@@ -342,6 +357,7 @@ class SelectedView(ColumnSorterMixin):
         v = View(
                  VGroup(
                         selected_grp,
+                        Item('export_csv', show_label=False),
                         grouping_grp
                         ),
                  )

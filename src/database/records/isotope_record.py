@@ -75,28 +75,32 @@ class IsotopeRecordView(HasTraits):
     analysis_type = ''
 
     def create(self, dbrecord):
-        self.labnumber = str(dbrecord.labnumber.labnumber)
-        self.aliquot = dbrecord.aliquot
-        self.step = dbrecord.step
-#        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
-        self.timestamp = dbrecord.analysis_timestamp
+        try:
+            self.labnumber = str(dbrecord.labnumber.labnumber)
+            self.aliquot = dbrecord.aliquot
+            self.step = dbrecord.step
+    #        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
+            self.timestamp = dbrecord.analysis_timestamp
 
-        irp = dbrecord.labnumber.irradiation_position
-        if irp is not None:
-            irl = irp.level
-            ir = irl.irradiation
-            self.irradiation_info = '{}{} {}'.format(ir.name, irl.name, irp.position)
-        else:
-            self.irradiation_info = ''
-#        self.mass_spectrometer = ''
-#        self.analysis_type = ''
-        meas = dbrecord.measurement
-        if meas is not None:
-            self.mass_spectrometer = meas.mass_spectrometer.name.lower()
-            self.analysis_type = meas.analysis_type.name
+            irp = dbrecord.labnumber.irradiation_position
+            if irp is not None:
+                irl = irp.level
+                ir = irl.irradiation
+                self.irradiation_info = '{}{} {}'.format(ir.name, irl.name, irp.position)
+            else:
+                self.irradiation_info = ''
+    #        self.mass_spectrometer = ''
+    #        self.analysis_type = ''
+            meas = dbrecord.measurement
+            if meas is not None:
+                self.mass_spectrometer = meas.mass_spectrometer.name.lower()
+                self.analysis_type = meas.analysis_type.name
 
-        self.uuid = dbrecord.uuid
-        self.record_id = '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+            self.uuid = dbrecord.uuid
+            self.record_id = '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+            return True
+        except Exception, e:
+            print e
 
     def to_string(self):
         return '{} {} {} {}'.format(self.labnumber, self.aliquot, self.timestamp, self.uuid)
@@ -135,35 +139,35 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     selected = Any
     display_item = Instance(HasTraits)
 
-    sample = Property
-    material = Property
-    labnumber = Property
-    project = Property
-    shortname = Property
-    analysis_type = Property
-    aliquot = Property
-    step = Property
-    mass_spectrometer = Property
+    sample = Property(depends_on='_dbrecord')
+    material = Property(depends_on='_dbrecord')
+    labnumber = Property(depends_on='_dbrecord')
+    project = Property(depends_on='_dbrecord')
+    shortname = Property(depends_on='_dbrecord')
+    analysis_type = Property(depends_on='_dbrecord')
+    aliquot = Property(depends_on='_dbrecord')
+    step = Property(depends_on='_dbrecord')
+    mass_spectrometer = Property(depends_on='_dbrecord')
 
-    position = Property
-    extract_device = Property
-    extract_value = Property
-    extract_units = Property
-    extract_duration = Property
-    cleanup_duration = Property
-    experiment = Property
-    extraction = Property
-    measurement = Property
+    position = Property(depends_on='_dbrecord')
+    extract_device = Property(depends_on='_dbrecord')
+    extract_value = Property(depends_on='_dbrecord')
+    extract_units = Property(depends_on='_dbrecord')
+    extract_duration = Property(depends_on='_dbrecord')
+    cleanup_duration = Property(depends_on='_dbrecord')
+    experiment = Property(depends_on='_dbrecord')
+    extraction = Property(depends_on='_dbrecord')
+    measurement = Property(depends_on='_dbrecord')
 
     changed = Event
 
-    ic_factor = Property
-    irradiation = Property
+    ic_factor = Property(depends_on='_dbrecord')
+    irradiation = Property(depends_on='_dbrecord')
 
-    status = Property
-    uuid = Property
+    status = Property(depends_on='_dbrecord')
+    uuid = Property(depends_on='_dbrecord')
 
-    peak_center_dac = Property
+    peak_center_dac = Property(depends_on='_dbrecord')
 
     item_width = 760
 
@@ -273,25 +277,27 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 # database record
 #===============================================================================
     def load_isotopes(self):
-        for iso in self.dbrecord.isotopes:
-            if iso.kind == 'signal':
-                result = iso.results[-1]
-                name = iso.molecular_weight.name
-                det = iso.detector.name
-                r = Isotope(dbrecord=iso, dbresult=result, name=name, detector=det)
-                fit = self._get_db_fit(name, 'signal')
-                r.set_fit(fit)
-                self.isotopes[name] = r
+        if self.dbrecord:
+            for iso in self.dbrecord.isotopes:
+                if iso.kind == 'signal':
+                    result = iso.results[-1]
+                    name = iso.molecular_weight.name
+                    det = iso.detector.name
+                    r = Isotope(dbrecord=iso, dbresult=result, name=name, detector=det)
+                    fit = self._get_db_fit(name, 'signal')
+                    r.set_fit(fit)
+                    self.isotopes[name] = r
 
-        for iso in self.dbrecord.isotopes:
-            if iso.kind == 'baseline':
-                result = iso.results[-1]
-                name = iso.molecular_weight.name
-                i = self.isotopes[name]
-                r = Baseline(dbrecord=iso, dbresult=result, name=name)
-                fit = self._get_db_fit(name, 'baseline')
-                r.set_fit(fit)
-                i.baseline = r
+            for iso in self.dbrecord.isotopes:
+                if iso.kind == 'baseline':
+                    result = iso.results[-1]
+                    name = iso.molecular_weight.name
+                    i = self.isotopes[name]
+                    r = Baseline(dbrecord=iso, dbresult=result, name=name)
+                    fit = self._get_db_fit(name, 'baseline')
+                    r.set_fit(fit)
+                    i.baseline = r
+            return True
 
     def load(self):
         self.load_isotopes()
@@ -806,15 +812,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_analysis_type(self):
         try:
             return self._dbrecord.measurement.analysis_type.name
-        except AttributeError, e:
-            print 'get_analysis_type', e
+        except AttributeError:
+            self.debug('no analysis type')
 
     @cached_property
     def _get_mass_spectrometer(self):
         try:
             return self._dbrecord.measurement.mass_spectrometer.name.lower()
-        except AttributeError, e:
-            print 'get_mass_spectrometer', e
+        except AttributeError:
+            self.debug('no mass spectrometer')
 
     @cached_property
     def _get_isotope_keys(self):

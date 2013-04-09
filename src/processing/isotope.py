@@ -67,12 +67,14 @@ class IsotopicMeasurement(HasTraits):
             try:
                 self.filter_outlier_iterations = int(fit.filter_outlier_iterations)  # if fit.filter_outliers_iterations else 0
             except TypeError, e:
-                print '{}. fit.filter_outlier_iterations'.format(e)
+                pass
+#                print '{}. fit.filter_outlier_iterations'.format(e)
 
             try:
                 self.filter_outlier_std_devs = int(fit.filter_outlier_std_devs)  # if fit.filter_outliers_std_devs else 0
             except TypeError, e:
-                print '{}. fit.filter_outlier_std_devs'.format(e)
+                pass
+#                print '{}. fit.filter_outlier_std_devs'.format(e)
 
     def set_uvalue(self, v):
         if isinstance(v, tuple):

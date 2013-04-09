@@ -26,6 +26,7 @@ import os
 from src.loggable import Loggable
 from src.database.core.base_orm import MigrateVersionTable
 from src.deprecate import deprecated
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
@@ -103,7 +104,9 @@ class DatabaseAdapter(Loggable):
                 if url is not None:
                     self.info('connecting to database {}'.format(url))
                     engine = create_engine(url)
-                    self.session_factory = sessionmaker(bind=engine)
+                    self.session_factory = sessionmaker(bind=engine,
+                                                        twophase=True,
+                                                        autoflush=False)
                     if test:
                         self.connected = self._test_db_connection()
                     else:
@@ -121,7 +124,6 @@ host={}'.format(self.name, self.username, self.host))
 
     def new_session(self):
         sess = scoped_session(self.session_factory)
-        sess.autoflush = False
         return sess
 
     def initialize_database(self):
@@ -350,18 +352,17 @@ host={}'.format(self.name, self.username, self.host))
 
         try:
             return q.one()
-        except SQLAlchemyError, e:
-            print 'get_one, e1', e, table, key, value
+        except MultipleResultsFound:
+            self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
             try:
                 if hasattr(table, 'id'):
                     q = q.order_by(table.id.desc())
-
                 return q.limit(1).all()[-1]
             except (SQLAlchemyError, IndexError, AttributeError), e:
-                pass
-                print 'get_one, e2', e, table, key, value
+                self.debug('no rows for {} {} {}'.format(table.__tablename__, key, value))
 
-
+        except NoResultFound:
+            self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
 
     @deprecated
     def _get_items(self, table, gtables,

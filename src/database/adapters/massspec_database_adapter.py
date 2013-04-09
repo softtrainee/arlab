@@ -99,10 +99,10 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_analysis(self, value, aliquot=None, step=None):
         key = 'RID'
         if aliquot:
-            value = ('{}-{}'.format(value, aliquot), aliquot)
             key = ('RID', 'Aliquot')
+            value = ('{}-{}'.format(value, aliquot), aliquot)
             if step:
-                value = value + (step,)
+                value = ('{}-{}'.format(value, aliquot, step), aliquot, step)
                 key = key + ('Increment',)
 
         return self._retrieve_item(AnalysesTable, value,
@@ -119,7 +119,9 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
 #    @get_first
     def get_detector(self, name):
-        return self._retrieve_first(DetectorTable, name, key='Label', order_by=DetectorTable.DetectorID.desc())
+        return self._retrieve_first(DetectorTable, name,
+                                    key='Label',
+                                    order_by=DetectorTable.DetectorID.desc())
 
 #        return DetectorTable, 'DetectorTypeID', \
 #                DetectorTable.DetectorID.desc() # gets the most recent value
@@ -197,8 +199,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
 
 #    @add
-    def add_analysis(self, rid, aliquot, step, irradpos, runtype, refdetlabel, **kw):
+    def add_analysis(self, rid, aliquot, step, irradpos, runtype, refdetlabel,
+                     overwrite=True,
+                     **kw):
         '''
+            this function does not check for existence of the record_id
         '''
 
 #        if analysis is None:
@@ -213,7 +218,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
-        params = dict(RID='{}-{}'.format(rid, aliquot),
+        params = dict(RID='{}-{}{}'.format(rid, aliquot, step),
                      Aliquot=aliquot,
                      RunDateTime=func.current_timestamp(),
                      LoginSessionID=1,
@@ -235,13 +240,15 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         params['IrradPosition'] = ip
         params.update(kw)
 
-        analysis = self.get_analysis(rid, aliquot, step)
-        if analysis is None:
-            analysis = AnalysesTable(**params)
-            self._add_item(analysis)
-        else:
-            for k, v in params.iteritems():
-                setattr(analysis, k, v)
+#        analysis = self.get_analysis(rid, aliquot, step)
+#        if analysis is None:
+        analysis = AnalysesTable(**params)
+        self._add_item(analysis)
+
+#        elif overwrite:
+#            for k, v in params.iteritems():
+#                setattr(analysis, k, v)
+
 
         return analysis
 
@@ -289,16 +296,18 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         self._add_item(d)
         return d
 
-    def add_isotope(self, rid, det, label, **kw):
-        detector = None
-        analysis = self.get_analysis(rid)
-        if isinstance(det, str):
-            # assume is a detector label e.i H1
-            dettype = self.get_detector_type(det)
-            if dettype is not None and len(dettype.detectors):
-                det = dettype.detectors[-1]
+    def add_isotope(self, rid, detector, label, **kw):
 
-            detector = self.get_detector(det)
+        analysis = self.get_analysis(rid)
+
+        if isinstance(detector, str):
+            # assume is a detector label e.i H1
+            detector = self.get_detector_type(detector)
+            if detector:
+                detector = detector.Label
+
+        if detector is not None:  # and len(dettype.detectors):
+            detector = self.get_detector(detector)
 
         iso = IsotopeTable(Label=label,
                            NumCnts=1
@@ -306,6 +315,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         if analysis is not None:
             analysis.isotopes.append(iso)
+
         if detector is not None:
             detector.isotopes.append(iso)
             iso.BkgdDetectorID = detector.DetectorID
