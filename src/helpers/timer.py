@@ -47,7 +47,10 @@ class Timer(Thread):
 
             st = time.time()
             func(*args, **kwargs)
-            flag.wait(max(0, p - time.time() - st))
+#            ct=time.time()
+#            print p - ct - st, ct, st
+#            print max(0, p - time.time() + st), p,
+            flag.wait(max(0, p - time.time() + st))
 
 #            t = time.time()
 
