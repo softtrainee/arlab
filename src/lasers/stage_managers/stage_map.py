@@ -309,6 +309,7 @@ class StageMap(Loggable):
         return pos
 
     def map_to_calibration(self, pos, cpos=None, rot=None,
+                           use_modified=False,
                            scale=None,
                            translate=None):
         cpos, rot, scale = self._get_calibration_params(cpos, rot, scale)
@@ -319,12 +320,14 @@ class StageMap(Loggable):
 
 #        if scale:
         a.scale(scale, scale)
-#         a.translate(*cpos)
+        if use_modified:
+            a.translate(*cpos)
 
 #         print cpos, rot, scale
         a.rotate(rot)
         a.translate(-cpos[0], -cpos[1])
-#        a.translate(*cpos)
+        if use_modified:
+            a.translate(*cpos)
         pos = a.transform(*pos)
         return pos
 

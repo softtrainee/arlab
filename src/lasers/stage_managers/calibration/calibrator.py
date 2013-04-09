@@ -49,7 +49,9 @@ class TrayCalibrator(Loggable):
             canvas.calibration_item.set_right(x, y)
             self.save(canvas.calibration_item)
 #            return 'Calibrate', None, None, canvas.calibration_item.rotation, 1
-            return dict(calibration_step='Calibrate', rotation=canvas.calibration_item.rotation)
+            print canvas.calibration_item.rotation
+            return dict(calibration_step='Calibrate', 
+                        rotation=canvas.calibration_item.rotation)
 
     def save(self, obj):
         p = self._get_path(self.name)
