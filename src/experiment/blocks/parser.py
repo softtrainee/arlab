@@ -20,6 +20,8 @@ from src.helpers.filetools import str_to_bool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
+from src.regex import ALIQUOT_REGEX
+
 class RunParser(Loggable):
     def parse(self, header, line, meta, delim='\t'):
         params = dict()
@@ -40,8 +42,15 @@ class RunParser(Loggable):
             except IndexError, e:
                 self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
+        ln = args[header.index('labnumber')]
+        if ALIQUOT_REGEX.match(ln):
+            ln, a = ln.split('-')
+            params['aliquot'] = int(a)
+
+        params['labnumber'] = ln
+
         # load strings
-        for attr in ['labnumber',
+        for attr in [
                      'measurement', 'extraction',
                      'post_measurement',
                      'post_equilibration',
@@ -69,7 +78,7 @@ class RunParser(Loggable):
 
         # load numbers
         for attr in ['duration', 'overlap', 'cleanup',
-                     'aliquot',
+#                     'aliquot',
                      'extract_group',
                      'weight'
                      ]:
