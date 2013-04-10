@@ -536,7 +536,7 @@ class SerialCommunicator(Communicator):
             ct = time.time()
 
         if ct - st > timeout:
-            self.info('timed out. {}s'.format(timeout))
+            self.info('timed out. {}s r={}, len={}'.format(timeout, r, len(r)))
 
         return r
 #    def _read(self, is_hex=False, time_out=1, delay=None):

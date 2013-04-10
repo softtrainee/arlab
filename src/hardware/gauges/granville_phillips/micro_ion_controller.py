@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import List, Str, HasTraits, Float
+from traits.api import List, Str, HasTraits, Float, Int
 from traitsui.api import View, HGroup, Item, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 from numpy import random, char
@@ -25,6 +25,7 @@ from numpy import random, char
 #=============local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 from src.traits_editors.color_map_bar_editor import BarGaugeEditor
+import time
 
 # from numpy import linspace
 # def gen():
@@ -40,9 +41,10 @@ class Gauge(HasTraits):
     low = 5e-10
     high = 1e-8
     color_scalar = 1
+    width=Int(100)
     def traits_view(self):
         v = View(HGroup(Item('display_name', show_label=False, style='readonly',
-                             width= -50,
+                             width= -30,
                              ),
                          Item('pressure',
                               format_str='%0.2e',
@@ -53,7 +55,8 @@ class Gauge(HasTraits):
                              show_label=False,
                              editor=BarGaugeEditor(low=self.low,
                                                    high=self.high,
-                                                   color_scalar=self.color_scalar
+                                                   color_scalar=self.color_scalar,
+                                                   width=self.width
                                                    )
                              )
 
@@ -66,6 +69,7 @@ class MicroIonController(CoreDevice):
     address = '01'
     gauges = List
     display_name = Str
+    
     def gauge_view(self):
         v = View(
                  Group(
@@ -147,9 +151,10 @@ class MicroIonController(CoreDevice):
         self.debug('getting pressure')
         b = self.get_convectron_b_pressure(verbose=verbose)
         self._set_gauge_pressure('CG2', b)
-
+        time.sleep(0.05)
         a = self.get_convectron_a_pressure(verbose=verbose)
         self._set_gauge_pressure('CG1', a)
+        time.sleep(0.05)
 
         ig = self.get_ion_pressure(verbose=verbose)
         self._set_gauge_pressure('IG', ig)

@@ -29,9 +29,9 @@ class Bar(wx.Control):
     low = 0
     high = 1
     color_scalar = 1
-
+    bar_width=100
     def __init__(self, parent, ident= -1):
-        super(Bar, self).__init__(parent, ident, (0, 0), (100, 15), style=wx.NO_BORDER)
+        super(Bar, self).__init__(parent, ident, (0, 0), (self.bar_width, 15), style=wx.NO_BORDER)
         self.Bind(wx.EVT_PAINT, self._on_paint, self)
         self._cmap = get_cmap('jet')
 
@@ -41,7 +41,7 @@ class Bar(wx.Control):
             dc.Clear()
             dc.BeginDrawing()
             dc.SetBrush(wx.Brush(self.value, wx.SOLID))
-            dc.DrawRectangle(0, 0, 100, 15)
+            dc.DrawRectangle(0, 0, self.bar_width, 15)
             dc.EndDrawing()
             del dc
 
@@ -69,7 +69,8 @@ class _BarGaugeEditor(Editor):
         self.control.low = self.factory.low
         self.control.high = self.factory.high
         self.control.color_scalar = self.factory.color_scalar
-
+        self.control.bar_width=self.factory.width
+        
     def update_editor(self):
         self.control.set_value(self.value)
 
@@ -78,4 +79,5 @@ class BarGaugeEditor(BasicEditorFactory):
     low = Float
     high = Float
     color_scalar = Int
+    width=Int(100)
 #============= EOF =============================================
