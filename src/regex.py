@@ -59,6 +59,8 @@ XY_REGEX = re.compile('[-,\d+].*\d*,[-,\d+].*\d*')
 '''
 DRILL_REGEX = re.compile('[dD]\d+$')
 
+ALIQUOT_REGEX = re.compile('\d+-+\d+$')
+
 def make_image_regex(ext):
     if ext is None:
         ext = ('png', 'tif', 'gif', 'jpeg', 'jpg', 'pct')
