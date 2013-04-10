@@ -21,6 +21,7 @@ from traits.api import List, HasTraits, Str, Float
 from traitsui.api import View, Item, ListEditor, InstanceEditor, HGroup
 
 from src.managers.manager import Manager
+import time
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -39,7 +40,12 @@ class GaugeManager(Manager):
 #            if hasattr(di, 'gauges'):
 #                self.gauges.extend(di.gauges)
 
-#    def finish_loading(self, *args, **kw):
+    def finish_loading(self, *args, **kw):
+        width=int(250/float(len(self.devices)))
+        for k in self.devices:
+            if hasattr(k, 'gauges'):
+                for gi in k.gauges:
+                    gi.width=width
 #        self.load_gauges()
 #        print 'load gm', args, kw
 #
@@ -60,9 +66,13 @@ class GaugeManager(Manager):
 
     def start_scans(self):
         self.info('starting gauge scans')
+        
+       
         for k in self.devices:
             if k.is_scanable:
                 k.start_scan()
+                #stagger starts to reduce collisions
+                time.sleep(0.25)
 #            if 'gauge_controller' in k:
 #                print v
 #                v.start_scan()
