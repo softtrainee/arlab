@@ -316,7 +316,6 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         iso = IsotopeTable(Label=label,
                            NumCnts=1
                            )
-
         if analysis is not None:
             analysis.isotopes.append(iso)
 

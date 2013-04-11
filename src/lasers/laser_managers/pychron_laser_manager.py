@@ -217,7 +217,8 @@ class PychronLaserManager(BaseLaserManager):
     def extract(self, value, units=''):
         self.info('set laser output')
         return self._ask('SetLaserOutput {} {}'.format(value, units)) == 'OK'
-
+    
+    
     def enable_laser(self, *args, **kw):
         self.info('enabling laser')
         return self._ask('Enable') == 'OK'
