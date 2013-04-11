@@ -28,6 +28,7 @@ from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 import os
 import yaml
+from src.experiment.automated_run.maker import AutomatedRunMaker
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -80,31 +81,43 @@ class BaseSchedule(ScriptEditable):
     parser = None
     update_aliquots_needed = Event
 
+    automated_run_maker = Instance(AutomatedRunMaker, ())
 
-    @on_trait_change('extraction_script:name')
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('''automated_run_maker:[extract_value, extract_units, cleanup,
+duration]''')
+    def _value_update(self, name, value):
+        if self.selected_runs:
+            for si in self.selected_runs:
+                setattr(si, name, value)
+
+    @on_trait_change('automated_run_maker:extraction_script:name')
     def _extraction_script_changed(self, obj, name, old, new):
-        self._script_changed('extraction')
+        self._script_changed('extraction', new)
 
-    @on_trait_change('measurement_script:name')
+    @on_trait_change('automated_run_maker:measurement_script:name')
     def _measurement_script_changed(self, obj, name, old, new):
-        self._script_changed('measurement')
+        self._script_changed('measurement', new)
 
-    @on_trait_change('post_equilibration_script:name')
+    @on_trait_change('automated_run_maker:post_equilibration_script:name')
     def _post_equilibration_script_changed(self, obj, name, old, new):
-        self._script_changed('post_equilibration')
+        self._script_changed('post_equilibration', new)
 
-    @on_trait_change('post_measurement_script:name')
+    @on_trait_change('automated_run_maker:post_measurement_script:name')
     def _post_measurement_script_changed(self, obj, name, old, new):
-        self._script_changed('post_measurement')
+        self._script_changed('post_measurement', new)
 
-    def _script_changed(self, sname):
-#        name = name[:-7]
+    def _script_changed(self, sname, name):
+#         name = name[:-7]
         if self.selected_runs is not None:
             for si in self.selected_runs:
-                self._update_run_script(si, sname)
+                self._update_run_script(si, sname, name)
 
-        if self.automated_run is not None:
-            self._update_run_script(self.automated_run, sname)
+        self.runs_table.update_needed = True
+#        if self.automated_run is not None:
+#            self._update_run_script(self.automated_run, sname)
 
     def _selected_changed(self, new):
 #        print new
@@ -112,7 +125,8 @@ class BaseSchedule(ScriptEditable):
         if len(new) == 1:
             run = new[0]
             if run.state == 'not run':
-                self.automated_run = run.clone_traits()
+#                self.automated_run = run.clone_traits()
+                self.automated_run_maker.load_run(run)
                 for si in SCRIPT_KEYS:
                     try:
                         n = self._clean_script_name(getattr(run.script_info, '{}_script_name'.format(si)))
@@ -122,12 +136,12 @@ class BaseSchedule(ScriptEditable):
                     except AttributeError:
                         pass
 
-    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
-    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
-    def _sync_selected_runs(self, name, new):
-        if self.selected_runs:
-            for si in self.selected_runs:
-                si.trait_set(**{name:new})
+#    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
+#    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+#    def _sync_selected_runs(self, name, new):
+#        if self.selected_runs:
+#            for si in self.selected_runs:
+#                si.trait_set(**{name:new})
 
 #    def make_configuration(self):
 #        extraction = self.extraction_script
@@ -403,5 +417,11 @@ class BaseSchedule(ScriptEditable):
              Item('paste_button', enabled_when='object._copy_cache'),
              Item('update_aliquots'),
               show_labels=False)
+
+    def _automated_run_maker_default(self):
+        return AutomatedRunMaker(
+                             mass_spectrometer=self.mass_spectrometer,
+                             extract_device=self.extract_device,
+                             )
 
 #============= EOF =============================================

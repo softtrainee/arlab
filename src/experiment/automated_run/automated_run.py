@@ -135,21 +135,23 @@ class AutomatedRun(Loggable):
                  'measurement', 'success', 'fail', 'truncate')
 #    irrad_level = Str
 
-    duration = Property(depends_on='_duration')
-    _duration = Float
+#    duration = Property(depends_on='_duration')
 
     extract_group = CInt
-    extract_value = Property(depends_on='_extract_value')
-    _extract_value = Float
+#    extract_value = Property(depends_on='_extract_value')
+#    _extract_value = Float
+#
+# #    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
+# #                           depends_on='_extract_units')
+# #    _extract_units = Enum('---', 'watts', 'temp', 'percent')
+#    extract_units = Str(NULL_STR)
+#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+#    _default_extract_units = 'watts'
 
-#    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
-#                           depends_on='_extract_units')
-#    _extract_units = Enum('---', 'watts', 'temp', 'percent')
-    extract_units = Str(NULL_STR)
-    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
-    _default_extract_units = 'watts'
-
+    extract_value = Float
+    extract_units = Str
     extract_device = Str
+    duration = Float
 
     tray = Str
     position = Property(String(enter_set=True, auto_set=False))
@@ -164,7 +166,7 @@ class AutomatedRun(Loggable):
     weight = Float
     comment = Str
     pattern = Str
-    patterns = Property
+#    patterns = Property
     disable_between_positions = Bool(False)
 
     scripts = Dict
@@ -2024,42 +2026,42 @@ anaylsis_type={}
 #    def _set_extract_units(self, v):
 #        self._extract_units = v
 
-    def _get_extract_value(self):
-        v = self._extract_value
-        return v
+#    def _get_extract_value(self):
+#        v = self._extract_value
+#        return v
 
-    def _validate_duration(self, d):
-        return self._validate_float(d)
+#    def _validate_duration(self, d):
+#        return self._validate_float(d)
+#
+#    def _validate_extract_value(self, d):
+#        return self._validate_float(d)
+#
+#    def _validate_float(self, d):
+#        try:
+#            return float(d)
+#        except ValueError:
+#            pass
+#
+#    def _set_duration(self, d):
+#        if d is not None:
+# #            if self.heat_step:
+# #                self.heat_step.duration = d
+# #            else:
+#            self._duration = d
 
-    def _validate_extract_value(self, d):
-        return self._validate_float(d)
-
-    def _validate_float(self, d):
-        try:
-            return float(d)
-        except ValueError:
-            pass
-
-    def _set_duration(self, d):
-        if d is not None:
-#            if self.heat_step:
-#                self.heat_step.duration = d
-#            else:
-            self._duration = d
-
-    def _set_extract_value(self, t):
-        if t is not None:
-#            if self.heat_step:
-#                self.heat_step.extract_value = t
-#            else:
-            self._extract_value = t
-            if not t:
-                self.extract_units = '---'
-            elif self.extract_units == '---':
-                self.extract_units = self._default_extract_units
-
-        else:
-            self.extract_units = '---'
+#    def _set_extract_value(self, t):
+#        if t is not None:
+# #            if self.heat_step:
+# #                self.heat_step.extract_value = t
+# #            else:
+#            self._extract_value = t
+#            if not t:
+#                self.extract_units = '---'
+#            elif self.extract_units == '---':
+#                self.extract_units = self._default_extract_units
+#
+#        else:
+#            self.extract_units = '---'
 
     def _get_state(self):
         return self._state
@@ -2093,17 +2095,6 @@ anaylsis_type={}
                         for ln in s.labnumbers]
         return [NULL_STR] + sorted(lns)
 
-    @cached_property
-    def _get_patterns(self):
-        p = paths.pattern_dir
-        patterns = [NULL_STR]
-        extension = '.lp'
-        if os.path.isdir(p):
-            ps = os.listdir(p)
-            if extension is not None:
-                patterns += [os.path.splitext(pi)[0] for pi in ps if pi.endswith(extension)]
-
-        return patterns
 
 #===============================================================================
 # views
