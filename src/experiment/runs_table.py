@@ -31,6 +31,7 @@ class RunsTable(HasTraits):
     selected = Any
     rearranged = Event
     extract_device = Str
+    update_needed = Event
 
     def set_runs(self, runs):
         if runs:
@@ -61,11 +62,12 @@ class RunsTable(HasTraits):
                       editor=myTabularEditor(adapter=ad,
                                             operations=['delete',
                                                         'move',
-#                                                                        'edit'
+#                                                        'edit'
                                                         ],
                                             editable=False,
                                             selected='selected',
                                             rearranged='rearranged',
+                                            update='update_needed',
                                             auto_update=True,
                                             multi_select=True,
                                             scroll_to_bottom=False)

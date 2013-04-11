@@ -90,7 +90,6 @@ class ExperimentSet(BaseSchedule):
     new_schedule_block = Button('New')
 
 
-    automated_run_maker = Instance(AutomatedRunMaker, ())
     def test(self):
         for ai in self.automated_runs:
             if not ai.test():
@@ -351,75 +350,100 @@ tray: {}
         b.edit_traits(kind='livemodal')
 
     def _add_fired(self):
-#        ars = self.automated_runs
-        ar = self.automated_run
-        # labnumber is a property so its not cloned by clone_traits
-#        ln = ar.labnumber
+        nars = self.automated_run_maker.new_runs()
+        self.automated_runs.extend(nars)
 
-        s = int(ar.position)
-        e = int(ar.endposition)
-        if e:
-            if e < s:
-                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-                return
-
-            for i in range(e - s + 1):
-                ar.position = str(s + i)
-                self._add_run(ar)
-        else:
-            self._add_run(ar)
-
+#        ar = self.automated_run_maker.automated_run
+        arm = self.automated_run_maker
         self.update_aliquots_needed = True
-        if self.auto_increment and ar.analysis_type == 'unknown':
-            ar = self.automated_run
-            ar.position = str(e + 1)
-#            print ar.position
-            ar.endposition = e + 1 + e - s
-            nn = self._auto_increment(ar.labnumber)
-            ar.labnumber = nn
-            ar._labnumber = nn
-
-
-    def _add_run(self, ar):
-        ars = self.automated_runs
-        nar = ar.clone_traits()
-        ln = ar.labnumber
-        if ALIQUOT_REGEX.match(ln):
-            ln, a = ln.split('-')
-            nar.aliquot = int(a)
-            nar.user_defined_aliquot = True
-        nar.labnumber = ln
-
-        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
-            nar.extract_value = 0
-            nar.extract_units = ''
-
-        if self.schedule_block and self.schedule_block != NULL_STR:
-#            print self.schedule_block
-            block = self._block_factory(self.schedule_block)
-            nruns = block.render(ar, self._current_group_id)
-            ars.extend(nruns)
-            self._current_group_id += 1
-
-        else:
-            if self.selected:
-                ind = self.automated_runs.index(self.selected[-1])
-                ars.insert(ind + 1, nar)
+        if self.auto_increment and nars[0].analysis_type == 'unknown':
+            if nars[0].position:
+                e = int(nars[0].position)
             else:
-                ars.append(nar)
+                e = 0
+            if nars[-1].position:
+                s = int(nars[-1].position)
+            else:
+                s = e
 
-        kw = dict()
-#        if self.auto_increment:
-#            rid = self._auto_increment(ar.labnumber)
-#            npos = self._auto_increment(ar.position)
-#            if rid:
-#                kw['labnumber'] = rid
-#            if npos:
-#                kw['position'] = npos
+#            ar = self.automated_run
+            arm.position = str(e + 1)
+#            print ar.position
+            arm.endposition = str(e + 1 + e - s)
+            nn = self._auto_increment(arm.labnumber)
+            arm._labnumber = '---'
+            arm.labnumber = nn
+
+#    def _add_fired(self):
+# #        ars = self.automated_runs
+#        ar = self.automated_run
+#        # labnumber is a property so its not cloned by clone_traits
+# #        ln = ar.labnumber
+#
+#        s = int(ar.position)
+#        e = int(ar.endposition)
+#        if e:
+#            if e < s:
+#                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+#                return
+#
+#            for i in range(e - s + 1):
+#                ar.position = str(s + i)
+#                self._add_run(ar)
 #        else:
-#            self._ok_to_add = False
-
-        self._add_hook(ar, **kw)
+#            self._add_run(ar)
+#
+#        self.update_aliquots_needed = True
+#        if self.auto_increment and ar.analysis_type == 'unknown':
+#            ar = self.automated_run
+#            ar.position = str(e + 1)
+# #            print ar.position
+#            ar.endposition = e + 1 + e - s
+#            nn = self._auto_increment(ar.labnumber)
+#            ar.labnumber = nn
+#            ar._labnumber = nn
+#
+#
+#    def _add_run(self, ar):
+#        ars = self.automated_runs
+#        nar = ar.clone_traits()
+#        ln = ar.labnumber
+#        if ALIQUOT_REGEX.match(ln):
+#            ln, a = ln.split('-')
+#            nar.aliquot = int(a)
+#            nar.user_defined_aliquot = True
+#        nar.labnumber = ln
+#
+#        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
+#            nar.extract_value = 0
+#            nar.extract_units = ''
+#
+#        if self.schedule_block and self.schedule_block != NULL_STR:
+# #            print self.schedule_block
+#            block = self._block_factory(self.schedule_block)
+#            nruns = block.render(ar, self._current_group_id)
+#            ars.extend(nruns)
+#            self._current_group_id += 1
+#
+#        else:
+#            if self.selected:
+#                ind = self.automated_runs.index(self.selected[-1])
+#                ars.insert(ind + 1, nar)
+#            else:
+#                ars.append(nar)
+#
+#        kw = dict()
+# #        if self.auto_increment:
+# #            rid = self._auto_increment(ar.labnumber)
+# #            npos = self._auto_increment(ar.position)
+# #            if rid:
+# #                kw['labnumber'] = rid
+# #            if npos:
+# #                kw['position'] = npos
+# #        else:
+# #            self._ok_to_add = False
+#
+#        self._add_hook(ar, **kw)
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -479,18 +503,19 @@ tray: {}
 #        return il
 
     def _mass_spectrometer_changed(self):
-        if self.automated_run is None:
-            return
+#        if self.automated_run is None:
+#            return
 
-        for ai in self.automated_runs:
-            ai.mass_spectrometer = self.mass_spectrometer
+#        for ai in self.automated_runs:
+#            ai.mass_spectrometer = self.mass_spectrometer
 
-        if self.automated_run.labnumber:
-            self._load_default_scripts()
-        else:
-            self.clear_script_names()
+#        if self.automated_run.labnumber:
+#            self._load_default_scripts()
+#        else:
+#            self.clear_script_names()
 
-        self.set_scripts_mass_spectrometer()
+#        self.set_scripts_mass_spectrometer()
+        self.automated_run_maker.mass_spectrometer = self.mass_spectrometer
 
     def _extract_device_changed(self):
 
@@ -500,10 +525,13 @@ tray: {}
             self.runs_table = RunsTable(extract_device=self.extract_device)
             self.runs_table.set_runs(runs)
 
-            self.automated_run = self.automated_run_factory(copy_automated_run=False)
+#            self.automated_run = self.automated_run_factory(copy_automated_run=False)
+            self.automated_run_maker.automated_run = self.automated_run_factory(copy_automated_run=False)
 
-            if self.mass_spectrometer:
-                self._load_default_scripts()
+            self.automated_run_maker.extract_device = self.extract_device
+
+#            if self.mass_spectrometer:
+#                self._load_default_scripts()
 
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
@@ -628,10 +656,10 @@ tray: {}
                     self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
                     self._warned_labnumbers.append(labnumber)
                 a._executable = False
-            else:
-                if ln.sample:
-                    a.run_info.sample = ln.sample.name
-                a.run_info.irrad_level = self._make_irrad_level(ln)
+#            else:
+#                if ln.sample:
+#                    a.run_info.sample = ln.sample.name
+#                a.run_info.irrad_level = self._make_irrad_level(ln)
 #            else:
 #                self._bind_automated_run(a)
 #                a.create_scripts()
@@ -655,7 +683,10 @@ tray: {}
         return ExperimentStats(experiment_set=self)
 
     def _automated_run_maker_default(self):
-        return AutomatedRunMaker(db=self.db)
+        return AutomatedRunMaker(db=self.db,
+                                 mass_spectrometer=self.mass_spectrometer,
+                                 extract_device=self.extract_device,
+                                 )
 #===============================================================================
 # views
 #===============================================================================
@@ -696,16 +727,16 @@ tray: {}
                                 )
 
         gparams_grp = self._get_global_parameters_group()
-        script_grp = self._get_script_group()
-        block_grp = HGroup(Item('schedule_block',
-                                label='Block',
-                                editor=EnumEditor(name='schedule_blocks')),
-                          Item('edit_schedule_block',
-                               enabled_when='object.schedule_block!="---"',
-                                show_label=False),
-                          Item('new_schedule_block', show_label=False),
-                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
-                          )
+#        script_grp = self._get_script_group()
+#        block_grp = HGroup(Item('schedule_block',
+#                                label='Block',
+#                                editor=EnumEditor(name='schedule_blocks')),
+#                          Item('edit_schedule_block',
+#                               enabled_when='object.schedule_block!="---"',
+#                                show_label=False),
+#                          Item('new_schedule_block', show_label=False),
+#                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
+#                          )
         v = View(
                  HGroup(
                         VGroup(
@@ -713,11 +744,12 @@ tray: {}
 #                               block_grp,
                                new_analysis,
 #                               script_grp,
-#                               HGroup(Item('auto_increment'),
-#                                     spring,
-#                                     Item('add', show_label=False,
-#                                          enabled_when='ok_to_add'),
-#                                     ),
+                               HGroup(Item('auto_increment'),
+                                     spring,
+                                     Item('add', show_label=False,
+#                                          enabled_when='ok_to_add'
+                                          ),
+                                     ),
                                ),
                         analysis_table
 

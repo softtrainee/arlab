@@ -60,10 +60,12 @@ class AutomatedRunAdapter(TabularAdapter):
 
     state_image = Property
     state_text = Property
+
     extraction_script_text = Property
     measurement_script_text = Property
     post_measurement_script_text = Property
     post_equilibration_script_text = Property
+
     position_text = Property
     extract_value_text = Property
     extract_units_text = Property
@@ -216,10 +218,10 @@ class AutomatedRunAdapter(TabularAdapter):
     def _get_script_name(self, script):
         name = ''
         script_name = getattr(self.item.script_info, '{}_script_name'.format(script))
+#        print script_name
         if script:
             name, _ext = os.path.splitext(script_name)
             name = name.replace(self.item.mass_spectrometer, '')
-
         return name
 
     def _get_number(self, attr):

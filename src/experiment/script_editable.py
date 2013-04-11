@@ -100,6 +100,7 @@ class Script(Loggable, ScriptMixin):
     def _get_names(self):
         names = [NULL_STR]
         ms = self._load_script_names()
+
         if ms:
             msn = '{}_'.format(self.mass_spectrometer)
             names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
@@ -167,12 +168,14 @@ class ScriptEditable(Saveable, ScriptMixin):
             name = '{}_{}'.format(self.mass_spectrometer, name)
         return name
 
-    def _update_run_script(self, run, sname):
+    def _update_run_script(self, run, sname, name):
         if run.state == 'not run':
-            ssname = '{}_script'.format(sname)
-            script = getattr(self, ssname)
-            if script:
-                setattr(run.script_info, '{}_script_name'.format(sname), script.name)
+#            ssname = '{}_script'.format(sname)
+#            script = getattr(self, ssname)
+#            print script, script.name
+#            if script:
+            setattr(run.script_info, '{}_script_name'.format(sname), name)
+
 #                setattr(run, '{}_dirty'.format(ssname), True)
 
     def _load_default_scripts(self, setter=None, key=None):
@@ -191,6 +194,7 @@ class ScriptEditable(Saveable, ScriptMixin):
 #        import yaml
         p = os.path.join(paths.scripts_dir, 'defaults.yaml')
         if not os.path.isfile(p):
+            self.warning('Script defaults file does not exist {}'.format(p))
             return
 
         with open(p, 'r') as fp:
@@ -208,13 +212,11 @@ class ScriptEditable(Saveable, ScriptMixin):
 
         key = key.lower()
 
-#        print key, defaults
         if not key in defaults:
             return
 
         scripts = defaults[key]
         for sk in SCRIPT_KEYS:
-
             sc = NULL_STR
             try:
                 sc = scripts[sk]
@@ -223,7 +225,7 @@ class ScriptEditable(Saveable, ScriptMixin):
                 pass
 
             sc = self._remove_file_extension(sc)
-            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
+            if key.lower() in ('u', 'bu') and self.extract_device != NULL_STR:
                 e = self.extract_device.split(' ')[1].lower()
                 if sk == 'extraction':
                     sc = e
