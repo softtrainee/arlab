@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from src.constants import NULL_STR, SCRIPT_KEYS
-from src.experiment.automated_run import AutomatedRun
-from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+from src.experiment.automated_run.automated_run import AutomatedRun
+from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter
 from src.experiment.blocks.parser import RunParser, UVRunParser
 from src.experiment.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
 from src.experiment.runs_table import RunsTable
@@ -193,67 +193,67 @@ class BaseSchedule(ScriptEditable):
             if self.automated_run:
                 self.automated_run.scripts = self.loaded_scripts
 
-    def _load_default_scripts(self, setter=None, key=None):
-        if key is None:
-            if self.automated_run is None:
-                return
-            key = self.automated_run.labnumber
-
-        if setter is None:
-#            def setter(ski, sci):
-#                v = getattr(self, '{}_script'.format(ski))
-
-            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
-
-        # open the yaml config file
-#        import yaml
-        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
-        if not os.path.isfile(p):
-            return
-
-        with open(p, 'r') as fp:
-            defaults = yaml.load(fp)
-
-        # convert keys to lowercase
-        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
-
-        # if labnumber is int use key='U'
-        try:
-            _ = int(key)
-            key = 'u'
-        except ValueError:
-            pass
-
-        key = key.lower()
-
-#        print key, defaults
-        if not key in defaults:
-            return
-
-        scripts = defaults[key]
-        for sk in SCRIPT_KEYS:
-
-            sc = NULL_STR
-            try:
-                sc = scripts[sk]
-                sc = sc if sc else NULL_STR
-            except KeyError:
-                pass
-
-            sc = self._remove_file_extension(sc)
-            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
-                e = self.extract_device.split(' ')[1].lower()
-                if sk == 'extraction':
-                    sc = e
-                elif sk == 'post_equilibration':
-                    sc = 'pump_{}'.format(e)
-
-            script = getattr(self, '{}_script'.format(sk))
-            if not sc in script.names:
-#            if not sc in getattr(self, '{}_scripts'.format(sk)):
-                sc = NULL_STR
-#            print setter, sk, sc
-            setter(sk, sc)
+#    def _load_default_scripts(self, setter=None, key=None):
+#        if key is None:
+#            if self.automated_run is None:
+#                return
+#            key = self.automated_run.labnumber
+#
+#        if setter is None:
+# #            def setter(ski, sci):
+# #                v = getattr(self, '{}_script'.format(ski))
+#
+#            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
+#
+#        # open the yaml config file
+# #        import yaml
+#        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+#        if not os.path.isfile(p):
+#            return
+#
+#        with open(p, 'r') as fp:
+#            defaults = yaml.load(fp)
+#
+#        # convert keys to lowercase
+#        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
+#
+#        # if labnumber is int use key='U'
+#        try:
+#            _ = int(key)
+#            key = 'u'
+#        except ValueError:
+#            pass
+#
+#        key = key.lower()
+#
+# #        print key, defaults
+#        if not key in defaults:
+#            return
+#
+#        scripts = defaults[key]
+#        for sk in SCRIPT_KEYS:
+#
+#            sc = NULL_STR
+#            try:
+#                sc = scripts[sk]
+#                sc = sc if sc else NULL_STR
+#            except KeyError:
+#                pass
+#
+#            sc = self._remove_file_extension(sc)
+#            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
+#                e = self.extract_device.split(' ')[1].lower()
+#                if sk == 'extraction':
+#                    sc = e
+#                elif sk == 'post_equilibration':
+#                    sc = 'pump_{}'.format(e)
+#
+#            script = getattr(self, '{}_script'.format(sk))
+#            if not sc in script.names:
+# #            if not sc in getattr(self, '{}_scripts'.format(sk)):
+#                sc = NULL_STR
+# #            print setter, sk, sc
+#            setter(sk, sc)
 
 #===============================================================================
 # persistence
@@ -290,22 +290,20 @@ class BaseSchedule(ScriptEditable):
 #
     def _get_dump_attrs(self):
         header = ['labnumber',
-#                  'aliquot',
                   'pattern',
                   'position',
                   'overlap',
-                  'extract_group',
-                  'extract_value',
-                  'extract_units',
+                  'e_group',
+                  'e_value',
+                  'e_units',
                   'duration',
                   'cleanup',
                   'autocenter',
-                  'extraction', 'measurement', 'post_equilibration', 'post_measurement',
-                  'disable_between_positions',
+                  'extraction', 'measurement', 'post_eq', 'post_meas',
+                  'dis_btw_pos',
                   'weight', 'comment'
                   ]
         attrs = ['labnumber',
-#                  'aliquot',
                   'pattern',
                   'position',
                   'overlap',
@@ -325,18 +323,10 @@ class BaseSchedule(ScriptEditable):
             header.extend(('reprate', 'mask', 'attenuator', 'image'))
             attrs.extend(('reprate', 'mask', 'attenuator', 'image'))
 
-#        else:
-#            header.extend(['beam'])
-#            attrs.extend(['beam'])
-
         return header, attrs
 
     def _meta_dumper(self, fp=None):
         pass
-
-#    @classmethod
-#    def _run_parser(cls, header, line, meta, delim='\t'):
-#        params = dict()
 
     def parse_line(self, *args, **kw):
         if self.parser is None:

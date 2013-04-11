@@ -21,7 +21,7 @@ from traitsui.api import View, Item, HGroup, Group, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.loggable import Loggable
-from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.experiment_manager import ExperimentManager
 from src.managers.manager import Manager
@@ -44,7 +44,7 @@ from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
 from src.constants import NULL_STR, SCRIPT_KEYS
-from src.experiment.automated_run_editor import AutomatedRunEditor
+from src.experiment.automated_run.editor import AutomatedRunEditor
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 

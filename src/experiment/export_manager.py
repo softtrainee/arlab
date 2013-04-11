@@ -27,7 +27,7 @@ import time
 from src.experiment.export.export_spec import ExportSpec
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.identifier import convert_special_name
-from src.experiment.automated_run import assemble_script_blob
+from src.experiment.automated_run.automated_run import assemble_script_blob
 from src.processing.search.selector_manager import SelectorManager
 from src.database.database_connection_spec import DBConnectionSpec
 from src.progress_dialog import MProgressDialog
@@ -39,11 +39,11 @@ from traitsui.tabular_adapter import TabularAdapter
 
 class ExportedAdapter(TabularAdapter):
     columns = [('', 'n'), ('RID', 'rid')]
-    def get_bg_color(self, *args, **kw):
-        if self.item.skipped:
-            return 'red'
-        else:
-            return 'lightgray'
+#    def get_bg_color(self, *args, **kw):
+#        if self.item.skipped:
+#            return 'red'
+#        else:
+#            return 'lightgray'
 
 class Exported(HasTraits):
     rid = Str
@@ -160,7 +160,8 @@ class ExportManager(IsotopeDatabaseManager):
         else:
             exp.export()
 
-        pd.increment()
+        do_later(pd.close)
+#        pd.increment()
 #
         t = time.time() - st
         self.info('export complete. exported {} analyses in {:0.2f}s'.format(n, t))
@@ -212,6 +213,7 @@ class ExportManager(IsotopeDatabaseManager):
             es.baseline_intercepts.append(iso.baseline.uvalue)
             es.signal_fits.append(iso.fit)
             es.baseline_fits.append('Average Y')
+
             es.blanks.append(iso.blank.uvalue)
 
         return es
@@ -244,9 +246,7 @@ class ExportManager(IsotopeDatabaseManager):
 #                for row in reader:
                 self.records = [IsotopeRecordView(uuid=row[uuid_idx],
                                                   record_id=row[record_id_idx],
-                                                  ) for row in reader][:20]
-
-
+                                                  ) for row in reader]  # [778:779]
 
     def _export_button_fired(self):
         if self.records:
@@ -327,5 +327,11 @@ if __name__ == '__main__':
     em.db.username = 'root'
     em.db.password = 'Argon'
     em.db.connect()
+
+
+    em.destination.dbconn_spec.host = '129.138.12.160'
+    em.destination.dbconn_spec.database = 'massspecdata'
+    em.destination.dbconn_spec.username = 'root'
+    em.destination.dbconn_spec.password = 'DBArgon'
     em.configure_traits()
 #============= EOF =============================================

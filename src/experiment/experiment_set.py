@@ -24,7 +24,7 @@ from traitsui.api import View, Item, VGroup, HGroup, spring, \
 import os
 import yaml
 #============= local library imports  ==========================
-from src.experiment.automated_run import AutomatedRun
+from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
 from src.experiment.stats import ExperimentStats
@@ -33,9 +33,11 @@ from src.experiment.stats import ExperimentStats
 from src.experiment.identifier import convert_identifier
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
-from src.experiment.blocks.parser import RunParser, UVRunParser
+# from src.experiment.blocks.parser import RunParser, UVRunParser
 from src.experiment.blocks.block import Block
 from src.experiment.runs_table import RunsTable
+from src.regex import ALIQUOT_REGEX
+from src.experiment.automated_run.maker import AutomatedRunMaker
 
 
 class ExperimentSet(BaseSchedule):
@@ -53,21 +55,23 @@ class ExperimentSet(BaseSchedule):
     delay_before_analyses = Float(5)
     name = Property(depends_on='path')
     path = Str
-    ok_to_add = Property(depends_on='_ok_to_add')
-    _ok_to_add = Bool(False)
+#    ok_to_add = Property(depends_on='_ok_to_add')
+#    _ok_to_add = Bool(False)
 
     dirty = Bool(False)
 
     executable = Bool(True)
-    auto_increment = Bool(False)
+#    auto_increment = Bool(False)
+    auto_increment = Bool(True)
 
 #    mass_spectrometer = Str('jan')
-    mass_spectrometer = Str(NULL_STR)
+    mass_spectrometer = Str('obama')
+#    mass_spectrometer = Str(NULL_STR)
     mass_spectrometers = Property
 #    tray = Str(NULL_STR)
     trays = Property
-#    extract_device = Str('Fusions Diode')
-    extract_device = Str(NULL_STR)
+    extract_device = Str('Fusions Diode')
+#    extract_device = Str(NULL_STR)
     extract_devices = Property
 
     right_clicked = Any
@@ -84,6 +88,9 @@ class ExperimentSet(BaseSchedule):
     schedule_block_added = Event
     edit_schedule_block = Button('Edit')
     new_schedule_block = Button('New')
+
+
+    automated_run_maker = Instance(AutomatedRunMaker, ())
     def test(self):
         for ai in self.automated_runs:
             if not ai.test():
@@ -344,16 +351,45 @@ tray: {}
         b.edit_traits(kind='livemodal')
 
     def _add_fired(self):
-
-
-        ars = self.automated_runs
+#        ars = self.automated_runs
         ar = self.automated_run
-        nar = ar.clone_traits()
-
         # labnumber is a property so its not cloned by clone_traits
-        nar.labnumber = ar.labnumber
-        nar.position = ar.position
-#        nar.aliquot=ar.aliquot
+#        ln = ar.labnumber
+
+        s = int(ar.position)
+        e = int(ar.endposition)
+        if e:
+            if e < s:
+                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+                return
+
+            for i in range(e - s + 1):
+                ar.position = str(s + i)
+                self._add_run(ar)
+        else:
+            self._add_run(ar)
+
+        self.update_aliquots_needed = True
+        if self.auto_increment and ar.analysis_type == 'unknown':
+            ar = self.automated_run
+            ar.position = str(e + 1)
+#            print ar.position
+            ar.endposition = e + 1 + e - s
+            nn = self._auto_increment(ar.labnumber)
+            ar.labnumber = nn
+            ar._labnumber = nn
+
+
+    def _add_run(self, ar):
+        ars = self.automated_runs
+        nar = ar.clone_traits()
+        ln = ar.labnumber
+        if ALIQUOT_REGEX.match(ln):
+            ln, a = ln.split('-')
+            nar.aliquot = int(a)
+            nar.user_defined_aliquot = True
+        nar.labnumber = ln
+
         if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
             nar.extract_value = 0
             nar.extract_units = ''
@@ -366,16 +402,6 @@ tray: {}
             self._current_group_id += 1
 
         else:
-
-
-#            rid = self._auto_increment(ar.labnumber)
-#            position = None
-#            if ar.position:
-#                position = self._auto_increment(ar.position)
-
-#            if not self._add_new_run(ar):
-#                return
-#            else:
             if self.selected:
                 ind = self.automated_runs.index(self.selected[-1])
                 ars.insert(ind + 1, nar)
@@ -383,18 +409,17 @@ tray: {}
                 ars.append(nar)
 
         kw = dict()
-        if self.auto_increment:
-            rid = self._auto_increment(ar.labnumber)
-            npos = self._auto_increment(ar.position)
-            if rid:
-                kw['labnumber'] = rid
-            if npos:
-                kw['position'] = npos
+#        if self.auto_increment:
+#            rid = self._auto_increment(ar.labnumber)
+#            npos = self._auto_increment(ar.position)
+#            if rid:
+#                kw['labnumber'] = rid
+#            if npos:
+#                kw['position'] = npos
 #        else:
 #            self._ok_to_add = False
 
         self._add_hook(ar, **kw)
-        self.update_aliquots_needed = True
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -407,51 +432,51 @@ tray: {}
 #    def _update_skip(self):
 #        self.update_aliquots_needed = True
 
-    @on_trait_change('automated_run:labnumber')
-    def _update_labnumber(self, labnumber):
-
-        arun = self.automated_run
-        # check for id in labtable
-        self._ok_to_add = False
-        db = self.db
-
-        arun.run_info.sample = ''
-        arun.aliquot = 1
-        arun.irrad_level = ''
-        if labnumber:
-
-            # convert labnumber (a, bg, or 10034 etc)
-            labnumber = convert_identifier(labnumber)
-#            if isinstance(convert_identifier(labnumber), int):
+#    @on_trait_change('automated_run:labnumber')
+#    def _update_labnumber(self, labnumber):
+#
+#        arun = self.automated_run
+#        # check for id in labtable
+#        self._ok_to_add = False
+#        db = self.db
+#
+#        arun.run_info.sample = ''
+#        arun.aliquot = 0
+#        arun.irrad_level = ''
+#        if labnumber:
+#
+#            # convert labnumber (a, bg, or 10034 etc)
+#            labnumber = convert_identifier(labnumber)
+# #            if isinstance(convert_identifier(labnumber), int):
+# #                self._ok_to_add = True
+# # #                arun.sample = convert_labnumber(convert_identifier(labnumber))
+# #                self._load_default_scripts()
+# #                return
+#
+#            ln = db.get_labnumber(labnumber)
+#            if ln:
 #                self._ok_to_add = True
-# #                arun.sample = convert_labnumber(convert_identifier(labnumber))
+#                # set sample and irrad info
+#                try:
+#                    arun.run_info.sample = ln.sample.name
+#                except AttributeError:
+#                    pass
+#
+#                arun.run_info.irrad_level = self._make_irrad_level(ln)
+#
+#                # set default scripts
 #                self._load_default_scripts()
-#                return
-
-            ln = db.get_labnumber(labnumber)
-            if ln:
-                self._ok_to_add = True
-                # set sample and irrad info
-                try:
-                    arun.run_info.sample = ln.sample.name
-                except AttributeError:
-                    pass
-
-                arun.run_info.irrad_level = self._make_irrad_level(ln)
-
-                # set default scripts
-                self._load_default_scripts()
-            else:
-                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
-
-    def _make_irrad_level(self, ln):
-        il = ''
-        ipos = ln.irradiation_position
-        if not ipos is None:
-            level = ipos.level
-            irrad = level.irradiation
-            il = '{}{}'.format(irrad.name, level.name)
-        return il
+#            else:
+#                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+#
+#    def _make_irrad_level(self, ln):
+#        il = ''
+#        ipos = ln.irradiation_position
+#        if not ipos is None:
+#            level = ipos.level
+#            irrad = level.irradiation
+#            il = '{}{}'.format(irrad.name, level.name)
+#        return il
 
     def _mass_spectrometer_changed(self):
         if self.automated_run is None:
@@ -628,6 +653,9 @@ tray: {}
 #        return self._automated_run_factory(extraction=es, measurement=ms)
     def _stats_default(self):
         return ExperimentStats(experiment_set=self)
+
+    def _automated_run_maker_default(self):
+        return AutomatedRunMaker(db=self.db)
 #===============================================================================
 # views
 #===============================================================================
@@ -653,7 +681,7 @@ tray: {}
 
     def traits_view(self):
         new_analysis = VGroup(
-                              Item('automated_run',
+                              Item('automated_run_maker',
                                    show_label=False,
                                    style='custom',
                                    ),
@@ -667,8 +695,8 @@ tray: {}
                                 label='Analyses',
                                 )
 
-        script_grp = self._get_script_group()
         gparams_grp = self._get_global_parameters_group()
+        script_grp = self._get_script_group()
         block_grp = HGroup(Item('schedule_block',
                                 label='Block',
                                 editor=EnumEditor(name='schedule_blocks')),
@@ -684,12 +712,12 @@ tray: {}
                                gparams_grp,
 #                               block_grp,
                                new_analysis,
-                               script_grp,
-                               HGroup(Item('auto_increment'),
-                                     spring,
-                                     Item('add', show_label=False,
-                                          enabled_when='ok_to_add'),
-                                     ),
+#                               script_grp,
+#                               HGroup(Item('auto_increment'),
+#                                     spring,
+#                                     Item('add', show_label=False,
+#                                          enabled_when='ok_to_add'),
+#                                     ),
                                ),
                         analysis_table
 
