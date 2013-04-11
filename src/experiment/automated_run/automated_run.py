@@ -138,18 +138,18 @@ class AutomatedRun(Loggable):
 #    duration = Property(depends_on='_duration')
 
     extract_group = CInt
-#    extract_value = Property(depends_on='_extract_value')
-#    _extract_value = Float
+    extract_value = Property(depends_on='_extract_value')
+    _extract_value = Float
 #
 # #    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
 # #                           depends_on='_extract_units')
 # #    _extract_units = Enum('---', 'watts', 'temp', 'percent')
-#    extract_units = Str(NULL_STR)
-#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
-#    _default_extract_units = 'watts'
+    extract_units = Str(NULL_STR)
+    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+    _default_extract_units = 'watts'
 
-    extract_value = Float
-    extract_units = Str
+#    extract_value = Float
+#    extract_units = Str
     extract_device = Str
     duration = Float
 
@@ -1815,7 +1815,7 @@ anaylsis_type={}
                           position=self.get_position_list(),
                           disable_between_positions=self.disable_between_positions,
                           duration=self.duration,
-                          extract_value=self._extract_value,
+                          extract_value=self.extract_value,
                           extract_units=self.extract_units,
                           cleanup=self.cleanup,
                           extract_device=hdn,
@@ -2026,9 +2026,9 @@ anaylsis_type={}
 #    def _set_extract_units(self, v):
 #        self._extract_units = v
 
-#    def _get_extract_value(self):
-#        v = self._extract_value
-#        return v
+    def _get_extract_value(self):
+        v = self._extract_value
+        return v
 
 #    def _validate_duration(self, d):
 #        return self._validate_float(d)
@@ -2049,19 +2049,19 @@ anaylsis_type={}
 # #            else:
 #            self._duration = d
 
-#    def _set_extract_value(self, t):
-#        if t is not None:
-# #            if self.heat_step:
-# #                self.heat_step.extract_value = t
-# #            else:
-#            self._extract_value = t
-#            if not t:
-#                self.extract_units = '---'
-#            elif self.extract_units == '---':
-#                self.extract_units = self._default_extract_units
-#
-#        else:
-#            self.extract_units = '---'
+    def _set_extract_value(self, t):
+        if t is not None:
+ #            if self.heat_step:
+ #                self.heat_step.extract_value = t
+ #            else:
+            self._extract_value = t
+            if not t:
+                self.extract_units = '---'
+            elif self.extract_units == '---':
+                self.extract_units = self._default_extract_units
+
+        else:
+            self.extract_units = '---'
 
     def _get_state(self):
         return self._state

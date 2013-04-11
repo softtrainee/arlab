@@ -62,13 +62,19 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
-
+    
     def is_ready(self):
         return True
 
     def take_snapshot(self, *args, **kw):
         pass
-
+    
+    def end_extract(self, *args, **kw):
+        pass
+    
+    def extract(self, *args, **kw):
+        pass
+    
     def prepare(self):
         pass
 
