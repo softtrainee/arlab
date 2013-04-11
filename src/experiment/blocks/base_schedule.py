@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from src.constants import NULL_STR, SCRIPT_KEYS
-from src.experiment.automated_run import AutomatedRun
-from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+from src.experiment.automated_run.automated_run import AutomatedRun
+from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter
 from src.experiment.blocks.parser import RunParser, UVRunParser
 from src.experiment.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
 from src.experiment.runs_table import RunsTable
@@ -28,6 +28,7 @@ from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
 from traitsui.api import Item, EnumEditor, VGroup, HGroup
 import os
 import yaml
+from src.experiment.automated_run.maker import AutomatedRunMaker
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -80,31 +81,43 @@ class BaseSchedule(ScriptEditable):
     parser = None
     update_aliquots_needed = Event
 
+    automated_run_maker = Instance(AutomatedRunMaker, ())
 
-    @on_trait_change('extraction_script:name')
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('''automated_run_maker:[extract_value, extract_units, cleanup,
+duration]''')
+    def _value_update(self, name, value):
+        if self.selected_runs:
+            for si in self.selected_runs:
+                setattr(si, name, value)
+
+    @on_trait_change('automated_run_maker:extraction_script:name')
     def _extraction_script_changed(self, obj, name, old, new):
-        self._script_changed('extraction')
+        self._script_changed('extraction', new)
 
-    @on_trait_change('measurement_script:name')
+    @on_trait_change('automated_run_maker:measurement_script:name')
     def _measurement_script_changed(self, obj, name, old, new):
-        self._script_changed('measurement')
+        self._script_changed('measurement', new)
 
-    @on_trait_change('post_equilibration_script:name')
+    @on_trait_change('automated_run_maker:post_equilibration_script:name')
     def _post_equilibration_script_changed(self, obj, name, old, new):
-        self._script_changed('post_equilibration')
+        self._script_changed('post_equilibration', new)
 
-    @on_trait_change('post_measurement_script:name')
+    @on_trait_change('automated_run_maker:post_measurement_script:name')
     def _post_measurement_script_changed(self, obj, name, old, new):
-        self._script_changed('post_measurement')
+        self._script_changed('post_measurement', new)
 
-    def _script_changed(self, sname):
-#        name = name[:-7]
+    def _script_changed(self, sname, name):
+#         name = name[:-7]
         if self.selected_runs is not None:
             for si in self.selected_runs:
-                self._update_run_script(si, sname)
+                self._update_run_script(si, sname, name)
 
-        if self.automated_run is not None:
-            self._update_run_script(self.automated_run, sname)
+        self.runs_table.update_needed = True
+#        if self.automated_run is not None:
+#            self._update_run_script(self.automated_run, sname)
 
     def _selected_changed(self, new):
 #        print new
@@ -112,7 +125,8 @@ class BaseSchedule(ScriptEditable):
         if len(new) == 1:
             run = new[0]
             if run.state == 'not run':
-                self.automated_run = run.clone_traits()
+#                self.automated_run = run.clone_traits()
+                self.automated_run_maker.load_run(run)
                 for si in SCRIPT_KEYS:
                     try:
                         n = self._clean_script_name(getattr(run.script_info, '{}_script_name'.format(si)))
@@ -122,12 +136,12 @@ class BaseSchedule(ScriptEditable):
                     except AttributeError:
                         pass
 
-    @on_trait_change('''automated_run:[_position, extract_+, cleanup, 
-    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
-    def _sync_selected_runs(self, name, new):
-        if self.selected_runs:
-            for si in self.selected_runs:
-                si.trait_set(**{name:new})
+#    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
+#    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+#    def _sync_selected_runs(self, name, new):
+#        if self.selected_runs:
+#            for si in self.selected_runs:
+#                si.trait_set(**{name:new})
 
 #    def make_configuration(self):
 #        extraction = self.extraction_script
@@ -193,67 +207,67 @@ class BaseSchedule(ScriptEditable):
             if self.automated_run:
                 self.automated_run.scripts = self.loaded_scripts
 
-    def _load_default_scripts(self, setter=None, key=None):
-        if key is None:
-            if self.automated_run is None:
-                return
-            key = self.automated_run.labnumber
-
-        if setter is None:
-#            def setter(ski, sci):
-#                v = getattr(self, '{}_script'.format(ski))
-
-            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
-
-        # open the yaml config file
-#        import yaml
-        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
-        if not os.path.isfile(p):
-            return
-
-        with open(p, 'r') as fp:
-            defaults = yaml.load(fp)
-
-        # convert keys to lowercase
-        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
-
-        # if labnumber is int use key='U'
-        try:
-            _ = int(key)
-            key = 'u'
-        except ValueError:
-            pass
-
-        key = key.lower()
-
-#        print key, defaults
-        if not key in defaults:
-            return
-
-        scripts = defaults[key]
-        for sk in SCRIPT_KEYS:
-
-            sc = NULL_STR
-            try:
-                sc = scripts[sk]
-                sc = sc if sc else NULL_STR
-            except KeyError:
-                pass
-
-            sc = self._remove_file_extension(sc)
-            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
-                e = self.extract_device.split(' ')[1].lower()
-                if sk == 'extraction':
-                    sc = e
-                elif sk == 'post_equilibration':
-                    sc = 'pump_{}'.format(e)
-
-            script = getattr(self, '{}_script'.format(sk))
-            if not sc in script.names:
-#            if not sc in getattr(self, '{}_scripts'.format(sk)):
-                sc = NULL_STR
-#            print setter, sk, sc
-            setter(sk, sc)
+#    def _load_default_scripts(self, setter=None, key=None):
+#        if key is None:
+#            if self.automated_run is None:
+#                return
+#            key = self.automated_run.labnumber
+#
+#        if setter is None:
+# #            def setter(ski, sci):
+# #                v = getattr(self, '{}_script'.format(ski))
+#
+#            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
+#
+#        # open the yaml config file
+# #        import yaml
+#        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+#        if not os.path.isfile(p):
+#            return
+#
+#        with open(p, 'r') as fp:
+#            defaults = yaml.load(fp)
+#
+#        # convert keys to lowercase
+#        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
+#
+#        # if labnumber is int use key='U'
+#        try:
+#            _ = int(key)
+#            key = 'u'
+#        except ValueError:
+#            pass
+#
+#        key = key.lower()
+#
+# #        print key, defaults
+#        if not key in defaults:
+#            return
+#
+#        scripts = defaults[key]
+#        for sk in SCRIPT_KEYS:
+#
+#            sc = NULL_STR
+#            try:
+#                sc = scripts[sk]
+#                sc = sc if sc else NULL_STR
+#            except KeyError:
+#                pass
+#
+#            sc = self._remove_file_extension(sc)
+#            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
+#                e = self.extract_device.split(' ')[1].lower()
+#                if sk == 'extraction':
+#                    sc = e
+#                elif sk == 'post_equilibration':
+#                    sc = 'pump_{}'.format(e)
+#
+#            script = getattr(self, '{}_script'.format(sk))
+#            if not sc in script.names:
+# #            if not sc in getattr(self, '{}_scripts'.format(sk)):
+#                sc = NULL_STR
+# #            print setter, sk, sc
+#            setter(sk, sc)
 
 #===============================================================================
 # persistence
@@ -290,22 +304,20 @@ class BaseSchedule(ScriptEditable):
 #
     def _get_dump_attrs(self):
         header = ['labnumber',
-#                  'aliquot',
                   'pattern',
                   'position',
                   'overlap',
-                  'extract_group',
-                  'extract_value',
-                  'extract_units',
+                  'e_group',
+                  'e_value',
+                  'e_units',
                   'duration',
                   'cleanup',
                   'autocenter',
-                  'extraction', 'measurement', 'post_equilibration', 'post_measurement',
-                  'disable_between_positions',
+                  'extraction', 'measurement', 'post_eq', 'post_meas',
+                  'dis_btw_pos',
                   'weight', 'comment'
                   ]
         attrs = ['labnumber',
-#                  'aliquot',
                   'pattern',
                   'position',
                   'overlap',
@@ -325,18 +337,10 @@ class BaseSchedule(ScriptEditable):
             header.extend(('reprate', 'mask', 'attenuator', 'image'))
             attrs.extend(('reprate', 'mask', 'attenuator', 'image'))
 
-#        else:
-#            header.extend(['beam'])
-#            attrs.extend(['beam'])
-
         return header, attrs
 
     def _meta_dumper(self, fp=None):
         pass
-
-#    @classmethod
-#    def _run_parser(cls, header, line, meta, delim='\t'):
-#        params = dict()
 
     def parse_line(self, *args, **kw):
         if self.parser is None:
@@ -413,5 +417,11 @@ class BaseSchedule(ScriptEditable):
              Item('paste_button', enabled_when='object._copy_cache'),
              Item('update_aliquots'),
               show_labels=False)
+
+    def _automated_run_maker_default(self):
+        return AutomatedRunMaker(
+                             mass_spectrometer=self.mass_spectrometer,
+                             extract_device=self.extract_device,
+                             )
 
 #============= EOF =============================================

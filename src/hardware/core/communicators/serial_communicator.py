@@ -526,7 +526,7 @@ class SerialCommunicator(Communicator):
             # print func
             try:
                 r, isterminated = func(r)
-#                print 'rrr', r, isterminated
+#               print r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):

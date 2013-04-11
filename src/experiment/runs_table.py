@@ -17,8 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, List, Str, Event
 from traitsui.api import View, Item, TableEditor
-from src.experiment.automated_run import AutomatedRun
-from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter, \
+from src.experiment.automated_run.automated_run import AutomatedRun
+from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter, \
     UVAutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.uv_automated_run import UVAutomatedRun
@@ -31,6 +31,7 @@ class RunsTable(HasTraits):
     selected = Any
     rearranged = Event
     extract_device = Str
+    update_needed = Event
 
     def set_runs(self, runs):
         if runs:
@@ -61,11 +62,12 @@ class RunsTable(HasTraits):
                       editor=myTabularEditor(adapter=ad,
                                             operations=['delete',
                                                         'move',
-#                                                                        'edit'
+#                                                        'edit'
                                                         ],
                                             editable=False,
                                             selected='selected',
                                             rearranged='rearranged',
+                                            update='update_needed',
                                             auto_update=True,
                                             multi_select=True,
                                             scroll_to_bottom=False)

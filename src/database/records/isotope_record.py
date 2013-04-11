@@ -297,6 +297,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     fit = self._get_db_fit(name, 'baseline')
                     r.set_fit(fit)
                     i.baseline = r
+
+            blanks = self._get_blanks()
+            if blanks:
+                for bi in blanks:
+                    for ba in bi.blanks:
+                        r = Blank(dbrecord=ba, name=ba.isotope)
+                        self.isotopes[ba.isotope].blank = r
+
             return True
 
     def load(self):
@@ -312,12 +320,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             graph = self._make_peak_center_graph(*peakcenter)
             self.peak_center_graph = graph
 
-        blanks = self._get_blanks()
-        if blanks:
-            for bi in blanks:
-                for ba in bi.blanks:
-                    r = Blank(dbrecord=ba, name=ba.isotope)
-                    self.isotopes[ba.isotope].blank = r
+#        blanks = self._get_blanks()
+#        if blanks:
+#            for bi in blanks:
+#                for ba in bi.blanks:
+#                    r = Blank(dbrecord=ba, name=ba.isotope)
+#                    self.isotopes[ba.isotope].blank = r
 
             if 'blanks' not in self.categories:
 #                self.categories.append(-1, 'blanks')
