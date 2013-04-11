@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Instance
 from traitsui.api import View, Item, VGroup, HGroup, InstanceEditor
 from src.viewable import Viewable
-from src.experiment.automated_run import AutomatedRun
+from src.experiment.automated_run.automated_run import AutomatedRun
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.script_editable import ScriptEditable

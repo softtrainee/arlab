@@ -23,24 +23,51 @@ from src.loggable import Loggable
 from src.regex import ALIQUOT_REGEX
 
 class RunParser(Loggable):
+    def _get_attr(self, attr):
+        if isinstance(attr, tuple):
+            attr, rattr = attr
+        else:
+            attr, rattr = attr, attr
+        return attr, rattr
+
+    def _get_idx(self, header, attr):
+        try:
+            return header.index(attr)
+        except ValueError:
+            pass
+
+    def _load_scripts(self, header, args):
+        script_info = dict()
+        # load scripts
+        for attr in [
+                     # ver. 1.0
+                     'measurement', 'extraction',
+                     'post_measurement',
+                     'post_equilibration',
+
+                     # ver. 2.0
+                     ('post_eq', 'post_equilibration'),
+                     ('post_meas', 'post_measurement'),
+                     ]:
+
+            attr, rattr = self._get_attr(attr)
+            idx = self._get_idx(header, attr)
+            if idx:
+                try:
+                    script_info[rattr] = args[idx]
+                except IndexError, e:
+                    self.debug('base schedule _run_parser {} {}'.format(e, attr))
+
+        return script_info
+
     def parse(self, header, line, meta, delim='\t'):
         params = dict()
         if not isinstance(line, list):
             line = line.split(delim)
 
-#        print len(line)
         args = map(str.strip, line)
 
-        script_info = dict()
-        # load scripts
-        for attr in ['measurement', 'extraction',
-                     'post_measurement',
-                     'post_equilibration',
-                     ]:
-            try:
-                script_info[attr] = args[header.index(attr)]
-            except IndexError, e:
-                self.debug('base schedule _run_parser {} {}'.format(e, attr))
+        script_info = self._load_scripts(header, args)
 
         ln = args[header.index('labnumber')]
         if ALIQUOT_REGEX.match(ln):
@@ -51,53 +78,124 @@ class RunParser(Loggable):
 
         # load strings
         for attr in [
-                     'measurement', 'extraction',
-                     'post_measurement',
-                     'post_equilibration',
                      'pattern',
                      'position',
-                     'comment'
+                     'comment',
+
+                     # ver 1.0
+                     'extract_units',
+                     # ver 2.0
+                     ('e_units', 'extract_units')
                      ]:
-            try:
-                params[attr] = args[header.index(attr)]
-            except (IndexError, ValueError), e:
-                self.debug('base schedule _run_parser {} {}'.format(e, attr))
+
+            attr, rattr = self._get_attr(attr)
+            idx = self._get_idx(header, attr)
+            if idx:
+                try:
+                    params[rattr] = args[idx]
+                except IndexError, e:
+                    self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         # load booleans
-        for attr in ['autocenter', 'disable_between_positions']:
-            try:
-                param = args[header.index(attr)]
+        for attr in [
+                     # ver 1.0
+                     'autocenter',
+                     'disable_between_positions',
+
+                     # ver 2.0
+                     ('dis_btw_pos', 'disable_between_positions')
+                     ]:
+            attr = self._get_attr(attr)
+            idx = self._get_idx(header, attr)
+            if idx:
+                try:
+                    param = args[idx]
+                except IndexError:
+                    params[rattr] = False
+                    continue
+
                 if param.strip():
                     bo = str_to_bool(param)
                     if bo is not None:
-                        params[attr] = bo
+                        params[rattr] = bo
                     else:
-                        params[attr] = False
-            except (IndexError, ValueError):
-                params[attr] = False
+                        params[rattr] = False
 
         # load numbers
         for attr in ['duration', 'overlap', 'cleanup',
 #                     'aliquot',
                      'extract_group',
-                     'weight'
+                     'weight',
+                     # ver 1.0
+                     'extract_value',
+                     # ver 2.0
+                     ('e_value', 'extract_value'),
                      ]:
-            try:
-                param = args[header.index(attr)].strip()
-                if param:
-                    params[attr] = float(param)
-            except (IndexError, ValueError):
-                pass
+#            if isinstance(attr, tuple):
+#                attr, rattr = attr
+#            else:
+#                attr, rattr = attr, attr
+            attr, rattr = self._get_attr(attr)
+            idx = self._get_idx(header, attr)
+            if idx:
+                try:
+                    param = args[idx]
+                    params[rattr] = float(param.strip())
+                except (IndexError, ValueError), e:
+                    print e
+                    pass
+
+#            try:
+#                idx = header.index(attr)
+#            except ValueError, e:
+#                print e
+#                continue
+#                try:
+#                    param = args[idx]
+#                    params[rattr] = float(param.strip())
+#                except (IndexError, ValueError), e:
+#                    print e
+#                    pass
+#            try:
+#                param = args[header.index(attr)].strip()
+#                if param:
+#                    params[attr] = float(param)
+#            except (IndexError, ValueError):
+#                pass
 
         # default extract_units to watts
 #        print header.index('extract_value'), len(args)
-        extract_value = args[header.index('extract_value')]
-        extract_units = args[header.index('extract_units')]
-        if not extract_units:
-            extract_units = '---'
+#        for attr in [
+#                     # ver 1.0
+#                     'extract_value',
+#                     'extract_units',
+#                     # ver 2.0
+#                     ('e_value', 'extract_value'),
+#                     ('e_units', 'extract_units')
+#                     ]:
+#            if isinstance(attr, tuple):
+#                attr, rattr = attr
+#            else:
+#                attr, rattr = attr, attr
+#
+#            try:
+#                idx = header.index(attr)
+#            except ValueError:
+#                continue
+#
+#            try:
+#                param = args[idx]
+#                params[rattr] = param
+#            except IndexError:
+#                pass
 
-        params['extract_value'] = extract_value
-        params['extract_units'] = extract_units
+#        extract_value = args[header.index('extract_value')]
+#        extract_units = args[header.index('extract_units')]
+#        if not extract_units:
+#            extract_units = '---'
+#
+#        params['extract_value'] = extract_value
+#        params['extract_units'] = extract_units
 
 #        def make_script_name(n):
 #            try:
@@ -113,6 +211,8 @@ class RunParser(Loggable):
 #                na = NULL_STR
 #
 #            return na
+#        for k, pa in params.iteritems():
+#            print k, pa
 
         return script_info, params  # , make_script_name
 

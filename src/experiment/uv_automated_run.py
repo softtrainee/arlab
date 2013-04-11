@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Int, Str, Enum , Property, List, cached_property, \
     Button
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup
-from src.experiment.automated_run import AutomatedRun
+from src.experiment.automated_run.automated_run import AutomatedRun
 from src.constants import NULL_STR
 import os
 from src.paths import paths

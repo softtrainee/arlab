@@ -20,9 +20,10 @@ from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, spring, Label
 from src.saveable import Saveable
 import os
 from src.paths import paths
-from src.constants import NULL_STR
+from src.constants import NULL_STR, SCRIPT_KEYS
 from src.pyscripts.pyscript_editor import PyScriptManager
 from src.loggable import Loggable
+import yaml
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ScriptMixin(object):
@@ -99,6 +100,7 @@ class Script(Loggable, ScriptMixin):
     def _get_names(self):
         names = [NULL_STR]
         ms = self._load_script_names()
+
         if ms:
             msn = '{}_'.format(self.mass_spectrometer)
             names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
@@ -166,13 +168,76 @@ class ScriptEditable(Saveable, ScriptMixin):
             name = '{}_{}'.format(self.mass_spectrometer, name)
         return name
 
-    def _update_run_script(self, run, sname):
+    def _update_run_script(self, run, sname, name):
         if run.state == 'not run':
-            ssname = '{}_script'.format(sname)
-            script = getattr(self, ssname)
-            if script:
-                setattr(run.script_info, '{}_script_name'.format(sname), script.name)
+#            ssname = '{}_script'.format(sname)
+#            script = getattr(self, ssname)
+#            print script, script.name
+#            if script:
+            setattr(run.script_info, '{}_script_name'.format(sname), name)
+
 #                setattr(run, '{}_dirty'.format(ssname), True)
+
+    def _load_default_scripts(self, setter=None, key=None):
+        if key is None:
+            if self.automated_run is None:
+                return
+            key = self.automated_run.labnumber
+
+        if setter is None:
+#            def setter(ski, sci):
+#                v = getattr(self, '{}_script'.format(ski))
+
+            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
+
+        # open the yaml config file
+#        import yaml
+        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+        if not os.path.isfile(p):
+            self.warning('Script defaults file does not exist {}'.format(p))
+            return
+
+        with open(p, 'r') as fp:
+            defaults = yaml.load(fp)
+
+        # convert keys to lowercase
+        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
+
+        # if labnumber is int use key='U'
+        try:
+            _ = int(key)
+            key = 'u'
+        except ValueError:
+            pass
+
+        key = key.lower()
+
+        if not key in defaults:
+            return
+
+        scripts = defaults[key]
+        for sk in SCRIPT_KEYS:
+            sc = NULL_STR
+            try:
+                sc = scripts[sk]
+                sc = sc if sc else NULL_STR
+            except KeyError:
+                pass
+
+            sc = self._remove_file_extension(sc)
+            if key.lower() in ('u', 'bu') and self.extract_device != NULL_STR:
+                e = self.extract_device.split(' ')[1].lower()
+                if sk == 'extraction':
+                    sc = e
+                elif sk == 'post_equilibration':
+                    sc = 'pump_{}'.format(e)
+
+            script = getattr(self, '{}_script'.format(sk))
+            if not sc in script.names:
+#            if not sc in getattr(self, '{}_scripts'.format(sk)):
+                sc = NULL_STR
+#            print setter, sk, sc
+            setter(sk, sc)
 #===============================================================================
 # property get/set
 #===============================================================================
