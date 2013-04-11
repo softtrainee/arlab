@@ -395,10 +395,6 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                     st = 0
             else:
                 st = stdict[arunid] if arunid in stdict else 0
-#                if arunid in stdict:
-#                    st = stdict[arunid]
-#                else:
-#                    st = 0
 #             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
             if not arun.aliquot:
                 arun.aliquot = st + c - offset

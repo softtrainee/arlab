@@ -99,11 +99,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_analysis(self, value, aliquot=None, step=None):
         key = 'RID'
         if aliquot:
-            key = ('RID', 'Aliquot')
-            value = ('{}-{}'.format(value, aliquot), aliquot)
             if step:
-                value = ('{}-{}'.format(value, aliquot, step), aliquot, step)
-                key = key + ('Increment',)
+                value = ('{}-{}{}'.format(value, aliquot, step), aliquot, step)
+                key = ('RID', 'Aliquot', 'Increment')
+            else:
+                key = ('RID', 'Aliquot')
+                value = ('{}-{}'.format(value, aliquot), aliquot)
 
         return self._retrieve_item(AnalysesTable, value,
                                    key=key)
@@ -199,8 +200,9 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
 
 #    @add
-    def add_analysis(self, rid, aliquot, step, irradpos, runtype, refdetlabel,
-                     overwrite=True,
+    def add_analysis(self, rid, aliquot, step, irradpos, runtype,
+#                     refdetlabel,
+#                     overwrite=True,
                      **kw):
         '''
             this function does not check for existence of the record_id
@@ -210,11 +212,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            rid, aliquot = rid.split('-')
 #            r = int(args[0])
 #            d = int(args[1]) if len(args) == 2 else None
-        rd = self.get_detector(refdetlabel)
-        refid, label = 0, ''
-        if rd:
-            refid = rd.DetectorID
-            label = rd.Label
+#        rd = self.get_detector(refdetlabel)
+#        refid, label = 0, ''
+#        if rd:
+#            refid = rd.DetectorID
+#            label = rd.Label
 
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
@@ -224,8 +226,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                      LoginSessionID=1,
                      SpecRunType=runtype,
                      Increment=step,
-                     RefDetID=refid,
-                     ReferenceDetectorLabel=label
+#                     RefDetID=refid,
+#                     ReferenceDetectorLabel=label
                      )
 
         # IrradPosition cannot be null
@@ -289,9 +291,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
     def add_detector(self, det_type, **kw):
         dtype = self.get_detector_type(det_type)
-        d = DetectorTable()
-        if dtype is not None:
-            dtype.detectors.append(d)
+        d = DetectorTable(
+                          DetectorTypeID=dtype.DetectorTypeID,
+                          **kw)
+#        if dtype is not None:
+#            dtype.detectors.append(d)
 
         self._add_item(d)
         return d
@@ -325,7 +329,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
     def add_isotope_result(self, isotope, data_reduction_session_id,
                            intercept, baseline, blank,
-                           fit
+                           fit,
+                           detector
 #                           intercept, intercept_err,
 #                           baseline, baseline_err,
 #                           blank, blank_err
@@ -350,6 +355,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         fit = self.get_fittype(fit)
 
+        detector = self.get_detector(detector)
+
         iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session_id,
                                     Intercept=intercept.nominal_value,
                                     InterceptEr=intercept.std_dev(),
@@ -360,7 +367,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                                     Bkgd=blank.nominal_value,
                                     BkgdEr=blank.std_dev(),
 
-                                    BkgdDetTypeID=1,
+                                    BkgdDetTypeID=detector.DetectorTypeID,
 
                                     Fit=fit
                                     )

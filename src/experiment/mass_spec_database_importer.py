@@ -50,6 +50,7 @@ class MassSpecDatabaseImporter(Loggable):
     sample_loading_id = None
     data_reduction_session_id = None
     login_session_id = None
+    _current_spec = None
 
     def connect(self):
         return self.db.connect()
@@ -195,11 +196,11 @@ class MassSpecDatabaseImporter(Loggable):
             self.sample_loading_id = sl.SampleLoadingID
 
     def add_login_session(self, ms):
-        if self.login_session_id is None:
-            db = self.db
-            ls = db.add_login_session(ms)
-            db.flush()
-            self.login_session_id = ls.LoginSessionID
+        self.info('adding new session for {}'.format(ms))
+        db = self.db
+        ls = db.add_login_session(ms)
+        db.flush()
+        self.login_session_id = ls.LoginSessionID
 
     def add_data_reduction_session(self):
         if self.data_reduction_session_id is None:
@@ -210,8 +211,10 @@ class MassSpecDatabaseImporter(Loggable):
 
     def create_import_session(self, spectrometer, tray):
         # add login, sample, dr ids
-        if self.login_session_id is None:
+        if self.login_session_id is None or self._current_spec != spectrometer:
+            self._current_spec = spectrometer
             self.add_login_session(spectrometer)
+
         if self.data_reduction_session_id is None:
             self.add_data_reduction_session()
         if self.sample_loading_id is None:
@@ -221,6 +224,7 @@ class MassSpecDatabaseImporter(Loggable):
         self.sample_loading_id = None
         self.data_reduction_session_id = None
         self.login_session_id = None
+        self._current_spec = None
 
     def add_analysis(self, spec, commit=True):
         gst = time.time()
@@ -270,14 +274,18 @@ class MassSpecDatabaseImporter(Loggable):
 
         # add runscript
         rs = db.add_runscript(spec.runscript_name, spec.runscript_text)
-#        db.flush()
+        db.flush()
 #        print irradpos, runtype
         self.create_import_session(spectrometer, tray)
+
+        # added the reference detector
+        refdbdet = db.add_detector('H1', Label='H1')
+        db.flush()
 
         analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
-                                   'H1',
+#                                   'H1',
                                    RedundantSampleID=sample_id,
                                    HeatingItemName=spec.extract_device,
                                    PwrAchieved_Max=spec.power_achieved,
@@ -288,6 +296,9 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
                                    )
+
+        analysis.RefDetID = refdbdet.DetectorID
+        analysis.ReferenceDetectorLabel = refdbdet.Label
         analysis.SampleLoadingID = self.sample_loading_id
         analysis.LoginSessionID = self.login_session_id
         analysis.RunScriptID = rs.RunScriptID
@@ -313,7 +324,15 @@ class MassSpecDatabaseImporter(Loggable):
 
 #            db_iso = timethis(db.add_isotope, args=(analysis, det, isok),
 #                              msg='add_isotope', log=self.debug, decorate='^')
-            db_iso = db.add_isotope(analysis, det, isok)
+
+            # add detector
+            if det == analysis.ReferenceDetectorLabel:
+                dbdet = refdbdet
+            else:
+                dbdet = db.add_detector(det, Label=det)
+                db.flush()
+#            print det, analysis.ReferenceDetectorLabel
+            db_iso = db.add_isotope(analysis, dbdet, isok)
 
             #===================================================================
             # baselines
@@ -368,7 +387,8 @@ class MassSpecDatabaseImporter(Loggable):
                                   baseline,
 #                                      ufloat((baseline, baseline_err)),
                                   ublank,
-                                  sfit
+                                  sfit,
+                                  dbdet,
                                   )
 
 

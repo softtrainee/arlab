@@ -47,7 +47,7 @@ from src.helpers.alphas import ALPHAS
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.constants import NULL_STR, SCRIPT_KEYS
-from src.experiment.automated_run_condition import TruncationCondition, \
+from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
@@ -119,12 +119,14 @@ class AutomatedRun(Loggable):
     special_labnumber = Str
 
     _labnumber = Str
-    labnumbers = Property(depends_on='project')
+#    labnumbers = Property(depends_on='project')
 
-    project = Any
-    projects = Property
+#    project = Any
+#    projects = Property
 
     aliquot = CInt
+    user_defined_aliquot = False
+
     step = Property(depends_on='_step')
     _step = Int
 
@@ -564,8 +566,15 @@ anaylsis_type={}
                 v = getattr(self.script_info, '{}_name'.format(attrname))
                 if v:
                     v = str(v).replace(self.mass_spectrometer, '')
+            elif attrname == 'labnumber':
+                if self.user_defined_aliquot:
+                    v = '{}-{}'.format(self.labnumber, self.aliquot)
+                else:
+                    v = self.labnumber
             else:
                 v = getattr(self, attrname)
+
+
             return v
 
         return [get_attr(ai) for ai in attr]
@@ -1509,8 +1518,8 @@ anaylsis_type={}
 #        signals=self._processed_signals_dict
 #        sig_ints = dict()
 #        base_ints = dict()
-        sig_ints=[]
-        base_ints=[]
+        sig_ints = []
+        base_ints = []
 #        for k,v in self._processed_signals_dict:
         psignals = self._processed_signals_dict
         for iso, _, kind in self._save_isotopes:
@@ -1522,8 +1531,8 @@ anaylsis_type={}
 #                sig_ints[iso] = si.uvalue
 #                base_ints[iso] = bi.uvalue
 
-        baseline_fits=['Average Y',]*len(self._active_detectors)
-            
+        baseline_fits = ['Average Y', ] * len(self._active_detectors)
+
 #        intercepts = [sig_ints, base_ints]
 #        signal_fits = dict(zip([ni.isotope for ni in self._active_detectors], self.fits))
 #        baseline_fits = dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])
@@ -1531,8 +1540,8 @@ anaylsis_type={}
 #        intercepts = [sig_ints, base_ints]
 #        fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
 #                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
-        rs_name, rs_text=self._assemble_script_blob()
-        
+        rs_name, rs_text = self._assemble_script_blob()
+
         exp = ExportSpec(rid=self.labnumber,
                          runscript_name=rs_name,
                          runscript_text=rs_text,
@@ -1599,24 +1608,24 @@ anaylsis_type={}
         self.info('analysis added to mass spec database')
 
     def _assemble_extraction_blob(self):
-        _names,txt=self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
+        _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
 #        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
 #                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
 #                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
 #                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
         return txt
-    
+
     def _assemble_script_blob(self, kinds=None):
         if kinds is None:
-            kinds='extraction', 'measurement', 'post_equilibration', 'post_measurement'
-        okinds=[]
-        bs=[]
-        for s in kinds:#('extraction', 'post_equilibration', 'post_measurement'):
-            sc=getattr(self, '{}_script'.format(s))
+            kinds = 'extraction', 'measurement', 'post_equilibration', 'post_measurement'
+        okinds = []
+        bs = []
+        for s in kinds:  # ('extraction', 'post_equilibration', 'post_measurement'):
+            sc = getattr(self, '{}_script'.format(s))
             if sc is not None:
                 bs.append((sc.name, sc.toblob()))
                 okinds.append(s)
-        
+
         return assemble_script_blob(bs, kinds=okinds)
 #        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
 #                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
@@ -1628,7 +1637,7 @@ anaylsis_type={}
 #                                                 (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
 #                                                 (self.post_measurement_script.name, self.post_measurement_script.toblob())]
 #                                                )
-        
+
 #    def _assemble_script_blob(self, kinds=None):
 #        '''
 #            make one blob of all the script text
@@ -1658,25 +1667,25 @@ anaylsis_type={}
 #===============================================================================
 # handlers
 #===============================================================================
-    def __labnumber_changed(self):
-        if self._labnumber != NULL_STR:
-            self.labnumber = self._labnumber
-
-    def _project_changed(self):
-        self._labnumber = NULL_STR
-        self.labnumber = ''
-
-    def _labnumber_changed(self):
-        if self.labnumber != NULL_STR:
-            if not self.labnumber in SPECIAL_MAPPING.values():
-                self.special_labnumber = NULL_STR
-
-    def _special_labnumber_changed(self):
-        if self.special_labnumber != NULL_STR:
-            ln = convert_special_name(self.special_labnumber)
-            if ln:
-                self.labnumber = ln
-                self._labnumber = NULL_STR
+#    def __labnumber_changed(self):
+#        if self._labnumber != NULL_STR:
+#            self.labnumber = self._labnumber
+#
+#    def _project_changed(self):
+#        self._labnumber = NULL_STR
+#        self.labnumber = ''
+#
+#    def _labnumber_changed(self):
+#        if self.labnumber != NULL_STR:
+#            if not self.labnumber in SPECIAL_MAPPING.values():
+#                self.special_labnumber = NULL_STR
+#
+#    def _special_labnumber_changed(self):
+#        if self.special_labnumber != NULL_STR:
+#            ln = convert_special_name(self.special_labnumber)
+#            if ln:
+#                self.labnumber = ln
+#                self._labnumber = NULL_STR
 
 
     def _runner_changed(self):
@@ -2099,20 +2108,21 @@ anaylsis_type={}
 #===============================================================================
 # views
 #===============================================================================
-    def _get_position_group(self):
-        grp = VGroup(
-                         Item('autocenter',
-                              tooltip='Should the extract device try to autocenter on the sample'
-                              ),
-                         Item('position',
-                              tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
-                              ),
-#                         Item('multiposition', label='Multi. position run'),
-#                         Item('endposition'),
-                         show_border=True,
-                         label='Position'
-                     )
-        return grp
+#    def _get_position_group(self):
+#        grp = VGroup(
+# #                         Item('autocenter',
+# #                              tooltip='Should the extract device try to autocenter on the sample'
+# #                              ),
+#                         HGroup(Item('position',
+#                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
+#                                     ),
+#                                Item('endposition', label='End')
+#                                ),
+# #                         Item('multiposition', label='Multi. position run'),
+#                         show_border=True,
+#                         label='Position'
+#                     )
+#        return grp
 
     def _get_supplemental_extract_group(self):
         pass
