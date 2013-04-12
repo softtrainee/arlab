@@ -21,7 +21,7 @@ from traitsui.api import View, Item, HGroup, Group, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.loggable import Loggable
-from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter
+from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.experiment_manager import ExperimentManager
 from src.managers.manager import Manager
@@ -44,9 +44,12 @@ from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
 from src.constants import NULL_STR, SCRIPT_KEYS
-from src.experiment.automated_run.editor import AutomatedRunEditor
+# from src.experiment.automated_run.editor import AutomatedRunEditor
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
+from src.experiment.automated_run.automated_run import AutomatedRun
+from src.experiment.automated_run.editor import AutomatedRunEditor
+from src.experiment.automated_run.factory import AutomatedRunFactory
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
@@ -59,6 +62,8 @@ class ExperimentExecutor(ExperimentManager):
     info_display = Instance(RichTextDisplay)
     pyscript_runner = Instance(PyScriptRunner)
     data_manager = Instance(H5DataManager, ())
+
+    current_run = Instance(AutomatedRun)
 
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
@@ -102,7 +107,8 @@ class ExperimentExecutor(ExperimentManager):
 
     mode = 'normal'
 
-    measuring = DelegatesTo('experiment_set')
+    measuring = Bool(False)
+#    measuring = DelegatesTo('experiment_')
     stats = Instance(StatsGroup, ())
 
     new_run_gen_needed = False
@@ -132,7 +138,7 @@ class ExperimentExecutor(ExperimentManager):
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
 
     def experiment_blob(self):
-        return '{}\n{}'.format(self.experiment_set.path, self._text)
+        return '{}\n{}'.format(self.experiment_queue.path, self._text)
 
     def opened(self):
 #        self.info_display.clear()
@@ -145,7 +151,7 @@ class ExperimentExecutor(ExperimentManager):
     def _get_all_automated_runs(self):
         ans = super(ExperimentExecutor, self)._get_all_automated_runs()
         startid = 0
-        exp = self.experiment_set
+        exp = self.experiment_queue
         if exp and exp._cached_runs:
             try:
                 startid = exp._cached_runs.index(self._last_ran) + 1
@@ -158,9 +164,9 @@ class ExperimentExecutor(ExperimentManager):
         super(ExperimentExecutor, self)._reload_from_disk()
         self._update_stats()
 
-    @on_trait_change('experiment_sets[]')
+    @on_trait_change('experiment_queues[]')
     def _update_stats(self):
-        self.stats.experiment_sets = self.experiment_sets
+        self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 
     def execute_procedure(self, name=None):
@@ -212,23 +218,30 @@ class ExperimentExecutor(ExperimentManager):
                                      title='Confirm Cancel'
                                      ):
                 self._alive = False
-                arun = self.experiment_set.current_run
+                arun = self.current_run
+#                arun = self.experiment_queue.current_run
                 if arun:
                     arun.cancel()
         else:
             if self._was_executed:
-                self.load_experiment_set(self.experiment_set.path, edit=False)
+                self.load_experiment_set(self.experiment_queue.path, edit=False)
 
             self.stop_file_listener()
 
+            # test runs first
+            for exp in self.experiment_queues:
+                if not exp.test_runs():
+                    self.warning('experiment canceled')
+                    return
+
             # check for blank before starting the thread
-            exp = self.experiment_sets[0]
+            exp = self.experiment_queues[0]
             if self._has_preceeding_blank_or_background(exp):
 #                 if self.extraction_line_manager:
 #                     # start the extraction line manager's valve state monitor
 #                     self.extraction_line_manager.start_status_monitor()
 
-                t = Thread(target=self._execute_experiment_sets)
+                t = Thread(target=self._execute_experiment_queues)
                 t.start()
 
                 self.err_message = False
@@ -260,7 +273,7 @@ class ExperimentExecutor(ExperimentManager):
 
         return nonfound
 
-    def _execute_experiment_sets(self):
+    def _execute_experiment_queues(self):
         self.stats.calculate()
         self.stats.start_timer()
         self.stats.nruns_finished = 0
@@ -270,8 +283,7 @@ class ExperimentExecutor(ExperimentManager):
                 self._alive = False
                 return
 
-        exp = self.experiment_sets[0]
-
+        exp = self.experiment_queues[0]
         nonfound = self._check_for_managers(exp)
         if nonfound:
             self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
@@ -288,12 +300,6 @@ class ExperimentExecutor(ExperimentManager):
 
         self.pyscript_runner.connect()
 
-        # check for a preceeding blank
-#        if not self._has_preceeding_blank_or_background(exp):
-#            self.info('experiment canceled because no blank or background was configured')
-#            self._alive = False
-#            return
-
         self._alive = True
 
         # delay before starting
@@ -303,9 +309,9 @@ class ExperimentExecutor(ExperimentManager):
         self.set_selector.selected_index = -2
         rc = 0
         ec = 0
-        for i, exp in enumerate(self.experiment_sets):
+        for i, exp in enumerate(self.experiment_queues):
             if self.isAlive():
-                self.experiment_set = exp
+                self.experiment_queue = exp
                 t = self._execute_automated_runs(i + 1, exp)
                 if t:
                     rc += t
@@ -333,7 +339,7 @@ class ExperimentExecutor(ExperimentManager):
             self.delay_between_runs_readback -= 0.5
         self.delaying_between_runs = False
 #    def check_for_mods(self):
-#        if self.experiment_set.new_run_gen_needed:
+#        if self.experiment_queue.new_run_gen_needed:
 #            return True
 
     def _execute_automated_runs(self, iexp, exp):
@@ -344,7 +350,11 @@ class ExperimentExecutor(ExperimentManager):
         exp._alive = True
 
         self.db.reset()
-        exp.save_to_db()
+
+        # save experiment to database
+        self.info('saving experiment {} to database'.format(exp.name))
+        self.db.add_experiment(exp.name)
+        self.db.flush()
 
         rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0
@@ -373,8 +383,12 @@ class ExperimentExecutor(ExperimentManager):
                 delay = exp.delay_between_analyses
                 self._delay(delay)
 
+            runargs = None
             try:
-                runargs = self._launch_run(rgen, cnt)
+                run = rgen.next()
+                if not run.skip:
+                    runargs = self._launch_run(run, cnt)
+
             except StopIteration:
                 break
 
@@ -434,16 +448,11 @@ class ExperimentExecutor(ExperimentManager):
                 msg = '{}\n{}'.format(msg, run.assemble_report())
 #                man.broadcast(msg)
 
-    def _launch_run(self, runsgen, cnt):
+    def _launch_run(self, run, cnt):
 #        repo = self.repository
-        dm = self.data_manager
+#        dm = self.data_manager
 #        runner = self.pyscript_runner
-
-        run = runsgen.next()
-        if run.skip:
-            return
-
-        self._setup_automated_run(cnt, run, dm)
+        run = self._setup_automated_run(cnt, run)
 #        self._setup_automated_run(cnt, run, repo, dm, runner)
 
         run.pre_extraction_save()
@@ -455,9 +464,13 @@ class ExperimentExecutor(ExperimentManager):
         return ta, run
 
 #    def _setup_automated_run(self, i, arun, repo, dm, runner):
-    def _setup_automated_run(self, i, arun, dm):
+    def _setup_automated_run(self, i, arv):
+        '''
+            convert the an AutomatedRunSpec an AutomatedRun
+        '''
 
-        exp = self.experiment_set
+        arun = arv.make_run()
+        exp = self.experiment_queue
         exp.current_run = arun
 
 #        arun.index = i
@@ -466,7 +479,7 @@ class ExperimentExecutor(ExperimentManager):
         arun.spectrometer_manager = self.spectrometer_manager
         arun.extraction_line_manager = self.extraction_line_manager
         arun.ion_optics_manager = self.ion_optics_manager
-        arun.data_manager = dm
+        arun.data_manager = self.data_manager
         arun.db = self.db
         arun.massspec_importer = self.massspec_importer
         arun.runner = self.pyscript_runner
@@ -481,6 +494,7 @@ class ExperimentExecutor(ExperimentManager):
         if mon is not None:
             mon.automated_run = arun
             arun.monitor = mon
+        return arun
 
     def _get_blank(self, kind):
         db = self.db
@@ -513,9 +527,9 @@ class ExperimentExecutor(ExperimentManager):
         types = ['air', 'unknown', 'cocktail']
         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
         # get first air, unknown or cocktail
-        aruns = self.experiment_set.cleaned_automated_runs
+        aruns = self.experiment_queue.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
-                    if a.analysis_type in types), None)
+                    if a.analysis_type in types and not a.skip), None)
 
         if fa:
             ind, an = fa
@@ -561,8 +575,10 @@ class ExperimentExecutor(ExperimentManager):
 
         if arun.measurement_script:
             arun.state = 'measurement'
+            self.measuring = True
             if not arun.do_measurement():
                 self._alive = False
+            self.measuring = False
 
         if not isAlive():
             return
@@ -599,8 +615,12 @@ class ExperimentExecutor(ExperimentManager):
         selected = self.selected
         self.save_enabled = False
         if self.edit_enabled and selected:
-            ae = AutomatedRunEditor(run=selected[-1])
-            info = ae.edit_traits(kind='livemodal')
+            base_run = selected[0]
+            ae = AutomatedRunFactory()
+            ae.load_from_run(base_run)
+
+#            ae = AutomatedRunEditor(run=selected[-1])
+            info = ae.edit_traits(kind='livemodal', view='edit_view')
             if info.result:
                 ae.commit_changes(selected)
                 self._update_aliquots()
@@ -616,9 +636,9 @@ class ExperimentExecutor(ExperimentManager):
     def _save_as_button_fired(self):
         self.save_as()
 
-    def _experiment_set_changed(self):
-        if self.experiment_set:
-            nonfound = self._check_for_managers(self.experiment_set)
+    def _experiment_queue_changed(self):
+        if self.experiment_queue:
+            nonfound = self._check_for_managers(self.experiment_queue)
             if nonfound:
                 self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
 
@@ -643,17 +663,17 @@ class ExperimentExecutor(ExperimentManager):
             if len(sel) == 1:
                 self.stats.calculate_at(sel[-1])
                 self.stats.calculate()
-#            self.experiment_set.selected = sel#[self.selected]
+#            self.experiment_queue.selected = sel#[self.selected]
 
     def _execute_button_fired(self):
         self._execute()
 
     def _truncate_button_fired(self):
-        self.experiment_set.truncate_run(self.truncate_style)
+        self.experiment_queue.truncate_run(self.truncate_style)
 
     def _show_sample_map_fired(self):
 
-        lm = self.experiment_set.sample_map
+        lm = self.experiment_queue.sample_map
         if lm is None:
             self.warning_dialog('No Tray map is set. Add "tray: <name_of_tray>" to ExperimentSet file')
         elif lm.ui:
@@ -662,7 +682,7 @@ class ExperimentExecutor(ExperimentManager):
             self.open_view(lm)
 
     def traits_view(self):
-        editor = myTabularEditor(adapter=AutomatedRunAdapter(),
+        editor = myTabularEditor(adapter=ExecuteAutomatedRunAdapter(),
                                  dclicked='dclicked',
                                  right_clicked='right_clicked',
                                  selected='selected',
@@ -682,7 +702,7 @@ class ExperimentExecutor(ExperimentManager):
 
                     spring,
                     Item('show_sample_map', show_label=False,
-                         enabled_when='object.experiment_set.sample_map'
+                         enabled_when='object.experiment_queue.sample_map'
                          ),
                     spring,
                     Item('end_at_run_completion'),
@@ -692,12 +712,12 @@ class ExperimentExecutor(ExperimentManager):
                          enabled_when='object.measuring'),
                     self._button_factory('execute_button',
                                              label='execute_label',
-                                             enabled='object.experiment_set.executable',
+                                             enabled='object.experiment_queue.executable',
                                              ))
         sel_grp = Item('set_selector', show_label=False, style='custom')
         exc_grp = Group(tb,
                         HGroup(sel_grp,
-#                               Item('object.experiment_set.stats',
+#                               Item('object.experiment_queue.stats',
                                Item('stats',
                                    style='custom'),
                              spring,
@@ -711,10 +731,12 @@ class ExperimentExecutor(ExperimentManager):
         v = View(
 #                 sel_grp,
                  exc_grp,
-                 HGroup(Item('object.experiment_set.mass_spectrometer', style='readonly'),
-                        Item('object.experiment_set.extract_device', style='readonly'),
-                        Item('object.experiment_set.tray', style='readonly')),
-                 Item('object.experiment_set.automated_runs',
+                 HGroup(
+                        Item('object.experiment_queue.mass_spectrometer', style='readonly'),
+                        Item('object.experiment_queue.extract_device', style='readonly'),
+                        Item('object.experiment_queue.tray', style='readonly')
+                        ),
+                 Item('object.experiment_queue.automated_runs',
                       style='custom',
                       show_label=False,
                       editor=editor

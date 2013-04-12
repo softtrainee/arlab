@@ -32,13 +32,14 @@ class SetSelector(HasTraits):
     selected = Str
     editable = Bool(True)
     def _get_names(self):
-        return ['Set {}'.format(i + 1) for i in range(len(self.experiment_manager.experiment_sets))]
+        return ['Queue {}'.format(i + 1)
+                for i in range(len(self.experiment_manager.experiment_queues))]
 
 #        print 'asdffds', ['Set {}'.format(i + 1) for i in range(len(self.experiment_sets))]
 
     def _add_button_fired(self):
         exp = self.experiment_manager
-        exp.new_experiment_set(clear=False)
+        exp.new_experiment_queue(clear=False)
         i = 0
         while 1:
             ni = len(self.names) + 1 + i
@@ -56,12 +57,12 @@ class SetSelector(HasTraits):
         else:
             si = len(self.names) - 1
 #        self.names.pop(si)
-        self.experiment_manager.experiment_sets.pop(si)
+        self.experiment_manager.experiment_queues.pop(si)
 
     def _selected_index_changed(self):
         if self.selected_index >= 0:
             em = self.experiment_manager
-            em.experiment_set = em.experiment_sets[self.selected_index]
+            em.experiment_set = em.experiment_queues[self.selected_index]
 
     def traits_view(self):
         v = View(

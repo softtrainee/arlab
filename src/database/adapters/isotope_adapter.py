@@ -56,7 +56,7 @@ from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDevic
 
 from src.database.core.functions import delete_one
 
-from src.experiment.identifier import convert_identifier
+from src.experiment.utilities.identifier import convert_identifier
 # from src.repo.repository import Repository, ZIPRepository
 # from src.paths import paths
 # import binascii

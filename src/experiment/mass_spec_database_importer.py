@@ -27,7 +27,7 @@ from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdap
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
-from src.experiment.info_blob import encode_infoblob
+from src.experiment.utilities.info_blob import encode_infoblob
 import time
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']

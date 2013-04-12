@@ -18,9 +18,9 @@
 from traits.api import HasTraits, Str, Button, Bool, on_trait_change, Any, \
     Instance, String, Property, cached_property, Float, List
 from traitsui.api import View, Item, TableEditor, VGroup, HGroup, Spring, spring, \
-EnumEditor
+EnumEditor, UItem
 from src.experiment.script_editable import ScriptEditable
-from src.experiment.identifier import convert_identifier, SPECIAL_NAMES, \
+from src.experiment.utilities.identifier import convert_identifier, SPECIAL_NAMES, \
     SPECIAL_MAPPING, convert_special_name
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.paths import paths
@@ -29,46 +29,50 @@ import os
 from src.regex import ALIQUOT_REGEX
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class AutomatedRunSpec(HasTraits):
-    pass
+# class AutomatedRunSpec(HasTraits):
+#    labnumber = String(enter_set=True, auto_set=False)
+#    _labnumber = Any
+#
+#    position = Str
+#    endposition = Str
+#    labnumbers = Property(depends_on='project')
+#    projects = Property
+#    project = Any
+#
+#    weight = Float
+#    comment = Str
+#
+#    #===========================================================================
+#    # extract
+#    #===========================================================================
+#    extract_value = Property(depends_on='_extract_value')
+#    _extract_value = Float
+#
+#    extract_units = Str(NULL_STR)
+#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+#    _default_extract_units = 'watts'
+#    duration = Float
+#    cleanup = Float
+#
+#    pattern = Str
+#    patterns = Property
+#    #===========================================================================
+#    # display only
+#    #===========================================================================
+#    irrad_level = Str
+#    sample = Str
+
 class AutomatedRunMaker(ScriptEditable):
-    labnumber = String(enter_set=True, auto_set=False)
-    position = Str
-    endposition = Str
 #    add = Button
 #    auto_increment = Bool(True)
     db = Any
     schedule_block = Any
 
-    _labnumber = Any
-    labnumbers = Property(depends_on='project')
-    projects = Property
-    project = Any
+    template_automated_run = Instance(AutomatedRun)
 
-    weight = Float
-    comment = Str
-
-    #===========================================================================
-    # extract
-    #===========================================================================
-    extract_value = Property(depends_on='_extract_value')
-    _extract_value = Float
-
-    extract_units = Str(NULL_STR)
-    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
-    _default_extract_units = 'watts'
-    duration = Float
-    cleanup = Float
-
-    pattern = Str
-    patterns = Property
-    #===========================================================================
-    # display only
-    #===========================================================================
-    irrad_level = Str
-    sample = Str
-
-#    automated_run = Instance(AutomatedRun, ())
+    def _template_automated_run_default(self):
+        t = AutomatedRun(db=self.db)
+        return t
 
     def load_run(self, ar):
         for attr in ('labnumber',
@@ -82,6 +86,8 @@ class AutomatedRunMaker(ScriptEditable):
     def _extract_device_changed(self):
         if self.mass_spectrometer:
             self._load_default_scripts(key=self.labnumber)
+
+
 
 #    @on_trait_change('labnumber')
 #    def _labnumber_changed(self):
@@ -366,93 +372,96 @@ class AutomatedRunMaker(ScriptEditable):
 #===============================================================================
 # views
 #===============================================================================
-    def _get_position_group(self):
-        grp = VGroup(
-#                         Item('autocenter',
-#                              tooltip='Should the extract device try to autocenter on the sample'
-#                              ),
-                         HGroup(Item('position',
-                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
-                                     ),
-                                Item('endposition', label='End')
-                                ),
-#                         Item('multiposition', label='Multi. position run'),
-                         show_border=True,
-                         label='Position'
-                     )
-        return grp
-
-    def _get_info_group(self):
-        readonly = lambda x, **kw: Item(x, style='readonly', **kw)
-        grp = VGroup(readonly('sample',
-                              tooltip='Sample info retreived from Database'
-                              ),
-                       readonly('irrad_level',
-                              tooltip='Irradiation info retreived from Database',
-                              label='Irradiation'),
-                       Item('weight',
-                            label='Weight (mg)',
-                            tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
-                            ),
-                       Item('comment',
-                            tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
-                            )
-                     )
-        return grp
-
-    def _get_extract_group(self):
-        sspring = lambda width = 17:Spring(springy=False, width=width)
-
-        extract_grp = VGroup(
-                             HGroup(sspring(width=33),
-                                    Item('extract_value', label='Extract',
-                                         tooltip='Set the extract value in extract units'
-                                         ),
-                                    spring,
-                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-                                    show_label=False),
-                                    ),
-                             Item('duration', label='Duration (s)',
-                                  tooltip='Set the number of seconds to run the extraction device.'
-                                  ),
-                             Item('cleanup', label='Cleanup (s)',
-                                  tooltip='Set the number of seconds to getter the sample gas'
-                                  ),
-                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
-                             Item('pattern', editor=EnumEditor(name='patterns')),
-                             label='Extract',
-                             show_border=True
-                             )
-        return extract_grp
-
     def traits_view(self):
-        pos_grp = self._get_position_group()
-        script_grp = self._get_script_group()
-        info_grp = self._get_info_group()
-        extract_grp = self._get_extract_group()
-        v = View(
-                 Item('project', editor=EnumEditor(name='projects'),
-                           tooltip='Select a project to constrain the labnumbers'
-                           ),
-#                 Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
-#                   tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
-#                    ),
-                 HGroup(Item('labnumber',
-                          tooltip='Enter a Labnumber'
-                          ),
-                      Item('_labnumber', show_label=False,
-                          editor=EnumEditor(name='labnumbers'),
-                          tooltip='Select a Labnumber from the selected Project'
-                          )),
-                 info_grp,
-                 extract_grp,
-                 pos_grp,
-                 script_grp,
-#                 HGroup(Item('auto_increment'),
-#                                     spring,
-#                                     Item('add', show_label=False,
-#                                          enabled_when='ok_to_add'),
-#                                     ),
-                 )
+        v = View(UItem('template_automated_run', style='custom'))
         return v
+#    def _get_position_group(self):
+#        grp = VGroup(
+# #                         Item('autocenter',
+# #                              tooltip='Should the extract device try to autocenter on the sample'
+# #                              ),
+#                         HGroup(Item('position',
+#                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
+#                                     ),
+#                                Item('endposition', label='End')
+#                                ),
+# #                         Item('multiposition', label='Multi. position run'),
+#                         show_border=True,
+#                         label='Position'
+#                     )
+#        return grp
+#
+#    def _get_info_group(self):
+#        readonly = lambda x, **kw: Item(x, style='readonly', **kw)
+#        grp = VGroup(readonly('sample',
+#                              tooltip='Sample info retreived from Database'
+#                              ),
+#                       readonly('irrad_level',
+#                              tooltip='Irradiation info retreived from Database',
+#                              label='Irradiation'),
+#                       Item('weight',
+#                            label='Weight (mg)',
+#                            tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
+#                            ),
+#                       Item('comment',
+#                            tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
+#                            )
+#                     )
+#        return grp
+#
+#    def _get_extract_group(self):
+#        sspring = lambda width = 17:Spring(springy=False, width=width)
+#
+#        extract_grp = VGroup(
+#                             HGroup(sspring(width=33),
+#                                    Item('extract_value', label='Extract',
+#                                         tooltip='Set the extract value in extract units'
+#                                         ),
+#                                    spring,
+#                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
+#                                    show_label=False),
+#                                    ),
+#                             Item('duration', label='Duration (s)',
+#                                  tooltip='Set the number of seconds to run the extraction device.'
+#                                  ),
+#                             Item('cleanup', label='Cleanup (s)',
+#                                  tooltip='Set the number of seconds to getter the sample gas'
+#                                  ),
+#                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
+#                             Item('pattern', editor=EnumEditor(name='patterns')),
+#                             label='Extract',
+#                             show_border=True
+#                             )
+#        return extract_grp
+
+#    def traits_view(self):
+#        pos_grp = self._get_position_group()
+#        script_grp = self._get_script_group()
+#        info_grp = self._get_info_group()
+#        extract_grp = self._get_extract_group()
+#        v = View(
+#                 Item('project', editor=EnumEditor(name='projects'),
+#                           tooltip='Select a project to constrain the labnumbers'
+#                           ),
+# #                 Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
+# #                   tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
+# #                    ),
+#                 HGroup(Item('labnumber',
+#                          tooltip='Enter a Labnumber'
+#                          ),
+#                      Item('_labnumber', show_label=False,
+#                          editor=EnumEditor(name='labnumbers'),
+#                          tooltip='Select a Labnumber from the selected Project'
+#                          )),
+#                 info_grp,
+#                 extract_grp,
+#                 pos_grp,
+#                 script_grp,
+# #                 HGroup(Item('auto_increment'),
+# #                                     spring,
+# #                                     Item('add', show_label=False,
+# #                                          enabled_when='ok_to_add'),
+# #                                     ),
+#                 )
+#        return v
 #============= EOF =============================================

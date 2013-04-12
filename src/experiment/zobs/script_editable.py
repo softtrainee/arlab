@@ -26,86 +26,86 @@ from src.loggable import Loggable
 import yaml
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class ScriptMixin(object):
-    def _clean_script_name(self, name):
-        name = self._remove_mass_spectrometer_name(name)
-        return self._remove_file_extension(name)
-
-    def _remove_file_extension(self, name, ext='.py'):
-        if name is NULL_STR:
-            return NULL_STR
-
-        if name.endswith('.py'):
-            name = name[:-3]
-
-        return name
-
-    def _remove_mass_spectrometer_name(self, name):
-        if self.mass_spectrometer:
-            name = name.replace('{}_'.format(self.mass_spectrometer), '')
-        return name
-
-class Script(Loggable, ScriptMixin):
-    application = Any
-    label = Str
-    name = Str
-    mass_spectrometer = Str
-    names = Property(depends_on='mass_spectrometer')
-    edit = Button
-    kind = 'ExtractionLine'
-
-    def _edit_fired(self):
-        p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
-                                                                                  self.name))
-        editor = PyScriptManager(kind=self.kind, application=self.application)
-        editor.open_script(p)
-        editor.open_view(editor)
-
-    def traits_view(self):
-        return View(HGroup(
-                           Label(self.label),
-                           spring,
-                           Item('name',
-                                show_label=False,
-                                width= -150,
-                                editor=EnumEditor(name='names')),
-                           Item('edit',
-                                enabled_when='name and name!="---"',
-                                show_label=False)
-                           )
-                    )
-
-#    def _get_scripts(self, es):
-# #        if self.mass_spectrometer != '---':
-#        es = [self._clean_script_name(ei) for ei in es]
-# #            k = '{}_'.format(self.mass_spectrometer)
-# #            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
+# class ScriptMixin(object):
+#    def _clean_script_name(self, name):
+#        name = self._remove_mass_spectrometer_name(name)
+#        return self._remove_file_extension(name)
 #
-#        es = [NULL_STR] + es
-#        return es
+#    def _remove_file_extension(self, name, ext='.py'):
+#        if name is NULL_STR:
+#            return NULL_STR
+#
+#        if name.endswith('.py'):
+#            name = name[:-3]
+#
+#        return name
+#
+#    def _remove_mass_spectrometer_name(self, name):
+#        if self.mass_spectrometer:
+#            name = name.replace('{}_'.format(self.mass_spectrometer), '')
+#        return name
 
-
-
-    def _load_script_names(self):
-        d = self.label.lower().replace(' ', '_')
-        p = os.path.join(paths.scripts_dir, d)
-#        print 'fff', name, p
-        if os.path.isdir(p):
-            return [s for s in os.listdir(p)
-                        if not s.startswith('.') and s.endswith('.py')]
-        else:
-            self.warning_dialog('{} script directory does not exist!'.format(p))
-
-    @cached_property
-    def _get_names(self):
-        names = [NULL_STR]
-        ms = self._load_script_names()
-
-        if ms:
-            msn = '{}_'.format(self.mass_spectrometer)
-            names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
-
-        return names
+# class Script(Loggable, ScriptMixin):
+#    application = Any
+#    label = Str
+#    name = Str
+#    mass_spectrometer = Str
+#    names = Property(depends_on='mass_spectrometer')
+#    edit = Button
+#    kind = 'ExtractionLine'
+#
+#    def _edit_fired(self):
+#        p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
+#                                                                                  self.name))
+#        editor = PyScriptManager(kind=self.kind, application=self.application)
+#        editor.open_script(p)
+#        editor.open_view(editor)
+#
+#    def traits_view(self):
+#        return View(HGroup(
+#                           Label(self.label),
+#                           spring,
+#                           Item('name',
+#                                show_label=False,
+#                                width= -150,
+#                                editor=EnumEditor(name='names')),
+#                           Item('edit',
+#                                enabled_when='name and name!="---"',
+#                                show_label=False)
+#                           )
+#                    )
+#
+# #    def _get_scripts(self, es):
+# # #        if self.mass_spectrometer != '---':
+# #        es = [self._clean_script_name(ei) for ei in es]
+# # #            k = '{}_'.format(self.mass_spectrometer)
+# # #            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
+# #
+# #        es = [NULL_STR] + es
+# #        return es
+#
+#
+#
+#    def _load_script_names(self):
+#        d = self.label.lower().replace(' ', '_')
+#        p = os.path.join(paths.scripts_dir, d)
+# #        print 'fff', name, p
+#        if os.path.isdir(p):
+#            return [s for s in os.listdir(p)
+#                        if not s.startswith('.') and s.endswith('.py')]
+#        else:
+#            self.warning_dialog('{} script directory does not exist!'.format(p))
+#
+#    @cached_property
+#    def _get_names(self):
+#        names = [NULL_STR]
+#        ms = self._load_script_names()
+#
+#        if ms:
+#            msn = '{}_'.format(self.mass_spectrometer)
+#            names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
+#
+#        return names
 
 class ScriptEditable(Saveable, ScriptMixin):
     application = Any

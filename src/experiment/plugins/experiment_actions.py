@@ -59,36 +59,36 @@ class ExecuteProcedureAction(ExperimentAction):
         man = self._get_executor(event)
         man.execute_procedure()
 
-class ExecuteExperimentSetAction(ExperimentAction):
+class ExecuteExperimentQueueAction(ExperimentAction):
     name = 'Execute'
     accelerator = 'Ctrl+W'
     def perform(self, event):
         man = self._get_executor(event)
 #        man.experiment_set_path = p
-        if man.load_experiment_set(path=globalv.test_experiment_set, edit=False):
+        if man.load_experiment_queue(path=globalv.test_experiment_set, edit=False):
             open_manager(event.window.application, man)
 
 
-class NewExperimentSetAction(ExperimentAction):
+class NewExperimentQueueAction(ExperimentAction):
     '''
     '''
-    description = 'Create a new experiment set'
-    name = 'New Experiment Set'
+    description = 'Create a new experiment queue'
+    name = 'New Experiment Queue'
     accelerator = 'Ctrl+N'
     def perform(self, event):
         '''
         '''
         manager = self._get_editor(event)
         if manager.load():
-            manager.new_experiment_set()
+            manager.new_experiment_queue()
             open_manager(event.window.application, manager)
 
 
-class OpenExperimentSetAction(ExperimentAction):
+class OpenExperimentQueueAction(ExperimentAction):
     '''
     '''
     description = 'Open experiment set'
-    name = 'Open Experiment Set'
+    name = 'Open Experiment Queue'
     accelerator = 'Shift+Ctrl+O'
     def perform(self, event):
         '''
@@ -96,7 +96,7 @@ class OpenExperimentSetAction(ExperimentAction):
         manager = self._get_editor(event)
         if manager.load():
     #        if manager.load_experiment_set(set_names=True):
-            if manager.load_experiment_set(saveable=True):
+            if manager.load_experiment_queue(saveable=True):
                 open_manager(event.window.application, manager)
 
 

@@ -39,7 +39,7 @@ from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.identifier import convert_identifier, get_analysis_type, \
+from src.experiment.utilities.identifier import convert_identifier, get_analysis_type, \
     SPECIAL_NAMES, convert_special_name, SPECIAL_MAPPING
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
@@ -59,6 +59,7 @@ class RunInfo(HasTraits):
     sample = Str
     irrad_level = Str
 
+#
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
     extraction_script_name = Str
@@ -103,6 +104,7 @@ class AutomatedRun(Loggable):
     local_lab_db = Instance(LocalLabAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
     repository = Instance(Repository)
+
     run_info = Instance(RunInfo, ())
     script_info = Instance(ScriptInfo, ())
 
@@ -115,12 +117,12 @@ class AutomatedRun(Loggable):
 #    sample = Str
 
     experiment_name = Str
-    labnumber = String(enter_set=True, auto_set=False)
-    special_labnumber = Str
+#    labnumber = String(enter_set=True, auto_set=False)
+#    special_labnumber = Str
 
-    _labnumber = Str
+#    _labnumber = Str
 #    labnumbers = Property(depends_on='project')
-
+#
 #    project = Any
 #    projects = Property
 
@@ -130,23 +132,28 @@ class AutomatedRun(Loggable):
     step = Property(depends_on='_step')
     _step = Int
 
-    state = Property(depends_on='_state')
-    _state = Enum('not run', 'extraction',
-                 'measurement', 'success', 'fail', 'truncate')
+    state = Str
 #    irrad_level = Str
 
 #    duration = Property(depends_on='_duration')
 
     extract_group = CInt
-    extract_value = Property(depends_on='_extract_value')
-    _extract_value = Float
+#    extract_value = Property(depends_on='_extract_value')
+#    _extract_value = Float
 #
 # #    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
 # #                           depends_on='_extract_units')
 # #    _extract_units = Enum('---', 'watts', 'temp', 'percent')
+    extract_value = Float
     extract_units = Str(NULL_STR)
-    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
-    _default_extract_units = 'watts'
+
+#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+#    _default_extract_units = 'watts'
+
+#    extract_units = Str(NULL_STR)
+#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+#    _default_extract_units = 'watts'
+
 
 #    extract_value = Float
 #    extract_units = Str
@@ -154,8 +161,9 @@ class AutomatedRun(Loggable):
     duration = Float
 
     tray = Str
-    position = Property(String(enter_set=True, auto_set=False))
-    _position = Str
+#    position = Property(String(enter_set=True, auto_set=False))
+#    _position = Str
+    position = Str
     endposition = Int
     multiposition = Bool
     autocenter = Bool
@@ -558,28 +566,28 @@ anaylsis_type={}
 #                bi = pp.baselines[ki]
 #                d[ki] = si - bi
 #            return d
-
-    def to_string_attrs(self, attr):
-        def get_attr(attrname):
-            if attrname in ['measurement_script',
-                            'extraction_script',
-                            'post_measurement_script',
-                            'post_equilibration_script']:
-                v = getattr(self.script_info, '{}_name'.format(attrname))
-                if v:
-                    v = str(v).replace(self.mass_spectrometer, '')
-            elif attrname == 'labnumber':
-                if self.user_defined_aliquot:
-                    v = '{}-{}'.format(self.labnumber, self.aliquot)
-                else:
-                    v = self.labnumber
-            else:
-                v = getattr(self, attrname)
-
-
-            return v
-
-        return [get_attr(ai) for ai in attr]
+#
+#    def to_string_attrs(self, attr):
+#        def get_attr(attrname):
+#            if attrname in ['measurement_script',
+#                            'extraction_script',
+#                            'post_measurement_script',
+#                            'post_equilibration_script']:
+#                v = getattr(self.script_info, '{}_name'.format(attrname))
+#                if v:
+#                    v = str(v).replace(self.mass_spectrometer, '')
+#            elif attrname == 'labnumber':
+#                if self.user_defined_aliquot:
+#                    v = '{}-{}'.format(self.labnumber, self.aliquot)
+#                else:
+#                    v = self.labnumber
+#            else:
+#                v = getattr(self, attrname)
+#
+#
+#            return v
+#
+#        return [get_attr(ai) for ai in attr]
 
     def get_position_list(self):
         return self._make_iterable(self.position)
@@ -1785,13 +1793,11 @@ anaylsis_type={}
         return ps
 
     def _make_script_name(self, name):
-        name = '{}_{}'.format(self.mass_spectrometer, name)
+        name = '{}_{}'.format(self.mass_spectrometer.lower(), name)
         name = self._add_script_extension(name)
         return name
 
     def _extraction_script_factory(self, root, file_name):
-#        source_dir = os.path.dirname(ec[key])
-#        file_name = os.path.basename(ec[key])
         file_name = self._make_script_name(file_name)
         if os.path.isfile(os.path.join(root, file_name)):
             klass = ExtractionLinePyScript
@@ -1897,35 +1903,33 @@ anaylsis_type={}
 
         return default
 
-    def _get_position(self):
-        return self._position
-
-    def _set_position(self, pos):
-        self._position = pos
-
-    def _validate_position(self, pos):
-        if not pos.strip():
-            return ''
-
-        ps = pos.split(',')
-#        try:
-        ok = False
-        for pi in ps:
-            if not pi:
-                continue
-
-            ok = False
-            if TRANSECT_REGEX.match(pi):
-                ok = True
-
-            elif POSITION_REGEX.match(pi):
-                ok = True
-
-        if not ok:
-            pos = self._position
-        return pos
-
-
+# #    def _get_position(self):
+# #        return self._position
+# #
+# #    def _set_position(self, pos):
+# #        self._position = pos
+#
+#    def _validate_position(self, pos):
+#        if not pos.strip():
+#            return ''
+#
+#        ps = pos.split(',')
+# #        try:
+#        ok = False
+#        for pi in ps:
+#            if not pi:
+#                continue
+#
+#            ok = False
+#            if TRANSECT_REGEX.match(pi):
+#                ok = True
+#
+#            elif POSITION_REGEX.match(pi):
+#                ok = True
+#
+#        if not ok:
+#            pos = self._position
+#        return pos
 
 #
 #            elif POSITION_REGEX.match(pi):
@@ -2049,26 +2053,26 @@ anaylsis_type={}
 # #            else:
 #            self._duration = d
 
-    def _set_extract_value(self, t):
-        if t is not None:
- #            if self.heat_step:
- #                self.heat_step.extract_value = t
- #            else:
-            self._extract_value = t
-            if not t:
-                self.extract_units = '---'
-            elif self.extract_units == '---':
-                self.extract_units = self._default_extract_units
+#    def _set_extract_value(self, t):
+#        if t is not None:
+# #            if self.heat_step:
+# #                self.heat_step.extract_value = t
+# #            else:
+#            self._extract_value = t
+#            if not t:
+#                self.extract_units = '---'
+#            elif self.extract_units == '---':
+#                self.extract_units = self._default_extract_units
+#
+#        else:
+#            self.extract_units = '---'
 
-        else:
-            self.extract_units = '---'
-
-    def _get_state(self):
-        return self._state
-
-    def _set_state(self, s):
-        if self._state != 'truncate':
-            self._state = s
+#    def _get_state(self):
+#        return self._state
+#
+#    def _set_state(self, s):
+#        if self._state != 'truncate':
+#            self._state = s
 
     def _set_step(self, v):
         v = v.upper()
@@ -2081,19 +2085,19 @@ anaylsis_type={}
         else:
             return ALPHAS[self._step - 1]
 
-    def _get_projects(self):
-        prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
-        if prs:
-            self.project = pi
-        return prs
-
-    def _get_labnumbers(self):
-        lns = []
-        if self.project:
-            lns = [str(ln.labnumber)
-                    for s in self.project.samples
-                        for ln in s.labnumbers]
-        return [NULL_STR] + sorted(lns)
+#    def _get_projects(self):
+#        prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
+#        if prs:
+#            self.project = pi
+#        return prs
+#
+#    def _get_labnumbers(self):
+#        lns = []
+#        if self.project:
+#            lns = [str(ln.labnumber)
+#                    for s in self.project.samples
+#                        for ln in s.labnumbers]
+#        return [NULL_STR] + sorted(lns)
 
 
 #===============================================================================
@@ -2115,123 +2119,123 @@ anaylsis_type={}
 #                     )
 #        return grp
 
-    def _get_supplemental_extract_group(self):
-        pass
-
-    def simple_view(self):
-        ext_grp = VGroup(
-#                         HGroup(Spring(springy=False, width=33),
-                         HGroup(Item('labnumber', style='readonly'),
-                                Item('aliquot'),
-                                Item('step')
-                                ),
-                         HGroup(
-                                Item('extract_value', label='Extract'),
-                                spring,
-                                Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-                                     show_label=False)
-                                ),
-                         Item('ramp_rate', label='Ramp Rate (C/s)'),
-                         Item('duration', label='Duration'),
-                         label='Extract'
-                         )
-
-        pos_grp = self._get_position_group()
-        grp = Group(ext_grp,
-                     pos_grp,
-                     layout='tabbed',
-                     enabled_when='not skip'
-                     )
-        extra_grp = self._get_supplemental_extract_group()
-        if extra_grp:
-            grp.content.append(extra_grp)
-
-        v = View(Item('skip'), grp)
-        return v
-
-    def traits_view(self):
-
-#        scripts = VGroup(
-#                       Item('extraction_line_script_name',
-#                        editor=EnumEditor(name='extraction_line_scripts'),
-#                        label='Extraction'
-#                        ),
-#                       Item('measurement_script_name',
-#                            editor=EnumEditor(name='measurement_scripts'),
-#                            label='Measurement'
+#    def _get_supplemental_extract_group(self):
+#        pass
+#
+#    def simple_view(self):
+#        ext_grp = VGroup(
+# #                         HGroup(Spring(springy=False, width=33),
+#                         HGroup(Item('labnumber', style='readonly'),
+#                                Item('aliquot'),
+#                                Item('step')
+#                                ),
+#                         HGroup(
+#                                Item('extract_value', label='Extract'),
+#                                spring,
+#                                Item('extract_units', editor=EnumEditor(name='extract_units_names'),
+#                                     show_label=False)
+#                                ),
+#                         Item('ramp_rate', label='Ramp Rate (C/s)'),
+#                         Item('duration', label='Duration'),
+#                         label='Extract'
+#                         )
+#
+#        pos_grp = self._get_position_group()
+#        grp = Group(ext_grp,
+#                     pos_grp,
+#                     layout='tabbed',
+#                     enabled_when='not skip'
+#                     )
+#        extra_grp = self._get_supplemental_extract_group()
+#        if extra_grp:
+#            grp.content.append(extra_grp)
+#
+#        v = View(Item('skip'), grp)
+#        return v
+#
+#    def traits_view(self):
+#
+# #        scripts = VGroup(
+# #                       Item('extraction_line_script_name',
+# #                        editor=EnumEditor(name='extraction_line_scripts'),
+# #                        label='Extraction'
+# #                        ),
+# #                       Item('measurement_script_name',
+# #                            editor=EnumEditor(name='measurement_scripts'),
+# #                            label='Measurement'
+# #                            ),
+# #                       label='Scripts',
+# #                       show_border=True
+# #                       )
+#        def readonly(n, **kw):
+#            return Item(n, style='readonly', **kw)
+#
+#        sspring = lambda width = 17:Spring(springy=False, width=width)
+#
+#        extract_grp = VGroup(
+#                             HGroup(sspring(width=33),
+#                                    Item('extract_value', label='Extract',
+#                                         tooltip='Set the extract value in extract units'
+#                                         ),
+#                                    spring,
+#                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
+#                                    show_label=False),
+#                                    ),
+#                             Item('duration', label='Duration (s)',
+#                                  tooltip='Set the number of seconds to run the extraction device.'
+#                                  ),
+#                             Item('cleanup', label='Cleanup (s)',
+#                                  tooltip='Set the number of seconds to getter the sample gas'
+#                                  ),
+#                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
+#                             Item('pattern', editor=EnumEditor(name='patterns')),
+#                             label='Extract'
+#                             )
+#        pos_grp = self._get_position_group()
+# #        extract_grp = Group(extract_grp, pos_grp, layout='tabbed')
+#        sup = self._get_supplemental_extract_group()
+#        if sup:
+#            extract_grp = Group(extract_grp, sup, layout='tabbed')
+#        else:
+#            extract_grp.show_border = True
+#
+#        extract_grp = VGroup(extract_grp, pos_grp)
+#
+#        v = View(
+#                 Group(
+#                       Item('project', editor=EnumEditor(name='projects'),
+#                           tooltip='Select a project to constrain the labnumbers'
+#                           ),
+#                       Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
+#                           tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
+#                           ),
+#                       HGroup(Item('labnumber',
+#                                  tooltip='Enter a Labnumber'
+#                                  ),
+#                              Item('_labnumber', show_label=False,
+#                                  editor=EnumEditor(name='labnumbers'),
+#                                  tooltip='Select a Labnumber from the selected Project'
+#                                  )
+#                             ),
+#                       readonly('object.run_info.sample',
+#                              tooltip='Sample info retreived from Database'
+#                              ),
+#                       readonly('object.run_info.irrad_level',
+#                              tooltip='Irradiation info retreived from Database',
+#                              label='Irradiation'),
+#                       Item('weight',
+#                            label='Weight (mg)',
+#                            tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
 #                            ),
-#                       label='Scripts',
-#                       show_border=True
+#                       Item('comment',
+#                            tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
+#                            ),
+#                       extract_grp,
+#                       show_border=True,
+#                       label='Info'
 #                       )
-        def readonly(n, **kw):
-            return Item(n, style='readonly', **kw)
-
-        sspring = lambda width = 17:Spring(springy=False, width=width)
-
-        extract_grp = VGroup(
-                             HGroup(sspring(width=33),
-                                    Item('extract_value', label='Extract',
-                                         tooltip='Set the extract value in extract units'
-                                         ),
-                                    spring,
-                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-                                    show_label=False),
-                                    ),
-                             Item('duration', label='Duration (s)',
-                                  tooltip='Set the number of seconds to run the extraction device.'
-                                  ),
-                             Item('cleanup', label='Cleanup (s)',
-                                  tooltip='Set the number of seconds to getter the sample gas'
-                                  ),
-                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
-                             Item('pattern', editor=EnumEditor(name='patterns')),
-                             label='Extract'
-                             )
-        pos_grp = self._get_position_group()
-#        extract_grp = Group(extract_grp, pos_grp, layout='tabbed')
-        sup = self._get_supplemental_extract_group()
-        if sup:
-            extract_grp = Group(extract_grp, sup, layout='tabbed')
-        else:
-            extract_grp.show_border = True
-
-        extract_grp = VGroup(extract_grp, pos_grp)
-
-        v = View(
-                 Group(
-                       Item('project', editor=EnumEditor(name='projects'),
-                           tooltip='Select a project to constrain the labnumbers'
-                           ),
-                       Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
-                           tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
-                           ),
-                       HGroup(Item('labnumber',
-                                  tooltip='Enter a Labnumber'
-                                  ),
-                              Item('_labnumber', show_label=False,
-                                  editor=EnumEditor(name='labnumbers'),
-                                  tooltip='Select a Labnumber from the selected Project'
-                                  )
-                             ),
-                       readonly('object.run_info.sample',
-                              tooltip='Sample info retreived from Database'
-                              ),
-                       readonly('object.run_info.irrad_level',
-                              tooltip='Irradiation info retreived from Database',
-                              label='Irradiation'),
-                       Item('weight',
-                            label='Weight (mg)',
-                            tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
-                            ),
-                       Item('comment',
-                            tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
-                            ),
-                       extract_grp,
-                       show_border=True,
-                       label='Info'
-                       )
-                 )
-        return v
+#                 )
+#        return v
 #============= EOF =============================================
 
 #    def do_regress(self, fits, series=0):
