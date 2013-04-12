@@ -103,14 +103,14 @@ class AnalysisAdapter(TabularAdapter):
     def _get_value(self, k):
         v = ''
         vv = getattr(self.item, k)
-        if not isinstance(vv, str):
+        if vv is not None and not isinstance(vv, str):
             v = self._floatfmt(vv.nominal_value)
         return v
 
     def _get_error(self, k):
         e = ''
         ee = getattr(self.item, k)
-        if not isinstance(ee, str):
+        if ee is not None and not isinstance(ee, str):
             e = self._floatfmt(ee.std_dev(), n=6)
         return e
 

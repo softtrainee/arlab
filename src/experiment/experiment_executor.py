@@ -114,6 +114,9 @@ class ExperimentExecutor(ExperimentManager):
     new_run_gen_needed = False
 
     statusbar = String
+
+    executable = Bool
+
     def isAlive(self):
         return self._alive
 
@@ -629,6 +632,11 @@ class ExperimentExecutor(ExperimentManager):
                 self.stats.calculate()
                 self.new_run_gen_needed = True
                 self.save_enabled = True
+
+    def _load_experiment_queue_hook(self):
+        self.executable = all([ei.executable for ei in self.experiment_queues])
+        print self.executable
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -714,7 +722,7 @@ class ExperimentExecutor(ExperimentManager):
                          enabled_when='object.measuring'),
                     self._button_factory('execute_button',
                                              label='execute_label',
-                                             enabled='object.experiment_queue.executable',
+                                             enabled='executable',
                                              ))
         sel_grp = Item('set_selector', show_label=False, style='custom')
         exc_grp = Group(tb,

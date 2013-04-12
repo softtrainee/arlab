@@ -301,6 +301,10 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                     for ai in ei.automated_runs
                     if ai.executable]
 
+    def _test(self):
+        for ei in self.experiment_queues:
+            ei.test_runs()
+
     def _update(self):
         self.debug('update runs')
 
@@ -499,6 +503,8 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                 ws = exp._warned_labnumbers
 
             self._update()
+            self._test()
+
             if self.experiment_queues:
                 self.experiment_queue = self.experiment_queues[0]
                 self.start_file_listener(self.experiment_queue.path)
@@ -507,8 +513,11 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                     self.set_selector.selected_index = 0
 
                 do_later(func)
-
+                self._load_experiment_queue_hook()
                 return True
+
+    def _load_experiment_queue_hook(self):
+        pass
 #===============================================================================
 # property get/set
 #===============================================================================

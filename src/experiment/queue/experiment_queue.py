@@ -29,7 +29,7 @@ class ExperimentQueue(BaseExperimentQueue):
 
         tested = []
         ar = runs[0].make_run()
-
+        self.executable = False
         for ri in runs:
             for si in SCRIPT_NAMES:
                 sn = getattr(ri, si)
@@ -40,6 +40,8 @@ class ExperimentQueue(BaseExperimentQueue):
                         tested.append(sn)
                         if not script.syntax_ok():
                             return 'Error in script {}'.format(script.name)
+        else:
+            self.executable = True
 
     def new_runs_generator(self, last_ran=None):
         runs = self.cleaned_automated_runs

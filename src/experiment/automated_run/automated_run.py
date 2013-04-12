@@ -213,10 +213,12 @@ class AutomatedRun(Loggable):
             return
 
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
-        self.plot_panel = p
-        self.plot_panel.baselines = baselines = self.experiment_manager._prev_baselines
-        self.plot_panel.blanks = blanks = self.experiment_manager._prev_blanks
-        self.plot_panel.correct_for_blank = True if (not self.analysis_type.startswith('blank') and not self.analysis_type.startswith('background')) else False
+
+        # set plot_panels, baselines, backgrounds
+        p.baselines = baselines = self.experiment_manager._prev_baselines
+        p.blanks = blanks = self.experiment_manager._prev_blanks
+        p.correct_for_blank = True if (not self.analysis_type.startswith('blank') and not self.analysis_type.startswith('background')) else False
+
 
         # sync the arar_age object's signals
         if self.analysis_type == 'unknown':
@@ -237,16 +239,20 @@ class AutomatedRun(Loggable):
             return
 
         spec = self.spectrometer_manager.spectrometer
-        g = p.graph
-        g.suppress_regression = True
-        for _, l in enumerate(dets):
-            det = spec.get_detector(l)
-            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
-        g.set_x_limits(min=0, max=400)
-
-        g.suppress_regression = False
         self._active_detectors = [spec.get_detector(n) for n in dets]
-        self.plot_panel.detectors = self._active_detectors
+        p.create(self._active_detectors)
+#        g = p.graph
+#        g.suppress_regression = True
+#        # construct plot panels graph
+#        for _, l in enumerate(dets):
+#            det = spec.get_detector(l)
+#            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
+#        g.set_x_limits(min=0, max=400)
+#
+#        g.suppress_regression = False
+#        p.detectors = self._active_detectors
+
+        self.plot_panel = p
 
     def py_set_regress_fits(self, fits, series=0):
         n = len(self._active_detectors)
@@ -533,6 +539,7 @@ anaylsis_type={}
     def finish(self):
 #        del self.info_display
         if self.plot_panel:
+            self.plot_panel.automated_run = None
             self.plot_panel.close_ui()
 
         if self.peak_plot_panel:
@@ -698,25 +705,25 @@ anaylsis_type={}
         else:
             self.info('======== Post Equilibration Finished unsuccessfully ========')
 
-    def _open_plot_panel(self, p=None, stack_order='bottom_to_top'):
-        if p is not None and p.ui:
-            p.ui.dispose()
+    def _plot_panel_closed(self):
+        self.truncate('Immediate')
 
-        p = PlotPanel(
-                         window_y=0.05,  # + 0.01 * self.index,
-                         window_x=0.6,  # + 0.01 * self.index,
+    def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
+        if plot_panel is None:
+            plot_panel = PlotPanel(
+                             window_y=0.05,  # + 0.01 * self.index,
+                             window_x=0.6,  # + 0.01 * self.index,
 
-                         window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
-                         stack_order=stack_order,
-                         automated_run=self,
-#                         signals=dict(),
-                         )
+                             window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
+                             stack_order=stack_order,
+                             arar_age=self.arar_age,
+    #                         signals=dict(),
+                             )
+            plot_panel.reset()
+            plot_panel.on_trait_change(self._plot_panel_closed, 'closed_event')
+            self.experiment_manager.open_view(plot_panel)
 
-        p.graph.clear()
-        p.clear_displays()
-
-        self.experiment_manager.open_view(p)
-        return p
+        return plot_panel
 
     def _set_table_attr(self, name, grp, attr, value):
         dm = self.data_manager

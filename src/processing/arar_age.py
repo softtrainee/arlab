@@ -124,6 +124,10 @@ class ArArAge(HasTraits):
         except AttributeError, e:
             self.debug(e)
 
+    def get_signal_value(self, k):
+        return self._get_arar_result_attr(k)
+
+
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
@@ -265,11 +269,16 @@ class ArArAge(HasTraits):
 #            err = ai.std_dev()
 #            return age, err
     def _make_signals(self, kind=None):
+        isos = self.isotopes
         def func(k):
-            iso = self.isotopes[k]
-            if kind:
-                iso = getattr(iso, kind)
-            return iso.value, iso.error
+            if k in isos:
+                iso = self.isotopes[k]
+                if kind:
+                    iso = getattr(iso, kind)
+
+                return iso.value, iso.error
+            else:
+                return 0, 1e-20
 
         return [func(ki)
                     for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']]
@@ -449,43 +458,71 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_Ar40(self):
-        return self.arar_result['s40']
+        return self._get_arar_result_attr('40')
+
+#        return self.arar_result['s40']
 
     @cached_property
     def _get_Ar39(self):
-        return self.arar_result['s39']
+        return self._get_arar_result_attr('39')
+#        return self.arar_result['s39']
 
     @cached_property
     def _get_Ar38(self):
-        return self.arar_result['s38']
+        return self._get_arar_result_attr('38')
+#        return self.arar_result['s38']
 
     @cached_property
     def _get_Ar37(self):
-        return self.arar_result['s37']
+        return self._get_arar_result_attr('37')
+#        return self.arar_result['s37']
 
     @cached_property
     def _get_Ar36(self):
-        return self.arar_result['s36']
+        return self._get_arar_result_attr('36')
+#        return self.arar_result['s36']
 
     @cached_property
     def _get_Ar40_error(self):
-        return self.arar_result['s40'].std_dev()
+        r = self._get_arar_result_attr('40')
+        if r:
+            return r.std_dev()
+#        return self.arar_result['s40'].std_dev()
 
     @cached_property
     def _get_Ar39_error(self):
-        return self.arar_result['s39'].std_dev()
+        r = self._get_arar_result_attr('39')
+        if r:
+            return r.std_dev()
+
+#        return self.arar_result['s39'].std_dev()
 
     @cached_property
     def _get_Ar38_error(self):
-        return self.arar_result['s38'].std_dev()
+        r = self._get_arar_result_attr('38')
+        if r:
+            return r.std_dev()
+
+#        return self._get_arar_result_attr('38').std_dev()
+#        return self.arar_result['s38'].std_dev()
 
     @cached_property
     def _get_Ar37_error(self):
-        return self.arar_result['s37'].std_dev()
+        r = self._get_arar_result_attr('37')
+        if r:
+            return r.std_dev()
+
+#        return self._get_arar_result_attr('37').std_dev()
+#        return self.arar_result['s37'].std_dev()
 
     @cached_property
     def _get_Ar36_error(self):
-        return self.arar_result['s36'].std_dev()
+        r = self._get_arar_result_attr('36')
+        if r:
+            return r.std_dev()
+
+#        return self._get_arar_result_attr('36').std_dev()
+#        return self.arar_result['s36'].std_dev()
 
     @cached_property
     def _get_moles_Ar40(self):
@@ -515,6 +552,24 @@ class ArArAge(HasTraits):
 
     def _get_sensitivity_multiplier(self):
         return 1.0
+
+    def _get_arar_result_attr(self, key):
+
+        if key.startswith('s'):
+            key = key[1:]
+        elif key.startswith('Ar'):
+            key = key[2:]
+
+        arar_attr = 's{}'.format(key)
+        if self.arar_result.has_key(arar_attr):
+            return self.arar_result[arar_attr]
+        else:
+            iso_attr = 'Ar{}'.format(key)
+            if self.isotopes.has_key(iso_attr):
+                return self.isotopes[iso_attr].get_corrected_value()
+
+
+
 
 
 #============= EOF =============================================
