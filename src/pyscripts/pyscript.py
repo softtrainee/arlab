@@ -527,7 +527,7 @@ class PyScript(Loggable):
 
         except Exception, e:
             import traceback
-#            traceback.print_exc()
+            traceback.print_exc()
 #            self.warning_dialog(str(e))
             return e
 #            return  traceback.format_exc()

@@ -21,7 +21,7 @@ import time
 from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import verbose_skip, makeRegistry
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 # from src.lasers.laser_managers.extraction_device import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'

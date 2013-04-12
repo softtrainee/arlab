@@ -21,7 +21,7 @@ from traits.api import List
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
 from src.helpers.parsers.initialization_parser import InitializationParser
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
 class LaserPlugin(CorePlugin):
     '''

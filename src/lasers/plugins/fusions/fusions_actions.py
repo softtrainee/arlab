@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager, open_selector
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 
 #============= standard library imports ========================
