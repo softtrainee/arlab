@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import  and_
-import hashlib
+# import hashlib
 from cStringIO import StringIO
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
@@ -775,6 +775,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_mass_spectrometers(self, **kw):
         return self._retrieve_items(gen_MassSpectrometerTable, **kw)
+
+    def get_extraction_devices(self, **kw):
+        return self._retrieve_items(gen_ExtractionDeviceTable, **kw)
 
     def get_analysis_types(self, **kw):
         return self._retrieve_items(gen_AnalysisTypeTable, **kw)

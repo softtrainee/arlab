@@ -22,8 +22,7 @@ from numpy import array, asarray, where
 #============= local library imports  ==========================
 from tinv import tinv
 from src.loggable import Loggable
-from src.helpers.alphas import ALPHAS
-from src.constants import PLUSMINUS
+from src.constants import PLUSMINUS, ALPHAS
 
 
 class BaseRegressor(Loggable):

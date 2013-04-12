@@ -15,9 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
-     Event, Float, Instance, Bool, cached_property, Dict
-from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group, spring, Spring
+from traits.api import Any, Str, Int, CInt, List, Property, \
+     Event, Float, Instance, Bool, cached_property, Dict, HasTraits
 from pyface.timer.api import do_after
 #============= standard library imports ========================
 import os
@@ -26,7 +25,6 @@ import random
 import ast
 import yaml
 import struct
-import uuid
 from threading import Thread, Event as TEvent
 from uncertainties import ufloat
 #============= local library imports  ==========================
@@ -39,11 +37,9 @@ from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.utilities.identifier import convert_identifier, get_analysis_type, \
-    SPECIAL_NAMES, convert_special_name, SPECIAL_MAPPING
+from src.experiment.utilities.identifier import convert_identifier
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
-from src.helpers.alphas import ALPHAS
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.constants import NULL_STR, SCRIPT_KEYS
@@ -51,10 +47,9 @@ from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
-
-from traits.api import HasTraits
-from src.regex import TRANSECT_REGEX, POSITION_REGEX
 from src.experiment.export.export_spec import ExportSpec
+
+
 class RunInfo(HasTraits):
     sample = Str
     irrad_level = Str
@@ -66,6 +61,7 @@ class ScriptInfo(HasTraits):
     post_measurement_script_name = Str
     post_equilibration_script_name = Str
 
+
 def assemble_script_blob(scripts, kinds=None):
     '''
         make one blob of all the script text
@@ -76,15 +72,7 @@ def assemble_script_blob(scripts, kinds=None):
         kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
 
     ts = []
-#        names = []
     for (name, blob), kind in zip(scripts, kinds):
-#        script = getattr(self, '{}_script'.format(kind))
-
-#        blob, name = None, None
-#        if script is not None:
-#            name = script.name
-#            blob = script.toblob()
-
         ts.append('#' + '=' * 79)
         ts.append('# {} SCRIPT {}'.format(kind.replace('_', ' ').upper(), name))
         ts.append('#' + '=' * 79)
@@ -92,6 +80,7 @@ def assemble_script_blob(scripts, kinds=None):
             ts.append(blob)
 
     return 'Pychron Script', '\n'.join(ts)
+
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
@@ -114,55 +103,21 @@ class AutomatedRun(Loggable):
     peak_plot_panel = Any
     arar_age = Instance(ArArAge)
 
-#    sample = Str
-
     experiment_name = Str
-#    labnumber = String(enter_set=True, auto_set=False)
-#    special_labnumber = Str
-
-#    _labnumber = Str
-#    labnumbers = Property(depends_on='project')
-#
-#    project = Any
-#    projects = Property
-
+    labnumber = Str
+    step = Str
     aliquot = CInt
     user_defined_aliquot = False
 
-    step = Property(depends_on='_step')
-    _step = Int
-
     state = Str
-#    irrad_level = Str
-
-#    duration = Property(depends_on='_duration')
-
     extract_group = CInt
-#    extract_value = Property(depends_on='_extract_value')
-#    _extract_value = Float
-#
-# #    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
-# #                           depends_on='_extract_units')
-# #    _extract_units = Enum('---', 'watts', 'temp', 'percent')
     extract_value = Float
     extract_units = Str(NULL_STR)
 
-#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
-#    _default_extract_units = 'watts'
-
-#    extract_units = Str(NULL_STR)
-#    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
-#    _default_extract_units = 'watts'
-
-
-#    extract_value = Float
-#    extract_units = Str
+    mass_spectrometer = Str
     extract_device = Str
     duration = Float
-
     tray = Str
-#    position = Property(String(enter_set=True, auto_set=False))
-#    _position = Str
     position = Str
     endposition = Int
     multiposition = Bool
@@ -174,13 +129,13 @@ class AutomatedRun(Loggable):
     weight = Float
     comment = Str
     pattern = Str
-#    patterns = Property
+
+    analysis_type = Str
     disable_between_positions = Bool(False)
 
     scripts = Dict
     signals = Dict
 
-    mass_spectrometer = Str
     sample_data_record = Any
 
     measurement_script_dirty = Event
@@ -207,8 +162,9 @@ class AutomatedRun(Loggable):
     _runtime = None
     _timestamp = None
 
-    executable = Property
-    check_executable = Bool(True)
+#    executable = Property
+#    check_executable = Bool(True)
+
     valid_scripts = Dict
     _alive = False
 
@@ -560,35 +516,6 @@ anaylsis_type={}
                     d[iso] = si - bi
             return d
 
-#        pp = self.plot_panel
-# #        if pp:
-#            for ki, si in pp.signals.iteritems():
-#                bi = pp.baselines[ki]
-#                d[ki] = si - bi
-#            return d
-#
-#    def to_string_attrs(self, attr):
-#        def get_attr(attrname):
-#            if attrname in ['measurement_script',
-#                            'extraction_script',
-#                            'post_measurement_script',
-#                            'post_equilibration_script']:
-#                v = getattr(self.script_info, '{}_name'.format(attrname))
-#                if v:
-#                    v = str(v).replace(self.mass_spectrometer, '')
-#            elif attrname == 'labnumber':
-#                if self.user_defined_aliquot:
-#                    v = '{}-{}'.format(self.labnumber, self.aliquot)
-#                else:
-#                    v = self.labnumber
-#            else:
-#                v = getattr(self, attrname)
-#
-#
-#            return v
-#
-#        return [get_attr(ai) for ai in attr]
-
     def get_position_list(self):
         return self._make_iterable(self.position)
 
@@ -624,21 +551,6 @@ anaylsis_type={}
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.experiment_manager:
             self.experiment_manager.info(msg, color=color, log=False)
-
-    def get_estimated_duration(self):
-        '''
-            use the pyscripts to calculate etd
-        '''
-        s = self.duration
-
-        for si in [self.measurement_script,
-                   self.extraction_script,
-                   self.post_equilibration_script,
-                   self.post_measurement_script]:
-            if si is not None:
-                s += si.get_estimated_duration()
-
-        return s
 
     def get_measurement_parameter(self, key, default=None):
         return self._get_yaml_parameter(self.measurement_script, key, default)
@@ -806,84 +718,12 @@ anaylsis_type={}
         self.experiment_manager.open_view(p)
         return p
 
-#    def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
-#        x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
-#        reg.xs=x
-#        reg.ys=y
-#        reg.fit=fi
-# #        reg.predict()
-#
-#        i=reg.coefficients[-1]
-#        ie=reg.coefficient_errors[-1]
-#        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,i,ie))
-#
-#        mi,ma=g.get_x_limits()
-#        fx=linspace(mi,ma,200)
-#        fy=reg.predict(fx)
-#        lci,uci=reg.calculate_ci(fx)
-#        #plot fit
-#        g.new_series(
-#                     fx,fy,
-#                     plotid=pi, color='black')
-#
-#
-#        kw = dict(color='red',
-#                         line_style='dash',
-#                         plotid=pi)
-#        #plot upper ci
-#        g.new_series(fx,uci
-#                     **kw
-#                     )
-#        g.new_series(fx,lci,
-#                     **kw
-#                     )
-#        g.redraw()
-#        return reg
-        # plot lower ci
-
-#        rdict = reg._regress_(x, y, fi)
-#        try:
-# #        self.regression_results[dn.name] = rdict
-#            self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,
-#                                                    rdict['coefficients'][-1],
-#                                                 rdict['coeff_errors'][-1]
-#                                                 ))
-#
-#            g.new_series(rdict['x'],
-#                         rdict['y'],
-#                         plotid=pi, color='black')
-#            kw = dict(color='red',
-#                         line_style='dash',
-#                         plotid=pi)
-#
-#            g.new_series(rdict['upper_x'],
-#                         rdict['upper_y'],
-#                         **kw
-#                         )
-#            g.new_series(rdict['lower_x'],
-#                         rdict['lower_y'],
-#                         **kw
-#                         )
-#            g.redraw()
-#            return rdict
-#        except:
-#            self.warning('problem regressing')
-
-
     def _set_table_attr(self, name, grp, attr, value):
-#        print name, attr, value
         dm = self.data_manager
         tab = dm.get_table(name, grp)
         setattr(tab.attrs, attr, value)
         tab.flush()
-#        print getattr(tab, attr)
 
-#    def _build_tables(self, gn):
-#        dm = self.data_manager
-#        #build tables
-#        for di in self._active_detectors:
-#            tab = dm.new_table('/{}'.format(gn), di.name)
-#            tab.attrs.isotope = di.isotope
     def _build_tables(self, gn, fits=None):
         dm = self.data_manager
 
@@ -1006,10 +846,6 @@ anaylsis_type={}
                      delay=3,
                      do_post_equilibration=True
                      ):
-#        eqtime = self.get_measurement_parameter('equilibration_time', default=15)
-#        inlet = self.get_measurement_parameter('inlet_valve')
-#        outlet = self.get_measurement_parameter('outlet_valve')
-#        delay = self.get_measurement_parameter('inlet_delay', default=3)
 
         elm = self.extraction_line_manager
         if elm:
@@ -1155,28 +991,6 @@ anaylsis_type={}
 
         return True
 
-
-#    def _get_spectrometer_signals(self, series):
-#        keys, signals = None, None
-#        spec = self.spectrometer_manager.spectrometer
-#        if not _debug:
-#            data = spec.get_intensities(tagged=True)
-#            if data is not None:
-#                keys, signals = data
-# #                keys, signals = zip(*data)
-#        else:
-#            keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
-#
-#            if series == 0:
-#                signals = [10, 1000, 8, 8, 8, 3]
-#            elif series == 1:
-#                r = random.randint(0, 10)
-#                signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
-#                           0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
-#                           ]
-#            else:
-#                signals = [1, 2, 3, 4, 5, 6]
-#        return keys, signals
 #===============================================================================
 # save
 #===============================================================================
@@ -1195,10 +1009,9 @@ anaylsis_type={}
         dm = self.data_manager
         # make a new frame for saving data
 
-
-        name = uuid.uuid4()
-        self.uuid = str(name)
-#        path = os.path.join(self.repository.root, '{}.h5'.format(name))
+#        name = uuid.uuid4()
+#        self.uuid = str(name)
+        name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
         frame = dm.new_frame(path=path)
 
@@ -1569,60 +1382,11 @@ anaylsis_type={}
                          )
 
         exp.load_record(self)
-#        attrs = [('rid', 'labnumber'), ('aliquot', 'aliquot'),
-#                 ('step', 'step'), ('irradpos', 'labnumber'),
-#                 ('extract_device', 'extract_device'), ('tray', 'tray'),
-#                 ('position', 'position'), ('power_requested', 'extract_value'),
-#                 ('power_achieved', 'extract_value'), ('duration', 'duration'),
-#                 ('duration_at_request', 'duration'), ('first_stage_delay', 'cleanup'),
-#                 ('comment', 'comment')
-#                 ]
-#
-#        for exp_attr, run_attr in attrs:
-#            setattr(exp, exp_attr, getattr(self, run_attr))
-
         self.massspec_importer.add_analysis(exp)
-#        self.massspec_importer.add_analysis(
-# #                                            self.labnumber,
-# #                                            self.aliquot,
-# #                                            self.step,
-# #                                            self.labnumber,
-#
-#                                            baselines,
-#                                            signals,
-#                                            blanks,
-#                                            detectors,
-# #                                            intercepts,
-# #                                            fits,
-# #                                            self.regression_results,
-#
-# #                                            'Pychron {}'.format(self.mass_spectrometer),  #
-# #                                            self.extract_device,
-# #                                            self.tray,
-# #                                            self.position,
-# #                                            self.extract_value,  # power requested
-# #                                            self.extract_value,  # power achieved,
-#
-# #                                            self.duration,  # total extraction
-# #                                            self.duration,  # time at extract_value
-#
-# #                                            self.cleanup,  # first stage delay
-# #                                            0,  # second stage delay
-#
-# #                                            rs_name,  # runscript
-# #                                            rs_text,
-#
-# #                                            self.comment,  # comment
-#                                            )
-
         self.info('analysis added to mass spec database')
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
-#        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
-#                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
-#                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
-#                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
         return txt
 
     def _assemble_script_blob(self, kinds=None):
@@ -1637,67 +1401,10 @@ anaylsis_type={}
                 okinds.append(s)
 
         return assemble_script_blob(bs, kinds=okinds)
-#        _names, txt = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
-#                                            (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
-#                                            (self.post_measurement_script.name, self.post_measurement_script.toblob())],
-#                                           kinds=['extraction', 'post_equilibration', 'post_measurement'])
-#        return txt
-#        rs_name, rs_text = assemble_script_blob([(self.extraction_script.name, self.extraction_script.toblob()),
-#                                                 (self.measurement_script.name, self.measurement_script.toblob()),
-#                                                 (self.post_equilibration_script.name, self.post_equilibration_script.toblob()),
-#                                                 (self.post_measurement_script.name, self.post_measurement_script.toblob())]
-#                                                )
 
-#    def _assemble_script_blob(self, kinds=None):
-#        '''
-#            make one blob of all the script text
-#
-#            return csv-list of names, blob
-#        '''
-#        if kinds is None:
-#            kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
-#
-#        ts = []
-# #        names = []
-#        for kind in kinds:
-#            script = getattr(self, '{}_script'.format(kind))
-#
-#            blob, name = None, None
-#            if script is not None:
-#                name = script.name
-#                blob = script.toblob()
-#
-#            ts.append('#' + '=' * 79)
-#            ts.append('# {} SCRIPT {}'.format(kind.replace('_', ' ').upper(), name))
-#            ts.append('#' + '=' * 79)
-#            if blob:
-#                ts.append(blob)
-#
-#        return 'Pychron Script', '\n'.join(ts)
 #===============================================================================
 # handlers
 #===============================================================================
-#    def __labnumber_changed(self):
-#        if self._labnumber != NULL_STR:
-#            self.labnumber = self._labnumber
-#
-#    def _project_changed(self):
-#        self._labnumber = NULL_STR
-#        self.labnumber = ''
-#
-#    def _labnumber_changed(self):
-#        if self.labnumber != NULL_STR:
-#            if not self.labnumber in SPECIAL_MAPPING.values():
-#                self.special_labnumber = NULL_STR
-#
-#    def _special_labnumber_changed(self):
-#        if self.special_labnumber != NULL_STR:
-#            ln = convert_special_name(self.special_labnumber)
-#            if ln:
-#                self.labnumber = ln
-#                self._labnumber = NULL_STR
-
-
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
             sc = getattr(self, '{}_script'.format(s))
@@ -1847,17 +1554,6 @@ anaylsis_type={}
     def _get_data_writer(self, grpname):
         dm = self.data_manager
         def write_data(x, keys, signals):
-#            active = [d.name for d in self._active_detectors]
-#            for key, si in zip(keys, signals):
-#                if not key in active:
-#                    continue
-#                t = dm.get_table(key, '/{}'.format(grpname))
-#                nrow = t.row
-#                nrow['time'] = x
-#                nrow['value'] = si
-#                nrow.append()
-#                t.flush()
-
             for det in self._active_detectors:
                 k = det.name
                 try:
@@ -1903,71 +1599,7 @@ anaylsis_type={}
 
         return default
 
-# #    def _get_position(self):
-# #        return self._position
-# #
-# #    def _set_position(self, pos):
-# #        self._position = pos
-#
-#    def _validate_position(self, pos):
-#        if not pos.strip():
-#            return ''
-#
-#        ps = pos.split(',')
-# #        try:
-#        ok = False
-#        for pi in ps:
-#            if not pi:
-#                continue
-#
-#            ok = False
-#            if TRANSECT_REGEX.match(pi):
-#                ok = True
-#
-#            elif POSITION_REGEX.match(pi):
-#                ok = True
-#
-#        if not ok:
-#            pos = self._position
-#        return pos
 
-#
-#            elif POSITION_REGEX.match(pi):
-#                return pos
-#
-#            if pi[0].lower() in ('p', 'l', 'd','r'):
-#                n = pi[1:]
-#            else:
-#                n = pi
-#            try:
-#                _ = int(n)
-#            except ValueError:
-#                return self._position
-#        return pos
-#            _ = map(int, ps)
-#            return pos
-#        except ValueError:
-#            return self._position
-
-#    @cached_property
-#    def _get_post_measurement_script(self):
-#        self._post_measurement_script = self._load_script('post_measurement')
-#        return self._post_measurement_script
-#
-#    @cached_property
-#    def _get_post_equilibration_script(self):
-#        self._post_equilibration_script = self._load_script('post_equilibration')
-#        return self._post_equilibration_script
-#
-#    @cached_property
-#    def _get_measurement_script(self):
-#        self._measurement_script = self._load_script('measurement')
-#        return self._measurement_script
-#
-#    @cached_property
-#    def _get_extraction_script(self):
-#        self._extraction_script = self._load_script('extraction')
-#        return self._extraction_script
 
     @cached_property
     def _get_post_measurement_script(self):
@@ -1989,117 +1621,23 @@ anaylsis_type={}
         self._extraction_script = self._load_script('extraction')
         return self._extraction_script
 
-#    @property
-#    def index(self):
-#        return self._index
-#
-#    @index.setter
-#    def index(self, v):
-#        self._index = v
-
     @property
     def runid(self):
         return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
-    @property
-    def analysis_type(self):
-        return get_analysis_type(self.labnumber)
-
 #    @property
-    def _get_executable(self):
-        a = True
-#        print self.extraction_script, self.measurement_script, self._executable
-        if self.check_executable:
-            a = self.script_info.extraction_script_name is not None and \
-                        self.script_info.measurement_script_name is not None
-            if self.valid_scripts:
-                a = a and all(self.valid_scripts.itervalues())
-#                            self._executable
-        return a
+#    def _get_executable(self):
+#        a = True
+# #        print self.extraction_script, self.measurement_script, self._executable
+#        if self.check_executable:
+#            a = self.script_info.extraction_script_name is not None and \
+#                        self.script_info.measurement_script_name is not None
+#            if self.valid_scripts:
+#                a = a and all(self.valid_scripts.itervalues())
+# #                            self._executable
+#        return a
 
-    def _get_duration(self):
-#        if self.heat_step:
-#            d = self.heat_step.duration
-#        else:
-        d = self._duration
-        return d
-
-#    def _get_extract_units(self):
-#        return self._extract_units
-#
-#    def _set_extract_units(self, v):
-#        self._extract_units = v
-
-    def _get_extract_value(self):
-        v = self._extract_value
-        return v
-
-#    def _validate_duration(self, d):
-#        return self._validate_float(d)
-#
-#    def _validate_extract_value(self, d):
-#        return self._validate_float(d)
-#
-#    def _validate_float(self, d):
-#        try:
-#            return float(d)
-#        except ValueError:
-#            pass
-#
-#    def _set_duration(self, d):
-#        if d is not None:
-# #            if self.heat_step:
-# #                self.heat_step.duration = d
-# #            else:
-#            self._duration = d
-
-#    def _set_extract_value(self, t):
-#        if t is not None:
-# #            if self.heat_step:
-# #                self.heat_step.extract_value = t
-# #            else:
-#            self._extract_value = t
-#            if not t:
-#                self.extract_units = '---'
-#            elif self.extract_units == '---':
-#                self.extract_units = self._default_extract_units
-#
-#        else:
-#            self.extract_units = '---'
-
-#    def _get_state(self):
-#        return self._state
-#
-#    def _set_state(self, s):
-#        if self._state != 'truncate':
-#            self._state = s
-
-    def _set_step(self, v):
-        v = v.upper()
-        if v in ALPHAS:
-            self._step = list(ALPHAS).index(v) + 1
-
-    def _get_step(self):
-        if self._step == 0:
-            return ''
-        else:
-            return ALPHAS[self._step - 1]
-
-#    def _get_projects(self):
-#        prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
-#        if prs:
-#            self.project = pi
-#        return prs
-#
-#    def _get_labnumbers(self):
-#        lns = []
-#        if self.project:
-#            lns = [str(ln.labnumber)
-#                    for s in self.project.samples
-#                        for ln in s.labnumbers]
-#        return [NULL_STR] + sorted(lns)
-
-
+#============= EOF =============================================
 #===============================================================================
 # views
 #===============================================================================
@@ -2236,7 +1774,126 @@ anaylsis_type={}
 #                       )
 #                 )
 #        return v
-#============= EOF =============================================
+#    def _get_spectrometer_signals(self, series):
+#        keys, signals = None, None
+#        spec = self.spectrometer_manager.spectrometer
+#        if not _debug:
+#            data = spec.get_intensities(tagged=True)
+#            if data is not None:
+#                keys, signals = data
+# #                keys, signals = zip(*data)
+#        else:
+#            keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+#
+#            if series == 0:
+#                signals = [10, 1000, 8, 8, 8, 3]
+#            elif series == 1:
+#                r = random.randint(0, 10)
+#                signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
+#                           0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
+#                           ]
+#            else:
+#                signals = [1, 2, 3, 4, 5, 6]
+#        return keys, signals
+
+#    def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
+#        x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
+#        reg.xs=x
+#        reg.ys=y
+#        reg.fit=fi
+# #        reg.predict()
+#
+#        i=reg.coefficients[-1]
+#        ie=reg.coefficient_errors[-1]
+#        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,i,ie))
+#
+#        mi,ma=g.get_x_limits()
+#        fx=linspace(mi,ma,200)
+#        fy=reg.predict(fx)
+#        lci,uci=reg.calculate_ci(fx)
+#        #plot fit
+#        g.new_series(
+#                     fx,fy,
+#                     plotid=pi, color='black')
+#
+#
+#        kw = dict(color='red',
+#                         line_style='dash',
+#                         plotid=pi)
+#        #plot upper ci
+#        g.new_series(fx,uci
+#                     **kw
+#                     )
+#        g.new_series(fx,lci,
+#                     **kw
+#                     )
+#        g.redraw()
+#        return reg
+        # plot lower ci
+
+#        rdict = reg._regress_(x, y, fi)
+#        try:
+# #        self.regression_results[dn.name] = rdict
+#            self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,
+#                                                    rdict['coefficients'][-1],
+#                                                 rdict['coeff_errors'][-1]
+#                                                 ))
+#
+#            g.new_series(rdict['x'],
+#                         rdict['y'],
+#                         plotid=pi, color='black')
+#            kw = dict(color='red',
+#                         line_style='dash',
+#                         plotid=pi)
+#
+#            g.new_series(rdict['upper_x'],
+#                         rdict['upper_y'],
+#                         **kw
+#                         )
+#            g.new_series(rdict['lower_x'],
+#                         rdict['lower_y'],
+#                         **kw
+#                         )
+#            g.redraw()
+#            return rdict
+#        except:
+#            self.warning('problem regressing')
+#    def get_estimated_duration(self):
+#        '''
+#            use the pyscripts to calculate etd
+#        '''
+#        s = self.duration
+#
+#        for si in [self.measurement_script,
+#                   self.extraction_script,
+#                   self.post_equilibration_script,
+#                   self.post_measurement_script]:
+#            if si is not None:
+#                s += si.get_estimated_duration()
+#
+#        return s
+
+#    def to_string_attrs(self, attr):
+#        def get_attr(attrname):
+#            if attrname in ['measurement_script',
+#                            'extraction_script',
+#                            'post_measurement_script',
+#                            'post_equilibration_script']:
+#                v = getattr(self.script_info, '{}_name'.format(attrname))
+#                if v:
+#                    v = str(v).replace(self.mass_spectrometer, '')
+#            elif attrname == 'labnumber':
+#                if self.user_defined_aliquot:
+#                    v = '{}-{}'.format(self.labnumber, self.aliquot)
+#                else:
+#                    v = self.labnumber
+#            else:
+#                v = getattr(self, attrname)
+#
+#
+#            return v
+#
+#        return [get_attr(ai) for ai in attr]
 
 #    def do_regress(self, fits, series=0):
 #        if not self._alive:

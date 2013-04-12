@@ -32,6 +32,7 @@ class UVAutomatedRunSpec(AutomatedRunSpec):
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
     browser_button = Button('Browse')
+    image = Str
 
     @cached_property
     def _get_masks(self):
@@ -54,6 +55,12 @@ class UVAutomatedRunSpec(AutomatedRunSpec):
             b.client = c
 
         return b
+
+    def _get_run_attrs(self):
+        attrs = super(UVAutomatedRunSpec, self)._get_run_attrs()
+        nattrs = ('reprate', 'mask', 'attenuator', 'image')
+        return attrs.extend(nattrs)
+
 #===============================================================================
 # handlers
 #===============================================================================

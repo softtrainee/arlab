@@ -21,24 +21,26 @@ from traitsui.tabular_adapter import TabularAdapter
 import os
 from src.paths import paths
 #============= local library imports  ==========================
-def get_name(func):
-    def _get_name(obj, trait, item):
-        name = func(obj, trait, item)
-
-        if name:
-            name, _ext = os.path.splitext(name)
-
-            if '_' in name:
-                ns = name.split('_')
-                name = '_'.join(ns[1:])
-
-        return name if name else ''
-    return _get_name
+# def get_name(func):
+#    def _get_name(obj, trait, item):
+#        name = func(obj, trait, item)
+#
+#        if name:
+#            name, _ext = os.path.splitext(name)
+#
+#            if '_' in name:
+#                ns = name.split('_')
+#                name = '_'.join(ns[1:])
+#
+#        return name if name else ''
+#    return _get_name
 
 class AutomatedRunSpecAdapter(TabularAdapter):
 
+    #===========================================================================
+    # widths
+    #===========================================================================
     aliquot_width = Int(50)
-
     sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
@@ -50,11 +52,61 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     extract_units_width = Int(50)
     extract_device_width = Int(125)
     labnumber_width = Int(70)
-
     extraction_script_width = Int(125)
     measurement_script_width = Int(125)
     post_measurement_script_width = Int(125)
     post_equilibration_script_width = Int(125)
+
+    #===========================================================================
+    # number values
+    #===========================================================================
+    extract_value_text = Property
+    duration_text = Property
+    cleanup_text = Property
+    aliquot_text = Property
+
+
+    def get_bg_color(self, obj, trait, row):
+        item = getattr(obj, trait)[row]
+        if row % 2 == 0:
+            color = 'white'
+        else:
+            color = '#E6F2FF'  # light gray blue
+
+        if not item.executable:
+            color = 'red'
+        if item.skip:
+            color = '#33CCFF'  # light blue
+        elif item.state == 'success':
+            color = '#66FF33'  # light green
+        return color
+
+    def _get_extract_value_text(self, trait, item):
+        return self._get_number('extract_value')
+
+    def _get_duration_text(self, trait, item):
+        return self._get_number('duration')
+
+    def _get_cleanup_text(self, trait, item):
+        return self._get_number('cleanup')
+#
+    def _get_aliquot_text(self, trait, item):
+        return self._get_number('aliquot')
+#
+    def _get_number(self, attr):
+        '''
+            dont display 0.0's
+        '''
+        v = getattr(self.item, attr)
+        if isinstance(v, str):
+            try:
+                v = int(v)
+            except ValueError:
+                v = ''
+        if v:
+            return v
+        else:
+            return ''
 
     def _columns_default(self):
         return self._columns_factory()
@@ -78,9 +130,6 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Post Meas.', 'post_measurement_script'),
                  ]
 
-#        if not self.show_state:
-#            cols.pop(0)
-
         return cols
 
 class UVAutomatedRunSpecAdapter(AutomatedRunSpecAdapter):
@@ -94,7 +143,7 @@ class UVAutomatedRunSpecAdapter(AutomatedRunSpecAdapter):
 COLOR_STATES = dict(extraction='yellow', measurement='orange',
                      success='green', fail='red', truncate='blue')
 
-class ExecuteAutomatedRunAdapter(TabularAdapter):
+class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
     state_width = Int(20)
     state_image = Property
     def _get_state_image(self):
@@ -122,14 +171,13 @@ class ExecuteAutomatedRunAdapter(TabularAdapter):
 
         return p
 
-    def _columns_default(self):
-        return self._columns_factory()
     def _columns_factory(self):
         cols = [
                  ('', 'state'),
                  ('Labnumber', 'labnumber'),
                  ('Aliquot', 'aliquot'),
                  ('Sample', 'sample'),
+                 ('Irrad.', 'irradiation'),
                  ('Position', 'position'),
 #                 ('Autocenter', 'autocenter'),
 #                 ('Pattern', 'pattern'),
@@ -143,9 +191,6 @@ class ExecuteAutomatedRunAdapter(TabularAdapter):
                  ('Post equilibration', 'post_equilibration_script'),
                  ('Post Measurement', 'post_measurement_script'),
                  ]
-
-#        if not self.show_state:
-#            cols.pop(0)
 
         return cols
 

@@ -59,9 +59,12 @@ class ExperimentStats(Loggable):
         return dt.strftime('%I:%M:%S %p %a %m/%d')
 
     def _calculate_duration(self, runs):
-        ni = len(runs)
-        dur = sum([a.get_estimated_duration() for a in runs])
-        dur += (self.delay_between_analyses * ni)
+        dur = 0
+        if runs:
+            ni = len(runs)
+            script_ctx = dict()
+            dur = sum([a.get_estimated_duration(script_ctx) for a in runs])
+            dur += (self.delay_between_analyses * ni)
         return dur
 
     def _get_total_time(self):

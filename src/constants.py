@@ -42,4 +42,10 @@ FIT_TYPES_INTERPOLATE = FIT_TYPES + ['Preceeding', 'Bracketing Interpolate', 'Br
 DELIMITERS = {',':'comma', '\t':'tab', ' ':'space'}
 AGE_SCALARS = {'Ma':1e6, 'ka':1e3, 'a':1}
 
+import string
+seeds = string.ascii_uppercase
+ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
+                                    for a in seeds
+                                        for b in seeds]
+
 #============= EOF =============================================

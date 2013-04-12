@@ -51,7 +51,13 @@ class BaseExperimentQueue(Loggable):
     stats = Instance(ExperimentStats, ())
 
     _suppress_aliquot_update = False
-    update_aliquots_needed = Event
+    update_needed = Event
+
+    name = Property(depends_on='path')
+    path = Str
+
+    def _get_name(self):
+        return self.path
 
     def test(self):
         self.info('testing')
@@ -59,7 +65,7 @@ class BaseExperimentQueue(Loggable):
 
     def add_runs(self, runviews):
         self.automated_runs.extend(runviews)
-        self.update_aliquots_needed = True
+        self.update_needed = True
 
     def set_extract_device(self, ed):
         self.extract_device = ed
@@ -81,13 +87,14 @@ class BaseExperimentQueue(Loggable):
 
         aruns = self._load_runs(txt)
         if aruns:
-#            self.executable = any([ai.executable for ai in aruns])
+            self.executable = any([ai.executable for ai in aruns])
             self.automated_runs = aruns
 
 #            lm = self.sample_map
 #            if lm:
 #                for ai in self.automated_runs:
 #                    if ai.position:
+
 #                        lm.set_hole_labnumber(ai)
 
             return True
@@ -293,17 +300,18 @@ tray: {}
             self.automated_runs.insert(idx, ci)
         self._suppress_aliquot_update = False
 
-        self.update_aliquots_needed = True
+        self.update_needed = True
 
     @on_trait_change('automated_runs[]')
     def _update_runs(self):
         if not self._suppress_aliquot_update:
-            self.update_aliquots_needed = True
+            self.update_needed = True
 #===============================================================================
 # property get/set
 #===============================================================================
     def _get_cleaned_automated_runs(self):
-        return [ci for ci in self.automated_runs if not ci.skip]
+        return [ci for ci in self.automated_runs
+                if not ci.skip]
 
 #===============================================================================
 # groups

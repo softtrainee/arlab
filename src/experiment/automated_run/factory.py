@@ -16,9 +16,10 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Str, Property, Any, \
-     Float, Instance, Int, List, cached_property, on_trait_change, Button
+     Float, Instance, Int, List, cached_property, on_trait_change, Bool
 from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.constants import NULL_STR, SCRIPT_KEYS
@@ -28,9 +29,7 @@ from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.regex import TRANSECT_REGEX, POSITION_REGEX
 from src.experiment.utilities.script_mixin import ScriptMixin
 from src.paths import paths
-import os
 from src.experiment.script.script import Script
-from traitsui.item import UReadonly
 
 
 class AutomatedRunFactory(Loggable, ScriptMixin):
@@ -46,6 +45,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     project = Any
     projects = Property
 
+    skip = Bool(False)
 #    weight = Float
 #    comment = Str
     weight = Float(12)
@@ -78,7 +78,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     # readonly
     #===========================================================================
     sample = Str
-    irrad_level = Str
+    irradiation = Str
     #===========================================================================
     # private
     #===========================================================================
@@ -164,7 +164,10 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
-                     'weight', 'comment'):
+                     'weight', 'comment',
+                     'sample', 'irradiation',
+                     'skip'
+                     ):
 
             if attr in excludes:
                 continue
@@ -244,7 +247,7 @@ post_equilibration_script:name
         if self.labnumber != NULL_STR:
             if not self.labnumber in SPECIAL_MAPPING.values():
                 self.special_labnumber = NULL_STR
-        self.irrad_level = ''
+        self.irradiation = ''
         self.sample = ''
 
         db = self.db
@@ -252,7 +255,7 @@ post_equilibration_script:name
             return
 #        arun.run_info.sample = ''
 #        arun.aliquot = 0
-#        arun.irrad_level = ''
+#        arun.irradiation = ''
         labnumber = self.labnumber
         if labnumber:
 
@@ -266,7 +269,7 @@ post_equilibration_script:name
                 except AttributeError:
                     pass
 
-                self.irrad_level = self._make_irrad_level(ln)
+                self.irradiation = self._make_irrad_level(ln)
                 # set default scripts
                 self._load_default_scripts(key=labnumber)
             else:
@@ -373,9 +376,8 @@ post_equilibration_script:name
                         tooltip='Sample info retreived from Database',
                         style='readonly'
                         ),
-                   Item('irrad_level',
+                   Item('irradiation',
                           tooltip='Irradiation info retreived from Database',
-                          label='Irradiation',
                           style='readonly'
                           ),
                    Item('weight',
@@ -462,6 +464,9 @@ post_equilibration_script:name
     def edit_view(self):
         extract_group = self._get_extract_group()
         v = View(
+                 Item('skip',
+                      tooltip='exclude this run from execution'
+                      ),
                  Item('labnumber', style='readonly'),
                  Item('aliquot'),
                  extract_group,
