@@ -39,7 +39,7 @@ from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
 import os
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable

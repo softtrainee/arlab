@@ -175,14 +175,21 @@ class PyScriptManager(Manager):
         return klass(manager=self.parent,
                      parent=self,
                      **kw)
+
+    def parse(self, txt):
+        self.body = txt
+        self._original_body = self.body
+        self._parse()
+
+    def _parse(self):
+        pass
 #===============================================================================
 # persistence
 #===============================================================================
     def _load_script(self, p):
         self.info('loading script {}'.format(p))
         with open(p, 'r') as f:
-            self.body = f.read()
-            self._original_body = self.body
+            self.parse(f.read())
 
     def _dump_script(self, p):
 
@@ -244,7 +251,7 @@ class PyScriptManager(Manager):
         return cmd
 
 #===============================================================================
-# views
+# groups
 #===============================================================================
     def _get_commands_group(self, name, label):
         return Group(Item(name,
@@ -256,13 +263,18 @@ class PyScriptManager(Manager):
                                         selected='selected_command'
                                         ),
                          width=200,
-                         height=400,
+                         height=410,
                          resizable=False
                            ),
                      label=label,
                      show_border=True,
                      )
+    def _get_design_group(self):
+        return
 
+#===============================================================================
+# views
+#===============================================================================
     def traits_view(self):
         help_grp = Group(
                        Item('selected_command_object',
@@ -274,7 +286,9 @@ class PyScriptManager(Manager):
                        )
 
         editor = VGroup(
-                        Item('body', editor=PyScriptCodeEditor(fontsize=18),
+                        Item('body',
+                             height=480,
+                             editor=PyScriptCodeEditor(fontsize=18),
                              show_label=False),
                         help_grp
                         )
@@ -283,13 +297,19 @@ class PyScriptManager(Manager):
                              Item('kind'),
                              self._get_commands_group('script_commands', 'Commands'))
 
-        v = View(VGroup(
-                    HGroup(
-                            command_grp,
-                            editor,
-                            ),
+        src_grp = HGroup(
+                        command_grp,
+                        editor,
+                        label='Source'
+                        )
 
-                 ),
+        design_grp = self._get_design_group()
+        tabs = Group(src_grp, layout='tabbed')
+        if design_grp:
+            tabs.content.append(design_grp)
+
+        v = View(
+                 tabs,
                  resizable=True,
                  buttons=[
                           Action(name='Test', action='test_script'),

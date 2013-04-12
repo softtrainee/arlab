@@ -23,6 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.paths import paths
 from src.pyscripts.pyscript_editor import PyScriptManager
+from src.pyscripts.measurement_editor import MeasurementPyScriptManager
 from src.constants import NULL_STR
 from src.loggable import Loggable
 
@@ -39,7 +40,11 @@ class Script(Loggable):
     def _edit_fired(self):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
                                                                                   self.name))
-        editor = PyScriptManager(kind=self.kind, application=self.application)
+        if self.kind == 'ExtractionLine':
+            editor = PyScriptManager(kind=self.kind, application=self.application)
+        else:
+            editor = MeasurementPyScriptManager(application=self.application)
+
         editor.open_script(p)
         editor.open_view(editor)
 

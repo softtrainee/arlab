@@ -37,21 +37,8 @@ from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 from src.traits_editors.led_editor import LED, LEDEditor
-from src.lasers.laser_managers.extraction_device import IExtractionDevice
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
-class ILaserManager(IExtractionDevice):
-    def trace_path(self, *args, **kw):
-        pass
-    def drill_point(self, *args, **kw):
-        pass
-    def take_snapshot(self, *args, **kw):
-        pass
-#    def extract(self, *args, **kw):
-#        pass
-#    def end_extract(self, *args, **kw):
-#        pass
-#    def move_to_position(self, *args, **kw):
-#        pass
 
 class BaseLaserManager(Manager):
     implements(ILaserManager)
@@ -62,19 +49,19 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
-    
+
     def is_ready(self):
         return True
 
     def take_snapshot(self, *args, **kw):
         pass
-    
+
     def end_extract(self, *args, **kw):
         pass
-    
+
     def extract(self, *args, **kw):
         pass
-    
+
     def prepare(self):
         pass
 
