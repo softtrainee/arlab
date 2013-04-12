@@ -30,7 +30,7 @@ from src.paths import paths
 from src.experiment.stats import ExperimentStats
 # from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 # from src.traits_editors.tabular_editor import myTabularEditor
-from src.experiment.identifier import convert_identifier
+from src.experiment.utilities.identifier import convert_identifier
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
 # from src.experiment.blocks.parser import RunParser, UVRunParser
@@ -96,17 +96,17 @@ class ExperimentSet(BaseSchedule):
                 return
         return True
 
-    def automated_run_factory(self, copy_automated_run=False, **params):
-        arun = self.automated_run
-        if arun and copy_automated_run:
-            params.update(dict(
-                               labnumber=arun.labnumber,
-                               position=arun.position,
-                               aliquot=arun.aliquot))
-
-        params['db'] = self.db
-        params['mass_spectrometer'] = self.mass_spectrometer
-        return self._automated_run_factory({}, params)
+#    def automated_run_factory(self, copy_automated_run=False, **params):
+#        arun = self.automated_run
+#        if arun and copy_automated_run:
+#            params.update(dict(
+#                               labnumber=arun.labnumber,
+#                               position=arun.position,
+#                               aliquot=arun.aliquot))
+#
+#        params['db'] = self.db
+#        params['mass_spectrometer'] = self.mass_spectrometer
+#        return self._automated_run_factory({}, params)
 
     def save_to_db(self):
         self.info('saving experiment {} to database'.format(self.name))
@@ -525,10 +525,10 @@ tray: {}
             self.runs_table = RunsTable(extract_device=self.extract_device)
             self.runs_table.set_runs(runs)
 
-#            self.automated_run = self.automated_run_factory(copy_automated_run=False)
-            self.automated_run_maker.automated_run = self.automated_run_factory(copy_automated_run=False)
-
             self.automated_run_maker.extract_device = self.extract_device
+#            self.automated_run_maker.
+#            self.automated_run = self.automated_run_factory(copy_automated_run=False)
+#            self.automated_run_maker.automated_run = self.automated_run_factory(copy_automated_run=False)
 
 #            if self.mass_spectrometer:
 #                self._load_default_scripts()
@@ -612,62 +612,62 @@ tray: {}
 # factories
 #===============================================================================
 
-    def _automated_run_factory(self, script_params, params):
-        '''
-             always use this factory for new AutomatedRuns
-             it sets the configuration, loaded scripts and binds our update_loaded_script
-             handler so we are aware of scripts that have been tested
-        '''
-        # copy some of the last runs values
-        if self.automated_runs:
-            pa = self.automated_runs[-1]
-            for k in ['extract_device', 'autocenter']:
-                if not k in params:
-                    params[k] = getattr(pa, k)
-
-        if self.extract_device == 'Fusions UV':
-            from src.experiment.uv_automated_run import UVAutomatedRun
-            klass = UVAutomatedRun
-        else:
-            klass = AutomatedRun
-
-        a = klass(scripts=self.loaded_scripts,
-                  application=self.application,
-                  **params)
-
-        for k, v in script_params.iteritems():
-            setattr(a.script_info, '{}_script_name'.format(k), v)
-
-
-#        a = klass(scripts=self.loaded_scripts,
-#                  labnumber=labnumber if labnumber else '',
-#                  **kw)
-        if 'labnumber' in params:
-            labnumber = params['labnumber']
-        else:
-            labnumber = ''
-
-        if labnumber:
-            ln = self.db.get_labnumber(labnumber)
-
-            if ln is None:
-                # check to see if we have already warned for this labnumber
-                if not labnumber in self._warned_labnumbers:
-                    self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
-                    self._warned_labnumbers.append(labnumber)
-                a._executable = False
-#            else:
-#                if ln.sample:
-#                    a.run_info.sample = ln.sample.name
-#                a.run_info.irrad_level = self._make_irrad_level(ln)
-#            else:
-#                self._bind_automated_run(a)
-#                a.create_scripts()
+#    def _automated_run_factory(self, script_params, params):
+#        '''
+#             always use this factory for new AutomatedRuns
+#             it sets the configuration, loaded scripts and binds our update_loaded_script
+#             handler so we are aware of scripts that have been tested
+#        '''
+#        # copy some of the last runs values
+#        if self.automated_runs:
+#            pa = self.automated_runs[-1]
+#            for k in ['extract_device', 'autocenter']:
+#                if not k in params:
+#                    params[k] = getattr(pa, k)
+#
+#        if self.extract_device == 'Fusions UV':
+#            from src.experiment.uv_automated_run import UVAutomatedRun
+#            klass = UVAutomatedRun
 #        else:
-        self._bind_automated_run(a)
-#            a.create_scripts()
-
-        return a
+#            klass = AutomatedRun
+#
+#        a = klass(scripts=self.loaded_scripts,
+#                  application=self.application,
+#                  **params)
+#
+#        for k, v in script_params.iteritems():
+#            setattr(a.script_info, '{}_script_name'.format(k), v)
+#
+#
+# #        a = klass(scripts=self.loaded_scripts,
+# #                  labnumber=labnumber if labnumber else '',
+# #                  **kw)
+#        if 'labnumber' in params:
+#            labnumber = params['labnumber']
+#        else:
+#            labnumber = ''
+#
+#        if labnumber:
+#            ln = self.db.get_labnumber(labnumber)
+#
+#            if ln is None:
+#                # check to see if we have already warned for this labnumber
+#                if not labnumber in self._warned_labnumbers:
+#                    self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
+#                    self._warned_labnumbers.append(labnumber)
+#                a._executable = False
+# #            else:
+# #                if ln.sample:
+# #                    a.run_info.sample = ln.sample.name
+# #                a.run_info.irrad_level = self._make_irrad_level(ln)
+# #            else:
+# #                self._bind_automated_run(a)
+# #                a.create_scripts()
+# #        else:
+#        self._bind_automated_run(a)
+# #            a.create_scripts()
+#
+#        return a
 
 #===============================================================================
 # defaults

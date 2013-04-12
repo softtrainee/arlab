@@ -28,12 +28,13 @@ from src.paths import paths
 class UVAutomatedRun(AutomatedRun):
     reprate = Int
     mask = Str
-    masks = Property
     attenuator = Str
-    extract_units_names = List([NULL_STR, 'burst', 'continuous'])
-    _default_extract_units = 'burst'
     image = Str
-    browser_button = Button('Browse')
+
+#    masks = Property
+#    extract_units_names = List([NULL_STR, 'burst', 'continuous'])
+#    _default_extract_units = 'burst'
+#    browser_button = Button('Browse')
 
     def _save_extraction(self, analysis):
         ext = super(UVAutomatedRun, self)._save_extraction(analysis)
@@ -58,28 +59,28 @@ class UVAutomatedRun(AutomatedRun):
 
         return ext
 
-    @cached_property
-    def _get_masks(self):
-        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
-        masks = []
-        if os.path.isfile(p):
-            with open(p, 'r') as fp:
-                for lin in fp:
-                    lin = lin.strip()
-                    if not lin or lin.startswith('#'):
-                        continue
-                    masks.append(lin)
+#    @cached_property
+#    def _get_masks(self):
+#        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
+#        masks = []
+#        if os.path.isfile(p):
+#            with open(p, 'r') as fp:
+#                for lin in fp:
+#                    lin = lin.strip()
+#                    if not lin or lin.startswith('#'):
+#                        continue
+#                    masks.append(lin)
+#
+#        return masks
 
-        return masks
-
-    def _get_supplemental_extract_group(self):
-        g = VGroup(Item('reprate'),
-                   Item('mask', editor=EnumEditor(name='masks')),
-                   Item('attenuator'),
-                   HGroup(Item('image', springy=True), Item('browser_button', show_label=False)),
-                   label='UV'
-                   )
-        return g
+#    def _get_supplemental_extract_group(self):
+#        g = VGroup(Item('reprate'),
+#                   Item('mask', editor=EnumEditor(name='masks')),
+#                   Item('attenuator'),
+#                   HGroup(Item('image', springy=True), Item('browser_button', show_label=False)),
+#                   label='UV'
+#                   )
+#        return g
 
     def _extraction_script_factory(self, ec, key):
         obj = super(UVAutomatedRun, self)._extraction_script_factory(ec, key)
@@ -89,23 +90,23 @@ class UVAutomatedRun(AutomatedRun):
                           )
         return obj
 
-    def _image_browser_factory(self):
-        b = self.application.get_service('src.media_server.browser.MediaBrowser')
-        if b is not None:
-            c = self.application.get_service('src.media_server.client.MediaClient')
-            b.client = c
-
-        return b
-#===============================================================================
-# handlers
-#===============================================================================
-    def _browser_button_fired(self):
-        browser = self._image_browser_factory()
-#        browser.root='images/fusions_uv'
-        browser.load_remote_directory('images/fusions_uv')
-        info = browser.edit_traits(view='modal_view', kind='livemodal')
-        if info.result:
-            self.image = browser.get_selected_image_name()
+#    def _image_browser_factory(self):
+#        b = self.application.get_service('src.media_server.browser.MediaBrowser')
+#        if b is not None:
+#            c = self.application.get_service('src.media_server.client.MediaClient')
+#            b.client = c
+#
+#        return b
+##===============================================================================
+# # handlers
+##===============================================================================
+#    def _browser_button_fired(self):
+#        browser = self._image_browser_factory()
+# #        browser.root='images/fusions_uv'
+#        browser.load_remote_directory('images/fusions_uv')
+#        info = browser.edit_traits(view='modal_view', kind='livemodal')
+#        if info.result:
+#            self.image = browser.get_selected_image_name()
 #    @cached_property
 #    def _get_post_measurement_script(self):
 #        self._post_measurement_script = self._load_script('post_measurement')

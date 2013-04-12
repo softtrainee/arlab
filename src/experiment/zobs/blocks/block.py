@@ -23,7 +23,7 @@ from traitsui.api import View, Item, InstanceEditor, HGroup, VGroup, \
 from src.experiment.blocks.base_schedule import BaseSchedule, RunAdapter
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.traits_editors.tabular_editor import myTabularEditor
-from src.experiment.identifier import ANALYSIS_MAPPING, convert_special_name, \
+from src.experiment.utilities.identifier import ANALYSIS_MAPPING, convert_special_name, \
     convert_identifier
 
 import os

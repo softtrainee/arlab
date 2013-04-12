@@ -15,31 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import HasTraits, List, Any, Event, Str
+from traitsui.api import View, Item
+from src.traits_editors.tabular_editor import myTabularEditor
+from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter, \
+    UVAutomatedRunSpecAdapter
+from src.experiment.automated_run.table import AutomatedRunsTable
+from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
 #============= standard library imports ========================
 #============= local library imports  ==========================
-PLUSMINUS = u'\u00b1'
-try:
-    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
-except UnicodeEncodeError:
-    PLUSMINUS = '+/-'
-    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
-SIGMA = u'\u03c3'
 
-try:
-    SIGMA = '{}'.format(SIGMA)
-except UnicodeEncodeError:
-    SIGMA = 's'
-
-NULL_STR = '---'
-SCRIPT_KEYS = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
-SCRIPT_NAMES = ['{}_script'.format(si) for si in SCRIPT_KEYS]
-
-FIT_TYPES = ['linear', 'parabolic', 'cubic',
-             u'average {}SD'.format(PLUSMINUS),
-              u'average {}SEM'.format(PLUSMINUS)]
-INTERPOLATE_TYPES = ['Preceeding', 'Bracketing Interpolate', 'Bracketing Average']
-FIT_TYPES_INTERPOLATE = FIT_TYPES + ['Preceeding', 'Bracketing Interpolate', 'Bracketing Average']
-DELIMITERS = {',':'comma', '\t':'tab', ' ':'space'}
-AGE_SCALARS = {'Ma':1e6, 'ka':1e3, 'a':1}
+class UVAutomatedRunsTable(AutomatedRunsTable):
+    klass = UVAutomatedRunSpec
+    adapter_klass = UVAutomatedRunSpecAdapter
 
 #============= EOF =============================================

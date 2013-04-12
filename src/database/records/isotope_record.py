@@ -31,7 +31,7 @@ from src.graph.regression_graph import StackedRegressionGraph
 from src.graph.stacked_graph import StackedGraph
 from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
-from src.experiment.identifier import convert_shortname, convert_labnumber
+from src.experiment.utilities.identifier import convert_shortname, convert_labnumber
 from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.deprecate import deprecated

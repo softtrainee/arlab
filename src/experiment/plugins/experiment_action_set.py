@@ -26,47 +26,27 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 BASE = 'src.experiment.plugins.experiment_actions'
 PATH = 'MenuBar/Experiment'
-SETSPATH = 'MenuBar/Experiment/Sets...'
+QUEUEPATH = 'MenuBar/Experiment/Queue...'
 
 class ExperimentActionSet(WorkbenchActionSet):
     '''
     '''
     id = 'pychron.experiment.action_set'
-#    menus = [
-#           Menu(name = '&File', path = 'MenuBar')
-#           ]
-#    actions = [
 
     def _main_actions(self):
         return [Action(name='New...',
-                      path=SETSPATH,
-                    class_name='{}:NewExperimentSetAction'.format(BASE)
+                      path=QUEUEPATH,
+                    class_name='{}:NewExperimentQueueAction'.format(BASE)
 
                     ),
                 Action(name='Open...',
-                       path=SETSPATH,
-                       class_name='{}:OpenExperimentSetAction'.format(BASE)
+                       path=QUEUEPATH,
+                       class_name='{}:OpenExperimentQueueAction'.format(BASE)
 
                        ),
-#                Action(name='Save',
-#                       path=SETSPATH,
-#                       class_name='{}:SaveExperimentSetAction'.format(BASE)
-#
-#                       ),
-#                Action(name='Save As...',
-#                       path=SETSPATH,
-#                       class_name='{}:SaveAsExperimentSetAction'.format(BASE)
-#
-#                       ),
-
-#                Action(name='Lab Table...',
-#                       path=PATH + '/Recall',
-#                       class_name='{}:OpenRecentTableAction'.format(BASE)
-#                       ),
-
                 Action(name='Execute...',
-                       path=PATH,
-                       class_name='{}:ExecuteExperimentSetAction'.format(BASE)
+                       path=QUEUEPATH,
+                       class_name='{}:ExecuteExperimentQueueAction'.format(BASE)
                        ),
                 Action(name='Execute Procedure...',
                        path=PATH,
@@ -76,7 +56,6 @@ class ExperimentActionSet(WorkbenchActionSet):
                        path=PATH,
                        class_name='{}:LabnumberEntryAction'.format(BASE)
                        ),
-
 #===============================================================================
 # Utilities
 #===============================================================================
@@ -110,28 +89,6 @@ class ExperimentActionSet(WorkbenchActionSet):
     def _actions_default(self):
         acs = self._main_actions()
         acs.extend(self._script_actions())
-#        di = os.path.join(paths.scripts_dir, 'procedures')
-#        ss = []
-#        es = []
-#        if os.path.isdir(di):
-#            ss = [s for s in os.listdir(di)
-#                            if not s.startswith('.') and s.endswith('.py')]
-#            ss = [Action(name=si, path=PATH + '/Procedures',
-#                         class_name='{}:ExecuteProcedureAction'.format(BASE)
-#                         ) for si in ss]
-#
-#
-#        di = os.path.join(paths.root_dir, 'experiments')
-#        if os.path.isdir(di):
-#            es = [s for s in os.listdir(di)
-#                            if not s.startswith('.') and s.endswith('.txt')]
-#
-#            es = [Action(name=si, path=SETSPATH,
-#                         class_name='{}:ExecuteExperimentAction'.format(BASE, si.split('.')[0])
-#                         ) for si in es]
-#
-#            for ei in es:
-#                print ei.name
 
         return acs
 #============= EOF ====================================
