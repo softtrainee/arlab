@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, DelegatesTo, Str, Int, \
-    Property, Event, on_trait_change
+    Property, Event, on_trait_change, Bool
 from traitsui.api import View, Item, VGroup, HGroup
 # from src.experiment.runs_table import RunsTable
 #============= standard library imports ========================
@@ -56,6 +56,8 @@ class BaseExperimentQueue(Loggable):
     name = Property(depends_on='path')
     path = Str
 
+    executable = Bool
+
     def _get_name(self):
         return self.path
 
@@ -87,7 +89,6 @@ class BaseExperimentQueue(Loggable):
 
         aruns = self._load_runs(txt)
         if aruns:
-            self.executable = any([ai.executable for ai in aruns])
             self.automated_runs = aruns
 
 #            lm = self.sample_map

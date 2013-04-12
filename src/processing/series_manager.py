@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List, Bool, Float, Property, Instance
+from traits.api import HasTraits, Str, List, Bool, Float, Property, Instance, Int
 from traitsui.api import View, Item, HGroup, Label, EnumEditor, \
     spring, Group, VGroup
 import apptools.sweet_pickle as pickle
@@ -33,7 +33,7 @@ class SeriesOptions(HasTraits):
     show = Bool
     fit = Str
     scalar = Float(1)
-
+    nsigma = Int(1)
     key = Property
     _key = Str
     def traits_view(self):

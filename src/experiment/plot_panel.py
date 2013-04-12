@@ -25,6 +25,7 @@ from uncertainties import ufloat
 from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
+from src.processing.arar_age import ArArAge
 #============= standard library imports ========================
 # from numpy import Inf
 # from pyface.timer.do_later import do_later
@@ -35,7 +36,8 @@ HEIGHT = 250
 class PlotPanelHandler(ViewableHandler):
     pass
 class PlotPanel(Viewable):
-    automated_run = Any
+#    automated_run = Any
+    arar_age = Instance(ArArAge)
     graph = Instance(Graph)
     window_x = 0
     window_y = 0
@@ -64,6 +66,27 @@ class PlotPanel(Viewable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
+
+    def reset(self):
+        self.clear_displays()
+        self.graph = self._graph_factory()
+
+    def create(self, dets):
+        '''
+            dets: list of Detector instances
+        '''
+
+        g = self.graph
+        g.suppress_regression = True
+#        # construct plot panels graph
+        for det in dets:
+            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
+
+        g.set_x_limits(min=0, max=400)
+#
+        g.suppress_regression = False
+        self.detectors = dets
+
     def clear_displays(self):
         self.ratio_display.clear()
         self.signal_display.clear()
@@ -74,7 +97,7 @@ class PlotPanel(Viewable):
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
-            arar_age = self.automated_run.arar_age
+            arar_age = self.arar_age
             for iso, reg in zip(self.isotopes, new):
                 try:
                     vv = reg.predict(0)
@@ -155,7 +178,7 @@ class PlotPanel(Viewable):
         self.add_text(display, msg, **kw)
 
     def _print_summary(self, display):
-        arar_age = self.automated_run.arar_age
+        arar_age = self.arar_age
         if arar_age:
             # call age first
             # loads all the other attrs
@@ -308,9 +331,10 @@ class PlotPanel(Viewable):
 #        except AttributeError:
 #            return reg.error_calc
 
-    def close(self, isok):
-        self.automated_run.truncate('Immediate')
-        return isok
+#    def close(self, isok):
+#        self.close_event = True
+# #        self.automated_run.truncate('Immediate')
+#        return isok
 
     def _get_ncounts(self):
         return self._ncounts
@@ -368,38 +392,26 @@ class PlotPanel(Viewable):
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]
+
+    def _display_factory(self):
+        return  RichTextDisplay(height=HEIGHT,
+                               default_color='black',
+                               default_size=12,
+                               scroll_to_bottom=False,
+                               bg_color='#FFFFCC'
+                               )
 #===============================================================================
 # defaults
 #===============================================================================
     def _fit_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-                               )
+        return self._display_factory()
+
     def _summary_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-                               )
+        return self._display_factory()
 
     def _signal_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-#                               width=0.25
-                               )
+        return self._display_factory()
+
     def _ratio_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-#                               width=0.75
-                               )
+        return self._display_factory()
 #============= EOF =============================================

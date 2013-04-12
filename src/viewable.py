@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Either, Int, Float, Any, Str, List
+from traits.api import HasTraits, Either, Int, Float, Any, Str, List, Event
 from traitsui.api import View, Item, TableEditor, Controller
 from traitsui.api import Handler
 from pyface.timer.do_later import do_after
@@ -39,6 +39,7 @@ class ViewableHandler(Handler):
 
     def closed(self, info, is_ok):
         info.object.closed(is_ok)
+        info.object.close_event = True
         info.object.ui = None
 
 class Viewable(Loggable):
@@ -54,6 +55,7 @@ class Viewable(Loggable):
 
     title = Str
     associated_windows = List
+    close_event = Event
 
     def opened(self):
         pass
