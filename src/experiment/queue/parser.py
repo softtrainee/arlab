@@ -122,7 +122,9 @@ class RunParser(Loggable):
                         params[rattr] = False
 
         # load numbers
-        for attr in ['duration', 'overlap', 'cleanup',
+        for attr in ['duration',
+#                     'overlap',
+                     'cleanup',
 #                     'aliquot',
                      'extract_group',
                      'weight',
@@ -141,9 +143,10 @@ class RunParser(Loggable):
                 try:
                     param = args[idx]
                     params[rattr] = float(param.strip())
-                except (IndexError, ValueError), e:
-                    print e
-                    pass
+                except IndexError, e:
+                    self.debug('{} {}'.format(e, attr))
+                except ValueError, e:
+                    self.debug('{} {} {}'.format(e, attr, param))
 
 #            try:
 #                idx = header.index(attr)

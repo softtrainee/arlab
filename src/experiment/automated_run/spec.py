@@ -16,40 +16,75 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Bool, Float, Property, Enum
-from traitsui.api import View, Item, TableEditor
-from src.experiment.automated_run.automated_run import AutomatedRun
-from src.constants import SCRIPT_KEYS
 #============= standard library imports ========================
+import uuid
 #============= local library imports  ==========================
+from src.experiment.automated_run.automated_run import AutomatedRun
+from src.experiment.utilities.identifier import get_analysis_type
+from src.constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
+from src.loggable import Loggable
 
-class AutomatedRunSpec(HasTraits):
+class AutomatedRunSpec(Loggable):
+    '''
+        this class is used to as a simple container and factory for 
+        an AutomatedRun. the AutomatedRun does the actual work. ie extraction and measurement
+    '''
     state = Property(depends_on='_state')
     _state = Enum('not run', 'extraction',
                  'measurement', 'success', 'fail', 'truncate')
+    skip = Bool(False)
+
     mass_spectrometer = Str
     extract_device = Str
+
+    #===========================================================================
+    # run id
+    #===========================================================================
     labnumber = Str
     aliquot = Int
+    step = Property(depends_on='_step')
+    _step = Int
+    user_defined_aliquot = False
+
+    #===========================================================================
+    # scripts
+    #===========================================================================
     measurement_script = Str
     post_measurement_script = Str
     post_equilibration_script = Str
     extraction_script = Str
-    user_defined_aliquot = False
 
-    skip = Bool(False)
-
+    #===========================================================================
+    # extraction
+    #===========================================================================
     extract_group = Int
     extract_value = Float
     extract_units = Str
     position = Str
     duration = Float
     cleanup = Float
-    sample = Str
 
+    #===========================================================================
+    # info
+    #===========================================================================
     weight = Float
     comment = Str
+
+    #===========================================================================
+    # display only
+    #===========================================================================
+    sample = Str
+    irradiation = Str
+
+    analysis_type = Property(depends_on='labnumber')
+    run_klass = AutomatedRun
+
+    executable = Bool(False)
+
+    _estimated_duration = 0
+
     def to_string(self):
-        attrs = ['labnumber', 'aliquot',
+        attrs = ['labnumber', 'aliquot', 'step',
                    'extract_value', 'extract_units',
                    'position', 'duration', 'cleanup',
                    'mass_spectrometer', 'extract_device',
@@ -58,23 +93,53 @@ class AutomatedRunSpec(HasTraits):
                    ]
         return ','.join(map(str, self.to_string_attrs(attrs)))
 
-    def get_estimated_duration(self):
-        return self.duration + self.cleanup
+    def get_estimated_duration(self, script_context):
+        '''
+            use the pyscripts to calculate etd
+            
+            script_context is a dictionary of already loaded scripts
+            
+            this is a good point to set executable as well
+        '''
+        if not self._estimated_duration:
+            arun = self.make_run(new_uuid=False)
+            s = 0
+            script_oks = []
+            for si in SCRIPT_NAMES:
+                name = getattr(self, si)
+                if name in script_context:
+                    self.debug('{:<30s} in script context. using previous estimated duration'.format(name))
+                    script, ok = script_context[name]
+                    s += script.get_estimated_duration()
+                    script_oks.append(ok)
+                else:
+                    script = getattr(arun, si)
+                    if script is not None:
+                        ok = script.syntax_ok()
+                        script_oks.append(ok)
+                        script_context[name] = script, ok
+                        if ok:
+                            s += script.get_estimated_duration()
 
-    def make_run(self):
-        arun = AutomatedRun()
-        for ai in ('labnumber', 'aliquot',
-                   'extract_value', 'extract_units',
-                   'position', 'duration', 'cleanup',
-                   'mass_spectrometer', 'extract_device'
-                   ):
+            # set executable. if all scripts have OK syntax executable is True
+            self.executable = all(script_oks)
+            self._estimated_duration = s
 
+        return self._estimated_duration
+
+    def make_run(self, new_uuid=True):
+        arun = self.run_klass()
+        attrs = self._get_run_attrs()
+        for ai in attrs:
             setattr(arun, ai, getattr(self, ai))
 
         for si in SCRIPT_KEYS:
             setattr(arun.script_info, '{}_script_name'.format(si),
                     getattr(self, '{}_script'.format(si)))
 
+        if new_uuid:
+            self.uuid = str(uuid.uuid4())
+            arun.uuid = self.uuid
         return arun
 
     def load(self, script_info, params):
@@ -103,6 +168,13 @@ class AutomatedRunSpec(HasTraits):
 
         return [get_attr(ai) for ai in attrs]
 
+    def _get_run_attrs(self):
+        return ('labnumber', 'aliquot', 'step',
+                   'extract_value', 'extract_units',
+                   'position', 'duration', 'cleanup',
+                   'mass_spectrometer', 'extract_device',
+                   'analysis_type'
+                   )
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -113,4 +185,17 @@ class AutomatedRunSpec(HasTraits):
         if self._state != 'truncate':
             self._state = s
 
+    def _get_analysis_type(self):
+        return get_analysis_type(self.labnumber)
+
+    def _set_step(self, v):
+        v = v.upper()
+        if v in ALPHAS:
+            self._step = list(ALPHAS).index(v) + 1
+
+    def _get_step(self):
+        if self._step == 0:
+            return ''
+        else:
+            return ALPHAS[self._step - 1]
 #============= EOF =============================================

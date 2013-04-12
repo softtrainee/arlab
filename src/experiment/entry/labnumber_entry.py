@@ -28,11 +28,10 @@ from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
 from src.experiment.entry.level import Level
 from src.experiment.entry.flux_monitor import FluxMonitor
-from src.helpers.alphas import ALPHAS
 from src.experiment.entry.db_entry import DBEntry
 from src.irradiation.irradiated_position import IrradiatedPosition, \
     IrradiatedPositionAdapter
-from src.constants import NULL_STR
+from src.constants import NULL_STR, ALPHAS
 
 
 class LabnumberEntry(DBEntry):

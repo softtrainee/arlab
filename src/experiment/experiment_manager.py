@@ -32,10 +32,10 @@ from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
 from pyface.timer.do_later import do_later
-from src.helpers.alphas import ALPHAS
 from src.saveable import Saveable
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
+from src.constants import ALPHAS
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -150,40 +150,42 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         ts = self._parse_experiment_file(self.experiment_set.path)
         for ei, ti in zip(self.experiment_queues, ts):
 #                ei._cached_runs = None
-            ei.load_automated_runs(text=ti)
+            ei.load(ti)
 
-        self._update_aliquots()
+        self._update()
 
     def check_for_file_mods(self):
-        path = self.experiment_set.path
+        path = self.experiment_queue.path
         if path:
             with open(path, 'r') as f:
                 diskhash = hashlib.sha1(f.read()).hexdigest()
             return self._experiment_hash != diskhash
 
     def save(self):
-        self.save_experiment_sets()
+        self.save_experiment_queues()
 
     def save_as(self):
         self.save_as_experiment_queues()
 
     def save_as_experiment_queues(self):
         # test sets before saving
+        if self._validate_experiment_queues():
+            p = self.save_file_dialog(default_directory=paths.experiment_dir)
+            if p:
+                p = self._dump_experiment_queues(p)
+                self.save_enabled = True
+
+    def save_experiment_queues(self):
+        if self._validate_experiment_queues():
+            self._dump_experiment_queues(self.experiment_set.path)
+            self.save_enabled = False
+
+    def _validate_experiment_queues(self):
         for exp in self.experiment_queues:
-            if not exp.test():
+            if not exp.test_runs():
                 return
 
-        p = self.save_file_dialog(default_directory=paths.experiment_dir)
-        if p:
-            p = self._dump_experiment_queues(p)
-            self.save_enabled = True
-
-    def save_experiment_sets(self):
-        for exp in self.experiment_queues:
-            if not exp.test():
-                return
-        self._dump_experiment_queues(self.experiment_set.path)
-        self.save_enabled = False
+        return True
 
     def _dump_experiment_queues(self, p):
 
@@ -296,10 +298,11 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
     def _get_all_automated_runs(self):
         return [ai for ei in self.experiment_queues
-                    for ai in ei.automated_runs]
+                    for ai in ei.automated_runs
+                    if ai.executable]
 
-    def _update_aliquots(self):
-        self.debug('update aliquots')
+    def _update(self):
+        self.debug('update runs')
 
         ans = self._get_all_automated_runs()
         # update the aliquots
@@ -307,6 +310,25 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
         # update the steps
         self._modify_steps(ans)
+
+        # update run info
+        self._update_info(ans)
+
+    def _update_info(self, ans):
+        self.debug('update run info')
+        db = self.db
+        for ai in ans:
+            if ai.labnumber:
+                dbln = db.get_labnumber(ai.labnumber)
+                sample = dbln.sample
+                if sample:
+                    ai.sample = sample.name
+
+                ipos = dbln.irradiation_position
+                if not ipos is None:
+                    level = ipos.level
+                    irrad = level.irradiation
+                    ai.irradiation = '{}{}'.format(irrad.name, level.name)
 
     def _modify_steps(self, ans):
         db = self.db
@@ -317,7 +339,6 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         for arun in ans:
             arunid = arun.labnumber
             if arun.skip:
-                arun.aliquot = 0
                 continue
 
             if arun.extract_group:
@@ -378,6 +399,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         fixed_dict = dict()
         for arun in ans:
             if arun.skip:
+                arun.aliquot = 0
                 continue
 
             arunid = arun.labnumber
@@ -476,7 +498,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #                        exp.set_script_names()
                 ws = exp._warned_labnumbers
 
-            self._update_aliquots()
+            self._update()
             if self.experiment_queues:
                 self.experiment_queue = self.experiment_queues[0]
                 self.start_file_listener(self.experiment_queue.path)
@@ -519,7 +541,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                              db=self.db,
                              application=self.application,
                              **kw)
-        exp.on_trait_change(self._update_aliquots, 'update_aliquots_needed')
+        exp.on_trait_change(self._update, 'update_needed')
 #        exp.on_trait_change(self._update_dirty, 'dirty')
         return exp
 #    def _experiment_set_factory(self, **kw):
@@ -527,7 +549,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #                             db=self.db,
 #                             application=self.application,
 #                             **kw)
-#        exp.on_trait_change(self._update_aliquots, 'update_aliquots_needed')
+#        exp.on_trait_change(self._update, 'update_aliquots_needed')
 # #        exp.on_trait_change(self._update_dirty, 'dirty')
 #        return exp
 

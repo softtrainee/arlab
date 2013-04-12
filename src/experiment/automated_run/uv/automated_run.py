@@ -22,6 +22,7 @@ from src.experiment.automated_run.automated_run import AutomatedRun
 from src.constants import NULL_STR
 import os
 from src.paths import paths
+from src.experiment.automated_run.uv.automated_run import UVAutomatedRun
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -35,6 +36,7 @@ class UVAutomatedRun(AutomatedRun):
 #    extract_units_names = List([NULL_STR, 'burst', 'continuous'])
 #    _default_extract_units = 'burst'
 #    browser_button = Button('Browse')
+    run_klass = UVAutomatedRun
 
     def _save_extraction(self, analysis):
         ext = super(UVAutomatedRun, self)._save_extraction(analysis)

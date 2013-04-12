@@ -15,14 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, cached_property, Int
+from traits.api import HasTraits, Str, Property, cached_property, Int, \
+    Any
 from traitsui.api import View, Item, EnumEditor, VGroup
 from src.loggable import Loggable
 from src.constants import NULL_STR
+import os
+from src.paths import paths
+from ConfigParser import ConfigParser
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class ExperimentQueueFactory(Loggable):
+    db = Any
+    application = Any
+
     mass_spectrometer = Str
     mass_spectrometers = Property
 
@@ -69,9 +76,43 @@ class ExperimentQueueFactory(Loggable):
 
     @cached_property
     def _get_extract_devices(self):
-        return [NULL_STR, 'Fusions Diode', 'Fusions UV', 'Fusions CO2']
+        '''
+            look in db first
+            then look for a config file
+            then use hardcorded defaults 
+        '''
+        cp = os.path.join(paths.setup_dir, 'names')
+        if self.db:
+            eds = self.db.get_extraction_devices()
+            names = [ei.name for ei in eds]
+        elif os.path.isfile(cp):
+            names = self._get_names_from_config(cp, 'Extraction Devices')
+        else:
+            names = ['Fusions Diode', 'Fusions UV', 'Fusions CO2']
+        return [NULL_STR] + names
 
     @cached_property
     def _get_mass_spectrometers(self):
-        return [NULL_STR, 'Jan', 'Obama']
+        '''
+            look in db first
+            then look for a config file
+            then use hardcorded defaults 
+        '''
+        cp = os.path.join(paths.setup_dir, 'names')
+        if self.db:
+            ms = self.db.get_mass_spectrometers()
+            names = [mi.name.capitalize() for mi in ms]
+        elif os.path.isfile(cp):
+            names = self._get_names_from_config(cp, 'Mass Spectrometers')
+        else:
+            names = ['Jan', 'Obama']
+
+        return [NULL_STR] + names
+
+    def _get_names_from_config(self, cp, section):
+        config = ConfigParser()
+        config.read(cp)
+        if config.has_section(section):
+            return [config.get(section, option) for option in config.options(section)]
+
 #============= EOF =============================================

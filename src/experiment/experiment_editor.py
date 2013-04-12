@@ -29,6 +29,7 @@ from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import NULL_STR
 from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
+from globals import globalv
 
 class ExperimentFactory(HasTraits):
     run_factory = Instance(AutomatedRunFactory)
@@ -60,7 +61,6 @@ class ExperimentFactory(HasTraits):
         elif name == 'extract_device':
             self._set_extract_device(new)
 
-        print name, new
         self.queue.trait_set(**{name:new})
 
     @on_trait_change('run_factory:[labnumber]')
@@ -187,10 +187,13 @@ class ExperimentEditor(ExperimentManager):
                               application=self.application,
                               queue=self.experiment_queue
                               )
-        e.queue_factory.mass_spectrometer = 'Jan'
-        e.queue_factory.extract_device = 'Fusions Diode'
-        e.queue_factory.delay_between_analyses = 100
-        e.queue_factory.delay_before_analyses = 10312
+
+        if globalv.experiment_debug:
+            e.queue_factory.mass_spectrometer = 'Jan'
+            e.queue_factory.extract_device = 'Fusions Diode'
+
+            e.queue_factory.delay_between_analyses = 100
+            e.queue_factory.delay_before_analyses = 10312
         return e
 
 #===============================================================================

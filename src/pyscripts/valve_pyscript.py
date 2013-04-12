@@ -20,6 +20,7 @@ from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
     makeNamedRegistry
 #============= standard library imports ========================
 import time
+from globals import globalv
 #============= local library imports  ==========================
 
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -60,7 +61,10 @@ class ValvePyScript(PyScript):
 
             if not ok:
                 self.info('Failed to open valve {} {}'.format(name, description))
-                self.cancel()
+                if not globalv.experiment_debug:
+                    self.cancel()
+                else:
+                    self.debug('Experiment debug mode. not canceling')
 
     @verbose_skip
     @command_register
@@ -80,7 +84,11 @@ class ValvePyScript(PyScript):
                 time.sleep(0.25)
             if not ok:
                 self.info('Failed to close valve {} {}'.format(name, description))
-                self.cancel()
+
+                if not globalv.experiment_debug:
+                    self.cancel()
+                else:
+                    self.debug('Experiment debug mode. not canceling')
 
     @verbose_skip
     @command_register

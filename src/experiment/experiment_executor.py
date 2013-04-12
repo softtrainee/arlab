@@ -230,7 +230,9 @@ class ExperimentExecutor(ExperimentManager):
 
             # test runs first
             for exp in self.experiment_queues:
-                if not exp.test_runs():
+                err = exp.test_runs()
+                if err:
+                    self.info('experiment canceled. {}'.format(err))
                     self.warning('experiment canceled')
                     return
 
@@ -473,8 +475,9 @@ class ExperimentExecutor(ExperimentManager):
         exp = self.experiment_queue
         exp.current_run = arun
 
+        self.debug('setup run {} of {}'.format(i, exp.name))
 #        arun.index = i
-        arun.experiment_name = exp.name
+        arun.experiment_name = exp.path
         arun.experiment_manager = self
         arun.spectrometer_manager = self.spectrometer_manager
         arun.extraction_line_manager = self.extraction_line_manager
@@ -530,7 +533,6 @@ class ExperimentExecutor(ExperimentManager):
         aruns = self.experiment_queue.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types and not a.skip), None)
-
         if fa:
             ind, an = fa
             if ind == 0:
@@ -623,7 +625,7 @@ class ExperimentExecutor(ExperimentManager):
             info = ae.edit_traits(kind='livemodal', view='edit_view')
             if info.result:
                 ae.commit_changes(selected)
-                self._update_aliquots()
+                self._update()
                 self.stats.calculate()
                 self.new_run_gen_needed = True
                 self.save_enabled = True
@@ -640,7 +642,7 @@ class ExperimentExecutor(ExperimentManager):
         if self.experiment_queue:
             nonfound = self._check_for_managers(self.experiment_queue)
             if nonfound:
-                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+                self.warning_dialog('Could not find managers {}'.format(','.join(nonfound)))
 
     def _resume_button_fired(self):
         self.resume_runs = True
