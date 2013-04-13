@@ -269,7 +269,7 @@ class PyScriptManager(Manager):
                      label=label,
                      show_border=True,
                      )
-    def _get_design_group(self):
+    def _get_parameters_group(self):
         return
 
 #===============================================================================
@@ -303,10 +303,10 @@ class PyScriptManager(Manager):
                         label='Source'
                         )
 
-        design_grp = self._get_design_group()
+        param_grp = self._get_parameters_group()
         tabs = Group(src_grp, layout='tabbed')
-        if design_grp:
-            tabs.content.append(design_grp)
+        if param_grp:
+            tabs.content.insert(0, param_grp)
 
         v = View(
                  tabs,

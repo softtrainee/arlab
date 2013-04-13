@@ -15,24 +15,93 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int
+from traits.api import HasTraits, Int, Bool, String, Float, on_trait_change
 from traitsui.api import View, Item, TableEditor, Group
 #============= standard library imports ========================
 import os
+import re
 #============= local library imports  ==========================
 from src.pyscripts.pyscript_editor import PyScriptManager
 from src.paths import paths
+from src.helpers.filetools import str_to_bool
 
-import re
+#===============================================================================
+# counts
+#===============================================================================
 MULTICOLLECT_NCOUNTS_REGEX = re.compile(r'(MULTICOLLECT_COUNTS) *= *\d+$')
+#===============================================================================
+# baseline
+#===============================================================================
 BASELINE_NCOUNTS_REGEX = re.compile(r'(BASELINE_COUNTS) *= *\d+$')
+BASELINE_DETECTOR_REGEX = re.compile(r'(BASELINE_DETECTOR) *= *')
+BASELINE_MASS_REGEX = re.compile(r'(BASELINE_MASS) *= *')
+
+#===============================================================================
+# peak center
+#===============================================================================
+PEAK_CENTER_START_REGEX = re.compile(r'(PEAK_CENTER_START) *= *')
+PEAK_CENTER_END_REGEX = re.compile(r'(PEAK_CENTER_END) *= *')
+PEAK_CENTER_DETECTOR_REGEX = re.compile(r"(PEAK_CENTER_DETECTOR) *= *")
+PEAK_CENTER_ISOTOPE_REGEX = re.compile(r"(PEAK_CENTER_ISOTOPE) *= *")
+#===============================================================================
+# equilibration
+#===============================================================================
+EQ_TIME_REGEX = re.compile(r"(EQ_TIME) *= *")
+EQ_INLET_REGEX = re.compile(r"(INLET) *= *")
+EQ_OUTLET_REGEX = re.compile(r"(OUTLET) *= *")
+EQ_DELAY_REGEX = re.compile(r"(DELAY) *= *")
+
+
+PARAMS = dict(
+             peak_center_start=(PEAK_CENTER_START_REGEX, 'PEAK_CENTER_START= {}'),
+             peak_center_end=(PEAK_CENTER_END_REGEX, 'PEAK_CENTER_END= {}'),
+             peak_center_detector=(PEAK_CENTER_DETECTOR_REGEX, 'PEAK_CENTER_DETECTOR= {}'),
+             peak_center_isotope=(PEAK_CENTER_ISOTOPE_REGEX, 'PEAK_CENTER_ISOTOPE= {}'),
+             multicollect_ncounts=(MULTICOLLECT_NCOUNTS_REGEX, 'MULTICOLLECT_COUNTS= {}'),
+
+             baseline_ncounts=(BASELINE_NCOUNTS_REGEX, 'BASELINE_COUNTS= {}'),
+             baseline_detector=(BASELINE_DETECTOR_REGEX, 'BASELINE_DETECTOR= {}'),
+             baseline_mass=(BASELINE_MASS_REGEX, 'BASELINE_MASS= {}'),
+
+             eq_time=(EQ_TIME_REGEX, 'EQ_TIME= {}'),
+             eq_inlet=(EQ_INLET_REGEX, 'INLET= {}'),
+             eq_outlet=(EQ_OUTLET_REGEX, 'OUTLET= {}'),
+             eq_delay=(EQ_DELAY_REGEX, 'DELAY= {}'),
+             )
+
 
 class MeasurementPyScriptManager(PyScriptManager):
     kind = 'Measurement'
 
+    #===========================================================================
+    # counts
+    #===========================================================================
     multicollect_ncounts = Int(100)
+
+    #===========================================================================
+    # baselines
+    #===========================================================================
     baseline_ncounts = Int(100)
-    def _get_design_group(self):
+    baseline_detector = String
+    baseline_mass = Float
+
+    #===========================================================================
+    # peak center
+    #===========================================================================
+    peak_center_start = Bool
+    peak_center_end = Bool
+    peak_center_isotope = String
+    peak_center_detector = String
+
+    #===========================================================================
+    # equilibration
+    #===========================================================================
+    eq_time = Float
+    eq_outlet = String
+    eq_inlet = String
+    eq_delay = Float
+
+    def _get_parameters_group(self):
 
         multicollect_grp = Group(
                                  Item('multicollect_ncounts', label='Counts'),
@@ -41,18 +110,81 @@ class MeasurementPyScriptManager(PyScriptManager):
                                  )
         baseline_grp = Group(
                                  Item('baseline_ncounts', label='Counts'),
+                                 Item('baseline_detector', label='Detector'),
+                                 Item('baseline_mass', label='Mass'),
                                  label='Baseline',
                                  show_border=True
                                  )
+
+        peak_center_grp = Group(
+                              Item('peak_center_start', label='Peak Center at Start'),
+                              Item('peak_center_end', label='Peak Center at End'),
+                              Item('peak_center_detector',
+                                   label='Detector',
+                                   enabled_when='peak_center_start or peak_center_end'
+                                   ),
+                              Item('peak_center_isotope',
+                                   label='Isotope',
+                                   enabled_when='peak_center_start or peak_center_end'
+                                   ),
+                              label='Peak Center',
+                              show_border=True)
+
+        equilibration_grp = Group(
+                                Item('eq_time', label='Time (s)'),
+                                Item('eq_inlet', label='Inlet Valve'),
+                                Item('eq_outlet', label='Outlet Valve'),
+                                Item('eq_delay', label='Delay (s)'),
+                                label='Equilibration',
+                                show_border=True
+                                )
+
         return Group(
                      multicollect_grp,
                      baseline_grp,
-                     label='Design')
+                     peak_center_grp,
+                     equilibration_grp,
+                     label='Parameters')
 
     def _parse(self):
+        str_to_str = lambda x: x.replace("'", '').replace('"', '')
         for li in self.body.split('\n'):
-            self._extract_parameter(li, MULTICOLLECT_NCOUNTS_REGEX, 'multicollect_ncounts', cast=int)
-            self._extract_parameter(li, BASELINE_NCOUNTS_REGEX, 'baseline_ncounts', cast=int)
+            if self._extract_parameter(li, MULTICOLLECT_NCOUNTS_REGEX, 'multicollect_ncounts', cast=int):
+                continue
+
+            #===================================================================
+            # baselines
+            #===================================================================
+            if self._extract_parameter(li, BASELINE_NCOUNTS_REGEX, 'baseline_ncounts', cast=int):
+                continue
+            if self._extract_parameter(li, BASELINE_DETECTOR_REGEX, 'baseline_detector', cast=str_to_str):
+                continue
+            if self._extract_parameter(li, BASELINE_MASS_REGEX, 'baseline_mass', cast=float):
+                continue
+
+            #===================================================================
+            # peak center
+            #===================================================================
+            if self._extract_parameter(li, PEAK_CENTER_START_REGEX, 'peak_center_start', cast=str_to_bool):
+                continue
+            if self._extract_parameter(li, PEAK_CENTER_END_REGEX, 'peak_center_end', cast=str_to_bool):
+                continue
+            if self._extract_parameter(li, PEAK_CENTER_DETECTOR_REGEX, 'peak_center_detector', cast=str_to_str):
+                continue
+            if self._extract_parameter(li, PEAK_CENTER_ISOTOPE_REGEX, 'peak_center_isotope', cast=str_to_str):
+                continue
+
+            #===================================================================
+            # equilibration
+            #===================================================================
+            if self._extract_parameter(li, EQ_TIME_REGEX, 'eq_time', cast=float):
+                continue
+            if self._extract_parameter(li, EQ_INLET_REGEX, 'eq_inlet', cast=str_to_str):
+                continue
+            if self._extract_parameter(li, EQ_OUTLET_REGEX, 'eq_outlet', cast=str_to_str):
+                continue
+            if self._extract_parameter(li, EQ_DELAY_REGEX, 'eq_delay', cast=float):
+                continue
 
     def _extract_parameter(self, line, regex, attr, cast=None):
         if regex.match(line):
@@ -61,35 +193,38 @@ class MeasurementPyScriptManager(PyScriptManager):
                 v = cast(v)
             setattr(self, attr, v)
 
-    def _multicollect_ncounts_changed(self):
-        regex = MULTICOLLECT_NCOUNTS_REGEX
-        nv = 'MULTICOLLECT_COUNTS= {}'.format(self.multicollect_ncounts)
-        self._modify_body(regex, nv)
+    @on_trait_change('peak_center_+, eq_+, multicollect_ncounts, baseline_+')
+    def _update_value(self, name, new):
+        regex = self._get_regex(name)
+        nv = self._get_new_value(name, new)
+        return self._modify_body(regex, nv)
 
-    def _baseline_ncounts_changed(self):
-        regex = BASELINE_NCOUNTS_REGEX
-        nv = 'BASELINE_COUNTS= {}'.format(self.baseline_ncounts)
-        self._modify_body(regex, nv)
+    def _get_regex(self, name):
+        return PARAMS[name][0]
+
+    def _get_new_value(self, name, new):
+        return PARAMS[name][1].format(new)
 
     def _modify_body(self, regex, nv):
         ostr = []
+        modified = False
         for li in self.body.split('\n'):
-            if regex.match(li):
+            if regex.match(li.strip()):
                 ostr.append(nv)
+                modified = True
             else:
                 ostr.append(li)
 
         self.body = '\n'.join(ostr)
 
-
+        return modified
 
 if __name__ == '__main__':
     from launchers.helpers import build_version
     build_version('_experiment')
     from src.helpers.logger_setup import logging_setup
     logging_setup('scripts')
-#    s = PyScriptManager(kind='ExtractionLine')
-#    s = PyScriptManager(kind='Bakeout')
+
     s = MeasurementPyScriptManager(kind='Measurement')
 
     p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown.py')

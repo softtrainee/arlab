@@ -67,19 +67,19 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
 
     def get_bg_color(self, obj, trait, row):
-        item = getattr(obj, trait)[row]
         if row % 2 == 0:
             color = 'white'
         else:
             color = '#E6F2FF'  # light gray blue
-
-        if not item.executable:
-            color = 'red'
-        if item.skip:
-            color = '#33CCFF'  # light blue
-        elif item.state == 'success':
-            color = '#66FF33'  # light green
         return color
+#        item = getattr(obj, trait)[row]
+#        if not item.executable:
+#            color = 'red'
+#        if item.skip:
+#            color = '#33CCFF'  # light blue
+#        elif item.state == 'success':
+#            color = '#66FF33'  # light green
+#        return color
 
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
@@ -146,6 +146,19 @@ COLOR_STATES = dict(extraction='yellow', measurement='orange',
 class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
     state_width = Int(20)
     state_image = Property
+    def get_bg_color(self, *args, **kw):
+        item = self.item
+        if not item.executable:
+            color = 'red'
+        if item.skip:
+            color = '#33CCFF'  # light blue
+        elif item.state == 'success':
+            color = '#66FF33'  # light green
+        else:
+            color = super(ExecuteAutomatedRunAdapter, self).get_bg_color(*args, **kw)
+
+        return color
+
     def _get_state_image(self):
         im = 'gray'
         if self.item:

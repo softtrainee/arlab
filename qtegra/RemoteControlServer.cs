@@ -18,7 +18,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-__version__=008
+__version__=009
 */
 using System.IO;
 using System.Text;
@@ -36,8 +36,11 @@ using Thermo.Imhotep.Util;
 class RemoteControl
 {
 	private static int m_PORT = 1069;
-	public static TcpListener TCPLISTENER;
-	public static Socket UDP_SOCK;
+	
+	private static Socket UDP_SOCK;
+	private static Thread SERVER_THREAD;
+	private static TcpListener TCPLISTENER;
+	
 	
 	private static bool USE_UDP=true;
 	private static bool TAG_DATA=true;
@@ -83,9 +86,14 @@ class RemoteControl
 		}
 		
 	}
+	
+	
+	
     //====================================================================================================================================
 	// 
 	//	Commands are case sensitive and in CamelCase
+	//  do not include the "<" or ">" in the commands. 
+	//  e.g SetTrapVoltage 120 not SetTrapVoltage <120>
 	//	Commands:
 	//		GetTuningSettingsList #return a comma separated string
 	//		SetTuningSettings
@@ -143,7 +151,8 @@ class RemoteControl
 	//			Error: could not set <hardware> to <value> 
 	
     //==========Generic Device===============================================
-	//      Get <name> -  name is any valid device currently listed in the hardware database
+	//      GetParameter <name> -  name is any valid device currently listed in the hardware database
+	//      SetParameter <name>,<value> -  name is any valid device currently listed in the hardware database
 	//====================================================================================================================================
 	
 	private static string ParseAndExecuteCommand (string cmd)
@@ -293,17 +302,14 @@ class RemoteControl
 //   Magnet
 //============================================================================================					
 		case "GetMagnetDAC":
-			//double r;
 			if (Instrument.GetParameter("Field Set", out r))
 			{
 				result=r.ToString();
 			}
 			break;
 			
-		case "SetMagnetDAC":
-		
+		case "SetMagnetDAC":		
 			result=SetMagnetDAC(Convert.ToDouble(args[1]));
-			//result=SetParameter("Field Set",Convert.ToDouble(args[1]));
 			break;
 			
 //============================================================================================
@@ -330,7 +336,6 @@ class RemoteControl
 			result=SetParameter("Acceleration Reference Set", Convert.ToDouble(args[1])/1000.0);
 			break;
 		case "GetTrapVoltage":
-			//double r;
 			if(Instrument.GetParameter("Trap Voltage Readback",out r))
 			{
 				result=r.ToString();
@@ -342,7 +347,6 @@ class RemoteControl
 			break;
 		
 		case "GetElectronEnergy":
-			//double r;
 			if(Instrument.GetParameter("Electron Energy Readback",out r))
 			{
 				result=r.ToString();
@@ -354,7 +358,6 @@ class RemoteControl
 			break;
 			
 		case "GetIonRepeller":
-			//double r;
 			if(Instrument.GetParameter("Ion Repeller Set",out r))
 			{
 				result=r.ToString();
@@ -366,7 +369,6 @@ class RemoteControl
 			break;
 		
 		case "GetYSymmetry":
-			//double r;
 			if(Instrument.GetParameter("Y-Symmetry Set",out r))
 			{
 				result=r.ToString();
@@ -379,7 +381,6 @@ class RemoteControl
 			break;
 		
 		case "GetZSymmetry":
-			//double r;
 			if(Instrument.GetParameter("Z-Symmetry Set",out r))
 			{
 				result=r.ToString();
@@ -391,7 +392,6 @@ class RemoteControl
 			break;
 			
 		case "GetZFocus":
-			//double r;
 			if(Instrument.GetParameter("Z-Focus Set",out r))
 			{
 				result=r.ToString();
@@ -403,7 +403,6 @@ class RemoteControl
 			break;
 		
 		case "GetExtractionLens":
-			//double r;
 			if(Instrument.GetParameter("Extraction Lens Set",out r))
 			{
 				result=r.ToString();
@@ -418,7 +417,6 @@ class RemoteControl
 //    Detectors
 //============================================================================================			
         case "GetDeflection":
-            //double r;
             if(Instrument.GetParameter(String.Format("Deflection {0} Set",args[1]), out r))
             {
                 result=r.ToString();
@@ -431,7 +429,6 @@ class RemoteControl
 		    break;
 		    
 		case "GetIonCounterVoltage":
-			//double r;
             if(Instrument.GetParameter("CDD Supply Set",out r))
             {
                 result=r.ToString();
@@ -445,23 +442,31 @@ class RemoteControl
 //============================================================================================
 //    Generic
 //============================================================================================			
-		case "Get":
+		case "GetParameter":
 			if(Instrument.GetParameter(args[1], out r))
 			{
 				result=r.ToString();
 			}
 			break;
+			
+		case "SetParameter"
+		    string[] pargs=args[1].Split(',');
+		    result=SetParameter(pargs[0], Convert.ToDouble(pargs[1]));
+		    break;
 		}
 
 		return result;
 	}
-	
- 	
+//============================================================================================
+//    EOCommands
+//============================================================================================          
+
+
 	private static bool PrepareEnvironment()
-      {
+    {
         m_restoreMeasurementInfo=Instrument.MeasurementInfo;
         return Instrument.ScanTransitionController.InitializeScriptScan(m_restoreMeasurementInfo);
-      }
+    }
       
 	public static void InitializeDataRecord()
 	{
@@ -479,17 +484,20 @@ class RemoteControl
 		//shutdown the server
 		if (USE_UDP)
 		{
-			UDP_SOCK.Close();
+			UDP_SOCK.Close();			
 		}
 		else
 		{
 			TCPLISTENER.Stop();
 		}
+		
+		SERVER_THREAD.Stop();
 
 	}
-	//====================================================================================================================================
-	//Qtegra Methods
-	//====================================================================================================================================
+	
+//====================================================================================================================================
+//Qtegra Methods
+//====================================================================================================================================
 	public static void SetIonCounterState(bool state)
 	{
 		if (state)
@@ -609,7 +617,8 @@ class RemoteControl
 			Spectrum spec = e.Value.Clone() as Spectrum;
 			IRMSBaseCupConfigurationData cupData = Instrument.CupConfigurationDataList.GetActiveCupConfiguration();
 	
-			
+			// change detnames to a list of detectors on your system
+			// this is is for an Argus VI c. 2010
 			List<string> detnames = new List<string>(new string[]{"CUP 4,H2","CUP 3,H1",
 																  "CUP 2,AX",
 																  "CUP 1,L1","CUP 0,L2",
@@ -639,6 +648,10 @@ class RemoteControl
 							}
 							//delegate adding the CDD value until later
 							//this way its easy to put a the end of the data string
+							//
+							// cddMass and cddCounts should be changed to lists 
+							// to handle mulitple CDD's for one machine
+							//
 							if( cupName=="CDD")
 							{
 								cdd=true;
@@ -731,6 +744,8 @@ class RemoteControl
 	
 	private static string GetSubCupParameters()
 	{	
+	    // change parameters to values relevant for your system
+	    // default is Argus VI c. 2010
 		List<string> parameters = new List<string>(new string[]{
 												"Deflection H2 Set",
 												"Deflection H1 Set",
@@ -822,9 +837,13 @@ class RemoteControl
 		}
 		return true;
 	}
-	//====================================================================================================================================
-	//Server Methods
-	//====================================================================================================================================
+	
+	
+	
+//====================================================================================================================================
+//Server Methods
+//====================================================================================================================================
+
 	private static void TCPServeForever ()
 	{
 		Logger.Log (LogLevel.UserInfo, "Starting TCP Server.");
@@ -832,15 +851,15 @@ class RemoteControl
 		TCPLISTENER.Start ();
 		
 		
-		Thread listenThread = new Thread (new ThreadStart (TCPListen));
-		listenThread.Start ();
+		SERVER_THREAD = new Thread (new ThreadStart (TCPListen));
+		SERVER_THREAD.Start ();
 		
 	}
 	private static void UDPServeForever()
 	{
 		Logger.Log (LogLevel.UserInfo, "Starting UDP Server.");
-		Thread listenThread = new Thread (new ThreadStart (UDPListen));
-		listenThread.Start ();
+		SERVER_THREAD = new Thread (new ThreadStart (UDPListen));
+		SERVER_THREAD.Start ();
 		
 	}
 	private static void UDPListen()

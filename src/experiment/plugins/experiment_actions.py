@@ -27,13 +27,13 @@ from globals import globalv
 
 class ExperimentAction(Action):
     def _get_manager(self, event):
-        return self._get_service(event, 'src.experiment.experiment_manager.ExperimentManager')
+        return self._get_service(event, 'src.experiment.manager.ExperimentManager')
 
     def _get_executor(self, event):
-        return self._get_service(event, 'src.experiment.experiment_executor.ExperimentExecutor')
+        return self._get_service(event, 'src.experiment.executor.ExperimentExecutor')
 
     def _get_editor(self, event):
-        return self._get_service(event, 'src.experiment.experiment_editor.ExperimentEditor')
+        return self._get_service(event, 'src.experiment.editor.ExperimentEditor')
 
     def _get_service(self, event, name):
         app = event.window.application

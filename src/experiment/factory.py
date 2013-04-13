@@ -15,27 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance, Button, \
-    Property, String
+from traits.api import HasTraits, Instance, Button, Bool, Property, \
+    on_trait_change, String
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom
-
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.experiment_manager import ExperimentManager
-# from src.paths import paths
-from src.saveable import SaveableButtons
+from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import NULL_STR
-from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
-from globals import globalv
 
 class ExperimentFactory(HasTraits):
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
     add_button = Button('add')
+    auto_increment = Bool(True)
 
     queue = Instance(ExperimentQueue)
 
@@ -49,7 +45,7 @@ class ExperimentFactory(HasTraits):
         self.run_factory.set_selected_runs(runs)
 
     def _add_button_fired(self):
-        new_runs = self.run_factory.new_runs()
+        new_runs = self.run_factory.new_runs(auto_increment=self.auto_increment)
         self.queue.add_runs(new_runs)
 
     @on_trait_change('queue_factory:[mass_spectrometer, extract_device, delay_+, tray]')
@@ -91,7 +87,11 @@ class ExperimentFactory(HasTraits):
         grp = VGroup(
                      UCustom('queue_factory'),
                      UCustom('run_factory', enabled_when='ok_run'),
-                     HGroup(UItem('add_button', enabled_when='ok_add'))
+                     HGroup(
+                            UItem('add_button', enabled_when='ok_add'),
+                            Item('auto_increment')
+                            )
+
                      )
         v = View(grp)
         return v
@@ -118,96 +118,5 @@ class ExperimentFactory(HasTraits):
                                  application=self.application
                                  )
         return eq
-
-class ExperimentEditor(ExperimentManager):
-    experiment_factory = Instance(ExperimentFactory)
-#===============================================================================
-# persistence
-#===============================================================================
-#    def load_experiment_set(self, saveable=False, *args, **kw):
-#        r = super(ExperimentEditor, self).load_experiment_set(*args, **kw)
-#
-#        # loading the experiment set will set dirty =True
-#        # change back to false. not really dirty
-# #        if r:
-# #            self.experiment_set.dirty = False
-#        self.save_enabled = saveable
-#        return r
-
-    @on_trait_change('experiment_queue:selected')
-    def _update_selected(self, new):
-        self.experiment_factory.set_selected_runs(new)
-
-#===============================================================================
-# views
-#===============================================================================
-    def traits_view(self):
-        factory_grp = UItem('experiment_factory',
-                            style='custom',
-                            width=0.35
-                            )
-        exp_grp = UItem('experiment_queue',
-                            style='custom',
-                            width=0.55
-                            )
-
-        sel_grp = UItem('set_selector',
-                       style='custom',
-                       width=0.10,
-                       )
-        v = View(
-                 HGroup(
-                        sel_grp,
-                        factory_grp,
-                        exp_grp
-                       ),
-                 resizable=True,
-                 width=0.80,
-                 height=0.85,
-                 buttons=['OK', 'Cancel'] + SaveableButtons,
-#                          Action(name='Save', action='save',
-#                                 enabled_when='dirty'),
-#                          Action(name='Save As',
-#                                 action='save_as',
-# #                                 enabled_when='dirty_save_as'
-#                                 ),
-
-#                          ],
-                 handler=self.handler_klass,
-#                 handler=SaveableManagerHandler,
-                 title='Experiment'
-                 )
-        return v
-
-#===============================================================================
-# defaults
-#===============================================================================
-    def _experiment_factory_default(self):
-        e = ExperimentFactory(db=self.db,
-                              application=self.application,
-                              queue=self.experiment_queue
-                              )
-
-        if globalv.experiment_debug:
-            e.queue_factory.mass_spectrometer = 'Jan'
-            e.queue_factory.extract_device = 'Fusions Diode'
-
-            e.queue_factory.delay_between_analyses = 100
-            e.queue_factory.delay_before_analyses = 10312
-        return e
-
-#===============================================================================
-# handlers
-#===============================================================================
-#    @on_trait_change('experiment_set:automated_runs:dirty')
-#    def _update_dirty(self, n):
-# #        self._dirty = n
-#        self.save_enabled = n
-
-#===============================================================================
-# property get/set
-#===============================================================================
-#    def _get_dirty(self):
-#        return self._dirty and os.path.isfile(self.path)
 
 #============= EOF =============================================

@@ -18,37 +18,33 @@
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
     Instance, Str, DelegatesTo, Any, on_trait_change, String
 from traitsui.api import View, Item, HGroup, Group, spring
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
+from threading import Thread
+import time
+import os
 #============= local library imports  ==========================
-# from src.loggable import Loggable
+from globals import globalv
 from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
-from src.experiment.experiment_manager import ExperimentManager
+from src.experiment.manager import ExperimentManager
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
-# from src.repo.repository import Repository, FTPRepository
+from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
-from threading import Thread
-import time
 from src.helpers.parsers.initialization_parser import InitializationParser
-from apptools.preferences.preference_binding import bind_preference
 from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
-import os
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from globals import globalv
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
-from src.constants import NULL_STR, SCRIPT_KEYS
-# from src.experiment.automated_run.editor import AutomatedRunEditor
+from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 from src.experiment.automated_run.automated_run import AutomatedRun
-from src.experiment.automated_run.editor import AutomatedRunEditor
 from src.experiment.automated_run.factory import AutomatedRunFactory
 
 # @todo: display total time in iso format
@@ -108,7 +104,6 @@ class ExperimentExecutor(ExperimentManager):
     mode = 'normal'
 
     measuring = Bool(False)
-#    measuring = DelegatesTo('experiment_')
     stats = Instance(StatsGroup, ())
 
     new_run_gen_needed = False

@@ -33,7 +33,7 @@ from globals import globalv
 from src.loggable import Loggable
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
-from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
@@ -291,7 +291,8 @@ class AutomatedRun(Loggable):
                                 check_conditions
                                 )
     def py_equilibration(self, eqtime=None, inlet=None, outlet=None,
-                         do_post_equilibration=True
+                         do_post_equilibration=True,
+                         delay=None
                          ):
 
         evt = TEvent()
@@ -304,6 +305,7 @@ class AutomatedRun(Loggable):
                                                                    kwargs=dict(eqtime=eqtime,
                                                                                 inlet=inlet,
                                                                                 outlet=outlet,
+                                                                                delay=delay,
                                                                                 do_post_equilibration=do_post_equilibration)
                  )
         t.start()
