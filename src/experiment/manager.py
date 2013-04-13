@@ -240,18 +240,20 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         return True
 
     def populate_default_tables(self):
+        self.debug('populating default tables')
         db = self.db
         if self.db:
-            if db.connect():
+            if db.connect(force=True):
                 from src.database.defaults import load_isotopedb_defaults
                 load_isotopedb_defaults(db)
                 return True
 
-    def bind_preferences(self):
-        super(ExperimentManager, self).bind_preferences()
-        if not self.db.connect():
-            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
-            self.db = None
+#    def bind_preferences(self):
+#        super(ExperimentManager, self).bind_preferences()
+#        if not self.db.connect(force=True):
+#        if not self.db.connect(force=True):
+#            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+#            self.db = None
 
     def selector_factory(self, style):
         db = self.db
@@ -299,7 +301,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
     def _get_all_automated_runs(self):
         return [ai for ei in self.experiment_queues
                     for ai in ei.automated_runs
-                    if ai.executable]
+                        if ai.executable]
 
     def _test(self):
         for ei in self.experiment_queues:
@@ -392,6 +394,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
             arun.aliquot += aoff
 
     def _modify_aliquots(self, ans):
+#        print ans
         offset = 0
 #        if self.experiment_set and self.experiment_set.selected:
 #            offset = len(self.experiment_set.selected)

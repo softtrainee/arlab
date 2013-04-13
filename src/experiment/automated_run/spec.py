@@ -79,7 +79,7 @@ class AutomatedRunSpec(Loggable):
     analysis_type = Property(depends_on='labnumber')
     run_klass = AutomatedRun
 
-    executable = Bool(False)
+    executable = Bool(True)
 
     _estimated_duration = 0
 

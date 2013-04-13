@@ -18,7 +18,7 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
-from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 import os
 import struct
 import base64

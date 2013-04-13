@@ -37,6 +37,8 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
     labnumber = String(enter_set=True, auto_set=False)
     aliquot = Int
+    o_aliquot = Int
+    user_defined_aliquot = False
     special_labnumber = Str
 
     _labnumber = Str
@@ -51,7 +53,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     weight = Float(12)
     comment = Str('this is a comment')
 
-    position = Property
+    position = Property(depends_on='_position')
     _position = Str
     endposition = Int
     #===========================================================================
@@ -104,10 +106,12 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
             run = runs[0]
             self._clone_run(run)
 
-    def new_runs(self):
+    def new_runs(self, auto_increment=False):
         '''
             returns a list of runs even if its only one run
         '''
+        s = 0
+        e = 0
         if self.position:
             s = int(self.position)
             e = int(self.endposition)
@@ -120,10 +124,25 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 #                    ar.position = str(s + i)
                     position = str(s + i)
                     arvs.append(self._new_run(position=position))
+                    '''
+                        clear user_defined_aliquot flag
+                        if adding multiple runs this allows 
+                        the subsequent runs to have there aliquots defined by db
+                    '''
+                    self.user_defined_aliquot = False
+
             else:
                 arvs = [self._new_run(position=str(s))]
         else:
             arvs = [self._new_run()]
+
+        if auto_increment:
+
+            if self.position:
+                self.position = str(e + 1)
+            if self.endposition:
+                self.endposition = 2 * e + 1 - s
+            self.labnumber = self._increment(self.labnumber)
 
         return arvs
 
@@ -144,6 +163,14 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 #===============================================================================
 # private
 #===============================================================================
+    def _increment(self, m):
+        try:
+            m = str(int(m) + 1)
+        except ValueError:
+            pass
+
+        return m
+
     def _make_irrad_level(self, ln):
         il = ''
         ipos = ln.irradiation_position
@@ -166,13 +193,19 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'weight', 'comment',
                      'sample', 'irradiation',
-                     'skip'
+                     'skip',
                      ):
 
             if attr in excludes:
                 continue
 
             setattr(arv, attr, getattr(self, attr))
+
+        if self.user_defined_aliquot:
+            arv.user_defined_aliquot = True
+            arv.aliquot = self.aliquot
+
+
 
         for si in SCRIPT_KEYS:
             name = '{}_script'.format(si)
@@ -243,6 +276,12 @@ post_equilibration_script:name
                 self.labnumber = ln
                 self._labnumber = NULL_STR
 
+    def _aliquot_changed(self):
+        if self.aliquot != self.o_aliquot:
+            self.user_defined_aliquot = True
+        else:
+            self.user_defined_aliquot = False
+
     def _labnumber_changed(self):
         if self.labnumber != NULL_STR:
             if not self.labnumber in SPECIAL_MAPPING.values():
@@ -269,12 +308,21 @@ post_equilibration_script:name
                 except AttributeError:
                     pass
 
+                try:
+                    a = ln.analyses[-1].aliquot + 1
+                    self.o_aliquot = a
+                except IndexError:
+                    a = 1
+                self.aliquot = a
+#                self.trait_set(aliquot=a, trait_change_notify=False)
+
                 self.irradiation = self._make_irrad_level(ln)
                 # set default scripts
                 self._load_default_scripts(key=labnumber)
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
+            self.aliquot = 1
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -370,8 +418,9 @@ post_equilibration_script:name
                           Item('_labnumber', show_label=False,
                               editor=EnumEditor(name='labnumbers'),
                               tooltip='Select a Labnumber from the selected Project'
-                              )
+                              ),
                          ),
+                   Item('aliquot'),
                    Item('sample',
                         tooltip='Sample info retreived from Database',
                         style='readonly'
@@ -412,7 +461,9 @@ post_equilibration_script:name
                          HGroup(Item('position',
                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
                                      ),
-                                Item('endposition', label='End')
+                                Item('endposition', label='End',
+                                     enabled_when='position'
+                                     )
                                 ),
  #                         Item('multiposition', label='Multi. position run'),
                          show_border=True,

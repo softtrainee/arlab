@@ -91,8 +91,11 @@ class DatabaseAdapter(Loggable):
     def connect(self, test=True, force=False):
         '''
         '''
+        if force:
+            self.debug('forcing database connection')
         if self.connection_parameters_changed:
             force = True
+
 #        print not self.isConnected() or force, self.connection_parameters_changed
         if not self.isConnected() or force:
             self.connected = True if self.kind == 'sqlite' else False
@@ -115,8 +118,8 @@ class DatabaseAdapter(Loggable):
                         self.info('connected to db')
                         self.initialize_database()
                     else:
-                        self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user={} \
-host={}'.format(self.name, self.username, self.host))
+                        self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user= {} \
+host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         self.connection_parameters_changed = False
         return self.connected
