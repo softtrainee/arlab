@@ -44,13 +44,14 @@ class ExperimentAction(Action):
 #===============================================================================
 class OpenScriptAction(ExperimentAction):
     def perform(self, event):
-        script_editor = self._get_service(event, 'src.pyscripts.pyscript_editor.PyScriptManager')
-        if script_editor.open_script():
-            open_manager(event.window.application, script_editor)
+        script_manager = self._get_service(event, 'src.pyscripts.manager.PyScriptManager')
+        editor = script_manager.open_script()
+        if editor:
+            open_manager(event.window.application, editor)
 
 class NewScriptAction(ExperimentAction):
     def perform(self, event):
-        script_editor = self._get_service(event, 'src.pyscripts.pyscript_editor.PyScriptManager')
+        script_editor = self._get_service(event, 'src.pyscripts.manager.PyScriptManager')
 #        if script_editor.open_script():
         open_manager(event.window.application, script_editor)
 

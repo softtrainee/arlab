@@ -47,8 +47,8 @@ def install_pychron_suite():
     parser.add_argument('-A', '--applications',
                         nargs=1,
                         type=str,
-                        default=['pychron', 'remote_hardware_server', 'bakeout'],
-                        help='set the version number e.g 1.0')
+                        # default=['pychron', 'remote_hardware_server', 'bakeout'],
+                        help='set applications to build')
     parser.add_argument(
         '-r',
         '--root',
