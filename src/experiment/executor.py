@@ -111,7 +111,8 @@ class ExperimentExecutor(ExperimentManager):
     statusbar = String
 
     executable = Bool
-
+    _max_allowable_runs=80
+    
     def isAlive(self):
         return self._alive
 
@@ -385,8 +386,13 @@ class ExperimentExecutor(ExperimentManager):
 
             runargs = None
             try:
+                if cnt >= self._max_allowable_runs:
+                    self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self._max_allowable_runs))
+                    break
+                
                 run = rgen.next()
-                if not run.skip:
+                if not run.skip
+
                     runargs = self._launch_run(run, cnt)
 
             except StopIteration:

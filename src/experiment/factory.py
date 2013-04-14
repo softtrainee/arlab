@@ -25,8 +25,9 @@ from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import NULL_STR
+from src.loggable import Loggable
 
-class ExperimentFactory(HasTraits):
+class ExperimentFactory(Loggable):
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
@@ -41,12 +42,23 @@ class ExperimentFactory(HasTraits):
     _extract_device = String
     _labnumber = String
 
+    #===========================================================================
+    # permisions
+    #===========================================================================
+    _max_allowable_runs = 25
+
+
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
 
     def _add_button_fired(self):
         new_runs = self.run_factory.new_runs(auto_increment=self.auto_increment)
         self.queue.add_runs(new_runs)
+
+        tol = self._max_allowable_runs
+        n = len(self.queue.automated_runs)
+        if n >= tol:
+            self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
 
     @on_trait_change('queue_factory:[mass_spectrometer, extract_device, delay_+, tray]')
     def _update_queue(self, name, new):
@@ -75,7 +87,12 @@ class ExperimentFactory(HasTraits):
 # property get/set
 #===============================================================================
     def _get_ok_add(self):
-        return  self.ok_run and self._labnumber
+        '''
+            tol should be a user permission
+        '''
+        tol = self._max_allowable_runs
+        ntest = len(self.queue.automated_runs) < tol
+        return  self.ok_run and self._labnumber and ntest
 
     def _get_ok_run(self):
         return (self._mass_spectrometer and self._mass_spectrometer != NULL_STR) and\
