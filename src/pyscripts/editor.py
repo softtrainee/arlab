@@ -23,11 +23,11 @@ from traitsui.menu import Action
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.managers.manager import Manager
 from src.paths import paths
 from src.pyscripts.pyscript_runner import PyScriptRunner
 from src.saveable import SaveableHandler
 from src.pyscripts.code_editor import PyScriptCodeEditor
+from src.viewable import Viewable
 
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
                     ExtractionLine='src.pyscripts.extraction_line_pyscript',
@@ -51,9 +51,10 @@ class ScriptHandler(SaveableHandler):
         info.ui.title = 'Script Editor - {}'.format(info.object.save_path)
 
 
-class PyScriptManager(Manager):
+class PyScriptEditor(Viewable):
 #    show_kind = Bool(False)
-    kind = Enum('ExtractionLine', 'Bakeout', 'Measurement')
+    _kind = 'ExtractionLine'
+#    _kind = Enum('ExtractionLine', 'Bakeout', 'Measurement')
     body = String
 
     save_enabled = Bool(False)
@@ -63,8 +64,8 @@ class PyScriptManager(Manager):
     _parser = None
     title = 'Script Editor - '
 
-    default_directory = Property
-    default_directory_name = Str
+#    default_directory = Property
+#    default_directory_name = Str
     context = Dict
 
     runner = Instance(PyScriptRunner, ())
@@ -108,13 +109,13 @@ class PyScriptManager(Manager):
         self.save_enabled = False
 
     def load_context(self):
-        ps = self._pyscript_factory(self.kind)
+        ps = self._pyscript_factory(self._kind)
         ps.bootstrap()
 
         self.context = ps.get_context()
 
     def load_commands(self):
-        ps = self._pyscript_factory(self.kind)
+        ps = self._pyscript_factory(self._kind)
         prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
 
 #        self.core_commands = prepcommands(ps.get_core_commands())
@@ -123,8 +124,6 @@ class PyScriptManager(Manager):
         self.script_commands.sort()
 
     def open_script(self, path=None):
-        if path is None:
-            path = self.open_file_dialog(default_directory=self._get_default_directory())
 #        p = os.path.join(self._get_default_directory(), 'btest.py')
         if path is not None:
             self._load_script(path)
@@ -133,7 +132,7 @@ class PyScriptManager(Manager):
             return True
 
     def test_script(self, report_success=True):
-        ps = self._pyscript_factory(self.kind)
+        ps = self._pyscript_factory(self._kind)
         ps.text = self.body
 
         ps.bootstrap(load=False)
@@ -163,7 +162,7 @@ class PyScriptManager(Manager):
     def _pyscript_factory(self, klassname, **kw):
 
         klassname = '{}PyScript'.format(klassname)
-        m = __import__(SCRIPT_PKGS[self.kind], fromlist=[klassname])
+        m = __import__(SCRIPT_PKGS[self._kind], fromlist=[klassname])
         klass = getattr(m, klassname)
         if self.save_path:
             r, n = os.path.split(self.save_path)
@@ -172,7 +171,8 @@ class PyScriptManager(Manager):
         else:
             kw['root'] = os.path.join(paths.scripts_dir, 'pyscripts')
 
-        return klass(manager=self.parent,
+        return klass(
+#                     manager=self.parent,
                      parent=self,
                      **kw)
 
@@ -201,16 +201,16 @@ class PyScriptManager(Manager):
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_default_directory(self):
-        if self.default_directory_name:
-            return os.path.join(paths.scripts_dir, self.default_directory_name)
-        else:
-            return paths.scripts_dir
+#    def _get_default_directory(self):
+#        if self.default_directory_name:
+#            return os.path.join(paths.scripts_dir, self.default_directory_name)
+#        else:
+#            return paths.scripts_dir
 #===============================================================================
 # handlers
 #===============================================================================
-    def _kind_changed(self):
-        self.load_commands()
+#    def _kind_changed(self):
+#        self.load_commands()
 
     def _body_changed(self):
         if self._original_body:
@@ -263,7 +263,7 @@ class PyScriptManager(Manager):
                                         selected='selected_command'
                                         ),
                          width=200,
-                         height=410,
+                         height=725,
                          resizable=False
                            ),
                      label=label,
@@ -294,7 +294,7 @@ class PyScriptManager(Manager):
                         )
 
         command_grp = VGroup(
-                             Item('kind'),
+#                             Item('_kind'),
                              self._get_commands_group('script_commands', 'Commands'))
 
         src_grp = HGroup(
@@ -329,9 +329,9 @@ if __name__ == '__main__':
     build_version('_experiment')
     from src.helpers.logger_setup import logging_setup
     logging_setup('scripts')
-#    s = PyScriptManager(kind='ExtractionLine')
-#    s = PyScriptManager(kind='Bakeout')
-    s = PyScriptManager(kind='Measurement')
+#    s = PyScriptEditor(_kind='ExtractionLine')
+#    s = PyScriptEditor(_kind='Bakeout')
+    s = PyScriptEditor(kind='Measurement')
 
     p = os.path.join(paths.scripts_dir, 'extraction', 'jan_uv_all.py')
     s.open_script(path=p)
@@ -348,7 +348,7 @@ if __name__ == '__main__':
 #            self._executing = True
 #            self.execute_script()
 #    def _calc_graph_button_fired(self):
-#        ps = self._pyscript_factory(self.kind, runner=self.runner)
+#        ps = self._pyscript_factory(self._kind, runner=self.runner)
 #        ps.set_text(self.body)
 #
 #        #graph calculated in secs
@@ -370,7 +370,7 @@ if __name__ == '__main__':
 # #        open_manager(self.application,
 # #                     self.runner)
 #
-#        ps = self._pyscript_factory(self.kind, runner=self.runner)
+#        ps = self._pyscript_factory(self._kind, runner=self.runner)
 #        load = False
 #        if path is None:
 #            ps.set_text(self.body)

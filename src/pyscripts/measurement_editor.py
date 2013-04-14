@@ -21,7 +21,7 @@ from traitsui.api import View, Item, TableEditor, Group
 import os
 import re
 #============= local library imports  ==========================
-from src.pyscripts.pyscript_editor import PyScriptManager
+from src.pyscripts.editor import PyScriptEditor
 from src.paths import paths
 from src.helpers.filetools import str_to_bool
 
@@ -55,24 +55,23 @@ EQ_DELAY_REGEX = re.compile(r"(DELAY) *= *")
 PARAMS = dict(
              peak_center_start=(PEAK_CENTER_START_REGEX, 'PEAK_CENTER_START= {}'),
              peak_center_end=(PEAK_CENTER_END_REGEX, 'PEAK_CENTER_END= {}'),
-             peak_center_detector=(PEAK_CENTER_DETECTOR_REGEX, 'PEAK_CENTER_DETECTOR= {}'),
-             peak_center_isotope=(PEAK_CENTER_ISOTOPE_REGEX, 'PEAK_CENTER_ISOTOPE= {}'),
+             peak_center_detector=(PEAK_CENTER_DETECTOR_REGEX, "PEAK_CENTER_DETECTOR= '{}'"),
+             peak_center_isotope=(PEAK_CENTER_ISOTOPE_REGEX, "PEAK_CENTER_ISOTOPE= '{}'"),
              multicollect_ncounts=(MULTICOLLECT_NCOUNTS_REGEX, 'MULTICOLLECT_COUNTS= {}'),
 
              baseline_ncounts=(BASELINE_NCOUNTS_REGEX, 'BASELINE_COUNTS= {}'),
-             baseline_detector=(BASELINE_DETECTOR_REGEX, 'BASELINE_DETECTOR= {}'),
+             baseline_detector=(BASELINE_DETECTOR_REGEX, "BASELINE_DETECTOR= '{}'"),
              baseline_mass=(BASELINE_MASS_REGEX, 'BASELINE_MASS= {}'),
 
              eq_time=(EQ_TIME_REGEX, 'EQ_TIME= {}'),
-             eq_inlet=(EQ_INLET_REGEX, 'INLET= {}'),
-             eq_outlet=(EQ_OUTLET_REGEX, 'OUTLET= {}'),
+             eq_inlet=(EQ_INLET_REGEX, "INLET= '{}'"),
+             eq_outlet=(EQ_OUTLET_REGEX, "OUTLET= '{}'"),
              eq_delay=(EQ_DELAY_REGEX, 'DELAY= {}'),
              )
 
 
-class MeasurementPyScriptManager(PyScriptManager):
-    kind = 'Measurement'
-
+class MeasurementPyScriptEditor(PyScriptEditor):
+    _kind = 'Measurement'
     #===========================================================================
     # counts
     #===========================================================================
@@ -225,7 +224,7 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('scripts')
 
-    s = MeasurementPyScriptManager(kind='Measurement')
+    s = MeasurementPyScriptEditor()
 
     p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown.py')
     s.open_script(path=p)
