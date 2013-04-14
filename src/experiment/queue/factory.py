@@ -36,8 +36,8 @@ class ExperimentQueueFactory(Loggable):
     extract_device = Str
     extract_devices = Property
 
-    delay_between_analyses = Int
-    delay_before_analyses = Int
+    delay_between_analyses = Int(5)
+    delay_before_analyses = Int(25)
     tray = Str
     trays = Property
 #===============================================================================

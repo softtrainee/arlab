@@ -391,8 +391,7 @@ class ExperimentExecutor(ExperimentManager):
                     break
                 
                 run = rgen.next()
-                if not run.skip
-
+                if not run.skip:
                     runargs = self._launch_run(run, cnt)
 
             except StopIteration:

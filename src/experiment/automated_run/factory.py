@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, Str, Property, Any, \
+from traits.api import HasTraits, String, Str, Property, Any,Either, Long, \
      Float, Instance, Int, List, cached_property, on_trait_change, Bool
 from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring
 #============= standard library imports ========================
@@ -36,8 +36,8 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
-    aliquot = Int
-    o_aliquot = Int
+    aliquot = Long
+    o_aliquot = Either(Long,Int)
     user_defined_aliquot = False
     special_labnumber = Str
 
@@ -203,7 +203,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
         if self.user_defined_aliquot:
             arv.user_defined_aliquot = True
-            arv.aliquot = self.aliquot
+            arv.aliquot = int(self.aliquot)
 
 
 
@@ -311,7 +311,8 @@ post_equilibration_script:name
                 try:
                     a = ln.analyses[-1].aliquot + 1
                     self.o_aliquot = a
-                except IndexError:
+                except IndexError, e:
+                    self.debug('Lanbumer changed IndexError:{}'.format(e))
                     a = 1
                 self.aliquot = a
 #                self.trait_set(aliquot=a, trait_change_notify=False)
@@ -321,8 +322,6 @@ post_equilibration_script:name
                 self._load_default_scripts(key=labnumber)
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
-
-            self.aliquot = 1
 #===============================================================================
 # property get/set
 #===============================================================================
