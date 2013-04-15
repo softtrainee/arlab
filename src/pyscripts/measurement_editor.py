@@ -201,6 +201,7 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     def _extract_parameter(self, line, regex, attr, cast=None):
         if regex.match(line):
             _, v = line.split('=')
+            v = v.strip()
             if cast:
                 v = cast(v)
             setattr(self, attr, v)
