@@ -145,7 +145,6 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
         self.mass_spectrometer = new
         for s in SCRIPT_NAMES:
             sc = getattr(self, s)
-            print sc, new
             sc.mass_spectrometer = new
 
     def set_extract_device(self, new):
