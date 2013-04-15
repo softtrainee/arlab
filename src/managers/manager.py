@@ -148,20 +148,20 @@ class Manager(Viewable, RPCable):
 
         self.add_window(self.ui)
 
-    def add_window(self, ui):
-
-        try:
-            if self.application is not None:
-                self.application.uis.append(ui)
-        except AttributeError:
-            pass
-
-    def open_view(self, obj, **kw):
-        def _open_():
-            ui = obj.edit_traits(**kw)
-            self.add_window(ui)
-
-        do_after(1, _open_)
+#    def add_window(self, ui):
+#
+#        try:
+#            if self.application is not None:
+#                self.application.uis.append(ui)
+#        except AttributeError:
+#            pass
+#
+#    def open_view(self, obj, **kw):
+#        def _open_():
+#            ui = obj.edit_traits(**kw)
+#            self.add_window(ui)
+#
+#        do_after(1, _open_)
 
 
 #    def close_ui(self):

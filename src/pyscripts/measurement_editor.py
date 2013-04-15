@@ -240,7 +240,7 @@ if __name__ == '__main__':
 
     s = MeasurementPyScriptEditor()
 
-    p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown.py')
+    p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown400_120.py')
     s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================

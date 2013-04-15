@@ -152,6 +152,13 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         self.bind_preferences()
 
     def verify_credentials(self, inform=True):
+        #disable for now
+        #change to enter credentials
+        self.can_edit_scripts=True
+        self.max_allowable_runs=10000
+        return True
+        
+        
         if globalv.experiment_debug:
             return True
 
