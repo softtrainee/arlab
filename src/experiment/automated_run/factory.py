@@ -127,6 +127,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
             else:
                 arvs = [self._new_run(position=str(s))]
+                self.position=self._increment(self.position)
         else:
             arvs = [self._new_run()]
 
@@ -317,12 +318,14 @@ post_equilibration_script:name
 #===============================================================================
 # property get/set
 #===============================================================================
+    @cached_property
     def _get_projects(self):
         prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
         if prs:
             self.project = pi
         return prs
 
+    @cached_property
     def _get_labnumbers(self):
         lns = []
         if self.project:
