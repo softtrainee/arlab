@@ -73,7 +73,7 @@ def calculate_decay_factor(dc, segments):
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
                        ic=(1.0, 0),
-                       abundant_sensitivity=0,
+                       abundance_sensitivity=0,
                        a37decayfactor=None,
                        a39decayfactor=None,
                        include_decay_error=False,
@@ -166,11 +166,11 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     # correct for abundant sensitivity
     # assumes symmetric and equal abundant sens for all peaks
-    n40 = s40 - abundant_sensitivity * (s39 + s39)
-    n39 = s39 - abundant_sensitivity * (s40 + s38)
-    n38 = s38 - abundant_sensitivity * (s39 + s37)
-    n37 = s37 - abundant_sensitivity * (s38 + s36)
-    n36 = s36 - abundant_sensitivity * (s37 + s37)
+    n40 = s40 - abundance_sensitivity * (s39 + s39)
+    n39 = s39 - abundance_sensitivity * (s40 + s38)
+    n38 = s38 - abundance_sensitivity * (s39 + s37)
+    n37 = s37 - abundance_sensitivity * (s38 + s36)
+    n36 = s36 - abundance_sensitivity * (s37 + s37)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
 

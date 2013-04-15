@@ -37,7 +37,9 @@ class ExperimentFactory(Loggable):
     queue = Instance(ExperimentQueue)
 
     ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
-    ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber')
+    ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
+    
+    _username=String
     _mass_spectrometer = String
     _extract_device = String
     _labnumber = String
@@ -45,8 +47,8 @@ class ExperimentFactory(Loggable):
     #===========================================================================
     # permisions
     #===========================================================================
-    max_allowable_runs = Int(25)
-    can_edit_scripts = Bool(False)
+    max_allowable_runs = Int(10000)
+    can_edit_scripts = Bool(True)
 
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
@@ -60,7 +62,7 @@ class ExperimentFactory(Loggable):
         if n >= tol:
             self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
 
-    @on_trait_change('queue_factory:[mass_spectrometer, extract_device, delay_+, tray]')
+    @on_trait_change('queue_factory:[mass_spectrometer, extract_device, delay_+, tray, username]')
     def _update_queue(self, name, new):
         if name == 'mass_spectrometer':
             self._mass_spectrometer = new
@@ -68,7 +70,10 @@ class ExperimentFactory(Loggable):
 
         elif name == 'extract_device':
             self._set_extract_device(new)
-
+        elif name=='username':
+            self._username=new
+            self.queue.username=new
+            
         self.queue.trait_set(**{name:new})
 
     @on_trait_change('run_factory:[labnumber]')
@@ -96,7 +101,7 @@ class ExperimentFactory(Loggable):
 
     def _get_ok_run(self):
         return (self._mass_spectrometer and self._mass_spectrometer != NULL_STR) and\
-                (self._extract_device and self._extract_device != NULL_STR)
+                (self._extract_device and self._extract_device != NULL_STR) and self._username
 #===============================================================================
 # views
 #===============================================================================

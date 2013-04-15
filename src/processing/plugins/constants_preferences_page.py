@@ -41,10 +41,16 @@ class ConstantsPreferencesPage(PreferencesPage):
     lambda_Ar37_error = Float(0)
     lambda_Ar39 = Float(7.068e-6)
     lambda_Ar39_error = Float(0)
-    abundant_sensitivity = Float(0)
     Ar37_Ar39_mode = Enum('Normal', 'Fixed')
     Ar37_Ar39 = Float(0.01)
     Ar37_Ar39_error = Float(0.01)
+
+    #===========================================================================
+    # spectrometer
+    #===========================================================================
+    abundant_sensitivity = Float(0)
+    sensitivity=Float(0)
+    ic_factor=Float(1.0)
 
     def traits_view(self):
         ratios = VGroup(
@@ -100,6 +106,12 @@ class ConstantsPreferencesPage(PreferencesPage):
                         )
         spectrometer = VGroup(
                             Item('abundant_sensitivity'),
+                            Item('sensitivity',
+                                 tooltip='Nominal spectrometer sensitivity saved with analysis'
+                                 ),
+                            Item('ic_factor',
+                                 tooltip='Default intercalibration factor (H1/CDD) saved with analysis'
+                                 ),
                             label='Spectrometer', show_border=True)
         v = View(ratios, decay, spectrometer)
         return v

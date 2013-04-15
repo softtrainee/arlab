@@ -142,8 +142,8 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
     #===========================================================================
     # permissions
     #===========================================================================
-    max_allowable_runs = 80
-    can_edit_scripts = False
+    max_allowable_runs = 10000
+    can_edit_scripts = True
     _last_ver_time = None
     _ver_timeout = 10
 

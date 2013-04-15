@@ -31,6 +31,7 @@ from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.loggable import Loggable
 from src.experiment.queue.parser import RunParser, UVRunParser
 from src.experiment.automated_run.uv.table import UVAutomatedRunsTable
+import datetime
 
 
 class BaseExperimentQueue(Loggable):
@@ -44,6 +45,7 @@ class BaseExperimentQueue(Loggable):
 
     mass_spectrometer = Str
     extract_device = Str
+    username=Str
     tray = Str
     delay_before_analyses = Int
     delay_between_analyses = Int
@@ -161,6 +163,7 @@ class BaseExperimentQueue(Loggable):
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)
         self._set_meta_param('delay_before_analyses', meta, default_int)
+        self._set_meta_param('username', meta, default)
 
         delim = '\t'
 
@@ -185,6 +188,7 @@ class BaseExperimentQueue(Loggable):
                 params['mass_spectrometer'] = self.mass_spectrometer
                 params['extract_device'] = self.extract_device
                 params['tray'] = self.tray
+                params['username']=self.username
 #                params['db'] = self.db
 
                 arun = self._automated_run_factory(script_info, params)
@@ -273,12 +277,18 @@ class BaseExperimentQueue(Loggable):
         return header, attrs
 
     def _meta_dumper(self, fp):
-        s = '''mass_spectrometer: {}
+        s = '''
+username: {}
+date: {}
+mass_spectrometer: {}
 delay_before_analyses: {}
 delay_between_analyses: {}
 extract_device: {}
 tray: {} 
-'''.format(self.mass_spectrometer,
+'''.format(
+           self.username,
+           datetime.datetime.today(),
+           self.mass_spectrometer,
            self.delay_before_analyses,
            self.delay_between_analyses,
            self.extract_device,
@@ -297,6 +307,9 @@ tray: {}
 #===============================================================================
 # handlers
 #===============================================================================
+    def _rearranged_fired(self):
+        self.update_needed = True
+        
     def _pasted_changed(self):
         sel = self.runs_table.selected
 

@@ -1067,7 +1067,14 @@ anaylsis_type={}
 
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
+            
+            dbuser=db.get_user(self.username)
+            if dbuser is None:
+                self.debug('user= {} does not existing. adding to database now'.format(self.username))
+                dbuser=db.add_user(self.username)
+            
             a = db.add_analysis(lab,
+                                user=dbuser,
                                 uuid=self.uuid,
                                 endtime=endtime,
                                 aliquot=aliquot,
@@ -1098,6 +1105,9 @@ anaylsis_type={}
             db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
 
+            # save ic factor
+            self._save_detector_intercalibration(a)
+            
             # save blanks
             self._save_blank_info(a)
 
@@ -1242,6 +1252,26 @@ anaylsis_type={}
                 det = db.add_detector(det)
                 db.add_deflection(meas, det, deflection)
 
+    def _save_detector_intercalibration(self, analysis):
+        self.info('saving detector intercalibration')
+        ic=self.arar_age.ic_factor
+        self.info('default ic_factor={}'.format(ic))
+
+        db = self.db
+        user = self.username
+        user = user if user else NULL_STR
+
+        name='detector_intercalibration'
+        funchist = getattr(db, 'add_{}_history'.format(name))
+        self.info('{} adding {} history for {}-{}'.format(user, name, analysis.labnumber.labnumber, analysis.aliquot))
+        history = funchist(analysis, user=user)
+
+        setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
+
+        func = getattr(db, 'add_{}'.format(name))
+        uv,ue=ic.nominal_value, ic.std_dev()
+        func(history, 'CDD', user_value=uv, user_error=ue)
+        
     def _save_blank_info(self, analysis):
         self.info('saving blank info')
         self._save_history_info(analysis, 'blanks')

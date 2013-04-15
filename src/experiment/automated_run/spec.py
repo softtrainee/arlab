@@ -34,9 +34,13 @@ class AutomatedRunSpec(Loggable):
                  'measurement', 'success', 'fail', 'truncate')
     skip = Bool(False)
 
+    #===========================================================================
+    # queue globals
+    #===========================================================================
     mass_spectrometer = Str
     extract_device = Str
-
+    username=Str
+    
     #===========================================================================
     # run id
     #===========================================================================
@@ -175,7 +179,7 @@ class AutomatedRunSpec(Loggable):
                    'position', 'duration', 'cleanup',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
-                   'sample', 'irradiation'
+                   'sample', 'irradiation','username'
                    )
 #===============================================================================
 # property get/set

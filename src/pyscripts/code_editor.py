@@ -24,6 +24,7 @@ from pyface.wx.drag_and_drop import PythonDropTarget
 
 #============= standard library imports ========================
 import wx
+from traitsui.key_bindings import KeyBinding
 #============= local library imports  ==========================
 
 
@@ -33,15 +34,21 @@ class _CodeEditor(SourceEditor):
 
         if PythonDropTarget is not None:
             self.control.SetDropTarget(PythonDropTarget(self))
-
+        
         keywords = '''and del from not while as elif global or with assert else if  
             pass yield break except import print class exec in raise continue finally is return def for lambda try'''
         if self.factory.keywords:
             keywords = ' '.join((keywords, self.factory.keywords))
         self.control.SetKeyWords(0, keywords)
-
         self.change_default_style()
-
+        
+        
+        self.control.Bind(wx.EVT_KEY_UP, self._on_key_up)
+    
+    def _on_key_up(self, event):
+        print event
+        
+    
     def change_default_style(self):
         from wx import stc
         self.control.SetEdgeMode(stc.STC_EDGE_LINE)
@@ -122,6 +129,8 @@ class PyScriptCodeEditor(BasicEditorFactory):
     fontsize = Int(12)
     fontname = Str('helvetica')
     keywords = ''
+    
+    
     #---------------------------------------------------------------------------
     #  Trait definitions:
     #---------------------------------------------------------------------------

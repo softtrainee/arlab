@@ -42,11 +42,16 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     special_labnumber = Str
 
     _labnumber = Str
-    labnumbers = Property(depends_on='project')
+    labnumbers = Property(depends_on='project, selected_level')
 
     project = Any
     projects = Property
 
+    selected_irradiation=Any
+    irradiations=Property
+    selected_level=Any
+    levels=Property(depends_on='selected_irradiation')
+    
     skip = Bool(False)
     weight = Float
     comment = Str
@@ -259,8 +264,17 @@ post_equilibration_script:name
             self.labnumber = self._labnumber
 
     def _project_changed(self):
-        self._labnumber = NULL_STR
-        self.labnumber = ''
+        self._clear_labnumber()
+
+    def _selected_irradiation_changed(self):
+        self._clear_labnumber()
+            
+    def _selected_level_changed(self):
+        self._clear_labnumber()
+
+    def _clear_labnumber(self):
+        self.labnumber=''
+        self._labnumber=NULL_STR
 
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
@@ -319,15 +333,32 @@ post_equilibration_script:name
 # property get/set
 #===============================================================================
     @cached_property
+    def _get_irradiations(self):
+        keys=[(pi, pi.name) for pi in self.db.get_irradiations()]
+        keys=[(NULL_STR, NULL_STR)]+keys
+        return dict(keys)
+    
+    @cached_property
+    def _get_levels(self):
+        irrad = self.db.get_irradiation(self.selected_irradiation)
+        r=[(NULL_STR, NULL_STR)]
+        if irrad:
+            r.extend([(pi, pi.name) for pi in irrad.levels])
+            
+        return dict(r)
+        
+    @cached_property
     def _get_projects(self):
-        prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
-        if prs:
-            self.project = pi
-        return prs
+        keys=[(pi, pi.name) for pi in self.db.get_projects()]
+        keys=[(NULL_STR, NULL_STR)]+keys
+        return dict(keys)
 
     @cached_property
     def _get_labnumbers(self):
         lns = []
+        if self.selected_level:
+            lns=[str(pi.labnumber.labnumber) 
+                    for pi in self.selected_level.positions]
         if self.project:
             lns = [str(ln.labnumber)
                     for s in self.project.samples
@@ -403,6 +434,10 @@ post_equilibration_script:name
                    Item('project', editor=EnumEditor(name='projects'),
                        tooltip='Select a project to constrain the labnumbers'
                        ),
+                   HGroup(
+                          Item('selected_irradiation',editor=EnumEditor(name='irradiations')),
+                          Item('selected_level',editor=EnumEditor(name='levels')),
+                          ),
                    Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
                        tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
                        ),
@@ -499,8 +534,8 @@ post_equilibration_script:name
         pos_grp = self._get_position_group()
         v = View(
                  VGroup(info_grp,
-                        extract_grp,
                         pos_grp,
+                        extract_grp,
                         script_grp,
                         )
                  )

@@ -40,7 +40,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     #===========================================================================
     # widths
     #===========================================================================
-    aliquot_width = Int(50)
+#    aliquot_width = Int(50)
     sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
@@ -63,7 +63,8 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     extract_value_text = Property
     duration_text = Property
     cleanup_text = Property
-    aliquot_text = Property
+    labnumber_text=Property
+#    aliquot_text = Property
 
 
     def get_bg_color(self, obj, trait, row):
@@ -80,7 +81,16 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 #        elif item.state == 'success':
 #            color = '#66FF33'  # light green
 #        return color
-
+    def _get_labnumber_text(self, trait, item):
+        ln=self.item.labnumber
+        if self.item.user_defined_aliquot:
+            ln=self.item.runid
+        else:
+            if self.item.step:
+                ln=self.item.runid
+                
+        return ln
+            
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
 
@@ -90,9 +100,9 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     def _get_cleanup_text(self, trait, item):
         return self._get_number('cleanup')
 #
-    def _get_aliquot_text(self, trait, item):
-        return self._get_number('aliquot')
-#
+#    def _get_aliquot_text(self, trait, item):
+#        return self._get_number('aliquot')
+
     def _get_number(self, attr):
         '''
             dont display 0.0's
@@ -114,7 +124,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         cols = [
 #                ('', 'state'),
                  ('Labnumber', 'labnumber'),
-                 ('Aliquot', 'aliquot'),
+#                 ('Aliquot', 'aliquot'),
                  ('Sample', 'sample'),
                  ('Position', 'position'),
 #                 ('Autocenter', 'autocenter'),

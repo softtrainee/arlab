@@ -56,7 +56,7 @@ class ArArAge(HasTraits):
     Ar36_39 = AgeProperty()
 
     j = AgeProperty()
-    abundant_sensitivity = Float
+    abundance_sensitivity = Float
     sensitivity = Property
     sensitivity_multiplier = Property
 
@@ -119,8 +119,11 @@ class ArArAge(HasTraits):
             bind_preference(self.arar_constants, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
             bind_preference(self.arar_constants, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
 
-    #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
-            bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+    #        bind_preference(self, 'abundance_sensitivity', 'pychron.spectrometer.abundance_sensitivity')
+            bind_preference(self, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
+            bind_preference(self, 'ic_factor', 'pychron.experiment.constants.ic_factor')
+            
+            
         except AttributeError, e:
             self.debug(e)
 
@@ -252,10 +255,10 @@ class ArArAge(HasTraits):
             nirrad.extend(irrad[-2:])
             irrad = nirrad
 
-        ab = self.abundant_sensitivity
+        ab = self.abundance_sensitivity
 
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    j, irrad, abundant_sensitivity=ab, ic=self.ic_factor,
+                                    j, irrad, abundance_sensitivity=ab, ic=self.ic_factor,
                                     include_decay_error=include_decay_error,
                                     arar_constants=self.arar_constants
                                     )
@@ -419,9 +422,14 @@ class ArArAge(HasTraits):
         return prs
 
 #    @cached_property
-#    def _get_abundant_sensitivity(self):
+#    def _get_abundance_sensitivity(self):
 #        return 3e-6
-
+    def _set_ic_factor(self, v):
+        if isinstance(v, (float, str, unicode, int)):
+            v=(float(v), 1e-20) 
+            
+        self._ic_factor=ufloat(v)
+        
     def _set_labnumber_record(self, v):
         self._labnumber_record = v
 
@@ -534,7 +542,7 @@ class ArArAge(HasTraits):
         return self.k39 * self.sensitivity * self.sensitivity_multiplier
 
     def _get_ic_factor(self):
-        return 1, 0
+        return self._ic_factor
 
     @cached_property
     def _get_Ar40_39(self):
