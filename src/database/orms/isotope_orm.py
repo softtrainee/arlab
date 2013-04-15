@@ -27,6 +27,7 @@ from src.database.core.base_orm import BaseMixin, NameMixin
 # from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
 from sqlalchemy.sql.expression import func
 from datetime import datetime
+from sqlalchemy.schema import Table
 # from sqlalchemy.types import FLOAT
 
 Base = declarative_base()
@@ -513,10 +514,15 @@ class gen_MolecularWeightTable(Base, NameMixin):
     mass = Column(Float)
 
 
+association_table = Table('association', Base.metadata,
+                        Column('project_id', Integer, ForeignKey('gen_ProjectTable.id')),
+                        Column('user_id', Integer, ForeignKey('gen_UserTable.id')),
+                        )
+
 class gen_ProjectTable(Base, NameMixin):
-    users = relationship('gen_UserTable', backref='project')
     samples = relationship('gen_SampleTable', backref='project')
     figures = relationship('proc_FigureTable', backref='project')
+    users = relationship('gen_UserTable', secondary=association_table)
 
 class gen_SampleTable(Base, NameMixin):
     material_id = foreignkey('gen_MaterialTable')
@@ -533,10 +539,19 @@ class gen_SensitivityTable(Base, BaseMixin):
 
     extractions = relationship('meas_ExtractionTable', backref='sensitivity')
 
+
+
 class gen_UserTable(Base, NameMixin):
-    project_id = foreignkey('gen_ProjectTable')
+#    project_id = foreignkey('gen_ProjectTable')
+    projects = relationship('gen_ProjectTable', secondary=association_table)
+    password = stringcolumn(80)
+    salt = stringcolumn(80)
 
-
+    #===========================================================================
+    # permissions
+    #===========================================================================
+    max_allowable_runs = Column(Integer, default=25)
+    can_edit_scripts = Column(Boolean, default=False)
 #===============================================================================
 #
 #===============================================================================

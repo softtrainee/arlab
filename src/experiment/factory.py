@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, Property, \
-    on_trait_change, String
+    on_trait_change, String, Int
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -45,8 +45,8 @@ class ExperimentFactory(Loggable):
     #===========================================================================
     # permisions
     #===========================================================================
-    _max_allowable_runs = 25
-
+    max_allowable_runs = Int(25)
+    can_edit_scripts = Bool(False)
 
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
@@ -55,7 +55,7 @@ class ExperimentFactory(Loggable):
         new_runs = self.run_factory.new_runs(auto_increment=self.auto_increment)
         self.queue.add_runs(new_runs)
 
-        tol = self._max_allowable_runs
+        tol = self.max_allowable_runs
         n = len(self.queue.automated_runs)
         if n >= tol:
             self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
@@ -90,7 +90,7 @@ class ExperimentFactory(Loggable):
         '''
             tol should be a user permission
         '''
-        tol = self._max_allowable_runs
+        tol = self.max_allowable_runs
         ntest = len(self.queue.automated_runs) < tol
         return  self.ok_run and self._labnumber and ntest
 
@@ -122,8 +122,14 @@ class ExperimentFactory(Loggable):
         rf = klass(db=self.db,
                    extract_device=self._extract_device,
                    mass_spectrometer=self._mass_spectrometer,
-                   application=self.application)
+                   application=self.application,
+                   can_edit=self.can_edit_scripts
+                   )
         return rf
+
+    def _can_edit_scripts_changed(self):
+        self.run_factory.can_edit = self.can_edit_scripts
+
 #===============================================================================
 # defaults
 #===============================================================================

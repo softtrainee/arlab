@@ -35,12 +35,14 @@ MULTICOLLECT_NCOUNTS_REGEX = re.compile(r'(MULTICOLLECT_COUNTS) *= *\d+$')
 BASELINE_NCOUNTS_REGEX = re.compile(r'(BASELINE_COUNTS) *= *\d+$')
 BASELINE_DETECTOR_REGEX = re.compile(r'(BASELINE_DETECTOR) *= *')
 BASELINE_MASS_REGEX = re.compile(r'(BASELINE_MASS) *= *')
+BASELINE_BEFORE_REGEX = re.compile(r'(BASELINE_BEFORE) *= *')
+BASELINE_AFTER_REGEX = re.compile(r'(BASELINE_AFTER) *= *')
 
 #===============================================================================
 # peak center
 #===============================================================================
-PEAK_CENTER_START_REGEX = re.compile(r'(PEAK_CENTER_START) *= *')
-PEAK_CENTER_END_REGEX = re.compile(r'(PEAK_CENTER_END) *= *')
+PEAK_CENTER_BEFORE_REGEX = re.compile(r'(PEAK_CENTER_BEFORE) *= *')
+PEAK_CENTER_AFTER_REGEX = re.compile(r'(PEAK_CENTER_AFTER) *= *')
 PEAK_CENTER_DETECTOR_REGEX = re.compile(r"(PEAK_CENTER_DETECTOR) *= *")
 PEAK_CENTER_ISOTOPE_REGEX = re.compile(r"(PEAK_CENTER_ISOTOPE) *= *")
 #===============================================================================
@@ -53,12 +55,15 @@ EQ_DELAY_REGEX = re.compile(r"(DELAY) *= *")
 
 
 PARAMS = dict(
-             peak_center_start=(PEAK_CENTER_START_REGEX, 'PEAK_CENTER_START= {}'),
-             peak_center_end=(PEAK_CENTER_END_REGEX, 'PEAK_CENTER_END= {}'),
+             peak_center_before=(PEAK_CENTER_BEFORE_REGEX, 'PEAK_CENTER_BEFORE= {}'),
+             peak_center_after=(PEAK_CENTER_AFTER_REGEX, 'PEAK_CENTER_AFTER= {}'),
              peak_center_detector=(PEAK_CENTER_DETECTOR_REGEX, "PEAK_CENTER_DETECTOR= '{}'"),
              peak_center_isotope=(PEAK_CENTER_ISOTOPE_REGEX, "PEAK_CENTER_ISOTOPE= '{}'"),
              multicollect_ncounts=(MULTICOLLECT_NCOUNTS_REGEX, 'MULTICOLLECT_COUNTS= {}'),
 
+
+             baseline_before=(BASELINE_BEFORE_REGEX, 'BASELINE_BEFORE= {}'),
+             baseline_after=(BASELINE_AFTER_REGEX, 'BASELINE_AFTER= {}'),
              baseline_ncounts=(BASELINE_NCOUNTS_REGEX, 'BASELINE_COUNTS= {}'),
              baseline_detector=(BASELINE_DETECTOR_REGEX, "BASELINE_DETECTOR= '{}'"),
              baseline_mass=(BASELINE_MASS_REGEX, 'BASELINE_MASS= {}'),
@@ -83,12 +88,14 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     baseline_ncounts = Int(100)
     baseline_detector = String
     baseline_mass = Float
+    baseline_before = Bool
+    baseline_after = Bool
 
     #===========================================================================
     # peak center
     #===========================================================================
-    peak_center_start = Bool
-    peak_center_end = Bool
+    peak_center_before = Bool
+    peak_center_after = Bool
     peak_center_isotope = String
     peak_center_detector = String
 
@@ -108,23 +115,25 @@ class MeasurementPyScriptEditor(PyScriptEditor):
                                  show_border=True
                                  )
         baseline_grp = Group(
-                                 Item('baseline_ncounts', label='Counts'),
-                                 Item('baseline_detector', label='Detector'),
-                                 Item('baseline_mass', label='Mass'),
-                                 label='Baseline',
-                                 show_border=True
-                                 )
+                             Item('baseline_before', label='Baselines at Start'),
+                             Item('baseline_after', label='Baselines at End'),
+                             Item('baseline_ncounts', label='Counts'),
+                             Item('baseline_detector', label='Detector'),
+                             Item('baseline_mass', label='Mass'),
+                             label='Baseline',
+                             show_border=True
+                             )
 
         peak_center_grp = Group(
-                              Item('peak_center_start', label='Peak Center at Start'),
-                              Item('peak_center_end', label='Peak Center at End'),
+                              Item('peak_center_before', label='Peak Center at Start'),
+                              Item('peak_center_after', label='Peak Center at End'),
                               Item('peak_center_detector',
                                    label='Detector',
-                                   enabled_when='peak_center_start or peak_center_end'
+                                   enabled_when='peak_center_before or peak_center_after'
                                    ),
                               Item('peak_center_isotope',
                                    label='Isotope',
-                                   enabled_when='peak_center_start or peak_center_end'
+                                   enabled_when='peak_center_before or peak_center_after'
                                    ),
                               label='Peak Center',
                               show_border=True)
@@ -154,6 +163,10 @@ class MeasurementPyScriptEditor(PyScriptEditor):
             #===================================================================
             # baselines
             #===================================================================
+            if self._extract_parameter(li, BASELINE_BEFORE_REGEX, 'baseline_before', cast=str_to_bool):
+                continue
+            if self._extract_parameter(li, BASELINE_AFTER_REGEX, 'baseline_after', cast=str_to_bool):
+                continue
             if self._extract_parameter(li, BASELINE_NCOUNTS_REGEX, 'baseline_ncounts', cast=int):
                 continue
             if self._extract_parameter(li, BASELINE_DETECTOR_REGEX, 'baseline_detector', cast=str_to_str):
@@ -164,9 +177,9 @@ class MeasurementPyScriptEditor(PyScriptEditor):
             #===================================================================
             # peak center
             #===================================================================
-            if self._extract_parameter(li, PEAK_CENTER_START_REGEX, 'peak_center_start', cast=str_to_bool):
+            if self._extract_parameter(li, PEAK_CENTER_BEFORE_REGEX, 'peak_center_before', cast=str_to_bool):
                 continue
-            if self._extract_parameter(li, PEAK_CENTER_END_REGEX, 'peak_center_end', cast=str_to_bool):
+            if self._extract_parameter(li, PEAK_CENTER_AFTER_REGEX, 'peak_center_after', cast=str_to_bool):
                 continue
             if self._extract_parameter(li, PEAK_CENTER_DETECTOR_REGEX, 'peak_center_detector', cast=str_to_str):
                 continue

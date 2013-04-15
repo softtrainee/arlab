@@ -77,13 +77,22 @@ class ExperimentEditor(ExperimentManager):
 
     def _experiment_queue_changed(self):
         self.experiment_factory.queue = self.experiment_queue
+
+    @on_trait_change('can_edit_script, max_allowable_runs')
+    def _update_value(self, name, value):
+        setattr(self.experiment_factory, name, value)
+
+#    def _can_edit_scripts_changed(self):
+#        self.experiment_factory._can_edit_script = self.can_edit_scripts
 #===============================================================================
 # defaults
 #===============================================================================
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,
                               application=self.application,
-                              queue=self.experiment_queue
+                              queue=self.experiment_queue,
+                              max_allowable_runs=self.max_allowable_runs,
+                              can_edit_scripts=self.can_edit_scripts
                               )
 
         if globalv.experiment_debug:

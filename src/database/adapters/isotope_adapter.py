@@ -417,24 +417,28 @@ class IsotopeAdapter(DatabaseAdapter):
             analysis.peak_center = pc
         return pc
 
-    def add_user(self, name, project=None, **kw):
+    def add_user(self, name, **kw):
         user = gen_UserTable(name=name, **kw)
-        if isinstance(project, str):
-            project = self.get_project(project)
-
-        q = self._build_query_and(gen_UserTable, name, gen_ProjectTable, project)
-
-        addflag = True
-        u = q.one()
-        if u is not None:
-            addflag = not (u.project == project)
-
-        if addflag:
-            self.info('adding user {}'.format(name))
-            if project is not None:
-                project.users.append(user)
-            self._add_item(user)
+        self._add_item(user)
         return user
+#    def add_user(self, name, **kw):
+#        user = gen_UserTable(name=name, **kw)
+#        if isinstance(project, str):
+#            project = self.get_project(project)
+#
+#        q = self._build_query_and(gen_UserTable, name, gen_ProjectTable, project)
+#
+#        addflag = True
+#        u = q.one()
+#        if u is not None:
+#            addflag = not (u.project == project)
+#
+#        if addflag:
+#            self.info('adding user {}'.format(name))
+#            if project is not None:
+#                project.users.append(user)
+#            self._add_item(user)
+#        return user
 
 
     def add_sample(self, name, project=None, material=None, **kw):
@@ -693,6 +697,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_molecular_weight(self, value):
         return self._retrieve_item(gen_MolecularWeightTable, value)
+
+    def get_user(self, value):
+        return self._retrieve_item(gen_UserTable, value)
 
     def get_project(self, value):
         return self._retrieve_item(gen_ProjectTable, value)

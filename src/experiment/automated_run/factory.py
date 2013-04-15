@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, Str, Property, Any,Either, Long, \
+from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
      Float, Instance, Int, List, cached_property, on_trait_change, Bool
 from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.constants import NULL_STR, SCRIPT_KEYS
+from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
     convert_identifier, convert_special_name
 from src.experiment.automated_run.spec import AutomatedRunSpec
@@ -37,7 +37,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
     labnumber = String(enter_set=True, auto_set=False)
     aliquot = Long
-    o_aliquot = Either(Long,Int)
+    o_aliquot = Either(Long, Int)
     user_defined_aliquot = False
     special_labnumber = Str
 
@@ -48,10 +48,8 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     projects = Property
 
     skip = Bool(False)
-#    weight = Float
-#    comment = Str
-    weight = Float(12)
-    comment = Str('this is a comment')
+    weight = Float
+    comment = Str
 
     position = Property(depends_on='_position')
     _position = Str
@@ -60,18 +58,13 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     # extract
     #===========================================================================
     extract_value = Property(depends_on='_extract_value')
-#    _extract_value = Float
-    _extract_value = Float(10)
-
-    extract_units = Str('watts')
-#    extract_units = Str(NULL_STR)
+    _extract_value = Float
+    extract_units = Str(NULL_STR)
     extract_units_names = List(['---', 'watts', 'temp', 'percent'])
     _default_extract_units = 'watts'
 
-    duration = Float(20)
-    cleanup = Float(30)
-#    duration = Float
-#    cleanup = Float
+    duration = Float
+    cleanup = Float
 
     pattern = Str
     patterns = Property
@@ -86,6 +79,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     #===========================================================================
     _selected_runs = None
     _spec_klass = AutomatedRunSpec
+
 
     def load_from_run(self, run):
         self._clone_run(run)
@@ -149,9 +143,10 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     def set_mass_spectrometer(self, new):
         new = new.lower()
         self.mass_spectrometer = new
-        for s in SCRIPT_KEYS:
-            s = getattr(self, '{}_script'.format(s))
-            s.mass_spectrometer = new
+        for s in SCRIPT_NAMES:
+            sc = getattr(self, s)
+            print sc, new
+            sc.mass_spectrometer = new
 
     def set_extract_device(self, new):
         new = new.lower()
@@ -193,7 +188,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'weight', 'comment',
                      'sample', 'irradiation',
-                     'skip',
+                     'skip', 'mass_spectrometer'
                      ):
 
             if attr in excludes:
@@ -204,8 +199,6 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
         if self.user_defined_aliquot:
             arv.user_defined_aliquot = True
             arv.aliquot = int(self.aliquot)
-
-
 
         for si in SCRIPT_KEYS:
             name = '{}_script'.format(si)

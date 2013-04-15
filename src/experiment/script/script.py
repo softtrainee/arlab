@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Any, Property, Button, cached_property, \
-    String
+    String, Bool
 from traitsui.api import View, Item, HGroup, Label, spring, EnumEditor
 #============= standard library imports ========================
 import os
@@ -36,6 +36,7 @@ class Script(Loggable):
     names = Property(depends_on='mass_spectrometer')
     edit = Button
     kind = 'ExtractionLine'
+    can_edit = Bool(False)
 
     def _edit_fired(self):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
@@ -57,7 +58,7 @@ class Script(Loggable):
                                 width= -150,
                                 editor=EnumEditor(name='names')),
                            Item('edit',
-                                enabled_when='name and name!="---"',
+                                enabled_when='name and name!="---" and can_edit',
                                 show_label=False)
                            )
                     )

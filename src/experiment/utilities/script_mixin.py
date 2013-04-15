@@ -15,13 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, String, Str, Instance
+from traits.api import HasTraits, Any, String, Str, Instance, Bool, \
+    on_trait_change
 # from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.paths import paths
-from src.constants import NULL_STR, SCRIPT_KEYS
+from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.script.script import Script
 import yaml
 
@@ -34,19 +35,23 @@ class ScriptMixin(HasTraits):
     measurement_script = Instance(Script)
     post_measurement_script = Instance(Script)
     post_equilibration_script = Instance(Script)
+    can_edit = Bool(False)
 
-    def _mass_spectrometer_changed(self):
-        self.extraction_script.mass_spectrometer = self.mass_spectrometer
-        self.measurement_script.mass_spectrometer = self.mass_spectrometer
-        self.post_measurement_script.mass_spectrometer = self.mass_spectrometer
-        self.post_equilibration_script.mass_spectrometer = self.mass_spectrometer
+
+    @on_trait_change('mass_spectrometer, can_edit')
+    def _update_value(self, name, new):
+        for si in SCRIPT_NAMES:
+            script = getattr(self, si)
+            setattr(script, name, new)
+
 
     def _script_factory(self, label, name, kind='ExtractionLine'):
         return Script(label=label,
 #                      names=getattr(self, '{}_scripts'.format(name)),
                       application=self.application,
                       mass_spectrometer=self.mass_spectrometer,
-                      kind=kind
+                      kind=kind,
+                      can_edit=self.can_edit
                       )
 
     def _extraction_script_default(self):

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, DelegatesTo, Any, on_trait_change, String
+    Instance, Str, Any, on_trait_change, String
 from traitsui.api import View, Item, HGroup, Group, spring
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
@@ -111,8 +111,7 @@ class ExperimentExecutor(ExperimentManager):
     statusbar = String
 
     executable = Bool
-    _max_allowable_runs=80
-    
+
     def isAlive(self):
         return self._alive
 
@@ -223,7 +222,7 @@ class ExperimentExecutor(ExperimentManager):
                     arun.cancel()
         else:
             if self._was_executed:
-                self.load_experiment_set(self.experiment_queue.path, edit=False)
+                self.load_experiment_queue(self.experiment_queue.path)
 
             self.stop_file_listener()
 
@@ -386,10 +385,10 @@ class ExperimentExecutor(ExperimentManager):
 
             runargs = None
             try:
-                if cnt >= self._max_allowable_runs:
-                    self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self._max_allowable_runs))
+                if cnt >= self.max_allowable_runs:
+                    self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self.max_allowable_runs))
                     break
-                
+
                 run = rgen.next()
                 if not run.skip:
                     runargs = self._launch_run(run, cnt)
@@ -635,7 +634,6 @@ class ExperimentExecutor(ExperimentManager):
 
     def _load_experiment_queue_hook(self):
         self.executable = all([ei.executable for ei in self.experiment_queues])
-        print self.executable
 
 #===============================================================================
 # handlers

@@ -140,6 +140,7 @@ class AutomatedRunSpec(Loggable):
         if new_uuid:
             self.uuid = str(uuid.uuid4())
             arun.uuid = self.uuid
+
         return arun
 
     def load(self, script_info, params):
@@ -173,7 +174,8 @@ class AutomatedRunSpec(Loggable):
                    'extract_value', 'extract_units',
                    'position', 'duration', 'cleanup',
                    'mass_spectrometer', 'extract_device',
-                   'analysis_type'
+                   'analysis_type',
+                   'sample', 'irradiation'
                    )
 #===============================================================================
 # property get/set
