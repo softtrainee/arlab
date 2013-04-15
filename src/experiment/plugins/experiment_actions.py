@@ -66,8 +66,9 @@ class ExecuteExperimentQueueAction(ExperimentAction):
     def perform(self, event):
         man = self._get_executor(event)
 #        man.experiment_set_path = p
-        if man.load_experiment_queue(path=globalv.test_experiment_set, edit=False):
-            open_manager(event.window.application, man)
+        if man.verify_credentials(inform=False):
+            if man.load_experiment_queue(path=globalv.test_experiment_set):
+                open_manager(event.window.application, man)
 
 
 class NewExperimentQueueAction(ExperimentAction):
@@ -79,10 +80,12 @@ class NewExperimentQueueAction(ExperimentAction):
     def perform(self, event):
         '''
         '''
+        app = event.window.application
         manager = self._get_editor(event)
-        if manager.load():
-            manager.new_experiment_queue()
-            open_manager(event.window.application, manager)
+        if manager.verify_credentials():
+            if manager.load():
+                manager.new_experiment_queue()
+                open_manager(app, manager)
 
 
 class OpenExperimentQueueAction(ExperimentAction):
@@ -95,10 +98,10 @@ class OpenExperimentQueueAction(ExperimentAction):
         '''
         '''
         manager = self._get_editor(event)
-        if manager.load():
-    #        if manager.load_experiment_set(set_names=True):
-            if manager.load_experiment_queue(saveable=True):
-                open_manager(event.window.application, manager)
+        if manager.verify_credentials():
+            if manager.load():
+                if manager.load_experiment_queue(saveable=True):
+                    open_manager(event.window.application, manager)
 
 
 class OpenRecentTableAction(ExperimentAction):

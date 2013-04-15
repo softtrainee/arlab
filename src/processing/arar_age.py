@@ -453,7 +453,8 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_rad40_percent(self):
-        return self.rad40 / self.Ar40 * 100
+        if self.Ar40:
+            return self.rad40 / self.Ar40 * 100
 #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
     @cached_property

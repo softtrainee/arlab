@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Str, Int, CInt, List, Property, \
-     Event, Float, Instance, Bool, cached_property, Dict, HasTraits
+     Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
+     ReadOnly
 from pyface.timer.api import do_after
 #============= standard library imports ========================
 import os
@@ -94,7 +95,7 @@ class AutomatedRun(Loggable):
     massspec_importer = Instance(MassSpecDatabaseImporter)
     repository = Instance(Repository)
 
-    run_info = Instance(RunInfo, ())
+#    run_info = Instance(RunInfo, ())
     script_info = Instance(ScriptInfo, ())
 
     runner = Any
@@ -108,6 +109,8 @@ class AutomatedRun(Loggable):
     step = Str
     aliquot = CInt
     user_defined_aliquot = False
+    sample = Str
+    irradiation = Str
 
     state = Str
     extract_group = CInt
@@ -241,6 +244,7 @@ class AutomatedRun(Loggable):
         spec = self.spectrometer_manager.spectrometer
         self._active_detectors = [spec.get_detector(n) for n in dets]
         p.create(self._active_detectors)
+        self.plot_panel = p
 #        g = p.graph
 #        g.suppress_regression = True
 #        # construct plot panels graph
@@ -252,7 +256,6 @@ class AutomatedRun(Loggable):
 #        g.suppress_regression = False
 #        p.detectors = self._active_detectors
 
-        self.plot_panel = p
 
     def py_set_regress_fits(self, fits, series=0):
         n = len(self._active_detectors)
@@ -274,9 +277,9 @@ class AutomatedRun(Loggable):
     def py_data_collection(self, ncounts, starttime, series=0):
         if not self._alive:
             return
-        if self.plot_panel:
-            self.plot_panel._ncounts = ncounts
-            self.plot_panel.isbaseline = False
+
+        self.plot_panel._ncounts = ncounts
+        self.plot_panel.isbaseline = False
 
         gn = 'signal'
         fits = self.fits
@@ -339,11 +342,7 @@ class AutomatedRun(Loggable):
         result = None
         ion = self.ion_optics_manager
         if not peak_hop:
-            if self.plot_panel:
-                self.plot_panel._ncounts = ncounts
-                self.plot_panel.isbaseline = True
-                self.plot_panel.show()
-
+            self.plot_panel.show()
             if mass:
                 if ion is not None:
                     if detector is None:
@@ -351,6 +350,9 @@ class AutomatedRun(Loggable):
                     ion.position(mass, detector, False)
                     self.info('Delaying {}s for detectors to settle'.format(settling_time))
                     time.sleep(settling_time)
+
+            self.plot_panel._ncounts = ncounts
+            self.plot_panel.isbaseline = True
 
             gn = 'baseline'
             fits = [fit, ] * len(self._active_detectors)
@@ -716,9 +718,11 @@ anaylsis_type={}
                              window_y=0.05,  # + 0.01 * self.index,
                              window_x=0.6,  # + 0.01 * self.index,
 
-                             window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
+                             window_title='Plot Panel {}, {} {}'.format(self.runid, self.sample, self.irradiation),
                              stack_order=stack_order,
                              arar_age=self.arar_age,
+                             sample=self.sample,
+                             irradiation=self.irradiation
     #                         signals=dict(),
                              )
             plot_panel.reset()

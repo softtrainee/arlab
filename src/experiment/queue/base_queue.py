@@ -105,7 +105,13 @@ class BaseExperimentQueue(Loggable):
 
         writeline = lambda m: stream.write(m + '\n')
 
-        tab = lambda l: writeline('\t'.join(map(str, l)))
+        def tab(l, comment=False):
+            s = '\t'.join(map(str, l))
+            if comment:
+                s = '#{}'.format(s)
+            writeline(s)
+
+#        tab = lambda l, comment = False: writeline('\t'.join(map(str, l)))
 
         # write metadata
         self._meta_dumper(stream)
@@ -126,7 +132,7 @@ class BaseExperimentQueue(Loggable):
         for arun in self.runs_table.automated_runs:
             vs = arun.to_string_attrs(attrs)
             vals = [v if isNotNull(v) else '' for v in vs]
-            tab(vals)
+            tab(vals, comment=arun.skip)
 
         return stream
 

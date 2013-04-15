@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool
+from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
+    Str
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
@@ -26,6 +27,8 @@ from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
+from src.helpers.formatting import floatfmt
+
 #============= standard library imports ========================
 # from numpy import Inf
 # from pyface.timer.do_later import do_later
@@ -38,6 +41,8 @@ class PlotPanelHandler(ViewableHandler):
 class PlotPanel(Viewable):
 #    automated_run = Any
     arar_age = Instance(ArArAge)
+    sample = Str
+    irradiation = Str
     graph = Instance(Graph)
     window_x = 0
     window_y = 0
@@ -92,6 +97,8 @@ class PlotPanel(Viewable):
         self.signal_display.clear()
         self.summary_display.clear()
         self.fit_display.clear()
+
+        self._print_results()
 
 
     @on_trait_change('graph:regression_results')
@@ -164,20 +171,27 @@ class PlotPanel(Viewable):
         disp.add_text(*args, **kw)
 
     def _floatfmt(self, f, n=5):
-        from src.helpers.formatting import floatfmt
         return floatfmt(f, n)
 
 
     def _print_parameter(self, display, name, uvalue, sig_figs=(3, 4), **kw):
         name = '{:<15s}'.format(name)
 
-        v = self._floatfmt(uvalue.nominal_value, sig_figs[0])
-        e = self._floatfmt(uvalue.std_dev(), sig_figs[1])
+        if not uvalue:
+            v, e = 0, 0
+        else:
+            v, e = uvalue.nominal_value, uvalue.std_dev()
+
+        v = self._floatfmt(v, sig_figs[0])
+        e = self._floatfmt(e, sig_figs[1])
 
         msg = u'{}= {} {}{}{}'.format(name, v, PLUSMINUS, e, self._get_pee(uvalue))
         self.add_text(display, msg, **kw)
 
     def _print_summary(self, display):
+        self.add_text(display, '{:<15s}= {}'.format('Sample', self.sample))
+        self.add_text(display, '{:<15s}= {}'.format('Irradiation', self.irradiation))
+
         arar_age = self.arar_age
         if arar_age:
             # call age first
@@ -188,7 +202,6 @@ class PlotPanel(Viewable):
             rad40 = arar_age.rad40_percent
             kca = arar_age.kca
             kcl = arar_age.kcl
-
             self._print_parameter(display, 'Age', age)
             self._print_parameter(display, 'J', j, sig_figs=(5, 6))
             self._print_parameter(display, '% rad40', rad40)
@@ -314,8 +327,11 @@ class PlotPanel(Viewable):
         self.add_text(display, '\n'.join(ts))
 
     def _get_pee(self, uv):
-        vv = uv.nominal_value
-        ee = uv.std_dev()
+        if uv is not None:
+            vv = uv.nominal_value
+            ee = uv.std_dev()
+        else:
+            vv, ee = 0, 0
         try:
             pee = abs(ee / vv * 100)
         except ZeroDivisionError:

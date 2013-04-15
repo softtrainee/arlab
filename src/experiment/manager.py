@@ -22,6 +22,7 @@ from traits.api import Instance, List, Str, Property
 from threading import Thread
 import time
 import hashlib
+import uuid
 #============= local library imports  ==========================
 # from src.experiment.experiment_set import ExperimentSet
 from src.paths import paths
@@ -36,6 +37,8 @@ from src.saveable import Saveable
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import ALPHAS
+from src.envisage.credentials import Credentials
+from globals import globalv
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -51,7 +54,7 @@ class ExperimentManagerHandler(SaveableManagerHandler):
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
-
+P_VERIFY_TIME = None
 class ExperimentManager(IsotopeDatabaseManager, Saveable):
     handler_klass = ExperimentManagerHandler
 #    experiment_set = Instance(ExperimentSet)
@@ -136,14 +139,56 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #        print cbg40/cbg36
 
 
-
+    #===========================================================================
+    # permissions
+    #===========================================================================
+    max_allowable_runs = 80
+    can_edit_scripts = False
+    _last_ver_time = None
+    _ver_timeout = 10
 
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
 
+    def verify_credentials(self, inform=True):
+        if globalv.experiment_debug:
+            return True
+
+        global P_VERIFY_TIME
+
+        verify = True
+        if P_VERIFY_TIME:
+            verify = time.time() - P_VERIFY_TIME > (self._ver_timeout * 60)
+
+        if not verify:
+            return True
+
+        cred = Credentials(db=self.db)
+        info = cred.edit_traits()
+
+        if info.result:
+            if self.db.connect(force=True):
+                rec = self.db.get_user(cred.username)
+                if rec and cred.verify(rec.password, rec.salt):
+                    self.username = cred.username
+                    self._load_permissions(rec, inform)
+                    P_VERIFY_TIME = time.time()
+                    return True
+                else:
+                    self.warning_dialog('Invalid username and password')
+
     def load(self):
         return self.populate_default_tables()
+
+    def _load_permissions(self, rec, inform):
+        self.max_allowable_runs = int(rec.max_allowable_runs)
+        self.can_edit_scripts = rec.can_edit_scripts
+        if inform:
+            self.information_dialog('''Permissions for {}
+max_runs= {}
+can_edit_scripts= {}
+'''.format(self.username, self.max_allowable_runs, self.can_edit_scripts))
 
     def _reload_from_disk(self):
 #        if not self._alive:
@@ -182,7 +227,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
     def _validate_experiment_queues(self):
         for exp in self.experiment_queues:
-            if not exp.test_runs():
+            if exp.test_runs():
                 return
 
         return True
