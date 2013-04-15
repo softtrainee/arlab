@@ -30,6 +30,8 @@ class ExperimentQueueFactory(Loggable):
     db = Any
     application = Any
 
+    username=Str
+    
     mass_spectrometer = Str
     mass_spectrometers = Property
 
@@ -45,6 +47,7 @@ class ExperimentQueueFactory(Loggable):
 #===============================================================================
     def traits_view(self):
         v = View(VGroup(
+                       Item('username'),
                        Item('mass_spectrometer',
                             editor=EnumEditor(name='mass_spectrometers'),
                             tooltip='Select a mass spectrometer for this set'

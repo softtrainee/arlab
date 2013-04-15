@@ -64,6 +64,7 @@ class AutomatedRunsTable(HasTraits):
                                             pasted='pasted',
                                             copy_cache='copy_cache',
                                             update='update_needed',
+                                            drag_move=True,
                                             auto_update=True,
                                             multi_select=True,
                                             scroll_to_bottom=False)

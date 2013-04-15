@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int, Bool, String, Float, on_trait_change
-from traitsui.api import View, Item, TableEditor, Group
+from traitsui.api import View, Item, HGroup, VGroup, Group, spring
 #============= standard library imports ========================
 import os
 import re
@@ -37,6 +37,7 @@ BASELINE_DETECTOR_REGEX = re.compile(r'(BASELINE_DETECTOR) *= *')
 BASELINE_MASS_REGEX = re.compile(r'(BASELINE_MASS) *= *')
 BASELINE_BEFORE_REGEX = re.compile(r'(BASELINE_BEFORE) *= *')
 BASELINE_AFTER_REGEX = re.compile(r'(BASELINE_AFTER) *= *')
+BASELINE_SETTLING_TIME_REGEX = re.compile(r'(BASELINE_SETTLING_TIME) *= *')
 
 #===============================================================================
 # peak center
@@ -51,7 +52,7 @@ PEAK_CENTER_ISOTOPE_REGEX = re.compile(r"(PEAK_CENTER_ISOTOPE) *= *")
 EQ_TIME_REGEX = re.compile(r"(EQ_TIME) *= *")
 EQ_INLET_REGEX = re.compile(r"(INLET) *= *")
 EQ_OUTLET_REGEX = re.compile(r"(OUTLET) *= *")
-EQ_DELAY_REGEX = re.compile(r"(DELAY) *= *")
+EQ_DELAY_REGEX = re.compile(r"(EQ_DELAY) *= *")
 
 
 PARAMS = dict(
@@ -67,11 +68,12 @@ PARAMS = dict(
              baseline_ncounts=(BASELINE_NCOUNTS_REGEX, 'BASELINE_COUNTS= {}'),
              baseline_detector=(BASELINE_DETECTOR_REGEX, "BASELINE_DETECTOR= '{}'"),
              baseline_mass=(BASELINE_MASS_REGEX, 'BASELINE_MASS= {}'),
+             baseline_settling_time=(BASELINE_SETTLING_TIME_REGEX, 'BASELINE_SETTLING_TIME= {}'),
 
              eq_time=(EQ_TIME_REGEX, 'EQ_TIME= {}'),
              eq_inlet=(EQ_INLET_REGEX, "INLET= '{}'"),
              eq_outlet=(EQ_OUTLET_REGEX, "OUTLET= '{}'"),
-             eq_delay=(EQ_DELAY_REGEX, 'DELAY= {}'),
+             eq_delay=(EQ_DELAY_REGEX, 'EQ_DELAY= {}'),
              )
 
 
@@ -90,6 +92,7 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     baseline_mass = Float
     baseline_before = Bool
     baseline_after = Bool
+    baseline_settling_time= Int(3)
 
     #===========================================================================
     # peak center
@@ -110,15 +113,23 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     def _get_parameters_group(self):
 
         multicollect_grp = Group(
-                                 Item('multicollect_ncounts', label='Counts'),
+                                 Item('multicollect_ncounts', label='Counts',
+                                      tooltip='Number of data points to collect'
+                                      ),
                                  label='Multicollect',
                                  show_border=True
                                  )
         baseline_grp = Group(
                              Item('baseline_before', label='Baselines at Start'),
                              Item('baseline_after', label='Baselines at End'),
-                             Item('baseline_ncounts', label='Counts'),
+                             Item('baseline_ncounts', 
+                                  tooltip='Number of baseline data points to collect',
+                                  label='Counts'),
                              Item('baseline_detector', label='Detector'),
+                             Item('baseline_settling_time',
+                                  label='Delay (s)',
+                                  tooltip='Wait "Delay" seconds after setting magnet to baseline position'
+                                  ),
                              Item('baseline_mass', label='Mass'),
                              label='Baseline',
                              show_border=True
@@ -140,18 +151,25 @@ class MeasurementPyScriptEditor(PyScriptEditor):
 
         equilibration_grp = Group(
                                 Item('eq_time', label='Time (s)'),
+                                Item('eq_outlet', label='Ion Pump Valve'),
+                                Item('eq_delay', label='Delay (s)',
+                                     tooltip='Wait "Delay" seconds before opening the Inlet Valve'
+                                     ),
                                 Item('eq_inlet', label='Inlet Valve'),
-                                Item('eq_outlet', label='Outlet Valve'),
-                                Item('eq_delay', label='Delay (s)'),
                                 label='Equilibration',
                                 show_border=True
                                 )
 
         return Group(
-                     multicollect_grp,
-                     baseline_grp,
-                     peak_center_grp,
-                     equilibration_grp,
+                     HGroup(
+                            VGroup(
+                                 multicollect_grp,
+                                 baseline_grp,
+                                 peak_center_grp,
+                                 equilibration_grp),
+                            spring,
+                            ),
+                     
                      label='Parameters')
 
     def _parse(self):

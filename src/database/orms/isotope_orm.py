@@ -251,6 +251,8 @@ class meas_AnalysisTable(Base, BaseMixin):
     measurement_id = foreignkey('meas_MeasurementTable')
     experiment_id = foreignkey('meas_ExperimentTable')
     import_id = foreignkey('gen_ImportTable')
+    user_id=foreignkey('gen_UserTable')
+    
     uuid = stringcolumn(40)
     analysis_timestamp = Column(DateTime, default=func.now())
     endtime = Column(Time)
@@ -283,6 +285,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
     notes = relationship('proc_NotesTable', backref='analysis')
     monitors = relationship('meas_MonitorTable', backref='analysis')
+    
 
 class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')
@@ -542,8 +545,12 @@ class gen_SensitivityTable(Base, BaseMixin):
 
 
 class gen_UserTable(Base, NameMixin):
+    
+    analyses=relationship('meas_AnalysisTable', backref='user')
 #    project_id = foreignkey('gen_ProjectTable')
     projects = relationship('gen_ProjectTable', secondary=association_table)
+    
+    
     password = stringcolumn(80)
     salt = stringcolumn(80)
 
