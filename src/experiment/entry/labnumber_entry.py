@@ -437,7 +437,7 @@ class LabnumberEntry(DBEntry):
         r = []
         irrad = self.db.get_irradiation(self.irradiation)
         if irrad:
-            r = [NULL_STR] + [str(ri.name) for ri in irrad.levels]
+            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
 #            if r and not self.level:
 
         return r

@@ -569,6 +569,7 @@ can_edit_scripts= {}
 
                 do_later(func)
                 self._load_experiment_queue_hook()
+                self.save_enabled=True
                 return True
 
     def _load_experiment_queue_hook(self):

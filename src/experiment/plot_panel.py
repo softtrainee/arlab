@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str
+    Str,CInt
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
@@ -49,7 +49,7 @@ class PlotPanel(Viewable):
     window_title = ''
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
-    _ncounts = Int
+    _ncounts = CInt
 
 #    detector = None
     detectors = List

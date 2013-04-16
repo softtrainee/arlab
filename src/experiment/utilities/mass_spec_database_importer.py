@@ -401,7 +401,7 @@ class MassSpecDatabaseImporter(Loggable):
             isos = []
             for a in ('Ar40', 'Ar38', 'Ar36'):
                 isos.append('{}\t{}'.format(a, 1.0))
-            blob = '\n'.join(isos)
+            blob = '\r'.join(isos)
         return blob
 
     def _build_timeblob(self, t, v):

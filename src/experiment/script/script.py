@@ -55,7 +55,7 @@ class Script(Loggable):
                            spring,
                            Item('name',
                                 show_label=False,
-                                width= -150,
+                                width= -225,
                                 editor=EnumEditor(name='names')),
                            Item('edit',
                                 enabled_when='name and name!="---" and can_edit',

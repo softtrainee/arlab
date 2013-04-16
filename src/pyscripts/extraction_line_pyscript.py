@@ -218,7 +218,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
         st = time.time()
         # set block=True to wait for pattern completion
-        self._manager_action([('execute_pattern', pattern, {'block':block})],
+        self._manager_action([('execute_pattern', (pattern,), {'block':block})],
                              name=self.extract_device,
                               protocol=ILaserManager)
 
@@ -231,7 +231,7 @@ class ExtractionLinePyScript(ValvePyScript):
             tray = self.tray
 
         self.info('set tray to {}'.format(tray))
-        result = self._manager_action([('set_stage_map', (tray), {})
+        result = self._manager_action([('set_stage_map', (tray,), {})
                                         ],
                                       protocol=ILaserManager,
                                       name=self.extract_device
