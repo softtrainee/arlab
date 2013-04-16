@@ -63,7 +63,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     extract_value_text = Property
     duration_text = Property
     cleanup_text = Property
-    labnumber_text=Property
+    labnumber_text = Property
 #    aliquot_text = Property
 
 
@@ -82,15 +82,18 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 #            color = '#66FF33'  # light green
 #        return color
     def _get_labnumber_text(self, trait, item):
-        ln=self.item.labnumber
-        if self.item.user_defined_aliquot:
-            ln=self.item.runid
+        it = self.item
+        ln = it.labnumber
+        if it.user_defined_aliquot:
+            ln = '{}-{}'.format(it.labnumber, it.aliquot)
         else:
             if self.item.step:
-                ln=self.item.runid
-                
+                ln = '{}-{}{}'.format(it.labnumber,
+                                    it.aliquot,
+                                    it.step)
+
         return ln
-            
+
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
 
@@ -120,6 +123,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
     def _columns_default(self):
         return self._columns_factory()
+
     def _columns_factory(self):
         cols = [
 #                ('', 'state'),
@@ -128,12 +132,12 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Sample', 'sample'),
                  ('Position', 'position'),
 #                 ('Autocenter', 'autocenter'),
-#                 ('Pattern', 'pattern'),
 #                 ('Overlap', 'overlap'),
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
                  ('Duration', 'duration'),
                  ('Cleanup', 'cleanup'),
+                 ('Pattern', 'pattern'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
                  ('Post Eq.', 'post_equilibration_script'),

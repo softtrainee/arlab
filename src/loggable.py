@@ -37,7 +37,7 @@ class Loggable(HasTraits):
 
     '''
     '''
-
+    application = Any
     logger = Any(transient=True)
     name = String
     logger_name = String

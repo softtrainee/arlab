@@ -86,7 +86,8 @@ class MassSpecExtractor(Extractor):
             positions = self.db.get_irradiation_positions(name, mli.Level)
             for ip in positions:
                 # is labnumber already in dest
-                if not dest.get_labnumber(ip.IrradPosition):
+                ln = dest.get_labnumber(ip.IrradPosition)
+                if not ln:
                     ln = dest.add_labnumber(ip.IrradPosition)
                     dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
 
@@ -95,7 +96,19 @@ class MassSpecExtractor(Extractor):
                     fl = dest.add_flux(ip.J, ip.JEr)
                     fh.flux = fl
 
-                    dest.flush()
+                self._add_sample_project(dest, dbpos)
+                dest.flush()
+
+    def _add_sample_project(self, dest, dbpos):
+
+        sample = dbpos.sample
+        project = sample.project
+        material = dbpos.Material
+
+        dest.add_sample(
+                        sample.Sample,
+                        material=material,
+                        project=project.Project)
 
     def _add_chronology(self, dest, name):
         chrons = self.db.get_chronology_by_irradname(name)

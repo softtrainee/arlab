@@ -95,6 +95,7 @@ class Paths():
     monitors_dir = None
     jog_dir = None
     pattern_dir = None
+    incremental_heat_template_dir = None
 
     bakeout_config_dir = None
     bakeout = None
@@ -203,11 +204,11 @@ class Paths():
         self.extraction_line_dir = join(setup_dir, 'extractionline')
         self.monitors_dir = join(setup_dir, 'monitors')
         self.pattern_dir = join(setup_dir, 'patterns')
+        self.incremental_heat_template_dir = join(setup_dir, 'incremental_heat_templates')
 
         self.bakeout_config_dir = join(setup_dir, 'bakeout_configurations')
         self.bakeout = join(device_dir, 'bakeout')
 
-        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
         self.block_dir = join(setup_dir, 'blocks')
         self.map_dir = map_dir = join(setup_dir, 'tray_maps')
         self.user_points_dir = join(map_dir, 'user_points')

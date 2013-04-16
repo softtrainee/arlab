@@ -91,6 +91,8 @@ class AnalysesTable(Base):
     ReferenceDetectorLabel = Column(String(40))
     RefDetID = Column(Integer)
 
+    PipettedIsotopes = Column(BLOB)
+
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
     araranalyses = relation('ArArAnalysisTable')
 #    araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
