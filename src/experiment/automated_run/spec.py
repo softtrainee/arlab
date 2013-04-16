@@ -166,7 +166,7 @@ class AutomatedRunSpec(Loggable):
             else:
                 try:
                     v = getattr(self, attrname)
-                except AttributeError, e:
+                except AttributeError:
                     v = ''
 
             return v

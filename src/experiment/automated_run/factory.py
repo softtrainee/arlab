@@ -49,12 +49,12 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     labnumbers = Property(depends_on='project, selected_level')
 
     project = Any
-    projects = Property
+    projects = Property(depends_on='db')
 
     selected_irradiation = Any
-    irradiations = Property
+    irradiations = Property(depends_on='db')
     selected_level = Any
-    levels = Property(depends_on='selected_irradiation')
+    levels = Property(depends_on='selected_irradiation, db')
 
     skip = Bool(False)
     weight = Float
@@ -118,11 +118,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         '''
             returns a list of runs even if its only one run
         '''
-        print self.template
         if self.template and self.template != NULL_STR:
             arvs = self._render_template()
         else:
-            arvs = self._new_runs(auto_increment)
+            arvs = self._new_runs()
 
         if auto_increment:
             if self.position:
@@ -334,7 +333,7 @@ post_equilibration_script:name
                 self._labnumber = NULL_STR
 
     def _aliquot_changed(self):
-        if self.aliquot != self.o_aliquot:
+        if self.aliquot != self.o_aliquot and self.o_aliquot:
             self.user_defined_aliquot = True
         else:
             self.user_defined_aliquot = False
@@ -389,25 +388,39 @@ post_equilibration_script:name
 #===============================================================================
     @cached_property
     def _get_irradiations(self):
-        keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
-        keys = [(NULL_STR, NULL_STR)] + keys
-        return dict(keys)
+#        return {'a':'1:xxx','g':'2:bbb',}
+        if self.db:
+            keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
+            keys=[(a, '{:02n}:{}'.format(i+1,b)) for i,(a,b) in enumerate(keys)]
+            keys = [(NULL_STR, '00:{}'.format(NULL_STR))] + keys
+            return dict(keys)
+        else:
+            return dict()
 
     @cached_property
     def _get_levels(self):
-        irrad = self.db.get_irradiation(self.selected_irradiation)
-        r = [(NULL_STR, NULL_STR)]
-        if irrad:
-            r.extend([(pi, pi.name) for pi in irrad.levels])
-
-        return dict(r)
-
+        if self.db:
+            irrad = self.db.get_irradiation(self.selected_irradiation)
+            r = [(NULL_STR, '00:{}'.format(NULL_STR))]
+            if irrad:
+                rr=sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
+                rr=[(a, '{:02n}:{}'.format(i+1,b)) for i,(a,b) in enumerate(rr)]
+                r.extend(rr)
+    
+            return dict(r)
+        else:
+            return dict()
+        
     @cached_property
     def _get_projects(self):
-        keys = [(pi, pi.name) for pi in self.db.get_projects()]
-        keys = [(NULL_STR, NULL_STR)] + keys
-        return dict(keys)
-
+        
+        if self.db:
+            keys = [(pi, pi.name) for pi in self.db.get_projects()]
+            keys = [(NULL_STR, NULL_STR)] + keys
+            return dict(keys)
+        else:
+            return dict()
+        
     @cached_property
     def _get_labnumbers(self):
         lns = []
@@ -476,7 +489,7 @@ post_equilibration_script:name
     @cached_property
     def _get_patterns(self):
         p = paths.pattern_dir
-        extension = '.lp'
+        extension = '.lp,.txt'
         return self._ls_directory(p, extension)
 
     @cached_property
@@ -487,11 +500,14 @@ post_equilibration_script:name
 
     def _ls_directory(self, p, extension):
         ps = [NULL_STR]
+        def test(path):
+            return any([path.endswith(ext) for ext in extension.split(',')])
+            
         if os.path.isdir(p):
             ds = os.listdir(p)
             if extension is not None:
                 ds = [pi for pi in ds
-                            if pi.endswith(extension)]
+                            if test(pi)]
             ds = [os.path.splitext(pi)[0] for pi in ds]
             ps += ds
 

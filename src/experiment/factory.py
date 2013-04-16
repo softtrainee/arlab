@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, Property, \
-    on_trait_change, String, Int
+    on_trait_change, String, Int, Any
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -28,13 +28,14 @@ from src.constants import NULL_STR
 from src.loggable import Loggable
 
 class ExperimentFactory(Loggable):
+    db=Any
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
     add_button = Button('add')
     auto_increment = Bool(True)
 
-    queue = Instance(ExperimentQueue)
+    queue = Instance(ExperimentQueue, ())
 
     ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
     ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
@@ -81,6 +82,15 @@ class ExperimentFactory(Loggable):
         if name == 'labnumber':
             self._labnumber = new
 
+#    @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
+#    def _update_queue_values(self, name, new):
+#        self.queue_factory.trait_set({name:new})
+#    
+#    def _queue_changed(self):
+#        for a in ('username','mass_spectrometer','extract_device','username', 
+#                  'delay_before_analyses','delay_between_analyses'
+#                  ):
+#            setattr(self.queue_factory, a, getattr(self.queue, a))
 #===============================================================================
 # private
 #===============================================================================

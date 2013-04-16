@@ -310,6 +310,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             if filters is not None:
                 for fi in filters:
                     q = q.filter(fi)
+                    
             if order is not None:
                 q = q.order_by(order)
 

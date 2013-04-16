@@ -353,6 +353,7 @@ class ExperimentExecutor(ExperimentManager):
 
         # save experiment to database
         self.info('saving experiment {} to database'.format(exp.name))
+        
         self.db.add_experiment(exp.name)
         self.db.flush()
 
@@ -756,7 +757,7 @@ class ExperimentExecutor(ExperimentManager):
                         show_labels=False),
                  statusbar='statusbar',
                  width=1150,
-                 height=750,
+                 height=800,
                  resizable=True,
                  title=self.title,
                  handler=self.handler_klass,

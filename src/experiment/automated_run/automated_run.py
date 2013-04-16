@@ -951,6 +951,7 @@ anaylsis_type={}
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
 
         spec = self.spectrometer_manager.spectrometer
+        ncounts=int(ncounts)
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1253,8 +1254,13 @@ anaylsis_type={}
                 db.add_deflection(meas, det, deflection)
 
     def _save_detector_intercalibration(self, analysis):
+        if self.arar_age:
+            ic=self.arar_age.ic_factor
+            
+        else:
+            ic=ArArAge().ic_factor
+            
         self.info('saving detector intercalibration')
-        ic=self.arar_age.ic_factor
         self.info('default ic_factor={}'.format(ic))
 
         db = self.db

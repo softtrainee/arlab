@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, DelegatesTo, Str, Int, \
-    Property, Event, on_trait_change, Bool
+    Property, Event, on_trait_change, Bool, String
 from traitsui.api import View, Item, VGroup, HGroup
 # from src.experiment.runs_table import RunsTable
 #============= standard library imports ========================
@@ -43,9 +43,9 @@ class BaseExperimentQueue(Loggable):
 
     cleaned_automated_runs = Property(depends_on='automated_runs[]')
 
-    mass_spectrometer = Str
-    extract_device = Str
-    username=Str
+    mass_spectrometer = String
+    extract_device = String
+    username=String
     tray = Str
     delay_before_analyses = Int
     delay_between_analyses = Int
@@ -68,8 +68,13 @@ class BaseExperimentQueue(Loggable):
         return True
 
     def add_runs(self, runviews):
-        self.automated_runs.extend(runviews)
-        self.update_needed = True
+        
+        self._suppress_aliquot_update=True
+        self.automated_runs.extend(runviews[:-1])
+            
+        self._suppress_aliquot_update=False
+        self.automated_runs.append(runviews[-1])
+#        self.update_needed = True
 
     def set_extract_device(self, ed):
         self.extract_device = ed
@@ -80,7 +85,12 @@ class BaseExperimentQueue(Loggable):
             klass = AutomatedRunsTable
 
         self.runs_table = klass()
+        
+        self._suppress_aliquot_update=True
         self.runs_table.set_runs(runs)
+        self._suppress_aliquot_update=False
+#        self.update_needed=True
+        
 #===============================================================================
 # persistence
 #===============================================================================
@@ -91,7 +101,9 @@ class BaseExperimentQueue(Loggable):
 
         aruns = self._load_runs(txt)
         if aruns:
+            self._suppress_aliquot_update=True
             self.automated_runs = aruns
+            self._suppress_aliquot_update=False
 
 #            lm = self.sample_map
 #            if lm:
@@ -124,8 +136,8 @@ class BaseExperimentQueue(Loggable):
         def isNotNull(vi):
             if vi and vi != NULL_STR:
                 try:
-                    vi = int(vi)
-                    return vi != 0
+                    vi = float(vi)
+                    return abs(vi)>1e-15
                 except ValueError:
                     return True
             else:
@@ -157,14 +169,14 @@ class BaseExperimentQueue(Loggable):
 
         default = lambda x: x if x else '---'
         default_int = lambda x: x if x is not None else 1
-
+        
         self._set_meta_param('tray', meta, default)
         self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)
         self._set_meta_param('delay_before_analyses', meta, default_int)
         self._set_meta_param('username', meta, default)
-
+        
         delim = '\t'
 
         header = map(str.strip, f.next().split(delim))
@@ -192,7 +204,7 @@ class BaseExperimentQueue(Loggable):
 #                params['db'] = self.db
 
                 arun = self._automated_run_factory(script_info, params)
-
+                
                 aruns.append(arun)
 
             except Exception, e:
@@ -241,33 +253,33 @@ class BaseExperimentQueue(Loggable):
 
     def _get_dump_attrs(self):
         header = ['labnumber',
-                  'pattern',
                   'position',
-                  'overlap',
-                  'e_group',
                   'e_value',
                   'e_units',
                   'duration',
                   'cleanup',
-                  'autocenter',
+                  'pattern',
+                  'e_group',
                   'extraction', 'measurement', 'post_eq', 'post_meas',
                   'dis_btw_pos',
-                  'weight', 'comment'
+                  'weight', 'comment',
+                  'overlap',
+                  'autocenter',
                   ]
         attrs = ['labnumber',
-                  'pattern',
                   'position',
-                  'overlap',
-                  'extract_group',
                   'extract_value',
                   'extract_units',
                   'duration',
                   'cleanup',
-                  'autocenter',
+                  'pattern',
+                  'extract_group',
                   'extraction_script', 'measurement_script',
                   'post_equilibration_script', 'post_measurement_script',
                   'disable_between_positions',
-                  'weight', 'comment'
+                  'weight', 'comment',
+                  'overlap',
+                  'autocenter',
                   ]
 
         if self.extract_device == 'Fusions UV':
@@ -324,6 +336,7 @@ tray: {}
 
     @on_trait_change('automated_runs[]')
     def _update_runs(self):
+        self.debug('automated runs increase {}'.format(len(self.automated_runs)))
         if not self._suppress_aliquot_update:
             self.update_needed = True
 #===============================================================================
