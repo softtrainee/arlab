@@ -92,7 +92,7 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     baseline_mass = Float
     baseline_before = Bool
     baseline_after = Bool
-    baseline_settling_time= Int(3)
+    baseline_settling_time = Int(3)
 
     #===========================================================================
     # peak center
@@ -122,7 +122,7 @@ class MeasurementPyScriptEditor(PyScriptEditor):
         baseline_grp = Group(
                              Item('baseline_before', label='Baselines at Start'),
                              Item('baseline_after', label='Baselines at End'),
-                             Item('baseline_ncounts', 
+                             Item('baseline_ncounts',
                                   tooltip='Number of baseline data points to collect',
                                   label='Counts'),
                              Item('baseline_detector', label='Detector'),
@@ -169,7 +169,7 @@ class MeasurementPyScriptEditor(PyScriptEditor):
                                  equilibration_grp),
                             spring,
                             ),
-                     
+
                      label='Parameters')
 
     def _parse(self):
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
     s = MeasurementPyScriptEditor()
 
-    p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown400_120.py')
+    p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown.py')
     s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================

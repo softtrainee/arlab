@@ -93,6 +93,8 @@ class ArArAge(HasTraits):
     moles_K39 = AgeProperty()
 
     ic_factor = Property
+    ic_factor_v = Float
+    ic_factor_e = Float
 
     arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
@@ -121,9 +123,10 @@ class ArArAge(HasTraits):
 
     #        bind_preference(self, 'abundance_sensitivity', 'pychron.spectrometer.abundance_sensitivity')
             bind_preference(self, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
-            bind_preference(self, 'ic_factor', 'pychron.experiment.constants.ic_factor')
-            
-            
+            bind_preference(self, 'ic_factor_v', 'pychron.experiment.constants.ic_factor')
+            bind_preference(self, 'ic_factor_e', 'pychron.experiment.constants.ic_factor_error')
+
+
         except AttributeError, e:
             self.debug(e)
 
@@ -424,12 +427,7 @@ class ArArAge(HasTraits):
 #    @cached_property
 #    def _get_abundance_sensitivity(self):
 #        return 3e-6
-    def _set_ic_factor(self, v):
-        if isinstance(v, (float, str, unicode, int)):
-            v=(float(v), 1e-20) 
-            
-        self._ic_factor=ufloat(v)
-        
+
     def _set_labnumber_record(self, v):
         self._labnumber_record = v
 
@@ -542,7 +540,7 @@ class ArArAge(HasTraits):
         return self.k39 * self.sensitivity * self.sensitivity_multiplier
 
     def _get_ic_factor(self):
-        return self._ic_factor
+        return ufloat((self.ic_factor_v, self.ic_factor_e))
 
     @cached_property
     def _get_Ar40_39(self):

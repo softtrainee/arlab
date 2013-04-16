@@ -39,8 +39,8 @@ class AutomatedRunSpec(Loggable):
     #===========================================================================
     mass_spectrometer = Str
     extract_device = Str
-    username=Str
-    
+    username = Str
+
     #===========================================================================
     # run id
     #===========================================================================
@@ -67,7 +67,7 @@ class AutomatedRunSpec(Loggable):
     position = Str
     duration = Float
     cleanup = Float
-
+    pattern = Str
     #===========================================================================
     # info
     #===========================================================================
@@ -177,9 +177,10 @@ class AutomatedRunSpec(Loggable):
         return ('labnumber', 'aliquot', 'step',
                    'extract_value', 'extract_units',
                    'position', 'duration', 'cleanup',
+                   'pattern',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
-                   'sample', 'irradiation','username'
+                   'sample', 'irradiation', 'username',
                    )
 #===============================================================================
 # property get/set
@@ -195,9 +196,12 @@ class AutomatedRunSpec(Loggable):
         return get_analysis_type(self.labnumber)
 
     def _set_step(self, v):
-        v = v.upper()
-        if v in ALPHAS:
-            self._step = list(ALPHAS).index(v) + 1
+        if isinstance(v, str):
+            v = v.upper()
+            if v in ALPHAS:
+                self._step = list(ALPHAS).index(v) + 1
+        else:
+            self._step = v
 
     def _get_step(self):
         if self._step == 0:

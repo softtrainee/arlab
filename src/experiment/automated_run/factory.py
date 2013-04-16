@@ -16,8 +16,10 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
-     Float, Instance, Int, List, cached_property, on_trait_change, Bool
-from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring
+     Float, Instance, Int, List, cached_property, on_trait_change, Bool, Button, \
+     Event
+from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring, \
+    UItem, ButtonEditor
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -30,9 +32,11 @@ from src.regex import TRANSECT_REGEX, POSITION_REGEX
 from src.experiment.utilities.script_mixin import ScriptMixin
 from src.paths import paths
 from src.experiment.script.script import Script
+from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
+from src.viewable import Viewable
 
 
-class AutomatedRunFactory(Loggable, ScriptMixin):
+class AutomatedRunFactory(Viewable, ScriptMixin):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
@@ -47,11 +51,11 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     project = Any
     projects = Property
 
-    selected_irradiation=Any
-    irradiations=Property
-    selected_level=Any
-    levels=Property(depends_on='selected_irradiation')
-    
+    selected_irradiation = Any
+    irradiations = Property
+    selected_level = Any
+    levels = Property(depends_on='selected_irradiation')
+
     skip = Bool(False)
     weight = Float
     comment = Str
@@ -74,6 +78,11 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     pattern = Str
     patterns = Property
 
+    template = String
+    templates = Property
+#    edit_template = Button('edit')
+    edit_template = Event
+    edit_template_label = Property(depends_on='template')
     #===========================================================================
     # readonly
     #===========================================================================
@@ -84,7 +93,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
     #===========================================================================
     _selected_runs = None
     _spec_klass = AutomatedRunSpec
-
+    _extract_group_cnt = 1
 
     def load_from_run(self, run):
         self._clone_run(run)
@@ -109,6 +118,66 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
         '''
             returns a list of runs even if its only one run
         '''
+        print self.template
+        if self.template and self.template != NULL_STR:
+            arvs = self._render_template()
+        else:
+            arvs = self._new_runs(auto_increment)
+
+        if auto_increment:
+            if self.position:
+                s = int(self.position)
+                e = int(self.endposition)
+                self.position = str(e + 1)
+                if self.endposition:
+                    self.endposition = 2 * e + 1 - s
+            self.labnumber = self._increment(self.labnumber)
+
+        return arvs
+
+    def set_mass_spectrometer(self, new):
+        new = new.lower()
+        self.mass_spectrometer = new
+        for s in SCRIPT_NAMES:
+            sc = getattr(self, s)
+            sc.mass_spectrometer = new
+
+    def set_extract_device(self, new):
+        new = new.lower()
+        self.extract_device = new
+        for s in SCRIPT_KEYS:
+            s = getattr(self, '{}_script'.format(s))
+            s.extract_device = new
+
+#===============================================================================
+# private
+#===============================================================================
+    def _new_template(self):
+        template = IncrementalHeatTemplate()
+        if self.template and self.template != NULL_STR:
+            template.load(os.path.join(paths.incremental_heat_template_dir,
+                                       '{}.txt'.format(self.template)
+                                       )
+                          )
+        return template
+
+    def _render_template(self):
+        arvs = []
+        template = self._new_template()
+
+        for st in template.steps:
+            if st.is_ok:
+                arv = self._new_run(extract_group=self._extract_group_cnt,
+                                    step=st.step_id
+                                    )
+                arv.trait_set(**st.make_dict())
+                arvs.append(arv)
+
+        self._extract_group_cnt += 1
+
+        return arvs
+
+    def _new_runs(self):
         s = 0
         e = 0
         if self.position:
@@ -132,37 +201,12 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
             else:
                 arvs = [self._new_run(position=str(s))]
-                self.position=self._increment(self.position)
+                self.position = self._increment(self.position)
         else:
             arvs = [self._new_run()]
 
-        if auto_increment:
-
-            if self.position:
-                self.position = str(e + 1)
-            if self.endposition:
-                self.endposition = 2 * e + 1 - s
-            self.labnumber = self._increment(self.labnumber)
-
         return arvs
 
-    def set_mass_spectrometer(self, new):
-        new = new.lower()
-        self.mass_spectrometer = new
-        for s in SCRIPT_NAMES:
-            sc = getattr(self, s)
-            sc.mass_spectrometer = new
-
-    def set_extract_device(self, new):
-        new = new.lower()
-        self.extract_device = new
-        for s in SCRIPT_KEYS:
-            s = getattr(self, '{}_script'.format(s))
-            s.extract_device = new
-
-#===============================================================================
-# private
-#===============================================================================
     def _increment(self, m):
         try:
             m = str(int(m) + 1)
@@ -191,6 +235,7 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
+                     'pattern',
                      'weight', 'comment',
                      'sample', 'irradiation',
                      'skip', 'mass_spectrometer'
@@ -220,7 +265,9 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
             excludes = []
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
-                     'weight', 'comment'):
+                     'pattern',
+                     'weight', 'comment',
+                     ):
             if attr in excludes:
                 continue
             setattr(self, attr, getattr(run, attr))
@@ -242,7 +289,10 @@ class AutomatedRunFactory(Loggable, ScriptMixin):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('cleanup, duration, extract_value, extract_units, position')
+    @on_trait_change('''cleanup, duration, extract_value,
+extract_units,
+pattern,
+position''')
     def _edit_handler(self, name, new):
         if self._selected_runs:
             for si in self._selected_runs:
@@ -268,13 +318,13 @@ post_equilibration_script:name
 
     def _selected_irradiation_changed(self):
         self._clear_labnumber()
-            
+
     def _selected_level_changed(self):
         self._clear_labnumber()
 
     def _clear_labnumber(self):
-        self.labnumber=''
-        self._labnumber=NULL_STR
+        self.labnumber = ''
+        self._labnumber = NULL_STR
 
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
@@ -329,35 +379,40 @@ post_equilibration_script:name
                 self._load_default_scripts(key=labnumber)
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+
+    def _edit_template_fired(self):
+        temp = self._new_template()
+        self.open_view(temp)
+
 #===============================================================================
 # property get/set
 #===============================================================================
     @cached_property
     def _get_irradiations(self):
-        keys=[(pi, pi.name) for pi in self.db.get_irradiations()]
-        keys=[(NULL_STR, NULL_STR)]+keys
+        keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
+        keys = [(NULL_STR, NULL_STR)] + keys
         return dict(keys)
-    
+
     @cached_property
     def _get_levels(self):
         irrad = self.db.get_irradiation(self.selected_irradiation)
-        r=[(NULL_STR, NULL_STR)]
+        r = [(NULL_STR, NULL_STR)]
         if irrad:
             r.extend([(pi, pi.name) for pi in irrad.levels])
-            
+
         return dict(r)
-        
+
     @cached_property
     def _get_projects(self):
-        keys=[(pi, pi.name) for pi in self.db.get_projects()]
-        keys=[(NULL_STR, NULL_STR)]+keys
+        keys = [(pi, pi.name) for pi in self.db.get_projects()]
+        keys = [(NULL_STR, NULL_STR)] + keys
         return dict(keys)
 
     @cached_property
     def _get_labnumbers(self):
         lns = []
-        if self.selected_level:
-            lns=[str(pi.labnumber.labnumber) 
+        if self.selected_level and self.selected_level != NULL_STR:
+            lns = [str(pi.labnumber.labnumber)
                     for pi in self.selected_level.positions]
         if self.project:
             lns = [str(ln.labnumber)
@@ -415,17 +470,33 @@ post_equilibration_script:name
         else:
             self.extract_units = NULL_STR
 
+    def _get_edit_template_label(self):
+        return 'Edit' if self.template and self.template != NULL_STR else 'New'
+
     @cached_property
     def _get_patterns(self):
         p = paths.pattern_dir
-        patterns = [NULL_STR]
         extension = '.lp'
-        if os.path.isdir(p):
-            ps = os.listdir(p)
-            if extension is not None:
-                patterns += [os.path.splitext(pi)[0] for pi in ps if pi.endswith(extension)]
+        return self._ls_directory(p, extension)
 
-        return patterns
+    @cached_property
+    def _get_templates(self):
+        p = paths.incremental_heat_template_dir
+        extension = '.txt'
+        return self._ls_directory(p, extension)
+
+    def _ls_directory(self, p, extension):
+        ps = [NULL_STR]
+        if os.path.isdir(p):
+            ds = os.listdir(p)
+            if extension is not None:
+                ds = [pi for pi in ds
+                            if pi.endswith(extension)]
+            ds = [os.path.splitext(pi)[0] for pi in ds]
+            ps += ds
+
+        return ps
+
 #===============================================================================
 # groups
 #===============================================================================
@@ -435,8 +506,12 @@ post_equilibration_script:name
                        tooltip='Select a project to constrain the labnumbers'
                        ),
                    HGroup(
-                          Item('selected_irradiation',editor=EnumEditor(name='irradiations')),
-                          Item('selected_level',editor=EnumEditor(name='levels')),
+                          Item('selected_irradiation',
+                               label='Irradiation',
+                               editor=EnumEditor(name='irradiations')),
+                          Item('selected_level',
+                               label='Level',
+                               editor=EnumEditor(name='levels')),
                           ),
                    Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
                        tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
@@ -508,9 +583,13 @@ post_equilibration_script:name
                                     Item('extract_value', label='Extract',
                                          tooltip='Set the extract value in extract units'
                                          ),
+                                    UItem('extract_units',
+                                         editor=EnumEditor(name='extract_units_names')),
                                     spring,
-                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-                                    show_label=False),
+                                    UItem('template', editor=EnumEditor(name='templates')),
+                                    UItem('edit_template',
+                                          editor=ButtonEditor(label_value='edit_template_label')
+                                          ),
                                     ),
                              Item('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'

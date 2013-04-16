@@ -38,8 +38,8 @@ class ExperimentFactory(Loggable):
 
     ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
     ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
-    
-    _username=String
+
+    _username = String
     _mass_spectrometer = String
     _extract_device = String
     _labnumber = String
@@ -70,10 +70,10 @@ class ExperimentFactory(Loggable):
 
         elif name == 'extract_device':
             self._set_extract_device(new)
-        elif name=='username':
-            self._username=new
-            self.queue.username=new
-            
+        elif name == 'username':
+            self._username = new
+            self.queue.username = new
+
         self.queue.trait_set(**{name:new})
 
     @on_trait_change('run_factory:[labnumber]')

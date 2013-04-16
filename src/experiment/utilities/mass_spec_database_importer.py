@@ -255,6 +255,8 @@ class MassSpecDatabaseImporter(Loggable):
         else:
             runtype = 'Unknown'
 
+        pipetted_isotopes = self._make_pipetted_isotopes(runtype)
+
         #=======================================================================
         # add analysis
         #=======================================================================
@@ -295,6 +297,7 @@ class MassSpecDatabaseImporter(Loggable):
                                    TotDurHeatingAtReqPwr=spec.duration_at_request,
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
+                                   PipettedIsotopes=pipetted_isotopes,
                                    )
 
         analysis.RefDetID = refdbdet.DetectorID
@@ -315,7 +318,7 @@ class MassSpecDatabaseImporter(Loggable):
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-        from src.simple_timeit import timethis
+#        from src.simple_timeit import timethis
         for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
 
             #===================================================================
@@ -331,7 +334,7 @@ class MassSpecDatabaseImporter(Loggable):
             else:
                 dbdet = db.add_detector(det, Label=det)
                 db.flush()
-#            print det, analysis.ReferenceDetectorLabel
+
             db_iso = db.add_isotope(analysis, dbdet, isok)
 
             #===================================================================
@@ -342,8 +345,6 @@ class MassSpecDatabaseImporter(Loggable):
             label = '{} Baseline'.format(det.upper())
             ncnts = len(tb)
             db_baseline = db.add_baseline(blob, label, ncnts, db_iso)
-
-#            baseline = baseline_dict[isok]
 
             sem = baseline.std_dev() / (ncnts) ** 0.5
             infoblob = self._make_infoblob(baseline.nominal_value, sem)
@@ -373,8 +374,6 @@ class MassSpecDatabaseImporter(Loggable):
             blob2 = [struct.pack('>f', float(v)) for v in vb]
             db.add_peaktimeblob(blob1, blob2, db_iso)
 
-#            intercept = signal_dict[isok]
-#            fit = signal_fits[isok]
             # in mass spec the intercept is alreay baseline corrected
             # mass spec also doesnt propograte baseline errors
 
@@ -382,24 +381,28 @@ class MassSpecDatabaseImporter(Loggable):
                 ublank = signal - baseline
 
             db.add_isotope_result(db_iso, self.data_reduction_session_id,
-#                                      ufloat((i, ierr)),
                                   signal,
                                   baseline,
-#                                      ufloat((baseline, baseline_err)),
                                   ublank,
                                   sfit,
                                   dbdet,
                                   )
 
-
-#        if not DEBUG:
-#            db.commit()
         if commit:
             self.debug('commit')
             db.commit()
 
         t = time.time() - gst
         self.debug('{} added analysis time {}s'.format(spec.record_id, t))
+
+    def _make_pipetted_isotopes(self, runtype):
+        blob = ''
+        if runtype == 'Air':
+            isos = []
+            for a in ('Ar40', 'Ar38', 'Ar36'):
+                isos.append('{}\t{}'.format(a, 1.0))
+            blob = '\n'.join(isos)
+        return blob
 
     def _build_timeblob(self, t, v):
         '''
