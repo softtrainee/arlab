@@ -74,7 +74,7 @@ class AnalysisSummary(Summary):
             self._make_keyword(name, value, True if i == n - 1 else False)
 
         # add j
-        j, je = record.j
+        j, je = record.j.nominal_value, record.j.std_dev()
         self._make_keyword('J', '{} {}{}'.format(j, PLUSMINUS, self.make_error(j, je)),
                            new_line=True)
 
