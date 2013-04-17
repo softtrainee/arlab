@@ -253,7 +253,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             records = self.selected
 
         if records is not None:
-            self._open_individual(records[0])
+            if isinstance(records,(list, tuple)):
+                records=records[0]
+            self._open_individual(records)
 
     def _open_individual(self, si):
         si = self._record_factory(si)
