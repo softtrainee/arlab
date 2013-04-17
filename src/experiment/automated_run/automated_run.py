@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, Str, Int, CInt, List, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
-     ReadOnly
+     String
 from pyface.timer.api import do_after
 #============= standard library imports ========================
 import os
@@ -112,7 +112,7 @@ class AutomatedRun(Loggable):
     sample = Str
     irradiation = Str
 
-    state = Str
+    state = String
     extract_group = CInt
     extract_value = Float
     extract_units = Str(NULL_STR)
@@ -1258,7 +1258,7 @@ anaylsis_type={}
             ic=self.arar_age.ic_factor
             
         else:
-            ic=ArArAge().ic_factor
+            ic=ArArAge(application=self.application).ic_factor
             
         self.info('saving detector intercalibration')
         self.info('default ic_factor={}'.format(ic))

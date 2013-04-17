@@ -20,6 +20,7 @@ from traits.api import HasTraits, Dict, Property, cached_property, \
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
+import copy
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
 from src.constants import AGE_SCALARS
@@ -92,7 +93,7 @@ class ArArAge(HasTraits):
     moles_Ar40 = AgeProperty()
     moles_K39 = AgeProperty()
 
-    ic_factor = Property
+    ic_factor = Property(depends_on='ic_factor_v, ic_factor_e')
     ic_factor_v = Float
     ic_factor_e = Float
 
@@ -246,9 +247,10 @@ class ArArAge(HasTraits):
         blsignals = self._make_signals(kind='blank')
         bksignals = self._make_signals(kind='background')
 
-        j = self.j
+        j = copy.copy(self.j)
         if not include_j_error:
-            j = j[0], 0
+            j.set_std_dev(0)
+#            j = j[0], 0
 
         irrad = self.irradiation_info
         if not include_irradiation_error:
@@ -447,7 +449,7 @@ class ArArAge(HasTraits):
         except AttributeError:
             pass
 
-        return (s, e)
+        return ufloat((s, e))
 
     @cached_property
     def _get_rad40(self):

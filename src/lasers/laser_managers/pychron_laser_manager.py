@@ -158,7 +158,9 @@ class PychronLaserManager(BaseLaserManager):
 #            if is local pattern then txt is a binary str
 #            log msg instead of cmd
 #        '''
-
+        if not name.endswith('.lp'):
+            name='{}.lp'.format(name)
+            
         cmd = 'DoPattern {}'.format(name)
         self._ask(cmd, verbose=False)
 #        self._communicator.info(msg)
@@ -166,6 +168,7 @@ class PychronLaserManager(BaseLaserManager):
         time.sleep(0.5)
 
         if not self._block('IsPatterning',
+                           period=1
 #                           position_callback=pm.set_current_position
                            ):
             cmd = 'AbortPattern'
@@ -275,7 +278,7 @@ class PychronLaserManager(BaseLaserManager):
         self.update_position()
         return r
 
-    def _block(self, cmd='GetDriveMoving', position_callback=None):
+    def _block(self, cmd='GetDriveMoving', period=0.25, position_callback=None):
 
         ask = self._ask
 
@@ -284,7 +287,7 @@ class PychronLaserManager(BaseLaserManager):
         maxtries = 200  # timeout after 50 s
         nsuccess = 4
         self._cancel_blocking = False
-        period = 0.25
+#        period = 0.25
         while tries < maxtries and cnt < nsuccess:
             if self._cancel_blocking:
                 break
