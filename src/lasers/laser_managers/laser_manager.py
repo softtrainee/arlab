@@ -110,7 +110,7 @@ class BaseLaserManager(Manager):
 
     def _pattern_executor_default(self):
         controller = None
-        if self.stage_manager:
+        if hasattr(self,'stage_manager'):
             controller = self.stage_manager.stage_controller
 
         pm = PatternExecutor(application=self.application, controller=controller)

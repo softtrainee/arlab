@@ -87,11 +87,11 @@ class PatternExecutor(Patternable):
         return pattern
 
     def is_local_pattern(self, name):
-        pname = name
-        if not name.endswith('.lp'):
-            pname = name + '.lp'
+#        pname = name
+#        if not name.endswith('.lp'):
+#            pname = name + '.lp'
 
-        path = os.path.join(paths.pattern_dir, pname)
+        path = os.path.join(paths.pattern_dir, name)
         if os.path.isfile(path):
             return path
 
@@ -151,6 +151,7 @@ class PatternExecutor(Patternable):
 
             self.controller.linear_move(pat.cx, pat.cy)
             self.pattern.close_ui()
+            self.finish()
             self.info('finished pattern')
 
     def _execute_iteration(self):
