@@ -29,8 +29,8 @@ class AutomatedRunSpec(Loggable):
         this class is used to as a simple container and factory for 
         an AutomatedRun. the AutomatedRun does the actual work. ie extraction and measurement
     '''
-    state = Property(depends_on='_state')
-    _state = Enum('not run', 'extraction',
+#    state = Property(depends_on='_state')
+    state = Enum('not run', 'extraction',
                  'measurement', 'success', 'fail', 'truncate')
     skip = Bool(False)
 
@@ -145,6 +145,8 @@ class AutomatedRunSpec(Loggable):
             self.uuid = str(uuid.uuid4())
             arun.uuid = self.uuid
 
+        #bind to the runs state
+        arun.on_trait_change(self._update_state, 'state')
         return arun
 
     def load(self, script_info, params):
@@ -182,15 +184,22 @@ class AutomatedRunSpec(Loggable):
                    'analysis_type',
                    'sample', 'irradiation', 'username',
                    )
+        
+#===============================================================================
+# handlers
+#===============================================================================
+    def _update_state(self,new):
+        self.state=new
+            
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_state(self):
-        return self._state
-
-    def _set_state(self, s):
-        if self._state != 'truncate':
-            self._state = s
+#    def _get_state(self):
+#        return self._state
+#
+#    def _set_state(self, s):
+#        if self._state != 'truncate':
+#            self._state = s
 
     def _get_analysis_type(self):
         return get_analysis_type(self.labnumber)

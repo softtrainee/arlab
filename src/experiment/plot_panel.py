@@ -198,12 +198,15 @@ class PlotPanel(Viewable):
             # loads all the other attrs
             age = arar_age.age
 
-            j = ufloat(arar_age.j)
+            j = arar_age.j
             rad40 = arar_age.rad40_percent
             kca = arar_age.kca
             kcl = arar_age.kcl
+            ic=arar_age.ic_factor
+            
             self._print_parameter(display, 'Age', age)
             self._print_parameter(display, 'J', j, sig_figs=(5, 6))
+            self._print_parameter(display, 'ICFactor', ic)
             self._print_parameter(display, '% rad40', rad40)
             self._print_parameter(display, 'K/Ca', kca)
             self._print_parameter(display, 'K/Cl', kcl)

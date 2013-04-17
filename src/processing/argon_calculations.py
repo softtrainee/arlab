@@ -146,8 +146,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3839 = ufloat(k3839)
     cl3638 = ufloat(cl3638)
     k3739 = ufloat(k3739)
-    ic = ufloat(ic)
-    j = ufloat(j)
+    ic = to_ufloat(ic)
+    j = to_ufloat(j)
 #    temp_ic = ufloat(ic)
 
 #===============================================================================

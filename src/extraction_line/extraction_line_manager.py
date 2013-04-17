@@ -295,9 +295,9 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             self.valve_manager.show_valve_properties(name)
 
-    def get_software_lock(self, name):
+    def get_software_lock(self, name, **kw):
         if self.valve_manager is not None:
-            return self.valve_manager.get_software_lock(name)
+            return self.valve_manager.get_software_lock(name, **kw)
 
     def set_software_lock(self, name, lock):
         if self.valve_manager is not None:
