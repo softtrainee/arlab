@@ -205,6 +205,10 @@ class PlotPanel(Viewable):
             ic=arar_age.ic_factor
             
             self._print_parameter(display, 'Age', age)
+            
+            
+            self._get_pee(age, error=arar_age.age_error_wo_j)
+            self.add_text(display, '{:<20s} Error w/o J {}{}'.format())            
             self._print_parameter(display, 'J', j, sig_figs=(5, 6))
             self._print_parameter(display, 'ICFactor', ic)
             self._print_parameter(display, '% rad40', rad40)
@@ -329,12 +333,16 @@ class PlotPanel(Viewable):
         ts = [func(iso) for iso in self.isotopes]
         self.add_text(display, '\n'.join(ts))
 
-    def _get_pee(self, uv):
+    def _get_pee(self, uv, error=None):
         if uv is not None:
             vv = uv.nominal_value
             ee = uv.std_dev()
         else:
             vv, ee = 0, 0
+            
+        if error is not None:
+            ee=error
+            
         try:
             pee = abs(ee / vv * 100)
         except ZeroDivisionError:

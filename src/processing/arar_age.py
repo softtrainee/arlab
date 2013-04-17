@@ -77,6 +77,7 @@ class ArArAge(HasTraits):
 
     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
     age_error = AgeProperty()
+    age_error_wo_j = AgeProperty()
     age_dirty = Event
 
     Ar40 = AgeProperty()
@@ -92,6 +93,7 @@ class ArArAge(HasTraits):
 
     moles_Ar40 = AgeProperty()
     moles_K39 = AgeProperty()
+    
 
     ic_factor = Property(depends_on='ic_factor_v, ic_factor_e')
     ic_factor_v = Float
@@ -343,6 +345,10 @@ class ArArAge(HasTraits):
     @cached_property
     def _get_age_error(self):
         return self.age.std_dev()
+    
+    @cached_property
+    def _get_age_error_wo_j(self):
+        return self.arar_result['age_err_wo_jerr']
 
     @cached_property
     def _get_timestamp(self):

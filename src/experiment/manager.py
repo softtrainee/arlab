@@ -229,7 +229,7 @@ can_edit_scripts= {}
 
     def save_experiment_queues(self):
         if self._validate_experiment_queues():
-            self._dump_experiment_queues(self.experiment_set.path)
+            self._dump_experiment_queues(self.experiment_queue.path)
             self.save_enabled = False
 
     def _validate_experiment_queues(self):
