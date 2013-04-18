@@ -38,7 +38,7 @@ from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabas
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.utilities.identifier import convert_identifier
+from src.experiment.utilities.identifier import convert_identifier, make_runid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
@@ -1674,7 +1674,8 @@ anaylsis_type={}
 
     @property
     def runid(self):
-        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+#        return #'{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+        return make_runid(self.labnumber, self.aliquot, self.step)
 
 #    @property
 #    def _get_executable(self):

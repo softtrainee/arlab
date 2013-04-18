@@ -20,6 +20,7 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
 from src.paths import paths
+from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
 # def get_name(func):
 #    def _get_name(obj, trait, item):
@@ -89,9 +90,10 @@ class AutomatedRunSpecAdapter(TabularAdapter):
             ln = '{}-{}'.format(it.labnumber, it.aliquot)
         else:
             if self.item.step:
-                ln = '{}-{}{}'.format(it.labnumber,
+                ln = make_runid(it.labnumber,
                                     it.aliquot,
                                     it.step)
+
 
         return ln
 

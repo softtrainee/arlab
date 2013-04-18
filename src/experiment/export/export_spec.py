@@ -19,6 +19,7 @@ from traits.api import HasTraits, CStr, Str, CInt, Int, Dict, Tuple, List, Float
     TraitError
 from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
+from src.experiment.utilities.identifier import make_runid
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -111,6 +112,7 @@ class ExportSpec(Loggable):
 
     @property
     def record_id(self):
-        return '{}-{}{}'.format(self.rid, self.aliquot, self.step)
+        return make_runid(self.rid, self.aliquot, self.step)
+#        return '{}-{}{}'.format(self.rid, self.aliquot, self.step)
 
 #============= EOF =============================================

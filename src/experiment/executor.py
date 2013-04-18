@@ -490,6 +490,19 @@ class ExperimentExecutor(ExperimentManager):
             convert the an AutomatedRunSpec an AutomatedRun
         '''
 
+        '''
+            check the secondary database for this labnumber 
+            get last aliquot
+        '''
+        if self.massspec_importer:
+            db = self.massspec_importer.db
+            lan = db.get_lastest_analysis(arv.labnumber)
+            if lan is not None:
+                if lan.aliquot > arv.aliquot:
+                    arv.aliquot = lan.aliquot
+                    self.message('{} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.aliquot))
+
+
         arun = arv.make_run()
         exp = self.experiment_queue
         exp.current_run = arun

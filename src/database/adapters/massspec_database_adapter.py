@@ -96,15 +96,30 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_login_session(self, value):
         return self._retrieve_item(LoginSessionTable, value, key='LoginSessionID')
 
+    def get_lastest_analysis(self, labnumber):
+        '''
+            return the analysis with the greatest aliquot with this labnumber
+        '''
+        sess = self.get_session()
+        q = sess.query(AnalysesTable)
+        q = q.filter_by(AnalysesTable.IrradPosition == labnumber)
+        q = q.order_by(AnalysesTable.Aliquot.asc())
+        q = q.limit(1)
+        a = q.one()
+        return a
+
     def get_analysis(self, value, aliquot=None, step=None):
-        key = 'RID'
+#        key = 'RID'
+        key = 'IrradPosition'
         if aliquot:
             if step:
-                value = ('{}-{}{}'.format(value, aliquot, step), aliquot, step)
-                key = ('RID', 'Aliquot', 'Increment')
+#                value = ('{}-{}{}'.format(value, aliquot, step), aliquot, step)
+                key = (key, 'Aliquot', 'Increment')
+                value = (value, aliquot, step)
             else:
-                key = ('RID', 'Aliquot')
-                value = ('{}-{}'.format(value, aliquot), aliquot)
+                key = (key, 'Aliquot')
+                value = (value, aliquot)
+#                value = ('{}-{}'.format(value, aliquot), aliquot)
 
         return self._retrieve_item(AnalysesTable, value,
                                    key=key)
@@ -220,7 +235,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
-        params = dict(RID='{}-{}{}'.format(rid, aliquot, step),
+        params = dict(RID=make_runid(rid, aliquot, step),
+#                    '{}-{}{}'.format(rid, aliquot, step),
                      Aliquot=aliquot,
                      RunDateTime=func.current_timestamp(),
                      LoginSessionID=1,
