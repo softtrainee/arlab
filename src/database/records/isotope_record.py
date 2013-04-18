@@ -31,7 +31,8 @@ from src.graph.regression_graph import StackedRegressionGraph
 from src.graph.stacked_graph import StackedGraph
 from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
-from src.experiment.utilities.identifier import convert_shortname, convert_labnumber
+from src.experiment.utilities.identifier import convert_shortname, convert_labnumber, \
+    make_runid
 from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.deprecate import deprecated
@@ -98,7 +99,7 @@ class IsotopeRecordView(HasTraits):
                 self.analysis_type = meas.analysis_type.name
 
             self.uuid = dbrecord.uuid
-            self.record_id = '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+            self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
             return True
         except Exception, e:
             print e
@@ -816,7 +817,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_record_id(self):
-        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+        return make_runid(self.labnumber, self.aliquot, self.step)
+#        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
     @cached_property
     def _get_labnumber_record(self):
@@ -836,7 +838,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             ln = self._dbrecord.labnumber.labnumber
             ln = convert_shortname(ln)
 
-            ln = '{}-{}{}'.format(ln, self.aliquot, self.step)
+            ln = make_runid(ln, self.aliquot, self.step)
+#            ln = '{}-{}{}'.format(ln, self.aliquot, self.step)
             return ln
 
     @cached_property

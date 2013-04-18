@@ -131,4 +131,8 @@ def get_analysis_type(idn):
     else:
         return 'unknown'
 
+def make_runid(ln, a, s):
+    return '{}-{:02n}{}'.format(ln, a, s)
+
+
 #============= EOF =============================================
