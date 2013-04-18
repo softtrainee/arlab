@@ -122,17 +122,30 @@ def logging_setup(name, **kw):
 #        global rhandler
         rhandler = logging.handlers.RotatingFileHandler(
               logpath, maxBytes=1e7, backupCount=5)
-#
-#        for hi in [shandler, rhandler]:
+
         for hi in [shandler, rhandler]:
             hi.setLevel(gLEVEL)
             hi.setFormatter(logging.Formatter(gFORMAT))
             root.addHandler(hi)
 
-#        main_logger.setLevel(logging.NOTSET)
-#        add_console(name='main')
-#        new_logger('main')
+#    new_logger('main')
 
+
+
+def new_logger(name):
+    name = '{:<{}}'.format(name, NAME_WIDTH)
+    if name.strip() == 'main':
+        l = logging.getLogger()
+    else:
+        l = logging.getLogger(name)
+#    l = logging.getLogger(name)
+    l.setLevel(gLEVEL)
+
+    return l
+#    '''
+#    '''
+#    return l
+#============================== EOF ===================================
 
 # MAXLEN = 30
 # def add_console(logger=None, name=None,
@@ -186,17 +199,3 @@ def logging_setup(name, **kw):
 #                logger.addHandler(h)
 
 #    return logger
-
-def new_logger(name):
-    name = '{:<{}}'.format(name, NAME_WIDTH)
-    if name.strip() == 'main':
-        l = logging.getLogger()
-    else:
-        l = logging.getLogger(name)
-#    l = logging.getLogger(name)
-    l.setLevel(gLEVEL)
-
-    return l
-#    '''
-#    '''
-#    return l

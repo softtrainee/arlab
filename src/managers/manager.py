@@ -174,8 +174,8 @@ class Manager(Viewable, RPCable):
 #    def close(self, is_ok):
 # #        print self.name, 'close', is_ok
 #        return True
-    def close(self, *args, **kw):
-        return True
+#    def close(self, *args, **kw):
+#        return True
 
     def _kill_hook(self):
         pass
@@ -196,7 +196,7 @@ class Manager(Viewable, RPCable):
                     if hasattr(man, 'kill'):
                         man.kill()
 
-        return not self._killed
+#        return not self._killed
 
 #    def warning_dialog(self, msg):
 #        '''
