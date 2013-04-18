@@ -95,7 +95,7 @@ class SelectorManager(SearchManager):
             selector.load_records(rs.analyses, load=False)
             self.selected_records = selector.records
 
-    def opened(self):
+    def opened(self, ui):
         self.selected_view.load_previous_selections()
 
     def close(self, isok):

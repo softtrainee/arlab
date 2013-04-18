@@ -32,7 +32,7 @@ class ViewableHandler(Handler):
 #        info.object.ui = info.ui
         info.object.initialized = True
 #        try:
-        info.object.opened()
+        info.object.opened(info.ui)
 #        except AttributeError:
 #            pass
 
@@ -70,7 +70,7 @@ class Viewable(Loggable):
     raised = Event
     initialized = Bool
 
-    def opened(self):
+    def opened(self, ui):
         pass
 
     def close(self, ok):

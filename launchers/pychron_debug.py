@@ -1,12 +1,12 @@
 #===============================================================================
 # Copyright 2012 Jake Ross
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,8 +29,8 @@ from helpers import build_version
 '''
 build_version(version_id, set_path=True)
 
-#PYC = os.path.join(merc, 'pychron_source.zip')
-#sys.path.insert(0, PYC)
+# PYC = os.path.join(merc, 'pychron_source.zip')
+# sys.path.insert(0, PYC)
 
 def main():
     '''
@@ -55,7 +55,7 @@ def main():
 
 #===============================================================================
 # test flag
-# set if you want to execute tests after startup    
+# set if you want to execute tests after startup
 # explicitly set the flag here once. mode is a readonly property
 #===============================================================================
     from globals import globalv
@@ -65,13 +65,13 @@ def main():
     os._exit(0)
 
 
-#def profile_code():
+# def profile_code():
 #    '''
 #    '''
 #
 #    import cProfile
-##    app_path = '/Users/Ross/Programming/pychron_beta/application_launch.py'
-##    l = open(app_path, 'r')
+# #    app_path = '/Users/Ross/Programming/pychron_beta/application_launch.py'
+# #    l = open(app_path, 'r')
 #    cProfile.run('main()', 'profile.out')
 #    import pstats
 #    p = pstats.Stats('profile.out')
@@ -81,7 +81,7 @@ def main():
 #    p.print_stats(1000)
 #
 #    os._exit(0)
-##    sys.exit()
+# #    sys.exit()
 if __name__ == '__main__':
     main()
 #============= EOF =============================================

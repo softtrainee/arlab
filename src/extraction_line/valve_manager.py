@@ -414,7 +414,7 @@ class ValveManager(Manager):
 
     def get_software_lock(self, name, description=None, **kw):
         if description:
-            v=self.get_valve_by_description(description)
+            v = self.get_valve_by_description(description)
         else:
             v = self.get_valve_by_name(name)
 

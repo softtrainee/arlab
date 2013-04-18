@@ -45,6 +45,7 @@ from chaco.data_label import DataLabel
 from src.loggable import Loggable
 from src.graph.context_menu_mixin import ContextMenuMixin
 from chaco.plot_graphics_context import PlotGraphicsContext
+from src.viewable import Viewable
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
@@ -71,15 +72,15 @@ def fmt(data):
     return ['%0.8f' % d for d in data]
 
 
-class GraphHandler(Handler):
-    def init(self, info):
-        info.object.ui = info.ui
+# class GraphHandler(Handler):
+#    def init(self, info):
+#        info.object.ui = info.ui
+#
+#    def closed(self, info, isok):
+#        info.object.closed()
 
-    def closed(self, info, isok):
-        info.object.closed()
 
-
-class Graph(Loggable, ContextMenuMixin):
+class Graph(Viewable, ContextMenuMixin):
     ''' 
     '''
     name = Str
@@ -1435,8 +1436,7 @@ class Graph(Loggable, ContextMenuMixin):
                  height=self.window_height,
                  x=self.window_x,
                  y=self.window_y,
-                 handler=GraphHandler,
-#                 statusbar = 'status_text',
+                 handler=self.handler_klass
                  )
 
         if self.view_identifier:

@@ -130,7 +130,7 @@ class SeriesManager(Viewable):
             self.dump()
         return True
 
-    def opened(self):
+    def opened(self, ui):
         self.load()
 
 #===============================================================================

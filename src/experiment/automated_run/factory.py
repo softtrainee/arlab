@@ -19,14 +19,13 @@ from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
      Float, Instance, Int, List, cached_property, on_trait_change, Bool, Button, \
      Event
 from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring, \
-    UItem, ButtonEditor
+    UItem, ButtonEditor, Label
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.loggable import Loggable
 from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
-    convert_identifier, convert_special_name
+    convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.regex import TRANSECT_REGEX, POSITION_REGEX
 from src.experiment.utilities.script_mixin import ScriptMixin
@@ -78,22 +77,37 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     pattern = Str
     patterns = Property
 
+    #===========================================================================
+    # templates
+    #===========================================================================
     template = String
     templates = Property
 #    edit_template = Button('edit')
     edit_template = Event
     edit_template_label = Property(depends_on='template')
     #===========================================================================
+    # frequency
+    #===========================================================================
+    frequency = Int
+
+    #===========================================================================
     # readonly
     #===========================================================================
     sample = Str
     irradiation = Str
+
     #===========================================================================
     # private
     #===========================================================================
     _selected_runs = None
     _spec_klass = AutomatedRunSpec
     _extract_group_cnt = 1
+
+#    frequencyable = Property(depends_on='labnumber')
+    extractable = Property(depends_on='labnumber')
+
+    def use_frequency(self):
+        return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
     def load_from_run(self, run):
         self._clone_run(run)
@@ -116,12 +130,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def new_runs(self, auto_increment=False):
         '''
-            returns a list of runs even if its only one run
+            returns a list of runs even if its only one run 
+                    also returns self.frequency if using special labnumber else None
         '''
         if self.template and self.template != NULL_STR:
             arvs = self._render_template()
         else:
             arvs = self._new_runs()
+
+        freq = self.frequency if self.labnumber in ANALYSIS_MAPPING else None
 
         if auto_increment:
             if self.position:
@@ -132,7 +149,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                     self.endposition = 2 * e + 1 - s
             self.labnumber = self._increment(self.labnumber)
 
-        return arvs
+
+        return arvs, freq
 
     def set_mass_spectrometer(self, new):
         new = new.lower()
@@ -179,7 +197,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     def _new_runs(self):
         s = 0
         e = 0
-        if self.position:
+
+        special = self.labnumber in ANALYSIS_MAPPING
+        if self.position and not special:
             s = int(self.position)
             e = int(self.endposition)
             if e:
@@ -199,10 +219,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                     self.user_defined_aliquot = False
 
             else:
-                arvs = [self._new_run(position=str(s))]
+                arvs = [self._new_run(position=str(s), special=special)]
                 self.position = self._increment(self.position)
         else:
-            arvs = [self._new_run()]
+            arvs = [self._new_run(special=special)]
 
         return arvs
 
@@ -223,9 +243,13 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             il = '{}{}'.format(irrad.name, level.name)
         return il
 
-    def _new_run(self, **kw):
+    def _new_run(self, special=False, **kw):
         arv = self._spec_klass(**kw)
-        self._set_run_values(arv)
+        ex = ('extract_value', 'extract_units', 'pattern') if special else None
+        if self.labnumber in ('ba', 'bg', 'bc', 'a', 'c'):
+            ex += ('position',)
+
+        self._set_run_values(arv, excludes=ex)
         return arv
 
     def _set_run_values(self, arv, excludes=None):
@@ -265,6 +289,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'pattern',
+                     'position',
                      'weight', 'comment',
                      ):
             if attr in excludes:
@@ -331,6 +356,9 @@ post_equilibration_script:name
             if ln:
                 self.labnumber = ln
                 self._labnumber = NULL_STR
+            self._frequency_enabled = True
+        else:
+            self._frequency_enabled = False
 
     def _aliquot_changed(self):
         if self.aliquot != self.o_aliquot and self.o_aliquot:
@@ -338,7 +366,7 @@ post_equilibration_script:name
         else:
             self.user_defined_aliquot = False
 
-    def _labnumber_changed(self):
+    def _labnumber_changed(self, old, new):
         if self.labnumber != NULL_STR:
             if not self.labnumber in SPECIAL_MAPPING.values():
                 self.special_labnumber = NULL_STR
@@ -371,11 +399,22 @@ post_equilibration_script:name
                     self.debug('Lanbumer changed IndexError:{}'.format(e))
                     a = 1
                 self.aliquot = a
-#                self.trait_set(aliquot=a, trait_change_notify=False)
 
                 self.irradiation = self._make_irrad_level(ln)
-                # set default scripts
-                self._load_default_scripts(key=labnumber)
+
+                '''
+                    load default steps if 
+                        1. labnumber is special
+                        2. labnumber was a special and now unknown
+                        
+                    dont load if was unknown and now unknown
+                    this preserves the users changes 
+                '''
+                if new in ANALYSIS_MAPPING or \
+                    old in ANALYSIS_MAPPING or not old and new:
+                    # set default scripts
+                    self._load_default_scripts(key=labnumber)
+
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
@@ -386,6 +425,9 @@ post_equilibration_script:name
 #===============================================================================
 # property get/set
 #===============================================================================
+    def _get_extractable(self):
+        return not self.labnumber in NON_EXTRACTABLE
+
     @cached_property
     def _get_irradiations(self):
 #        return {'a':'1:xxx','g':'2:bbb',}
@@ -516,6 +558,10 @@ post_equilibration_script:name
 #===============================================================================
 # groups
 #===============================================================================
+    def _frequency_group(self):
+        grp = Group(Item('frequency'))
+        return grp
+
     def _get_info_group(self):
         grp = Group(
                    Item('project', editor=EnumEditor(name='projects'),
@@ -529,15 +575,18 @@ post_equilibration_script:name
                                label='Level',
                                editor=EnumEditor(name='levels')),
                           ),
-                   Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
-                       tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
-                       ),
+
+                   HGroup(Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
+                               tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
+                               ),
+                          Item('frequency')
+                          ),
                    HGroup(Item('labnumber',
                               tooltip='Enter a Labnumber'
                               ),
                           Item('_labnumber', show_label=False,
                               editor=EnumEditor(name='labnumbers'),
-                              width=75,
+                              width=100,
                               tooltip='Select a Labnumber from the selected Project'
                               ),
                          ),
@@ -598,11 +647,13 @@ post_equilibration_script:name
         extract_grp = VGroup(
                              HGroup(sspring(width=33),
                                     Item('extract_value', label='Extract',
-                                         tooltip='Set the extract value in extract units'
+                                         tooltip='Set the extract value in extract units',
+                                         enabled_when='extractable'
                                          ),
                                     UItem('extract_units',
                                          editor=EnumEditor(name='extract_units_names')),
                                     spring,
+                                    Label('Step Heat Template'),
                                     UItem('template', editor=EnumEditor(name='templates')),
                                     UItem('edit_template',
                                           editor=ButtonEditor(label_value='edit_template_label')

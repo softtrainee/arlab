@@ -84,6 +84,7 @@ class AutomatedRunSpec(Loggable):
     run_klass = AutomatedRun
 
     executable = Bool(True)
+    frequency_added = False
 
     _estimated_duration = 0
 
@@ -145,7 +146,7 @@ class AutomatedRunSpec(Loggable):
             self.uuid = str(uuid.uuid4())
             arun.uuid = self.uuid
 
-        #bind to the runs state
+        # bind to the runs state
         arun.on_trait_change(self._update_state, 'state')
         return arun
 
@@ -182,15 +183,15 @@ class AutomatedRunSpec(Loggable):
                    'pattern',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
-                   'sample', 'irradiation', 'username','comment'
+                   'sample', 'irradiation', 'username', 'comment'
                    )
-        
+
 #===============================================================================
 # handlers
 #===============================================================================
-    def _update_state(self,new):
-        self.state=new
-            
+    def _update_state(self, new):
+        self.state = new
+
 #===============================================================================
 # property get/set
 #===============================================================================

@@ -138,13 +138,29 @@ class ExperimentExecutor(ExperimentManager):
     def experiment_blob(self):
         return '{}\n{}'.format(self.experiment_queue.path, self._text)
 
-    def opened(self):
-#        self.info_display.clear()
+    def opened(self, ui):
+        self.info_display.clear()
         self.end_at_run_completion = False
         self._was_executed = False
         self.stats.reset()
         self.statusbar = ''
         super(ExperimentExecutor, self).opened()
+
+    def add_backup(self, uuid_str):
+#        p = os.path.join(paths.hidden_dir, 'backup_recovery')
+        with open(paths.backup_recovery_file, 'a') as fp:
+            fp.write('{}\n'.format(uuid_str))
+
+    def remove_backup(self, uuid_str):
+#        p = os.path.join(paths.hidden_dir, 'backup_recovery')
+
+        with open(paths.backup_recovery_file, 'r') as fp:
+            r = fp.read()
+
+        r = r.replace(uuid_str, '')
+        with open(paths.backup_recovery_file, 'w') as fp:
+            fp.write(r)
+
 
     def _get_all_automated_runs(self):
         ans = super(ExperimentExecutor, self)._get_all_automated_runs()
@@ -353,7 +369,7 @@ class ExperimentExecutor(ExperimentManager):
 
         # save experiment to database
         self.info('saving experiment {} to database'.format(exp.name))
-        
+
         self.db.add_experiment(exp.name)
         self.db.flush()
 
@@ -479,7 +495,13 @@ class ExperimentExecutor(ExperimentManager):
         exp.current_run = arun
         self.debug('setup run {} of {}'.format(i, exp.name))
         self.debug('%%%%%%%%%%%%%%% Comment= {} %%%%%%%%%%%%%'.format(arun.comment))
-            
+
+        '''
+            save this runs uuid to a hidden file
+            used for analysis recovery
+        '''
+        self.add_backup(arun.uuid)
+
 #        arun.index = i
         arun.experiment_name = exp.path
         arun.experiment_manager = self

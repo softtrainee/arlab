@@ -115,7 +115,7 @@ class ScanManager(Manager):
 
             self.trait_set(isotope=iso, trait_change_notify=False)
 
-    def opened(self):
+    def opened(self, ui):
 
         self.graph = self._graph_factory()
 

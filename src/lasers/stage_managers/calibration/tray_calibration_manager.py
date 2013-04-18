@@ -122,8 +122,8 @@ class TrayCalibrationManager(Manager):
                 self.style = calobj.style
             except AttributeError:
                 self.debug('calibration file is an older incompatible version')
-                return 
-            
+                return
+
             self.canvas.calibration_item = calobj
             # force style change update
             self._style_changed()

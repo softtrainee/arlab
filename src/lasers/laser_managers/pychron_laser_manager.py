@@ -96,7 +96,7 @@ class PychronLaserManager(BaseLaserManager):
             self.connected = True
         return r
 
-    def opened(self):
+    def opened(self, ui):
         self.update_position()
         self._opened_hook()
 
@@ -159,8 +159,8 @@ class PychronLaserManager(BaseLaserManager):
 #            log msg instead of cmd
 #        '''
         if not name.endswith('.lp'):
-            name='{}.lp'.format(name)
-            
+            name = '{}.lp'.format(name)
+
         cmd = 'DoPattern {}'.format(name)
         self._ask(cmd, verbose=False)
 #        self._communicator.info(msg)
@@ -222,8 +222,8 @@ class PychronLaserManager(BaseLaserManager):
     def extract(self, value, units=''):
         self.info('set laser output')
         return self._ask('SetLaserOutput {} {}'.format(value, units)) == 'OK'
-    
-    
+
+
     def enable_laser(self, *args, **kw):
         self.info('enabling laser')
         return self._ask('Enable') == 'OK'
