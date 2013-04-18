@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List
+from traits.api import List, Instance
 from envisage.ui.workbench.api import WorkbenchApplication
 from pyface.api import AboutDialog, SplashScreen
 from pyface.image_resource import ImageResource
@@ -24,16 +24,17 @@ import copy
 #============= local library imports  ==========================
 from src.loggable import Loggable
 import os
-# from kiva.fonttools.font import Font
+
 
 class Pychron(WorkbenchApplication, Loggable):
-# class Pychron(TasksApplication):
     '''
     '''
-    id = 'pychron.uv'
-    name = 'pyUV'
+    id = 'pychron.experiment'
+    name = 'pyExperiment'
 
     uis = List
+
+
     def _about_dialog_default(self):
         '''
         '''
@@ -49,8 +50,8 @@ class Pychron(WorkbenchApplication, Loggable):
     def _splash_screen_default(self):
         from src.paths import paths
         p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        paths.app_resources=p
-        
+        paths.app_resources = p
+
         sp = SplashScreen(
                           image=ImageResource(name='splash{}.png'.format(paths.version),
                                               search_path=[p, paths.splashes]

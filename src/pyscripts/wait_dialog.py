@@ -101,7 +101,8 @@ class WaitDialog(Viewable):
 
         self._end()
         try:
-            self.ui.dispose()
+            self.disposed = True
+#            self.ui.dispose()
         except Exception, e:
             pass
 #

@@ -391,7 +391,7 @@ post_equilibration_script:name
 #        return {'a':'1:xxx','g':'2:bbb',}
         if self.db:
             keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
-            keys=[(a, '{:02n}:{}'.format(i+1,b)) for i,(a,b) in enumerate(keys)]
+            keys = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(keys)]
             keys = [(NULL_STR, '00:{}'.format(NULL_STR))] + keys
             return dict(keys)
         else:
@@ -403,24 +403,24 @@ post_equilibration_script:name
             irrad = self.db.get_irradiation(self.selected_irradiation)
             r = [(NULL_STR, '00:{}'.format(NULL_STR))]
             if irrad:
-                rr=sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
-                rr=[(a, '{:02n}:{}'.format(i+1,b)) for i,(a,b) in enumerate(rr)]
+                rr = sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
+                rr = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(rr)]
                 r.extend(rr)
-    
+
             return dict(r)
         else:
             return dict()
-        
+
     @cached_property
     def _get_projects(self):
-        
+
         if self.db:
             keys = [(pi, pi.name) for pi in self.db.get_projects()]
             keys = [(NULL_STR, NULL_STR)] + keys
             return dict(keys)
         else:
             return dict()
-        
+
     @cached_property
     def _get_labnumbers(self):
         lns = []
@@ -502,7 +502,7 @@ post_equilibration_script:name
         ps = [NULL_STR]
         def test(path):
             return any([path.endswith(ext) for ext in extension.split(',')])
-            
+
         if os.path.isdir(p):
             ds = os.listdir(p)
             if extension is not None:

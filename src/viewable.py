@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Either, Int, Float, Any, Str, List, Event
+from traits.api import HasTraits, Either, Int, Float, Any, Str, List, Event, \
+    Bool
 from traitsui.api import View, Item, TableEditor, Controller
 from traitsui.api import Handler
 from pyface.timer.do_later import do_after
@@ -28,11 +29,18 @@ from src.loggable import Loggable
 # class ViewableHandler(Controller):
 class ViewableHandler(Handler):
     def init(self, info):
-        info.object.ui = info.ui
+#        info.object.ui = info.ui
+        info.object.initialized = True
         try:
             info.object.opened()
         except AttributeError:
             pass
+
+    def object__disposed_fired(self, info):
+        info.ui.dispose()
+
+    def object__raised_fired(self, info):
+        info.ui.control.Raise()
 
     def close(self, info, is_ok):
         return info.object.close(is_ok)
@@ -40,7 +48,8 @@ class ViewableHandler(Handler):
     def closed(self, info, is_ok):
         info.object.closed(is_ok)
         info.object.close_event = True
-        info.object.ui = None
+        info.object.initialized = False
+#        info.object.ui = None
 
 class Viewable(Loggable):
     ui = Any
@@ -55,7 +64,11 @@ class Viewable(Loggable):
 
     title = Str
     associated_windows = List
+
     close_event = Event
+    disposed = Event
+    raised = Event
+    initialized = Bool
 
     def opened(self):
         pass
@@ -70,20 +83,23 @@ class Viewable(Loggable):
         return True
 
     def close_ui(self):
-        if self.ui is not None:
-            # disposes 50 ms from now
-            do_after(50, self.ui.dispose)
-            # sleep a little so everything has time to update
-            # time.sleep(0.05)
+        self.disposed = True
+#        if self.ui is not None:
+#            # disposes 50 ms from now
+#            do_after(50, self.ui.dispose)
+#            # sleep a little so everything has time to update
+#            # time.sleep(0.05)
 
     def show(self, **kw):
-        if self.ui is None or self.ui.control is None:
+        if not self.initialized:
+#        if self.ui is None or self.ui.control is None:
             func = lambda:do_after(10, self.edit_traits, **kw)
         else:
-            func = lambda:do_after(10, self.ui.control.Raise)
+#            func = lambda:do_after(10, self.ui.control.Raise)
+            func = lambda:do_after(10, self.trait_set(raised=True))
 
         func()
-    
+
     def add_window(self, ui):
 
         try:

@@ -44,13 +44,13 @@ from globals import globalv
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):
         if info.initialized:
-            if info.object.experiment_set is not None:
+            if info.object.experiment_queue is not None:
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
     def object_path_changed(self, info):
         if info.initialized:
-            if info.object.experiment_set is not None:
+            if info.object.experiment_queue is not None:
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
@@ -152,13 +152,13 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         self.bind_preferences()
 
     def verify_credentials(self, inform=True):
-        #disable for now
-        #change to enter credentials
-        self.can_edit_scripts=True
-        self.max_allowable_runs=10000
+        # disable for now
+        # change to enter credentials
+        self.can_edit_scripts = True
+        self.max_allowable_runs = 10000
         return True
-        
-        
+
+
         if globalv.experiment_debug:
             return True
 
@@ -569,7 +569,8 @@ can_edit_scripts= {}
 
                 do_later(func)
                 self._load_experiment_queue_hook()
-                self.save_enabled=True
+                self.save_enabled = True
+
                 return True
 
     def _load_experiment_queue_hook(self):
