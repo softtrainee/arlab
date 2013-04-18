@@ -36,12 +36,12 @@ class ViewableHandler(Handler):
 #        except AttributeError:
 #            pass
 
-    def object__disposed_changed(self, info):
+    def object_disposed_changed(self, info):
         if info.initialized:
             if info.ui:
                 info.ui.dispose()
         
-    def object__raised_changed(self, info):
+    def object_raised_changed(self, info):
         if info.initialized:
             if info.ui:
                 info.ui.control.Raise()

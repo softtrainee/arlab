@@ -371,7 +371,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
         while s:
             if self._cancel:
-                break
+                break            
             self._sleep(1)
             s = r.isSet()
 

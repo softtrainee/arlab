@@ -149,6 +149,7 @@ class ArArAge(HasTraits):
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
+            self.isotopes[iso]=niso
         else:
             niso = self.isotopes[iso]
 
@@ -278,6 +279,7 @@ class ArArAge(HasTraits):
                                     include_decay_error=include_decay_error,
                                     arar_constants=self.arar_constants
                                     )
+        
 
         if result:
             self.arar_result = result
@@ -289,11 +291,13 @@ class ArArAge(HasTraits):
 #            return age, err
     def _make_signals(self, kind=None):
         isos = self.isotopes
+#        print isos
         def func(k):
             if kind is None:
                 tag = k
             else:
                 tag = '{}_{}'.format(k, kind)
+            
             if k in isos:
                 iso = self.isotopes[k]
                 if kind:
@@ -361,7 +365,7 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_age_error_wo_j(self):
-        return self.arar_result['age_err_wo_jerr'] / self.age_scalar
+        return float(self.arar_result['age_err_wo_jerr'] / self.age_scalar)
 
     @cached_property
     def _get_timestamp(self):
@@ -480,8 +484,10 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_rad40_percent(self):
-        if self.Ar40:
+        try:
             return self.rad40 / self.Ar40 * 100
+        except ZeroDivisionError:
+            return ufloat(0,1e-20)
 #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
     @cached_property
@@ -589,6 +595,8 @@ class ArArAge(HasTraits):
             key = key[2:]
 
         arar_attr = 's{}'.format(key)
+        
+#        print self.arar_result
         if self.arar_result.has_key(arar_attr):
             return self.arar_result[arar_attr]
         else:

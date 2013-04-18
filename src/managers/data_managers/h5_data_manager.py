@@ -178,7 +178,7 @@ class H5DataManager(DataManager):
             traceback.print_exc()
             return True
 
-    def close(self):
+    def close_file(self):
         try:
             self._frame.close()
         except Exception, e:
@@ -186,7 +186,7 @@ class H5DataManager(DataManager):
 
 
     def kill(self):
-        self.close()
+        self.close_file()
 #        for table in f.walkNodes('/', 'Table'):
 
 #    def add_table(self, table, table_style='Timestamp', parent='root'):

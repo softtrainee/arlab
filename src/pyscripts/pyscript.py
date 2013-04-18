@@ -275,7 +275,7 @@ class PyScript(Loggable):
                 self.parent_script.cancel()
 
         if self._wait_dialog:
-            self._wait_dialog.close()
+            self._wait_dialog.stop()
 
         self._cancel_hook()
 
@@ -628,8 +628,9 @@ class PyScript(Loggable):
                                 )
 
             do_later(wd.edit_traits)
-            evt.wait(timeout=timeout + 1)
-            do_later(wd.close)
+            evt.wait(timeout=timeout + 0.25)
+            do_later(wd.stop)
+            
             if wd._canceled:
                 self.cancel()
             elif wd._continued:

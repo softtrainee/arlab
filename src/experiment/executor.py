@@ -59,7 +59,7 @@ class ExperimentExecutor(ExperimentManager):
     pyscript_runner = Instance(PyScriptRunner)
     data_manager = Instance(H5DataManager, ())
 
-    current_run = Instance(AutomatedRun)
+#    current_run = Instance(AutomatedRun)
 
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
@@ -231,11 +231,10 @@ class ExperimentExecutor(ExperimentManager):
             if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
                                      title='Confirm Cancel'
                                      ):
-                self._alive = False
-                arun = self.current_run
-#                arun = self.experiment_queue.current_run
+                arun = self.experiment_queue.current_run
                 if arun:
                     arun.cancel()
+                self._alive = False
         else:
             if self._was_executed:
                 self.load_experiment_queue(self.experiment_queue.path)
@@ -320,7 +319,6 @@ class ExperimentExecutor(ExperimentManager):
         #check the first aliquot before delaying
         arv=exp.cleaned_automated_runs[0]
         self._check_run_aliquot(arv)
-        return
     
         # delay before starting
         delay = exp.delay_before_analyses
@@ -583,6 +581,7 @@ class ExperimentExecutor(ExperimentManager):
         aruns = self.experiment_queue.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types and not a.skip), None)
+        
         if fa:
             ind, an = fa
             if ind == 0:
@@ -593,7 +592,8 @@ class ExperimentExecutor(ExperimentManager):
                     return
             else:
                 pa = aruns[ind - 1]
-                if not pa.analysis_type in btypes:
+#                print pa, pa.analysis_type, btypes
+                if not pa.analysis_type in btypes or pa.skip:
                     if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
                         if not self._get_blank(an.analysis_type):
                             return

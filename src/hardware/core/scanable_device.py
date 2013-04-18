@@ -226,7 +226,7 @@ class ScanableDevice(ViewableDevice):
                         self.data_manager.delete_frame()
 
         if self.data_manager:
-            self.data_manager.close()
+            self.data_manager.close_file()
         self._auto_started = False
         self.info('Scan stopped')
 

@@ -303,7 +303,7 @@ class LaserManager(BaseLaserManager):
 
     def close(self, ok):
         self.pulse.dump_pulse()
-        return super(LaserManager, self).close(self)
+        return super(LaserManager, self).close(self, ok)
 
     def set_laser_monitor_duration(self, d):
         '''

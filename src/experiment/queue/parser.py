@@ -73,6 +73,7 @@ class RunParser(Loggable):
         if ALIQUOT_REGEX.match(ln):
             ln, a = ln.split('-')
             params['aliquot'] = int(a)
+            params['user_defined_aliquot']=True
 
         params['labnumber'] = ln
 

@@ -242,7 +242,7 @@ class FusionsLaserManager(LaserManager):
             else:
                 self.data_manager.delete_frame()
 
-            self.data_manager.close()
+            self.data_manager.close_file()
 
             self.set_zoom(self._previous_zoom)
             '''
