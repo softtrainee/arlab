@@ -201,13 +201,7 @@ class ExtractionLineManager(Manager):
     def isMonitoringValveState(self):
         return self._monitoring_valve_status
 #        return self._update_status_flag.isSet()
-#    def _view_controller(self):
-#        print self.ui.control
-#        self.view_controller.edit_traits(kind = 'livemodal',
-#                                      parent = self.ui.control)
 
-#    def show_device_streamer(self):
-#        self.device_stream_manager.edit_traits(parent=self.window.control)
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
         bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
