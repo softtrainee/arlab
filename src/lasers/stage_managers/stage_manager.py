@@ -140,6 +140,7 @@ class StageManager(Manager):
 
     def opened(self, ui):
         self.keyboard_focus = True
+        super(StageManager,self).opened(ui)
 
     def get_video_database(self):
         from src.database.adapters.video_adapter import VideoAdapter

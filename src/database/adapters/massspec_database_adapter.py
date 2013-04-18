@@ -35,6 +35,7 @@ from sqlalchemy.sql.expression import func, distinct
 
 from src.database.selectors.massspec_selector import MassSpecSelector
 import binascii
+from src.experiment.utilities.identifier import make_runid
 
 
 class MassSpecDatabaseAdapter(DatabaseAdapter):
@@ -96,16 +97,24 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_login_session(self, value):
         return self._retrieve_item(LoginSessionTable, value, key='LoginSessionID')
 
-    def get_lastest_analysis(self, labnumber):
+    def get_lastest_analysis_aliquot(self, labnumber):
         '''
             return the analysis with the greatest aliquot with this labnumber
         '''
         sess = self.get_session()
-        q = sess.query(AnalysesTable)
-        q = q.filter_by(AnalysesTable.IrradPosition == labnumber)
-        q = q.order_by(AnalysesTable.Aliquot.asc())
+        q = sess.query(AnalysesTable.Aliquot)
+        q = q.filter(AnalysesTable.IrradPosition == labnumber)
+        q = q.order_by(AnalysesTable.Aliquot.desc())
         q = q.limit(1)
-        a = q.one()
+        try:
+            a = q.one()
+        
+            if a:
+                a=int(a[0])
+        except Exception,e:
+            self.debug(e)
+            a=None
+            
         return a
 
     def get_analysis(self, value, aliquot=None, step=None):

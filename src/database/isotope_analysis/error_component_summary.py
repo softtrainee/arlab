@@ -23,7 +23,7 @@ class ErrorComponentSummary(Summary):
     def _build_summary(self, *args, **kw):
         record = self.record
 
-        keys = record.isotope_keys
+        keys = record.isotope_keys[:]
         keys += ('j', 'ic_factor')
         vs = []
         mx = -1e20
