@@ -951,7 +951,7 @@ anaylsis_type={}
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
 
         spec = self.spectrometer_manager.spectrometer
-        ncounts=int(ncounts)
+        ncounts = int(ncounts)
         for i in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(i, ncounts, check_conditions)
             if ck == 'break':
@@ -1042,9 +1042,13 @@ anaylsis_type={}
         self.info('post measurement save')
 
         cp = self.data_manager.get_current_path()
-
         # close h5 file
         self.data_manager.close()
+
+        # do preliminary processing of data
+        # returns signals dict and peak_center table
+        ss, pc = self._preliminary_processing(cp)
+        self._processed_signals_dict = ss
 
         ln = self.labnumber
         ln = convert_identifier(ln)
@@ -1062,18 +1066,18 @@ anaylsis_type={}
 
         # save to a database
         db = self.db
-        if db:
+        if db and db.connect(force=True):
             lab = db.get_labnumber(ln)
             experiment = db.get_experiment(self.experiment_name)
 
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
-            
-            dbuser=db.get_user(self.username)
+
+            dbuser = db.get_user(self.username)
             if dbuser is None:
                 self.debug('user= {} does not existing. adding to database now'.format(self.username))
-                dbuser=db.add_user(self.username)
-            
+                dbuser = db.add_user(self.username)
+
             a = db.add_analysis(lab,
                                 user=dbuser,
                                 uuid=self.uuid,
@@ -1097,10 +1101,6 @@ anaylsis_type={}
 
             self._save_spectrometer_info(meas)
 
-            # do preliminary processing of data
-            # returns signals dict and peak_center table
-            ss, pc = self._preliminary_processing(cp)
-            self._processed_signals_dict = ss
             # add selected history
 
             db.add_selected_histories(a)
@@ -1108,7 +1108,7 @@ anaylsis_type={}
 
             # save ic factor
             self._save_detector_intercalibration(a)
-            
+
             # save blanks
             self._save_blank_info(a)
 
@@ -1118,8 +1118,10 @@ anaylsis_type={}
             # save monitor
             self._save_monitor_info(a)
 
-            if globalv.experiment_savedb:
-                db.commit()
+            db.commit()
+
+            # tell the executor to remove this run from backup run recovery
+            self.experiment_manager.remove_backup(self.uuid)
 
         # save to massspec
         self._save_to_massspec()
@@ -1255,11 +1257,11 @@ anaylsis_type={}
 
     def _save_detector_intercalibration(self, analysis):
         if self.arar_age:
-            ic=self.arar_age.ic_factor
-            
+            ic = self.arar_age.ic_factor
+
         else:
-            ic=ArArAge(application=self.application).ic_factor
-            
+            ic = ArArAge(application=self.application).ic_factor
+
         self.info('saving detector intercalibration')
         self.info('default ic_factor={}'.format(ic))
 
@@ -1267,7 +1269,7 @@ anaylsis_type={}
         user = self.username
         user = user if user else NULL_STR
 
-        name='detector_intercalibration'
+        name = 'detector_intercalibration'
         funchist = getattr(db, 'add_{}_history'.format(name))
         self.info('{} adding {} history for {}-{}'.format(user, name, analysis.labnumber.labnumber, analysis.aliquot))
         history = funchist(analysis, user=user)
@@ -1275,9 +1277,9 @@ anaylsis_type={}
         setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
 
         func = getattr(db, 'add_{}'.format(name))
-        uv,ue=ic.nominal_value, ic.std_dev
+        uv, ue = ic.nominal_value, ic.std_dev
         func(history, 'CDD', user_value=uv, user_error=ue)
-        
+
     def _save_blank_info(self, analysis):
         self.info('saving blank info')
         self._save_history_info(analysis, 'blanks')

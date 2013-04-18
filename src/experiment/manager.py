@@ -269,9 +269,6 @@ can_edit_scripts= {}
     def stop_file_listener(self):
         self.filelistener.stop()
 
-    def opened(self):
-        self.info_display.clear()
-
     def close(self, isok):
         if self.filelistener:
             self.filelistener.stop()

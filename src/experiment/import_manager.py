@@ -42,7 +42,7 @@ class MassSpecExtractor(Extractor):
     dbconn_spec = Instance(DBConnectionSpec, ())
     connect_button = Button('Connect')
     db = Instance(MassSpecDatabaseAdapter, ())
-    
+
     def _dbconn_spec_default(self):
         return DBConnectionSpec(database='massspecdata',
                                 username='massspec',
@@ -102,10 +102,10 @@ class MassSpecExtractor(Extractor):
                     ln.selected_flux_history = fh
                     fl = dest.add_flux(ip.J, ip.JEr)
                     fh.flux = fl
-                    
+
 #                    dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
-                sample=self._add_sample_project(dest, ip)
-                ln.sample=sample
+                sample = self._add_sample_project(dest, ip)
+                ln.sample = sample
                 dest.flush()
 
     def _add_sample_project(self, dest, dbpos):

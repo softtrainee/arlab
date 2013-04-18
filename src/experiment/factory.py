@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, Property, \
     on_trait_change, String, Int, Any
-from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom
+from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
@@ -28,11 +28,12 @@ from src.constants import NULL_STR
 from src.loggable import Loggable
 
 class ExperimentFactory(Loggable):
-    db=Any
+    db = Any
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
     add_button = Button('add')
+    clear_button = Button('clear')
     auto_increment = Bool(True)
 
     queue = Instance(ExperimentQueue, ())
@@ -54,9 +55,12 @@ class ExperimentFactory(Loggable):
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
 
+    def _clear_button_fired(self):
+        self.queue.clear_frequency_runs()
+
     def _add_button_fired(self):
-        new_runs = self.run_factory.new_runs(auto_increment=self.auto_increment)
-        self.queue.add_runs(new_runs)
+        new_runs, freq = self.run_factory.new_runs(auto_increment=self.auto_increment)
+        self.queue.add_runs(new_runs, freq)
 
         tol = self.max_allowable_runs
         n = len(self.queue.automated_runs)
@@ -85,9 +89,9 @@ class ExperimentFactory(Loggable):
 #    @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
 #    def _update_queue_values(self, name, new):
 #        self.queue_factory.trait_set({name:new})
-#    
+#
 #    def _queue_changed(self):
-#        for a in ('username','mass_spectrometer','extract_device','username', 
+#        for a in ('username','mass_spectrometer','extract_device','username',
 #                  'delay_before_analyses','delay_between_analyses'
 #                  ):
 #            setattr(self.queue_factory, a, getattr(self.queue, a))
@@ -121,7 +125,11 @@ class ExperimentFactory(Loggable):
                      UCustom('run_factory', enabled_when='ok_run'),
                      HGroup(
                             UItem('add_button', enabled_when='ok_add'),
-                            Item('auto_increment')
+                            Item('auto_increment'),
+#                            spring,
+                            UItem('clear_button',
+                                 tooltip='Clear all runs added using "frequency"'
+                                 )
                             )
 
                      )

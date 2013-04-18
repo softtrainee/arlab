@@ -263,7 +263,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # viewable
 #===============================================================================
-    def opened(self):
+    def opened(self, ui):
 #        def d():
 # #            self.selected = None
 #            self.selected = 'summary'

@@ -23,6 +23,11 @@ ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                       bg='Background', u='Unknown', c='Cocktail', a='Air'
                       )
 
+# "labnumbers" where extract group is disabled
+NON_EXTRACTABLE = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
+                      bg='Background', c='Cocktail', a='Air'
+                      )
+
 SPECIAL_NAMES = [NULL_STR, 'Air', 'Cocktail', 'Blank Unknown', 'Blank Air', 'Blank Cocktail', 'Background']
 SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
                        blank_air='ba',

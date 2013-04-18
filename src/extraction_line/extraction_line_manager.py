@@ -148,7 +148,7 @@ class ExtractionLineManager(Manager):
             self.monitor.stop()
         return True
 
-    def opened(self):
+    def opened(self, ui):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
         p = os.path.join(paths.hidden_dir, 'show_explanantion')

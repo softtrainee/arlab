@@ -143,7 +143,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Measurement', 'measurement_script'),
                  ('Post Eq.', 'post_equilibration_script'),
                  ('Post Meas.', 'post_measurement_script'),
-                 ('Comment','comment')
+                 ('Comment', 'comment')
                  ]
 
         return cols
@@ -221,7 +221,7 @@ class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
                  ('Measurement', 'measurement_script'),
                  ('Post equilibration', 'post_equilibration_script'),
                  ('Post Measurement', 'post_measurement_script'),
-                 ('Comment','comment')
+                 ('Comment', 'comment')
                  ]
 
         return cols

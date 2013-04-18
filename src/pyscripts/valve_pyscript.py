@@ -71,13 +71,13 @@ class ValvePyScript(PyScript):
                                                       ))], protocol=ELPROTOCOL)
         if result is not None:
             self._finish_valve_change('close', result, name, description)
-            
+
     def _finish_valve_change(self, action, result, name, description):
         ok, changed = result[0]
         if changed:
             time.sleep(0.25)
-            
-        locked=self._manager_action([('get_software_lock', (name,), dict(
+
+        locked = self._manager_action([('get_software_lock', (name,), dict(
                                                   mode='script',
                                                   description=description
                                                   ))], protocol=ELPROTOCOL)
@@ -88,8 +88,8 @@ class ValvePyScript(PyScript):
                 self.cancel()
             else:
                 self.debug('Experiment debug mode. not canceling')
-        
-        
+
+
     @verbose_skip
     @command_register
     def is_open(self, name=None, description=''):
@@ -104,7 +104,7 @@ class ValvePyScript(PyScript):
         self.info('is {} ({}) closed?'.format(name, description))
         result = self._get_valve_state(name, description)
         if result:
-            r=result[0] == False
+            r = result[0] == False
             self.debug('is closed {}'.format(r))
             return r
 

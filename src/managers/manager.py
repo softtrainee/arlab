@@ -126,7 +126,7 @@ class Manager(Viewable, RPCable):
         pass
 
 
-    def opened(self):
+    def opened(self, ui):
         def _loop():
             start = time.time()
             self.info('Window set to close after {} min'.format(self.close_after_minutes))
@@ -146,7 +146,7 @@ class Manager(Viewable, RPCable):
         for _k, man in self.get_managers():
             man._killed = False
 
-        self.add_window(self.ui)
+        self.add_window(ui)
 
 #    def add_window(self, ui):
 #

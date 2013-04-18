@@ -67,7 +67,7 @@ class DatabaseRecord(Saveable):
         ts = ' '.join((rd, rt))
         return timefunc(ts)
 
-    def opened(self):
+    def opened(self, ui):
         self.show()
 
     def closed(self, isok):

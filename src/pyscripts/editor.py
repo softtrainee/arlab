@@ -218,7 +218,7 @@ class PyScriptEditor(Viewable):
                 self.save_enabled = False
             else:
                 self.save_enabled = True
-        
+
     def _command_text_factory(self, scmd):
         cmd = self._command_object(scmd)
         return cmd.get_text()

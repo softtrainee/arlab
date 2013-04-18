@@ -75,7 +75,7 @@ class RemoteHardwareServerManager(Manager):
             self.directory_server.start()
 
 
-    def opened(self):
+    def opened(self, ui):
         self.edit_traits(
                  view='display_view',
                  parent=self.ui.control

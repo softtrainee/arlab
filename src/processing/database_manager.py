@@ -28,7 +28,7 @@ class DatabaseManager(Manager):
         super(DatabaseManager, self).__init__(*args, **kw)
         if self.application:
             self.bind_preferences()
-            
+
     def bind_preferences(self):
         try:
 #            bind_preference(self, 'username', 'envisage.ui.workbench.username')
@@ -55,7 +55,7 @@ class DatabaseManager(Manager):
 #                            username='root',
 #                            password='Argon',
                             kind='mysql',
-                            #name='isotopedb_dev',
+                            # name='isotopedb_dev',
                             application=self.application
                             )
 

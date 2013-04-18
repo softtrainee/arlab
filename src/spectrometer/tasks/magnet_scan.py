@@ -111,7 +111,7 @@ class MagnetScan(SpectrometerTask):
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
         intensities = self._magnet_step_hook(do,
-                                             delay=1,
+                                             delay=3,
                                              detector=det,
                                              peak_generator=peak_generator)
         self._graph_hook(do, intensities)

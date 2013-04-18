@@ -129,7 +129,7 @@ class StageManager(Manager):
     calibrated_position_entry = Property(String(enter_set=True, auto_set=False))
     _calibrated_position = Str
 
-    use_modified=Bool(True) #set true to use modified affine calculation
+    use_modified = Bool(True)  # set true to use modified affine calculation
     def __init__(self, *args, **kw):
         '''
 
@@ -138,7 +138,7 @@ class StageManager(Manager):
 #        self.add_output('Welcome')
         self.stage_controller = self._stage_controller_factory()
 
-    def opened(self):
+    def opened(self, ui):
         self.keyboard_focus = True
 
     def get_video_database(self):
@@ -289,9 +289,9 @@ class StageManager(Manager):
     def move_to_hole(self, hole, **kw):
         if self.move_thread:
             self.stage_controller.stop()
-            
-        self.move_thread=Thread(name='stage.move_to_hole',
-                                target=self._move_to_hole,args=(hole,), kwargs=kw)
+
+        self.move_thread = Thread(name='stage.move_to_hole',
+                                target=self._move_to_hole, args=(hole,), kwargs=kw)
         self.move_thread.start()
 
     def move_to_point(self, pt):

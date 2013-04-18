@@ -85,20 +85,10 @@ class ScriptMixin(HasTraits):
         return name
 
     def _load_default_scripts(self, key):
-#        if key is None:
-#            if self.automated_run is None:
-#                return
-#            key = self.automated_run.labnumber
-#
-#        if setter is None:
-# #            def setter(ski, sci):
-# #                v = getattr(self, '{}_script'.format(ski))
-
         self.debug('load default scripts for {}'.format(key))
         setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
 
         # open the yaml config file
-#        import yaml
         p = os.path.join(paths.scripts_dir, 'defaults.yaml')
         if not os.path.isfile(p):
             self.warning('Script defaults file does not exist {}'.format(p))
@@ -141,8 +131,6 @@ class ScriptMixin(HasTraits):
 
             script = getattr(self, '{}_script'.format(sk))
             if not sc in script.names:
-#            if not sc in getattr(self, '{}_scripts'.format(sk)):
                 sc = NULL_STR
-#            print setter, sk, sc
             setter(sk, sc)
 #============= EOF =============================================

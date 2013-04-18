@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str,CInt
+    Str, CInt
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
@@ -202,14 +202,14 @@ class PlotPanel(Viewable):
             rad40 = arar_age.rad40_percent
             kca = arar_age.kca
             kcl = arar_age.kcl
-            ic=arar_age.ic_factor
-            
+            ic = arar_age.ic_factor
+
             self._print_parameter(display, 'Age', age)
-            
-            err=arar_age.age_error_wo_j
-            pee=self._get_pee(age, error=err)
+
+            err = arar_age.age_error_wo_j
+            pee = self._get_pee(age, error=err)
             self.add_text(display, '{:<15s}=       {:0.4f}{}'.format('Error w/o J', err, pee))
-                        
+
             self._print_parameter(display, 'J', j, sig_figs=(5, 6))
             self._print_parameter(display, 'ICFactor', ic)
             self._print_parameter(display, '% rad40', rad40)
@@ -340,10 +340,10 @@ class PlotPanel(Viewable):
             ee = uv.std_dev
         else:
             vv, ee = 0, 0
-            
+
         if error is not None:
-            ee=error
-            
+            ee = error
+
         try:
             pee = abs(ee / vv * 100)
         except ZeroDivisionError:

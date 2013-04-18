@@ -177,7 +177,7 @@ class BakeoutManager(Manager):
         # reset the general timers
             c.start_timer()
 
-    def opened(self):
+    def opened(self, ui):
         self.info('opened')
         # delay 1s before starting scan
         do_after_timer(1000, self.reset_general_scan)

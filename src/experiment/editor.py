@@ -76,14 +76,15 @@ class ExperimentEditor(ExperimentManager):
         return v
 
     def _experiment_queue_changed(self):
-        self.experiment_factory.queue = self.experiment_queue
-        qf= self.experiment_factory.queue_factory
-        eq=self.experiment_queue
-        for a in ('username','mass_spectrometer','extract_device','username', 
-                  'delay_before_analyses','delay_between_analyses'
-                  ):
-            setattr(qf, a, getattr(eq, a))
-       
+        eq = self.experiment_queue
+        if eq:
+            self.experiment_factory.queue = self.experiment_queue
+            qf = self.experiment_factory.queue_factory
+            for a in ('username', 'mass_spectrometer', 'extract_device', 'username',
+                      'delay_before_analyses', 'delay_between_analyses'
+                      ):
+                setattr(qf, a, getattr(eq, a))
+
     @on_trait_change('can_edit_script, max_allowable_runs')
     def _update_value(self, name, value):
         setattr(self.experiment_factory, name, value)

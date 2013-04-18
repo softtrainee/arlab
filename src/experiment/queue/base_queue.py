@@ -45,7 +45,7 @@ class BaseExperimentQueue(Loggable):
 
     mass_spectrometer = String
     extract_device = String
-    username=String
+    username = String
     tray = Str
     delay_before_analyses = Int
     delay_between_analyses = Int
@@ -67,14 +67,44 @@ class BaseExperimentQueue(Loggable):
         self.info('testing')
         return True
 
-    def add_runs(self, runviews):
-        
-        self._suppress_aliquot_update=True
-        self.automated_runs.extend(runviews[:-1])
-            
-        self._suppress_aliquot_update=False
-        self.automated_runs.append(runviews[-1])
-#        self.update_needed = True
+    def clear_frequency_runs(self):
+        self.automated_runs = [ri for ri in self.automated_runs
+                                    if not ri.frequency_added]
+
+    def add_runs(self, runviews, freq=None):
+        '''
+            runviews: list of runs
+            freq: optional inter
+        '''
+        aruns = self.automated_runs
+        self._suppress_aliquot_update = True
+        if freq:
+            cnt = 0
+            n = len(aruns)
+            for i, ai in enumerate(aruns[::-1]):
+                if cnt == freq:
+                    run = runviews[0].clone_traits()
+                    run.frequency_added = True
+                    aruns.insert(n - i, run)
+                    cnt = 0
+                if ai.analysis_type == 'unknown':
+                    cnt += 1
+
+
+#            inserts = [(i, ) for i, ai in enumerate(aruns)
+#                       if ai.analysis_type == 'unknown' and ]
+#            print inserts
+#            for idx, run in reversed(inserts):
+#                run = runviews[0].clone_traits()
+#                aruns.insert(idx, run)
+
+            self.update_needed = True
+        else:
+            aruns.extend(runviews)
+            self._suppress_aliquot_update = False
+
+        self.update_needed = True
+
 
     def set_extract_device(self, ed):
         self.extract_device = ed
@@ -85,12 +115,12 @@ class BaseExperimentQueue(Loggable):
             klass = AutomatedRunsTable
 
         self.runs_table = klass()
-        
-        self._suppress_aliquot_update=True
+
+        self._suppress_aliquot_update = True
         self.runs_table.set_runs(runs)
-        self._suppress_aliquot_update=False
+        self._suppress_aliquot_update = False
 #        self.update_needed=True
-        
+
 #===============================================================================
 # persistence
 #===============================================================================
@@ -101,9 +131,9 @@ class BaseExperimentQueue(Loggable):
 
         aruns = self._load_runs(txt)
         if aruns:
-            self._suppress_aliquot_update=True
+            self._suppress_aliquot_update = True
             self.automated_runs = aruns
-            self._suppress_aliquot_update=False
+            self._suppress_aliquot_update = False
 
 #            lm = self.sample_map
 #            if lm:
@@ -137,7 +167,7 @@ class BaseExperimentQueue(Loggable):
             if vi and vi != NULL_STR:
                 try:
                     vi = float(vi)
-                    return abs(vi)>1e-15
+                    return abs(vi) > 1e-15
                 except ValueError:
                     return True
             else:
@@ -169,14 +199,14 @@ class BaseExperimentQueue(Loggable):
 
         default = lambda x: x if x else '---'
         default_int = lambda x: x if x is not None else 1
-        
+
         self._set_meta_param('tray', meta, default)
         self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)
         self._set_meta_param('delay_before_analyses', meta, default_int)
         self._set_meta_param('username', meta, default)
-        
+
         delim = '\t'
 
         header = map(str.strip, f.next().split(delim))
@@ -186,25 +216,28 @@ class BaseExperimentQueue(Loggable):
             pklass = UVRunParser
         parser = pklass()
         for linenum, line in enumerate(f):
-            if line.startswith('#'):
-                continue
-
+            skip = False
             line = line.strip()
+
+            # load commented runs but flag as skipped
+            if line.startswith('#'):
+                skip = True
+                line = line[1:]
+
             if not line:
                 continue
 
             try:
 
                 script_info, params = parser.parse(header, line, meta)
-#                script_info, params = self._parse_line(header, line, meta)
                 params['mass_spectrometer'] = self.mass_spectrometer
                 params['extract_device'] = self.extract_device
                 params['tray'] = self.tray
-                params['username']=self.username
-#                params['db'] = self.db
+                params['username'] = self.username
+                params['skip'] = skip
 
                 arun = self._automated_run_factory(script_info, params)
-                
+
                 aruns.append(arun)
 
             except Exception, e:
@@ -321,7 +354,7 @@ tray: {}
 #===============================================================================
 #    def _rearranged_fired(self):
 #        self.update_needed = True
-        
+
     def _pasted_changed(self):
         sel = self.runs_table.selected
 
@@ -332,12 +365,14 @@ tray: {}
             self.automated_runs.insert(idx, ci)
         self._suppress_aliquot_update = False
 
+        self.debug('%%%%%%%%%%%%%%%%%%% Update Needed')
         self.update_needed = True
 
     @on_trait_change('automated_runs[]')
     def _update_runs(self):
         self.debug('automated runs increase {}'.format(len(self.automated_runs)))
         if not self._suppress_aliquot_update:
+            self.debug('%%%%%%%%%%%%%%%%%%% Update Needed')
             self.update_needed = True
 #===============================================================================
 # property get/set

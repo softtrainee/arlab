@@ -30,8 +30,8 @@ class ExperimentQueueFactory(Loggable):
     db = Any
     application = Any
 
-    username=Str
-    
+    username = Str
+
     mass_spectrometer = Str
     mass_spectrometers = Property
 
