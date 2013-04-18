@@ -110,25 +110,25 @@ class MassSpecDatabaseImporter(Loggable):
                 ]
 
         regresults = (dict(
-                          Ar40=ufloat((reg.predict(0), reg.predict_error(0))),
-                          Ar39=ufloat((reg1.predict(0), reg1.predict_error(0))),
-                          Ar38=ufloat((reg2.predict(0), reg2.predict_error(0))),
-                          Ar37=ufloat((reg3.predict(0), reg3.predict_error(0))),
-                          Ar36=ufloat((reg4.predict(0), reg4.predict_error(0))),
+                          Ar40=ufloat(reg.predict(0), reg.predict_error(0)),
+                          Ar39=ufloat(reg1.predict(0), reg1.predict_error(0)),
+                          Ar38=ufloat(reg2.predict(0), reg2.predict_error(0)),
+                          Ar37=ufloat(reg3.predict(0), reg3.predict_error(0)),
+                          Ar36=ufloat(reg4.predict(0), reg4.predict_error(0)),
 
                           ),
                       dict(
-                          Ar40=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar39=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar38=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar37=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar36=ufloat((cddregbs.predict(0), cddregbs.predict_error(0)))
+                          Ar40=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar39=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar38=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar37=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar36=ufloat(cddregbs.predict(0), cddregbs.predict_error(0))
                           ))
-        blanks = [ufloat((0, 0.1)),
-                  ufloat((0.1, 0.001)),
-                  ufloat((0.01, 0.001)),
-                  ufloat((0.01, 0.001)),
-                  ufloat((0.00001, 0.0001)),
+        blanks = [ufloat(0, 0.1),
+                  ufloat(0.1, 0.001),
+                  ufloat(0.01, 0.001),
+                  ufloat(0.01, 0.001),
+                  ufloat(0.00001, 0.0001),
                   ]
         fits = (
               dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
@@ -348,7 +348,7 @@ class MassSpecDatabaseImporter(Loggable):
             ncnts = len(tb)
             db_baseline = db.add_baseline(blob, label, ncnts, db_iso)
 
-            sem = baseline.std_dev() / (ncnts) ** 0.5
+            sem = baseline.std_dev / (ncnts) ** 0.5
             infoblob = self._make_infoblob(baseline.nominal_value, sem)
             db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
                                                             bfit,

@@ -68,7 +68,7 @@ class ArArConstants(HasTraits):
     def _get_ufloat(self, attr):
         v = getattr(self, '{}_v'.format(attr))
         e = getattr(self, '{}_e'.format(attr))
-        return ufloat((v, e))
+        return ufloat(v, e)
 
     def _get_atm4036(self):
         return self._get_ufloat('atm4036')
@@ -93,7 +93,7 @@ class ArArConstants(HasTraits):
 
     def _get_lambda_k(self):
         k = self.lambda_b + self.lambda_e
-        return ufloat((k.nominal_value, k.std_dev()))
+        return ufloat(k.nominal_value, k.std_dev)
 
 # dp = get_default_preferences()
 # scope = dp.get_scope('application')

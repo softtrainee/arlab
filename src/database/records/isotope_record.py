@@ -45,6 +45,7 @@ from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 from src.database.isotope_analysis.notes_summary import NotesSummary
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import Isotope, Blank, Background, Baseline
+from src.database.isotope_analysis.errro_component_summary import ErrorComponentSummary
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 
 class EditableGraph(HasTraits):
@@ -130,8 +131,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     blanks_summary = Property
     backgrounds_summary = Property
     notes_summary = Property
+    error_summary = Property
 
     categories = List(['summary', 'irradiation',
+                       'error',
                        'supplemental', 'measurement', 'extraction', 'experiment',
                        'notes',
                        'signal', 'baseline'
@@ -265,8 +268,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 # #            self.selected = None
 #            self.selected = 'summary'
 #        do_later(d)
-        self.selected = 'summary'
+#        self.selected = 'summary'
 #        self.selected = 'notes'
+        self.selected = 'error'
         super(IsotopeRecord, self).opened()
 
     def closed(self, isok):
@@ -391,7 +395,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             if self.isotopes.has_key(ki):
                 v = self.isotopes[ki].baseline_corrected_value()
             else:
-                v = ufloat((0, 0))
+                v = ufloat(0, 0)
 
             d[ki] = v
 
@@ -410,27 +414,38 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             selected = selected.replace(' ', '_')
             selected = selected.lower()
 
-            if selected == 'summary':
+            self.debug('selected= {}'.format(selected))
+            if selected in (
+                            'blanks',
+                            'backgrounds',
+                            'det._intercal.',
+                            'irradiation',
+                            'supplemental',
+                            'measurement',
+                            'extraction', 'experiment', 'notes',
+                            'error',
+                            ):
+                item = getattr(self, '{}_summary'.format(selected))
+            elif selected == 'summary':
                 item = self.analysis_summary
-            elif selected == 'blanks':
-                item = self.blanks_summary  # BlanksSummary(record=self)
-            elif selected == 'backgrounds':
-                item = self.backgrounds_summary
-#                item = BackgroundsSummary(record=self)
-            elif selected == 'det._intercal.':
-                item = self.detector_intercalibration_summary
-            elif selected == 'irradiation':
-                item = self.irradiation_summary
-            elif selected == 'supplemental':
-                item = self.supplemental_summary
-            elif selected == 'measurement':
-                item = self.measurement_summary
-            elif selected == 'extraction':
-                item = self.extraction_summary
-            elif selected == 'experiment':
-                item = self.experiment_summary
-            elif selected == 'notes':
-                item = self.notes_summary
+#            elif selected == 'blanks':
+#                item = self.blanks_summary  # BlanksSummary(record=self)
+#            elif selected == 'backgrounds':
+#                item = self.backgrounds_summary
+#            elif selected == 'det._intercal.':
+#                item = self.detector_intercalibration_summary
+#            elif selected == 'irradiation':
+#                item = self.irradiation_summary
+#            elif selected == 'supplemental':
+#                item = self.supplemental_summary
+#            elif selected == 'measurement':
+#                item = self.measurement_summary
+#            elif selected == 'extraction':
+#                item = self.extraction_summary
+#            elif selected == 'experiment':
+#                item = self.experiment_summary
+#            elif selected == 'notes':
+#                item = self.notes_summary
             else:
                 name = '{}_graph'.format(selected)
                 item = getattr(self, name)
@@ -584,7 +599,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
             i += 1
 
-        graph.set_x_limits(min=0)
+        if i:
+            graph.set_x_limits(min=0)
+
         graph.refresh()
 
         return graph
@@ -792,6 +809,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return bs
 
     @cached_property
+    def _get_error_summary(self):
+        bs = ErrorComponentSummary(record=self)
+        return bs
+
+
+    @cached_property
     def _get_record_id(self):
         return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
@@ -902,7 +925,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_sensitivity(self):
         def func(dbr):
             if dbr.extraction:
-                return dbr.extraction.sensitivity
+                if dbr.extraction.sensitivity:
+                    return dbr.extraction.sensitivity.sensitivity
 
         return self._get_dbrecord_value('sensitivity', func=func, default=1)
 

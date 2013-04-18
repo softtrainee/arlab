@@ -66,7 +66,7 @@ class Constants(ExcelMixin):
             print e
 
 #        print type(value)
-        return ufloat((value, error))
+        return ufloat(value, error)
 
 
 class Result(HasTraits):
@@ -91,7 +91,7 @@ class ResultAdapter(TabularAdapter):
 
     def _get_error(self, attr):
         v = getattr(self.item, attr)
-        return self._float_fmt(v.std_dev(), 6)
+        return self._float_fmt(v.std_dev, 6)
 
     def _get_age_text(self):
         return self._get_value('age')

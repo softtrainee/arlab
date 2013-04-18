@@ -362,7 +362,7 @@ class Plotter(Viewable):
 
         if unzip:
 
-            ages, errors = zip(*[(a.nominal_value, a.std_dev())
+            ages, errors = zip(*[(a.nominal_value, a.std_dev)
                                  for a in ages])
             ages = array(ages)
             errors = array(errors)
@@ -550,7 +550,7 @@ class Plotter(Viewable):
         return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
     def _unzip_value_error(self, pairs):
 #        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
-        return zip(*[(ri.nominal_value, ri.std_dev()) for ri in pairs])
+        return zip(*[(ri.nominal_value, ri.std_dev) for ri in pairs])
 
     def _add_plot_metadata(self, g):
         # add meta plot info

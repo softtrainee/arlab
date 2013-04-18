@@ -363,7 +363,7 @@ class Spectrum(Plotter):
 
     def _calculate_total_gas_rad40(self, analyses):
         r, e = zip(*[(a.rad40_percent.nominal_value,
-                a.rad40_percent.std_dev())
+                a.rad40_percent.std_dev)
                 for a in analyses])
 
         r = array(r)
@@ -372,7 +372,7 @@ class Spectrum(Plotter):
 
         m, ee = average(r, weights=wts, returned=True)
         ee = ee ** -0.5
-        return ufloat((m, ee))
+        return ufloat(m, ee)
 
     def _calculate_total_gas_age(self, analyses):
         '''
@@ -411,7 +411,7 @@ class Spectrum(Plotter):
             if isinstance(aa, tuple):
                 ai, ei = aa
             else:
-                ai, ei = aa.nominal_value, aa.std_dev()
+                ai, ei = aa.nominal_value, aa.std_dev
 
             xs.append(prev)
 
@@ -570,14 +570,14 @@ class Spectrum(Plotter):
             age, error = 1, 1
         else:
 
-            age, error = plat_age.nominal_value, plat_age.std_dev()
+            age, error = plat_age.nominal_value, plat_age.std_dev
 
         error *= self.plotter_options.nsigma
         txt = self._build_label_text(age, error, *args)
         return 'Age= {}'.format(txt)
 
     def _build_integrated_age_label(self, tga, *args):
-        age, error = tga.nominal_value, tga.std_dev()
+        age, error = tga.nominal_value, tga.std_dev
         error *= self.plotter_options.nsigma
         txt = self._build_label_text(age, error, *args)
         return 'Integrated Age= {}'.format(txt)

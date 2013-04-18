@@ -1275,7 +1275,7 @@ anaylsis_type={}
         setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
 
         func = getattr(db, 'add_{}'.format(name))
-        uv,ue=ic.nominal_value, ic.std_dev()
+        uv,ue=ic.nominal_value, ic.std_dev
         func(history, 'CDD', user_value=uv, user_error=ue)
         
     def _save_blank_info(self, analysis):
@@ -1305,7 +1305,7 @@ anaylsis_type={}
         func = getattr(db, 'add_{}'.format(name))
         for isotope, v in pb.iteritems():
             uv = v.nominal_value
-            ue = v.std_dev()
+            ue = v.std_dev
             func(history, user_value=uv, user_error=ue, isotope=isotope)
 
     def _save_isotope_info(self, analysis, signals):
@@ -1385,7 +1385,7 @@ anaylsis_type={}
             if iso in pb:
                 blanks.append(pb[iso])
             else:
-                blanks.append(ufloat((0, 0)))
+                blanks.append(ufloat(0, 0))
 
 #        signals=self._processed_signals_dict
 #        sig_ints = dict()

@@ -358,13 +358,13 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session_id,
                                     Intercept=intercept.nominal_value,
-                                    InterceptEr=intercept.std_dev(),
+                                    InterceptEr=intercept.std_dev,
 
                                     Iso=isotope_value.nominal_value,
-                                    IsoEr=isotope_value.std_dev(),
+                                    IsoEr=isotope_value.std_dev,
 
                                     Bkgd=blank.nominal_value,
-                                    BkgdEr=blank.std_dev(),
+                                    BkgdEr=blank.std_dev,
 
                                     BkgdDetTypeID=detector.DetectorTypeID,
 

@@ -111,7 +111,7 @@ class Series(Plotter):
 #            v = getattr(analysis, k)
 #            v = get_value(analysis, k)
 
-        return v.nominal_value, v.std_dev()
+        return v.nominal_value, v.std_dev
 #============= EOF =============================================
 
 ##===============================================================================

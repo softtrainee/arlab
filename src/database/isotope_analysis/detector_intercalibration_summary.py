@@ -85,7 +85,7 @@ class DetectorIntercalibrationSummary(HistorySummary):
                 xs.append(ri.timestamp)
                 ic = (ri.Ar40 / ri.Ar36) / 295.5
                 ys.append(ic.nominal_value)
-                es.append(ic.std_dev())
+                es.append(ic.std_dev)
 
             txs = xs + [dbr.timestamp]
             xs = np.array(xs)

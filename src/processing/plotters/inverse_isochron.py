@@ -35,8 +35,8 @@ class InverseIsochron(Plotter):
 
         xx = [a.Ar39 / a.Ar40 for a in analyses]
         yy = [a.Ar36 / a.Ar40 for a in analyses]
-        xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev()) for xi in xx])
-        ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev()) for yi in yy])
+        xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev) for xi in xx])
+        ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev) for yi in yy])
         print xerrs, yerrs
 #        xs, xerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
 #                          [a.arar_result['s39'] / a.arar_result['s40'] for a in analyses]
