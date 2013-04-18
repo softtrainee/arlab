@@ -206,9 +206,10 @@ class PlotPanel(Viewable):
             
             self._print_parameter(display, 'Age', age)
             
-            
-            self._get_pee(age, error=arar_age.age_error_wo_j)
-            self.add_text(display, '{:<20s} Error w/o J {}{}'.format())            
+            err=arar_age.age_error_wo_j
+            pee=self._get_pee(age, error=err)
+            self.add_text(display, '{:<15s}=       {:0.4f}{}'.format('Error w/o J', err, pee))
+                        
             self._print_parameter(display, 'J', j, sig_figs=(5, 6))
             self._print_parameter(display, 'ICFactor', ic)
             self._print_parameter(display, '% rad40', rad40)

@@ -537,6 +537,7 @@ post_equilibration_script:name
                               ),
                           Item('_labnumber', show_label=False,
                               editor=EnumEditor(name='labnumbers'),
+                              width=75,
                               tooltip='Select a Labnumber from the selected Project'
                               ),
                          ),

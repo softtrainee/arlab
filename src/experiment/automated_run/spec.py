@@ -182,7 +182,7 @@ class AutomatedRunSpec(Loggable):
                    'pattern',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
-                   'sample', 'irradiation', 'username',
+                   'sample', 'irradiation', 'username','comment'
                    )
         
 #===============================================================================

@@ -70,10 +70,10 @@ class ValvePyScript(PyScript):
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
         if result is not None:
-            self._finish_valve_change('close', result[0])
+            self._finish_valve_change('close', result, name, description)
             
     def _finish_valve_change(self, action, result, name, description):
-        ok, changed = result
+        ok, changed = result[0]
         if changed:
             time.sleep(0.25)
             

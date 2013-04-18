@@ -40,7 +40,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     #===========================================================================
     # widths
     #===========================================================================
-#    aliquot_width = Int(50)
+
     sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
@@ -57,6 +57,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     post_measurement_script_width = Int(125)
     post_equilibration_script_width = Int(125)
 
+    comment_width = Int(125)
     #===========================================================================
     # number values
     #===========================================================================
@@ -142,6 +143,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Measurement', 'measurement_script'),
                  ('Post Eq.', 'post_equilibration_script'),
                  ('Post Meas.', 'post_measurement_script'),
+                 ('Comment','comment')
                  ]
 
         return cols
@@ -159,6 +161,8 @@ COLOR_STATES = dict(extraction='yellow', measurement='orange',
 
 class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
     state_width = Int(20)
+    aliquot_width = Int(50)
+    irradiation_width = Int(80)
     state_image = Property
     def get_bg_color(self, *args, **kw):
         item = self.item
@@ -217,6 +221,7 @@ class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
                  ('Measurement', 'measurement_script'),
                  ('Post equilibration', 'post_equilibration_script'),
                  ('Post Measurement', 'post_measurement_script'),
+                 ('Comment','comment')
                  ]
 
         return cols

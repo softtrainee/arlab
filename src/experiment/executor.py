@@ -477,8 +477,9 @@ class ExperimentExecutor(ExperimentManager):
         arun = arv.make_run()
         exp = self.experiment_queue
         exp.current_run = arun
-
         self.debug('setup run {} of {}'.format(i, exp.name))
+        self.debug('%%%%%%%%%%%%%%% Comment= {} %%%%%%%%%%%%%'.format(arun.comment))
+            
 #        arun.index = i
         arun.experiment_name = exp.path
         arun.experiment_manager = self
