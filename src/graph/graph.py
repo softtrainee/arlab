@@ -245,13 +245,13 @@ class Graph(Viewable, ContextMenuMixin):
         self.set_data(x, plotid, series)
         self.set_data(y, plotid, series, axis=1)
 
-    def close(self):
-        '''
-            close the window
-        '''
-        if self.ui is not None:
-            do_after_timer(1, self.ui.dispose)
-        self.ui = None
+#    def close(self):
+#        '''
+#            close the window
+#        '''
+#        if self.ui is not None:
+#            do_after_timer(1, self.ui.dispose)
+#        self.ui = None
 
     def clear(self):
         '''

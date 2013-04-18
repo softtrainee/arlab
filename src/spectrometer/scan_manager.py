@@ -245,7 +245,7 @@ class ScanManager(Manager):
 
     def _stop_recording(self):
         self._consuming = False
-        self.record_data_manager.close()
+        self.record_data_manager.close_file()
 #===============================================================================
 # handlers
 #===============================================================================

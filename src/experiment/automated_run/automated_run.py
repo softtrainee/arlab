@@ -224,7 +224,7 @@ class AutomatedRun(Loggable):
 
 
         # sync the arar_age object's signals
-        if self.analysis_type == 'unknown':
+        if self.use_arar_age():
             if not blanks:
                 blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
@@ -550,10 +550,10 @@ anaylsis_type={}
             self.peak_plot_panel.close_ui()
 
         if self.peak_center:
-            self.peak_center.graph.close()
+            self.peak_center.graph.close_ui()
 
         if self.coincidence_scan:
-            self.coincidence_scan.graph.close()
+            self.coincidence_scan.graph.close_ui()
 
         if self.monitor:
             self.monitor.stop()
@@ -568,16 +568,19 @@ anaylsis_type={}
 
     def get_extraction_parameter(self, key, default=None):
         return self._get_yaml_parameter(self.extraction_script, key, default)
-
+    
+    def use_arar_age(self):
+        return self.analysis_type == 'unknown' or self.labnumber in ('c',)
+    
     def start(self):
         def _start():
-            if self.analysis_type == 'unknown':
-                    # load arar_age object for age calculation
-                    self.arar_age = ArArAge()
-                    ln = self.labnumber
-                    ln = convert_identifier(ln)
-                    ln = self.db.get_labnumber(ln)
-                    self.arar_age.labnumber_record = ln
+            if self.use_arar_age():
+                # load arar_age object for age calculation
+                self.arar_age = ArArAge()
+                ln = self.labnumber
+                ln = convert_identifier(ln)
+                ln = self.db.get_labnumber(ln)
+                self.arar_age.labnumber_record = ln
 
             self.measuring = False
             self.update = True
@@ -1043,7 +1046,7 @@ anaylsis_type={}
 
         cp = self.data_manager.get_current_path()
         # close h5 file
-        self.data_manager.close()
+        self.data_manager.close_file()
 
         # do preliminary processing of data
         # returns signals dict and peak_center table
@@ -1227,10 +1230,11 @@ anaylsis_type={}
                           self.experiment_manager.experiment_blob()
                           )
         exp.experiments.append(ext)
-
-        script = db.add_script(self.extraction_script.name,
-                               self._assemble_extraction_blob())
-        script.extractions.append(ext)
+        
+        if self.extraction_script:
+            script = db.add_script(self.extraction_script.name,
+                                   self._assemble_extraction_blob())
+            script.extractions.append(ext)
 
         for pi in self.get_position_list():
             if isinstance(pi, tuple):
@@ -1278,7 +1282,7 @@ anaylsis_type={}
 
         func = getattr(db, 'add_{}'.format(name))
         uv, ue = ic.nominal_value, ic.std_dev
-        func(history, 'CDD', user_value=uv, user_error=ue)
+        func(history, 'CDD', user_value=uv, user_error=float(ue))
 
     def _save_blank_info(self, analysis):
         self.info('saving blank info')
@@ -1307,7 +1311,7 @@ anaylsis_type={}
         func = getattr(db, 'add_{}'.format(name))
         for isotope, v in pb.iteritems():
             uv = v.nominal_value
-            ue = v.std_dev
+            ue = float(v.std_dev)
             func(history, user_value=uv, user_error=ue, isotope=isotope)
 
     def _save_isotope_info(self, analysis, signals):
@@ -1637,6 +1641,9 @@ anaylsis_type={}
         return write_data
 
     def _get_yaml_parameter(self, script, key, default):
+        if not script:
+            return default
+        
         m = ast.parse(script._text)
         docstr = ast.get_docstring(m)
         if docstr is not None:

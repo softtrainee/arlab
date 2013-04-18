@@ -269,9 +269,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 # #            self.selected = None
 #            self.selected = 'summary'
 #        do_later(d)
-#        self.selected = 'summary'
+        self.selected = 'summary'
 #        self.selected = 'notes'
-        self.selected = 'error'
+#        self.selected = 'error'
         super(IsotopeRecord, self).opened(ui)
 
     def closed(self, isok):

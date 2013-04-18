@@ -173,7 +173,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     n36 = s36 - abundance_sensitivity * (s37 + s37)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
-
     # calculate decay factors
     if a37decayfactor is None:
         try:

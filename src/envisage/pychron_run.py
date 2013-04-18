@@ -287,7 +287,6 @@ def launch():
 #        warning(app.workbench.active_window, tb)
         app.exit()
     
-    logger.info('--------------- wiaitng')
     for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
         gi.close_ui()
 
