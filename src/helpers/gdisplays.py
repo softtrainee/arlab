@@ -39,12 +39,12 @@ gLoggerDisplay = RichTextDisplay(title='Logger',
                                  bg_color='light grey'
                                  )
 
-gMessageDisplay = RichTextDisplay(title='Logger',
-                                 width=450,
+gMessageDisplay = RichTextDisplay(title='Messages',
+                                 width=480,
 #                                 x=(sw-width)/2,
                                  y=100,
-                                 default_size=16,
-                                 default_color='black',
+                                 default_size=14,
+                                 default_color='darkgreen',
                                  bg_color='light grey'
                                  )
 

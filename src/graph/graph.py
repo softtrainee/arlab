@@ -146,7 +146,7 @@ class Graph(Viewable, ContextMenuMixin):
 
 
 
-    def closed(self):
+    def closed(self, *args):
         if self.close_func:
             self.close_func()
 #    def close_ui(self):

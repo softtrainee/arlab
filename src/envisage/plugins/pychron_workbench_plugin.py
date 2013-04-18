@@ -33,8 +33,8 @@ class PychronWorkbenchPlugin(CorePlugin):
 #
     def stop(self):
         from src.helpers.gdisplays import gWarningDisplay, gLoggerDisplay
-        gWarningDisplay.close()
-        gLoggerDisplay.close()
+        gWarningDisplay.close(True)
+        gLoggerDisplay.close(True)
 
 
 #    @on_trait_change('application:stopped')

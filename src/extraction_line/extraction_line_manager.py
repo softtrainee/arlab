@@ -149,7 +149,7 @@ class ExtractionLineManager(Manager):
         return True
 
     def opened(self, ui):
-        super(ExtractionLineManager, self).opened()
+        super(ExtractionLineManager, self).opened(ui)
         self.reload_scene_graph()
         p = os.path.join(paths.hidden_dir, 'show_explanantion')
         if os.path.isfile(p):

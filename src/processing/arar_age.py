@@ -136,8 +136,13 @@ class ArArAge(HasTraits):
     def get_error_component(self, key):
         v = next((error for (var, error) in self.age.error_components().items()
                                 if var.tag == key), 0)
-
-        return v ** 2 / self.age_error ** 2 * 100
+        ae=self.age_error
+        if ae:
+            return v ** 2 / self.age_error ** 2 * 100
+        else:
+            return 0
+        
+    
     def get_signal_value(self, k):
         return self._get_arar_result_attr(k)
 

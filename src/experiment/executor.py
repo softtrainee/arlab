@@ -144,7 +144,7 @@ class ExperimentExecutor(ExperimentManager):
         self._was_executed = False
         self.stats.reset()
         self.statusbar = ''
-        super(ExperimentExecutor, self).opened()
+        super(ExperimentExecutor, self).opened(ui)
 
     def add_backup(self, uuid_str):
 #        p = os.path.join(paths.hidden_dir, 'backup_recovery')
@@ -315,9 +315,13 @@ class ExperimentExecutor(ExperimentManager):
                 return
 
         self.pyscript_runner.connect()
-
         self._alive = True
-
+        
+        #check the first aliquot before delaying
+        arv=exp.cleaned_automated_runs[0]
+        self._check_run_aliquot(arv)
+        return
+    
         # delay before starting
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
@@ -483,26 +487,33 @@ class ExperimentExecutor(ExperimentManager):
                    )
         ta.start()
         return ta, run
-
-#    def _setup_automated_run(self, i, arun, repo, dm, runner):
-    def _setup_automated_run(self, i, arv):
-        '''
-            convert the an AutomatedRunSpec an AutomatedRun
-        '''
-
+    
+    def _check_run_aliquot(self, arv):
         '''
             check the secondary database for this labnumber 
             get last aliquot
         '''
         if self.massspec_importer:
             db = self.massspec_importer.db
-            lan = db.get_lastest_analysis(arv.labnumber)
-            if lan is not None:
-                if lan.aliquot > arv.aliquot:
-                    arv.aliquot = lan.aliquot
-                    self.message('{} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.aliquot))
+            al = db.get_lastest_analysis_aliquot(arv.labnumber)
+            if al is not None:
+                if al > arv.aliquot:
+                    arv.aliquot = al+1
+                    self.message('{} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.labnumber, 
+                                                                                                       arv.aliquot))
 
 
+#    def _setup_automated_run(self, i, arun, repo, dm, runner):
+    def _setup_automated_run(self, i, arv):
+        '''
+            convert the an AutomatedRunSpec an AutomatedRun
+        '''
+        
+        #the first run was checked before delay before runs
+        if i>1:
+            self._check_run_aliquot(arv)
+
+        
         arun = arv.make_run()
         exp = self.experiment_queue
         exp.current_run = arun

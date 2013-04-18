@@ -46,7 +46,7 @@ from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 from src.database.isotope_analysis.notes_summary import NotesSummary
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import Isotope, Blank, Background, Baseline
-from src.database.isotope_analysis.errro_component_summary import ErrorComponentSummary
+from src.database.isotope_analysis.error_component_summary import ErrorComponentSummary
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 
 class EditableGraph(HasTraits):
@@ -272,7 +272,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #        self.selected = 'summary'
 #        self.selected = 'notes'
         self.selected = 'error'
-        super(IsotopeRecord, self).opened()
+        super(IsotopeRecord, self).opened(ui)
 
     def closed(self, isok):
         self.selected = None

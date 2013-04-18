@@ -100,7 +100,7 @@ class Loggable(HasTraits):
     def db_save_dialog(self):
         return self.confirmation_dialog('Save to Database')
 
-    def meassage(self, msg):
+    def message(self, msg):
 #        if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
 #            do_later(gWarningDisplay.edit_traits)
         from src.helpers.gdisplays import gMessageDisplay

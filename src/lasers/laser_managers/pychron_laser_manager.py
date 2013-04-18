@@ -76,7 +76,7 @@ class PychronLaserManager(BaseLaserManager):
     def _test_connection_button_fired(self):
         self.test_connection()
         if self.connected:
-            self.opened()
+            self.opened(None)
 
     def test_connection(self):
         self.connected = self._communicator.open()
