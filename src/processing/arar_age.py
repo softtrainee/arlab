@@ -348,7 +348,7 @@ class ArArAge(HasTraits):
     
     @cached_property
     def _get_age_error_wo_j(self):
-        return self.arar_result['age_err_wo_jerr']
+        return self.arar_result['age_err_wo_jerr']/self.age_scalar
 
     @cached_property
     def _get_timestamp(self):

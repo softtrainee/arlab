@@ -319,8 +319,8 @@ tray: {}
 #===============================================================================
 # handlers
 #===============================================================================
-    def _rearranged_fired(self):
-        self.update_needed = True
+#    def _rearranged_fired(self):
+#        self.update_needed = True
         
     def _pasted_changed(self):
         sel = self.runs_table.selected

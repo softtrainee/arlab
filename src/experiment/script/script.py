@@ -36,7 +36,7 @@ class Script(Loggable):
     names = Property(depends_on='mass_spectrometer')
     edit = Button
     kind = 'ExtractionLine'
-    can_edit = Bool(False)
+    can_edit = Bool(True)
 
     def _edit_fired(self):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
