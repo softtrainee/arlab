@@ -181,7 +181,7 @@ if __name__ == '__main__':
 #    print irrad
 #    ans =
 
-    fv.model_flux(analyses, ufloat((28.02e6, 0)))
+    fv.model_flux(analyses, ufloat(28.02e6, 0))
 #    xs = [[ 0.          , 0.85000002  ],
 #           [ 0.80000001  , 0.40000001  ],
 #           [ 0.80000001 , -0.40000001  ],

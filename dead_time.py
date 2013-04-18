@@ -64,11 +64,11 @@ class DeadTime():
                 break
 
             rskey = KEYS36[int(l[rsind].strip()[-1]) - 1]
-            uf = ufloat((float(l[ind36]) * 6240, float(l[ind36 + 1]) * 6240))
+            uf = ufloat(float(l[ind36]) * 6240, float(l[ind36 + 1]) * 6240)
             nshots[rskey].append(uf)
 
             rskey = KEYS40[int(l[rsind].strip()[-1]) - 1]
-            uf = ufloat((float(l[ind40]) * 6240, float(l[ind40 + 1]) * 6240))
+            uf = ufloat(float(l[ind40]) * 6240, float(l[ind40 + 1]) * 6240)
             nshots[rskey].append(uf)
 
         return nshots
@@ -86,7 +86,7 @@ class DeadTime():
         r = [i40 / i36 for i40, i36 in zip(s40, s36)]
 
         v = [vi.nominal_value for vi in r]
-        errs = [vi.std_dev() for vi in r]
+        errs = [vi.std_dev for vi in r]
 
         m, e = calculate_weighted_mean(v, errs)
 

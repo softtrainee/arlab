@@ -64,7 +64,7 @@ class Mean(HasTraits):
 
         vs = [vi for vi in vs if vi is not None]
         if vs:
-            vs, es = zip(*[(v.nominal_value, v.std_dev()) for v in vs])
+            vs, es = zip(*[(v.nominal_value, v.std_dev) for v in vs])
             vs, es = array(vs), array(es)
             if use_weights:
                 weights = 1 / es ** 2
@@ -79,7 +79,7 @@ class Mean(HasTraits):
         else:
             av, werr = 0, 0
 
-        return ufloat((av, werr))
+        return ufloat(av, werr)
 
     def _calculate_arithmetic_mean(self, attr):
         return self._calculate_mean(attr, use_weights=False)

@@ -19,7 +19,7 @@ from traits.api import HasTraits, Either, Int, Float, Any, Str, List, Event, \
     Bool
 from traitsui.api import View, Item, TableEditor, Controller
 from traitsui.api import Handler
-from pyface.timer.do_later import do_after
+from pyface.timer.do_later import do_after, do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -31,10 +31,10 @@ class ViewableHandler(Handler):
     def init(self, info):
 #        info.object.ui = info.ui
         info.object.initialized = True
-        try:
-            info.object.opened()
-        except AttributeError:
-            pass
+#        try:
+        info.object.opened()
+#        except AttributeError:
+#            pass
 
     def object__disposed_fired(self, info):
         info.ui.dispose()
@@ -52,7 +52,7 @@ class ViewableHandler(Handler):
 #        info.object.ui = None
 
 class Viewable(Loggable):
-    ui = Any
+#    ui = Any
     id = ''
     handler_klass = ViewableHandler
 
@@ -91,14 +91,14 @@ class Viewable(Loggable):
 #            # time.sleep(0.05)
 
     def show(self, **kw):
+        args = tuple()
         if not self.initialized:
-#        if self.ui is None or self.ui.control is None:
-            func = lambda:do_after(10, self.edit_traits, **kw)
+            func = self.edit_traits
         else:
-#            func = lambda:do_after(10, self.ui.control.Raise)
-            func = lambda:do_after(10, self.trait_set(raised=True))
+            func = self.trait_set
+            kw['raised'] = True
 
-        func()
+        do_later(func, *args, **kw)
 
     def add_window(self, ui):
 

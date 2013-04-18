@@ -111,7 +111,7 @@ class AnalysisAdapter(TabularAdapter):
         e = ''
         ee = getattr(self.item, k)
         if ee is not None and not isinstance(ee, str):
-            e = self._floatfmt(ee.std_dev(), n=6)
+            e = self._floatfmt(ee.std_dev, n=6)
         return e
 
 class AnalysisIntensityAdapter(AnalysisAdapter):

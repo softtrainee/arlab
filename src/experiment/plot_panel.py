@@ -109,7 +109,7 @@ class PlotPanel(Viewable):
                 try:
                     vv = reg.predict(0)
                     ee = reg.predict_error(0)
-                    u = ufloat((vv, ee))
+                    u = ufloat(vv, ee)
                     if self.isbaseline:
                         self.baselines[iso] = u
                         if arar_age:
@@ -180,7 +180,7 @@ class PlotPanel(Viewable):
         if not uvalue:
             v, e = 0, 0
         else:
-            v, e = uvalue.nominal_value, uvalue.std_dev()
+            v, e = uvalue.nominal_value, uvalue.std_dev
 
         v = self._floatfmt(v, sig_figs[0])
         e = self._floatfmt(e, sig_figs[1])
@@ -241,8 +241,8 @@ class PlotPanel(Viewable):
                 return ''
 
             if cfb:
-                bu = ufloat((0, 0))
-                bl = ufloat((0, 0))
+                bu = ufloat(0, 0)
+                bl = ufloat(0, 0)
                 try:
                     bu = self.baselines[u]
                     bl = self.baselines[l]
@@ -251,15 +251,15 @@ class PlotPanel(Viewable):
                 try:
                     rr = (ru - bu) / (rl - bl)
                 except ZeroDivisionError:
-                    rr = ufloat((0, 0))
+                    rr = ufloat(0, 0)
             else:
                 try:
                     rr = ru / rl
                 except ZeroDivisionError:
-                    rr = ufloat((0, 0))
+                    rr = ufloat(0, 0)
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
-                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
+                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev)), n=6) + \
                     self._get_pee(rr)
             return res
 
@@ -272,10 +272,10 @@ class PlotPanel(Viewable):
             try:
                 us = self.signals[iso]
             except KeyError:
-                us = ufloat((0, 0))
+                us = ufloat(0, 0)
 
-            ubs = ufloat((0, 0))
-            ubl = ufloat((0, 0))
+            ubs = ufloat(0, 0)
+            ubl = ufloat(0, 0)
             if self.correct_for_baseline:
                 try:
                     ubs = self.baselines[iso]
@@ -298,7 +298,7 @@ class PlotPanel(Viewable):
             try:
                 ub = self.baselines[iso]
             except KeyError:
-                ub = ufloat((0, 0))
+                ub = ufloat(0, 0)
             return ub
 
         self._print_('bs', get_value, display)
@@ -308,7 +308,7 @@ class PlotPanel(Viewable):
             try:
                 ub = self.blanks[iso]
             except KeyError:
-                ub = ufloat((0, 0))
+                ub = ufloat(0, 0)
             return ub
 
         self._print_('bl', get_value, display)
@@ -320,7 +320,7 @@ class PlotPanel(Viewable):
         def func(iso):
             uv = get_value(iso)
             vv = uv.nominal_value
-            ee = uv.std_dev()
+            ee = uv.std_dev
 
             v = pad('{:0.5f}'.format(vv))
             e = pad('{:0.6f}'.format(ee), n=6)
@@ -337,7 +337,7 @@ class PlotPanel(Viewable):
     def _get_pee(self, uv, error=None):
         if uv is not None:
             vv = uv.nominal_value
-            ee = uv.std_dev()
+            ee = uv.std_dev
         else:
             vv, ee = 0, 0
             

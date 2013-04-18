@@ -128,7 +128,7 @@ class Analysis(Loggable):
     @property
     def age_string(self):
         a = self.age.nominal_value
-        e = self.age.std_dev()
+        e = self.age.std_dev
 #        a, e = self.age_value, self.age_error
         try:
             pe = abs(e / a * 100)
@@ -144,11 +144,11 @@ class Analysis(Loggable):
 #        rr = self.isotope_record.arar_result
 #        return rr['rad40']
 
-    def __getattr__(self, attr):
-#        if self.isotope_record:
-
-#        if hasattr(self.isotope_record, attr):
-        return getattr(self.isotope_record, attr)
+#    def __getattr__(self, attr):
+# #        if self.isotope_record:
+#
+# #        if hasattr(self.isotope_record, attr):
+#        return getattr(self.isotope_record, attr)
 #            else:
 #                raise AttributeError('Analysis has not attribute= {}'.format(attr))
 
@@ -226,7 +226,7 @@ class NonDBAnalysis(HasTraits):
 
     @cached_property
     def _get_age(self):
-        return ufloat((self._age, self._error))
+        return ufloat(self._age, self._error)
 
     def _set_age(self, ae):
         self._age = ae[0]

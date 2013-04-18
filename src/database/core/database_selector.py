@@ -253,9 +253,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             records = self.selected
 
         if records is not None:
-            if isinstance(records,(list, tuple)):
-                records=records[0]
+            if isinstance(records, (list, tuple)):
+                records = records[0]
             self._open_individual(records)
+
+        self.debug('opened')
 
     def _open_individual(self, si):
         si = self._record_factory(si)
@@ -274,9 +276,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             si.window_x = self.wx
             si.window_y = self.wy
             def do(si, sid):
+                self.debug('{}'.format(si))
                 info = si.edit_traits()
                 self._open_window(sid, info)
 
+            self.debug('do later open')
             do_later(do, si, sid)
 
         except Exception, e:
