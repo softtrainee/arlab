@@ -195,6 +195,10 @@ def get_user_plugins():
     return plugins
 
 def app_factory():
+    '''
+        assemble the plugins 
+        return a Pychron WorkbenchApplication
+    '''
     plugins = [
                CorePlugin(),
                WorkbenchPlugin(),
@@ -208,10 +212,39 @@ def app_factory():
     return Pychron(plugins=plugins)
 
 
+def check_dependencies():
+    '''
+        check the dependencies and 
+    '''
+    from pyface.api import warning
+    try:
+        mod = __import__('uncertainties',
+                         fromlist=['__version__']
+                         )
+        __version__ = mod.__version__
+    except ImportError:
+        warning(None, 'Install "{}" package. required version>={} '.format('uncertainties', '2.1'))
+        return
+
+    maj, _min = __version__.split('.')
+    if int(maj) < 2:
+        warning(None, 'Update "{}" package. your version={}. required version>={} '.format('uncertainties',
+                                                                                           __version__,
+                                                                                           '2.1'
+                                                                                           ))
+        return
+
+    return True
+
+
+
 app = None
 def launch():
     '''
     '''
+
+    if not check_dependencies():
+        return
 
     global app
     app = app_factory()
