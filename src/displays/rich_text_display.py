@@ -46,7 +46,6 @@ def gui_decorator(func):
 # class DisplayHandler(Handler):
 class DisplayHandler(ViewableHandler):
     def closed(self, info, is_ok):
-
         obj = info.object
         obj._opened = False
         obj.was_closed = True
