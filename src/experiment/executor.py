@@ -281,8 +281,9 @@ class ExperimentExecutor(ExperimentManager):
                 if not man.test_connection():
                     nonfound.append(extract_device)
 
-
-        if self.spectrometer_manager is None:
+        needs_spec_man=any([ai.measurement_script for ai in self._get_all_automated_runs()])
+        
+        if self.spectrometer_manager is None and needs_spec_man:
             if not globalv.experiment_debug:
                 nonfound.append('spectrometer')
 
