@@ -114,7 +114,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def commit_changes(self, runs):
         for i, ri in enumerate(runs):
-            self._set_run_values(ri, excludes='labnumber')
+            self._set_run_values(ri, excludes=['labnumber','position'])
 
             if self.aliquot:
                 ri.aliquot = self.aliquot + i
@@ -144,7 +144,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             if self.position:
                 s = int(self.position)
                 e = int(self.endposition)
-                self.position = str(e + 1)
+                if e:
+                    self.position = str(e + 1)
+                else:
+                    self.position=self._increment(self.position)
                 if self.endposition:
                     self.endposition = 2 * e + 1 - s
             self.labnumber = self._increment(self.labnumber)
@@ -220,7 +223,11 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
             else:
                 arvs = [self._new_run(position=str(s), special=special)]
-                self.position = self._increment(self.position)
+#                 self.position = self._increment(self.position)
+        elif self.position and self.labnumber=='dg':
+            arvs = [self._new_run(special=False, position=self.position)]
+                        
+#             self.position = self._increment(self.position)
         else:
             arvs = [self._new_run(special=special)]
 
@@ -249,6 +256,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if self.labnumber in ('ba', 'bg', 'bc', 'a', 'c'):
             ex += ('position',)
 
+        print ex
         self._set_run_values(arv, excludes=ex)
         return arv
 
