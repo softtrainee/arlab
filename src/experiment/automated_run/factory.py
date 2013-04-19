@@ -133,23 +133,32 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             returns a list of runs even if its only one run 
                     also returns self.frequency if using special labnumber else None
         '''
-        if self.template and self.template != NULL_STR:
+        freq = self.frequency if self.labnumber in ANALYSIS_MAPPING else None
+        
+        if self.template and self.template != NULL_STR and not freq:
             arvs = self._render_template()
         else:
             arvs = self._new_runs()
 
-        freq = self.frequency if self.labnumber in ANALYSIS_MAPPING else None
 
         if auto_increment:
             if self.position:
-                s = int(self.position)
+                increment=1
+                if ',' in self.position:
+                    spos=map(int, self.position.split(','))
+                    increment=spos[-1]-spos[0]+1
+                    s=spos[-1]
+                else:
+                    s = int(self.position)
+                    
                 e = int(self.endposition)
                 if e:
                     self.position = str(e + 1)
                 else:
-                    self.position=self._increment(self.position)
+                    self.position=self._increment(self.position, increment=increment)
                 if self.endposition:
                     self.endposition = 2 * e + 1 - s
+                    
             self.labnumber = self._increment(self.labnumber)
 
 
@@ -188,7 +197,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         for st in template.steps:
             if st.is_ok:
                 arv = self._new_run(extract_group=self._extract_group_cnt,
-                                    step=st.step_id
+                                    step=st.step_id,
+                                    position=self.position
                                     )
                 arv.trait_set(**st.make_dict())
                 arvs.append(arv)
@@ -233,13 +243,22 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
         return arvs
 
-    def _increment(self, m):
-        try:
-            m = str(int(m) + 1)
-        except ValueError:
-            pass
-
-        return m
+    def _increment(self, m, increment=1):
+        
+        s=','
+        if s not in m:
+            m=(m,)
+            s=''
+        else:
+            m=m.split(s)
+        ms=[]
+        for mi in m:
+            try:
+                ms.append(str(int(mi) + increment))
+            except ValueError:
+                return s.join(m)
+        
+        return s.join(ms)
 
     def _make_irrad_level(self, ln):
         il = ''
@@ -252,11 +271,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def _new_run(self, special=False, **kw):
         arv = self._spec_klass(**kw)
-        ex = ('extract_value', 'extract_units', 'pattern') if special else None
+        ex = ('extract_value', 'extract_units', 'pattern') if special else tuple()
         if self.labnumber in ('ba', 'bg', 'bc', 'a', 'c'):
             ex += ('position',)
 
-        print ex
         self._set_run_values(arv, excludes=ex)
         return arv
 

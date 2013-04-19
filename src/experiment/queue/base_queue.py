@@ -47,8 +47,8 @@ class BaseExperimentQueue(Loggable):
     extract_device = String
     username = String
     tray = Str
-    delay_before_analyses = Int
-    delay_between_analyses = Int
+    delay_before_analyses = Int(5)
+    delay_between_analyses = Int(30)
 
     stats = Instance(ExperimentStats, ())
 
