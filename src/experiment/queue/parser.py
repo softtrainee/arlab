@@ -95,7 +95,8 @@ class RunParser(Loggable):
                 try:
                     params[rattr] = args[idx]
                 except IndexError, e:
-                    self.debug('base schedule _run_parser {} {}'.format(e, attr))
+                    pass
+#                     self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         # load booleans
         for attr in [
@@ -127,17 +128,17 @@ class RunParser(Loggable):
 #                     'overlap',
                      'cleanup',
 #                     'aliquot',
+                     
+                     # ver 1.0
                      'extract_group',
+                     # ver 2.0
+                     ('e_group', 'extract_group'),
                      'weight',
                      # ver 1.0
                      'extract_value',
                      # ver 2.0
                      ('e_value', 'extract_value'),
                      ]:
-#            if isinstance(attr, tuple):
-#                attr, rattr = attr
-#            else:
-#                attr, rattr = attr, attr
             attr, rattr = self._get_attr(attr)
             idx = self._get_idx(header, attr)
             if idx:
@@ -147,78 +148,10 @@ class RunParser(Loggable):
                 except IndexError, e:
                     self.debug('{} {}'.format(e, attr))
                 except ValueError, e:
-                    self.debug('{} {} {}'.format(e, attr, param))
+                    pass
+#                     self.debug('{} {} {}'.format(e, attr, param))
 
-#            try:
-#                idx = header.index(attr)
-#            except ValueError, e:
-#                print e
-#                continue
-#                try:
-#                    param = args[idx]
-#                    params[rattr] = float(param.strip())
-#                except (IndexError, ValueError), e:
-#                    print e
-#                    pass
-#            try:
-#                param = args[header.index(attr)].strip()
-#                if param:
-#                    params[attr] = float(param)
-#            except (IndexError, ValueError):
-#                pass
-
-        # default extract_units to watts
-#        print header.index('extract_value'), len(args)
-#        for attr in [
-#                     # ver 1.0
-#                     'extract_value',
-#                     'extract_units',
-#                     # ver 2.0
-#                     ('e_value', 'extract_value'),
-#                     ('e_units', 'extract_units')
-#                     ]:
-#            if isinstance(attr, tuple):
-#                attr, rattr = attr
-#            else:
-#                attr, rattr = attr, attr
-#
-#            try:
-#                idx = header.index(attr)
-#            except ValueError:
-#                continue
-#
-#            try:
-#                param = args[idx]
-#                params[rattr] = param
-#            except IndexError:
-#                pass
-
-#        extract_value = args[header.index('extract_value')]
-#        extract_units = args[header.index('extract_units')]
-#        if not extract_units:
-#            extract_units = '---'
-#
-#        params['extract_value'] = extract_value
-#        params['extract_units'] = extract_units
-
-#        def make_script_name(n):
-#            try:
-#                na = args[header.index(n)]
-#                if na.startswith('_'):
-#                    if meta:
-#                        na = meta['mass_spectrometer'] + na
-#
-#                if na and not na.endswith('.py'):
-#                    na = na + '.py'
-#            except IndexError, e:
-#                print 'base schedule make_script_name ', e
-#                na = NULL_STR
-#
-#            return na
-#        for k, pa in params.iteritems():
-#            print k, pa
-
-        return script_info, params  # , make_script_name
+        return script_info, params
 
 
 class UVRunParser(RunParser):

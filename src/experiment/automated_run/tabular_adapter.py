@@ -66,7 +66,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     duration_text = Property
     cleanup_text = Property
     labnumber_text = Property
-#    aliquot_text = Property
+    aliquot_text = Property
 
 
     def get_bg_color(self, obj, trait, row):
@@ -87,16 +87,25 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         it = self.item
         ln = it.labnumber
         if it.user_defined_aliquot:
-            ln = '{}-{}'.format(it.labnumber, it.aliquot)
-        else:
-            if self.item.step:
-                ln = make_runid(it.labnumber,
-                                    it.aliquot,
-                                    it.step)
+            ln = '{}-{:02n}'.format(it.labnumber, it.aliquot)
+#         else:
+#             if self.item.step:
+#                 ln = make_runid(it.labnumber,
+#                                     it.aliquot,
+#                                     it.step)
 
 
         return ln
-
+    def _get_aliquot_text(self, trait, item):
+        it=self.item
+        
+        if  it.step:
+            al='{:02n}{}'.format(it.aliquot, it.step)
+        else:
+            al='{:02n}'.format(it.aliquot)
+            
+        return al
+    
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
 

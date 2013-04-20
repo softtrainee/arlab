@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits,Any
 from traitsui.api import View, Item, TableEditor
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
@@ -24,6 +24,7 @@ from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 
 class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
+    current_run=Any
     def test_runs(self):
         runs = self.cleaned_automated_runs
 

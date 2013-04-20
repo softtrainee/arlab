@@ -239,7 +239,8 @@ def check_dependencies():
         warning(None, 'Install "{}" package. required version>={} '.format('uncertainties', '2.1'))
         return
 
-    maj, _min = __version__.split('.')
+    vargs = __version__.split('.')
+    maj=vargs[0]
     if int(maj) < 2:
         warning(None, 'Update "{}" package. your version={}. required version>={} '.format('uncertainties',
                                                                                            __version__,

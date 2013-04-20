@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Int, Bool, Float, Property, Enum
+from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -61,7 +61,7 @@ class AutomatedRunSpec(Loggable):
     #===========================================================================
     # extraction
     #===========================================================================
-    extract_group = Int
+    extract_group = CInt
     extract_value = Float
     extract_units = Str
     position = Str
@@ -98,7 +98,7 @@ class AutomatedRunSpec(Loggable):
                    ]
         return ','.join(map(str, self.to_string_attrs(attrs)))
 
-    def get_estimated_duration(self, script_context):
+    def get_estimated_duration(self, script_context, warned):
         '''
             use the pyscripts to calculate etd
             
@@ -113,7 +113,10 @@ class AutomatedRunSpec(Loggable):
             for si in SCRIPT_NAMES:
                 name = getattr(self, si)
                 if name in script_context:
-                    self.debug('{:<30s} in script context. using previous estimated duration'.format(name))
+                    if name not in warned:
+                        self.debug('{:<30s} in script context. using previous estimated duration'.format(name))
+                        warned.append(name)
+                        
                     script, ok = script_context[name]
                     s += script.get_estimated_duration()
                     script_oks.append(ok)
