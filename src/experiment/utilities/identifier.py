@@ -90,7 +90,7 @@ def convert_labnumber(ln):
 
         if ln in SPECIAL_IDS:
             ln = SPECIAL_IDS[ln]
-    except TypeError:
+    except ValueError:
         pass
 
 
@@ -163,15 +163,16 @@ def make_special_identifier(ln, ed, ms, aliquot=None):
     else:
         return d
 
-def make_rid(ln, a, ed, ms):
+def make_rid(ln, a,step=''):
     '''
         if ln can be converted to integer return ln
         else return special_identifier
     '''
     try:
         _ = int(ln)
-        return ln
+        return make_runid(ln,a,step)
     except ValueError:
-        return make_special_identifier(ln, ed, ms, aliquot=a)
+        return '{}-{:02n}'.format(ln, a)
+#        return make_special_identifier(ln, ed, ms, aliquot=a)
 
 #============= EOF =============================================

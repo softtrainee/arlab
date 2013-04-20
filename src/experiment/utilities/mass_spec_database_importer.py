@@ -314,7 +314,7 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         item = db.add_changeable_items(analysis, self.data_reduction_session_id)
 
-        self.debug('%%%%%%%%%%%%%%%%%%%% {} %%%%%%%%%%%%%%%%%%%'.format(spec.comment))
+        self.debug('%%%%%%%%%%%%%%%%%%%% Comment: {} %%%%%%%%%%%%%%%%%%%'.format(spec.comment))
         item.Comment = spec.comment
         db.flush()
 

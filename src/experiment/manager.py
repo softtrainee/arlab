@@ -373,9 +373,10 @@ can_edit_scripts= {}
     
     def _get_labnumber(self, arun):
         db=self.db
-        ms=db.get_mass_spectrometer(arun.mass_spectrometer)
-        ed=db.get_extraction_device(arun.extract_device)               
-        dbln = db.get_labnumber(make_identifier(arun.labnumber, ed.id, ms.id))
+#        ms=db.get_mass_spectrometer(arun.mass_spectrometer)
+#        ed=db.get_extraction_device(arun.extract_device)               
+        dbln = db.get_labnumber(arun.labnumber)
+#                                make_identifier(arun.labnumber, ed.id, ms.id))
         return dbln
     
     def _update_info(self, ans):

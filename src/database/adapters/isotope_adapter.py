@@ -676,7 +676,7 @@ class IsotopeAdapter(DatabaseAdapter):
             pass
 
     def get_labnumber(self, labnum):
-        return self._retrieve_item(gen_LabTable, str(labnum), key='identifier')
+        return self._retrieve_item(gen_LabTable, labnum, key='identifier')
 #        if isinstance(labnum, str):
 #            labnum = convert_identifier(labnum)
 #
