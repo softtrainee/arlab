@@ -244,7 +244,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
-        params = dict(RID=make_runid(rid, aliquot, step),
+        params = dict(RID=rid,#make_runid(rid, aliquot, step),
 #                    '{}-{}{}'.format(rid, aliquot, step),
                      Aliquot=aliquot,
                      RunDateTime=func.current_timestamp(),

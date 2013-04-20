@@ -39,7 +39,7 @@ from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, make_runid, \
-    make_rid
+    make_rid, make_special_identifier
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
@@ -194,6 +194,7 @@ class AutomatedRun(Loggable):
 
     skip = Bool
     fits = List
+    runid=Str
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -328,7 +329,6 @@ class AutomatedRun(Loggable):
                                 )
 
     def py_baselines(self, ncounts, starttime, mass, detector,
-#                    peak_hop=False,
                     series=0, nintegrations=5, settling_time=4,
                     fit='average_SEM'
                     ):
@@ -1095,7 +1095,7 @@ anaylsis_type={}
         self._processed_signals_dict = ss
 
         ln = self.labnumber
-        ln = convert_identifier(ln)
+#        ln = convert_identifier(ln)
         aliquot = self.aliquot
 
         # save to local sqlite database for backup and reference
@@ -1111,6 +1111,7 @@ anaylsis_type={}
         # save to a database
         db = self.db
         if db and db.connect(force=True):
+            
             lab = db.get_labnumber(ln)
             experiment = db.get_experiment(self.experiment_name)
 
@@ -1130,7 +1131,6 @@ anaylsis_type={}
                                 step=self.step,
                                 comment=self.comment
                                 )
-
             # added analysis to experiment
             experiment.analyses.append(a)
 
@@ -1463,10 +1463,10 @@ anaylsis_type={}
 #                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
         rs_name, rs_text = self._assemble_script_blob()
 
-        ms = db.get_mass_spectrometer(self.mass_spectrometer)
-        ed = db.get_extraction_device(self.extract_device)
+#        ms = db.get_mass_spectrometer(self.mass_spectrometer)
+#        ed = db.get_extraction_device(self.extract_device)
 
-        exp = ExportSpec(rid=make_rid(self.labnumber, self.aliquot, ed.id, ms.id),
+        exp = ExportSpec(rid=make_rid(self.labnumber, self.aliquot, self.step),
                          runscript_name=rs_name,
                          runscript_text=rs_text,
                          signal_fits=self.fits,
@@ -1730,10 +1730,15 @@ anaylsis_type={}
         self._extraction_script = self._load_script('extraction')
         return self._extraction_script
 
-    @property
-    def runid(self):
-#        return #'{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
-        return make_runid(self.labnumber, self.aliquot, self.step)
+#    @property
+#    def runid(self):
+##        return #'{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+#
+#        if self.analysis_type!='unknown':
+#            return make_special_identifier(self.labnumber, )
+#        
+#        
+#        return make_runid(self.labnumber, self.aliquot, self.step)
 
 #    @property
 #    def _get_executable(self):

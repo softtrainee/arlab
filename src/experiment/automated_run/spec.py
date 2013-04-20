@@ -148,6 +148,7 @@ class AutomatedRunSpec(Loggable):
         if new_uuid:
             self.uuid = str(uuid.uuid4())
             arun.uuid = self.uuid
+        arun
 
         # bind to the runs state
         arun.on_trait_change(self._update_state, 'state')

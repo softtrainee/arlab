@@ -393,6 +393,14 @@ post_equilibration_script:name
         if self.special_labnumber != NULL_STR:
             ln = convert_special_name(self.special_labnumber)
             if ln:
+                db = self.db
+                if not db:
+                    return
+                
+                ms = db.get_mass_spectrometer(self.mass_spectrometer)
+                ed = db.get_extraction_device(self.extract_device)
+                ln = make_special_identifier(ln, ed.id, ms.id)
+                
                 self.labnumber = ln
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
@@ -416,9 +424,8 @@ post_equilibration_script:name
             if not labnumber in SPECIAL_MAPPING.values():
                 self.special_labnumber = NULL_STR
             else:
-                ms = db.get_mass_spectrometer(self.mass_spectrometer)
-                ed = db.get_extraction_device(self.extract_device)
-                labnumber = make_special_identifier(labnumber, ed.id, ms.id)
+                
+                
                 special = True
 
         self.irradiation = ''
