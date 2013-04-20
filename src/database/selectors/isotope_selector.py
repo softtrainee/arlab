@@ -98,7 +98,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #            dm = H5DataManager(**kw)
 #
 #        self.data_manager = dm
-    lookup = {'Labnumber':([gen_LabTable], gen_LabTable.labnumber),
+    lookup = {'Labnumber':([gen_LabTable], gen_LabTable.identifier),
               'Step':([], meas_AnalysisTable.step),
               'Aliquot':([], meas_AnalysisTable.aliquot),
               'Sample':([gen_LabTable, gen_SampleTable], gen_SampleTable.name),
