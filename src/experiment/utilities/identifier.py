@@ -144,7 +144,13 @@ def make_runid(ln, a, s):
 
 
 def make_special_identifier(ln, a, ms, ed):
-    return '{}.{}/{}-[:02n}'.format(ln, ed, ms, a)
+    '''
+        ln: str or int
+        a: int aliquot
+        ms: int mass spectrometer id
+        ed: int extract device id
+    '''
+    return '{}-{:02n}-{:02n}-[:02n}'.format(ln, ed, ms, a)
 
 def make_rid(ln, a, ms, ed):
     '''
