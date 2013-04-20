@@ -198,7 +198,7 @@ class IonOpticsManager(Manager):
             if save:
                 save = True
                 if confirm_save:
-                    msg = 'Update Magnet Field Table with new peak center- {} ({}) @ {}'.format(*args)
+                    msg = 'Update Magnet Field Table with new peak center- {} ({}) @ RefDetUnits= {}'.format(*args)
                     save = self.confirmation_dialog(msg)
                 if save:
                     spec.magnet.update_field_table(isotope, dac_a)

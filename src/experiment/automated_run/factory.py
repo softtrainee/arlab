@@ -275,7 +275,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if self.labnumber in ('ba', 'bg', 'bc', 'a', 'c'):
             ex += ('position',)
 
+        
         self._set_run_values(arv, excludes=ex)
+        print arv.extract_group
         return arv
 
     def _set_run_values(self, arv, excludes=None):
@@ -287,7 +289,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                      'pattern',
                      'weight', 'comment',
                      'sample', 'irradiation',
-                     'skip', 'mass_spectrometer'
+                     'skip', 'mass_spectrometer',
+                     
                      ):
 
             if attr in excludes:

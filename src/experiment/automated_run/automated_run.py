@@ -897,6 +897,9 @@ anaylsis_type={}
                 return ti
 
     def _check_iteration(self, i, ncounts, check_conditions):
+        if self.plot_panel is None:
+            return 'break'
+        
         if check_conditions:
             termination_condition = self._check_conditions(self.termination_conditions, i)
             if termination_condition:

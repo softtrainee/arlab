@@ -401,7 +401,7 @@ can_edit_scripts= {}
                     if arunid in aoffs:
                         aoffs[arunid] += 1
                     else:
-                        aoffs[arunid] = 1
+                        aoffs[arunid] = 0
 
 #                    aoff += 1
                     idcnt_dict, stdict = dict(), dict()
@@ -439,7 +439,7 @@ can_edit_scripts= {}
                 aoff = aoffs[arunid]
             else:
                 aoff = 0
-#            print arun.labnumber, aoff
+#             print arun.labnumber, aoff
             arun.aliquot += aoff
 
     def _modify_aliquots(self, ans):
@@ -482,6 +482,7 @@ can_edit_scripts= {}
 
 #             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
             if not arun.user_defined_aliquot:
+#                 print arunid, st, c, offset
                 arun.aliquot = int(st + c - offset)
             else:
                 c = 0
