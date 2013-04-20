@@ -490,12 +490,18 @@ class ExperimentExecutor(ExperimentManager):
         '''
         if self.massspec_importer:
             db = self.massspec_importer.db
-            al = db.get_lastest_analysis_aliquot(arv.labnumber)
-            if al is not None:
-                if al > arv.aliquot:
-                    arv.aliquot = al + 1
-                    self.message('{} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.labnumber,
+            try:
+                _= int(arv.labnumber)
+                al = db.get_lastest_analysis_aliquot(arv.labnumber)
+                if al is not None:
+                    if al > arv.aliquot:
+                        old=arv.aliquot
+                        arv.aliquot = al + 1
+                        self.message('{}-{:02n} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.labnumber,
+                                                                                                                  old,
                                                                                                        arv.aliquot))
+            except ValueError:
+                pass
 
 
 #    def _setup_automated_run(self, i, arun, repo, dm, runner):

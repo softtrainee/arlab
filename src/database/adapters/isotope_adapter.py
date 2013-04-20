@@ -543,7 +543,7 @@ class IsotopeAdapter(DatabaseAdapter):
                       sample=None, irradiation=None, **kw):
         ln = self.get_labnumber(labnumber)
         if ln is None:
-            ln = gen_LabTable(labnumber=labnumber,
+            ln = gen_LabTable(identifier=labnumber,
     #                      aliquot=aliquot,
                           ** kw)
 
