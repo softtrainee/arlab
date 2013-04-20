@@ -78,7 +78,7 @@ class IsotopeRecordView(HasTraits):
 
     def create(self, dbrecord):
         try:
-            self.labnumber = str(dbrecord.labnumber.labnumber)
+            self.labnumber = str(dbrecord.labnumber.identifier)
             self.aliquot = dbrecord.aliquot
             self.step = dbrecord.step
     #        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
@@ -828,14 +828,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_labnumber(self):
         if self._dbrecord:
             if self._dbrecord.labnumber:
-                ln = self._dbrecord.labnumber.labnumber
+                ln = self._dbrecord.labnumber.identifier
                 ln = convert_labnumber(ln)
                 return ln
 
     @cached_property
     def _get_shortname(self):
         if self._dbrecord:
-            ln = self._dbrecord.labnumber.labnumber
+            ln = self._dbrecord.labnumber.identifier
             ln = convert_shortname(ln)
 
             ln = make_runid(ln, self.aliquot, self.step)

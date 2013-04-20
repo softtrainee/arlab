@@ -220,7 +220,7 @@ class MassSpecImporter(Importer):
         sess = dest.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.join(gen_LabTable)
-        q = q.filter(gen_LabTable.labnumber == dblabnumber.labnumber)
+        q = q.filter(gen_LabTable.identifier == dblabnumber.identifier)
         q = q.filter(and_(meas_AnalysisTable.aliquot == aliquot,
                            meas_AnalysisTable.step == step))
         try:
@@ -241,7 +241,7 @@ class MassSpecImporter(Importer):
         status = msrecord.changeable[-1].StatusLevel
 
         dest = self.destination
-        self.info('adding analysis {} {}{}'.format(dblabnumber.labnumber, aliquot, step))
+        self.info('adding analysis {} {}{}'.format(dblabnumber.identifier, aliquot, step))
         self.import_count += 1
         dbanal = dest.add_analysis(dblabnumber,
                                    uuid=uuid.uuid4(),

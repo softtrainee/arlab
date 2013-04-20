@@ -81,10 +81,18 @@ def convert_special_name(name, output='shortname'):
 
 def convert_labnumber(ln):
     '''
+        ln is a str  but only special labnumbers cannot be converted to int
         convert number to name
+        
     '''
-    if ln in SPECIAL_IDS:
-        ln = SPECIAL_IDS[ln]
+    try:
+        ln = int(ln)
+
+        if ln in SPECIAL_IDS:
+            ln = SPECIAL_IDS[ln]
+    except TypeError:
+        pass
+
 
     return ln
 
@@ -134,5 +142,19 @@ def get_analysis_type(idn):
 def make_runid(ln, a, s):
     return '{}-{:02n}{}'.format(ln, a, s)
 
+
+def make_special_identifier(ln, a, ms, ed):
+    return '{}.{}/{}-[:02n}'.format(ln, ed, ms, a)
+
+def make_rid(ln, a, ms, ed):
+    '''
+        if ln can be converted to integer return ln
+        else return special_identifier
+    '''
+    try:
+        _ = int(ln)
+        return ln
+    except TypeError:
+        return make_special_identifier(ln, a, ms, ed)
 
 #============= EOF =============================================

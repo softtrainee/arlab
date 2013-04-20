@@ -136,20 +136,20 @@ class ArArAge(HasTraits):
     def get_error_component(self, key):
         v = next((error for (var, error) in self.age.error_components().items()
                                 if var.tag == key), 0)
-        ae=self.age_error
+        ae = self.age_error
         if ae:
             return v ** 2 / self.age_error ** 2 * 100
         else:
             return 0
-        
-    
+
+
     def get_signal_value(self, k):
         return self._get_arar_result_attr(k)
 
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
-            self.isotopes[iso]=niso
+            self.isotopes[iso] = niso
         else:
             niso = self.isotopes[iso]
 
@@ -279,7 +279,7 @@ class ArArAge(HasTraits):
                                     include_decay_error=include_decay_error,
                                     arar_constants=self.arar_constants
                                     )
-        
+
 
         if result:
             self.arar_result = result
@@ -297,7 +297,7 @@ class ArArAge(HasTraits):
                 tag = k
             else:
                 tag = '{}_{}'.format(k, kind)
-            
+
             if k in isos:
                 iso = self.isotopes[k]
                 if kind:
@@ -487,7 +487,7 @@ class ArArAge(HasTraits):
         try:
             return self.rad40 / self.Ar40 * 100
         except ZeroDivisionError:
-            return ufloat(0,1e-20)
+            return ufloat(0, 1e-20)
 #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
     @cached_property
@@ -595,7 +595,7 @@ class ArArAge(HasTraits):
             key = key[2:]
 
         arar_attr = 's{}'.format(key)
-        
+
 #        print self.arar_result
         if self.arar_result.has_key(arar_attr):
             return self.arar_result[arar_attr]

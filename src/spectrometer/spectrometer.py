@@ -311,13 +311,21 @@ class Spectrometer(SpectrometerDevice):
 
 #        return data
 
-    def get_intensity(self, key):
-
+    def get_intensity(self, dkeys):
+        '''
+            dkeys: str or tuple of strs
+            
+        '''
 #        index = DETECTOR_ORDER.index(key)
         data = self.get_intensities()
         if data is not None:
             keys, signals = data
-            return signals[keys.index(key)]
+
+            if isinstance(dkeys, (tuple, list)):
+                return [signals[keys.index(key)] for key in dkeys]
+            else:
+                return signals[keys.index(dkeys)]
+
 
 #        return data
     def get_hv_correction(self, current=False):

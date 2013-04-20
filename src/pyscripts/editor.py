@@ -287,7 +287,7 @@ class PyScriptEditor(Viewable):
         editor = VGroup(
                         Item('body',
                              height=480,
-                             editor=PyScriptCodeEditor(fontsize=18),
+                             editor=PyScriptCodeEditor(fontsize=14),
                              show_label=False),
                         help_grp
                         )

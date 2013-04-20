@@ -25,7 +25,8 @@ import os
 #============= local library imports  ==========================
 from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
-    convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE
+    convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
+    make_special_identifier
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.regex import TRANSECT_REGEX, POSITION_REGEX
 from src.experiment.utilities.script_mixin import ScriptMixin
@@ -114,10 +115,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def commit_changes(self, runs):
         for i, ri in enumerate(runs):
-            self._set_run_values(ri, excludes=['labnumber','position'])
+            self._set_run_values(ri, excludes=['labnumber', 'position'])
 
             if self.aliquot:
-                ri.aliquot = self.aliquot + i
+                ri.aliquot = int(self.aliquot + i)
                 ri.user_defined_aliquot = True
             else:
                 ri.user_defined_aliquot = False
@@ -134,7 +135,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                     also returns self.frequency if using special labnumber else None
         '''
         freq = self.frequency if self.labnumber in ANALYSIS_MAPPING else None
-        
+
         if self.template and self.template != NULL_STR and not freq:
             arvs = self._render_template()
         else:
@@ -143,22 +144,22 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
         if auto_increment:
             if self.position:
-                increment=1
+                increment = 1
                 if ',' in self.position:
-                    spos=map(int, self.position.split(','))
-                    increment=spos[-1]-spos[0]+1
-                    s=spos[-1]
+                    spos = map(int, self.position.split(','))
+                    increment = spos[-1] - spos[0] + 1
+                    s = spos[-1]
                 else:
                     s = int(self.position)
-                    
+
                 e = int(self.endposition)
                 if e:
                     self.position = str(e + 1)
                 else:
-                    self.position=self._increment(self.position, increment=increment)
+                    self.position = self._increment(self.position, increment=increment)
                 if self.endposition:
                     self.endposition = 2 * e + 1 - s
-                    
+
             self.labnumber = self._increment(self.labnumber)
 
 
@@ -234,9 +235,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             else:
                 arvs = [self._new_run(position=str(s), special=special)]
 #                 self.position = self._increment(self.position)
-        elif self.position and self.labnumber=='dg':
+        elif self.position and self.labnumber == 'dg':
             arvs = [self._new_run(special=False, position=self.position)]
-                        
+
 #             self.position = self._increment(self.position)
         else:
             arvs = [self._new_run(special=special)]
@@ -244,20 +245,20 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         return arvs
 
     def _increment(self, m, increment=1):
-        
-        s=','
+
+        s = ','
         if s not in m:
-            m=(m,)
-            s=''
+            m = (m,)
+            s = ''
         else:
-            m=m.split(s)
-        ms=[]
+            m = m.split(s)
+        ms = []
         for mi in m:
             try:
                 ms.append(str(int(mi) + increment))
             except ValueError:
                 return s.join(m)
-        
+
         return s.join(ms)
 
     def _make_irrad_level(self, ln):
@@ -275,7 +276,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if self.labnumber in ('ba', 'bg', 'bc', 'a', 'c'):
             ex += ('position',)
 
-        
+
         self._set_run_values(arv, excludes=ex)
         print arv.extract_group
         return arv
@@ -284,18 +285,28 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if excludes is None:
             excludes = []
 
+        '''
+            if run is not an unknown and not a degas then don't copy evalue, eunits and pattern
+            if runs is an unknown but is part of an extract group dont copy the evalue
+        '''
+        if arv.analysis_type != 'unknown':
+            if arv.analysis_type != 'dg':
+                excludes.extend('extract_value', 'extract_units', 'pattern')
+        else:
+            if arv.extract_group:
+                excludes.extend('extract_value')
+
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'pattern',
                      'weight', 'comment',
                      'sample', 'irradiation',
                      'skip', 'mass_spectrometer',
-                     
+
                      ):
 
             if attr in excludes:
                 continue
-
             setattr(arv, attr, getattr(self, attr))
 
         if self.user_defined_aliquot:
@@ -326,7 +337,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             setattr(self, attr, getattr(run, attr))
 
         if run.user_defined_aliquot:
-            self.aliquot = run.aliquot
+            self.aliquot = int(run.aliquot)
 
         for si in SCRIPT_KEYS:
             name = '{}_script'.format(si)
@@ -396,19 +407,24 @@ post_equilibration_script:name
             self.user_defined_aliquot = False
 
     def _labnumber_changed(self, old, new):
-        if self.labnumber != NULL_STR:
-            if not self.labnumber in SPECIAL_MAPPING.values():
-                self.special_labnumber = NULL_STR
-        self.irradiation = ''
-        self.sample = ''
-
         db = self.db
         if not db:
             return
-#        arun.run_info.sample = ''
-#        arun.aliquot = 0
-#        arun.irradiation = ''
+
         labnumber = self.labnumber
+        special = False
+        if labnumber != NULL_STR:
+            if not labnumber in SPECIAL_MAPPING.values():
+                self.special_labnumber = NULL_STR
+            else:
+                ms = db.get_mass_spectrometer(self.mass_spectrometer)
+                ed = db.get_extraction_device(self.extract_device)
+                labnumber = make_special_identifier(labnumber, ms.id, ed.id)
+                special = True
+
+        self.irradiation = ''
+        self.sample = ''
+
         if labnumber:
 
             # convert labnumber (a, bg, or 10034 etc)
@@ -443,6 +459,9 @@ post_equilibration_script:name
                     old in ANALYSIS_MAPPING or not old and new:
                     # set default scripts
                     self._load_default_scripts(key=labnumber)
+            elif special:
+                if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'):
+                    db.add_labnumber(labnumber)
 
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
@@ -496,7 +515,7 @@ post_equilibration_script:name
     def _get_labnumbers(self):
         lns = []
         if self.selected_level and self.selected_level != NULL_STR:
-            lns = [str(pi.labnumber.labnumber)
+            lns = [str(pi.labnumber.identifier)
                     for pi in self.selected_level.positions]
         if self.project:
             lns = [str(ln.labnumber)
