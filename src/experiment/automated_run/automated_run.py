@@ -545,13 +545,15 @@ anaylsis_type={}
         if self.plot_panel:
             self.plot_panel.automated_run = None
             self.plot_panel.close_ui()
-
-        if self.peak_plot_panel:
-            self.peak_plot_panel.close_ui()
+            del self.plot_panel
+            
+#        if self.peak_plot_panel:
+#            self.peak_plot_panel.close_ui()
 
         if self.peak_center:
             self.peak_center.graph.close_ui()
-
+            del self.peak_center
+            
         if self.coincidence_scan:
             self.coincidence_scan.graph.close_ui()
 
