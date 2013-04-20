@@ -39,6 +39,8 @@ from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import ALPHAS
 from src.envisage.credentials import Credentials
 from globals import globalv
+from src.experiment.utilities.identifier import convert_identifier,\
+    make_identifier
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -368,13 +370,23 @@ can_edit_scripts= {}
 
         # update run info
         self._update_info(ans)
-
+    
+    def _get_labnumber(self, arun):
+        db=self.db
+        ms=db.get_mass_spectrometer(arun.mass_spectrometer)
+        ed=db.get_extraction_device(arun.extract_device)               
+        dbln = db.get_labnumber(make_identifier(arun.labnumber, ed.id, ms.id))
+        return dbln
+    
     def _update_info(self, ans):
         self.debug('update run info')
-        db = self.db
+#         db = self.db
         for ai in ans:
             if ai.labnumber:
-                dbln = db.get_labnumber(ai.labnumber)
+                dbln=self._get_labnumber(ai)
+#                 ms=db.get_mass_spectrometer(ai.mass_spectrometer)
+#                 ed=db.get_extraction_device(ai.extract_device)               
+#                 dbln = db.get_labnumber(make_identifier(ai.labnumber, ed.id, ms.id))
                 sample = dbln.sample
                 if sample:
                     ai.sample = sample.name
@@ -413,7 +425,8 @@ can_edit_scripts= {}
                     else:
                         c = 1
 
-                ln = db.get_labnumber(arunid)
+                ln=self._get_labnumber(arun)
+#                 ln = db.get_labnumber(arunid)
                 if ln is not None:
                     st = 0
                     if ln.analyses:
@@ -471,7 +484,10 @@ can_edit_scripts= {}
             if arunid in fixed_dict:
                 st = fixed_dict[arunid]
             else:
-                ln = db.get_labnumber(arunid)
+                
+                ln=self._get_labnumber(arun)
+                
+#                 ln = db.get_labnumber(arunid)
                 if ln is not None:
                     try:
                         st = ln.analyses[-1].aliquot

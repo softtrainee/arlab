@@ -1466,7 +1466,7 @@ anaylsis_type={}
         ms = db.get_mass_spectrometer(self.mass_spectrometer)
         ed = db.get_extraction_device(self.extract_device)
 
-        exp = ExportSpec(rid=make_rid(self.labnumber, self.aliquot, ms.id, ed.id),
+        exp = ExportSpec(rid=make_rid(self.labnumber, self.aliquot, ed.id, ms.id),
                          runscript_name=rs_name,
                          runscript_text=rs_text,
                          signal_fits=self.fits,

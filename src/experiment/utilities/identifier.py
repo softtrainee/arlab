@@ -142,17 +142,28 @@ def get_analysis_type(idn):
 def make_runid(ln, a, s):
     return '{}-{:02n}{}'.format(ln, a, s)
 
-
-def make_special_identifier(ln, a, ms, ed):
+def make_identifier(ln, ed, ms):
+    try:
+        _ = int(ln)
+        return ln
+    except ValueError:
+        return make_special_identifier(ln, ed, ms)
+    
+def make_special_identifier(ln, ed, ms, aliquot=None):
     '''
         ln: str or int
         a: int aliquot
         ms: int mass spectrometer id
         ed: int extract device id
     '''
-    return '{}-{:02n}-{:02n}-[:02n}'.format(ln, ed, ms, a)
+    
+    d='{}-{:02n}-{:02n}'.format(ln, ed, ms)
+    if aliquot:
+        return '{}-{:02n}'.format(d,aliquot)
+    else:
+        return d
 
-def make_rid(ln, a, ms, ed):
+def make_rid(ln, a, ed, ms):
     '''
         if ln can be converted to integer return ln
         else return special_identifier
@@ -160,7 +171,7 @@ def make_rid(ln, a, ms, ed):
     try:
         _ = int(ln)
         return ln
-    except TypeError:
-        return make_special_identifier(ln, a, ms, ed)
+    except ValueError:
+        return make_special_identifier(ln, ed, ms, aliquot=a)
 
 #============= EOF =============================================
