@@ -286,7 +286,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     except (ZeroDivisionError, ValueError), e:
         age = ufloat(0, 0)
-        wo_jerr = ufloat(0, 0)
+        wo_jerr = 0
 
 #    print s40 / s36
     result = dict(

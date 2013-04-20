@@ -316,11 +316,11 @@ class ExperimentExecutor(ExperimentManager):
 
         self.pyscript_runner.connect()
         self._alive = True
-        
-        #check the first aliquot before delaying
-        arv=exp.cleaned_automated_runs[0]
+
+        # check the first aliquot before delaying
+        arv = exp.cleaned_automated_runs[0]
         self._check_run_aliquot(arv)
-    
+
         # delay before starting
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
@@ -384,10 +384,6 @@ class ExperimentExecutor(ExperimentManager):
             self.db.reset()
             force_delay = False
 
-#            if the user is editing the experiment set dont continue?
-#            if self.editing_signal:
-#                self.editing_signal.wait()
-
             # check for mods
             if self.check_for_file_mods():
                 self._reload_from_disk()
@@ -409,9 +405,9 @@ class ExperimentExecutor(ExperimentManager):
                     self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self.max_allowable_runs))
                     break
 
-                run = rgen.next()
-                if not run.skip:
-                    runargs = self._launch_run(run, cnt)
+                runspec = rgen.next()
+                if not runspec.skip:
+                    runargs = self._launch_run(runspec, cnt)
 
             except StopIteration:
                 break
@@ -419,7 +415,7 @@ class ExperimentExecutor(ExperimentManager):
             cnt += 1
             if runargs:
                 t, run = runargs
-                self._last_ran = run
+                self._last_ran = runspec
 
                 if run.overlap:
                     self.info('overlaping')
@@ -486,7 +482,7 @@ class ExperimentExecutor(ExperimentManager):
                    )
         ta.start()
         return ta, run
-    
+
     def _check_run_aliquot(self, arv):
         '''
             check the secondary database for this labnumber 
@@ -497,8 +493,8 @@ class ExperimentExecutor(ExperimentManager):
             al = db.get_lastest_analysis_aliquot(arv.labnumber)
             if al is not None:
                 if al > arv.aliquot:
-                    arv.aliquot = al+1
-                    self.message('{} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.labnumber, 
+                    arv.aliquot = al + 1
+                    self.message('{} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.labnumber,
                                                                                                        arv.aliquot))
 
 
@@ -507,12 +503,12 @@ class ExperimentExecutor(ExperimentManager):
         '''
             convert the an AutomatedRunSpec an AutomatedRun
         '''
-        
-        #the first run was checked before delay before runs
-        if i>1:
+
+        # the first run was checked before delay before runs
+        if i > 1:
             self._check_run_aliquot(arv)
 
-        
+
         arun = arv.make_run()
         exp = self.experiment_queue
         exp.current_run = arun
@@ -582,7 +578,7 @@ class ExperimentExecutor(ExperimentManager):
         aruns = self.experiment_queue.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                     if a.analysis_type in types and not a.skip), None)
-        
+
         if fa:
             ind, an = fa
             if ind == 0:

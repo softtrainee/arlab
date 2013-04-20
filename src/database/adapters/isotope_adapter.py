@@ -676,15 +676,16 @@ class IsotopeAdapter(DatabaseAdapter):
             pass
 
     def get_labnumber(self, labnum):
-        if isinstance(labnum, str):
-            labnum = convert_identifier(labnum)
-
-        try:
-            labnum = int(labnum)
-        except (ValueError, TypeError):
-            pass
-
-        return self._retrieve_item(gen_LabTable, labnum, key='labnumber')
+        return self._retrieve_item(gen_LabTable, str(labnum), key='identifier')
+#        if isinstance(labnum, str):
+#            labnum = convert_identifier(labnum)
+#
+#        try:
+#            labnum = int(labnum)
+#        except (ValueError, TypeError):
+#            pass
+#
+#        return self._retrieve_item(gen_LabTable, labnum, key='labnumber')
 
     def get_mass_spectrometer(self, value):
         return self._retrieve_item(gen_MassSpectrometerTable, value)

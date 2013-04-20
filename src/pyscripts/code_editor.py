@@ -143,7 +143,7 @@ class PyScriptCodeEditor(BasicEditorFactory):
     klass = _CodeEditor
 
     fontsize = Int(12)
-    fontname = Str('helvetica')
+    fontname = Str('menlo regular')
     keywords = ''
 
 

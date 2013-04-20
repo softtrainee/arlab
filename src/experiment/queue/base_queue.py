@@ -125,8 +125,9 @@ class BaseExperimentQueue(Loggable):
 # persistence
 #===============================================================================
     def load(self, txt):
-#        if self.automated_runs is not None:
-#            self._cached_runs = self.automated_runs
+        if self.automated_runs is not None:
+            self._cached_runs = self.automated_runs
+
         self.stats.delay_between_analyses = self.delay_between_analyses
 
         aruns = self._load_runs(txt)

@@ -54,26 +54,35 @@ EQ_INLET_REGEX = re.compile(r"(INLET) *= *")
 EQ_OUTLET_REGEX = re.compile(r"(OUTLET) *= *")
 EQ_DELAY_REGEX = re.compile(r"(EQ_DELAY) *= *")
 
+#===============================================================================
+# peak hops
+#===============================================================================
+USE_PEAK_HOP_REGEX = re.compile(r'(USE_PEAK_HOP) *= *')
+NCYCLES_REGEX = re.compile(r'(NCYCLES) *= *')
 
 PARAMS = dict(
-             peak_center_before=(PEAK_CENTER_BEFORE_REGEX, 'PEAK_CENTER_BEFORE= {}'),
-             peak_center_after=(PEAK_CENTER_AFTER_REGEX, 'PEAK_CENTER_AFTER= {}'),
-             peak_center_detector=(PEAK_CENTER_DETECTOR_REGEX, "PEAK_CENTER_DETECTOR= '{}'"),
-             peak_center_isotope=(PEAK_CENTER_ISOTOPE_REGEX, "PEAK_CENTER_ISOTOPE= '{}'"),
-             multicollect_ncounts=(MULTICOLLECT_NCOUNTS_REGEX, 'MULTICOLLECT_COUNTS= {}'),
+             peak_center_before=(PEAK_CENTER_BEFORE_REGEX, 'PEAK_CENTER_BEFORE', '{}= {}'),
+             peak_center_after=(PEAK_CENTER_AFTER_REGEX, 'PEAK_CENTER_AFTER', '{}= {}'),
+             peak_center_detector=(PEAK_CENTER_DETECTOR_REGEX, "PEAK_CENTER_DETECTOR", "{}= '{}'"),
+             peak_center_isotope=(PEAK_CENTER_ISOTOPE_REGEX, "PEAK_CENTER_ISOTOPE", "{}= '{}'"),
+             multicollect_ncounts=(MULTICOLLECT_NCOUNTS_REGEX, 'MULTICOLLECT_COUNTS', '{}= {}'),
 
 
-             baseline_before=(BASELINE_BEFORE_REGEX, 'BASELINE_BEFORE= {}'),
-             baseline_after=(BASELINE_AFTER_REGEX, 'BASELINE_AFTER= {}'),
-             baseline_ncounts=(BASELINE_NCOUNTS_REGEX, 'BASELINE_COUNTS= {}'),
-             baseline_detector=(BASELINE_DETECTOR_REGEX, "BASELINE_DETECTOR= '{}'"),
-             baseline_mass=(BASELINE_MASS_REGEX, 'BASELINE_MASS= {}'),
-             baseline_settling_time=(BASELINE_SETTLING_TIME_REGEX, 'BASELINE_SETTLING_TIME= {}'),
+             baseline_before=(BASELINE_BEFORE_REGEX, 'BASELINE_BEFORE', '{}= {}'),
+             baseline_after=(BASELINE_AFTER_REGEX, 'BASELINE_AFTER', '{}= {}'),
+             baseline_ncounts=(BASELINE_NCOUNTS_REGEX, 'BASELINE_COUNTS', '{}= {}'),
+             baseline_detector=(BASELINE_DETECTOR_REGEX, "BASELINE_DETECTOR", "{}= '{}'"),
+             baseline_mass=(BASELINE_MASS_REGEX, 'BASELINE_MASS', '{}= {}'),
+             baseline_settling_time=(BASELINE_SETTLING_TIME_REGEX, 'BASELINE_SETTLING_TIME', '{}= {}'),
 
-             eq_time=(EQ_TIME_REGEX, 'EQ_TIME= {}'),
-             eq_inlet=(EQ_INLET_REGEX, "INLET= '{}'"),
-             eq_outlet=(EQ_OUTLET_REGEX, "OUTLET= '{}'"),
-             eq_delay=(EQ_DELAY_REGEX, 'EQ_DELAY= {}'),
+             eq_time=(EQ_TIME_REGEX, 'EQ_TIME', '{}= {}'),
+             eq_inlet=(EQ_INLET_REGEX, "INLET", "{}= '{}'"),
+             eq_outlet=(EQ_OUTLET_REGEX, "OUTLET", "{}= '{}'"),
+             eq_delay=(EQ_DELAY_REGEX, 'EQ_DELAY', '{}= {}'),
+
+             use_peak_hop=(USE_PEAK_HOP_REGEX, 'USE_PEAK_HOP', '{}= {}'),
+             ncycles=(NCYCLES_REGEX, 'NCYCLES', '{}= {}'),
+#             hops=(HOPS_REGEX, 'HOPS', '{}= {}'),
              )
 
 
@@ -109,6 +118,13 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     eq_outlet = String
     eq_inlet = String
     eq_delay = Float
+
+    #===========================================================================
+    # peak hop
+    #===========================================================================
+    ncycles = Int
+    use_peak_hop = Bool
+
 
     def _get_parameters_group(self):
 
@@ -177,13 +193,15 @@ class MeasurementPyScriptEditor(PyScriptEditor):
         for li in self.body.split('\n'):
             if self._extract_parameter(li, MULTICOLLECT_NCOUNTS_REGEX, 'multicollect_ncounts', cast=int):
                 continue
-
+#            self.debug(li)
             #===================================================================
             # baselines
             #===================================================================
             if self._extract_parameter(li, BASELINE_BEFORE_REGEX, 'baseline_before', cast=str_to_bool):
+#                self.debug('extracted baseline before')
                 continue
             if self._extract_parameter(li, BASELINE_AFTER_REGEX, 'baseline_after', cast=str_to_bool):
+#                self.debug('extracted baseline after')
                 continue
             if self._extract_parameter(li, BASELINE_NCOUNTS_REGEX, 'baseline_ncounts', cast=int):
                 continue
@@ -216,6 +234,14 @@ class MeasurementPyScriptEditor(PyScriptEditor):
             if self._extract_parameter(li, EQ_DELAY_REGEX, 'eq_delay', cast=float):
                 continue
 
+            #===================================================================
+            # peak hop
+            #===================================================================
+            if self._extract_parameter(li, USE_PEAK_HOP_REGEX, 'use_peak_hop', cast=str_to_bool):
+                continue
+            if self._extract_parameter(li, NCYCLES_REGEX, 'ncycles', cast=int):
+                continue
+
     def _extract_parameter(self, line, regex, attr, cast=None):
         if regex.match(line):
             _, v = line.split('=')
@@ -223,6 +249,7 @@ class MeasurementPyScriptEditor(PyScriptEditor):
             if cast:
                 v = cast(v)
             setattr(self, attr, v)
+            self._update_value(attr, v)
 
     @on_trait_change('peak_center_+, eq_+, multicollect_ncounts, baseline_+')
     def _update_value(self, name, new):
@@ -234,7 +261,15 @@ class MeasurementPyScriptEditor(PyScriptEditor):
         return PARAMS[name][0]
 
     def _get_new_value(self, name, new):
-        return PARAMS[name][1].format(new)
+        p = PARAMS[name][1]
+        f = PARAMS[name][2]
+#        print p, f
+        p = '{:<25s}'.format(p)
+        return f.format(p, new)
+#        return '{:<25s}{}'.format(p,)
+
+
+#        return PARAMS[name][1].format(new)
 
     def _modify_body(self, regex, nv):
         ostr = []
@@ -258,7 +293,7 @@ if __name__ == '__main__':
 
     s = MeasurementPyScriptEditor()
 
-    p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown.py')
+    p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown_peak_hop.py')
     s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================

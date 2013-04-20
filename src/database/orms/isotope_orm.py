@@ -496,6 +496,7 @@ class gen_ImportTable(Base, BaseMixin):
 
 class gen_LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
+    identifier = stringcolumn()
 #    aliquot = Column(Integer)
     sample_id = foreignkey('gen_SampleTable')
     analyses = relationship('meas_AnalysisTable', backref='labnumber')
