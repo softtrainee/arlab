@@ -100,7 +100,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     # templates
     #===========================================================================
     template = String
-    templates = Property
+    templates = Property(depends_on='update_templates_needed')
+    update_templates_needed = Event
 #    edit_template = Button('edit')
     edit_template = Event
     edit_template_label = Property(depends_on='template')
@@ -134,7 +135,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def commit_changes(self, runs):
         for i, ri in enumerate(runs):
-            self._set_run_values(ri, excludes=['labnumber', 'position','mass_spectrometer','extract_device'])
+            self._set_run_values(ri, excludes=['labnumber', 'position', 'mass_spectrometer', 'extract_device'])
 
             if self.aliquot:
                 ri.aliquot = int(self.aliquot + i)
@@ -337,7 +338,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             name = '{}_script'.format(si)
             if name in excludes or si in excludes:
                 continue
-            
+
             s = getattr(self, name)
             setattr(arv, name, s.name)
 
@@ -583,9 +584,16 @@ post_equilibration_script:name
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
+    def _template_closed(self):
+        self.template = os.path.splitext(self._template.name)[0]
+        self.update_templates_needed = True
+
     def _edit_template_fired(self):
         temp = self._new_template()
+        temp.on_trait_change(self._template_closed, 'close_event')
         self.open_view(temp)
+        self._template = temp
+
 
 #===============================================================================
 # property get/set
@@ -710,7 +718,12 @@ post_equilibration_script:name
     def _get_templates(self):
         p = paths.incremental_heat_template_dir
         extension = '.txt'
-        return self._ls_directory(p, extension)
+        temps = self._ls_directory(p, extension)
+        if self.template in temps:
+            self.template = temps[temps.index(self.template)]
+        else:
+            self.template = NULL_STR
+        return temps
 
     def _ls_directory(self, p, extension):
         ps = [NULL_STR]
