@@ -48,10 +48,10 @@ class ExperimentActionSet(WorkbenchActionSet):
                        path=QUEUEPATH,
                        class_name='{}:ExecuteExperimentQueueAction'.format(BASE)
                        ),
-                Action(name='Execute Procedure...',
-                       path=PATH,
-                       class_name='{}:ExecuteProcedureAction'.format(BASE)
-                       ),
+#                Action(name='Execute Procedure...',
+#                       path=PATH,
+#                       class_name='{}:ExecuteProcedureAction'.format(BASE)
+#                       ),
                 Action(name='Labnumber Entry...',
                        path=PATH,
                        class_name='{}:LabnumberEntryAction'.format(BASE)
@@ -86,9 +86,41 @@ class ExperimentActionSet(WorkbenchActionSet):
                        class_name='{}:OpenScriptAction'.format(BASE)),
                 ]
 
+    def _exec_queue_actions(self):
+        '''
+            a bit of meta programming
+            
+            load exp queues from directory
+            create an action here and create a subclass of ExperimentAction and 
+            add it to the experiment_actions module
+            
+            experiment_actions provides a conviencence function for this 
+            mkaction(name, path)
+        '''
+
+        from src.paths import paths
+        import os
+        actions = []
+        p = paths.generic_experiment_dir
+        import experiment_actions as exp_actions
+        for di in os.listdir(p):
+            if di.endswith('.txt'):
+                name = os.path.splitext(di)[0]
+                name = name.replace(' ', '_')
+                path = os.path.join(p, di)
+                exp_actions.mkaction(name, path)
+
+#                setattr(exp_actions, '{}Action'.format(name), exp_actions.mkaction(name, path))
+                action = Action(name=name,
+                                path=PATH + '/Generic',
+                                class_name='{}:{}Action'.format(BASE, name)
+                                )
+                actions.append(action)
+        return actions
+
     def _actions_default(self):
         acs = self._main_actions()
         acs.extend(self._script_actions())
-
+        acs.extend(self._exec_queue_actions())
         return acs
 #============= EOF ====================================
