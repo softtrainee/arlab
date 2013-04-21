@@ -59,7 +59,7 @@ class ExperimentEditor(ExperimentManager):
                        ),
                  resizable=True,
                  width=0.80,
-                 height=0.95,
+                 height=0.90,
                  buttons=['OK', 'Cancel'] + SaveableButtons,
 #                          Action(name='Save', action='save',
 #                                 enabled_when='dirty'),

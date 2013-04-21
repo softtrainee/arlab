@@ -252,6 +252,12 @@ class MassSpecDatabaseImporter(Loggable):
             else:
                 rid = '4359'
                 irradpos = '4359'
+                
+            aliquot=db.get_lastest_analysis_aliquot(rid)+1
+            rid='{}-{:02n}'.format(rid,aliquot)
+            spec.aliquot=aliquot
+            
+            
         else:
             runtype = 'Unknown'
 

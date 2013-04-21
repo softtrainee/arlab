@@ -358,7 +358,7 @@ can_edit_scripts= {}
         for ei in self.experiment_queues:
             ei.test_runs()
 
-    def _update(self):
+    def _update(self, all_info=False):
         self.debug('update runs')
 
         ans = self._get_all_automated_runs()
@@ -369,7 +369,9 @@ can_edit_scripts= {}
         self._modify_steps(ans)
 
         # update run info
-        self._update_info(ans[-1:])
+        if not all_info:
+            ans=ans[-1:]
+        self._update_info(ans)
 
     def _get_labnumber(self, arun):
         db = self.db
@@ -393,7 +395,7 @@ can_edit_scripts= {}
                     ai.irradiation = '{}{}'.format(irrad.name, level.name)
 
     def _modify_steps(self, ans):
-        db = self.db
+#        db = self.db
         idcnt_dict = dict()
         stdict = dict()
         extract_group = 1
@@ -566,7 +568,7 @@ can_edit_scripts= {}
 #                        exp.set_script_names()
                 ws = exp._warned_labnumbers
 
-            self._update()
+            self._update(all_info=True)
             self._test()
 
             if self.experiment_queues:
