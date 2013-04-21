@@ -38,8 +38,7 @@ from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabas
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.utilities.identifier import convert_identifier, make_runid, \
-    make_rid, make_special_identifier
+from src.experiment.utilities.identifier import convert_identifier, make_rid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
@@ -194,7 +193,7 @@ class AutomatedRun(Loggable):
 
     skip = Bool
     fits = List
-    runid=Str
+    runid = Str
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -589,6 +588,12 @@ anaylsis_type={}
             if self.use_arar_age():
                 # load arar_age object for age calculation
                 self.arar_age = ArArAge()
+                es = self.extraction_script
+                if es is not None:
+                    # get senstivity multiplier from extraction script
+                    v = self._get_yaml_parameter(es, 'sensitivity_multiplier', default=1)
+                    self.arar_age.sensitivity_multiplier = v
+
                 ln = self.labnumber
                 ln = convert_identifier(ln)
                 ln = self.db.get_labnumber(ln)
@@ -1111,7 +1116,7 @@ anaylsis_type={}
         # save to a database
         db = self.db
         if db and db.connect(force=True):
-            
+
             lab = db.get_labnumber(ln)
             experiment = db.get_experiment(self.experiment_name)
 
@@ -1732,12 +1737,12 @@ anaylsis_type={}
 
 #    @property
 #    def runid(self):
-##        return #'{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+# #        return #'{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 #
 #        if self.analysis_type!='unknown':
 #            return make_special_identifier(self.labnumber, )
-#        
-#        
+#
+#
 #        return make_runid(self.labnumber, self.aliquot, self.step)
 
 #    @property

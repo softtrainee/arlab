@@ -26,6 +26,8 @@ from src.pyscripts.editor import PyScriptEditor
 from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
 from src.constants import NULL_STR
 from src.loggable import Loggable
+import ast
+import yaml
 
 class Script(Loggable):
     application = Any
@@ -37,6 +39,24 @@ class Script(Loggable):
     edit = Button
     kind = 'ExtractionLine'
     can_edit = Bool(True)
+
+    def get_parameter(self, key, default=None):
+        p = os.path.join(self._get_root(), '{}_{}.py'.format(self.mass_spectrometer.lower(), self.name))
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                text = fp.read()
+                m = ast.parse(text)
+                docstr = ast.get_docstring(m)
+                if docstr is not None:
+                    params = yaml.load(docstr)
+                    try:
+                        return params[key]
+                    except KeyError:
+                        pass
+                    except TypeError:
+                        self.warning('Invalid yaml docstring in {}. Could not retrieve {}'.format(self.name, key))
+
+        return default
 
     def _edit_fired(self):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
@@ -90,9 +110,13 @@ class Script(Loggable):
             name = name.replace('{}_'.format(self.mass_spectrometer.lower()), '')
         return name
 
-    def _load_script_names(self):
+    def _get_root(self):
         d = self.label.lower().replace(' ', '_')
         p = os.path.join(paths.scripts_dir, d)
+        return p
+
+    def _load_script_names(self):
+        p = self._get_root()
         if os.path.isdir(p):
             return [s for s in os.listdir(p)
                         if not s.startswith('.') and s.endswith('.py')]

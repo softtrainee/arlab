@@ -50,11 +50,9 @@ class ExperimentQueueFactory(Loggable):
                        Item('username'),
                        Item('mass_spectrometer',
                             editor=EnumEditor(name='mass_spectrometers'),
-                            tooltip='Select a mass spectrometer for this set'
                             ),
                        Item('extract_device',
                             editor=EnumEditor(name='extract_devices'),
-                            tooltip='Select an extraction device for this set'
                             ),
 #                       Item('tray',
 #                            editor=EnumEditor(name='trays'),

@@ -366,14 +366,14 @@ tray: {}
             self.automated_runs.insert(idx, ci)
         self._suppress_aliquot_update = False
 
-        self.debug('%%%%%%%%%%%%%%%%%%% Update Needed')
+        self.debug('%%%%%%%%%%%%%%%%%%% Paste Update Needed')
         self.update_needed = True
 
     @on_trait_change('automated_runs[]')
     def _update_runs(self):
         self.debug('automated runs increase {}'.format(len(self.automated_runs)))
         if not self._suppress_aliquot_update:
-            self.debug('%%%%%%%%%%%%%%%%%%% Update Needed')
+            self.debug('%%%%%%%%%%%%%%%%%%% Len Update Needed')
             self.update_needed = True
 #===============================================================================
 # property get/set
