@@ -134,7 +134,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def commit_changes(self, runs):
         for i, ri in enumerate(runs):
-            self._set_run_values(ri, excludes=['labnumber', 'position'])
+            self._set_run_values(ri, excludes=['labnumber', 'position','mass_spectrometer','extract_device'])
 
             if self.aliquot:
                 ri.aliquot = int(self.aliquot + i)
@@ -308,11 +308,11 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             if runs is an unknown but is part of an extract group dont copy the evalue
         '''
         if arv.analysis_type != 'unknown':
-            if arv.analysis_type != 'dg':
-                excludes.extend('extract_value', 'extract_units', 'pattern')
+            if arv.analysis_type != 'degas':
+                excludes.extend(('extract_value', 'extract_units', 'pattern'))
         else:
             if arv.extract_group:
-                excludes.extend('extract_value')
+                excludes.extend(('extract_value',))
 
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
@@ -337,6 +337,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             name = '{}_script'.format(si)
             if name in excludes or si in excludes:
                 continue
+            
             s = getattr(self, name)
             setattr(arv, name, s.name)
 

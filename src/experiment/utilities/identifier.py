@@ -120,7 +120,6 @@ def convert_identifier(identifier):
 def get_analysis_type(idn):
 
     idn = idn.lower()
-
     # check for Bg before B
     if idn.startswith('bg'):
         return 'background'
