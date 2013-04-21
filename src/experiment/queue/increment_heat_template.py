@@ -27,6 +27,7 @@ import os
 #============= local library imports  ==========================
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.paths import paths, build_directories
+from src.viewable import Viewable
 paths.build('_experiment')
 build_directories(paths)
 
@@ -61,7 +62,7 @@ class IncrementalHeatStep(HasTraits):
         return self.duration and self.cleanup and self.value
 
 
-class IncrementalHeatTemplate(HasTraits):
+class IncrementalHeatTemplate(Viewable):
     steps = List()
     name = Property(depends_on='path')
     path = File
@@ -152,6 +153,7 @@ class IncrementalHeatTemplate(HasTraits):
 
     def _save_button_fired(self):
         self.dump(self.path)
+        self.close_ui()
 
     def _save_as_button_fired(self):
         dlg = FileDialog(action='save as',
@@ -164,6 +166,7 @@ class IncrementalHeatTemplate(HasTraits):
 
             self.dump(path)
             self.path = path
+            self.close_ui()
 
     def traits_view(self):
         editor = myTabularEditor(adapter=IncrementalHeatAdapter(),
@@ -183,7 +186,8 @@ class IncrementalHeatTemplate(HasTraits):
                  height=500,
                  width=600,
                  resizable=True,
-                 title=self.title
+                 title=self.title,
+                 handler=self.handler_klass
                  )
         return v
 

@@ -290,67 +290,48 @@ class MeasurementPyScriptEditor(PyScriptEditor):
             for vi, di in zip(v, self.active_detectors):
                 di.fit = vi
 
+        attrs = (
+                ('multicollect_counts', int),
+                ('active_detectors'   , extract_detectors),
+                ('fits'               , extract_fits),
 
+                ('baseline_before'    , str_to_bool),
+                ('baseline_after'     , str_to_bool),
+                ('baseline_counts'    , int),
+                ('baseline_detector'  , str_to_str),
+                ('baseline_mass'      , float),
+
+                ('peak_center_before', str_to_bool),
+                ('peak_center_after', str_to_bool),
+                ('peak_center_detector', str_to_str),
+                ('peak_center_isotope', str_to_str),
+
+                ('eq_time', float),
+                ('eq_inlet', str_to_str),
+                ('eq_outlet', str_to_str),
+                ('eq_delay', float),
+
+                ('use_peak_hop', str_to_bool),
+                ('ncycles', int),
+                )
+        found = []
         for li in lines:
-            if self._extract_parameter(li, 'multicollect_counts', cast=int):
-                continue
-            if self._extract_parameter(li, 'active_detectors', cast=extract_detectors):
-                continue
-            if self._extract_parameter(li, 'fits', cast=extract_fits):
-                continue
-#            self.debug(li)
-            #===================================================================
-            # baselines
-            #===================================================================
-            if self._extract_parameter(li, 'baseline_before', cast=str_to_bool):
-#                self.debug('extracted baseline before')
-                continue
-            if self._extract_parameter(li, 'baseline_after', cast=str_to_bool):
-#                self.debug('extracted baseline after')
-                continue
-            if self._extract_parameter(li, 'baseline_counts', cast=int):
-                continue
-            if self._extract_parameter(li, 'baseline_detector', cast=str_to_str):
-                continue
-            if self._extract_parameter(li, 'baseline_mass', cast=float):
-                continue
-
-            #===================================================================
-            # peak center
-            #===================================================================
-            if self._extract_parameter(li, 'peak_center_before', cast=str_to_bool):
-                continue
-            if self._extract_parameter(li, 'peak_center_after', cast=str_to_bool):
-                continue
-            if self._extract_parameter(li, 'peak_center_detector', cast=str_to_str):
-                continue
-            if self._extract_parameter(li, 'peak_center_isotope', cast=str_to_str):
-                continue
-
-            #===================================================================
-            # equilibration
-            #===================================================================
-            if self._extract_parameter(li, 'eq_time', cast=float):
-                continue
-            if self._extract_parameter(li, 'eq_inlet', cast=str_to_str):
-                continue
-            if self._extract_parameter(li, 'eq_outlet', cast=str_to_str):
-                continue
-            if self._extract_parameter(li, 'eq_delay', cast=float):
-                continue
-
-            #===================================================================
-            # peak hop
-            #===================================================================
-            if self._extract_parameter(li, 'use_peak_hop', cast=str_to_bool):
-                continue
-            if self._extract_parameter(li, 'ncycles', cast=int):
-                continue
-
+            for v, cast in attrs:
+                if self._extract_parameter(li, v, cast=cast):
+                    found.append(v)
+                    continue
 
         hoplist = self._extract_multiline_parameter(lines, 'hops')
         if hoplist:
             self.hops = self._extract_hops(hoplist)
+
+        for name, _cast in attrs:
+            if name not in found:
+                nv = self._get_new_value(name, getattr(self, name))
+
+                lines.insert(3, nv)
+
+        self.body = '\n'.join(lines)
 
     def _extract_hops(self, hl):
         hops = []
@@ -401,15 +382,20 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     def _extract_parameter(self, line, attr, cast=None):
 
         regex = globals()['{}_REGEX'.format(attr.upper())]
+#        if attr == 'multicollect_counts':
+#            print regex.match(line), line
         if regex.match(line):
             _, v = line.split('=')
             v = v.strip()
             if cast:
                 v = cast(v)
 
+#            if attr == 'multicollect_counts':
+#                print 'vvvvv', v
             if v is not None:
                 setattr(self, attr, v)
                 self._update_value(attr, v)
+            return True
 
     @on_trait_change('hops:[counts,detectors, position]')
     def _update_hops(self, obj, name, new):
@@ -529,6 +515,7 @@ use_peak_hop, ncycles, baseline_ncycles
                 modified = True
             else:
                 ostr.append(li)
+
         self.body = '\n'.join(ostr)
 
         return modified

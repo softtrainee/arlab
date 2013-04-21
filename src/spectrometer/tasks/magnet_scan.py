@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Float, DelegatesTo
-from traitsui.api import View, Item, EnumEditor
+from traitsui.api import View, Item, EnumEditor, Group
 #============= standard library imports ========================
 from numpy import linspace, exp
 import random
@@ -223,10 +223,15 @@ class MagnetScan(SpectrometerTask):
         return self.detectors[0]
 
     def traits_view(self):
-        v = View(Item('reference_detector', editor=EnumEditor(name='detectors')),
-                 Item('start_mass', label='Start'),
-                 Item('stop_mass', label='Stop'),
-                 Item('step_mass', label='Step'),
+        v = View(
+                 Group(
+                       Item('reference_detector', editor=EnumEditor(name='detectors')),
+                       Item('start_mass', label='Start'),
+                       Item('stop_mass', label='Stop'),
+                       Item('step_mass', label='Step'),
+                       label='Magnet Scan',
+                       show_border=True
+                       )
 #                 buttons=['OK', 'Cancel'],
 #                 title=self.title
 #                  HGroup(spring, Item('execute', editor=ButtonEditor(label_value='execute_label'),
