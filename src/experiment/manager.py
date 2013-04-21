@@ -382,7 +382,7 @@ can_edit_scripts= {}
         self.debug('update run info')
 #         db = self.db
         for ai in ans:
-            if ai.labnumber:
+            if ai.labnumber and not ai.labnumber in ('dg',):
                 dbln = self._get_labnumber(ai)
                 sample = dbln.sample
                 if sample:
