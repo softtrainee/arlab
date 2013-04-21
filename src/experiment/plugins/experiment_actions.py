@@ -22,7 +22,19 @@ from pyface.action.api import Action
 
 #============= local library imports  ==========================
 from src.envisage.core.action_helper import open_manager
-from globals import globalv
+
+
+def mkaction(name, path):
+    def action(cls, event):
+        man = cls._get_executor(event)
+        if man.load_experiment_queue(path=path):
+            open_manager(event.window.application, man)
+
+    nname = '{}Action'.format(name)
+    klass = type(nname, (ExperimentAction,), dict(perform=action,
+                                                    name=name
+                                                    ))
+    globals()[nname] = klass
 
 
 class ExperimentAction(Action):
@@ -55,15 +67,16 @@ class NewScriptAction(ExperimentAction):
 #        if script_editor.open_script():
         open_manager(event.window.application, script_editor)
 
-class ExecuteProcedureAction(ExperimentAction):
-    def perform(self, event):
-        man = self._get_executor(event)
-        man.execute_procedure()
+# class ExecuteProcedureAction(ExperimentAction):
+#    def perform(self, event):
+#        man = self._get_executor(event)
+#        man.execute_procedure()
 
 class ExecuteExperimentQueueAction(ExperimentAction):
     name = 'Execute'
     accelerator = 'Ctrl+W'
     def perform(self, event):
+        from globals import globalv
         man = self._get_executor(event)
 #        man.experiment_set_path = p
         if man.verify_credentials(inform=False):
