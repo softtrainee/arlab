@@ -334,9 +334,7 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
 
-#        result = None
         ion = self.ion_optics_manager
-#        if not peak_hop:
         self.plot_panel.show()
         if mass:
             if ion is not None:
@@ -359,30 +357,19 @@ class AutomatedRun(Loggable):
                             check_conditions)
 
         self.experiment_manager._prev_baselines = self.plot_panel.baselines
-#        else:
-#            isotopes = [di.isotope for di in self._active_detectors]
-#            masses = [ion.get_mass(iso) + mass for iso in isotopes]
-#            result = self._peak_hop_factory(detector, isotopes, ncounts, nintegrations, starttime, series,
-#                                   name='baselines',
-#                                   masses=masses)
+
         return result
 
-    def py_peak_hop(self, cycles, hops, starttime, series=0):
+    def py_peak_hop(self, cycles, hops, starttime, series=0, group='signal'):
         if not self._alive:
             return
 
-        gn = 'signal'
-#        fits = self.fits
-#        if fits is None:
-#            fits = ['linear', ] * len(self._active_detectors)
-
-        self._build_peak_hop_tables(gn, hops)
-        writer = self._get_data_writer(gn)
+        self._build_peak_hop_tables(group, hops)
+        writer = self._get_data_writer(group)
 
         return self._peak_hop(cycles, hops, writer,
                        starttime, series)
 
-#        self._peak_hop_factory(*args, name='signals')
 
     def py_peak_center(self, **kw):
         if not self._alive:

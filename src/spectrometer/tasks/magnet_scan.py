@@ -46,7 +46,7 @@ class MagnetScan(SpectrometerTask):
     start_mass = Float(36)
     stop_mass = Float(40)
     step_mass = Float(1)
-    title = 'Magnet Scan'
+#    title = 'Magnet Scan'
 #    def _scan_dac(self, values, det, delay=850):
 #
 #        graph = self.graph
@@ -227,8 +227,8 @@ class MagnetScan(SpectrometerTask):
                  Item('start_mass', label='Start'),
                  Item('stop_mass', label='Stop'),
                  Item('step_mass', label='Step'),
-                 buttons=['OK', 'Cancel'],
-                 title=self.title
+#                 buttons=['OK', 'Cancel'],
+#                 title=self.title
 #                  HGroup(spring, Item('execute', editor=ButtonEditor(label_value='execute_label'),
 #                        show_label=False))
 

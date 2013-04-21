@@ -143,19 +143,28 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def peak_hop(self, ncycles=5, hops=None, calc_time=False):
+    def peak_hop(self, ncycles=5, hops=None, calc_time=False, baseline=False):
+        if hops is None:
+            return
+
         if calc_time:
             # counts = sum of counts for each hop
             counts = sum([ci for _h, ci in hops])
             self._estimated_duration += (ncycles * counts * estimated_duration_ff)
             return
 
+        group = 'signal'
+        if baseline:
+            group = 'baseline'
+
         if not self._automated_run_call('py_peak_hop', ncycles, hops,
                                         self._time_zero,
-                                        self._series_count
+                                        self._series_count,
+                                        group=group
                                         ):
             self.cancel()
         self._series_count += 4
+
 #    @count_verbose_skip
 #    @command_register
 #    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
