@@ -26,7 +26,7 @@ import os
 from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
     convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
-    make_special_identifier
+    make_special_identifier, make_standard_identifier
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.regex import TRANSECT_REGEX, POSITION_REGEX
 from src.experiment.utilities.script_mixin import ScriptMixin
@@ -35,6 +35,10 @@ from src.experiment.script.script import Script
 from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
 from src.viewable import Viewable
 
+def CBItem(name, **kw):
+    return HGroup(Item(name, **kw), UItem('cb_{}'.format(name),
+                                          visible_when='cbs_enabled'
+                                          ))
 
 class AutomatedRunFactory(Viewable, ScriptMixin):
     db = Any
@@ -63,6 +67,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     position = Property(depends_on='_position')
     _position = Str
     endposition = Int
+
     #===========================================================================
     # extract
     #===========================================================================
@@ -73,10 +78,23 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     _default_extract_units = 'watts'
 
     duration = Float
+
     cleanup = Float
 
     pattern = Str
     patterns = Property
+    #===========================================================================
+    # checkboxes
+    #===========================================================================
+    cb_pattern = Bool
+    cb_cleanup = Bool
+    cb_duration = Bool
+    cb_position = Bool
+    cb_extract_value = Bool
+    cb_extract_units = Bool
+
+    cb_comment = Bool
+    cb_weight = Bool
 
     #===========================================================================
     # templates
@@ -100,12 +118,13 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     #===========================================================================
     # private
     #===========================================================================
-    _selected_runs = None
+    _selected_runs = List
     _spec_klass = AutomatedRunSpec
     _extract_group_cnt = 1
 
 #    frequencyable = Property(depends_on='labnumber')
     extractable = Property(depends_on='labnumber')
+    cbs_enabled = Property(depends_on='_selected_runs')
 
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
@@ -300,13 +319,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                      'pattern',
                      'weight', 'comment',
                      'sample', 'irradiation',
-                     'skip', 'mass_spectrometer','extract_device'
+                     'skip', 'mass_spectrometer', 'extract_device'
 
                      ):
 
             if attr in excludes:
                 continue
+
             setattr(arv, attr, getattr(self, attr))
+            setattr(arv, '_prev_{}'.format(attr), getattr(self, attr))
 
         if self.user_defined_aliquot:
             arv.user_defined_aliquot = True
@@ -316,11 +337,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             name = '{}_script'.format(si)
             if name in excludes or si in excludes:
                 continue
-
             s = getattr(self, name)
-#            print s.name
             setattr(arv, name, s.name)
-
 
     def _clone_run(self, run, excludes=None):
         if excludes is None:
@@ -349,17 +367,86 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                                        application=self.application,
                                        mass_spectrometer=self.mass_spectrometer))
 
+    def _load_extraction_info(self, script=None):
+        if script is None:
+            script = self.extraction_script
+
+        if '##' in self.labnumber:
+            mod = script.get_parameter('modifier')
+            if mod is not None:
+                self.labnumber = self.labnumber.replace('##', str(mod))
+
+
+    def _set_cb_defaults(self, run):
+        if run.analysis_type == 'unknown':
+            if not run.extract_group:
+                self.cb_extract_value = True
+                self.cb_extract_units = True
+                self.cb_duration = True
+                self.cb_cleanup = True
+                self.cb_pattern = True
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('_selected_runs')
+    def _selected_runs_handler(self):
+        if self._selected_runs:
+
+            self._set_cb_defaults(self._selected_runs[0])
+#            self._suppress_cb_change = False
+        else:
+            td = self.traits()
+            for tr in td:
+                if tr.startswith('cb_'):
+                    td[tr] = False
+#            self.cb_position = False
+
+    @on_trait_change('cb_+')
+    def _edit_cb_handler(self, name, new):
+        if name == 'cbs_enabled':
+            return
+
+        def setvalue(obj, attr, v):
+#            try:
+            pattr = '_prev_{}'.format(nname)
+            setattr(obj, pattr, getattr(obj, attr))
+            setattr(obj, attr, v)
+#            except Exception:
+#                setattr(obj, attr, 0)
+
+        if self._selected_runs:
+            nname = name[3:]
+            if new:
+                v = getattr(self, nname)
+                for si in self._selected_runs:
+                    setvalue(si, nname, v)
+            else:
+                pname = '_prev_{}'.format(nname)
+                for si in self._selected_runs:
+                    if hasattr(si, pname):
+                        v = getattr(si, pname)
+                        setvalue(si, nname, v)
+#                    else:
+#                        v = ''
+
+
+
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
 pattern,
 position''')
     def _edit_handler(self, name, new):
         if self._selected_runs:
-            for si in self._selected_runs:
-                setattr(si, name, new)
+            cb = True
+            cbname = 'cb_{}'.format(name)
+            if hasattr(self, cbname):
+                cb = getattr(self, cbname)
+            if cb:
+                for si in self._selected_runs:
+#                    setattr(si, '_prev_{}'.format(name), getattr(si, name))
+                    setattr(si, name, new)
+
+
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -367,6 +454,9 @@ post_measurement_script:name,
 post_equilibration_script:name
     ''')
     def _edit_script_handler(self, obj, name, new):
+        if obj.label == 'Extraction':
+            self._load_extraction_info(obj)
+
         if self._selected_runs:
             for si in self._selected_runs:
                 name = '{}_script'.format(obj.label)
@@ -396,12 +486,17 @@ post_equilibration_script:name
                 db = self.db
                 if not db:
                     return
-                
+
                 ms = db.get_mass_spectrometer(self.mass_spectrometer)
                 ed = db.get_extraction_device(self.extract_device)
-                ln = make_special_identifier(ln, ed.id, ms.id)
-                
+                if ln in ('a', 'ba'):
+                    ln = make_standard_identifier(ln, '##', ms.id)
+                else:
+                    ln = make_special_identifier(ln, ed.id, ms.id)
+
                 self.labnumber = ln
+                self._load_extraction_info()
+
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
         else:
@@ -414,28 +509,52 @@ post_equilibration_script:name
             self.user_defined_aliquot = False
 
     def _labnumber_changed(self, old, new):
+        def _load_scripts(_old, _new):
+            '''
+                load default steps if 
+                    1. labnumber is special
+                    2. labnumber was a special and now unknown
+                    
+                dont load if was unknown and now unknown
+                this preserves the users changes 
+            '''
+            # if new is special e.g bu-01-01
+            if '-' in _new:
+                _new = _new.split('-')[0]
+            if '-' in _old:
+                _old = old.split('-')[0]
+
+            if _new in ANALYSIS_MAPPING or \
+                _old in ANALYSIS_MAPPING or not _old and _new:
+                # set default scripts
+                self._load_default_scripts(key=_new)
+
+        labnumber = self.labnumber
+        if not labnumber or labnumber == NULL_STR:
+            return
+
         db = self.db
         if not db:
             return
 
-        labnumber = self.labnumber
         special = False
-        if labnumber != NULL_STR:
-            if not labnumber in SPECIAL_MAPPING.values():
-                self.special_labnumber = NULL_STR
-            else:
-                
-                
-                special = True
+        try:
+            _ = int(labnumber)
+        except ValueError:
+            special = True
+
+        # if labnumber has a place holder load default script and return
+        if '##' in labnumber:
+            _load_scripts(old, new)
+            return
 
         self.irradiation = ''
         self.sample = ''
 
         if labnumber:
-
             # convert labnumber (a, bg, or 10034 etc)
-            clabnumber = convert_identifier(labnumber)
-            ln = db.get_labnumber(clabnumber)
+#            clabnumber = convert_identifier(labnumber)
+            ln = db.get_labnumber(labnumber)
             if ln:
                 # set sample and irrad info
                 try:
@@ -452,30 +571,14 @@ post_equilibration_script:name
                 self.aliquot = a
 
                 self.irradiation = self._make_irrad_level(ln)
+                _load_scripts(old, new)
 
-                '''
-                    load default steps if 
-                        1. labnumber is special
-                        2. labnumber was a special and now unknown
-                        
-                    dont load if was unknown and now unknown
-                    this preserves the users changes 
-                '''
-                
-                #if new is special e.g bu-01-01
-                if '-' in new:
-                    new=new.split('-')[0]
-                if '-' in old:
-                    old=old.split('-')[0]
-                
-                if new in ANALYSIS_MAPPING or \
-                    old in ANALYSIS_MAPPING or not old and new:
-                    # set default scripts
-                    self._load_default_scripts(key=new)
             elif special:
                 if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
                     db.add_labnumber(labnumber)
                     db.commit()
+                else:
+                    self.labnumber = ''
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
@@ -486,8 +589,15 @@ post_equilibration_script:name
 #===============================================================================
 # property get/set
 #===============================================================================
+    def _get_cbs_enabled(self):
+        return self._selected_runs
+
     def _get_extractable(self):
-        return not self.labnumber in NON_EXTRACTABLE
+        ln = self.labnumber
+        if '-' in ln:
+            ln = ln.split('-')[0]
+
+        return not ln in NON_EXTRACTABLE
 
     @cached_property
     def _get_irradiations(self):
@@ -626,7 +736,6 @@ post_equilibration_script:name
     def _get_info_group(self):
         grp = Group(
                    Item('project', editor=EnumEditor(name='projects'),
-                       tooltip='Select a project to constrain the labnumbers'
                        ),
                    HGroup(
                           Item('selected_irradiation',
@@ -638,7 +747,6 @@ post_equilibration_script:name
                           ),
 
                    HGroup(Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
-                               tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
                                ),
                           Item('frequency')
                           ),
@@ -648,7 +756,6 @@ post_equilibration_script:name
                           Item('_labnumber', show_label=False,
                               editor=EnumEditor(name='labnumbers'),
                               width=100,
-                              tooltip='Select a Labnumber from the selected Project'
                               ),
                          ),
                    Item('aliquot'),
@@ -660,11 +767,11 @@ post_equilibration_script:name
                           tooltip='Irradiation info retreived from Database',
                           style='readonly'
                           ),
-                   Item('weight',
+                   CBItem('weight',
                         label='Weight (mg)',
                         tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
                         ),
-                   Item('comment',
+                   CBItem('comment',
                         tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
                         ),
 #                       extract_grp,
@@ -689,7 +796,7 @@ post_equilibration_script:name
  #                         Item('autocenter',
  #                              tooltip='Should the extract device try to autocenter on the sample'
  #                              ),
-                         HGroup(Item('position',
+                         HGroup(CBItem('position',
                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
                                      ),
                                 Item('endposition', label='End',
@@ -707,12 +814,13 @@ post_equilibration_script:name
 
         extract_grp = VGroup(
                              HGroup(sspring(width=33),
-                                    Item('extract_value', label='Extract',
+                                    CBItem('extract_value', label='Extract',
                                          tooltip='Set the extract value in extract units',
                                          enabled_when='extractable'
                                          ),
-                                    UItem('extract_units',
-                                         editor=EnumEditor(name='extract_units_names')),
+                                    CBItem('extract_units',
+                                            show_label=False,
+                                            editor=EnumEditor(name='extract_units_names')),
                                     spring,
                                     Label('Step Heat Template'),
                                     UItem('template', editor=EnumEditor(name='templates')),
@@ -720,14 +828,15 @@ post_equilibration_script:name
                                           editor=ButtonEditor(label_value='edit_template_label')
                                           ),
                                     ),
-                             Item('duration', label='Duration (s)',
+                             CBItem('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'
+
                                   ),
-                             Item('cleanup', label='Cleanup (s)',
+                             CBItem('cleanup', label='Cleanup (s)',
                                   tooltip='Set the number of seconds to getter the sample gas'
                                   ),
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
-                             Item('pattern', editor=EnumEditor(name='patterns')),
+                             CBItem('pattern', editor=EnumEditor(name='patterns')),
                              label='Extract',
                              show_border=True
                              )

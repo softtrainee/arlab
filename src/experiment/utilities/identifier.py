@@ -148,7 +148,24 @@ def make_identifier(ln, ed, ms):
         return ln
     except ValueError:
         return make_special_identifier(ln, ed, ms)
-    
+
+def make_standard_identifier(ln, modifier, ms, aliquot=None):
+    '''
+        ln: str or int
+        a: int
+        modifier: str or int. if int zero pad 
+        ms: int
+    '''
+    try:
+        modifier = '{:02n}'.format(modifier)
+    except ValueError:
+        pass
+
+    d = '{}-{}-{:02n}'.format(ln, modifier, ms)
+    if aliquot:
+        d = '{}-{:02n}'.format(d, aliquot)
+    return d
+
 def make_special_identifier(ln, ed, ms, aliquot=None):
     '''
         ln: str or int
@@ -156,21 +173,20 @@ def make_special_identifier(ln, ed, ms, aliquot=None):
         ms: int mass spectrometer id
         ed: int extract device id
     '''
-    
-    d='{}-{:02n}-{:02n}'.format(ln, ed, ms)
-    if aliquot:
-        return '{}-{:02n}'.format(d,aliquot)
-    else:
-        return d
 
-def make_rid(ln, a,step=''):
+    d = '{}-{:02n}-{:02n}'.format(ln, ed, ms)
+    if aliquot:
+        d = '{}-{:02n}'.format(d, aliquot)
+    return d
+
+def make_rid(ln, a, step=''):
     '''
         if ln can be converted to integer return ln
         else return special_identifier
     '''
     try:
         _ = int(ln)
-        return make_runid(ln,a,step)
+        return make_runid(ln, a, step)
     except ValueError:
         return '{}-{:02n}'.format(ln, a)
 #        return make_special_identifier(ln, ed, ms, aliquot=a)

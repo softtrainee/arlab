@@ -410,7 +410,7 @@ class PlotPanel(Viewable):
                        layout='tabbed'
                        ),
                  width=600,
-                 height=0.85,
+                 height=0.90,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,

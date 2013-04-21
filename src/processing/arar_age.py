@@ -20,7 +20,7 @@ from traits.api import HasTraits, Dict, Property, cached_property, \
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
-import copy
+# import copy
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
 from src.constants import AGE_SCALARS
@@ -60,6 +60,7 @@ class ArArAge(HasTraits):
     abundance_sensitivity = Float
     sensitivity = Property
     sensitivity_multiplier = Property
+    _sensitivity_multiplier = Float
 
     labnumber_record = Property
     _labnumber_record = None
@@ -584,8 +585,11 @@ class ArArAge(HasTraits):
     def _get_sensitivity(self):
         return 1.0
 
+    def _set_sensitivity_multiplier(self, v):
+        self._sensitivity_multiplier = v
+
     def _get_sensitivity_multiplier(self):
-        return 1.0
+        return self._sensitivity_multiplier
 
     def _get_arar_result_attr(self, key):
 
