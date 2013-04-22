@@ -87,7 +87,7 @@ class AutomatedRunSpec(Loggable):
     frequency_added = False
 
     _estimated_duration = 0
-
+    
     def to_string(self):
         attrs = ['labnumber', 'aliquot', 'step',
                    'extract_value', 'extract_units',

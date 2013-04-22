@@ -172,8 +172,12 @@ def make_special_identifier(ln, ed, ms, aliquot=None):
         ms: int mass spectrometer id
         ed: int extract device id
     '''
-
-    d = '{}-{:02n}-{:02n}'.format(ln, ed, ms)
+    if isinstance(ed, int):
+        ed='{:02n}'.format(ed)
+    if isinstance(ms, int):
+        ms='{:02n}'.format(ms)
+    
+    d = '{}-{}-{}'.format(ln, ed, ms)
     if aliquot:
         d = '{}-{:02n}'.format(d, aliquot)
     return d

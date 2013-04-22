@@ -231,8 +231,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     def _new_runs(self):
         s = 0
         e = 0
-
-        special = self.labnumber in ANALYSIS_MAPPING
+        ln=self.labnumber
+        if '-' in ln:
+            ln=ln.split('-')[0]
+        special =ln in ANALYSIS_MAPPING
         if self.position and not special:
             s = int(self.position)
             e = int(self.endposition)
@@ -303,6 +305,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     def _set_run_values(self, arv, excludes=None):
         if excludes is None:
             excludes = []
+            
+        excludes=list(excludes)
 
         '''
             if run is not an unknown and not a degas then don't copy evalue, eunits and pattern
@@ -494,7 +498,10 @@ post_equilibration_script:name
                 if ln in ('a', 'ba'):
                     ln = make_standard_identifier(ln, '##', ms.id)
                 else:
-                    ln = make_special_identifier(ln, ed.id, ms.id)
+                    msname=ms.name[0].capitalize()
+                    edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
+#                     ln = make_special_identifier(ln, ed.id, ms.id)
+                    ln = make_special_identifier(ln, edname, msname)
 
                 self.labnumber = ln
                 self._load_extraction_info()
@@ -511,6 +518,7 @@ post_equilibration_script:name
             self.user_defined_aliquot = False
 
     def _labnumber_changed(self, old, new):
+        print old, new
         def _load_scripts(_old, _new):
             '''
                 load default steps if 
@@ -579,6 +587,7 @@ post_equilibration_script:name
                 if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
                     db.add_labnumber(labnumber)
                     db.commit()
+                    _load_scripts(old, new)
                 else:
                     self.labnumber = ''
             else:
@@ -836,12 +845,17 @@ post_equilibration_script:name
                                             show_label=False,
                                             editor=EnumEditor(name='extract_units_names')),
                                     spring,
-                                    Label('Step Heat Template'),
-                                    UItem('template', editor=EnumEditor(name='templates')),
-                                    UItem('edit_template',
-                                          editor=ButtonEditor(label_value='edit_template_label')
-                                          ),
+#                                     Label('Step Heat Template'),
                                     ),
+                             HGroup(
+                                 Item('template', 
+                                       label='Step Heat Template',
+                                       editor=EnumEditor(name='templates')),
+                                 UItem('edit_template',
+                                      editor=ButtonEditor(label_value='edit_template_label')
+                                      )
+                                    ),
+                             
                              CBItem('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'
 
