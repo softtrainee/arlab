@@ -24,6 +24,7 @@ from numpy import polyfit, linspace
 from spectrometer_task import SpectrometerTask
 from traitsui.tabular_adapter import TabularAdapter
 from src.graph.guide_overlay import GuideOverlay
+from src.traits_editors.tabular_editor import myTabularEditor
 
 class ResultsAdapter(TabularAdapter):
     columns = [('N', 'cnt'), ('Endpoints', 'endpoints'), ('Linear', 'linear')]
@@ -119,10 +120,12 @@ class RiseRate(SpectrometerTask):
                              format_str='%0.3f',
                              label='Rise Rate linear fit  (fA/min)')
                         ),
-                 HGroup(UItem('clear_results_button')),
-                 UItem('results', editor=TabularEditor(operations=[],
-                                                       editable=False,
-                                                       adapter=ResultsAdapter()))
+                 HGroup(UItem('clear_results_button'),spring),
+                UItem('results', 
+                      width=-300,
+                      editor=myTabularEditor(operations=[],
+                                                      editable=False,
+                                                      adapter=ResultsAdapter()))
 
                   )
         return v

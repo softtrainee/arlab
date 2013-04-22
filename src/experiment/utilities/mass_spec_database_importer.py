@@ -296,6 +296,7 @@ class MassSpecDatabaseImporter(Loggable):
 #                                   'H1',
                                    RedundantSampleID=sample_id,
                                    HeatingItemName=spec.extract_device,
+                                   PwrAchieved=spec.power_achieved,
                                    PwrAchieved_Max=spec.power_achieved,
                                    PwrAchievedSD=0,
                                    FinalSetPwr=spec.power_requested,

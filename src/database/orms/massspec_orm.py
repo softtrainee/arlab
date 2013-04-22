@@ -66,6 +66,7 @@ class AnalysesTable(Base):
 
     HeatingItemName = Column(String(80))
     FinalSetPwr = Column(Float, default=0)
+    PwrAchieved = Column(Float, default=0)
     PwrAchievedSD = Column(Float, default=0)
     PwrAchieved_Max = Column(Float, default=0)
     TotDurHeating = Column(Integer)
