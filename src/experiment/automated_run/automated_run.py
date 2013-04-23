@@ -356,7 +356,8 @@ class AutomatedRun(Loggable):
                             ncounts, starttime, series, fits,
                             check_conditions)
 
-        self.experiment_manager._prev_baselines = self.plot_panel.baselines
+        if self.plot_panel:
+            self.experiment_manager._prev_baselines = self.plot_panel.baselines
 
         return result
 

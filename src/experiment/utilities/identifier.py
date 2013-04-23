@@ -153,14 +153,16 @@ def make_standard_identifier(ln, modifier, ms, aliquot=None):
         ln: str or int
         a: int
         modifier: str or int. if int zero pad 
-        ms: int
+        ms: int or str 
     '''
+    if isinstance(ms, int):
+        ms='{:02n}'.format(ms)
     try:
         modifier = '{:02n}'.format(modifier)
     except ValueError:
         pass
 
-    d = '{}-{}-{:02n}'.format(ln, modifier, ms)
+    d = '{}-{}-{}'.format(ln, modifier, ms)
     if aliquot:
         d = '{}-{:02n}'.format(d, aliquot)
     return d
