@@ -295,9 +295,13 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     def _new_run(self, special=False, **kw):
         arv = self._spec_klass(**kw)
         ex = ('extract_value', 'extract_units', 'pattern') if special else tuple()
-        if self.labnumber in ('ba', 'bg', 'bc', 'a', 'c'):
+        
+        ln=self.labnumber
+        if '-' in ln:
+            ln=ln.split('-')[0]
+            
+        if ln in ('ba', 'bg', 'bc', 'a', 'c'):
             ex += ('position',)
-
 
         self._set_run_values(arv, excludes=ex)
         return arv
@@ -380,6 +384,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if '##' in self.labnumber:
             mod = script.get_parameter('modifier')
             if mod is not None:
+                if isinstance(mod, int):
+                    mod='{:02n}'.format(mod)
+                    
                 self.labnumber = self.labnumber.replace('##', str(mod))
 
 
@@ -496,7 +503,7 @@ post_equilibration_script:name
                 ms = db.get_mass_spectrometer(self.mass_spectrometer)
                 ed = db.get_extraction_device(self.extract_device)
                 if ln in ('a', 'ba'):
-                    ln = make_standard_identifier(ln, '##', ms.id)
+                    ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
                 else:
                     msname=ms.name[0].capitalize()
                     edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
