@@ -397,7 +397,7 @@ class PowerCalibrationManager(Manager):
             db.add_path(r, self.data_manager.get_current_path())
             db.commit()
             db.close()
-        self.data_manager.close()
+        self.data_manager.close_file()
 
 #    def _gragh_data(self, data):
 #        g = self.graph
@@ -505,7 +505,7 @@ class PowerCalibrationManager(Manager):
                     return
                 else:
                     self.data_manager.delete_frame()
-                    self.data_manager.close()
+                    self.data_manager.close_file()
 
                 self._apply_calibration()
 

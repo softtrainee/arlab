@@ -35,6 +35,7 @@ from sqlalchemy.sql.expression import func, distinct
 
 from src.database.selectors.massspec_selector import MassSpecSelector
 import binascii
+from src.experiment.utilities.identifier import make_runid
 
 
 class MassSpecDatabaseAdapter(DatabaseAdapter):
@@ -96,15 +97,38 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
     def get_login_session(self, value):
         return self._retrieve_item(LoginSessionTable, value, key='LoginSessionID')
 
+    def get_lastest_analysis_aliquot(self, labnumber):
+        '''
+            return the analysis with the greatest aliquot with this labnumber
+        '''
+        sess = self.get_session()
+        q = sess.query(AnalysesTable.Aliquot)
+        q = q.filter(AnalysesTable.IrradPosition == labnumber)
+        q = q.order_by(AnalysesTable.Aliquot.desc())
+        q = q.limit(1)
+        try:
+            a = q.one()
+        
+            if a:
+                a=int(a[0])
+        except Exception,e:
+            self.debug(e)
+            a=None
+            
+        return a
+
     def get_analysis(self, value, aliquot=None, step=None):
-        key = 'RID'
+#        key = 'RID'
+        key = 'IrradPosition'
         if aliquot:
             if step:
-                value = ('{}-{}{}'.format(value, aliquot, step), aliquot, step)
-                key = ('RID', 'Aliquot', 'Increment')
+#                value = ('{}-{}{}'.format(value, aliquot, step), aliquot, step)
+                key = (key, 'Aliquot', 'Increment')
+                value = (value, aliquot, step)
             else:
-                key = ('RID', 'Aliquot')
-                value = ('{}-{}'.format(value, aliquot), aliquot)
+                key = (key, 'Aliquot')
+                value = (value, aliquot)
+#                value = ('{}-{}'.format(value, aliquot), aliquot)
 
         return self._retrieve_item(AnalysesTable, value,
                                    key=key)
@@ -220,7 +244,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
-        params = dict(RID='{}-{}{}'.format(rid, aliquot, step),
+        params = dict(RID=rid,#make_runid(rid, aliquot, step),
+#                    '{}-{}{}'.format(rid, aliquot, step),
                      Aliquot=aliquot,
                      RunDateTime=func.current_timestamp(),
                      LoginSessionID=1,
@@ -316,7 +341,6 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         iso = IsotopeTable(Label=label,
                            NumCnts=1
                            )
-
         if analysis is not None:
             analysis.isotopes.append(iso)
 
@@ -359,13 +383,13 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session_id,
                                     Intercept=intercept.nominal_value,
-                                    InterceptEr=intercept.std_dev(),
+                                    InterceptEr=float(intercept.std_dev),
 
                                     Iso=isotope_value.nominal_value,
-                                    IsoEr=isotope_value.std_dev(),
+                                    IsoEr=float(isotope_value.std_dev),
 
                                     Bkgd=blank.nominal_value,
-                                    BkgdEr=blank.std_dev(),
+                                    BkgdEr=float(blank.std_dev),
 
                                     BkgdDetTypeID=detector.DetectorTypeID,
 

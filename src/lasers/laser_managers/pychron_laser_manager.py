@@ -76,7 +76,7 @@ class PychronLaserManager(BaseLaserManager):
     def _test_connection_button_fired(self):
         self.test_connection()
         if self.connected:
-            self.opened()
+            self.opened(None)
 
     def test_connection(self):
         self.connected = self._communicator.open()
@@ -96,7 +96,7 @@ class PychronLaserManager(BaseLaserManager):
             self.connected = True
         return r
 
-    def opened(self):
+    def opened(self, ui):
         self.update_position()
         self._opened_hook()
 
@@ -115,61 +115,66 @@ class PychronLaserManager(BaseLaserManager):
             name is either a name of a file 
             of a pickled pattern obj
         '''
+        if name:
+            return self._execute_pattern(name)
+#        pm = self.pattern_executor
+#        pattern = pm.load_pattern(name)
+#        if pattern:
+#            t = Thread(target=self._execute_pattern,
+#                       args=(pattern,))
+#            t.start()
+#            if block:
+#                t.join()
+#
+#            return True
 
-        pm = self.pattern_executor
-        pattern = pm.load_pattern(name)
-        if pattern:
-            t = Thread(target=self._execute_pattern,
-                       args=(pattern,))
-            t.start()
-            if block:
-                t.join()
-
-            return True
-
-    def _execute_pattern(self, pattern):
+    def _execute_pattern(self, name):
         '''
         '''
-        name = pattern.name
+#        name = pattern.name
         self.info('executing pattern {}'.format(name))
-        pm = self.pattern_executor
+#        pm = self.pattern_executor
 
-        pm.start()
+#        pm.start()
 
         # set the current position
-        xyz = self.get_position()
-        if xyz:
-            pm.set_current_position(*xyz)
+#        xyz = self.get_position()
+#        if xyz:
+#            pm.set_current_position(*xyz)
+#        '''
+#            look for pattern name in local pattern dir
+#            if exists send the pickled pattern string instead of
+#            the name
+#        '''
+#        if pm.is_local_pattern(name):
+#            txt = pickle.dumps(pattern)
+#            msg = 'DoPattern <local pickle> {}'.format(name)
+#        else:
+#            msg = 'Do Pattern {}'.format(name)
 
-        '''
-            look for pattern name in local pattern dir
-            if exists send the pickled pattern string instead of
-            the name
-        '''
-        if pm.is_local_pattern(name):
-            txt = pickle.dumps(pattern)
-            msg = 'DoPattern <local pickle> {}'.format(name)
-        else:
-            msg = 'Do Pattern {}'.format(name)
 
-        cmd = 'DoPattern {}'.format(txt)
+#        '''
+#            display an alternate message
+#            if is local pattern then txt is a binary str
+#            log msg instead of cmd
+#        '''
+        if not name.endswith('.lp'):
+            name = '{}.lp'.format(name)
 
-        '''
-            display an alternate message
-            if is local pattern then txt is a binary str
-            log msg instead of cmd
-        '''
+        cmd = 'DoPattern {}'.format(name)
         self._ask(cmd, verbose=False)
-        self._communicator.info(msg)
+#        self._communicator.info(msg)
 
         time.sleep(0.5)
 
         if not self._block('IsPatterning',
-                           position_callback=pm.set_current_position):
+                           period=1
+#                           position_callback=pm.set_current_position
+                           ):
             cmd = 'AbortPattern'
             self._ask(cmd)
 
-        pm.finish()
+#        pm.finish()
 
     @on_trait_change('pattern_executor:pattern:canceled')
     def pattern_canceled(self):
@@ -217,6 +222,7 @@ class PychronLaserManager(BaseLaserManager):
     def extract(self, value, units=''):
         self.info('set laser output')
         return self._ask('SetLaserOutput {} {}'.format(value, units)) == 'OK'
+
 
     def enable_laser(self, *args, **kw):
         self.info('enabling laser')
@@ -272,7 +278,7 @@ class PychronLaserManager(BaseLaserManager):
         self.update_position()
         return r
 
-    def _block(self, cmd='GetDriveMoving', position_callback=None):
+    def _block(self, cmd='GetDriveMoving', period=0.25, position_callback=None):
 
         ask = self._ask
 
@@ -281,7 +287,7 @@ class PychronLaserManager(BaseLaserManager):
         maxtries = 200  # timeout after 50 s
         nsuccess = 4
         self._cancel_blocking = False
-        period = 0.25
+#        period = 0.25
         while tries < maxtries and cnt < nsuccess:
             if self._cancel_blocking:
                 break

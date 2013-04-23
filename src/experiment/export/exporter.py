@@ -18,7 +18,7 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
-from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 import os
 import struct
 import base64
@@ -119,7 +119,7 @@ class XMLExporter(Exporter):
             xmlp.add('detector', det, iso)
             xmlp.add('fit', sfit, iso)
             xmlp.add('value', signal.nominal_value, iso)
-            xmlp.add('error', signal.std_dev(), iso)
+            xmlp.add('error', signal.std_dev, iso)
 
             t, v = zip(*si)
             xmlp.add('blob',
@@ -131,7 +131,7 @@ class XMLExporter(Exporter):
             xmlp.add('detector', det, iso)
             xmlp.add('fit', bfit, iso)
             xmlp.add('value', baseline.nominal_value, iso)
-            xmlp.add('error', baseline.std_dev(), iso)
+            xmlp.add('error', baseline.std_dev, iso)
 
             t, v = zip(*bi)
             xmlp.add('blob',
@@ -142,6 +142,6 @@ class XMLExporter(Exporter):
             iso = xmlp.add(isok, '', blank)
             xmlp.add('detector', det, iso)
             xmlp.add('value', ublank.nominal_value, iso)
-            xmlp.add('error', ublank.std_dev(), iso)
+            xmlp.add('error', ublank.std_dev, iso)
 
 #============= EOF =============================================

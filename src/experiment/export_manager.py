@@ -26,7 +26,7 @@ import time
 #============= local library imports  ==========================
 from src.experiment.export.export_spec import ExportSpec
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.experiment.identifier import convert_special_name
+from src.experiment.utilities.identifier import convert_special_name, make_runid
 from src.experiment.automated_run.automated_run import assemble_script_blob
 from src.processing.search.selector_manager import SelectorManager
 from src.database.database_connection_spec import DBConnectionSpec
@@ -186,7 +186,8 @@ class ExportManager(IsotopeDatabaseManager):
         if rec.mass_spectrometer:
             spectrometer = 'Pychron {}'.format(rec.mass_spectrometer.capitalize())
         else:
-            self.info('no mass spectrometer specified. Cannot import {}-{}{}'.format(rec.labnumber, rec.aliquot, rec.step))
+            r = make_runid(rec.labnumber, rec.aliquot, rec.step)
+            self.info('no mass spectrometer specified. Cannot import {}'.format(r))
             return
 
         es = ExportSpec(rid=convert_special_name(rec.labnumber),

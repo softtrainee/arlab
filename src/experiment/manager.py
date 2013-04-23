@@ -16,52 +16,60 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, List, Str, Property
-from apptools.preferences.preference_binding import bind_preference
+# from apptools.preferences.preference_binding import bind_preference
 # import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
 import time
 import hashlib
+import uuid
 #============= local library imports  ==========================
-from src.experiment.experiment_set import ExperimentSet
+# from src.experiment.experiment_set import ExperimentSet
 from src.paths import paths
-from src.database.adapters.isotope_adapter import IsotopeAdapter
+# from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.experiment.selection_view import SelectionView
-from src.experiment.file_listener import FileListener
+from src.experiment.utilities.file_listener import FileListener
 from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
 from pyface.timer.do_later import do_later
-from src.helpers.alphas import ALPHAS
 from src.saveable import Saveable
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.experiment.queue.experiment_queue import ExperimentQueue
+from src.constants import ALPHAS
+from src.envisage.credentials import Credentials
+from globals import globalv
+from src.experiment.utilities.identifier import convert_identifier, \
+    make_identifier
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):
         if info.initialized:
-            if info.object.experiment_set is not None:
+            if info.object.experiment_queue is not None:
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
     def object_path_changed(self, info):
         if info.initialized:
-            if info.object.experiment_set is not None:
+            if info.object.experiment_queue is not None:
 #                info.ui.title = 'Experiment {}'.format(info.object.title)
                 info.ui.title = info.object.title
 
-
+P_VERIFY_TIME = None
 class ExperimentManager(IsotopeDatabaseManager, Saveable):
     handler_klass = ExperimentManagerHandler
-    experiment_set = Instance(ExperimentSet)
+#    experiment_set = Instance(ExperimentSet)
+    experiment_queue = Instance(ExperimentQueue)
     set_selector = Instance(SetSelector)
 #    db = Instance(IsotopeAdapter)
 #    repository = Instance(Repository)
 
 #    repo_kind = Str
-    experiment_sets = List
+    experiment_queues = List
+#    experiment_queues = List
 
-    title = Property(depends_on='experiment_set')  # DelegatesTo('experiment_set', prefix='name')
+    title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
 #    path = DelegatesTo('experiment_set')
 #    path = Property(depends_on='experiment_set')
 #    editing_signal = None
@@ -133,68 +141,117 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #        print cbg40/cbg36
 
 
-
+    #===========================================================================
+    # permissions
+    #===========================================================================
+    max_allowable_runs = 10000
+    can_edit_scripts = True
+    _last_ver_time = None
+    _ver_timeout = 10
 
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
 
+    def verify_credentials(self, inform=True):
+        # disable for now
+        # change to enter credentials
+        self.can_edit_scripts = True
+        self.max_allowable_runs = 10000
+        return True
+
+
+        if globalv.experiment_debug:
+            return True
+
+        global P_VERIFY_TIME
+
+        verify = True
+        if P_VERIFY_TIME:
+            verify = time.time() - P_VERIFY_TIME > (self._ver_timeout * 60)
+
+        if not verify:
+            return True
+
+        cred = Credentials(db=self.db)
+        info = cred.edit_traits()
+
+        if info.result:
+            if self.db.connect(force=True):
+                rec = self.db.get_user(cred.username)
+                if rec and cred.verify(rec.password, rec.salt):
+                    self.username = cred.username
+                    self._load_permissions(rec, inform)
+                    P_VERIFY_TIME = time.time()
+                    return True
+                else:
+                    self.warning_dialog('Invalid username and password')
+
     def load(self):
         return self.populate_default_tables()
+
+    def _load_permissions(self, rec, inform):
+        self.max_allowable_runs = int(rec.max_allowable_runs)
+        self.can_edit_scripts = rec.can_edit_scripts
+        if inform:
+            self.information_dialog('''Permissions for {}
+max_runs= {}
+can_edit_scripts= {}
+'''.format(self.username, self.max_allowable_runs, self.can_edit_scripts))
 
     def _reload_from_disk(self):
 #        if not self._alive:
         ts = self._parse_experiment_file(self.experiment_set.path)
-        for ei, ti in zip(self.experiment_sets, ts):
+        for ei, ti in zip(self.experiment_queues, ts):
 #                ei._cached_runs = None
-            ei.load_automated_runs(text=ti)
+            ei.load(ti)
 
-        self._update_aliquots()
+        self._update()
 
     def check_for_file_mods(self):
-        path = self.experiment_set.path
+        path = self.experiment_queue.path
         if path:
             with open(path, 'r') as f:
                 diskhash = hashlib.sha1(f.read()).hexdigest()
             return self._experiment_hash != diskhash
 
     def save(self):
-        self.save_experiment_sets()
+        self.save_experiment_queues()
 
     def save_as(self):
-        self.save_as_experiment_sets()
+        self.save_as_experiment_queues()
 
-    def save_as_experiment_sets(self):
+    def save_as_experiment_queues(self):
         # test sets before saving
-        for exp in self.experiment_sets:
-            if not exp.test():
+        if self._validate_experiment_queues():
+            p = self.save_file_dialog(default_directory=paths.experiment_dir)
+            if p:
+                p = self._dump_experiment_queues(p)
+                self.save_enabled = True
+
+    def save_experiment_queues(self):
+        if self._validate_experiment_queues():
+            self._dump_experiment_queues(self.experiment_queue.path)
+            self.save_enabled = False
+
+    def _validate_experiment_queues(self):
+        for exp in self.experiment_queues:
+            if exp.test_runs():
                 return
 
-        p = self.save_file_dialog(default_directory=paths.experiment_dir)
-        if p:
-            p = self._dump_experiment_sets(p)
-            self.save_enabled = True
+        return True
 
-    def save_experiment_sets(self):
-        for exp in self.experiment_sets:
-            if not exp.test():
-                return
-        self._dump_experiment_sets(self.experiment_set.path)
-        self.save_enabled = False
-
-    def _dump_experiment_sets(self, p):
+    def _dump_experiment_queues(self, p):
 
         if not p:
             return
         if not p.endswith('.txt'):
             p += '.txt'
 
-
-
         self.info('saving experiment to {}'.format(p))
         with open(p, 'wb') as fp:
-            n = len(self.experiment_sets)
-            for i, exp in enumerate(self.experiment_sets):
+            n = len(self.experiment_queues)
+            for i, exp in enumerate(self.experiment_queues):
                 exp.path = p
                 exp.dump(fp)
                 if i < (n - 1):
@@ -213,9 +270,6 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
     def stop_file_listener(self):
         self.filelistener.stop()
-
-    def opened(self):
-        self.info_display.clear()
 
     def close(self, isok):
         if self.filelistener:
@@ -237,18 +291,20 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         return True
 
     def populate_default_tables(self):
+        self.debug('populating default tables')
         db = self.db
         if self.db:
-            if db.connect():
+            if db.connect(force=True):
                 from src.database.defaults import load_isotopedb_defaults
                 load_isotopedb_defaults(db)
                 return True
 
-    def bind_preferences(self):
-        super(ExperimentManager, self).bind_preferences()
-        if not self.db.connect():
-            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
-            self.db = None
+#    def bind_preferences(self):
+#        super(ExperimentManager, self).bind_preferences()
+#        if not self.db.connect(force=True):
+#        if not self.db.connect(force=True):
+#            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+#            self.db = None
 
     def selector_factory(self, style):
         db = self.db
@@ -294,11 +350,17 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
             return ts
 
     def _get_all_automated_runs(self):
-        return [ai for ei in self.experiment_sets
-                    for ai in ei.automated_runs]
+        return [ai for ei in self.experiment_queues
+                    for ai in ei.automated_runs
+                        if ai.executable]
 
-    def _update_aliquots(self):
-        self.debug('update aliquots')
+    def _test(self):
+        for ei in self.experiment_queues:
+            ei.test_runs()
+
+    def _update(self, all_info=False):
+        self.debug('update runs')
+
         ans = self._get_all_automated_runs()
         # update the aliquots
         self._modify_aliquots(ans)
@@ -306,8 +368,34 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         # update the steps
         self._modify_steps(ans)
 
-    def _modify_steps(self, ans):
+        # update run info
+        if not all_info:
+            ans=ans[-1:]
+        self._update_info(ans)
+
+    def _get_labnumber(self, arun):
         db = self.db
+        dbln = db.get_labnumber(arun.labnumber)
+        return dbln
+
+    def _update_info(self, ans):
+        self.debug('update run info')
+#         db = self.db
+        for ai in ans:
+            if ai.labnumber and not ai.labnumber in ('dg',):
+                dbln = self._get_labnumber(ai)
+                sample = dbln.sample
+                if sample:
+                    ai.sample = sample.name
+
+                ipos = dbln.irradiation_position
+                if not ipos is None:
+                    level = ipos.level
+                    irrad = level.irradiation
+                    ai.irradiation = '{}{}'.format(irrad.name, level.name)
+
+    def _modify_steps(self, ans):
+#        db = self.db
         idcnt_dict = dict()
         stdict = dict()
         extract_group = 1
@@ -315,7 +403,6 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         for arun in ans:
             arunid = arun.labnumber
             if arun.skip:
-                arun.aliquot = 0
                 continue
 
             if arun.extract_group:
@@ -323,7 +410,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                     if arunid in aoffs:
                         aoffs[arunid] += 1
                     else:
-                        aoffs[arunid] = 1
+                        aoffs[arunid] = 0
 
 #                    aoff += 1
                     idcnt_dict, stdict = dict(), dict()
@@ -335,7 +422,8 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                     else:
                         c = 1
 
-                ln = db.get_labnumber(arunid)
+                ln = self._get_labnumber(arun)
+#                 ln = db.get_labnumber(arunid)
                 if ln is not None:
                     st = 0
                     if ln.analyses:
@@ -361,10 +449,11 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                 aoff = aoffs[arunid]
             else:
                 aoff = 0
-#            print arun.labnumber, aoff
+#             print arun.labnumber, aoff
             arun.aliquot += aoff
 
     def _modify_aliquots(self, ans):
+#        print ans
         offset = 0
 #        if self.experiment_set and self.experiment_set.selected:
 #            offset = len(self.experiment_set.selected)
@@ -373,8 +462,10 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         # update the aliquots
         idcnt_dict = dict()
         stdict = dict()
+        fixed_dict = dict()
         for arun in ans:
             if arun.skip:
+                arun.aliquot = 0
                 continue
 
             arunid = arun.labnumber
@@ -387,43 +478,69 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #                    c = 1
 #            else:
 #                c = 1
-            ln = db.get_labnumber(arunid)
-            if ln is not None:
-                try:
-                    st = ln.analyses[-1].aliquot
-                except IndexError:
-                    st = 0
+            if arunid in fixed_dict:
+                st = fixed_dict[arunid]
             else:
-                st = stdict[arunid] if arunid in stdict else 0
+
+                ln = self._get_labnumber(arun)
+
+#                 ln = db.get_labnumber(arunid)
+                if ln is not None:
+                    try:
+                        st = ln.analyses[-1].aliquot
+                    except IndexError:
+                        st = 0
+                else:
+                    st = stdict[arunid] if arunid in stdict else 0
+
 #             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
-            if not arun.aliquot:
-                arun.aliquot = st + c - offset
+            if not arun.user_defined_aliquot:
+#                 print arunid, st, c, offset
+                arun.aliquot = int(st + c - offset)
+            else:
+                c = 0
+                fixed_dict[arunid] = arun.aliquot
+
 #            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
+#            print stdict
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 
     def _update_dirty(self):
         pass
 #===============================================================================
+# experiment queue
+#===============================================================================
+    def new_experiment_queue(self, clear=True):
+        if clear:
+            self.experiment_queues = []
+
+        exp = self._experiment_queue_factory()
+#        arun = exp.automated_run_factory()
+#        exp.automated_run = arun
+#        exp.automated_runs.append(arun)
+        self.experiment_queue = exp
+        self.experiment_queues.append(exp)
+#===============================================================================
 # experiment set
 #===============================================================================
-    def new_experiment_set(self, clear=True):
-        if clear:
-            self.experiment_sets = []
-
-        exp = self._experiment_set_factory()
-        arun = exp.automated_run_factory()
-        exp.automated_run = arun
-#        exp.automated_runs.append(arun)
-        self.experiment_set = exp
-        self.experiment_sets.append(exp)
+#    def new_experiment_set(self, clear=True):
+#        if clear:
+#            self.experiment_queues = []
+#
+#        exp = self._experiment_set_factory()
+# #        arun = exp.automated_run_factory()
+# #        exp.automated_run = arun
+# #        exp.automated_runs.append(arun)
+#        self.experiment_set = exp
+#        self.experiment_queues.append(exp)
 
 #    def close(self, isok):
 #        self.dirty_save_as = False
 #===============================================================================
 # persistence
 #===============================================================================
-    def load_experiment_set(self, path=None, edit=True, saveable=False):
+    def load_experiment_queue(self, path=None, edit=True, saveable=False):
 #        self.bind_preferences()
         # make sure we have a database connection
         if not self.test_connections():
@@ -434,39 +551,47 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
         if path is not None:
 
-            self.experiment_set = None
-            self.experiment_sets = []
+            self.experiment_queue = None
+            self.experiment_queues = []
             # parse the file into individual experiment sets
             ts = self._parse_experiment_file(path)
             ws = []
             for text in ts:
-                exp = self._experiment_set_factory(path=path)
-                exp._warned_labnumbers = ws
-                if exp.load_automated_runs(text=text):
-                    self.experiment_sets.append(exp)
+                exp = self._experiment_queue_factory(path=path)
 
-                    if edit:
-                        exp.automated_run = exp.automated_runs[-1].clone_traits()
+                exp._warned_labnumbers = ws
+                if exp.load(text):
+                    self.experiment_queues.append(exp)
+#
+#                    if edit:
+#                        exp.automated_run = exp.automated_runs[-1].clone_traits()
 #                        exp.set_script_names()
                 ws = exp._warned_labnumbers
 
-            self._update_aliquots()
-            if self.experiment_sets:
-                self.experiment_set = self.experiment_sets[0]
-                self.start_file_listener(self.experiment_set.path)
+            self._update(all_info=True)
+            self._test()
+
+            if self.experiment_queues:
+                self.experiment_queue = self.experiment_queues[0]
+                self.start_file_listener(self.experiment_queue.path)
                 def func():
                     self.set_selector.selected_index = -2
                     self.set_selector.selected_index = 0
 
                 do_later(func)
+                self._load_experiment_queue_hook()
+                self.save_enabled = True
 
                 return True
+
+    def _load_experiment_queue_hook(self):
+        pass
 #===============================================================================
 # property get/set
 #===============================================================================
     def _get_title(self):
-        if self.experiment_set:
-            return 'Experiment {}'.format(self.experiment_set.name)
+        if self.experiment_queue:
+            return 'Experiment {}'.format(self.experiment_queue.name)
 
 #    def _get_path(self):
 #        if self.experiment_set:
@@ -488,14 +613,22 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #===============================================================================
 # factories
 #===============================================================================
-    def _experiment_set_factory(self, **kw):
-        exp = ExperimentSet(
+    def _experiment_queue_factory(self, **kw):
+        exp = ExperimentQueue(
                              db=self.db,
                              application=self.application,
                              **kw)
-        exp.on_trait_change(self._update_aliquots, 'update_aliquots_needed')
+        exp.on_trait_change(self._update, 'update_needed')
 #        exp.on_trait_change(self._update_dirty, 'dirty')
         return exp
+#    def _experiment_set_factory(self, **kw):
+#        exp = ExperimentSet(
+#                             db=self.db,
+#                             application=self.application,
+#                             **kw)
+#        exp.on_trait_change(self._update, 'update_aliquots_needed')
+# #        exp.on_trait_change(self._update_dirty, 'dirty')
+#        return exp
 
     def _labnumber_entry_factory(self):
         lne = LabnumberEntry(db=self.db)

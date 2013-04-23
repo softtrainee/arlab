@@ -162,7 +162,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
             selector.load_records(rs.analyses)
             self.selected_records = selector.records
 
-    def opened(self):
+    def opened(self, ui):
         self._load_stored_selections()
 
     def close(self, isok):

@@ -20,6 +20,7 @@ from traits.api import HasTraits, Dict, Property, cached_property, \
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
+# import copy
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
 from src.constants import AGE_SCALARS
@@ -56,9 +57,10 @@ class ArArAge(HasTraits):
     Ar36_39 = AgeProperty()
 
     j = AgeProperty()
-    abundant_sensitivity = Float
+    abundance_sensitivity = Float
     sensitivity = Property
     sensitivity_multiplier = Property
+    _sensitivity_multiplier = Float
 
     labnumber_record = Property
     _labnumber_record = None
@@ -76,6 +78,7 @@ class ArArAge(HasTraits):
 
     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
     age_error = AgeProperty()
+    age_error_wo_j = AgeProperty()
     age_dirty = Event
 
     Ar40 = AgeProperty()
@@ -92,7 +95,10 @@ class ArArAge(HasTraits):
     moles_Ar40 = AgeProperty()
     moles_K39 = AgeProperty()
 
-    ic_factor = Property
+
+    ic_factor = Property(depends_on='ic_factor_v, ic_factor_e')
+    ic_factor_v = Float
+    ic_factor_e = Float
 
     arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
@@ -119,14 +125,32 @@ class ArArAge(HasTraits):
             bind_preference(self.arar_constants, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
             bind_preference(self.arar_constants, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
 
-    #        bind_preference(self, 'abundant_sensitivity', 'pychron.spectrometer.abundant_sensitivity')
-            bind_preference(self, 'abundant_sensitivity', 'pychron.experiment.constants.abundant_sensitivity')
+    #        bind_preference(self, 'abundance_sensitivity', 'pychron.spectrometer.abundance_sensitivity')
+            bind_preference(self, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
+            bind_preference(self, 'ic_factor_v', 'pychron.experiment.constants.ic_factor')
+            bind_preference(self, 'ic_factor_e', 'pychron.experiment.constants.ic_factor_error')
+
+
         except AttributeError, e:
             self.debug(e)
+
+    def get_error_component(self, key):
+        v = next((error for (var, error) in self.age.error_components().items()
+                                if var.tag == key), 0)
+        ae = self.age_error
+        if ae:
+            return v ** 2 / self.age_error ** 2 * 100
+        else:
+            return 0
+
+
+    def get_signal_value(self, k):
+        return self._get_arar_result_attr(k)
 
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
+            self.isotopes[iso] = niso
         else:
             niso = self.isotopes[iso]
 
@@ -163,7 +187,7 @@ class ArArAge(HasTraits):
             try:
                 return k / ca * k_ca_pr
             except ZeroDivisionError:
-                return ufloat((0, 0))
+                return ufloat(0, 0)
 
     def _calculate_kcl(self):
         result = self.arar_result
@@ -181,7 +205,7 @@ class ArArAge(HasTraits):
             try:
                 return k / cl * k_cl_pr
             except ZeroDivisionError:
-                return ufloat((0, 0))
+                return ufloat(0, 0)
 
 
     def calculate_age(self, **kw):
@@ -236,9 +260,10 @@ class ArArAge(HasTraits):
         blsignals = self._make_signals(kind='blank')
         bksignals = self._make_signals(kind='background')
 
-        j = self.j
-        if not include_j_error:
-            j = j[0], 0
+#        j = copy.copy(self.j)
+#        if not include_j_error:
+#            j.set_std_dev(0)
+#            j = j[0], 0
 
         irrad = self.irradiation_info
         if not include_irradiation_error:
@@ -248,13 +273,14 @@ class ArArAge(HasTraits):
             nirrad.extend(irrad[-2:])
             irrad = nirrad
 
-        ab = self.abundant_sensitivity
+        ab = self.abundance_sensitivity
 
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    j, irrad, abundant_sensitivity=ab, ic=self.ic_factor,
+                                    self.j, irrad, abundance_sensitivity=ab, ic=self.ic_factor,
                                     include_decay_error=include_decay_error,
                                     arar_constants=self.arar_constants
                                     )
+
 
         if result:
             self.arar_result = result
@@ -265,11 +291,22 @@ class ArArAge(HasTraits):
 #            err = ai.std_dev()
 #            return age, err
     def _make_signals(self, kind=None):
+        isos = self.isotopes
+#        print isos
         def func(k):
-            iso = self.isotopes[k]
-            if kind:
-                iso = getattr(iso, kind)
-            return iso.value, iso.error
+            if kind is None:
+                tag = k
+            else:
+                tag = '{}_{}'.format(k, kind)
+
+            if k in isos:
+                iso = self.isotopes[k]
+                if kind:
+                    iso = getattr(iso, kind)
+
+                return iso.value, iso.error, tag
+            else:
+                return 0, 1e-20, tag
 
         return [func(ki)
                     for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']]
@@ -325,7 +362,11 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_age_error(self):
-        return self.age.std_dev()
+        return self.age.std_dev
+
+    @cached_property
+    def _get_age_error_wo_j(self):
+        return float(self.arar_result['age_err_wo_jerr'] / self.age_scalar)
 
     @cached_property
     def _get_timestamp(self):
@@ -410,7 +451,7 @@ class ArArAge(HasTraits):
         return prs
 
 #    @cached_property
-#    def _get_abundant_sensitivity(self):
+#    def _get_abundance_sensitivity(self):
 #        return 3e-6
 
     def _set_labnumber_record(self, v):
@@ -432,7 +473,7 @@ class ArArAge(HasTraits):
         except AttributeError:
             pass
 
-        return (s, e)
+        return ufloat(s, e, 'j')
 
     @cached_property
     def _get_rad40(self):
@@ -444,48 +485,79 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_rad40_percent(self):
-        return self.rad40 / self.Ar40 * 100
+        try:
+            return self.rad40 / self.Ar40 * 100
+        except ZeroDivisionError:
+            return ufloat(0, 1e-20)
 #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
     @cached_property
     def _get_Ar40(self):
-        return self.arar_result['s40']
+        return self._get_arar_result_attr('40')
+
+#        return self.arar_result['s40']
 
     @cached_property
     def _get_Ar39(self):
-        return self.arar_result['s39']
+        return self._get_arar_result_attr('39')
+#        return self.arar_result['s39']
 
     @cached_property
     def _get_Ar38(self):
-        return self.arar_result['s38']
+        return self._get_arar_result_attr('38')
+#        return self.arar_result['s38']
 
     @cached_property
     def _get_Ar37(self):
-        return self.arar_result['s37']
+        return self._get_arar_result_attr('37')
+#        return self.arar_result['s37']
 
     @cached_property
     def _get_Ar36(self):
-        return self.arar_result['s36']
+        return self._get_arar_result_attr('36')
+#        return self.arar_result['s36']
 
     @cached_property
     def _get_Ar40_error(self):
-        return self.arar_result['s40'].std_dev()
+        r = self._get_arar_result_attr('40')
+        if r:
+            return r.std_dev
+#        return self.arar_result['s40'].std_dev()
 
     @cached_property
     def _get_Ar39_error(self):
-        return self.arar_result['s39'].std_dev()
+        r = self._get_arar_result_attr('39')
+        if r:
+            return r.std_dev
+
+#        return self.arar_result['s39'].std_dev()
 
     @cached_property
     def _get_Ar38_error(self):
-        return self.arar_result['s38'].std_dev()
+        r = self._get_arar_result_attr('38')
+        if r:
+            return r.std_dev
+
+#        return self._get_arar_result_attr('38').std_dev()
+#        return self.arar_result['s38'].std_dev()
 
     @cached_property
     def _get_Ar37_error(self):
-        return self.arar_result['s37'].std_dev()
+        r = self._get_arar_result_attr('37')
+        if r:
+            return r.std_dev
+
+#        return self._get_arar_result_attr('37').std_dev()
+#        return self.arar_result['s37'].std_dev()
 
     @cached_property
     def _get_Ar36_error(self):
-        return self.arar_result['s36'].std_dev()
+        r = self._get_arar_result_attr('36')
+        if r:
+            return r.std_dev
+
+#        return self._get_arar_result_attr('36').std_dev()
+#        return self.arar_result['s36'].std_dev()
 
     @cached_property
     def _get_moles_Ar40(self):
@@ -496,7 +568,7 @@ class ArArAge(HasTraits):
         return self.k39 * self.sensitivity * self.sensitivity_multiplier
 
     def _get_ic_factor(self):
-        return 1, 0
+        return ufloat(self.ic_factor_v, self.ic_factor_e, 'ic_factor')
 
     @cached_property
     def _get_Ar40_39(self):
@@ -513,8 +585,31 @@ class ArArAge(HasTraits):
     def _get_sensitivity(self):
         return 1.0
 
+    def _set_sensitivity_multiplier(self, v):
+        self._sensitivity_multiplier = v
+
     def _get_sensitivity_multiplier(self):
-        return 1.0
+        return self._sensitivity_multiplier
+
+    def _get_arar_result_attr(self, key):
+
+        if key.startswith('s'):
+            key = key[1:]
+        elif key.startswith('Ar'):
+            key = key[2:]
+
+        arar_attr = 's{}'.format(key)
+
+#        print self.arar_result
+        if self.arar_result.has_key(arar_attr):
+            return self.arar_result[arar_attr]
+        else:
+            iso_attr = 'Ar{}'.format(key)
+            if self.isotopes.has_key(iso_attr):
+                return self.isotopes[iso_attr].get_corrected_value()
+
+
+
 
 
 #============= EOF =============================================

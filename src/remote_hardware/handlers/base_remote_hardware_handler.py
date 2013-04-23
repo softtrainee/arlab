@@ -26,7 +26,7 @@ from error_handler import ErrorHandler
 
 from dummies import DummyDevice, DummyLM
 from src.remote_hardware.errors import DeviceConnectionErrorCode
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
 # DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 # CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'

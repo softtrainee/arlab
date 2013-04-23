@@ -32,6 +32,8 @@ except UnicodeEncodeError:
 
 NULL_STR = '---'
 SCRIPT_KEYS = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
+SCRIPT_NAMES = ['{}_script'.format(si) for si in SCRIPT_KEYS]
+
 FIT_TYPES = ['linear', 'parabolic', 'cubic',
              u'average {}SD'.format(PLUSMINUS),
               u'average {}SEM'.format(PLUSMINUS)]
@@ -39,5 +41,11 @@ INTERPOLATE_TYPES = ['Preceeding', 'Bracketing Interpolate', 'Bracketing Average
 FIT_TYPES_INTERPOLATE = FIT_TYPES + ['Preceeding', 'Bracketing Interpolate', 'Bracketing Average']
 DELIMITERS = {',':'comma', '\t':'tab', ' ':'space'}
 AGE_SCALARS = {'Ma':1e6, 'ka':1e3, 'a':1}
+
+import string
+seeds = string.ascii_uppercase
+ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
+                                    for a in seeds
+                                        for b in seeds]
 
 #============= EOF =============================================

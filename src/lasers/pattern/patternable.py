@@ -34,7 +34,7 @@ class Patternable(Manager):
             self.pattern = obj
             self.pattern.path = path
             return obj
-        except pickle.PickleError:
-            pass
+        except (pickle.PickleError, Exception), e:
+            self.debug('load pattern:{}'.format(e))
 
 #============= EOF =============================================

@@ -23,7 +23,8 @@ import cStringIO
 from src.paths import paths
 from src.lasers.pattern.patternable import Patternable
 import time
-from threading import Thread
+from threading import Thread, Event, Lock
+from Queue import Queue
 
 
 class PatternExecutor(Patternable):
@@ -34,6 +35,7 @@ class PatternExecutor(Patternable):
     controller = Any
     show_patterning = Bool(False)
     _alive = Bool(False)
+    _next_point = None
 
     def start(self, show=False):
         self._alive = True
@@ -87,11 +89,11 @@ class PatternExecutor(Patternable):
         return pattern
 
     def is_local_pattern(self, name):
-        pname = name
-        if not name.endswith('.lp'):
-            pname = name + '.lp'
+#        pname = name
+#        if not name.endswith('.lp'):
+#            pname = name + '.lp'
 
-        path = os.path.join(paths.pattern_dir, pname)
+        path = os.path.join(paths.pattern_dir, name)
         if os.path.isfile(path):
             return path
 
@@ -151,6 +153,7 @@ class PatternExecutor(Patternable):
 
             self.controller.linear_move(pat.cx, pat.cy)
             self.pattern.close_ui()
+            self.finish()
             self.info('finished pattern')
 
     def _execute_iteration(self):
@@ -164,8 +167,11 @@ class PatternExecutor(Patternable):
             elif kind == 'CircularContourPattern':
 
                 self._execute_contour(controller, pattern)
+            elif kind == 'SeekPattern':
+                self._execute_seek(controller, pattern)
             else:
                 self._execute_points(controller, pattern)
+
 #                multipoint = False
 #                if multipoint:
 #                    controller.multiple_point_move(pts)
@@ -208,5 +214,82 @@ class PatternExecutor(Patternable):
     def _execute_arc(self, controller, pattern):
         controller.single_axis_move('x', pattern.radius, block=True)
         controller.arc_move(pattern.cx, pattern.cy, pattern.degrees, block=True)
+
+    def _execute_seek(self, controller, pattern):
+
+
+        #=======================================================================
+        # monitor input
+        #=======================================================================
+        def _monitor_input(pevt, fevt, threshold=1, deadband=0.5, period=0.25):
+            '''
+                periodically get input value
+                if input value greater than threshold set pause event
+                if input value last than threshold-deadband and was paused, clear paused flag
+            '''
+            get_value = lambda: 1
+            flag = False
+            while not fevt.is_set() and self.isPatterning():
+                v = get_value()
+                if v > threshold:
+                    pevt.set()
+                    flag = True
+                elif flag and v < (threshold - deadband):
+                    pevt.clear()
+                    flag = False
+                time.sleep(period)
+
+        #=======================================================================
+        # control motion
+        #=======================================================================
+        '''
+            if paused and not already stopped, stop motion
+            if not paused not but was paused move to newt_point
+        '''
+        def _control_motion(self, pevt, fevt, q):
+            flag = False
+            while not fevt.is_set() and self.isPatterning():
+                if pevt.is_set():
+                    if not flag:
+                        flag = True
+                        controller.stop()
+                    time.sleep(0.1)
+
+                else:
+                    if flag:
+                        try:
+                            np = q.get_nowait()
+                            controller.linear_move(*np, block=False,
+                                           velocity=pattern.velocity)
+                        except:
+                            self.debug('No next point avaliable')
+                        flag = False
+
+                    time.sleep(0.1)
+
+
+        finished = Event()
+        paused = Event()
+        q = Queue()
+        mt = Thread(target=_monitor_input,
+                    args=(paused, finished),
+                    name='seek.monitor_input')
+
+        ct = Thread(target=_control_motion,
+                    args=(paused, finished, q),
+                    name='seek.monitor_input')
+        mt.start()
+        ct.start()
+
+        pts = pattern.points_factory()
+        for x, y in pts:
+            if not self.isPatterning():
+                break
+
+            q.put((x, y))
+            controller.linear_move(x, y, block=True,
+                                   velocity=pattern.velocity)
+
+        finished.set()
 
 #============= EOF =============================================

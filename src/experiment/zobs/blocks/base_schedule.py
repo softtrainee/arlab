@@ -19,7 +19,7 @@ from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter
 from src.experiment.blocks.parser import RunParser, UVRunParser
-from src.experiment.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
+from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
 from src.experiment.runs_table import RunsTable
 from src.experiment.script_editable import ScriptEditable
 from src.paths import paths

@@ -38,6 +38,16 @@ gLoggerDisplay = RichTextDisplay(title='Logger',
                                  default_color='black',
                                  bg_color='light grey'
                                  )
+
+gMessageDisplay = RichTextDisplay(title='Messages',
+                                 width=480,
+#                                 x=(sw-width)/2,
+                                 y=100,
+                                 default_size=14,
+                                 default_color='darkgreen',
+                                 bg_color='light grey'
+                                 )
+
 gTraceDisplay = ErrorDisplay(title='Error Stack',
                                  width=825,
                                  x=(sw - 825) / 2,

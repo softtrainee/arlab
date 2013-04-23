@@ -37,21 +37,8 @@ from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 from src.traits_editors.led_editor import LED, LEDEditor
-from src.lasers.laser_managers.extraction_device import IExtractionDevice
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
-class ILaserManager(IExtractionDevice):
-    def trace_path(self, *args, **kw):
-        pass
-    def drill_point(self, *args, **kw):
-        pass
-    def take_snapshot(self, *args, **kw):
-        pass
-#    def extract(self, *args, **kw):
-#        pass
-#    def end_extract(self, *args, **kw):
-#        pass
-#    def move_to_position(self, *args, **kw):
-#        pass
 
 class BaseLaserManager(Manager):
     implements(ILaserManager)
@@ -67,6 +54,12 @@ class BaseLaserManager(Manager):
         return True
 
     def take_snapshot(self, *args, **kw):
+        pass
+
+    def end_extract(self, *args, **kw):
+        pass
+
+    def extract(self, *args, **kw):
         pass
 
     def prepare(self):
@@ -117,7 +110,7 @@ class BaseLaserManager(Manager):
 
     def _pattern_executor_default(self):
         controller = None
-        if self.stage_manager:
+        if hasattr(self, 'stage_manager'):
             controller = self.stage_manager.stage_controller
 
         pm = PatternExecutor(application=self.application, controller=controller)
@@ -292,10 +285,16 @@ class LaserManager(BaseLaserManager):
 
     def set_laser_power(self, power,
                         verbose=True,
+                        units=None,
                          *args, **kw):
         '''
         '''
-        p = self._get_calibrated_power(power, verbose=verbose, **kw)
+        
+        if units=='percent':
+            p=power
+        else:
+            p = self._get_calibrated_power(power, verbose=verbose, **kw)
+            
         if p is None:
             self.emergency_shutoff('Invalid power calibration')
             self.warning_dialog('Invalid Power Calibration')
@@ -310,7 +309,7 @@ class LaserManager(BaseLaserManager):
 
     def close(self, ok):
         self.pulse.dump_pulse()
-        return super(LaserManager, self).close(self)
+        return super(LaserManager, self).close(self, ok)
 
     def set_laser_monitor_duration(self, d):
         '''
@@ -602,6 +601,7 @@ class LaserManager(BaseLaserManager):
     def _laser_script_executor_default(self):
         return LaserScriptExecutor(laser_manager=self,
                                    name=self.name)
+        
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('calib')

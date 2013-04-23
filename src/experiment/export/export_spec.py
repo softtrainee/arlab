@@ -19,6 +19,7 @@ from traits.api import HasTraits, CStr, Str, CInt, Int, Dict, Tuple, List, Float
     TraitError
 from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
+from src.experiment.utilities.identifier import make_runid, make_rid
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -74,8 +75,10 @@ class ExportSpec(Loggable):
     def load_record(self, record):
         attrs = [
 #                 ('rid', 'labnumber'),
+                 ('labnumber','labnumber'),
                  ('aliquot', 'aliquot'),
-                 ('step', 'step'), ('irradpos', 'labnumber'),
+                 ('step', 'step'), 
+                 ('irradpos', 'labnumber'),
                  ('extract_device', 'extract_device'), ('tray', 'tray'),
                  ('position', 'position'), ('power_requested', 'extract_value'),
                  ('power_achieved', 'extract_value'), ('duration', 'duration'),
@@ -111,6 +114,7 @@ class ExportSpec(Loggable):
 
     @property
     def record_id(self):
-        return '{}-{}{}'.format(self.rid, self.aliquot, self.step)
+        return make_rid(self.labnumber, self.aliquot, self.step)
+##        return '{}-{}{}'.format(self.rid, self.aliquot, self.step)
 
 #============= EOF =============================================

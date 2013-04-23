@@ -8,9 +8,9 @@ def mcalc_fractional_error(*args):
 
     T = args[-1]
     r = []
-    te = T.std_dev() / T.nominal_value
+    te = T.std_dev / T.nominal_value
     for ai in args[:-1]:
-        r.append(((ai.std_dev() / ai.nominal_value) / te) ** 2)
+        r.append(((ai.std_dev / ai.nominal_value) / te) ** 2)
 
     return r
 
@@ -24,7 +24,7 @@ def acalc_fractional_error(*args):
 
     r = []
     for ai in args[:-1]:
-        r.append((ai.std_dev() / T.std_dev()) ** 2)
+        r.append((ai.std_dev / T.std_dev) ** 2)
 
     return r
 
@@ -92,15 +92,15 @@ def calc_error_contrib(ar40, ar39, ar38, ar37, ar36, s40, s39, s38, s37, s36, J,
 
 if __name__ == '__main__':
     constants = ArArConstants()
-    s40 = ufloat((5.50986, 5.50986 * 0.0004))
-    s39 = ufloat((3.65491e-1, 3.65491e-1 * 0.0011))
-    s38 = ufloat((4.4904e-3, 4.4904e-3 * 0.0117))
-    s37 = ufloat((2.47163e-3, 2.47163e-3 * 0.038))
+    s40 = ufloat(5.50986, 5.50986 * 0.0004)
+    s39 = ufloat(3.65491e-1, 3.65491e-1 * 0.0011)
+    s38 = ufloat(4.4904e-3, 4.4904e-3 * 0.0117)
+    s37 = ufloat(2.47163e-3, 2.47163e-3 * 0.038)
 #    s38 = ufloat((4.4904e-3, 0))
 #    s37 = ufloat((2.47163e-3, 0))
-    s36 = ufloat((2.623e-5, 2.623e-5 * 0.5955))
+    s36 = ufloat(2.623e-5, 2.623e-5 * 0.5955)
 
-    J = ufloat((1, 0))
+    J = ufloat(1, 0)
     k4039 = 0
     ca3637 = 2.8e-4
     cl3638 = 0
@@ -116,9 +116,9 @@ if __name__ == '__main__':
                              s40, s39, s38, s37, s36, J, constants)
     for ni, ai, vi in zip(('ar40', 'ar39', 'ar38', 'ar37', 'ar36', 'J   ', 'LambdaK'),
                       args,
-                      (s40, s39, s38, s37, s36, J, ufloat((1, 0)))
+                      (s40, s39, s38, s37, s36, J, ufloat(1, 0))
                       ):
         print '{:<10s}'.format(ni), \
-            '{:<10s}'.format('{:0.2f}'.format(vi.std_dev() / vi.nominal_value * 100)), \
+            '{:<10s}'.format('{:0.2f}'.format(vi.std_dev / vi.nominal_value * 100)), \
                 ai * 100
 

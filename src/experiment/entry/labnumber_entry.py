@@ -28,11 +28,10 @@ from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
 from src.experiment.entry.level import Level
 from src.experiment.entry.flux_monitor import FluxMonitor
-from src.helpers.alphas import ALPHAS
 from src.experiment.entry.db_entry import DBEntry
 from src.irradiation.irradiated_position import IrradiatedPosition, \
     IrradiatedPositionAdapter
-from src.constants import NULL_STR
+from src.constants import NULL_STR, ALPHAS
 
 
 class LabnumberEntry(DBEntry):
@@ -438,7 +437,7 @@ class LabnumberEntry(DBEntry):
         r = []
         irrad = self.db.get_irradiation(self.irradiation)
         if irrad:
-            r = [NULL_STR] + [str(ri.name) for ri in irrad.levels]
+            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
 #            if r and not self.level:
 
         return r

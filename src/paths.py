@@ -70,6 +70,7 @@ class Paths():
     #==============================================================================
     scripts_dir = scripts_dir = None
     experiment_dir = None
+    generic_experiment_dir = None
     plugins_dir = None
     hidden_dir = None
     plotter_options_dir = None
@@ -95,6 +96,7 @@ class Paths():
     monitors_dir = None
     jog_dir = None
     pattern_dir = None
+    incremental_heat_template_dir = None
 
     bakeout_config_dir = None
     bakeout = None
@@ -127,6 +129,10 @@ class Paths():
     #==============================================================================
     clovera_root = None
 
+    #===========================================================================
+    # files
+    #===========================================================================
+    backup_recovery_file = None
 
     def build(self, version):
         self.version = version
@@ -180,7 +186,7 @@ class Paths():
         # root
         #==============================================================================
         self.scripts_dir = scripts_dir = join(root, 'scripts')
-        self.procedures_dir = join(scripts_dir, 'procedures')
+#        self.procedures_dir = join(scripts_dir, 'procedures')
         self.measurement_dir = join(scripts_dir, 'measurement')
         self.post_measurement_dir = join(scripts_dir, 'post_measurement')
         self.extraction_dir = join(scripts_dir, 'extraction')
@@ -188,6 +194,7 @@ class Paths():
 
 
         self.experiment_dir = join(root, 'experiments')
+        self.generic_experiment_dir = join(self.experiment_dir, 'generic')
         self.hidden_dir = join(root, '.hidden')
         self.plotter_options_dir = join(self.hidden_dir, 'plotter_options')
         self.test_dir = join(root, 'testing')
@@ -203,11 +210,11 @@ class Paths():
         self.extraction_line_dir = join(setup_dir, 'extractionline')
         self.monitors_dir = join(setup_dir, 'monitors')
         self.pattern_dir = join(setup_dir, 'patterns')
+        self.incremental_heat_template_dir = join(setup_dir, 'incremental_heat_templates')
 
         self.bakeout_config_dir = join(setup_dir, 'bakeout_configurations')
         self.bakeout = join(device_dir, 'bakeout')
 
-        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
         self.block_dir = join(setup_dir, 'blocks')
         self.map_dir = map_dir = join(setup_dir, 'tray_maps')
         self.user_points_dir = join(map_dir, 'user_points')
@@ -237,6 +244,12 @@ class Paths():
         # lovera exectuables
         #==============================================================================
 #        self.clovera_root = join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
+
+
+        #=======================================================================
+        # files
+        #=======================================================================
+        self.backup_recovery_file = join(self.hidden_dir, 'backup_recovery')
 
 
 paths = Paths()

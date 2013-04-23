@@ -32,14 +32,18 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 
 
 # from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
+from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay,\
+    gMessageDisplay
 from globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
 
+#
+#if globalv.open_logger_on_launch:
+##    do_later(gLoggerDisplay.edit_traits)
+#    do_later(gLoggerDisplay.show)
 
-if globalv.open_logger_on_launch:
-    do_later(gLoggerDisplay.edit_traits)
+    
 
 logger = new_logger('launcher')
 # logger = logging.getLogger('launcher')
@@ -195,6 +199,10 @@ def get_user_plugins():
     return plugins
 
 def app_factory():
+    '''
+        assemble the plugins 
+        return a Pychron WorkbenchApplication
+    '''
     plugins = [
                CorePlugin(),
                WorkbenchPlugin(),
@@ -205,13 +213,52 @@ def app_factory():
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
 
-    return Pychron(plugins=plugins)
+    app=Pychron(plugins=plugins)
+    
+    gLoggerDisplay.application=app
+    gMessageDisplay.application=app
+    gWarningDisplay.application=app
+    gTraceDisplay.application=app
+    
+    if globalv.open_logger_on_launch:
+        do_later(gLoggerDisplay.open_view, gLoggerDisplay)
+
+    return app
+
+def check_dependencies():
+    '''
+        check the dependencies and 
+    '''
+    from pyface.api import warning
+    try:
+        mod = __import__('uncertainties',
+                         fromlist=['__version__']
+                         )
+        __version__ = mod.__version__
+    except ImportError:
+        warning(None, 'Install "{}" package. required version>={} '.format('uncertainties', '2.1'))
+        return
+
+    vargs = __version__.split('.')
+    maj=vargs[0]
+    if int(maj) < 2:
+        warning(None, 'Update "{}" package. your version={}. required version>={} '.format('uncertainties',
+                                                                                           __version__,
+                                                                                           '2.1'
+                                                                                           ))
+        return
+
+    return True
+
 
 
 app = None
 def launch():
     '''
     '''
+
+    if not check_dependencies():
+        return
 
     global app
     app = app_factory()
@@ -225,6 +272,7 @@ def launch():
 
         app.on_trait_change(start_test, 'started')
 
+    
     try:
         app.run()
     except Exception, err:
@@ -239,12 +287,13 @@ def launch():
 #        logger.warning(err)
 #        warning(app.workbench.active_window, tb)
         app.exit()
+    
+    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
+        gi.close_ui()
 
     logger.info('Quitting Pychron')
     app.exit()
 
-    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
-        gi.close()
 
     return
 

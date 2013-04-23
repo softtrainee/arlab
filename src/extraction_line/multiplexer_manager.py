@@ -42,9 +42,9 @@ class MultiplexerManager(Manager):
         self.closed(True)
         self.controller.bootstrap()
         self.controller.post_initialize()
-        self.opened()
+        self.opened(None)
 
-    def opened(self):
+    def opened(self, ui):
         self.controller.start_scan()
 
     def closed(self, isok):

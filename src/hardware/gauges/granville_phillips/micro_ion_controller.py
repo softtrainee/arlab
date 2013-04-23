@@ -41,7 +41,7 @@ class Gauge(HasTraits):
     low = 5e-10
     high = 1e-8
     color_scalar = 1
-    width=Int(100)
+    width = Int(100)
     def traits_view(self):
         v = View(HGroup(Item('display_name', show_label=False, style='readonly',
                              width= -30,
@@ -69,7 +69,7 @@ class MicroIonController(CoreDevice):
     address = '01'
     gauges = List
     display_name = Str
-    
+
     def gauge_view(self):
         v = View(
                  Group(

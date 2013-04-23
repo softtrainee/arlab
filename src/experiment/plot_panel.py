@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool
+from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
+    Str, CInt
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
@@ -25,6 +26,9 @@ from uncertainties import ufloat
 from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
+from src.processing.arar_age import ArArAge
+from src.helpers.formatting import floatfmt
+
 #============= standard library imports ========================
 # from numpy import Inf
 # from pyface.timer.do_later import do_later
@@ -35,14 +39,17 @@ HEIGHT = 250
 class PlotPanelHandler(ViewableHandler):
     pass
 class PlotPanel(Viewable):
-    automated_run = Any
+#    automated_run = Any
+    arar_age = Instance(ArArAge)
+    sample = Str
+    irradiation = Str
     graph = Instance(Graph)
     window_x = 0
     window_y = 0
     window_title = ''
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
-    _ncounts = Int
+    _ncounts = CInt
 
 #    detector = None
     detectors = List
@@ -64,22 +71,45 @@ class PlotPanel(Viewable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
+
+    def reset(self):
+        self.clear_displays()
+        self.graph = self._graph_factory()
+
+    def create(self, dets):
+        '''
+            dets: list of Detector instances
+        '''
+
+        g = self.graph
+        g.suppress_regression = True
+#        # construct plot panels graph
+        for det in dets:
+            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
+
+        g.set_x_limits(min=0, max=400)
+#
+        g.suppress_regression = False
+        self.detectors = dets
+
     def clear_displays(self):
         self.ratio_display.clear()
         self.signal_display.clear()
         self.summary_display.clear()
         self.fit_display.clear()
 
+        self._print_results()
+
 
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
-            arar_age = self.automated_run.arar_age
+            arar_age = self.arar_age
             for iso, reg in zip(self.isotopes, new):
                 try:
                     vv = reg.predict(0)
                     ee = reg.predict_error(0)
-                    u = ufloat((vv, ee))
+                    u = ufloat(vv, ee)
                     if self.isbaseline:
                         self.baselines[iso] = u
                         if arar_age:
@@ -141,33 +171,47 @@ class PlotPanel(Viewable):
         disp.add_text(*args, **kw)
 
     def _floatfmt(self, f, n=5):
-        from src.helpers.formatting import floatfmt
         return floatfmt(f, n)
 
 
     def _print_parameter(self, display, name, uvalue, sig_figs=(3, 4), **kw):
         name = '{:<15s}'.format(name)
 
-        v = self._floatfmt(uvalue.nominal_value, sig_figs[0])
-        e = self._floatfmt(uvalue.std_dev(), sig_figs[1])
+        if not uvalue:
+            v, e = 0, 0
+        else:
+            v, e = uvalue.nominal_value, uvalue.std_dev
+
+        v = self._floatfmt(v, sig_figs[0])
+        e = self._floatfmt(e, sig_figs[1])
 
         msg = u'{}= {} {}{}{}'.format(name, v, PLUSMINUS, e, self._get_pee(uvalue))
         self.add_text(display, msg, **kw)
 
     def _print_summary(self, display):
-        arar_age = self.automated_run.arar_age
+        self.add_text(display, '{:<15s}= {}'.format('Sample', self.sample))
+        self.add_text(display, '{:<15s}= {}'.format('Irradiation', self.irradiation))
+
+        arar_age = self.arar_age
         if arar_age:
             # call age first
             # loads all the other attrs
             age = arar_age.age
 
-            j = ufloat(arar_age.j)
+            j = arar_age.j
             rad40 = arar_age.rad40_percent
             kca = arar_age.kca
             kcl = arar_age.kcl
+            ic = arar_age.ic_factor
 
             self._print_parameter(display, 'Age', age)
+
+            err = arar_age.age_error_wo_j
+            pee = self._get_pee(age, error=err)
+            self.add_text(display, '{:<15s}=       {:0.4f}{}'.format('Error w/o J', err, pee))
+
             self._print_parameter(display, 'J', j, sig_figs=(5, 6))
+            self._print_parameter(display, 'ICFactor', ic)
             self._print_parameter(display, '% rad40', rad40)
             self._print_parameter(display, 'K/Ca', kca)
             self._print_parameter(display, 'K/Cl', kcl)
@@ -197,8 +241,8 @@ class PlotPanel(Viewable):
                 return ''
 
             if cfb:
-                bu = ufloat((0, 0))
-                bl = ufloat((0, 0))
+                bu = ufloat(0, 0)
+                bl = ufloat(0, 0)
                 try:
                     bu = self.baselines[u]
                     bl = self.baselines[l]
@@ -207,15 +251,15 @@ class PlotPanel(Viewable):
                 try:
                     rr = (ru - bu) / (rl - bl)
                 except ZeroDivisionError:
-                    rr = ufloat((0, 0))
+                    rr = ufloat(0, 0)
             else:
                 try:
                     rr = ru / rl
                 except ZeroDivisionError:
-                    rr = ufloat((0, 0))
+                    rr = ufloat(0, 0)
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
-                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
+                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev)), n=6) + \
                     self._get_pee(rr)
             return res
 
@@ -228,10 +272,10 @@ class PlotPanel(Viewable):
             try:
                 us = self.signals[iso]
             except KeyError:
-                us = ufloat((0, 0))
+                us = ufloat(0, 0)
 
-            ubs = ufloat((0, 0))
-            ubl = ufloat((0, 0))
+            ubs = ufloat(0, 0)
+            ubl = ufloat(0, 0)
             if self.correct_for_baseline:
                 try:
                     ubs = self.baselines[iso]
@@ -254,7 +298,7 @@ class PlotPanel(Viewable):
             try:
                 ub = self.baselines[iso]
             except KeyError:
-                ub = ufloat((0, 0))
+                ub = ufloat(0, 0)
             return ub
 
         self._print_('bs', get_value, display)
@@ -264,7 +308,7 @@ class PlotPanel(Viewable):
             try:
                 ub = self.blanks[iso]
             except KeyError:
-                ub = ufloat((0, 0))
+                ub = ufloat(0, 0)
             return ub
 
         self._print_('bl', get_value, display)
@@ -276,7 +320,7 @@ class PlotPanel(Viewable):
         def func(iso):
             uv = get_value(iso)
             vv = uv.nominal_value
-            ee = uv.std_dev()
+            ee = uv.std_dev
 
             v = pad('{:0.5f}'.format(vv))
             e = pad('{:0.6f}'.format(ee), n=6)
@@ -290,9 +334,16 @@ class PlotPanel(Viewable):
         ts = [func(iso) for iso in self.isotopes]
         self.add_text(display, '\n'.join(ts))
 
-    def _get_pee(self, uv):
-        vv = uv.nominal_value
-        ee = uv.std_dev()
+    def _get_pee(self, uv, error=None):
+        if uv is not None:
+            vv = uv.nominal_value
+            ee = uv.std_dev
+        else:
+            vv, ee = 0, 0
+
+        if error is not None:
+            ee = error
+
         try:
             pee = abs(ee / vv * 100)
         except ZeroDivisionError:
@@ -308,9 +359,10 @@ class PlotPanel(Viewable):
 #        except AttributeError:
 #            return reg.error_calc
 
-    def close(self, isok):
-        self.automated_run.truncate('Immediate')
-        return isok
+#    def close(self, isok):
+#        self.close_event = True
+# #        self.automated_run.truncate('Immediate')
+#        return isok
 
     def _get_ncounts(self):
         return self._ncounts
@@ -358,7 +410,7 @@ class PlotPanel(Viewable):
                        layout='tabbed'
                        ),
                  width=600,
-                 height=0.85,
+                 height=0.90,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,
@@ -368,38 +420,26 @@ class PlotPanel(Viewable):
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]
+
+    def _display_factory(self):
+        return  RichTextDisplay(height=HEIGHT,
+                               default_color='black',
+                               default_size=12,
+                               scroll_to_bottom=False,
+                               bg_color='#FFFFCC'
+                               )
 #===============================================================================
 # defaults
 #===============================================================================
     def _fit_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-                               )
+        return self._display_factory()
+
     def _summary_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-                               )
+        return self._display_factory()
 
     def _signal_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-#                               width=0.25
-                               )
+        return self._display_factory()
+
     def _ratio_display_default(self):
-        return RichTextDisplay(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-#                               width=0.75
-                               )
+        return self._display_factory()
 #============= EOF =============================================

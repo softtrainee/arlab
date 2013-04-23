@@ -177,7 +177,7 @@ class BakeoutManager(Manager):
         # reset the general timers
             c.start_timer()
 
-    def opened(self):
+    def opened(self, ui):
         self.info('opened')
         # delay 1s before starting scan
         do_after_timer(1000, self.reset_general_scan)
@@ -207,7 +207,7 @@ class BakeoutManager(Manager):
         super(BakeoutManager, self).kill()
 
         if self.data_manager:
-            self.data_manager.close()
+            self.data_manager.close_file()
 
         for c in self._get_controllers():
             c.end()
@@ -455,7 +455,7 @@ class BakeoutManager(Manager):
             self.database.commit()
 
         if self.data_manager is not None:
-            self.data_manager.close()
+            self.data_manager.close_file()
 
     def _db_rollback(self):
         self.info('rolling back')
@@ -533,7 +533,7 @@ class BakeoutManager(Manager):
                     do_later(self._db_rollback)
 
             if self.data_manager is not None:
-                self.data_manager.close()
+                self.data_manager.close_file()
 
     @on_trait_change('include_+')
     def _toggle_graphs(self):

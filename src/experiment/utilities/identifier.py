@@ -23,6 +23,11 @@ ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                       bg='Background', u='Unknown', c='Cocktail', a='Air'
                       )
 
+# "labnumbers" where extract group is disabled
+NON_EXTRACTABLE = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
+                      bg='Background', c='Cocktail', a='Air'
+                      )
+
 SPECIAL_NAMES = [NULL_STR, 'Air', 'Cocktail', 'Blank Unknown', 'Blank Air', 'Blank Cocktail', 'Background']
 SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
                        blank_air='ba',
@@ -76,10 +81,18 @@ def convert_special_name(name, output='shortname'):
 
 def convert_labnumber(ln):
     '''
+        ln is a str  but only special labnumbers cannot be converted to int
         convert number to name
+        
     '''
-    if ln in SPECIAL_IDS:
-        ln = SPECIAL_IDS[ln]
+    try:
+        ln = int(ln)
+
+        if ln in SPECIAL_IDS:
+            ln = SPECIAL_IDS[ln]
+    except ValueError:
+        pass
+
 
     return ln
 
@@ -107,7 +120,6 @@ def convert_identifier(identifier):
 def get_analysis_type(idn):
 
     idn = idn.lower()
-
     # check for Bg before B
     if idn.startswith('bg'):
         return 'background'
@@ -125,5 +137,63 @@ def get_analysis_type(idn):
         return 'degas'
     else:
         return 'unknown'
+
+def make_runid(ln, a, s):
+    return '{}-{:02n}{}'.format(ln, a, s)
+
+def make_identifier(ln, ed, ms):
+    try:
+        _ = int(ln)
+        return ln
+    except ValueError:
+        return make_special_identifier(ln, ed, ms)
+
+def make_standard_identifier(ln, modifier, ms, aliquot=None):
+    '''
+        ln: str or int
+        a: int
+        modifier: str or int. if int zero pad 
+        ms: int or str 
+    '''
+    if isinstance(ms, int):
+        ms='{:02n}'.format(ms)
+    try:
+        modifier = '{:02n}'.format(modifier)
+    except ValueError:
+        pass
+
+    d = '{}-{}-{}'.format(ln, modifier, ms)
+    if aliquot:
+        d = '{}-{:02n}'.format(d, aliquot)
+    return d
+
+def make_special_identifier(ln, ed, ms, aliquot=None):
+    '''
+        ln: str or int
+        a: int aliquot
+        ms: int mass spectrometer id
+        ed: int extract device id
+    '''
+    if isinstance(ed, int):
+        ed='{:02n}'.format(ed)
+    if isinstance(ms, int):
+        ms='{:02n}'.format(ms)
+    
+    d = '{}-{}-{}'.format(ln, ed, ms)
+    if aliquot:
+        d = '{}-{:02n}'.format(d, aliquot)
+    return d
+
+def make_rid(ln, a, step=''):
+    '''
+        if ln can be converted to integer return ln
+        else return special_identifier
+    '''
+    try:
+        _ = int(ln)
+        return make_runid(ln, a, step)
+    except ValueError:
+        return '{}-{:02n}'.format(ln, a)
+#        return make_special_identifier(ln, ed, ms, aliquot=a)
 
 #============= EOF =============================================

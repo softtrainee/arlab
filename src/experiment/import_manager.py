@@ -42,6 +42,13 @@ class MassSpecExtractor(Extractor):
     dbconn_spec = Instance(DBConnectionSpec, ())
     connect_button = Button('Connect')
     db = Instance(MassSpecDatabaseAdapter, ())
+
+    def _dbconn_spec_default(self):
+        return DBConnectionSpec(database='massspecdata',
+                                username='massspec',
+                                password='DBArgon',
+                                host='129.138.12.160'
+                                )
     def _connect_button_fired(self):
         self.connect()
 
@@ -86,7 +93,8 @@ class MassSpecExtractor(Extractor):
             positions = self.db.get_irradiation_positions(name, mli.Level)
             for ip in positions:
                 # is labnumber already in dest
-                if not dest.get_labnumber(ip.IrradPosition):
+                ln = dest.get_labnumber(ip.IrradPosition)
+                if not ln:
                     ln = dest.add_labnumber(ip.IrradPosition)
                     dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
 
@@ -95,7 +103,21 @@ class MassSpecExtractor(Extractor):
                     fl = dest.add_flux(ip.J, ip.JEr)
                     fh.flux = fl
 
-                    dest.flush()
+#                    dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
+                sample = self._add_sample_project(dest, ip)
+                ln.sample = sample
+                dest.flush()
+
+    def _add_sample_project(self, dest, dbpos):
+
+        sample = dbpos.sample
+        project = sample.project
+        material = dbpos.Material
+
+        return dest.add_sample(
+                        sample.Sample,
+                        material=material,
+                        project=project.Project)
 
     def _add_chronology(self, dest, name):
         chrons = self.db.get_chronology_by_irradname(name)

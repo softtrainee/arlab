@@ -516,7 +516,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
 
         return fig
 
-    def _display_series(self, ans, po, title):
+    def _display_series(self, ans, po, title, data_type='database'):
         # open a series manager
         sm = SeriesManager(analyses=ans)
         info = sm.edit_traits(kind='livemodal')

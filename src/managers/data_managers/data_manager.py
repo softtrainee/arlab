@@ -39,7 +39,7 @@ class DataManager(Manager):
     def get_current_path(self):
         pass
 
-    def close(self):
+    def close_file(self):
         pass
 
     def new_frame(self, *args, **kw):

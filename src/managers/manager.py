@@ -126,7 +126,7 @@ class Manager(Viewable, RPCable):
         pass
 
 
-    def opened(self):
+    def opened(self, ui):
         def _loop():
             start = time.time()
             self.info('Window set to close after {} min'.format(self.close_after_minutes))
@@ -146,22 +146,22 @@ class Manager(Viewable, RPCable):
         for _k, man in self.get_managers():
             man._killed = False
 
-        self.add_window(self.ui)
+        self.add_window(ui)
 
-    def add_window(self, ui):
-
-        try:
-            if self.application is not None:
-                self.application.uis.append(ui)
-        except AttributeError:
-            pass
-
-    def open_view(self, obj, **kw):
-        def _open_():
-            ui = obj.edit_traits(**kw)
-            self.add_window(ui)
-
-        do_after(1, _open_)
+#    def add_window(self, ui):
+#
+#        try:
+#            if self.application is not None:
+#                self.application.uis.append(ui)
+#        except AttributeError:
+#            pass
+#
+#    def open_view(self, obj, **kw):
+#        def _open_():
+#            ui = obj.edit_traits(**kw)
+#            self.add_window(ui)
+#
+#        do_after(1, _open_)
 
 
 #    def close_ui(self):
@@ -174,8 +174,8 @@ class Manager(Viewable, RPCable):
 #    def close(self, is_ok):
 # #        print self.name, 'close', is_ok
 #        return True
-    def close(self, *args, **kw):
-        return True
+#    def close(self, *args, **kw):
+#        return True
 
     def _kill_hook(self):
         pass
@@ -196,7 +196,7 @@ class Manager(Viewable, RPCable):
                     if hasattr(man, 'kill'):
                         man.kill()
 
-        return not self._killed
+#        return not self._killed
 
 #    def warning_dialog(self, msg):
 #        '''

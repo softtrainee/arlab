@@ -61,20 +61,25 @@ class Mean(HasTraits):
                                 if not isinstance(ai, Marker) and\
                                     ai.status == 0 and \
                                         ai.temp_status == 0)
-        vs, es = zip(*[(v.nominal_value, v.std_dev()) for v in vs])
-        vs, es = array(vs), array(es)
-        if use_weights:
-            weights = 1 / es ** 2
-        else:
-            weights = ones(vs.shape)
 
-        av, sum_weights = average(vs, weights=weights, returned=True)
-        if use_weights:
-            werr = sum_weights ** -0.5
-        else:
-            werr = vs.std(ddof=1)
+        vs = [vi for vi in vs if vi is not None]
+        if vs:
+            vs, es = zip(*[(v.nominal_value, v.std_dev) for v in vs])
+            vs, es = array(vs), array(es)
+            if use_weights:
+                weights = 1 / es ** 2
+            else:
+                weights = ones(vs.shape)
 
-        return ufloat((av, werr))
+            av, sum_weights = average(vs, weights=weights, returned=True)
+            if use_weights:
+                werr = sum_weights ** -0.5
+            else:
+                werr = vs.std(ddof=1)
+        else:
+            av, werr = 0, 0
+
+        return ufloat(av, werr)
 
     def _calculate_arithmetic_mean(self, attr):
         return self._calculate_mean(attr, use_weights=False)

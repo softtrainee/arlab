@@ -21,10 +21,12 @@ from src.viewable import Viewable
 from src.experiment.automated_run.automated_run import AutomatedRun
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.script_editable import ScriptEditable
+# from src.experiment.script_editable import ScriptEditable
 from src.constants import SCRIPT_KEYS
+from src.loggable import Loggable
 
-class AutomatedRunEditor(ScriptEditable):
+# class AutomatedRunEditor(ScriptEditable):
+class AutomatedRunEditor(Loggable):
     id = 'automated_run_editor'
     title = 'Edit Automated Runs'
     run = Instance(AutomatedRun)

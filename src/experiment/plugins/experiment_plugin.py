@@ -18,12 +18,12 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.experiment.experiment_manager import ExperimentManager
+from src.experiment.manager import ExperimentManager
 from src.envisage.core.core_plugin import CorePlugin
 from src.helpers.parsers.initialization_parser import InitializationParser
-from src.experiment.experiment_executor import ExperimentExecutor
-from src.experiment.experiment_editor import ExperimentEditor
-from src.pyscripts.pyscript_editor import PyScriptManager
+from src.experiment.executor import ExperimentExecutor
+from src.experiment.editor import ExperimentEditor
+from src.pyscripts.manager import PyScriptManager
 from src.experiment.signal_calculator import SignalCalculator
 from src.experiment.import_manager import ImportManager
 from src.experiment.image_browser import ImageBrowser

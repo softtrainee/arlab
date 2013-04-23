@@ -115,7 +115,7 @@ class ScanManager(Manager):
 
             self.trait_set(isotope=iso, trait_change_notify=False)
 
-    def opened(self):
+    def opened(self, ui):
 
         self.graph = self._graph_factory()
 
@@ -245,7 +245,7 @@ class ScanManager(Manager):
 
     def _stop_recording(self):
         self._consuming = False
-        self.record_data_manager.close()
+        self.record_data_manager.close_file()
 #===============================================================================
 # handlers
 #===============================================================================

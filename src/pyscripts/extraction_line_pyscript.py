@@ -21,7 +21,7 @@ import time
 from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import verbose_skip, makeRegistry
-from src.lasers.laser_managers.laser_manager import ILaserManager
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 # from src.lasers.laser_managers.extraction_device import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -218,7 +218,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
         st = time.time()
         # set block=True to wait for pattern completion
-        self._manager_action([('execute_pattern', pattern, {'block':block})],
+        self._manager_action([('execute_pattern', (pattern,), {'block':block})],
                              name=self.extract_device,
                               protocol=ILaserManager)
 
@@ -231,7 +231,7 @@ class ExtractionLinePyScript(ValvePyScript):
             tray = self.tray
 
         self.info('set tray to {}'.format(tray))
-        result = self._manager_action([('set_stage_map', (tray), {})
+        result = self._manager_action([('set_stage_map', (tray,), {})
                                         ],
                                       protocol=ILaserManager,
                                       name=self.extract_device
@@ -371,7 +371,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
         while s:
             if self._cancel:
-                break
+                break            
             self._sleep(1)
             s = r.isSet()
 

@@ -510,7 +510,7 @@ class Ideogram(Plotter):
 
         ages_errors = self._get_ages(graph.analyses, group_id=group_id, unzip=False)
         ages_errors = sorted(ages_errors, key=lambda x: x.nominal_value)
-        ages, errors = zip(*[(ai.nominal_value, ai.std_dev()) for j, ai in enumerate(ages_errors)
+        ages, errors = zip(*[(ai.nominal_value, ai.std_dev) for j, ai in enumerate(ages_errors)
                              if not j in sel])
 
         xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
@@ -536,7 +536,7 @@ class Ideogram(Plotter):
 
             if sel:
                 dp.visible = True
-                ages, errors = zip(*[(a.nominal_value, a.std_dev()) for a in ages_errors])
+                ages, errors = zip(*[(a.nominal_value, a.std_dev) for a in ages_errors])
                 xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
                 dp.value.set_data(ys)
                 dp.index.set_data(xs)

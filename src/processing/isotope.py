@@ -81,7 +81,7 @@ class IsotopicMeasurement(HasTraits):
             self._value, self._error = v
         else:
             self._value = v.nominal_value
-            self._error = v.std_dev()
+            self._error = v.std_dev
 
     def _mean_regressor_factory(self):
         reg = MeanRegressor(xs=self.xs, ys=self.ys)
@@ -142,7 +142,7 @@ class IsotopicMeasurement(HasTraits):
 
     @cached_property
     def _get_uvalue(self):
-        return ufloat((self.value, self.error))
+        return ufloat(self.value, self.error)
 #===============================================================================
 # arthmetic
 #===============================================================================

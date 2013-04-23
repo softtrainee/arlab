@@ -74,7 +74,7 @@ class AnalysisSummary(Summary):
             self._make_keyword(name, value, True if i == n - 1 else False)
 
         # add j
-        j, je = record.j
+        j, je = record.j.nominal_value, record.j.std_dev
         self._make_keyword('J', '{} {}{}'.format(j, PLUSMINUS, self.make_error(j, je)),
                            new_line=True)
 
@@ -138,38 +138,35 @@ class AnalysisSummary(Summary):
         self.add_text(' ')
 
         age = record.age
-        try:
-            ej = arar_result['age_err_wo_jerr'] / record.age_scalar
-        except TypeError:
-            ej = 0
+        wo_jerr = record.age_error_wo_j
 
         kca = self.record.kca
         kcl = self.record.kcl
         self._make_keyword('K/Ca', '{} {}{}'.format(self.floatfmt(kca.nominal_value, n=2),
                                                     PLUSMINUS,
-                                                    self.make_error(kca.nominal_value, kca.std_dev())),
+                                                    self.make_error(kca.nominal_value, kca.std_dev)),
                             new_line=True)
 
         self._make_keyword('K/Cl', '{} {}{}'.format(self.floatfmt(kcl.nominal_value, n=2),
                                                     PLUSMINUS,
-                                                    self.make_error(kcl.nominal_value, kcl.std_dev())),
+                                                    self.make_error(kcl.nominal_value, kcl.std_dev)),
                             new_line=True, underline=underline_width)
 
         self.add_text('  ')
         self._make_keyword('Age', '{} {}{} ({})'.format(self.floatfmt(age.nominal_value, n=4),
                                                         PLUSMINUS,
-                                                        self.make_error(age.nominal_value, age.std_dev()),
+                                                        self.make_error(age.nominal_value, age.std_dev),
                                                         record.age_units),
                            new_line=True
                            )
         self.add_text('             {}{} (Exclude Error in J)'.format(PLUSMINUS,
-                                                                      self.make_error(age.nominal_value, ej)
+                                                                      self.make_error(age.nominal_value, wo_jerr)
                                                                       ))
 
     def _make_ratio(self, name, nom, dem, scalar=1, underline_width=0):
         try:
             rr = nom / dem * scalar
-            v, e = rr.nominal_value, rr.std_dev()
+            v, e = rr.nominal_value, rr.std_dev
         except ZeroDivisionError:
             v, e = 0, 0
 
@@ -188,7 +185,7 @@ class AnalysisSummary(Summary):
     def _make_corrected_signals(self, iso, widths, lh, last_line=False):
         s1 = self.record.isotopes[iso].baseline_corrected_value()
         sv1 = self.floatfmt(s1.nominal_value)
-        bse1 = self.make_error(s1.nominal_value, s1.std_dev())
+        bse1 = self.make_error(s1.nominal_value, s1.std_dev)
 
         arar = self.record.arar_result
         s2 = None
@@ -199,7 +196,7 @@ class AnalysisSummary(Summary):
 
         if s2 is not None:
             sv2 = self.floatfmt(s2.nominal_value)
-            bse2 = self.make_error(s2.nominal_value, s2.std_dev())
+            bse2 = self.make_error(s2.nominal_value, s2.std_dev)
         else:
             sv2 = NULL_STR
             bse2 = NULL_STR

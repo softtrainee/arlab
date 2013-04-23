@@ -15,25 +15,55 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Any, Button, Bool, Event
-from traitsui.api import View, Item, spring, ButtonEditor, HGroup
+from traits.api import HasTraits , Float, Any, Button, Bool, List
+from traitsui.api import View, Item, spring, ButtonEditor, HGroup, \
+    TabularEditor, VGroup, UItem
 #============= standard library imports ========================
 from numpy import polyfit, linspace
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
+from traitsui.tabular_adapter import TabularAdapter
+from src.graph.guide_overlay import GuideOverlay
+from src.traits_editors.tabular_editor import myTabularEditor
+
+class ResultsAdapter(TabularAdapter):
+    columns = [('N', 'cnt'), ('Endpoints', 'endpoints'), ('Linear', 'linear')]
+
+class Result(HasTraits):
+    linear = Float
+    endpoints = Float
+    def calculate(self, xs, ys, rise, starttime):
+        ti = xs[-1]
+        run = (ti - starttime) / 60.
+        rrendpoints = rise / run
+
+        rrfit = polyfit(linspace(0, run, len(ys)), ys, 1)[0]
+        self.endpoints = rrendpoints
+        self.linear = rrfit
+        return rrendpoints, rrfit, ti, run
 
 class RiseRate(SpectrometerTask):
     result_fit = Float
     result_endpoints = Float
+    results = List
     graph = Any
     clear_button = Button('Clear')
+    clear_results_button = Button('Clear Results')
     calculated = Bool
+
+    def _clear_results_button_fired(self):
+        self.results = []
 
     def _clear_button_fired(self):
         self.calculated = False
 
-        self.graph.plots[0].overlays.pop()
-        self.graph.plots[0].overlays.pop()
+        overlays = []
+        plot = self.graph.plots[0]
+        for oi in plot.overlays:
+            if not isinstance(oi, GuideOverlay):
+                overlays.append(oi)
+
+        plot.overlays = overlays
         self.graph.redraw()
 
     def _execute(self):
@@ -52,21 +82,20 @@ class RiseRate(SpectrometerTask):
 
         xs = self.graph.get_data()
         ys = self.graph.get_data(axis=1, series=self.detector.series_id)
-        yss = ys[xs >= self._starttime]
+        ys = ys[xs >= self._starttime]
 
-        ts = xs[-1]
-        run = (ts - self._starttime) / 60.
-        rrendpoints = rise / run
+        result = Result(cnt=len(self.results) + 1)
+        rrendpoints, rrfit, ti, run = result.calculate(xs, ys, rise, self._starttime)
 
-        rrfit = polyfit(linspace(0, run, len(yss)), yss, 1)[0]
-
-        self.graph.add_vertical_rule(ts)
+        self.graph.add_vertical_rule(ti)
         self.graph.redraw()
         self.calculated = True
         self.info('calculated rise rate {:0.1f} {:0.3f}/{:0.3f}, {:0.3f}'.format(rrendpoints, rise, run, rrfit))
 
         self.result_endpoints = rrendpoints
         self.result_fit = rrfit
+
+        self.results.append(result)
 
     def _get_intensity(self):
         return self.spectrometer.get_intensity(self.detector.name)
@@ -76,18 +105,27 @@ class RiseRate(SpectrometerTask):
 
     def traits_view(self):
         v = View(
-                 Item('result_endpoints', style='readonly',
-                      format_str='%0.3f',
-                      label='Rise Rate endpoints (fA/min)'),
-                 Item('result_fit', style='readonly',
-                      format_str='%0.3f',
-                      label='Rise Rate linear fit  (fA/min)'),
                   HGroup(spring,
-                         Item('clear_button', show_label=False, enabled_when='calculated'),
+                         Item('clear_button', show_label=False,
+                              enabled_when='calculated'
+                              ),
                          Item('execute_button',
-                              enabled_when='not calculated',
                               editor=ButtonEditor(label_value='execute_label'),
-                        show_label=False))
+                        show_label=False)),
+
+                 VGroup(Item('result_endpoints', style='readonly',
+                             format_str='%0.3f',
+                             label='Rise Rate endpoints (fA/min)'),
+                        Item('result_fit', style='readonly',
+                             format_str='%0.3f',
+                             label='Rise Rate linear fit  (fA/min)')
+                        ),
+                 HGroup(UItem('clear_results_button'),spring),
+                UItem('results', 
+                      width=-300,
+                      editor=myTabularEditor(operations=[],
+                                                      editable=False,
+                                                      adapter=ResultsAdapter()))
 
                   )
         return v

@@ -37,20 +37,21 @@ class ExperimentStats(Loggable):
     _timer = Any(transient=True)
     delay_between_analyses = Float
     _start_time = None
-    experiment_set = Any
+
+#    experiment_queue = Any
 
     def calculate_duration(self, runs=None):
-        if runs is None:
-            runs = self.experiment_set.cleaned_automated_runs
+#        if runs is None:
+#            runs = self.experiment_queue.cleaned_automated_runs
         dur = self._calculate_duration(runs)
         self._total_time = dur
         return dur
 
-    def calculate_etf(self):
-        runs = self.experiment_set.cleaned_automated_runs
-        dur = self._calculate_duration(runs)
-        self._total_time = dur
-        self.etf = self.format_duration(dur)
+#    def calculate_etf(self):
+#        runs = self.experiment_queue.cleaned_automated_runs
+#        dur = self._calculate_duration(runs)
+#        self._total_time = dur
+#        self.etf = self.format_duration(dur)
 
     def format_duration(self, dur):
         dt = (datetime.datetime.now() + \
@@ -58,9 +59,13 @@ class ExperimentStats(Loggable):
         return dt.strftime('%I:%M:%S %p %a %m/%d')
 
     def _calculate_duration(self, runs):
-        ni = len(runs)
-        dur = sum([a.get_estimated_duration() for a in runs])
-        dur += (self.delay_between_analyses * ni)
+        dur = 0
+        warned=[]
+        if runs:
+            ni = len(runs)
+            script_ctx = dict()
+            dur = sum([a.get_estimated_duration(script_ctx, warned) for a in runs])
+            dur += (self.delay_between_analyses * ni)
         return dur
 
     def _get_total_time(self):
@@ -111,7 +116,7 @@ class ExperimentStats(Loggable):
         self.nruns_finished = 0
 
 class StatsGroup(ExperimentStats):
-    experiment_sets = List
+    experiment_queues = List
     def calculate(self):
         ''' 
             calculate the total duration
@@ -119,12 +124,12 @@ class StatsGroup(ExperimentStats):
         '''
 
         runs = [ai
-                for ei in self.experiment_sets
+                for ei in self.experiment_queues
                     for ai in ei.cleaned_automated_runs]
         ni = len(runs)
         self.nruns = ni
-        tt = sum([ei.stats.calculate_duration()
-                 for ei in self.experiment_sets])
+        tt = sum([ei.stats.calculate_duration(ei.cleaned_automated_runs)
+                 for ei in self.experiment_queues])
         self._total_time = tt
         offset = 0
         if self._start_time:
@@ -137,7 +142,7 @@ class StatsGroup(ExperimentStats):
             calculate the time at which a selected run will execute
         '''
         tt = 0
-        for ei in self.experiment_sets:
+        for ei in self.experiment_queues:
             if sel in ei.cleaned_automated_runs:
                 si = ei.cleaned_automated_runs.index(sel)
                 tt += ei.stats.calculate_duration(ei.cleaned_automated_runs[:si + 1])

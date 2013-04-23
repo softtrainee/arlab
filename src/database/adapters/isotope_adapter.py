@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import  and_
-import hashlib
+# import hashlib
 from cStringIO import StringIO
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
@@ -56,7 +56,7 @@ from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDevic
 
 from src.database.core.functions import delete_one
 
-from src.experiment.identifier import convert_identifier
+from src.experiment.utilities.identifier import convert_identifier
 # from src.repo.repository import Repository, ZIPRepository
 # from src.paths import paths
 # import binascii
@@ -417,24 +417,28 @@ class IsotopeAdapter(DatabaseAdapter):
             analysis.peak_center = pc
         return pc
 
-    def add_user(self, name, project=None, **kw):
+    def add_user(self, name, **kw):
         user = gen_UserTable(name=name, **kw)
-        if isinstance(project, str):
-            project = self.get_project(project)
-
-        q = self._build_query_and(gen_UserTable, name, gen_ProjectTable, project)
-
-        addflag = True
-        u = q.one()
-        if u is not None:
-            addflag = not (u.project == project)
-
-        if addflag:
-            self.info('adding user {}'.format(name))
-            if project is not None:
-                project.users.append(user)
-            self._add_item(user)
+        self._add_item(user)
         return user
+#    def add_user(self, name, **kw):
+#        user = gen_UserTable(name=name, **kw)
+#        if isinstance(project, str):
+#            project = self.get_project(project)
+#
+#        q = self._build_query_and(gen_UserTable, name, gen_ProjectTable, project)
+#
+#        addflag = True
+#        u = q.one()
+#        if u is not None:
+#            addflag = not (u.project == project)
+#
+#        if addflag:
+#            self.info('adding user {}'.format(name))
+#            if project is not None:
+#                project.users.append(user)
+#            self._add_item(user)
+#        return user
 
 
     def add_sample(self, name, project=None, material=None, **kw):
@@ -539,7 +543,7 @@ class IsotopeAdapter(DatabaseAdapter):
                       sample=None, irradiation=None, **kw):
         ln = self.get_labnumber(labnumber)
         if ln is None:
-            ln = gen_LabTable(labnumber=labnumber,
+            ln = gen_LabTable(identifier=labnumber,
     #                      aliquot=aliquot,
                           ** kw)
 
@@ -672,15 +676,16 @@ class IsotopeAdapter(DatabaseAdapter):
             pass
 
     def get_labnumber(self, labnum):
-        if isinstance(labnum, str):
-            labnum = convert_identifier(labnum)
-
-        try:
-            labnum = int(labnum)
-        except (ValueError, TypeError):
-            pass
-
-        return self._retrieve_item(gen_LabTable, labnum, key='labnumber')
+        return self._retrieve_item(gen_LabTable, labnum, key='identifier')
+#        if isinstance(labnum, str):
+#            labnum = convert_identifier(labnum)
+#
+#        try:
+#            labnum = int(labnum)
+#        except (ValueError, TypeError):
+#            pass
+#
+#        return self._retrieve_item(gen_LabTable, labnum, key='labnumber')
 
     def get_mass_spectrometer(self, value):
         return self._retrieve_item(gen_MassSpectrometerTable, value)
@@ -693,6 +698,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_molecular_weight(self, value):
         return self._retrieve_item(gen_MolecularWeightTable, value)
+
+    def get_user(self, value):
+        return self._retrieve_item(gen_UserTable, value)
 
     def get_project(self, value):
         return self._retrieve_item(gen_ProjectTable, value)
@@ -762,7 +770,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_irradiations(self, **kw):
 #        return self._retrieve_items(irrad_IrradiationTable, order=irrad_IrradiationTable.name, ** kw)
-        return self._retrieve_items(irrad_IrradiationTable, order=irrad_IrradiationTable.name.desc(), ** kw)
+        return self._retrieve_items(irrad_IrradiationTable,
+                                    order=irrad_IrradiationTable.name.desc(),
+                                    **kw)
 
     def get_irradiation_productions(self, **kw):
         return self._retrieve_items(irrad_ProductionTable, **kw)
@@ -775,6 +785,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_mass_spectrometers(self, **kw):
         return self._retrieve_items(gen_MassSpectrometerTable, **kw)
+
+    def get_extraction_devices(self, **kw):
+        return self._retrieve_items(gen_ExtractionDeviceTable, **kw)
 
     def get_analysis_types(self, **kw):
         return self._retrieve_items(gen_AnalysisTypeTable, **kw)

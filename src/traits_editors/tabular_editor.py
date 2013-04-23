@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, on_trait_change, Any, Str, Event
+from traits.api import Bool, on_trait_change, Any, Str, Event, List
 from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
 
@@ -26,6 +26,10 @@ import wx
 class _TabularEditor(wxTabularEditor):
 #    drop_target = Any
     rearranged = Event
+    pasted = Event
+
+    copy_cache = List
+
     def init(self, parent):
         super(_TabularEditor, self).init(parent)
 
@@ -36,6 +40,8 @@ class _TabularEditor(wxTabularEditor):
         # remove binding added by wxTabularEditor
         control.Bind(wx.EVT_MOTION, None)
         self.sync_value(self.factory.rearranged, 'rearranged', 'to')
+        self.sync_value(self.factory.pasted, 'pasted', 'to')
+        self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
 
     def update_editor(self):
         super(_TabularEditor, self).update_editor()
@@ -57,18 +63,23 @@ class _TabularEditor(wxTabularEditor):
 
     def _on_key(self, event):
         key = event.GetKeyCode()
-#        print event.CmdDown()
-        if event.CmdDown() and key == 67:
+        if event.CmdDown():
+            if key == 67:
 #            self.copy_selection = self.selected
                 if self.multi_selected:
                     sel = self.multi_selected
                 elif self.selected:
                     sel = self.selected
+
+                self.copy_cache = sel
                 if sel and wx.TheClipboard.Open():
                     dataObj = wx.TextDataObject()
                     dataObj.SetText('\n'.join([si.to_string() for si in sel]))
                     wx.TheClipboard.SetData(dataObj)
                     wx.TheClipboard.Close()
+            elif key == 86:
+                if self.copy_cache:
+                    self.pasted = True
 
 #        print event.GetModifiers()
         else:
@@ -111,6 +122,8 @@ class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
     drag_move = Bool(False)
     rearranged = Str
+    pasted = Str
+    copy_cache = Str
     def _get_klass(self):
         return _TabularEditor
 #============= EOF =============================================

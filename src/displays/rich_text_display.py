@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, List, Float, Str, Button, Int
+from traits.api import HasTraits, List, Float, Str, Button, Int, on_trait_change
 from traitsui.api import View, Item, CustomEditor, Handler, HGroup, spring
 
 #=============standard library imports ========================
@@ -25,6 +25,7 @@ from src.helpers.color_generators import colors8i
 from pyface.timer.do_later import do_later, do_after
 from email.mime.base import MIMEBase
 from src.paths import paths
+from src.viewable import ViewableHandler, Viewable
 #=============local library imports  ==========================
 
 def gui_decorator(func):
@@ -42,20 +43,34 @@ def gui_decorator(func):
 
     return decorator
 
-class DisplayHandler(Handler):
+#class DisplayHandler(Handler):
+class DisplayHandler(ViewableHandler):
     def closed(self, info, is_ok):
         obj = info.object
-        obj.opened = False
+        obj._opened = False
         obj.was_closed = True
-        return True
+
+        return super(DisplayHandler, self).closed(info, is_ok)
 
     def init(self, info):
-        info.object.ui = info.ui
-        if not info.object.opened and not info.object.was_closed:
+        super(DisplayHandler, self).init(info)
+#        print 'rrrrr', info
+#        info.object.ui = info.ui
+        if not info.object._opened and not info.object.was_closed:
             info.object.load_text_buffer()
-        info.object.opened = True
-
-class RichTextDisplay(HasTraits):
+            
+        info.object._opened = True
+        
+#    @on_trait_change('object:disposed')  
+#    def _update_disposed(self):
+#        ui=self.ui
+#        print ui, 'ffffff'
+##    def object__disposed_fired(self, info):
+##        print self, info.ui, 'sadsdffsd'
+#        if ui:
+#           ui.dispose()
+# class RichTextDisplay(HasTraits):
+class RichTextDisplay(Viewable):
     '''
     '''
     _display = None
@@ -69,7 +84,7 @@ class RichTextDisplay(HasTraits):
     ok_to_open = True
     scroll_to_bottom = True
 
-    opened = False
+    _opened = False
     was_closed = False
 
     default_color = Str('red')
@@ -93,9 +108,9 @@ class RichTextDisplay(HasTraits):
     def visible(self):
         return self._display is not None
 
-    def close(self):
-        if self.ui is not None:
-            self.ui.dispose()
+#    def close(self):
+#        if self.ui is not None:
+#            self.ui.dispose()
 
     def traits_view(self):
         '''

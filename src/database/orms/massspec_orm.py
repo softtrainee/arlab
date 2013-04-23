@@ -66,6 +66,7 @@ class AnalysesTable(Base):
 
     HeatingItemName = Column(String(80))
     FinalSetPwr = Column(Float, default=0)
+    PwrAchieved = Column(Float, default=0)
     PwrAchievedSD = Column(Float, default=0)
     PwrAchieved_Max = Column(Float, default=0)
     TotDurHeating = Column(Integer)
@@ -90,6 +91,8 @@ class AnalysesTable(Base):
 
     ReferenceDetectorLabel = Column(String(40))
     RefDetID = Column(Integer)
+
+    PipettedIsotopes = Column(BLOB)
 
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
     araranalyses = relation('ArArAnalysisTable')

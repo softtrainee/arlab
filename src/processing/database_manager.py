@@ -45,16 +45,17 @@ class DatabaseManager(Manager):
             pass
 
     def _db_factory(self):
-        db = IsotopeAdapter(username='massspec',
-                            password='DBArgon',
+#        db = IsotopeAdapter(username='massspec',
+#                            password='DBArgon',
+#                            kind='mysql',
+#                            #name='isotopedb_dev',
+#                            host='129.138.12.131'
+#                            )
+        db = IsotopeAdapter(
+#                            username='root',
+#                            password='Argon',
                             kind='mysql',
-                            name='isotopedb_dev',
-                            host='129.138.12.131'
-                            )
-        db = IsotopeAdapter(username='root',
-                            password='Argon',
-                            kind='mysql',
-                            name='isotopedb_dev',
+                            # name='isotopedb_dev',
                             application=self.application
                             )
 

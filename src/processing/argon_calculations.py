@@ -47,7 +47,7 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
     if arar_constants is None:
         arar_constants = ArArConstants()
     j = (umath.exp(age * arar_constants.lambda_k) - 1) / r
-    return j.nominal_value, j.std_dev()
+    return j.nominal_value, j.std_dev
 #    return j
 
 def calculate_decay_factor(dc, segments):
@@ -73,7 +73,7 @@ def calculate_decay_factor(dc, segments):
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
                        ic=(1.0, 0),
-                       abundant_sensitivity=0,
+                       abundance_sensitivity=0,
                        a37decayfactor=None,
                        a39decayfactor=None,
                        include_decay_error=False,
@@ -118,7 +118,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     '''
     def to_ufloat(v):
         if isinstance(v, tuple):
-            v = ufloat(v)
+            v = ufloat(*v)
         return v
 
     if arar_constants is None:
@@ -139,15 +139,15 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments , decay_time = irradinfo
 
-    ca3637 = ufloat(ca3637)
-    ca3937 = ufloat(ca3937)
-    ca3837 = ufloat(ca3837)
-    k4039 = ufloat(k4039)
-    k3839 = ufloat(k3839)
-    cl3638 = ufloat(cl3638)
-    k3739 = ufloat(k3739)
-    ic = ufloat(ic)
-    j = ufloat(j)
+    ca3637 = to_ufloat(ca3637)
+    ca3937 = to_ufloat(ca3937)
+    ca3837 = to_ufloat(ca3837)
+    k4039 = to_ufloat(k4039)
+    k3839 = to_ufloat(k3839)
+    cl3638 = to_ufloat(cl3638)
+    k3739 = to_ufloat(k3739)
+    ic = to_ufloat(ic)
+    j = to_ufloat(j)
 #    temp_ic = ufloat(ic)
 
 #===============================================================================
@@ -166,13 +166,12 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     # correct for abundant sensitivity
     # assumes symmetric and equal abundant sens for all peaks
-    n40 = s40 - abundant_sensitivity * (s39 + s39)
-    n39 = s39 - abundant_sensitivity * (s40 + s38)
-    n38 = s38 - abundant_sensitivity * (s39 + s37)
-    n37 = s37 - abundant_sensitivity * (s38 + s36)
-    n36 = s36 - abundant_sensitivity * (s37 + s37)
+    n40 = s40 - abundance_sensitivity * (s39 + s39)
+    n39 = s39 - abundance_sensitivity * (s40 + s38)
+    n38 = s38 - abundance_sensitivity * (s39 + s37)
+    n37 = s37 - abundance_sensitivity * (s38 + s36)
+    n36 = s36 - abundance_sensitivity * (s37 + s37)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
-
 
     # calculate decay factors
     if a37decayfactor is None:
@@ -193,7 +192,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
-    k37 = ufloat((0, 1e-20))
+    k37 = ufloat(0, 1e-20)
 #    if arar_constants.k3739_mode == 'fixed':
 #        k3739 = arar_constants.fixed_k3739
 #
@@ -242,7 +241,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         iteratively calculate atm36
     '''
     m = cl3638 * arar_constants.lambda_Cl36.nominal_value * decay_time
-    atm36 = ufloat((0, 1e-20))
+    atm36 = ufloat(0, 1e-20)
     for _ in range(5):
         ar38atm = arar_constants.atm3836.nominal_value * atm36
         cl38 = s38 - ar38atm - k38 - ca38
@@ -260,32 +259,40 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
-    age_with_jerr = ufloat((0, 0))
-    age_wo_jerr = ufloat((0, 0))
+#    age_with_jerr = ufloat(0, 0)
+#    age_wo_jerr = ufloat(0, 0)
     try:
         R = ar40rad / k39
         # dont include error in decay constant
         age = age_equation(j, R, include_decay_error=include_decay_error,
                            arar_constants=arar_constants)
 #        age = age_equation(j, R)
-        age_with_jerr = deepcopy(age)
 
+#        age_with_jerr = deepcopy(age)
+#        print 'j', age
         # dont include error in decay constant
-        j.set_std_dev(0)
-        age = age_equation(j, R, include_decay_error=include_decay_error,
-                           arar_constants=arar_constants)
+        pe = j.std_dev
+        j.std_dev = 0
+#        j.set_std_dev(0)
+        wo_jerr = age.std_dev
+#        print 'jo', age
+        j.std_dev = pe
+#        j.set_std_dev(pe)
+
+#        age = age_equation(j, R, include_decay_error=include_decay_error,
+#                           arar_constants=arar_constants)
 #        age = age_equation(j, R)
-        age_wo_jerr = deepcopy(age)
+#        age_wo_jerr = deepcopy(age)
 
     except (ZeroDivisionError, ValueError), e:
-        age = ufloat((0, 0))
-        age_wo_jerr = ufloat((0, 0))
+        age = ufloat(0, 0)
+        wo_jerr = 0
 
 #    print s40 / s36
     result = dict(
-                  age=age_with_jerr,
+                  age=age,
 #                 age=age_wo_jerr,
-                  age_err_wo_jerr=age_wo_jerr.std_dev(),
+                  age_err_wo_jerr=wo_jerr,
                   rad40=ar40rad,
 
                   k39=k39,
@@ -571,9 +578,9 @@ def calculate_error_F(signals, F, k4039, ca3937, ca3637):
     C3 = k4039.nominal_value
     C4 = ca3937.nominal_value
 
-    ssD = D.std_dev() ** 2
-    ssB = B.std_dev() ** 2
-    ssG = G.std_dev() ** 2
+    ssD = D.std_dev ** 2
+    ssB = B.std_dev ** 2
+    ssG = G.std_dev ** 2
     G = G.nominal_value
     B = B.nominal_value
     D = D.nominal_value

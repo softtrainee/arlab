@@ -181,6 +181,7 @@ class PyScript(Loggable):
     syntax_checked = Property
     _syntax_checking = False
     _syntax_checked = False
+    _syntax_error = None
     _gosub_script = None
     _wait_dialog = None
 
@@ -191,6 +192,9 @@ class PyScript(Loggable):
     _estimated_duration = 0
 
     _graph_calc = False
+
+    def syntax_ok(self):
+        return not self._syntax_error
 
     def check_for_modifications(self):
         old = self.toblob()
@@ -271,7 +275,7 @@ class PyScript(Loggable):
                 self.parent_script.cancel()
 
         if self._wait_dialog:
-            self._wait_dialog.close()
+            self._wait_dialog.stop()
 
         self._cancel_hook()
 
@@ -357,6 +361,7 @@ class PyScript(Loggable):
                 err = s.test()
                 if err:
                     raise PyscriptError(self.name, err)
+
         else:
             if not self._cancel:
                 self.info('doing GOSUB')
@@ -483,6 +488,7 @@ class PyScript(Loggable):
     def test(self):
 
         self._syntax_checking = True
+        self._syntax_error = True
         self.info('testing syntax')
         r = self._execute()
 
@@ -499,6 +505,7 @@ class PyScript(Loggable):
 
         else:
             self.info('syntax checking passed')
+            self._syntax_error = False
 
         self.syntax_checked = True
         self._syntax_checking = False
@@ -520,7 +527,7 @@ class PyScript(Loggable):
 
         except Exception, e:
             import traceback
-#            traceback.print_exc()
+            traceback.print_exc()
 #            self.warning_dialog(str(e))
             return e
 #            return  traceback.format_exc()
@@ -621,8 +628,9 @@ class PyScript(Loggable):
                                 )
 
             do_later(wd.edit_traits)
-            evt.wait(timeout=timeout + 1)
-            do_later(wd.close)
+            evt.wait(timeout=timeout + 0.25)
+            do_later(wd.stop)
+            
             if wd._canceled:
                 self.cancel()
             elif wd._continued:

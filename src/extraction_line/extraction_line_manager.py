@@ -26,7 +26,7 @@ from src.extraction_line.explanation.extraction_line_explanation import Extracti
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 from src.paths import paths
 from src.managers.manager import Manager
-from src.pyscripts.pyscript_editor import PyScriptManager
+from src.pyscripts.manager import PyScriptManager
 from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
@@ -148,8 +148,8 @@ class ExtractionLineManager(Manager):
             self.monitor.stop()
         return True
 
-    def opened(self):
-        super(ExtractionLineManager, self).opened()
+    def opened(self, ui):
+        super(ExtractionLineManager, self).opened(ui)
         self.reload_scene_graph()
         p = os.path.join(paths.hidden_dir, 'show_explanantion')
         if os.path.isfile(p):
@@ -201,13 +201,7 @@ class ExtractionLineManager(Manager):
     def isMonitoringValveState(self):
         return self._monitoring_valve_status
 #        return self._update_status_flag.isSet()
-#    def _view_controller(self):
-#        print self.ui.control
-#        self.view_controller.edit_traits(kind = 'livemodal',
-#                                      parent = self.ui.control)
 
-#    def show_device_streamer(self):
-#        self.device_stream_manager.edit_traits(parent=self.window.control)
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
         bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
@@ -295,9 +289,9 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             self.valve_manager.show_valve_properties(name)
 
-    def get_software_lock(self, name):
+    def get_software_lock(self, name, **kw):
         if self.valve_manager is not None:
-            return self.valve_manager.get_software_lock(name)
+            return self.valve_manager.get_software_lock(name, **kw)
 
     def set_software_lock(self, name, lock):
         if self.valve_manager is not None:

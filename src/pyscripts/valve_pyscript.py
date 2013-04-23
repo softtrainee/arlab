@@ -20,6 +20,7 @@ from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
     makeNamedRegistry
 #============= standard library imports ========================
 import time
+from globals import globalv
 #============= local library imports  ==========================
 
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -54,13 +55,7 @@ class ValvePyScript(PyScript):
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
         if result is not None:
-            ok, changed = result[0]
-            if changed:
-                time.sleep(0.25)
-
-            if not ok:
-                self.info('Failed to open valve {} {}'.format(name, description))
-                self.cancel()
+            self._finish_valve_change('open', result, name, description)
 
     @verbose_skip
     @command_register
@@ -75,12 +70,25 @@ class ValvePyScript(PyScript):
                                                       description=description
                                                       ))], protocol=ELPROTOCOL)
         if result is not None:
-            ok, changed = result[0]
-            if changed:
-                time.sleep(0.25)
-            if not ok:
-                self.info('Failed to close valve {} {}'.format(name, description))
+            self._finish_valve_change('close', result, name, description)
+
+    def _finish_valve_change(self, action, result, name, description):
+        ok, changed = result[0]
+        if changed:
+            time.sleep(0.25)
+
+        locked = self._manager_action([('get_software_lock', (name,), dict(
+                                                  mode='script',
+                                                  description=description
+                                                  ))], protocol=ELPROTOCOL)
+        if not ok and not locked:
+            self.info('Failed to {} valve {} {}'.format(action, name, description))
+
+            if not globalv.experiment_debug:
                 self.cancel()
+            else:
+                self.debug('Experiment debug mode. not canceling')
+
 
     @verbose_skip
     @command_register
@@ -95,9 +103,10 @@ class ValvePyScript(PyScript):
     def is_closed(self, name=None, description=''):
         self.info('is {} ({}) closed?'.format(name, description))
         result = self._get_valve_state(name, description)
-        print 'is closed', result
         if result:
-            return result[0] == False
+            r = result[0] == False
+            self.debug('is closed {}'.format(r))
+            return r
 
     def _get_valve_state(self, name, description):
         return self._manager_action([('get_valve_state', (name,), dict(

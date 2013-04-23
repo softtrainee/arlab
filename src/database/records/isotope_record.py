@@ -31,7 +31,8 @@ from src.graph.regression_graph import StackedRegressionGraph
 from src.graph.stacked_graph import StackedGraph
 from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
-from src.experiment.identifier import convert_shortname, convert_labnumber
+from src.experiment.utilities.identifier import convert_shortname, convert_labnumber, \
+    make_runid
 from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.deprecate import deprecated
@@ -45,6 +46,7 @@ from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
 from src.database.isotope_analysis.notes_summary import NotesSummary
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import Isotope, Blank, Background, Baseline
+from src.database.isotope_analysis.error_component_summary import ErrorComponentSummary
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 
 class EditableGraph(HasTraits):
@@ -76,7 +78,7 @@ class IsotopeRecordView(HasTraits):
 
     def create(self, dbrecord):
         try:
-            self.labnumber = str(dbrecord.labnumber.labnumber)
+            self.labnumber = str(dbrecord.labnumber.identifier)
             self.aliquot = dbrecord.aliquot
             self.step = dbrecord.step
     #        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
@@ -97,7 +99,7 @@ class IsotopeRecordView(HasTraits):
                 self.analysis_type = meas.analysis_type.name
 
             self.uuid = dbrecord.uuid
-            self.record_id = '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+            self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
             return True
         except Exception, e:
             print e
@@ -130,8 +132,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     blanks_summary = Property
     backgrounds_summary = Property
     notes_summary = Property
+    error_summary = Property
 
     categories = List(['summary', 'irradiation',
+                       'error',
                        'supplemental', 'measurement', 'extraction', 'experiment',
                        'notes',
                        'signal', 'baseline'
@@ -260,14 +264,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # viewable
 #===============================================================================
-    def opened(self):
+    def opened(self, ui):
 #        def d():
 # #            self.selected = None
 #            self.selected = 'summary'
 #        do_later(d)
         self.selected = 'summary'
 #        self.selected = 'notes'
-        super(IsotopeRecord, self).opened()
+#        self.selected = 'error'
+        super(IsotopeRecord, self).opened(ui)
 
     def closed(self, isok):
         self.selected = None
@@ -391,7 +396,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             if self.isotopes.has_key(ki):
                 v = self.isotopes[ki].baseline_corrected_value()
             else:
-                v = ufloat((0, 0))
+                v = ufloat(0, 0)
 
             d[ki] = v
 
@@ -410,27 +415,38 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             selected = selected.replace(' ', '_')
             selected = selected.lower()
 
-            if selected == 'summary':
+            self.debug('selected= {}'.format(selected))
+            if selected in (
+                            'blanks',
+                            'backgrounds',
+                            'det._intercal.',
+                            'irradiation',
+                            'supplemental',
+                            'measurement',
+                            'extraction', 'experiment', 'notes',
+                            'error',
+                            ):
+                item = getattr(self, '{}_summary'.format(selected))
+            elif selected == 'summary':
                 item = self.analysis_summary
-            elif selected == 'blanks':
-                item = self.blanks_summary  # BlanksSummary(record=self)
-            elif selected == 'backgrounds':
-                item = self.backgrounds_summary
-#                item = BackgroundsSummary(record=self)
-            elif selected == 'det._intercal.':
-                item = self.detector_intercalibration_summary
-            elif selected == 'irradiation':
-                item = self.irradiation_summary
-            elif selected == 'supplemental':
-                item = self.supplemental_summary
-            elif selected == 'measurement':
-                item = self.measurement_summary
-            elif selected == 'extraction':
-                item = self.extraction_summary
-            elif selected == 'experiment':
-                item = self.experiment_summary
-            elif selected == 'notes':
-                item = self.notes_summary
+#            elif selected == 'blanks':
+#                item = self.blanks_summary  # BlanksSummary(record=self)
+#            elif selected == 'backgrounds':
+#                item = self.backgrounds_summary
+#            elif selected == 'det._intercal.':
+#                item = self.detector_intercalibration_summary
+#            elif selected == 'irradiation':
+#                item = self.irradiation_summary
+#            elif selected == 'supplemental':
+#                item = self.supplemental_summary
+#            elif selected == 'measurement':
+#                item = self.measurement_summary
+#            elif selected == 'extraction':
+#                item = self.extraction_summary
+#            elif selected == 'experiment':
+#                item = self.experiment_summary
+#            elif selected == 'notes':
+#                item = self.notes_summary
             else:
                 name = '{}_graph'.format(selected)
                 item = getattr(self, name)
@@ -584,7 +600,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
             i += 1
 
-        graph.set_x_limits(min=0)
+        if i:
+            graph.set_x_limits(min=0)
+
         graph.refresh()
 
         return graph
@@ -792,8 +810,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return bs
 
     @cached_property
+    def _get_error_summary(self):
+        bs = ErrorComponentSummary(record=self)
+        return bs
+
+
+    @cached_property
     def _get_record_id(self):
-        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
+        return make_runid(self.labnumber, self.aliquot, self.step)
+#        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
     @cached_property
     def _get_labnumber_record(self):
@@ -803,17 +828,18 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_labnumber(self):
         if self._dbrecord:
             if self._dbrecord.labnumber:
-                ln = self._dbrecord.labnumber.labnumber
+                ln = self._dbrecord.labnumber.identifier
                 ln = convert_labnumber(ln)
                 return ln
 
     @cached_property
     def _get_shortname(self):
         if self._dbrecord:
-            ln = self._dbrecord.labnumber.labnumber
+            ln = self._dbrecord.labnumber.identifier
             ln = convert_shortname(ln)
 
-            ln = '{}-{}{}'.format(ln, self.aliquot, self.step)
+            ln = make_runid(ln, self.aliquot, self.step)
+#            ln = '{}-{}{}'.format(ln, self.aliquot, self.step)
             return ln
 
     @cached_property
@@ -902,7 +928,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_sensitivity(self):
         def func(dbr):
             if dbr.extraction:
-                return dbr.extraction.sensitivity
+                if dbr.extraction.sensitivity:
+                    return dbr.extraction.sensitivity.sensitivity
 
         return self._get_dbrecord_value('sensitivity', func=func, default=1)
 

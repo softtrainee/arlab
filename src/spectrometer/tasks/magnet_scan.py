@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Float, DelegatesTo
-from traitsui.api import View, Item, EnumEditor
+from traitsui.api import View, Item, EnumEditor, Group
 #============= standard library imports ========================
 from numpy import linspace, exp
 import random
@@ -46,7 +46,7 @@ class MagnetScan(SpectrometerTask):
     start_mass = Float(36)
     stop_mass = Float(40)
     step_mass = Float(1)
-    title = 'Magnet Scan'
+#    title = 'Magnet Scan'
 #    def _scan_dac(self, values, det, delay=850):
 #
 #        graph = self.graph
@@ -111,7 +111,7 @@ class MagnetScan(SpectrometerTask):
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
         intensities = self._magnet_step_hook(do,
-                                             delay=1,
+                                             delay=3,
                                              detector=det,
                                              peak_generator=peak_generator)
         self._graph_hook(do, intensities)
@@ -223,12 +223,17 @@ class MagnetScan(SpectrometerTask):
         return self.detectors[0]
 
     def traits_view(self):
-        v = View(Item('reference_detector', editor=EnumEditor(name='detectors')),
-                 Item('start_mass', label='Start'),
-                 Item('stop_mass', label='Stop'),
-                 Item('step_mass', label='Step'),
-                 buttons=['OK', 'Cancel'],
-                 title=self.title
+        v = View(
+                 Group(
+                       Item('reference_detector', editor=EnumEditor(name='detectors')),
+                       Item('start_mass', label='Start'),
+                       Item('stop_mass', label='Stop'),
+                       Item('step_mass', label='Step'),
+                       label='Magnet Scan',
+                       show_border=True
+                       )
+#                 buttons=['OK', 'Cancel'],
+#                 title=self.title
 #                  HGroup(spring, Item('execute', editor=ButtonEditor(label_value='execute_label'),
 #                        show_label=False))
 

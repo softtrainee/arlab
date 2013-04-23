@@ -20,21 +20,20 @@ from traits.api import Any, Dict, List, Bool
 import os
 import pickle
 from pickle import PickleError
+from Queue import Queue
+from threading import Timer, Thread, Event
+import time
+import random
 #=============local library imports  ==========================
+from globals import globalv
 from src.managers.manager import Manager
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
 from src.paths import paths
 from src.helpers.parsers.valve_parser import ValveParser
-from threading import Timer, Thread, Event
-import time
 from src.loggable import Loggable
-import random
-from Queue import Queue
-# from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
-from globals import globalv
-from src.helpers.alphas import ALPHAS
+from src.constants import ALPHAS
 
 
 class ValveGroup(object):
@@ -413,8 +412,11 @@ class ValveManager(Manager):
 #                    return a
             return next((a for a in self.actuators if a.name == name), None)
 
-    def get_software_lock(self, name):
-        v = self.get_valve_by_name(name)
+    def get_software_lock(self, name, description=None, **kw):
+        if description:
+            v = self.get_valve_by_description(description)
+        else:
+            v = self.get_valve_by_name(name)
 
         if v is not None:
             return v.software_lock

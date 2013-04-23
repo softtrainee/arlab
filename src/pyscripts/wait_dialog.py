@@ -33,7 +33,11 @@ class WDHandler(ViewableHandler):
 #    def closed(self, info, is_ok):
 #        info.object.closed(is_ok)
 #        return True
-
+#    def close(self, info, isok):
+#        print 'close', isok
+#        
+#        return True
+        
     def _continue(self, info):
         info.object._continue()
 
@@ -73,7 +77,10 @@ class WaitDialog(Viewable):
 
         self.timer = Timer(1000, self._update_time)
         self._continued = False
-
+    
+    def stop(self):
+        self._end()
+        
     def _get_current_time(self):
         return self._current_time
 
@@ -83,6 +90,7 @@ class WaitDialog(Viewable):
     def _current_time_changed(self):
         if self._current_time <= 0:
             self._end()
+            self._canceled=False
 
     def _update_time(self):
         self._current_time -= 1
@@ -93,17 +101,27 @@ class WaitDialog(Viewable):
         if self.end_evt is not None:
             self.end_evt.set()
 
-    def close(self, isok=None):
-#        self._current_time = -1
-#        self._end()
-        if isok is not None:
-            self._canceled = not isok
+        self.debug('disposing {}'.format(self))
+        self.disposed = True
+        
+    def close(self, isok):
+        super(WaitDialog,self).close(isok)
+        self._canceled = not isok
 
-        self._end()
-        try:
-            self.ui.dispose()
-        except Exception, e:
-            pass
+        if self.timer is not None:
+            self.timer.Stop()
+        if self.end_evt is not None:
+            self.end_evt.set()
+        return True
+        
+#    def closed(self, isok):
+#        self.debug('closed {}'.format(isok))
+##        self._current_time = -1
+##        self._end()
+##        if isok is not None:
+#
+#        self._end()
+#        return True
 #
     def _continue(self):
         self._canceled = False

@@ -25,8 +25,6 @@ from pyface.wx.drag_and_drop import PythonDropTarget
 #============= standard library imports ========================
 import wx
 #============= local library imports  ==========================
-
-
 class _CodeEditor(SourceEditor):
     def init(self, parent):
         super(_CodeEditor, self).init(parent)
@@ -39,8 +37,33 @@ class _CodeEditor(SourceEditor):
         if self.factory.keywords:
             keywords = ' '.join((keywords, self.factory.keywords))
         self.control.SetKeyWords(0, keywords)
-
         self.change_default_style()
+
+
+        self.control.Bind(wx.EVT_KEY_UP, self._on_key_up)
+
+    def _on_key_up(self, event):
+        key = event.GetKeyCode()
+        control = self.control
+        if key == wx.WXK_NUMPAD_ENTER or key == wx.WXK_RETURN:
+            pchar = control.GetCharAt(control.GetCurrentPos() - 1)
+            if pchar == 10:  # newline, :
+                line = control.GetCurrentLine()
+                txt = control.GetLine(line - 1)
+                indent = len(txt) - len(txt.lstrip())
+                spchar = control.GetCharAt(control.GetCurrentPos() - 2)
+                spchar = spchar == 58
+                if indent or spchar:
+                    control.SetLineIndentation(line, indent + control.GetTabWidth())
+                    if not indent:
+                        indent = 4
+                    else:
+                        if spchar:
+                            indent += 4
+                    control.GotoPos(control.GetCurrentPos() + indent)
+
+        event.Skip()
+
 
     def change_default_style(self):
         from wx import stc
@@ -120,8 +143,10 @@ class PyScriptCodeEditor(BasicEditorFactory):
     klass = _CodeEditor
 
     fontsize = Int(12)
-    fontname = Str('helvetica')
+    fontname = Str('menlo regular')
     keywords = ''
+
+
     #---------------------------------------------------------------------------
     #  Trait definitions:
     #---------------------------------------------------------------------------

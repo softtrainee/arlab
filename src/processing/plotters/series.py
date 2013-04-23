@@ -73,7 +73,7 @@ class Series(Plotter):
                                     scatter,
                                     0,
                                     )
-        self._add_error_bars(scatter, es, 'y')
+        self._add_error_bars(scatter, es, 'y', options.nsigma)
 
         sel = [i for i, ai in enumerate(analyses) if ai.status != 0]
         scatter.index.metadata['selections'] = sel
@@ -84,27 +84,34 @@ class Series(Plotter):
         return an
 
     def get_value(self, analysis, k):
-        def get_value(ai, ki):
-            try:
-#                nv = ai.arar_result[ki.replace('Ar', 's')]
-                # if ki is like s40 or s39
-                nv = ai.arar_result[ki]
-            except KeyError:
+#        def get_value(ai, ki):
 
-                # ki is like Ar40 or Ar39bs
-                nv = ai.signals[ki].uvalue  # - ai.signals['{}bs'.format(ki)]
-            return nv
+#            try:
+# #                nv = ai.arar_result[ki.replace('Ar', 's')]
+#                # if ki is like s40 or s39
+#                nv = ai.arar_result[ki]
+#            except KeyError:
+#
+#                # ki is like Ar40 or Ar39bs
+#                nv = ai.isotopes[ki].uvalue  # - ai.signals['{}bs'.format(ki)]
+#            return nv
 
         if '/' in k:
             n, d = k.split('/')
-            nv = get_value(analysis, n)
-            dv = get_value(analysis, d)
+#            nv = get_value(analysis, n)
+#            dv = get_value(analysis, d)
+#            nv = getattr(analysis, n)
+#            dv = getattr(analysis, d)
+            nv = analysis.get_signal_value(n)
+            dv = analysis.get_signal_value(d)
             v = (nv / dv)
 
         else:
-            v = get_value(analysis, k)
+            v = analysis.get_signal_value(k)
+#            v = getattr(analysis, k)
+#            v = get_value(analysis, k)
 
-        return v.nominal_value, v.std_dev()
+        return v.nominal_value, v.std_dev
 #============= EOF =============================================
 
 ##===============================================================================

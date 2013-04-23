@@ -27,7 +27,7 @@ from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdap
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
-from src.experiment.info_blob import encode_infoblob
+from src.experiment.utilities.info_blob import encode_infoblob
 import time
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
@@ -110,25 +110,25 @@ class MassSpecDatabaseImporter(Loggable):
                 ]
 
         regresults = (dict(
-                          Ar40=ufloat((reg.predict(0), reg.predict_error(0))),
-                          Ar39=ufloat((reg1.predict(0), reg1.predict_error(0))),
-                          Ar38=ufloat((reg2.predict(0), reg2.predict_error(0))),
-                          Ar37=ufloat((reg3.predict(0), reg3.predict_error(0))),
-                          Ar36=ufloat((reg4.predict(0), reg4.predict_error(0))),
+                          Ar40=ufloat(reg.predict(0), reg.predict_error(0)),
+                          Ar39=ufloat(reg1.predict(0), reg1.predict_error(0)),
+                          Ar38=ufloat(reg2.predict(0), reg2.predict_error(0)),
+                          Ar37=ufloat(reg3.predict(0), reg3.predict_error(0)),
+                          Ar36=ufloat(reg4.predict(0), reg4.predict_error(0)),
 
                           ),
                       dict(
-                          Ar40=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar39=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar38=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar37=ufloat((regbs.predict(0), regbs.predict_error(0))),
-                          Ar36=ufloat((cddregbs.predict(0), cddregbs.predict_error(0)))
+                          Ar40=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar39=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar38=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar37=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar36=ufloat(cddregbs.predict(0), cddregbs.predict_error(0))
                           ))
-        blanks = [ufloat((0, 0.1)),
-                  ufloat((0.1, 0.001)),
-                  ufloat((0.01, 0.001)),
-                  ufloat((0.01, 0.001)),
-                  ufloat((0.00001, 0.0001)),
+        blanks = [ufloat(0, 0.1),
+                  ufloat(0.1, 0.001),
+                  ufloat(0.01, 0.001),
+                  ufloat(0.01, 0.001),
+                  ufloat(0.00001, 0.0001),
                   ]
         fits = (
               dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
@@ -252,8 +252,16 @@ class MassSpecDatabaseImporter(Loggable):
             else:
                 rid = '4359'
                 irradpos = '4359'
+                
+            aliquot=db.get_lastest_analysis_aliquot(rid)+1
+            rid='{}-{:02n}'.format(rid,aliquot)
+            spec.aliquot=aliquot
+            
+            
         else:
             runtype = 'Unknown'
+
+        pipetted_isotopes = self._make_pipetted_isotopes(runtype)
 
         #=======================================================================
         # add analysis
@@ -288,6 +296,7 @@ class MassSpecDatabaseImporter(Loggable):
 #                                   'H1',
                                    RedundantSampleID=sample_id,
                                    HeatingItemName=spec.extract_device,
+                                   PwrAchieved=spec.power_achieved,
                                    PwrAchieved_Max=spec.power_achieved,
                                    PwrAchievedSD=0,
                                    FinalSetPwr=spec.power_requested,
@@ -295,6 +304,7 @@ class MassSpecDatabaseImporter(Loggable):
                                    TotDurHeatingAtReqPwr=spec.duration_at_request,
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
+                                   PipettedIsotopes=pipetted_isotopes,
                                    )
 
         analysis.RefDetID = refdbdet.DetectorID
@@ -310,12 +320,14 @@ class MassSpecDatabaseImporter(Loggable):
         # add changeable items
         #=======================================================================
         item = db.add_changeable_items(analysis, self.data_reduction_session_id)
-        item.comment = spec.comment
+
+        self.debug('%%%%%%%%%%%%%%%%%%%% Comment: {} %%%%%%%%%%%%%%%%%%%'.format(spec.comment))
+        item.Comment = spec.comment
         db.flush()
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-        from src.simple_timeit import timethis
+#        from src.simple_timeit import timethis
         for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
 
             #===================================================================
@@ -331,7 +343,7 @@ class MassSpecDatabaseImporter(Loggable):
             else:
                 dbdet = db.add_detector(det, Label=det)
                 db.flush()
-#            print det, analysis.ReferenceDetectorLabel
+
             db_iso = db.add_isotope(analysis, dbdet, isok)
 
             #===================================================================
@@ -343,9 +355,7 @@ class MassSpecDatabaseImporter(Loggable):
             ncnts = len(tb)
             db_baseline = db.add_baseline(blob, label, ncnts, db_iso)
 
-#            baseline = baseline_dict[isok]
-
-            sem = baseline.std_dev() / (ncnts) ** 0.5
+            sem = baseline.std_dev / (ncnts) ** 0.5
             infoblob = self._make_infoblob(baseline.nominal_value, sem)
             db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
                                                             bfit,
@@ -373,8 +383,6 @@ class MassSpecDatabaseImporter(Loggable):
             blob2 = [struct.pack('>f', float(v)) for v in vb]
             db.add_peaktimeblob(blob1, blob2, db_iso)
 
-#            intercept = signal_dict[isok]
-#            fit = signal_fits[isok]
             # in mass spec the intercept is alreay baseline corrected
             # mass spec also doesnt propograte baseline errors
 
@@ -382,24 +390,28 @@ class MassSpecDatabaseImporter(Loggable):
                 ublank = signal - baseline
 
             db.add_isotope_result(db_iso, self.data_reduction_session_id,
-#                                      ufloat((i, ierr)),
                                   signal,
                                   baseline,
-#                                      ufloat((baseline, baseline_err)),
                                   ublank,
                                   sfit,
                                   dbdet,
                                   )
 
-
-#        if not DEBUG:
-#            db.commit()
         if commit:
             self.debug('commit')
             db.commit()
 
         t = time.time() - gst
         self.debug('{} added analysis time {}s'.format(spec.record_id, t))
+
+    def _make_pipetted_isotopes(self, runtype):
+        blob = ''
+        if runtype == 'Air':
+            isos = []
+            for a,v in (('Ar40',295.5e-13), ('Ar38',0.19e-13), ('Ar36',1e-13)):
+                isos.append('{}\t{}'.format(a, v))
+            blob = '\r'.join(isos)
+        return blob
 
     def _build_timeblob(self, t, v):
         '''

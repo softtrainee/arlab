@@ -66,7 +66,7 @@ class AgeCalcTest(TestCase):
     def test_age(self):
         ageerr = self.age_dict['age']
         age = ageerr.nominal_value / 1e6
-        err = ageerr.std_dev()
+        err = ageerr.std_dev
         self.assertAlmostEqual(age,
                          self.age,  # 28.0625,
                          places=4)

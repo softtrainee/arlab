@@ -30,7 +30,7 @@ def calculate_decay_factor(dc, segments):
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
                        ic=(1.0, 0),
-                       abundant_sensitivity=0,
+                       abundance_sensitivity=0,
                        a37decayfactor=None,
                        a39decayfactor=None,
                        include_decay_error=False,
@@ -124,11 +124,11 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     # correct for abundant sensitivity
     # assumes symmetric and equal abundant sens for all peaks
-    n40 = s40 - abundant_sensitivity * (0 + s39)
-    n39 = s39 - abundant_sensitivity * (s40 + s38)
-    n38 = s38 - abundant_sensitivity * (s39 + s37)
-    n37 = s37 - abundant_sensitivity * (s38 + s36)
-    n36 = s36 - abundant_sensitivity * (s37 + 0)
+    n40 = s40 - abundance_sensitivity * (0 + s39)
+    n39 = s39 - abundance_sensitivity * (s40 + s38)
+    n38 = s38 - abundance_sensitivity * (s39 + s37)
+    n37 = s37 - abundance_sensitivity * (s38 + s36)
+    n36 = s36 - abundance_sensitivity * (s37 + 0)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
 
@@ -151,7 +151,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
-    k37 = ufloat((0, 1e-20))
+    k37 = ufloat(0, 1e-20)
 
     # iteratively calculate 37, 39
     for _ in range(5):
@@ -173,7 +173,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         iteratively calculate atm36
     '''
     m = cl3638 * constants.lambda_Cl36.nominal_value * decay_time
-    atm36 = ufloat((0, 1e-20))
+    atm36 = ufloat(0, 1e-20)
     for _ in range(5):
         ar38atm = constants.atm3836.nominal_value * atm36
         cl38 = s38 - ar38atm - k38 - ca38
@@ -191,8 +191,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
-    age_with_jerr = ufloat((0, 0))
-    age_wo_jerr = ufloat((0, 0))
+    age_with_jerr = ufloat(0, 0)
+    age_wo_jerr = ufloat(0, 0)
     try:
         R = ar40rad / k39
         # dont include error in decay constant
@@ -208,14 +208,14 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     except (ZeroDivisionError, ValueError), e:
         print e
-        age = ufloat((0, 0))
-        age_wo_jerr = ufloat((0, 0))
+        age = ufloat(0, 0)
+        age_wo_jerr = ufloat(0, 0)
 
 #    print s40 / s36
     result = dict(
                   age=age_with_jerr,
 #                 age=age_wo_jerr,
-                  age_err_wo_jerr=age_wo_jerr.std_dev(),
+                  age_err_wo_jerr=age_wo_jerr.std_dev,
                   rad40=ar40rad,
 
                   k39=k39,
@@ -309,7 +309,7 @@ class Constants(ExcelMixin):
             print e
 
 #        print type(value)
-        return ufloat((value, error))
+        return ufloat(value, error)
 
 
 # class Isotope(HasTraits):
@@ -347,7 +347,7 @@ class ResultAdapter(TabularAdapter):
 
     def _get_error(self, attr):
         v = getattr(self.item, attr)
-        return self._float_fmt(v.std_dev(), 6)
+        return self._float_fmt(v.std_dev, 6)
 
     def _get_age_text(self):
         return self._get_value('age')

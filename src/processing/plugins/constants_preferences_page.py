@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import Float, Enum
-from traitsui.api import View, Item, VGroup, HGroup, spring, Spring, Label
+from traitsui.api import View, Item, VGroup, HGroup, spring, \
+    Spring, Label, UItem
 from apptools.preferences.ui.preferences_page import PreferencesPage
 from src.constants import PLUSMINUS
 
@@ -41,10 +42,17 @@ class ConstantsPreferencesPage(PreferencesPage):
     lambda_Ar37_error = Float(0)
     lambda_Ar39 = Float(7.068e-6)
     lambda_Ar39_error = Float(0)
-    abundant_sensitivity = Float(0)
     Ar37_Ar39_mode = Enum('Normal', 'Fixed')
     Ar37_Ar39 = Float(0.01)
     Ar37_Ar39_error = Float(0.01)
+
+    #===========================================================================
+    # spectrometer
+    #===========================================================================
+    abundant_sensitivity = Float(0)
+    sensitivity = Float(0)
+    ic_factor = Float(1.0)
+    ic_factor_error = Float(0.0)
 
     def traits_view(self):
         ratios = VGroup(
@@ -100,6 +108,18 @@ class ConstantsPreferencesPage(PreferencesPage):
                         )
         spectrometer = VGroup(
                             Item('abundant_sensitivity'),
+                            Item('sensitivity',
+                                 tooltip='Nominal spectrometer sensitivity saved with analysis'
+                                 ),
+                            HGroup(Spring(springy=False, width=125),
+                               Label('Value'), Spring(springy=False, width=55),
+                               Label('{}1s'.format(PLUSMINUS))),
+                            HGroup(
+                                Item('ic_factor',
+                                     tooltip='Default intercalibration factor (H1/CDD) saved with analysis'
+                                     ),
+                                UItem('ic_factor_error')
+                                   ),
                             label='Spectrometer', show_border=True)
         v = View(ratios, decay, spectrometer)
         return v
