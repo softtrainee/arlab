@@ -383,7 +383,7 @@ class LabnumberEntry(DBEntry):
 #        sample = None
 #        material = None
 #        project = None
-        labnumber = ln.labnumber if ln else None
+        labnumber = ln.identifier if ln else None
         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
         if labnumber:
             selhist = ln.selected_flux_history
