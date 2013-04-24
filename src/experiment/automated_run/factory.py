@@ -663,7 +663,7 @@ post_equilibration_script:name
     def _get_labnumbers(self):
         lns = []
         if self.selected_level and self.selected_level != NULL_STR:
-            lns = [str(pi.identifier.identifier)
+            lns = [str(pi.labnumber.identifier)
                     for pi in self.selected_level.positions]
             
         project=self.project
