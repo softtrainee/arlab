@@ -663,11 +663,14 @@ post_equilibration_script:name
     def _get_labnumbers(self):
         lns = []
         if self.selected_level and self.selected_level != NULL_STR:
-            lns = [str(pi.labnumber.identifier)
+            lns = [str(pi.identifier.identifier)
                     for pi in self.selected_level.positions]
-        if self.project:
-            lns = [str(ln.labnumber)
-                    for s in self.project.samples
+            
+        project=self.project
+        if project:
+            project=self.db.get_project(project)
+            lns = [str(ln.identifier)
+                    for s in project.samples
                         for ln in s.labnumbers]
         return [NULL_STR] + sorted(lns)
 
