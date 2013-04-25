@@ -15,13 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, on_trait_change, Any, Str, Event, List
+from traits.api import Bool, on_trait_change, Any, Str, Event, List, Int
 from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
+# from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
 
+from pyface.timer.api \
+    import do_later
 #============= standard library imports ========================
 import wx
+# from traitsui.wx.constants import is_mac, scrollbar_dx
 #============= local library imports  ==========================
+
 
 class _TabularEditor(wxTabularEditor):
 #    drop_target = Any
@@ -42,6 +47,21 @@ class _TabularEditor(wxTabularEditor):
         self.sync_value(self.factory.rearranged, 'rearranged', 'to')
         self.sync_value(self.factory.pasted, 'pasted', 'to')
         self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
+
+#        print control.GetClientSize()
+#        control.SetWidth(self.factory.width)
+    def _size_modified (self, event):
+        """ Handles the size of the list control being changed.
+        """
+        control = self.control
+        n = control.GetColumnCount()
+        if n == 1:
+            dx, dy = control.GetClientSizeTuple()
+            control.SetColumnWidth(0, dx - 1)
+        elif n > 1:
+            do_later(self._set_column_widths)
+
+        event.Skip()
 
     def update_editor(self):
         super(_TabularEditor, self).update_editor()
@@ -124,6 +144,7 @@ class myTabularEditor(TabularEditor):
     rearranged = Str
     pasted = Str
     copy_cache = Str
+    width = Int
     def _get_klass(self):
         return _TabularEditor
 #============= EOF =============================================

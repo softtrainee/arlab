@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Color, Button, Any, Instance
-from traitsui.api import View, Item, TableEditor, UItem, Label
-from traitsui.wx.editor import Editor
+from traitsui.api import View, UItem
+from traitsui.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 # from traitsui.wx.basic_editor_factory import BasicEditorFactory
 import wx

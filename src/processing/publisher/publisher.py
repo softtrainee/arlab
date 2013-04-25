@@ -15,27 +15,100 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List
+from traits.api import HasTraits, List, Instance, Button, Any, Enum, on_trait_change
+from traitsui.api import View, Item, Controller, UItem, spring, HGroup, \
+    VGroup
+from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
-from reportlab.platypus.doctemplate import SimpleDocTemplate
-# from reportlab.platypus.tables import Table, TableStyle
-# from reportlab.lib.styles import getSampleStyleSheet
-# from reportlab.platypus import Paragraph
-# from reportlab.lib.units import inch
-
-#============= local library imports  ==========================
-from src.loggable import Loggable
-from src.processing.publisher.templates.tables.spectrum import SpectrumTable
-from src.processing.publisher.templates.tables.ideogram_table import IdeogramTable
 import csv
 import os
-from reportlab.lib.units import inch
-# from reportlab.lib import colors
+from uncertainties import ufloat
+#============= local library imports  ==========================
+from src.loggable import Loggable
+from src.traits_editors.tabular_editor import myTabularEditor
+from src.experiment.utilities.identifier import make_runid
+from src.processing.publisher.writers.pdf_writer import PDFWriter
+from src.processing.publisher.writers.csv_writer import CSVWriter
+from src.processing.publisher.writers.mass_spec_writer import MassSpecCSVWriter
+from src.processing.autoupdate_parser import AutoupdateParser
+
+class LoadedTableAdapter(TabularAdapter):
+    columns = [('RunID', 'runid')]
+
+class SelectedTableAdapter(TabularAdapter):
+    columns = [('RunID', 'runid')]
+
+class LoadedTable(HasTraits):
+    analyses = List
+    def load(self, p):
+        ap = AutoupdateParser()
+        if os.path.isfile(p):
+            samples = ap.parse(p, self._analysis_factory)
+            self.analyses = samples[0].analyses
+#            self.analyses = ans
 
 
+#            with open(p, 'r') as fp:
+#                delim = '\t'
+#                reader = csv.reader(fp, delimiter=delim)
+#                factory = self._analysis_factory
+#                ans = [factory(line) for line in reader]
+#                self.analyses = [ai for ai in ans if ai is not None]
 
-class Publisher(Loggable):
-    def writer(self, out, kind='pdf'):
+    def _analysis_factory(self, params):
+        a = PubAnalysis()
+        a.set_runid(params['run_id'])
+        for si in ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'):
+            v = params[si]
+            e = params['{}Er'.format(si)]
+#            print v, e
+            setattr(a, si, ufloat(v, e))
+
+
+        return a
+
+class LoadedTableController(Controller):
+    load_button = Button
+    selected = Any
+#    def controller_selected_changed(self, info):
+#        print self.selected
+
+    def controller_load_button_changed(self, info):
+        p = '/Users/ross/Sandbox/autoupdate.txt'
+        self.model.load(p)
+
+    def traits_view(self):
+        v = View(
+                 HGroup(spring, UItem('controller.load_button')),
+                 UItem('analyses', editor=myTabularEditor(
+                                                          multi_select=True,
+                                                          selected='controller.selected',
+                                                          adapter=LoadedTableAdapter())),
+
+                 )
+
+        return v
+
+class SelectedTable(HasTraits):
+    analyses = List
+
+class SelectedTableController(Controller):
+    make_button = Button('make')
+    style = Enum('Publication', 'Data Repository')
+    def controller_make_button_changed(self, info):
+#        print info
+        # get an output path
+        out = '/Users/ross/Sandbox/autoupdate_table.pdf'
+        writer = self._new_writer(out)
+        ans = self.model.analyses
+        writer.add_ideogram_table(ans, add_title=True, add_header=True)
+        writer.publish()
+        import webbrowser
+        webbrowser.open('file://{}'.format(out))
+#        for ai in self.model.analyses:
+#            print ai
+
+    def _new_writer(self, out, kind='pdf'):
         if kind == 'pdf':
             klass = PDFWriter
         elif kind == 'csv':
@@ -45,207 +118,148 @@ class Publisher(Loggable):
         pub = klass(filename=out)
         return pub
 
-#    def publish(self, samples, out, kind='pdf'):
-#        if kind == 'pdf':
-#            klass = PDFPublisher
-#
-#        pub = klass(filename=out)
-#        pub.add_spectrum_table([1, 2])
-# #        for si in samples:
-# #            pass
-# #            pub.add_spectrum()
-# #            pub.add_sample(si)
-#
-#        pub.publish()
-class BaseWriter(Loggable):
-    filename = ''
-    def publish(self):
-        pass
+    def traits_view(self):
+        v = View(
+                 HGroup(spring, UItem('controller.style'),
+                        UItem('controller.make_button',
+                              enabled_when='analyses'
+                              )),
+                 UItem('analyses',
+                       editor=myTabularEditor(adapter=SelectedTableAdapter(),
+                                              ))
+                 )
+        return v
 
-class CSVWriter(BaseWriter):
-    _rows = List
-    header = ['record_id',
-              'age_value', 'age_error',
-              'temp_status',
-              'group_id', 'graph_id']
-    subheader = None
-    delimiter = ','
-    attrs = None
-    def _add_header(self):
-        header_row = self.header
-        self._rows.append(header_row)
-        if self.subheader:
-            self._rows.append(self.subheader)
+class Publisher(Loggable):
+    loaded_table = Instance(LoadedTableController)
+    selected_table = Instance(SelectedTableController)
+    append_button = Button('Append')
+    replace_button = Button('Replace')
 
-    def add_ideogram_table(self, analyses, title=False, header=False, add_group_marker=True):
+    @on_trait_change('loaded_table:model:analyses[]')
+    def _analyses_handler(self, new):
+        self.selected_table.model.analyses = new
 
-        if header:
-            self._add_header()
+    def _append_button_fired(self):
+        if self.loaded_table.selected:
+            self.selected_table.model.analyses.extend(self.loaded_table.selected)
 
-        attrs = self.attrs
-        if not attrs:
-            attrs = self.header
+    def _replace_button_fired(self):
+        if self.loaded_table.selected:
+            self.selected_table.model.analyses = self.loaded_table.selected
 
-        for ai in analyses:
-            row = [getattr(ai, hi) for hi in attrs]
-            self._rows.append(row)
-        if add_group_marker:
-            self.add_group_marker()
+    def _loaded_table_default(self):
+        return LoadedTableController(LoadedTable())
 
-    def add_group_marker(self):
-        self._rows.append([])
+    def _selected_table_default(self):
+        return SelectedTableController(SelectedTable())
 
-    def publish(self):
-        with open(self.filename, 'w') as fp:
-            writer = csv.writer(fp, delimiter=self.delimiter)
-            for ri in self._rows:
-                writer.writerow(ri)
+    def traits_view(self):
+        v = View(
+                 HGroup(UItem('loaded_table', style='custom'),
+                        VGroup(spring,
+                               UItem('append_button'),
+                               UItem('replace_button'),
+                               spring
+                               ),
+                        UItem('selected_table', style='custom')),
+                 resizable=True,
+                 height=300,
+                 width=500,
+                 x=100,
+                 y=100
+                 )
+        return v
 
-class MassSpecCSVWriter(CSVWriter):
-    delimiter = ','
-    header = ['Run ID# (pref. XXXX-XX)',
-            'Sample',
-             'J',
-            'J',
-            'Status (0=OK, 1=Deleted)',
-            'Moles 39Ar X 10^-14',
-            'Moles 40Arr X 10^-14',
-            '40Ar*/39Ar,%40Ar*',
-            '%40Ar*',
-            '39K/Ktotal',
-            '36Ar/39Ar  (corrected for D and decay)',
-            '36ArCa/36ArTotal',
-            '38Cl/39Ar',
-            '38Cl/39Ar',
-            '37Ar/39Ar',
-            '37Ar/39Ar',
-            'Power or Temp.',
-            'Age',
-            'Age Error(w/o  J;  irr. Param. Opt.)',
-            '40Ar',
-            '40Ar',
-            '39Ar',
-            '39Ar',
-            '38Ar',
-            '38Ar',
-            '37Ar',
-            '37Ar',
-            '36Ar',
-            '36Ar',
-            'Isoch. 40/36',
-            'Isoch 39/36',
-            '% i40/36',
-            '% i39/36',
-            '% i39/40',
-            'Cor. Coef. 40/39',
-            'Cor.Coef. 36/39']
-    attrs = ['record_id', 'sample', 'j', 'jerr', 'status',
-             '', '', '', '', '', '', '', '', '', '', '', '',
-             'age_value', 'age_error'
-             ]
+def make_ufloat(*args):
+    if not args:
+        args = (1, 0)
+    return ufloat(*args)
 
-    subheader = ['Required',
-            'Required',
-            'Required',
-            'Required',
-            'Required',
-            'Req. moles plot',
-            'Req. moles plot',
-            'Req. spectrum',
-            'Req. pct. Rad. Plot',
-            'Opt. In pct. Rad. Plot',
-            'Opt. In spec. if use Exclude Ca39 Opt. For spectrum table',
-            'Opt. For spectrum table',
-            'Req. Cl / K plot',
-            'Opt. In Cl / K plot',
-            'Req. Ca / K plot',
-            'Opt. In Ca / K plot',
-            'Opt.',
-            'Req. spectrum, age-prob.',
-            'Req. spectrum, age-prob.',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Requred spectrum',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Req. spec. isot. Recomb.',
-            'Req. for isochron',
-            'Req. for isochron',
-            'Req. inv. isoch.',
-            'Req. conv. isoch.',
-            'Req. inv. isoch.',
-            'Req. conv. isoch.',
-            'Req. inv. isoch.']
-
-    def add_group_marker(self):
-        self._rows.append(['<new_group>'])
+def uone():
+    return make_ufloat()
 
 
-class PDFWriter(BaseWriter):
-    _text = ''
-#    def __init__(self,*args,**kw):
-    _flowables = List
+import re
+STEP_REGEX = re.compile('\d{2,}\w+')
 
-    def add_ideogram_table(self, analyses,
-                           configure_table=True,
-                           add_title=False, add_header=False, tablenum=1, **kw):
-        ta = IdeogramTable()
-        if configure_table:
-            info = ta.edit_traits(kind='modal')
-            if not info.result:
-                return True
-
-        ta.add_header = add_header
-        ta.add_title = add_title
-        ta.number = tablenum
-        fta = ta.make(analyses)
-        self._flowables.append(fta)
-
-    def add_spectrum_table(self, samples):
-
-        ta = SpectrumTable()
-        fta = ta.make(samples)
-        self._flowables.append(fta)
+class PubAnalysis(HasTraits):
+    labnumber = 'A'
+    aliquot = 0
+    step = ''
+    sample = 'FC-2'
+    material = 'sanidine'
+    status = 0
 
 
-    def add_sample(self):
-        pass
+    j = ufloat(1e-4, 1e-7)
+    ic_factor = ufloat(1.03, 1e-10)
+    rad40 = ufloat(99.0, 0.1)
 
-    def publish(self):
-        doc = SimpleDocTemplate(self.filename,
-                                leftMargin=0.5 * inch,
-                                rightMargin=0.5 * inch
-                                )
-        doc.build(self._flowables)
+    k39 = uone()
+    moles_Ar40 = uone()
 
+    Ar40 = uone()
+    Ar39 = uone()
+    Ar38 = uone()
+    Ar37 = uone()
+    Ar36 = uone()
 
-class DummyAnalysis(HasTraits):
+    Ar40_blank = uone()
+    Ar39_blank = uone()
+    Ar38_blank = uone()
+    Ar37_blank = uone()
+    Ar36_blank = uone()
+
+    extract_value = 10
+
+    rad40_percent = uone()
+
+    age = uone()
+    blank_fit = 'LR'
+    def set_runid(self, rid):
+        ln, a = rid.split('-')
+        self.labnumber = ln
+        if STEP_REGEX.match(a):
+            self.step = a[-1]
+            self.aliquot = int(a[:-1])
+        else:
+            self.aliquot = int(a)
+
     @property
-    def age_value(self):
-        return 10.23543626543
+    def runid(self):
+        return make_runid(self.labnumber, self.aliquot, self.step)
     @property
-    def age_error(self):
-        return 0.03421435345
-    def __getattr__(self, attr):
-        return ''
+    def R(self):
+        return self.rad40 / self.k39
 
 if __name__ == '__main__':
-    out = '/Users/ross/Sandbox/publish.txt'
+    out = '/Users/ross/Sandbox/publish.pdf'
 
     pub = Publisher()
-    pi = pub.writer(out, kind='massspec')
+    pub.configure_traits()
+#    pi = pub.writer(out, kind='pdf')
 
-    ans = [DummyAnalysis(record_id='4000-{:02n}'.format(i)) for i in range(5)]
-    pi.add_ideogram_table(ans, title=True, header=True)
-    ans = [DummyAnalysis(record_id='5000-{:02n}'.format(i)) for i in range(5)]
-    pi.add_ideogram_table(ans)
-    ans = [DummyAnalysis(record_id='6000-{:02n}'.format(i)) for i in range(5)]
-    pi.add_ideogram_table(ans)
-    ans = [DummyAnalysis(record_id='7000-{:02n}'.format(i)) for i in range(5)]
-    pi.add_ideogram_table(ans)
-    pi.publish()
+#    ans = [DummyAnalysis(labnumber='4000',
+#                         aliquot=i)
+#                         for i in range(5)]
+#    ta = pi.add_ideogram_table(ans, add_title=True, add_header=True)
+#    ans = [DummyAnalysis(labnumber='5000',
+#                         aliquot=i
+#                         ) for i in range(5)]
+#
+#    pi.add_ideogram_table(ans,
+#                          widths=ta.get_widths(),
+#                          add_header=True)
+# #    ans = [DummyAnalysis(record_id='6000-{:02n}'.format(i)) for i in range(5)]
+# #    pi.add_ideogram_table(ans)
+# #    ans = [DummyAnalysis(record_id='7000-{:02n}'.format(i)) for i in range(5)]
+# #    pi.add_ideogram_table(ans)
+#    pi.publish()
+#
+#    import webbrowser
+#    webbrowser.open('file://{}'.format(out))
+
+
+
 #============= EOF =============================================

@@ -18,7 +18,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Int, Callable
-from traitsui.wx.editor import Editor
+from traitsui.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
 

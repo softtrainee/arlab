@@ -105,6 +105,7 @@ class RiseRate(SpectrometerTask):
 
     def traits_view(self):
         v = View(
+                 VGroup(
                   HGroup(spring,
                          Item('clear_button', show_label=False,
                               enabled_when='calculated'
@@ -120,13 +121,14 @@ class RiseRate(SpectrometerTask):
                              format_str='%0.3f',
                              label='Rise Rate linear fit  (fA/min)')
                         ),
-                 HGroup(UItem('clear_results_button'),spring),
-                UItem('results', 
-                      width=-300,
-                      editor=myTabularEditor(operations=[],
-                                                      editable=False,
-                                                      adapter=ResultsAdapter()))
+                 HGroup(UItem('clear_results_button')),
+                 UItem('results',
+                       width= -100,
+                       editor=myTabularEditor(operations=[],
+                                                       editable=False,
+                                                       adapter=ResultsAdapter())),
 
+                        )
                   )
         return v
 #============= EOF =============================================
