@@ -41,9 +41,8 @@ from src.processing.search.selected_view import Marker
 from src.processing.search.figure_manager import FigureManager
 from src.database.records.isotope_record import IsotopeRecord
 # import csv
-from src.processing.publisher.publisher import  CSVWriter, \
-    PDFWriter, MassSpecCSVWriter
-from src.irradiation.flux_manager import FluxManager
+
+# from src.irradiation.flux_manager import FluxManager
 from src.processing.base_analysis_manager import BaseAnalysisManager
 from src.processing.series_manager import SeriesManager
 from src.processing.project_view import ProjectView
@@ -51,9 +50,11 @@ from src.graph.graph import Graph
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.paths import paths
 import csv
-from src.helpers.filetools import str_to_bool
+# from src.helpers.filetools import str_to_bool
 from src.processing.manual_entry_manager import ManualEntryManager
 from src.processing.fit_manager import FitManager
+# from src.processing.database_plotter import DatabasePlotter
+# from src.processing.publisher.writers import CSVWriter, PDFWriter, MassSpecCSVWriter
 
 
 class ProcessingManager(DatabaseManager, BaseAnalysisManager):
@@ -77,6 +78,7 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
     _window_count = 0
     def database_plot(self):
         if self.db.connect():
+            from src.processing.database_plotter import DatabasePlotter
             db = DatabasePlotter()
             self.open_view(db)
 
@@ -164,8 +166,9 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
             4. apply to unknowns
         '''
         if self.db.connect():
-            fm = FluxManager(db=self.db)
-            fm.edit_traits()
+            pass
+#            fm = FluxManager(db=self.db)
+#            fm.edit_traits()
 
 
 #===============================================================================
@@ -256,11 +259,14 @@ class ProcessingManager(DatabaseManager, BaseAnalysisManager):
 #            p = '/Users/ross/Sandbox/figure_export.csv'
             if p:
                 if kind == 'csv':
+                    from src.processing.publisher.writers.csv_writer import CSVWriter
                     klass = CSVWriter
                 elif kind == 'pdf':
 #                    p = '/Users/ross/Sandbox/figure_export.pdf'
+                    from src.processing.publisher.writers.pdf_writer import PDFWriter
                     klass = PDFWriter
                 elif kind == 'massspec':
+                    from src.processing.publisher.writers.mass_spec_writer import MassSpecCSVWriter
                     klass = MassSpecCSVWriter
 
                 self._export(klass, p, grouped_analyses)

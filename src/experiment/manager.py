@@ -370,7 +370,7 @@ can_edit_scripts= {}
 
         # update run info
         if not all_info:
-            ans=ans[-1:]
+            ans = ans[-1:]
         self._update_info(ans)
 
     def _get_labnumber(self, arun):
@@ -458,7 +458,7 @@ can_edit_scripts= {}
 #        if self.experiment_set and self.experiment_set.selected:
 #            offset = len(self.experiment_set.selected)
 
-        db = self.db
+#        db = self.db
         # update the aliquots
         idcnt_dict = dict()
         stdict = dict()
@@ -470,21 +470,16 @@ can_edit_scripts= {}
 
             arunid = arun.labnumber
             c = 1
+            st = 0
+            if arunid in fixed_dict:
+                st = fixed_dict[arunid]
+
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
                 if not arun.extract_group:
                     c += 1
-#                else:
-#                    c = 1
-#            else:
-#                c = 1
-            if arunid in fixed_dict:
-                st = fixed_dict[arunid]
             else:
-
                 ln = self._get_labnumber(arun)
-
-#                 ln = db.get_labnumber(arunid)
                 if ln is not None:
                     try:
                         st = ln.analyses[-1].aliquot
@@ -492,6 +487,14 @@ can_edit_scripts= {}
                         st = 0
                 else:
                     st = stdict[arunid] if arunid in stdict else 0
+#                else:
+#                    c = 1
+#            else:
+#                c = 1
+#            else:
+
+
+#                 ln = db.get_labnumber(arunid)
 
 #             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
             if not arun.user_defined_aliquot:

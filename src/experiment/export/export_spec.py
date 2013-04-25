@@ -74,16 +74,15 @@ class ExportSpec(Loggable):
 
     def load_record(self, record):
         attrs = [
-#                 ('rid', 'labnumber'),
-                 ('labnumber','labnumber'),
+                 ('labnumber', 'labnumber'),
                  ('aliquot', 'aliquot'),
-                 ('step', 'step'), 
+                 ('step', 'step'),
                  ('irradpos', 'labnumber'),
                  ('extract_device', 'extract_device'), ('tray', 'tray'),
                  ('position', 'position'), ('power_requested', 'extract_value'),
                  ('power_achieved', 'extract_value'), ('duration', 'duration'),
                  ('duration_at_request', 'duration'), ('first_stage_delay', 'cleanup'),
-                 ('comment', 'comment')
+                 ('comment', 'comment'),
                  ]
 
         for exp_attr, run_attr in attrs:
@@ -93,16 +92,14 @@ class ExportSpec(Loggable):
                 except TraitError, e:
                     self.debug(e)
 
-    def iter(self):
-#        print self.detectors
-#        print self.signals
-#        print self.baselines
-#        print self.blanks
-#        print self.signal_intercepts
-#        print self.baseline_intercepts
-#        print self.signal_fits
-#        print self.baseline_fits
+        if hasattr(record, 'ic_factor'):
+            ic = record.ic_factor
+            self.ic_factor_v = float(ic.nominal_value)
+            self.ic_factor_e = float(ic.std_dev)
+        else:
+            self.debug('{} has no ic_factor attribute'.format(record,))
 
+    def iter(self):
         return zip(self.detectors,
                    self.signals,
                    self.baselines,
@@ -115,6 +112,5 @@ class ExportSpec(Loggable):
     @property
     def record_id(self):
         return make_rid(self.labnumber, self.aliquot, self.step)
-##        return '{}-{}{}'.format(self.rid, self.aliquot, self.step)
 
 #============= EOF =============================================

@@ -144,17 +144,28 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 ri.user_defined_aliquot = False
 
     def set_selected_runs(self, runs):
-        self._selected_runs = runs
         if runs:
             run = runs[0]
             self._clone_run(run)
+        self._selected_runs = runs
+
+    def _make_short_labnumber(self, labnumber=None):
+        if labnumber is None:
+            labnumber = self.labnumber
+        if '-' in labnumber:
+            labnumber = labnumber.split('-')[0]
+
+        special = labnumber in ANALYSIS_MAPPING
+        return labnumber, special
 
     def new_runs(self, auto_increment=False):
         '''
             returns a list of runs even if its only one run 
                     also returns self.frequency if using special labnumber else None
         '''
-        freq = self.frequency if self.labnumber in ANALYSIS_MAPPING else None
+        _ln, special = self._make_short_labnumber()
+
+        freq = self.frequency if special else None
 
         if self.template and self.template != NULL_STR and not freq:
             arvs = self._render_template()
@@ -231,38 +242,63 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     def _new_runs(self):
         s = 0
         e = 0
-        ln=self.labnumber
-        if '-' in ln:
-            ln=ln.split('-')[0]
-        special =ln in ANALYSIS_MAPPING
-        if self.position and not special:
-            s = int(self.position)
-            e = int(self.endposition)
-            if e:
-                if e < s:
-                    self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-                    return
-                arvs = []
-                for i in range(e - s + 1):
-#                    ar.position = str(s + i)
-                    position = str(s + i)
-                    arvs.append(self._new_run(position=position))
-                    '''
-                        clear user_defined_aliquot flag
-                        if adding multiple runs this allows 
-                        the subsequent runs to have there aliquots defined by db
-                    '''
-                    self.user_defined_aliquot = False
-
-            else:
-                arvs = [self._new_run(position=str(s), special=special)]
-#                 self.position = self._increment(self.position)
-        elif self.position and self.labnumber == 'dg':
-            arvs = [self._new_run(special=False, position=self.position)]
-
-#             self.position = self._increment(self.position)
+        _ln, special = self._make_short_labnumber()
+        if special:
+#            arvs = [self._new_run(position=self.position)]
+            arvs = [self._new_run()]
         else:
-            arvs = [self._new_run(special=special)]
+            if self.position:
+                s = int(self.position)
+                e = int(self.endposition)
+                if e:
+                    if e < s:
+                        self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+                        return
+                    arvs = []
+                    for i in range(e - s + 1):
+    #                    ar.position = str(s + i)
+                        position = str(s + i)
+                        arvs.append(self._new_run(position=position, excludes=['position']))
+                        '''
+                            clear user_defined_aliquot flag
+                            if adding multiple runs this allows 
+                            the subsequent runs to have there aliquots defined by db
+                        '''
+                        self.user_defined_aliquot = False
+
+                else:
+                    arvs = [self._new_run()]
+            else:
+                arvs = [self._new_run()]
+
+#        if self.position and not special:
+#            s = int(self.position)
+#            e = int(self.endposition)
+#            if e:
+#                if e < s:
+#                    self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+#                    return
+#                arvs = []
+#                for i in range(e - s + 1):
+# #                    ar.position = str(s + i)
+#                    position = str(s + i)
+#                    arvs.append(self._new_run(position=position))
+#                    '''
+#                        clear user_defined_aliquot flag
+#                        if adding multiple runs this allows
+#                        the subsequent runs to have there aliquots defined by db
+#                    '''
+#                    self.user_defined_aliquot = False
+#
+#            else:
+#                arvs = [self._new_run(position=str(s), special=special)]
+#                 self.position = self._increment(self.position)
+#        elif self.position and self.labnumber == 'dg':
+#            arvs = [self._new_run(special=False, position=self.position)]
+#
+# #             self.position = self._increment(self.position)
+#        else:
+#            arvs = [self._new_run(special=special)]
 
         return arvs
 
@@ -292,46 +328,52 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             il = '{}{}'.format(irrad.name, level.name)
         return il
 
-    def _new_run(self, special=False, **kw):
+    def _new_run(self, excludes=None, **kw):
+
+        ln, special = self._make_short_labnumber()
+
         arv = self._spec_klass(**kw)
-        ex = ('extract_value', 'extract_units', 'pattern') if special else tuple()
-        
-        ln=self.labnumber
-        if '-' in ln:
-            ln=ln.split('-')[0]
-            
-        if ln in ('ba', 'bg', 'bc', 'a', 'c'):
-            ex += ('position',)
 
-        self._set_run_values(arv, excludes=ex)
-        return arv
-
-    def _set_run_values(self, arv, excludes=None):
         if excludes is None:
             excludes = []
-            
-        excludes=list(excludes)
 
-        '''
-            if run is not an unknown and not a degas then don't copy evalue, eunits and pattern
-            if runs is an unknown but is part of an extract group dont copy the evalue
-        '''
+        excludes.extend(['extract_value', 'extract_units', 'pattern'] if special else [])
+
+#        ln = self.labnumber
+#        if '-' in ln:
+#            ln = ln.split('-')[0]
+
+        if ln in ('ba', 'bg', 'bc', 'a', 'c'):
+            excludes.extend(('position',))
+
         if arv.analysis_type != 'unknown':
             if arv.analysis_type != 'degas':
                 excludes.extend(('extract_value', 'extract_units', 'pattern'))
         else:
             if arv.extract_group:
-                excludes.extend(('extract_value',))
+                excludes.extend(('extract_value', 'cleanup', 'duration', 'pattern'))
+
+        self._set_run_values(arv, excludes=excludes)
+        return arv
+
+    def _set_run_values(self, arv, excludes=None):
+        if excludes is None:
+            excludes = []
+
+
+        '''
+            if run is not an unknown and not a degas then don't copy evalue, eunits and pattern
+            if runs is an unknown but is part of an extract group dont copy the evalue
+        '''
 
         for attr in ('labnumber',
+                     'position',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'pattern',
                      'weight', 'comment',
                      'sample', 'irradiation',
                      'skip', 'mass_spectrometer', 'extract_device'
-
                      ):
-
             if attr in excludes:
                 continue
 
@@ -348,7 +390,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 continue
 
             s = getattr(self, name)
-            setattr(arv, name, s.name)
+            if s.cb:
+                setattr(arv, name, s.name)
 
     def _clone_run(self, run, excludes=None):
         if excludes is None:
@@ -385,8 +428,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             mod = script.get_parameter('modifier')
             if mod is not None:
                 if isinstance(mod, int):
-                    mod='{:02n}'.format(mod)
-                    
+                    mod = '{:02n}'.format(mod)
+
                 self.labnumber = self.labnumber.replace('##', str(mod))
 
 
@@ -398,13 +441,21 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 self.cb_duration = True
                 self.cb_cleanup = True
                 self.cb_pattern = True
+
+        for si in SCRIPT_NAMES:
+            sc = getattr(self, si)
+            sc.cb = False
+
+#        self.measurement_script.cb = False
 #===============================================================================
 # handlers
 #===============================================================================
     @on_trait_change('_selected_runs')
     def _selected_runs_handler(self):
         if self._selected_runs:
-
+            for si in SCRIPT_NAMES:
+                sc = getattr(self, si)
+                sc.cb_edit = True
             self._set_cb_defaults(self._selected_runs[0])
 #            self._suppress_cb_change = False
         else:
@@ -412,6 +463,11 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             for tr in td:
                 if tr.startswith('cb_'):
                     td[tr] = False
+
+            for si in SCRIPT_NAMES:
+                sc = getattr(self, si)
+                sc.cb_edit = False
+
 #            self.cb_position = False
 
     @on_trait_change('cb_+')
@@ -460,6 +516,63 @@ position''')
                     setattr(si, name, new)
 
 
+    @on_trait_change('''measurement_script:cb, 
+extraction_script:cb, 
+post_measurement_script:cb,
+post_equilibration_script:cb
+    ''')
+    def _edit_script_cb_handler(self, obj, name, new):
+        name = '{}_script'.format(obj.label)
+        if new:
+            if obj.label == 'Extraction':
+                self._load_extraction_info(obj)
+
+            new_name = getattr(self, name).name
+
+            for si in self._selected_runs:
+                pname = '_prev_{}_script.{}'.format(obj.label, id(si))
+                pscript_name = getattr(si, name)
+                setattr(self, pname, pscript_name)
+                setattr(si, name, new_name)
+
+        else:
+            for si in self._selected_runs:
+                pname = '_prev_{}_script.{}'.format(obj.label, id(si))
+                if hasattr(self, pname):
+                    prev_name = getattr(self, pname)
+                    setattr(si, name, prev_name)
+
+
+#            def func():
+
+#            if self._selected_runs:
+#                for si in self._selected_runs:
+#                    name = '{}_script'.format(obj.label)
+#                    setattr(self, '_prev_{}_script'.format(obj.label), getattr(si, name))
+#                    setattr(si, name, new)
+#        else:
+#            if self._selected_runs:
+#                for si in self._selected_runs:
+#                    name = '{}_script'.format(obj.label)
+#                    v = getattr(self, '_prev_{}_script'.format(obj.label))
+#                    setattr(si, name, v)
+
+        if self._selected_runs:
+            for si in self._selected_runs:
+                pass
+#                name = '{}_script'.format(obj.label)
+#                pname = '_prev_{}_script'.format(obj.label)
+#                if new:
+#                    setattr(self, pname, getattr(si, name))
+#                    script = getattr(self, name)
+#                    new = script.name
+#                else:
+#                    new = None
+#                    if hasattr(self, pname):
+#                        new = getattr(self, pname)
+#
+#                if new:
+#                    setattr(si, name, new)
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -467,13 +580,14 @@ post_measurement_script:name,
 post_equilibration_script:name
     ''')
     def _edit_script_handler(self, obj, name, new):
-        if obj.label == 'Extraction':
-            self._load_extraction_info(obj)
+        if obj.cb:
+            if obj.label == 'Extraction':
+                self._load_extraction_info(obj)
 
-        if self._selected_runs:
-            for si in self._selected_runs:
-                name = '{}_script'.format(obj.label)
-                setattr(si, name, new)
+            if self._selected_runs:
+                for si in self._selected_runs:
+                    name = '{}_script'.format(obj.label)
+                    setattr(si, name, new)
 
     def __labnumber_changed(self):
         if self._labnumber != NULL_STR:
@@ -505,7 +619,7 @@ post_equilibration_script:name
                 if ln in ('a', 'ba'):
                     ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
                 else:
-                    msname=ms.name[0].capitalize()
+                    msname = ms.name[0].capitalize()
                     edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
 #                     ln = make_special_identifier(ln, ed.id, ms.id)
                     ln = make_special_identifier(ln, edname, msname)
@@ -594,6 +708,7 @@ post_equilibration_script:name
                 if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
                     db.add_labnumber(labnumber)
                     db.commit()
+                    self.aliquot = 1
                     _load_scripts(old, new)
                 else:
                     self.labnumber = ''
@@ -858,14 +973,14 @@ post_equilibration_script:name
 #                                     Label('Step Heat Template'),
                                     ),
                              HGroup(
-                                 Item('template', 
+                                 Item('template',
                                        label='Step Heat Template',
                                        editor=EnumEditor(name='templates')),
                                  UItem('edit_template',
                                       editor=ButtonEditor(label_value='edit_template_label')
                                       )
                                     ),
-                             
+
                              CBItem('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'
 

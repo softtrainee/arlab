@@ -133,6 +133,8 @@ class AutomatedRun(Loggable):
     comment = Str
     pattern = Str
 
+    ic_factor = Any
+
     analysis_type = Str
     disable_between_positions = Bool(False)
 
@@ -1295,10 +1297,10 @@ anaylsis_type={}
 
     def _save_detector_intercalibration(self, analysis):
         if self.arar_age:
-            ic = self.arar_age.ic_factor
+            self.ic_factor = ic = self.arar_age.ic_factor
 
         else:
-            ic = ArArAge(application=self.application).ic_factor
+            self.ic_factor = ic = ArArAge(application=self.application).ic_factor
 
         self.info('saving detector intercalibration')
         self.info('default ic_factor={}'.format(ic))
