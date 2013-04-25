@@ -140,7 +140,7 @@ class StageManager(Manager):
 
     def opened(self, ui):
         self.keyboard_focus = True
-        super(StageManager,self).opened(ui)
+        super(StageManager, self).opened(ui)
 
     def get_video_database(self):
         from src.database.adapters.video_adapter import VideoAdapter
@@ -393,6 +393,8 @@ class StageManager(Manager):
     @on_trait_change('stop_button')
     def stop(self, ax_key=None, verbose=False):
         self.stage_controller.stop(ax_key=ax_key, verbose=verbose)
+        if self.parent.pattern_executor:
+            self.parent.pattern_executor.stop()
 
     def relative_move(self, *args, **kw):
         self.stage_controller.relative_move(*args, **kw)
@@ -815,7 +817,7 @@ class StageManager(Manager):
 
             self.linear_move(xi, yi, velocity=vi,
                              block=block,
-                             mode='absolute',  # use absolute mode because commands are queued
+                             mode='absolute', # use absolute mode because commands are queued
                              set_stage=False)
             if block:
                 if end_callback:
