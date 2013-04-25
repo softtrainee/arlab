@@ -18,7 +18,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Int, Callable
-from traitsui.editor import Editor
+from traitsui.wx.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
 
@@ -188,7 +188,7 @@ class wxLED(wx.Control):
 
 
 
-        xpm = ['17 17 3 1',  # width height ncolors chars_per_pixel
+        xpm = ['17 17 3 1', # width height ncolors chars_per_pixel
                '0 c None',
                'X c %s' % color1.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
                '- c %s' % color2.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
