@@ -21,11 +21,21 @@ from traitsui.api import View, Item, TableEditor
 import math
 #============= local library imports  ==========================
 
-def floatfmt(f, n, s=2):
-    if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, n):
-        fmt = '{{:0.{}e}}'.format(s)
+def floatfmt(f, n, s=2, max_width=None):
+    if abs(f) < 1e-20:
+        v = '0.0'
     else:
-        fmt = '{{:0.{}f}}'.format(n)
 
-    return fmt.format(f)
+        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, s + 1):
+            fmt = '{{:0.{}E}}'.format(s)
+        else:
+            fmt = '{{:0.{}f}}'.format(n)
+
+        v = fmt.format(f)
+        if max_width:
+            if len(v) > max_width:
+                v = v[:max_width]
+
+    return v
+
 #============= EOF =============================================

@@ -52,12 +52,11 @@ class PDFTable(HasTraits):
                 self.sample_rowids[-1] += 1
                 trows.insert(-1, [])
 
-    def floatfmt(self, v, n=5, scale=1):
-        fmt = '{{:0.{}f}}'.format(n)
-        
-        nv=fmt.format(v / scale)
-        
-        if len(nv)>n+2
+#    def floatfmt(self, v, n=5, scale=1):
+#        fmt = '{{:0.{}f}}'.format(n)
+#        nv = fmt.format(v / scale)
+#        if len(nv)>n+2:
+
 
 
     def _make(self, rows):
@@ -149,4 +148,8 @@ class Title(Row):
 
 class RowItem(BaseItem):
     pass
+
+def NamedParameter(name, value):
+    return '<b>{}</b>: {}'.format(name, value)
+
 #============= EOF =============================================

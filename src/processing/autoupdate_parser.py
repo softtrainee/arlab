@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 # from traits.api import HasTraits
 # from traitsui.api import View, Item
@@ -23,16 +21,16 @@
 #============= standard library imports ========================
 import csv
 from src.stats.core import calculate_mswd
+from src.constants import ARGON_KEYS
 #============= local library imports  ==========================
 # from src.stats import calculate_mswd, calculate_weighted_mean
 # from src.data_processing.argon_calculations import calculate_arar_age, find_plateaus
 
 
-def formatfloat(f, n=3):
-        if f > 1000:
-            n -= 1
-        return '{:0.{}f}'.format(f, n)
-
+# def formatfloat(f, n=3):
+#        if f > 1000:
+#            n -= 1
+#        return '{:0.{}f}'.format(f, n)
 
 class Sample(object):
     analyses = None
@@ -44,6 +42,82 @@ class Sample(object):
     def add_analysis(self, params, factory):
         a = factory(params)
         self.analyses.append(a)
+
+
+class AutoupdateParser(object):
+    def _get_value(self, key, header, line, default=None):
+        try:
+            v = line[header.index(key)]
+        except IndexError:
+            v = default
+
+        return v
+
+    def parse(self, p, factory):
+        with open(p, 'U') as f:
+            reader = csv.reader(f, delimiter='\t')
+
+            header = reader.next()
+
+            sampleObj = None
+            samples = []
+            print header
+            sample_group = 0
+#            sample_idx = header.index('Sample')
+            for line in reader:
+                get_value = lambda x, **kw: self._get_value(x, header, line, **kw)
+
+                sample = get_value('Sample')
+                if not sample:
+                    break
+
+                if sampleObj is None or sampleObj.name != sample:
+                    sampleObj = Sample(sample)
+                    samples.append(sampleObj)
+                    sample_group += 1
+
+                params = dict()
+                params['sample'] = sample
+                params['material'] = get_value('Material')
+                params['sample_group'] = sample_group
+                params['power'] = get_value('Pwr_Achieved')
+
+                params['run_id'] = get_value('Run_ID')
+                params['age'] = get_value('Age')
+                params['age_err'] = get_value('Age_Er')
+
+                params['j'] = get_value('J')
+                params['j_err'] = get_value('J_Er')
+
+                params['k_ca'] = 1 / float(get_value('Ca_Over_K'))
+                params['k_ca_err'] = get_value('Ca_Over_K_Er')
+
+                params['rad40_percent'] = get_value('PctAr40Rad')
+                params['rad40_percent_err'] = get_value('PctAr40Rad_Er')
+                params['rad40'] = get_value('Ar40Rad_Over_Ar39')
+                params['rad40_err'] = get_value('Ar40Rad_Over_Ar39_Er')
+
+
+                for si in ARGON_KEYS:
+                    params[si] = get_value('{}_'.format(si))
+                    params['{}Er'.format(si)] = get_value('{}_Er'.format(si))
+                    params['{}_blank'.format(si)] = get_value('{}_Bkgd'.format(si))
+                    params['{}_blankerr'.format(si)] = get_value('{}_BkgdEr'.format(si))
+
+                sampleObj.add_analysis(params, factory)
+
+            return samples
+
+if __name__ == '__main__':
+    p = AutoupdateParser()
+    pa = '/Users/ross/Antarctica/MinnaBluff/data/gm-06.csv'
+    samples = p.parse(pa)
+
+    print samples[0].get_isotopic_recombination_age()
+
+
+
+#============= EOF =====================================
 #    def finish(self):
 #        self._calculate_cumulative39()
 #        self.find_plateau_steps()
@@ -248,75 +322,6 @@ class Sample(object):
 #            d.append(v)
 #        return d
 
-class AutoupdateParser(object):
-    header = None
-    line = None
-#    def get_value(self, line, idx, cast=float, default=''):
-#        try:
-#            v = line[self.header.index(key)]
-#        except ValueError:
-#            return default
-# #        print len(line), self.header.index(key), v
-#        return cast(v)
-
-    def _parse_rid(self, rid):
-        l_number = rid.split('-')[0] + '-'
-        suffix = ''
-        for s in rid.split('-')[1]:
-            try:
-                float(s)
-                l_number += str(s)
-            except:
-                suffix += s
-        return l_number, suffix
-
-    def _parse_comment(self):
-        comment = self.get_value('Comment', cast=str)
-
-        weight = comment.split(',')[1].split('mg')[0].strip()
-
-        return weight,
-
-    def _get_value(self, key, header, line, default=None):
-        try:
-            v = line[header.index(key)]
-        except IndexError:
-            v = default
-
-        return v
-
-    def parse(self, p, factory):
-        with open(p, 'U') as f:
-            reader = csv.reader(f, delimiter='\t')
-
-#            reader = csv.reader(f, delimiter=',')
-
-            header = reader.next()
-#            self.header = header
-            sampleObj = None
-            samples = []
-            print header
-#            sample_idx = header.index('Sample')
-            for line in reader:
-                get_value = lambda x, **kw: self._get_value(x, header, line, **kw)
-
-                sample = get_value('Sample')
-                if not sample:
-                    break
-
-                if sampleObj is None or sampleObj.name != sample:
-                    sampleObj = Sample(sample)
-                    samples.append(sampleObj)
-                params = dict()
-                params['run_id'] = get_value('Run_ID')
-                for si in ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'):
-                    params[si] = get_value('{}_'.format(si))
-                    params['{}Er'.format(si)] = get_value('{}_Er'.format(si))
-
-                sampleObj.add_analysis(params, factory)
-
-            return samples
-
 #                self.line = line
 #                try:
 #                    rid = self.get_value('Run_ID', cast=str)
@@ -405,20 +410,33 @@ class AutoupdateParser(object):
 #                    break
 #
 #            return samples
+#    header = None
+#    line = None
+#    def get_value(self, line, idx, cast=float, default=''):
+#        try:
+#            v = line[self.header.index(key)]
+#        except ValueError:
+#            return default
+# #        print len(line), self.header.index(key), v
+#        return cast(v)
+#
+#    def _parse_rid(self, rid):
+#        l_number = rid.split('-')[0] + '-'
+#        suffix = ''
+#        for s in rid.split('-')[1]:
+#            try:
+#                float(s)
+#                l_number += str(s)
+#            except:
+#                suffix += s
+#        return l_number, suffix
 
-
-
-
-if __name__ == '__main__':
-    p = AutoupdateParser()
-    pa = '/Users/ross/Antarctica/MinnaBluff/data/gm-06.csv'
-    samples = p.parse(pa)
-
-    print samples[0].get_isotopic_recombination_age()
-
-
-
-#============= EOF =====================================
+#    def _parse_comment(self):
+#        comment = self.get_value('Comment', cast=str)
+#
+#        weight = comment.split(',')[1].split('mg')[0].strip()
+#
+#        return weight,
 #    COLUMN_NAMES = ['Run_ID',
 #                    'Sample',
 #                    'System',

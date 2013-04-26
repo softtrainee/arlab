@@ -51,4 +51,5 @@ ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
                                     for a in seeds
                                         for b in seeds]
 
+ARGON_KEYS = ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36')
 #============= EOF =============================================

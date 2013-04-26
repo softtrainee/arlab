@@ -24,8 +24,11 @@ from reportlab.lib import colors
 #============= local library imports  ==========================
 from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.processing.publisher.templates.tables.pdf_table import PDFTable, \
-    RowItem, Row, Superscript, Title, Subscript, SummaryRow
-from src.constants import PLUSMINUS
+    RowItem, Row, Superscript, Title, Subscript, SummaryRow, NamedParameter
+from src.constants import PLUSMINUS, ARGON_KEYS
+from src.helpers.formatting import floatfmt
+def DefaultInt(value=45):
+    return Int(value)
 
 class IdeogramTable(PDFTable):
     status_width = Int(5)
@@ -35,59 +38,19 @@ class IdeogramTable(PDFTable):
 
     low = Int(0)
     high = Int(200)
-    ar40_width = Int(40)
-    ar40_error_width = Int(40)
-    ar39_width = Int(40)
-    ar39_error_width = Int(40)
-    ar38_width = Int(40)
-    ar38_error_width = Int(40)
-    ar37_width = Int(40)
-    ar37_error_width = Int(40)
-    ar36_width = Int(40)
-    ar36_error_width = Int(40)
+    ar40_width = DefaultInt()
+    ar40_error_width = DefaultInt()
+    ar39_width = DefaultInt()
+    ar39_error_width = DefaultInt()
+    ar38_width = DefaultInt()
+    ar38_error_width = DefaultInt()
+    ar37_width = DefaultInt()
+    ar37_error_width = DefaultInt()
+    ar36_width = DefaultInt()
+    ar36_error_width = DefaultInt()
 
-    def set_widths(self, widths):
-        for k, v in widths.iteritems():
-            setattr(self, k, v)
-
-    def get_widths(self):
-        widths = dict()
-        for a in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
-            for k in ('{}_width'.format(a),
-                           '{}_error_width'.format(a)
-                           ):
-                widths[k] = getattr(self, k)
-        return widths
-
-    def _value_error_width_factory(self, name):
-        top = HGroup(Label(name.capitalize()), spring, Label('Error'), spring)
-        bottom = HGroup(self._width_factory('{}_width'.format(name)),
-                        self._width_factory('{}_error_width'.format(name)))
-        return VGroup(top, bottom)
-
-    def _single_value_width_factory(self, name):
-        top = HGroup(Label(name.capitalize()))
-        bottom = self._width_factory('{}_width'.format(name))
-        return VGroup(top, bottom)
-
-    def _width_factory(self, name):
-        return Item(name,
-                    editor=RangeEditor(mode='spinner', low_name='low', high_name='high'),
-                    show_label=False)
-
-    def traits_view(self):
-        contents = []
-        for n in ['status', 'id', 'power']:
-            contents.append(self._single_value_width_factory(n))
-
-        for n in ['ar40', 'ar39', 'ar38', 'ar37', 'ar36']:
-            contents.append(self._value_error_width_factory(n))
-
-        column_widths = HGroup(*contents)
-        v = View(column_widths,
-                 buttons=['OK', 'Cancel']
-                 )
-        return v
+    _sample_summary_row1 = None
+    _sample_summary_row2 = None
 
     def make(self, analyses):
         if self.add_title:
@@ -96,49 +59,24 @@ class IdeogramTable(PDFTable):
             rows = [[]]
 
         a = analyses[0]
-        rows += self.make_sample_summary(a.sample, a.labnumber, a.j,
+        rows.extend(self._make_sample_summary(a.sample,
+                                          a.labnumber_aliquot, a.j,
                                          a.material,
                                          '---',
                                          a.ic_factor
                                          )
+                    )
         if self.add_header:
-            rows += self._make_header()
+            rows.extend(self._make_header())
 
         for ai in analyses:
             r = self._make_analysis_row(ai)
             rows.append(r)
 
-        rows += self._make_summary_row(analyses)
+        rows.extend(self._make_summary_row(analyses))
+        rows.extend(self._make_footer_rows())
+
         return self._make(rows)
-
-    def _make_summary_row(self, analyses):
-#        rows = []
-        ages, errors = zip(*[(ai.age.nominal_value, ai.age.std_dev) for ai in analyses])
-        n = len(analyses)
-#        row = ['', 'n= {}'.format(n)]
-#        rows.append(row)
-        row = SummaryRow()
-#
-        wm, we = calculate_weighted_mean(ages, errors)
-        wm = self.floatfmt(wm, n=3)
-        we = self.floatfmt(we, n=4)
-
-#        row = ['', u'weighted mean= {} {}{}'.format(wm, PLUSMINUS, we)]
-#        rows.append(row)
-#
-        mswd = calculate_mswd(ages, errors)
-        mswd = self.floatfmt(mswd, n=3)
-#        row = ['', u'mswd= {}'.format(mswd)]
-#        rows.append(row)
-
-        row.add_item(value='n={}'.format(n), span=3)
-        row.add_item(value=u'weighted mean= {} {}{}'.format(wm, PLUSMINUS, we),
-                     span=3)
-        row.add_item(value=u'mswd= {}'.format(mswd),
-                     span=3)
-
-
-        return [row]
 
     def make_title(self):
         a40 = Superscript(40)
@@ -147,28 +85,30 @@ class IdeogramTable(PDFTable):
         return [Title(value=v, fontsize=10,
                        fontname='Helvetica-Bold')]
 
-    def make_sample_summary(self, sample, labnumber, j, material, igsn, ic):
+    def _make_sample_summary(self, sample, labnumber, j, material, igsn, ic):
         if not isinstance(j, tuple):
             j = j.nominal_value, j.std_dev
 
         if not isinstance(ic, tuple):
             ic = ic.nominal_value, ic.std_dev
 
-        pm = self._plusminus()
+#        pm = self._plusminus()
 
         line1 = Row(fontsize=8)
-        line1.add_item(value='Sample: {}'.format(sample))
-        line1.add_blank_item(n=3,)
-        line1.add_item(value='Lab #: {}'.format(labnumber))
-        line1.add_blank_item()
-        line1.add_item(value=u'J: {:0.3e}{}{:0.4e}'.format(j[0], pm, j[1]))
-        line1.add_blank_item(n=3)
-        line1.add_item(value=u'IC: {:0.3f}{}{:0.4f}'.format(ic[0], pm, ic[1]))
+        line1.add_item(value=NamedParameter('Sample', sample), span=5)
+        line1.add_item(value=NamedParameter('Lab #', labnumber), span=2)
+
+        js = '{:0.2E} {}{:0.2E}'.format(j[0], PLUSMINUS, j[1])
+        line1.add_item(value=NamedParameter('J', js), span=3)
+        ics = '{:0.3f} {}{:0.4f}'.format(ic[0], PLUSMINUS, ic[1])
+        line1.add_item(value=NamedParameter('IC', ics), span=3)
 
         line2 = Row(fontsize=8)
-        line2.add_item(value='Material: {}'.format(material))
-        line2.add_blank_item(n=3)
-        line2.add_item(value='IGSN #: {}'.format(igsn))
+        line2.add_item(value=NamedParameter('Material', material), span=5)
+        line2.add_item(value=NamedParameter('IGSN', igsn), span=2)
+
+        self._sample_summary_row1 = line1
+        self._sample_summary_row2 = line2
 
         return [line1, line2]
 
@@ -177,7 +117,7 @@ class IdeogramTable(PDFTable):
         super_ar = lambda x: '{}Ar'.format(Superscript(x))
 
         _102fa = '(10{} fA)'.format(Superscript(2))
-        _103fa = '(10{} fA)'.format(Superscript(2))
+        _103fa = '(10{} fA)'.format(Superscript(3))
         minus_102fa = '(10{} fA)'.format(Superscript(-2))
 
         line = [
@@ -191,10 +131,11 @@ class IdeogramTable(PDFTable):
                 (super_ar(37), ''), (sigma, ''),
                 (super_ar(36), ''), (sigma, minus_102fa),
                 ('%{}*'.format(super_ar(40)), ''),
-                ('{}*/{}Ar{}'.format(super_ar(40),
-                                               super_ar(39),
-                                               Subscript('K')), ''),
+                ('{}*/{}{}'.format(super_ar(40),
+                                   super_ar(39),
+                                   Subscript('K')), ''),
                 ('Age', '(Ma)'), (sigma, ''),
+                ('K/Ca', ''),
                 ('Blank', 'type'),
                 (super_ar(40), ''), (sigma, ''),
                 (super_ar(39), ''), (sigma, ''),
@@ -205,8 +146,8 @@ class IdeogramTable(PDFTable):
 
         name_row, unit_row = zip(*line)
 
-        default_fontsize = 7
-        nrow = Row()
+        default_fontsize = 6
+        nrow = Row(fontsize=default_fontsize)
         for ni in name_row:
             if len(ni) == 2:
                 ni, fontsize = ni
@@ -214,8 +155,8 @@ class IdeogramTable(PDFTable):
                 fontsize = default_fontsize
             nrow.add_item(value=ni, fontsize=fontsize)
 
-        urow = Row()
         default_fontsize = 6
+        urow = Row(fontsize=default_fontsize)
         for ni in unit_row:
             if len(ni) == 2:
                 ni, fontsize = ni
@@ -225,12 +166,12 @@ class IdeogramTable(PDFTable):
                           fontsize=fontsize)
         return [
                 nrow.render(),
-                urow.render()
+                urow
                 ]
 
     def _make_analysis_row(self, analysis):
-        floatfmt = self.floatfmt
-        def fmt_attr(v, key='nominal_value', n=5, **kw):
+#        floatfmt = self.floatfmt
+        def fmt_attr(v, key='nominal_value', n=5, scale=1, **kw):
             if isinstance(v, tuple):
                 if key == 'std_dev':
                     v = v[1]
@@ -239,18 +180,20 @@ class IdeogramTable(PDFTable):
             else:
                 v = getattr(v, key)
 
-            return floatfmt(v, n=n, **kw)
+            v = v / float(scale)
+
+            return floatfmt(v, n=n, max_width=8, **kw)
 
         def error(**kw):
             return lambda x: fmt_attr(x, key='std_dev', **kw)
         def value(**kw):
             return lambda x: fmt_attr(x, key='nominal_value', **kw)
 
-        row = Row()
-        default_fontsize = 7
+        default_fontsize = 6
+        row = Row(fontsize=default_fontsize)
         attrs = (
                  ('status', lambda x: '' if x == 0 else 'x'),
-                 ('aliquot', '{:02}',),
+                 ('aliquot_step', '{}',),
                  ('extract_value', '{}'),
                  ('moles_Ar40', value()),
 
@@ -259,7 +202,7 @@ class IdeogramTable(PDFTable):
                  #==============================================================
                  ('Ar40', value(scale=1e3)),
                  ('Ar40', error()),
-                 ('Ar39', value()),
+                 ('Ar39', value(scale=1e3)),
                  ('Ar39', error()),
                  ('Ar38', value()),
                  ('Ar38', error()),
@@ -274,7 +217,8 @@ class IdeogramTable(PDFTable):
                  ('rad40_percent', value(n=1)),
                  ('R', value(n=5)),
                  ('age', value(n=2)),
-                 ('age', error(n=2)),
+                 ('age', error(n=4)),
+                 ('k_ca', value(n=1)),
                  #==============================================================
                  # blanks
                  #==============================================================
@@ -292,7 +236,7 @@ class IdeogramTable(PDFTable):
                  ('Ar37_blank', error()),
 
                  ('Ar36_blank', value()),
-                 ('Ar36_blank', error(scale=1e3)),
+                 ('Ar36_blank', error()),
                  )
         for args in attrs:
             if len(args) == 3:
@@ -307,6 +251,32 @@ class IdeogramTable(PDFTable):
         nrow = row
         return nrow
 
+    def _make_summary_row(self, analyses):
+#        rows = []
+        ages, errors = zip(*[(ai.age.nominal_value, ai.age.std_dev) for ai in analyses])
+        n = len(analyses)
+        row = SummaryRow()
+
+        wm, we = calculate_weighted_mean(ages, errors)
+        wm = floatfmt(wm, n=3)
+        we = floatfmt(we, n=4)
+#
+        mswd = calculate_mswd(ages, errors)
+        mswd = floatfmt(mswd, n=3)
+
+        row.add_item(value='n={}'.format(n), span=3)
+        row.add_item(value=u'weighted mean= {} {}{}'.format(wm, PLUSMINUS, we),
+                     span=3)
+        row.add_item(value=u'mswd= {}'.format(mswd),
+                     span=3)
+
+        return [row]
+
+    def _make_footer_rows(self):
+        return []
+#===============================================================================
+# table formatting
+#===============================================================================
     def _get_style(self, rows):
 
         '''
@@ -333,15 +303,12 @@ class IdeogramTable(PDFTable):
             style.add('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.black)
 
         # set style for sample row
-        style.add('SPAN', (0, sample_row), (4, sample_row))  # sample
-        style.add('SPAN', (4, sample_row), (6, sample_row))  # labnumber
-        style.add('LINEBELOW', (0, sample_row), (5, sample_row), 1.5, colors.black)
-        style.add('SPAN', (6, sample_row), (9, sample_row))  # j
-        style.add('SPAN', (10, sample_row), (-1, sample_row))  # ic
+        for s, e in self._sample_summary_row1.spans:
+            style.add('SPAN', (s, sample_row), (e, sample_row))
+            style.add('LINEBELOW', (s, sample_row), (e, sample_row), 1.5, colors.black)
 
-        # set style for sample row 2
-        style.add('SPAN', (0, sample_row2), (4, sample_row2))  # material
-        style.add('SPAN', (4, sample_row2), (6, sample_row2))  # igsn
+        for s, e in self._sample_summary_row2.spans:
+            style.add('SPAN', (s, sample_row2), (e, sample_row2))
 
         # set style for name header
         style.add('LINEABOVE', (0, name_row), (-1, name_row), 1.5, colors.black)
@@ -373,26 +340,64 @@ class IdeogramTable(PDFTable):
             ta._argW[w] = scale(getattr(self, '{}_width'.format(n)))
             ta._argW[w + 1] = scale(getattr(self, '{}_error_width'.format(n)))
 
-#        #set isotope widths 40-37
-#        for i in range(8):
-#            w = 0.4 if i % 2 == 0 else 0.4
-#            ta._argW[4 + i] = w * inch
-
-#        ta._argW[12] = 0.4 * inch #36
-#        ta._argW[13] = 0.6 * inch #36err
-
-        ta._argW[14] = 0.5 * inch  # rad40
-        ta._argW[15] = 0.8 * inch  # rad40/k39
+        ta._argW[14] = 0.4 * inch  # rad40
+        ta._argW[15] = 0.7 * inch  # rad40/k39
         ta._argW[16] = 0.5 * inch  # age
         ta._argW[17] = 0.5 * inch  # age err
 
-        ta._argW[18] = 0.5 * inch  # blank fit type
+        ta._argW[18] = 0.4 * inch  # blank fit type
 
         start = 19
         for i, n in enumerate(['ar40', 'ar39', 'ar38', 'ar37', 'ar36']):
             ta._argW[start + 2 * i] = scale(getattr(self, '{}_width'.format(n)))
             ta._argW[start + 2 * i + 1] = scale(getattr(self, '{}_error_width'.format(n)))
 
+
+    def set_widths(self, widths):
+        for k, v in widths.iteritems():
+            setattr(self, k, v)
+
+    def get_widths(self):
+        widths = dict()
+        for a in map(str.lower, ARGON_KEYS):
+            for k in ('{}_width'.format(a),
+                           '{}_error_width'.format(a)
+                           ):
+                widths[k] = getattr(self, k)
+        return widths
+
+#===============================================================================
+# views
+#===============================================================================
+    def _value_error_width_factory(self, name):
+        top = HGroup(Label(name.capitalize()), spring, Label('Error'), spring)
+        bottom = HGroup(self._width_factory('{}_width'.format(name)),
+                        self._width_factory('{}_error_width'.format(name)))
+        return VGroup(top, bottom)
+
+    def _single_value_width_factory(self, name):
+        top = HGroup(Label(name.capitalize()))
+        bottom = self._width_factory('{}_width'.format(name))
+        return VGroup(top, bottom)
+
+    def _width_factory(self, name):
+        return Item(name,
+                    editor=RangeEditor(mode='spinner', low_name='low', high_name='high'),
+                    show_label=False)
+
+    def traits_view(self):
+        contents = []
+        for n in ['status', 'id', 'power']:
+            contents.append(self._single_value_width_factory(n))
+
+        for n in ['ar40', 'ar39', 'ar38', 'ar37', 'ar36']:
+            contents.append(self._value_error_width_factory(n))
+
+        column_widths = HGroup(*contents)
+        v = View(column_widths,
+                 buttons=['OK', 'Cancel']
+                 )
+        return v
 
 if __name__ == '__main__':
     t = IdeogramTable()
