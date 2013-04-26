@@ -23,7 +23,7 @@ import apptools.sweet_pickle as pickle
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.constants import FIT_TYPES
-from src.traits_editors.bound_enum_editor import BoundEnumEditor
+# from src.traits_editors.bound_enum_editor import BoundEnumEditor
 import os
 from src.paths import paths
 
@@ -43,8 +43,11 @@ class Fit(HasTraits):
                         HGroup(Item('name',
                                     editor=EnumEditor(name='names'),
                                     show_label=False),
-                               Item('fit', editor=BoundEnumEditor(values=FIT_TYPES,
-                                                                  do_binding=self.do_binding
+#                               Item('fit', editor=BoundEnumEditor(values=FIT_TYPES,
+#                                                                  do_binding=self.do_binding
+#                                                                  ),
+                               Item('fit', editor=EnumEditor(values=FIT_TYPES,
+#                                                                  do_binding=self.do_binding
                                                                   ),
                                     show_label=False),
                                Item('filter_str', show_label=False),

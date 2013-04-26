@@ -24,6 +24,7 @@ from reportlab.lib.units import inch
 from src.processing.publisher.writers.writer import BaseWriter
 from src.processing.publisher.templates.tables.ideogram_table import IdeogramTable
 from src.processing.publisher.templates.tables.spectrum import SpectrumTable
+from reportlab.lib.pagesizes import legal, landscape
 
 
 class PDFWriter(BaseWriter):
@@ -36,12 +37,12 @@ class PDFWriter(BaseWriter):
 #                           configure_table=True,
                            add_title=False, add_header=False, tablenum=1, **kw):
         ta = IdeogramTable()
-        if widths is None:
-            info = ta.edit_traits(kind='modal')
-            if not info.result:
-                return True
-        else:
-            ta.set_widths(widths)
+#        if widths is None:
+#            info = ta.edit_traits(kind='modal')
+#            if not info.result:
+#                return True
+#        else:
+#            ta.set_widths(widths)
 
         ta.add_header = add_header
         ta.add_title = add_title
@@ -63,7 +64,8 @@ class PDFWriter(BaseWriter):
         doc = SimpleDocTemplate(self.filename,
                                 leftMargin=0.5 * inch,
                                 rightMargin=0.5 * inch,
-                                pagesize=(20 * inch, 10 * inch)
+                                pagesize=landscape(legal)
+#                                pagesize=(20 * inch, 10 * inch)
                                 )
         doc.build(self._flowables)
 #============= EOF =============================================
