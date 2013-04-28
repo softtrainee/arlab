@@ -22,6 +22,7 @@ from uncertainties import ufloat
 from numpy import mean
 #============= local library imports  ==========================
 from src.experiment.utilities.identifier import make_runid
+from src.stats.core import calculate_weighted_mean
 
 def make_ufloat(*args):
     if not args:
@@ -42,26 +43,35 @@ class Marker(HasTraits):
 def AnalysisProperty():
     return Property(depends_on='analyses')
 
-class PubAnalysisMean(HasTraits):
+class ComputedValues(HasTraits):
+# class PubAnalysisMean(HasTraits):
     analyses = List
-    age = AnalysisProperty()
+    wm_age = AnalysisProperty()
     k_ca = AnalysisProperty()
     labnumber = AnalysisProperty()
+    sample = AnalysisProperty()
 
     @cached_property
     def _get_labnumber(self):
         return self.analyses[0].labnumber
 
     @cached_property
+    def _get_sample(self):
+        return self.analyses[0].sample
+
+    @cached_property
     def _get_k_ca(self):
         return self._get_value('k_ca')
 
     @cached_property
-    def _get_age(self):
-        return self._get_value('age')
+    def _get_wm_age(self):
+        ages, errors = zip(*[(ai.age.nominal_value, ai.age.std_dev) for ai in self.analyses])
+        wm, werr = calculate_weighted_mean(ages, errors)
+        return wm
+#        return self._get_value('age')
 #        return mean([ai.age for ai in self.analyses])
-    def _get_value(self, attr):
-        return mean([getattr(ai, attr) for ai in self.analyses])
+#    def _get_value(self, attr):
+#        return mean([getattr(ai, attr) for ai in self.analyses])
 
 class PubAnalysis(HasTraits):
     labnumber = 'A'

@@ -15,9 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Button, Any, Dict, cached_property, Property
+from traits.api import HasTraits, List, Button, Any, Dict, cached_property, Property, \
+    on_trait_change
 from traitsui.api import View, Item, Controller, SetEditor, UItem, \
-    HGroup, spring
+    HGroup, spring, ListEditor, InstanceEditor
 #============= standard library imports ========================
 import os
 from uncertainties import ufloat
@@ -27,6 +28,8 @@ from src.processing.publisher.analysis import PubAnalysis, Marker
 from src.constants import ARGON_KEYS, PLUSMINUS
 from src.traits_editors.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
+from pyface.action.menu_manager import MenuManager
+from pyface.action.action import Action
 
 
 class LoadedTableAdapter(TabularAdapter):
@@ -67,8 +70,13 @@ class LoadedTableAdapter(TabularAdapter):
 
         return cols
 
-class MeanLoadedTableAdapter(LoadedTableAdapter):
-    visible_columns = ['labnumber', 'age']
+class ComputedValuesTabularAdapter(TabularAdapter):
+    columns = [('Lab. #', 'labnumber'),
+               ('Sample', 'sample'),
+               ('Weighted Mean Age.', 'wm_age'),
+               ]
+# class MeanLoadedTableAdapter(LoadedTableAdapter):
+#    visible_columns = ['labnumber', 'age']
 
 class LoadedTableController(Controller):
     load_button = Button
@@ -81,35 +89,79 @@ class LoadedTableController(Controller):
                         'K/Ca':'k_ca'
                         })
 
+    @on_trait_change('model:groups:right_clicked')
+    def _right_clicked_handler(self, new):
+        if self.selected:
+            sel = self.selected.selected
+        else:
+            sel = self.model.groups[0].selected
+
+        if not sel:
+            return
+
+        mm = self._menu_factory(sel)
+
+        control = self.info.ui.control
+        menu = mm.create_menu(control, None)
+        menu.show()
+
+    def _include(self, selected):
+        def __include():
+            print 'asdfasdfasdf', selected
+        return __include
+
+    def _menu_factory(self, selected):
+        actions = [('Include', self._include(selected))]
+        menu = [self._action_factory(*action)
+            for action in actions]
+
+        return MenuManager(*menu)
+
+    def _action_factory(self, name, func, **kw):
+        if isinstance(func, str):
+            func = getattr(self, func)
+
+        return Action(name=name,
+                      on_perform=func,
+#                   visible_when='0',
+                       **kw)
+
     def controller_load_button_changed(self, info):
         p = '/Users/ross/Sandbox/autoupdate_stepheat.txt'
         self.model.load(p)
 
-    def controller_columns_button_changed(self, info):
-        v = View(Item('controller.columns',
-                      editor=SetEditor(ordered=True,
-                                       values=['RunID', 'Age', 'AgeError', 'K/Ca']),
-                      ),
-                 buttons=['OK', 'Cancel'],
-                 kind='livemodal'
-                 )
-        info = self.edit_traits(v)
-        if info.result:
-            cs = [self.column_dict[ci] for ci in self.columns]
-            self._loaded_table_adapter.visible_columns = cs
+#    def controller_columns_button_changed(self, info):
+#        v = View(Item('controller.columns',
+#                      editor=SetEditor(ordered=True,
+#                                       values=['RunID', 'Age', 'AgeError', 'K/Ca']),
+#                      ),
+#                 buttons=['OK', 'Cancel'],
+#                 kind='livemodal'
+#                 )
+#        info = self.edit_traits(v)
+#        if info.result:
+#            cs = [self.column_dict[ci] for ci in self.columns]
+#            self._loaded_table_adapter.visible_columns = cs
 
     def traits_view(self):
-        self._loaded_table_adapter = LoadedTableAdapter()
-        self._mean_loaded_table_adapter = MeanLoadedTableAdapter()
+#        self._loaded_table_adapter = LoadedTableAdapter()
+#        self._mean_loaded_table_adapter = MeanLoadedTableAdapter()
+        self._computed_values_adapter = ComputedValuesTabularAdapter()
         v = View(
                  HGroup(UItem('controller.columns_button'),
                         spring, UItem('controller.load_button')),
-                 UItem('analyses', editor=myTabularEditor(
-                                                          multi_select=True,
-                                                          selected='controller.selected',
-                                                          adapter=self._loaded_table_adapter)),
-                 UItem('means', editor=myTabularEditor(
-                                                          adapter=self._mean_loaded_table_adapter)),
+                 UItem('groups',
+                       style='custom',
+                       editor=ListEditor(use_notebook=True,
+                                        page_name='.name',
+                                        style='custom',
+                                        selected='controller.selected'
+    #                                                   editor=InstanceEditor()
+                                           )
+                       ),
+                 UItem('computed_values', editor=myTabularEditor(
+                                                                 editable=False,
+                                                                 adapter=self._computed_values_adapter)),
 
                  )
 
