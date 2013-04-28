@@ -26,6 +26,8 @@ from src.loggable import Loggable
 from src.processing.publisher.loaded_table import LoadedTableController
 from src.processing.publisher.selected_table import SelectedTableController
 from src.processing.publisher.table_model import LoadedTable, SelectedTable
+from pyface.action.menu_manager import MenuManager
+from traitsui.menu import Action
 
 
 class Publisher(Loggable):
@@ -34,17 +36,35 @@ class Publisher(Loggable):
     append_button = Button('Append')
     replace_button = Button('Replace')
 
-    @on_trait_change('loaded_table:model:analyses[]')
+    _selected = None
+
+    @on_trait_change('loaded_table:model:groups')
     def _analyses_handler(self, new):
-        self.selected_table.model.analyses = new
+        self.selected_table.model.groups = [gi.clone_traits() for gi in self.loaded_table.model.groups]
 
-    def _append_button_fired(self):
-        if self.loaded_table.selected:
-            self.selected_table.model.analyses.extend(self.loaded_table.selected)
+    @on_trait_change('loaded_table:model:groups:selected')
+    def _selected_row_handler(self, new):
+#        print new
+        self._selected = new
 
-    def _replace_button_fired(self):
-        if self.loaded_table.selected:
-            self.selected_table.model.analyses = self.loaded_table.selected
+
+    @on_trait_change('loaded_table:selected')
+    def _selected_page_handler(self, new):
+        idx = self.loaded_table.model.groups.index(new)
+        self.selected_table.selected = self.selected_table.model.groups[idx]
+
+    @on_trait_change('selected_table:selected')
+    def _selected_page_handler2(self, new):
+        idx = self.selected_table.model.groups.index(new)
+        self.loaded_table.selected = self.loaded_table.model.groups[idx]
+
+#    def _append_button_fired(self):
+#        if self.loaded_table.selected:
+#            self.selected_table.model.analyses.extend(self.loaded_table.selected)
+#
+#    def _replace_button_fired(self):
+#        if self.loaded_table.selected:
+#            self.selected_table.model.analyses = self.loaded_table.selected
 
     def _loaded_table_default(self):
         return LoadedTableController(LoadedTable())
@@ -60,7 +80,8 @@ class Publisher(Loggable):
                                UItem('replace_button'),
                                spring
                                ),
-                        UItem('selected_table', style='custom')),
+                        UItem('selected_table', style='custom')
+                        ),
                  resizable=True,
                  height=700,
                  width=800,

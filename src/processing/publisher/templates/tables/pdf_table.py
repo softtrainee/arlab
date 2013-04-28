@@ -57,23 +57,27 @@ class PDFTable(HasTraits):
 #        nv = fmt.format(v / scale)
 #        if len(nv)>n+2:
 
-
-
     def _make(self, rows):
-        ts = Table(rows)
-        ts.hAlign = 'LEFT'
-        self._set_column_widths(ts)
-        self._set_row_heights(ts)
-        s = self._get_style(rows)
-        ts.setStyle(s)
-        return ts
+        ta = Table(rows)
+        ta.hAlign = 'LEFT'
+        self._set_column_widths(ta)
+        self._set_row_heights(ta, rows)
 
+        s = self._get_style(rows)
+        ta.setStyle(s)
+        return ta
+
+    def _get_idxs(self, rows, klass):
+            return [(i, v) for i, v in enumerate(rows)
+                      if isinstance(v, klass)]
     def _set_column_widths(self, ta):
         ta._argW[0] = 0.17 * inch
 #        ta._argW[2] = 0.5 * inch
 
-    def _set_row_heights(self, ts):
+    def _set_row_heights(self, ta, rows):
         pass
+
+
     def _get_style(self, rows):
         pass
 
@@ -92,11 +96,13 @@ class Row(HasTraits):
             kw['fontsize'] = self.fontsize
 
         self.items.append(RowItem(**kw))
+        ss = len(self.items) - 1
         if span > 1:
-            ss = len(self.items) - 1
             se = ss + span
             self.spans.append((ss, se))
             self.add_blank_item(span)
+        elif span == -1:
+            self.spans.append((ss, -1))
 
     def add_blank_item(self, n=1):
         for _ in range(n):
@@ -117,19 +123,32 @@ class BaseItem(HasTraits):
     fontsize = Int(8)
     fontname = 'Helvetica'
     def render(self):
-        fmt = self.fmt
-        if fmt is None:
-            fmt = u'{}'
+        v = self.value
+        if not isinstance(v, Paragraph):
+            fmt = self.fmt
+            if fmt is None:
+                fmt = u'{}'
+            if isinstance(fmt, (str, unicode)):
+                v = fmt.format(v)
+            else:
+                v = fmt(v)
 
-        if isinstance(fmt, (str, unicode)):
-            v = fmt.format(self.value)
-        else:
-            v = fmt(self.value)
+        v = self._set_font(v, self.fontsize, self.fontname)
 
-        return self._set_font(v, self.fontsize, self.fontname)
+        return v
 
     def _set_font(self, v, size, name):
-        return self._new_paragraph(u'<font size={} name="{}">{}</font>'.format(size, name, v))
+        if isinstance(v, Paragraph):
+            for frag in v.frags:
+                frag.fontName = name
+                if frag.super or frag.sub:
+                    frag.fontSize = size - 2
+                else:
+                    frag.fontSize = size
+        else:
+            v = self._new_paragraph(u'<font size={} name="{}">{}</font>'.format(size, name, v))
+
+        return v
 
     def _new_paragraph(self, t, s='Normal'):
         style = STYLES[s]
@@ -138,6 +157,13 @@ class BaseItem(HasTraits):
 
 class SummaryRow(Row):
     pass
+class AnalysisRow(Row):
+    pass
+class FootNoteRow(Row):
+    pass
+class FooterRow(Row):
+    pass
+
 class Title(Row):
     fontname = 'Helvetica-bold'
     def __init__(self, value='', **kw):
@@ -151,5 +177,18 @@ class RowItem(BaseItem):
 
 def NamedParameter(name, value):
     return '<b>{}</b>: {}'.format(name, value)
+
+def Anchor(tagname, num, s='Normal'):
+    snum = Superscript(num)
+    link = '{{}}<a href="#{}" color="green">{}</a>'.format(tagname, snum)
+    tag = '{{}}{}: {{}}<a name="{}"/>'.format(snum, tagname)
+
+    style = STYLES[s]
+
+    p1 = lambda x: Paragraph(link.format(x), style)
+    p2 = lambda n, v: Paragraph(tag.format(n, v), style)
+
+    return p1, p2
+
 
 #============= EOF =============================================

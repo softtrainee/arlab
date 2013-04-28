@@ -25,6 +25,7 @@ from src.processing.publisher.writers.writer import BaseWriter
 from src.processing.publisher.templates.tables.ideogram_table import IdeogramTable
 from src.processing.publisher.templates.tables.spectrum import SpectrumTable
 from reportlab.lib.pagesizes import legal, landscape
+from reportlab.platypus.flowables import Image
 
 
 class PDFWriter(BaseWriter):
@@ -56,6 +57,14 @@ class PDFWriter(BaseWriter):
         ta = SpectrumTable()
         fta = ta.make(samples)
         self._flowables.append(fta)
+
+
+    def add_pychron_graph(self, gc):
+        self._flowables.append(gc)
+
+    def add_image(self, path):
+        im = Image(path)
+        self._flowables.append(im)
 
     def add_sample(self):
         pass

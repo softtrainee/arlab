@@ -15,49 +15,56 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Property, cached_property
+from traits.api import HasTraits, List, Property, cached_property, Str, Any
+from traitsui.api import View, UItem
 #============= standard library imports ========================
 import os
 from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.processing.autoupdate_parser import AutoupdateParser
-from src.processing.publisher.analysis import Marker, PubAnalysis, \
-    PubAnalysisMean
+from src.processing.publisher.analysis import Marker, PubAnalysis, ComputedValues  # , \
+#    PubAnalysisMean
 from src.constants import ARGON_KEYS
+from src.traits_editors.tabular_editor import myTabularEditor
+from src.processing.publisher.loaded_table import LoadedTableAdapter
 
+class Group(HasTraits):
+    analyses = List
+    name = Str
+    selected = Any
+    right_clicked = Any
+    def traits_view(self):
+        self._loaded_table_adapter = LoadedTableAdapter()
+        v = View(
+               UItem('analyses', editor=myTabularEditor(
+                                                  multi_select=True,
+                                                  editable=False,
+                                                  selected='selected',
+                                                  adapter=self._loaded_table_adapter,
+                                                  right_clicked='right_clicked'
+                                                  )
+                     ),
+               )
+        return v
 
 class TableModel(HasTraits):
-    analyses = List
-    cleaned_analyses = Property(depends_on='analyses')
-    grouped_analyses = Property(depends_on='analyses')
+    groups = List
 
-    @cached_property
-    def _get_cleaned_analyses(self):
-        return [ai for ai in self.analyses if not isinstance(ai, Marker)]
-
-    @cached_property
-    def _get_grouped_analyses(self):
-        from itertools import groupby
-        from operator import attrgetter
-        return groupby(self.cleaned_analyses, attrgetter('sample_group'))
 
 class LoadedTable(TableModel):
-    means = Property(depends_on='analyses, analyses[]')
+    computed_values = Property(depends_on='groups, groups[]')
     @cached_property
-    def _get_means(self):
-        return [PubAnalysisMean(analyses=list(ans)) for i, ans in self.grouped_analyses]
+    def _get_computed_values(self):
+        return [ComputedValues(analyses=gi.analyses) for gi in self.groups]
 
     def load(self, p):
         ap = AutoupdateParser()
         if os.path.isfile(p):
             samples = ap.parse(p, self._analysis_factory)
-            n = len(samples)
-            ans = []
             for i, si in enumerate(samples):
-                ans.extend(si.analyses)
-                if i < (n - 1):
-                    ans.append(Marker())
-            self.analyses = ans
+                self.groups.append(Group(analyses=si.analyses,
+                                         name=si.analyses[0].labnumber
+                                         ))
 
     def _analysis_factory(self, params):
         a = PubAnalysis()
