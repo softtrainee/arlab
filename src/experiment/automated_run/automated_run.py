@@ -1311,7 +1311,7 @@ anaylsis_type={}
 
         name = 'detector_intercalibration'
         funchist = getattr(db, 'add_{}_history'.format(name))
-        self.info('{} adding {} history for {}-{}'.format(user, name, analysis.labnumber.identifier, analysis.aliquot))
+        self.info('{} adding {} history for {}'.format(user, name, self.runid))
         history = funchist(analysis, user=user)
 
         setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
