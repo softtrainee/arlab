@@ -41,6 +41,7 @@ from src.envisage.credentials import Credentials
 from globals import globalv
 from src.experiment.utilities.identifier import convert_identifier, \
     make_identifier
+import weakref
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -372,10 +373,27 @@ can_edit_scripts= {}
         if not all_info:
             ans = ans[-1:]
         self._update_info(ans)
-
+        
+#     def _clear_cache(self):
+#         for di in dir(self):
+#             if di.startswith('_cached'):
+#                 setattr(self, di, None)
+                
     def _get_labnumber(self, arun):
-        db = self.db
-        dbln = db.get_labnumber(arun.labnumber)
+        '''
+            cache labnumbers for quick retrieval
+        '''
+        ca='_cached_{}'.format(arun.labnumber)
+#         print ca, hasattr(self,ca)
+        dbln=None
+        if hasattr(self,ca):
+            dbln=getattr(self, ca)
+
+        if not dbln:
+            db = self.db
+            dbln = db.get_labnumber(arun.labnumber)
+            setattr(self, ca, dbln)
+            
         return dbln
 
     def _update_info(self, ans):
@@ -478,6 +496,7 @@ can_edit_scripts= {}
                 c = idcnt_dict[arunid]
                 if not arun.extract_group:
                     c += 1
+                st = stdict[arunid] if arunid in stdict else 0
             else:
                 ln = self._get_labnumber(arun)
                 if ln is not None:
@@ -487,25 +506,14 @@ can_edit_scripts= {}
                         st = 0
                 else:
                     st = stdict[arunid] if arunid in stdict else 0
-#                else:
-#                    c = 1
-#            else:
-#                c = 1
-#            else:
 
-
-#                 ln = db.get_labnumber(arunid)
-
-#             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
             if not arun.user_defined_aliquot:
-#                 print arunid, st, c, offset
                 arun.aliquot = int(st + c - offset)
             else:
                 c = 0
                 fixed_dict[arunid] = arun.aliquot
 
-#            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
-#            print stdict
+#             print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 
