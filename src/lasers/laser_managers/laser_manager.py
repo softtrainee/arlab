@@ -289,12 +289,12 @@ class LaserManager(BaseLaserManager):
                          *args, **kw):
         '''
         '''
-        
-        if units=='percent':
-            p=power
+
+        if units == 'percent':
+            p = power
         else:
             p = self._get_calibrated_power(power, verbose=verbose, **kw)
-            
+
         if p is None:
             self.emergency_shutoff('Invalid power calibration')
             self.warning_dialog('Invalid Power Calibration')
@@ -309,7 +309,7 @@ class LaserManager(BaseLaserManager):
 
     def close(self, ok):
         self.pulse.dump_pulse()
-        return super(LaserManager, self).close(self, ok)
+        return super(LaserManager, self).close(ok)
 
     def set_laser_monitor_duration(self, d):
         '''
@@ -601,7 +601,7 @@ class LaserManager(BaseLaserManager):
     def _laser_script_executor_default(self):
         return LaserScriptExecutor(laser_manager=self,
                                    name=self.name)
-        
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('calib')
