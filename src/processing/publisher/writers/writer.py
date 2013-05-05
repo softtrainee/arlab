@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from src.loggable import Loggable
 
 #============= enthought library imports =======================
-# from src.pyscripts.pyscript_editor import PyScriptManager
-from src.pyscripts.manager import PyScriptManager
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BakeoutPyScriptManager(PyScriptManager):
-    kind = 'Bakeout'
-    default_directory_name = 'bakeout'
+class BaseWriter(Loggable):
+    filename = ''
+    def publish(self):
+        pass
 #============= EOF =============================================

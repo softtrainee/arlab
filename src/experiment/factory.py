@@ -121,6 +121,7 @@ class ExperimentFactory(Loggable):
 #===============================================================================
     def traits_view(self):
         grp = VGroup(
+                     HGroup(UItem('add_button', enabled_when='ok_add'), spring),
                      UCustom('queue_factory'),
                      UCustom('run_factory', enabled_when='ok_run'),
                      HGroup(

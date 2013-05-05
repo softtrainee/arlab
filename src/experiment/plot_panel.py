@@ -359,9 +359,9 @@ class PlotPanel(Viewable):
 #        except AttributeError:
 #            return reg.error_calc
 
-#    def close(self, isok):
+#    def closed(self, isok):
 #        self.close_event = True
-# #        self.automated_run.truncate('Immediate')
+#        self.automated_run.truncate('Immediate')
 #        return isok
 
     def _get_ncounts(self):

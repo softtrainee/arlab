@@ -58,7 +58,7 @@ class ConstantsPreferencesPage(PreferencesPage):
         ratios = VGroup(
                         HGroup(Spring(springy=False, width=125),
                                Label('Value'), Spring(springy=False, width=55),
-                               Label('{}1s'.format(PLUSMINUS))),
+                               Label(u'{}1s'.format(PLUSMINUS))),
                         HGroup(Item('Ar40_Ar36_atm', label='(40Ar/36Ar)atm'),
                                Item('Ar40_Ar36_atm_error', show_label=False)),
                         HGroup(Item('Ar40_Ar38_atm', label='(40Ar/38Ar)atm'),
@@ -75,7 +75,7 @@ class ConstantsPreferencesPage(PreferencesPage):
         decay = VGroup(
                         HGroup(Spring(springy=False, width=125),
                                Label('Value'), Spring(springy=False, width=55),
-                               Label('{}1s'.format(PLUSMINUS))),
+                               Label(u'{}1s'.format(PLUSMINUS))),
 
                         HGroup(
                                 VGroup(
@@ -113,7 +113,7 @@ class ConstantsPreferencesPage(PreferencesPage):
                                  ),
                             HGroup(Spring(springy=False, width=125),
                                Label('Value'), Spring(springy=False, width=55),
-                               Label('{}1s'.format(PLUSMINUS))),
+                               Label(u'{}1s'.format(PLUSMINUS))),
                             HGroup(
                                 Item('ic_factor',
                                      tooltip='Default intercalibration factor (H1/CDD) saved with analysis'

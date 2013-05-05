@@ -21,7 +21,12 @@ from pyface.timer.api import do_later
 from pyface.message_dialog import information, warning as nonmodal_warning, \
     MessageDialog
 # from pyface.api import confirm
-from pyface.wx.dialog import confirmation, warning
+#
+# from traits.etsconfig.api import ETSConfig
+# if ETSConfig.toolkit == 'wx':
+#    from pyface.wx.dialog import confirmation, warning
+
+
 
 #============= standard library imports ========================
 # import wx

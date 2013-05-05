@@ -19,8 +19,7 @@ from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
-from src.pyscripts.editor import PyScriptEditor
+
 from src.managers.manager import Manager
 from src.paths import paths
 
@@ -49,8 +48,10 @@ class PyScriptManager(Manager):
             # get script kind
             kind = self._extract_kind(path)
             if kind == 'measurement':
+                from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
                 klass = MeasurementPyScriptEditor
             else:
+                from src.pyscripts.editor import PyScriptEditor
                 klass = PyScriptEditor
 
             editor = klass()

@@ -62,6 +62,10 @@ class FusionsActionSet(WorkbenchActionSet):
                        path='{}/Visualizer'.format(laser_path),
                        class_name='{}LoadStageVisualizerAction'.format(self.action_path)
                        ),
+                Action(name='Scanner...',
+                       path=laser_path,
+                       class_name='{}OpenScannerAction'.format(self.action_path)
+                       ),
 
                 #===============================================================
                 #

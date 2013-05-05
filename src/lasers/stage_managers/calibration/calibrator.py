@@ -68,7 +68,8 @@ class TrayCalibrator(Loggable):
                     obj = pickle.load(f)
                     return obj
                 except pickle.PickleError, e:
-                    cls.debug(e)
+                    pass
+#                    cls.debug(e)
 
     @classmethod
     def _get_path(cls, name):

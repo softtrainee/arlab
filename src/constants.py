@@ -19,16 +19,19 @@
 #============= local library imports  ==========================
 PLUSMINUS = u'\u00b1'
 try:
-    PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
+    PLUSMINUS_ERR = u'{}Err.'.format(PLUSMINUS)
 except UnicodeEncodeError:
     PLUSMINUS = '+/-'
     PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
-SIGMA = u'\u03c3'
 
+SIGMA = u'\u03c3'
 try:
-    SIGMA = '{}'.format(SIGMA)
-except UnicodeEncodeError:
-    SIGMA = 's'
+    SIGMA = u'{}'.format(SIGMA)
+except UnicodeEncodeError, e:
+    try:
+        SIGMA = unicode('\x73', encoding='Symbol')
+    except Exception:
+        SIGMA = 's'
 
 NULL_STR = '---'
 SCRIPT_KEYS = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
@@ -48,4 +51,5 @@ ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
                                     for a in seeds
                                         for b in seeds]
 
+ARGON_KEYS = ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36')
 #============= EOF =============================================

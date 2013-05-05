@@ -17,13 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Any, Property, Button, cached_property, \
     String, Bool
-from traitsui.api import View, Item, HGroup, Label, spring, EnumEditor
+from traitsui.api import View, Item, HGroup, Label, spring, EnumEditor, UItem
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.paths import paths
-from src.pyscripts.editor import PyScriptEditor
-from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
 from src.constants import NULL_STR
 from src.loggable import Loggable
 import ast
@@ -39,6 +37,8 @@ class Script(Loggable):
     edit = Button
     kind = 'ExtractionLine'
     can_edit = Bool(True)
+    cb = Bool(True)
+    cb_edit = Bool(False)
 
     def get_parameter(self, key, default=None):
         p = os.path.join(self._get_root(), '{}_{}.py'.format(self.mass_spectrometer.lower(), self.name))
@@ -62,8 +62,10 @@ class Script(Loggable):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
                                                                                   self.name))
         if self.kind == 'ExtractionLine':
+            from src.pyscripts.editor import PyScriptEditor
             editor = PyScriptEditor(application=self.application)
         else:
+            from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
             editor = MeasurementPyScriptEditor(application=self.application)
 
         editor.open_script(p)
@@ -73,13 +75,16 @@ class Script(Loggable):
         return View(HGroup(
                            Label(self.label),
                            spring,
-                           Item('name',
-                                show_label=False,
+                           UItem('name',
                                 width= -225,
                                 editor=EnumEditor(name='names')),
-                           Item('edit',
+                           UItem('edit',
                                 enabled_when='name and name!="---" and can_edit',
-                                show_label=False)
+                                ),
+                           UItem('cb',
+                                 enabled_when='name and name!="---" and can_edit',
+                                 visible_when='cb_edit'
+                                 ),
                            )
                     )
 

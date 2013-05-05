@@ -152,7 +152,8 @@ class PatternExecutor(Patternable):
 #                time.sleep(0.1)
 
             self.controller.linear_move(pat.cx, pat.cy)
-            self.pattern.close_ui()
+            if self.pattern:
+                self.pattern.close_ui()
             self.finish()
             self.info('finished pattern')
 
@@ -171,7 +172,6 @@ class PatternExecutor(Patternable):
                 self._execute_seek(controller, pattern)
             else:
                 self._execute_points(controller, pattern)
-
 #                multipoint = False
 #                if multipoint:
 #                    controller.multiple_point_move(pts)

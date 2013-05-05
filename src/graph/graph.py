@@ -46,6 +46,9 @@ from src.loggable import Loggable
 from src.graph.context_menu_mixin import ContextMenuMixin
 from chaco.plot_graphics_context import PlotGraphicsContext
 from src.viewable import Viewable
+import tempfile
+import os
+from src.paths import paths
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
@@ -126,7 +129,7 @@ class Graph(Viewable, ContextMenuMixin):
 
     view_identifier = None
 
-    ui = Any
+#    ui = Any
 
     close_func = Callable
 
@@ -1227,32 +1230,44 @@ class Graph(Viewable, ContextMenuMixin):
 #
 #                if not ext in IMAGE_EXTENSIONS:
 #                    path = ''.join((base, DEFAULT_IMAGE_EXT))
+    def render_to_pdf(self, canvas=None):
+        '''
+            make a new PDFgc but dont save it
+            
+        '''
+        return self._render_to_pdf(save=False, filename='/Users/ross/Sandbox/aaa.pdf', canvas=canvas)
 
-    def _render_to_pdf(self, filename=None, dest_box=None):
+
+    def _render_to_pdf(self, save=True, canvas=None, filename=None, dest_box=None):
         '''
         '''
         from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-
-        if not filename.endswith('.pdf'):
-            filename += '.pdf'
+        if filename:
+            if not filename.endswith('.pdf'):
+                filename += '.pdf'
 #        if dest_box is None:
 #            dest_box = [0.5, 0.5, 0.5, 0.5]
         gc = PdfPlotGraphicsContext(filename=filename,
+                                    pdf_canvas=canvas
 #                                  pd/f_canvas=canvas,
 #                                  pagesize='letter',
 #                                  dest_box=dest_box,
 #                                  dest_box_units='inch'
                                   )
-
+#        print gc.gc
         pc = self.plotcontainer
+#        print pc.width, pc.height
 #        ob = pc.bgcolor
-#        pc.bgcolor = 'white'
 #        if len(pc.components) == 1:
 #            gc.render_component(pc.components[0])
 #        else:
-        pc.do_layout(force=True)
-        gc.render_component(pc, valign='center')
-        gc.save()
+#        pc.do_layout(force=True)
+        gc.render_component(pc,
+                            valign='center'
+                            )
+        if save:
+            gc.save()
+        return gc
 #        pc.bgcolor = ob
 
     def _render_to_pic(self, filename):

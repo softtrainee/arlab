@@ -505,7 +505,7 @@ class FusionsLaserManager(LaserManager):
                                Item('units', show_label=False, style='readonly'),
                                spring
                                ),
-                           Item('laser_script_executor', show_label=False, style='custom'),
+#                           Item('laser_script_executor', show_label=False, style='custom'),
 #                           self._button_factory('execute_button', 'execute_label'),
                            show_border=True,
 #                           springy=True,

@@ -252,12 +252,16 @@ class MassSpecDatabaseImporter(Loggable):
             else:
                 rid = '4359'
                 irradpos = '4359'
-                
-            aliquot=db.get_lastest_analysis_aliquot(rid)+1
-            rid='{}-{:02n}'.format(rid,aliquot)
-            spec.aliquot=aliquot
             
+            paliquot=db.get_lastest_analysis_aliquot(rid)
+            if paliquot is None:
+                paliquot=0
             
+            aliquot =  paliquot+ 1    
+            rid = '{}-{:02n}'.format(rid, aliquot)
+            spec.aliquot = aliquot
+
+
         else:
             runtype = 'Unknown'
 
@@ -342,6 +346,9 @@ class MassSpecDatabaseImporter(Loggable):
                 dbdet = refdbdet
             else:
                 dbdet = db.add_detector(det, Label=det)
+                if det == 'CDD':
+                    dbdet.ICFactor = spec.ic_factor_v
+                    dbdet.ICFactorEr = spec.ic_factor_e
                 db.flush()
 
             db_iso = db.add_isotope(analysis, dbdet, isok)
@@ -408,7 +415,7 @@ class MassSpecDatabaseImporter(Loggable):
         blob = ''
         if runtype == 'Air':
             isos = []
-            for a,v in (('Ar40',295.5e-13), ('Ar38',0.19e-13), ('Ar36',1e-13)):
+            for a, v in (('Ar40', 295.5e-13), ('Ar38', 0.19e-13), ('Ar36', 1e-13)):
                 isos.append('{}\t{}'.format(a, v))
             blob = '\r'.join(isos)
         return blob

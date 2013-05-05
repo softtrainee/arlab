@@ -353,7 +353,7 @@ class VideoStageManager(StageManager):
 
         renderer = None
         if self.render_with_markup:
-            renderer = self._render_with_markup
+            renderer = self._render_snapshot
 
         self.video.start_recording(path, renderer)
 
