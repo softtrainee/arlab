@@ -18,10 +18,12 @@
 
 #=============enthought library imports=======================
 #============= standard library imports ========================
-from threading import Thread, Event
+from threading import Event
 import time
+
+from PySide.QtCore import QThread
 #============= local library imports  ==========================
-class Timer(Thread):
+class Timer(QThread):
     def __init__(self, period, func, *args, **kw):
         super(Timer, self).__init__()
         self._period = period / 1000.0

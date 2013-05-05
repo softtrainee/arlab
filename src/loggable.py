@@ -20,6 +20,7 @@ from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
 from pyface.message_dialog import information, warning as nonmodal_warning, \
     MessageDialog
+from pyface.confirmation_dialog import confirm, ConfirmationDialog
 # from pyface.api import confirm
 #
 # from traits.etsconfig.api import ETSConfig
@@ -91,9 +92,18 @@ class Loggable(HasTraits):
         return True
 
     def confirmation_dialog(self, msg, title=''):
-        result = confirmation(None, msg, title=title)
+#        return False
+        dlg = ConfirmationDialog(
+                                 message=msg,
+                                 title=title,
+                                 style='modal')
+        dlg.control = dlg._create_control(None)
+        dlg._show_modal()
+#        print result
+        return False
+#        result = confirmation(None, msg, title=title)
         # NO==5104, YES==5103
-        return result == 5103
+#        return result == 5103
 
 
     def information_dialog(self, msg, title=None):
@@ -143,7 +153,7 @@ class Loggable(HasTraits):
 
                 args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
                         msg))
-                gLoggerDisplay.add_text(args)
+                gLoggerDisplay.add_text(args, gui=False)
 
             if decorate:
                 msg = '====== {}'.format(msg)
@@ -152,8 +162,8 @@ class Loggable(HasTraits):
 
     def close_displays(self):
         from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
-        gLoggerDisplay.close()
-        gWarningDisplay.close()
+        gLoggerDisplay.close_ui()
+        gWarningDisplay.close_ui()
 
     def debug(self, msg, decorate=True):
         '''

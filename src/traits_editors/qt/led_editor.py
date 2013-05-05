@@ -21,11 +21,18 @@ from traits.api import HasTraits, Property, Int, Callable
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
-from PySide.QtGui import QImage
+from PySide.QtGui import QImage, QLabel, QColor, QPixmap
 #============= local library imports  ==========================
-# import wx
 #============= views ===================================
 COLORS = ['red', 'yellow', 'green', 'black']
+QT_COLORS = [QColor(ci) for ci in COLORS]
+# QT_COLORS = [
+#             QColor(220, 10, 10),
+#             QColor(250, 200, 0),
+#             QColor(10, 220, 10),
+#             QColor(0, 0, 0),
+#             ]
+
 class LED(HasTraits):
     '''
     '''
@@ -49,37 +56,33 @@ class ButtonLED(LED):
         self.callable()
 
 
-# WX_COLORS = [wx.Colour(220, 10, 10),
-#             wx.Colour(250, 200, 0),
-#             wx.Colour(10, 220, 10),
-#              wx.Colour(0, 0, 0)]
-
 def change_intensity(color, fac):
     '''
 
     '''
-    rgb = [color.Red(), color.Green(), color.Blue()]
+    rgb = [color.red(), color.green(), color.blue()]
     for i, intensity in enumerate(rgb):
         rgb[i] = min(int(round(intensity * fac, 0)), 255)
 
-    return wx.Color(*rgb)
+    return QColor(*rgb)
 
-# class wxLED(wx.Control):
-class wxLED(QImage):
+class qtLED(QLabel):
     _state = False
+
     def __init__(self, parent, obj, state):
         '''
 
         '''
-
-#        wx.Control.__init__(self, parent, -1, (0, 0), (20, 20), style=wx.NO_BORDER)
+        super(qtLED, self).__init__()
 
         self._blink = 0
         self.blink = False
 
+
 #        self.timer = wx.Timer(self)
 #        self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
 
+#        self.connect()
 #        self.Bind(wx.EVT_PAINT, self.OnPaint, self)
 #        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeft, self)
 
@@ -129,38 +132,41 @@ class wxLED(QImage):
         self.set_state(state)
 
 
-    def OnMotion(self, event):
-        print event
+#    def OnMotion(self, event):
+#        print event
+#
+#    def OnLeft(self, event):
+#        if self._state:
+#            self.set_state(0)
+#        else:
+#            self.set_state(2)
+#
+#        if self._obj is not None:
+#            self._obj.on_action()
+#
+#    def GetValue(self):
+#        return self._state
 
-    def OnLeft(self, event):
-        if self._state:
-            self.set_state(0)
-        else:
-            self.set_state(2)
+    def setText(self, v):
+        pass
 
-        if self._obj is not None:
-            self._obj.on_action()
-
-    def GetValue(self):
-        return self._state
-
-    def SetValue(self, v):
-        if isinstance(v, int):
-            self._state = v
-
-    def OnTimer(self, event):
-        '''
-
-        '''
-        if self.blink:
-            if self._blink % 3 == 0:
-                self._set_led_color(0, color=change_intensity(WX_COLORS[self._state], 0.5))
-            else:
-                self._set_led_color(self._state)
-
-            self._blink += 1
-            if self._blink >= 100:
-                self._blink = 0
+#    def SetValue(self, v):
+#        if isinstance(v, int):
+#            self._state = v
+#
+#    def OnTimer(self, event):
+#        '''
+#
+#        '''
+#        if self.blink:
+#            if self._blink % 3 == 0:
+#                self._set_led_color(0, color=change_intensity(WX_COLORS[self._state], 0.5))
+#            else:
+#                self._set_led_color(self._state)
+#
+#            self._blink += 1
+#            if self._blink >= 100:
+#                self._blink = 0
 
     def set_state(self, s):
         '''
@@ -170,14 +176,28 @@ class wxLED(QImage):
         # use negative values for blinking
         if s < 0:
             self.blink = True
-            self.timer.Start(200)
+#            self.timer.Start(200)
         else:
-            self.timer.Stop()
+            pass
+#            self.timer.Stop()
 
         s = abs(s)
 
         self._state = s
         self._set_led_color(s)
+
+
+    def _set_image(self, color1, color2):
+        xpm = ['17 17 3 1',  # width height ncolors chars_per_pixel
+               '0 c None',
+               'X c {}'.format(color1.name()),
+               '- c {}'.format(color2.name())
+               ]
+        xpm += [s.strip() for s in self.ascii_led.splitlines()]
+
+        qim = QImage(xpm)
+        pix = QPixmap.fromImage(qim)
+        self.setPixmap(pix)
 
     def _set_led_color(self, state, color=None):
         '''
@@ -188,31 +208,11 @@ class wxLED(QImage):
             color2 = color
         else:
 #            base_color = WX_COLORS[state]
-            base_color = 1
+            base_color = QT_COLORS[state]
             color1 = base_color
             color2 = change_intensity(base_color, 0.5)
 
-
-
-        xpm = ['17 17 3 1',  # width height ncolors chars_per_pixel
-               '0 c None',
-               'X c %s' % color1.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-               '- c %s' % color2.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-               # '= c %s' % shadow_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
-               # '* c %s' % highlight_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii')
-               ]
-
-        xpm += [s.strip() for s in self.ascii_led.splitlines()]
-        self.bmp = wx.BitmapFromXPMData(xpm)
-        self.Refresh()
-
-
-    def OnPaint(self, e):
-        '''
-  
-        '''
-        dc = wx.PaintDC(self)
-        dc.DrawBitmap(self.bmp, 0, 0, True)
+        self._set_image(color1, color2)
 
 
 class _LEDEditor(Editor):
@@ -221,7 +221,7 @@ class _LEDEditor(Editor):
 
         '''
         if self.control is None:
-            self.control = wxLED(parent, self.value, self.value.state)
+            self.control = qtLED(parent, self.value, self.value.state)
 #            self.control = self._create_control(parent)
             self.value.on_trait_change(self.update_object, 'state')
 
@@ -233,9 +233,11 @@ class _LEDEditor(Editor):
             if self.control is not None:
                 self.control.set_state(new)
 
-#    def update_editor(self, *args, **kw):
-#        '''
-#        '''
+    def update_editor(self, *args, **kw):
+        '''
+        '''
+        if self.control:
+            pass
 #        self.control = self._create_control(None)
 #        self.value.on_trait_change(self.update_object, 'state')
 
@@ -243,7 +245,7 @@ class _LEDEditor(Editor):
 #        '''
 #
 #        '''
-#        panel = wxLED(parent, self.value, self.value.state)
+#        panel = qtLED(parent, self.value, self.value.state)
 #        return panel
 
 class LEDEditor(BasicEditorFactory):

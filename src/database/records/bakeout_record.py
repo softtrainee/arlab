@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, DelegatesTo
-from traitsui.api import Item, VGroup, HGroup, spring, Group
+from traits.api import Instance, DelegatesTo, Button
+from traitsui.api import Item, VGroup, HGroup, spring, Group, UItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
@@ -26,12 +26,16 @@ class BakeoutRecord(SQLiteRecord):
     viewer = Instance(BakeoutGraphViewer)
     graph = DelegatesTo('viewer')
     summary = DelegatesTo('viewer')
-    export_button = DelegatesTo('viewer')
+    export_button = Button
+
     window_width = 800
     window_height = 0.85
+    def _export_button_fired(self):
+        self.viewer.export()
 
     def create(self, dbrecord):
         self._dbrecord = dbrecord
+        return True
 
     def load_graph(self, *args, **kw):
         self.viewer = BakeoutGraphViewer(title=self.title)
@@ -45,17 +49,21 @@ class BakeoutRecord(SQLiteRecord):
                           readonly('rundate', label='Date'),
                           readonly('runtime', label='Time'),
                           readonly('path', label='Path'),
-                          Item('summary', show_label=False, style='custom'),
+                          UItem('summary', style='custom'),
                           label='Info'
                           )
-        graph_grp = Item('graph', show_label=False, style='custom')
+        graph_grp = UItem('graph', style='custom')
 
         grp = Group(
                   graph_grp,
                   info_grp,
                   layout='tabbed'
                   )
-        button_grp = HGroup(spring, Item('export_button', show_label=False)),
-        v = self.view_factory(VGroup(grp, button_grp))
+        button_grp = HGroup(spring,
+                            UItem('export_button')
+                            )
+        v = self.view_factory(VGroup(grp,
+                                     button_grp
+                                     ))
         return v
 #============= EOF =============================================
