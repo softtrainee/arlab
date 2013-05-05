@@ -45,6 +45,7 @@ class CSVDataManager(DataManager):
 #            return loadtxt(frame, converters=converters, delimiter=',')
             return loadtxt(frame, delimiter=',')
 
+
     def write_metadata(self, md, frame_key=None):
 
         sline = ['#<metadata>===================================================']

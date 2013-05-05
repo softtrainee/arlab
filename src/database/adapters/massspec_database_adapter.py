@@ -108,13 +108,13 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         q = q.limit(1)
         try:
             a = q.one()
-        
+
             if a:
-                a=int(a[0])
-        except Exception,e:
+                a = int(a[0])
+        except Exception, e:
             self.debug(e)
-            a=None
-            
+            a = None
+
         return a
 
     def get_analysis(self, value, aliquot=None, step=None):
@@ -244,7 +244,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
-        params = dict(RID=rid,#make_runid(rid, aliquot, step),
+        params = dict(RID=rid,  # make_runid(rid, aliquot, step),
 #                    '{}-{}{}'.format(rid, aliquot, step),
                      Aliquot=aliquot,
                      RunDateTime=func.current_timestamp(),

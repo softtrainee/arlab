@@ -41,6 +41,7 @@ from src.envisage.credentials import Credentials
 from globals import globalv
 from src.experiment.utilities.identifier import convert_identifier, \
     make_identifier
+import weakref
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -370,12 +371,29 @@ can_edit_scripts= {}
 
         # update run info
         if not all_info:
-            ans=ans[-1:]
+            ans = ans[-1:]
         self._update_info(ans)
-
+        
+#     def _clear_cache(self):
+#         for di in dir(self):
+#             if di.startswith('_cached'):
+#                 setattr(self, di, None)
+                
     def _get_labnumber(self, arun):
-        db = self.db
-        dbln = db.get_labnumber(arun.labnumber)
+        '''
+            cache labnumbers for quick retrieval
+        '''
+        ca='_cached_{}'.format(arun.labnumber)
+#         print ca, hasattr(self,ca)
+        dbln=None
+        if hasattr(self,ca):
+            dbln=getattr(self, ca)
+
+        if not dbln:
+            db = self.db
+            dbln = db.get_labnumber(arun.labnumber)
+            setattr(self, ca, dbln)
+            
         return dbln
 
     def _update_info(self, ans):
@@ -458,7 +476,7 @@ can_edit_scripts= {}
 #        if self.experiment_set and self.experiment_set.selected:
 #            offset = len(self.experiment_set.selected)
 
-        db = self.db
+#        db = self.db
         # update the aliquots
         idcnt_dict = dict()
         stdict = dict()
@@ -470,21 +488,17 @@ can_edit_scripts= {}
 
             arunid = arun.labnumber
             c = 1
+            st = 0
+            if arunid in fixed_dict:
+                st = fixed_dict[arunid]
+
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
                 if not arun.extract_group:
                     c += 1
-#                else:
-#                    c = 1
-#            else:
-#                c = 1
-            if arunid in fixed_dict:
-                st = fixed_dict[arunid]
+                st = stdict[arunid] if arunid in stdict else 0
             else:
-
                 ln = self._get_labnumber(arun)
-
-#                 ln = db.get_labnumber(arunid)
                 if ln is not None:
                     try:
                         st = ln.analyses[-1].aliquot
@@ -493,16 +507,13 @@ can_edit_scripts= {}
                 else:
                     st = stdict[arunid] if arunid in stdict else 0
 
-#             print arunid, arun.aliquot, 'fpp', type(arun.aliquot)
             if not arun.user_defined_aliquot:
-#                 print arunid, st, c, offset
                 arun.aliquot = int(st + c - offset)
             else:
                 c = 0
                 fixed_dict[arunid] = arun.aliquot
 
-#            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
-#            print stdict
+#             print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 

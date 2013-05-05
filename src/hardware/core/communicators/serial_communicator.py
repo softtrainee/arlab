@@ -469,7 +469,7 @@ class SerialCommunicator(Communicator):
         inw = handle.inWaiting()
         c = min(inw, nchars - len(r))
         r += handle.read(c)
-#        print 'get n', len(r), nchars, self._prep_str(r), len(r) == nchars
+        print 'get n', len(r), nchars, self._prep_str(r), len(r) == nchars
         return r[:nchars], len(r) >= nchars
 
     def _check_handshake(self, handshake_chrs):
@@ -485,7 +485,7 @@ class SerialCommunicator(Communicator):
         try:
             inw = self.handle.inWaiting()
             r += self.handle.read(inw)
-            # print 'inw',inw,r, terminator
+#            print 'inw', inw, r, terminator
             if terminator is None:
                 terminator = ('\n', '\r')
 
@@ -523,10 +523,9 @@ class SerialCommunicator(Communicator):
 
         ct = time.time()
         while ct - st < timeout:
-            # print func
             try:
                 r, isterminated = func(r)
-#               print r, isterminated
+#                print r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):

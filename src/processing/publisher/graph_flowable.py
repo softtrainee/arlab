@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,34 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from src.pyscripts.pyscript_editor import PyScriptManager
-from src.pyscripts.manager import PyScriptManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from reportlab.platypus.flowables import Flowable
 
-class BakeoutPyScriptManager(PyScriptManager):
-    kind = 'Bakeout'
-    default_directory_name = 'bakeout'
+
+class GraphFlowable(Flowable):
+    '''
+        use this class to add a Chaco Graph (src.graph.graph.Graph) to a 
+        PDF document
+        
+        ...
+        gf=GraphFlowable(graph)
+        doc.build([gf,...,])
+        
+    '''
+    def __init__(self, graph, scale=1.0, align='left'):
+        self._graph = graph
+        self._scale = scale
+        self._size = graph.plotcontainer.width * self._scale
+        self._xoffset = 0
+        self._align = align
+
+    def wrap(self, *args):
+        return (self._xoffset, self._size)
+
+    def draw(self):
+        if self._align == 'center':
+            self.canv.translate(self._xoffset + self._size, 0)  # , -self.size)
+        self.canv.scale(self._scale, self._scale)
+        self._graph.render_to_pdf(canvas=self.canv)
 #============= EOF =============================================

@@ -22,6 +22,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from src.paths import paths
+from src.helpers.logger_setup import logging_setup
+import struct
+logging_setup('prox')
+paths.build('_prox')
+
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
@@ -53,26 +59,44 @@ class MultiBankADCExpansion(NCDDevice):
         if nbits == 12:
 #            self._read_ten_bit(channel)
             bank = TWELVE_BIT_BANKS
-            nbytes = 2
+            nchars = 2
         else:
 #            self._read_eight_bit(channel)
             bank = EIGHT_BIT_BANKS
-            nbytes = 1
+            nchars = 1
+
         bank_idx = bank[channel / 16]
         channel_idx = channel % 16
+
         cmdstr = self._make_cmdstr(254, bank_idx, channel_idx)
 
-        resp = self.ask(cmdstr, nbytes=nbytes)
+#        band_idx = 192
+#        cmdstr = self._make_cmdstr(254, bank_idx)
+        resp = self.ask(cmdstr, nchars=nchars, remove_eol=False)
+
         if nbits == 12:
             '''
                 resp is lsb msb
                 switch to msb lsb
             '''
-            resp = resp[2:] + resp[:2]
+#            resp = resp[1:] + resp[:1]
+            fmt = '<h'
+#            return struct.unpack('@H', resp)[0]
+        else:
 
-        return int(resp, 16)
+            fmt = '>B'
+        return struct.unpack(fmt, resp)[0]
+
+
+#        print resp
+#        return int(resp, 2)
 
     def read_all(self):
         pass
 
+if __name__ == '__main__':
+    a = MultiBankADCExpansion(name='proxr_adc')
+    a.bootstrap()
+    print a.read_channel(0, nbits=8)
+    print a.read_channel(0, nbits=12)
 #============= EOF =============================================

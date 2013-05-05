@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from src.pyscripts.pyscript_editor import PyScriptManager
-from src.pyscripts.manager import PyScriptManager
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.traits_editors.factory import toolkit_factory
 
-class BakeoutPyScriptManager(PyScriptManager):
-    kind = 'Bakeout'
-    default_directory_name = 'bakeout'
+PyScriptCodeEditor = toolkit_factory('code_editor', 'PyScriptCodeEditor')
 #============= EOF =============================================

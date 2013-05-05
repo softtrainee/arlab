@@ -15,10 +15,13 @@
 # limitations under the License.
 #===============================================================================
 
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = "qt4"
 
 if __name__ == '__main__':
     from helpers import build_version
-    build_version('_bakeout', set_path=True)
+    build_version('_bakeout', set_path=False)
+
     from src.envisage.bakedpy_run import launch
     from src.helpers.logger_setup import logging_setup
 

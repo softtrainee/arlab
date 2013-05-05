@@ -46,14 +46,15 @@ from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
 import datetime
 from src.bakeout.classifier import Classifier
-from src.managers.data_managers.h5_data_manager import H5DataManager
+from collections import namedtuple
 
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
 
-from wx import GetDisplaySize
-DISPLAYSIZE = GetDisplaySize()
+# from wx import GetDisplaySize
+# DISPLAYSIZE = GetDisplaySize()
+DISPLAYSIZE = namedtuple('Size', 'width height')(500, 500)
 
 
 class BakeoutManager(Manager):

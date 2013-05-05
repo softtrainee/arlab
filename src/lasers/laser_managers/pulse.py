@@ -71,7 +71,8 @@ class Pulse(HasTraits):
         return WaitDialog(low_name=0,
                           auto_start=False,
                           wtime=self.duration,
-                          title=''
+                          title='',
+                          dispose_at_end=False
                           )
     def start(self):
         self._duration_changed()

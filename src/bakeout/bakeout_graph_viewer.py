@@ -21,7 +21,7 @@ from traits.api import HasTraits, Instance, \
 from traitsui.api import View, Item, ListEditor, Group
 #============= standard library imports  ==========================
 import numpy as np
-from wx import GetDisplaySize
+
 
 #============= local library imports  ==========================
 from src.graph.graph import Graph
@@ -31,11 +31,11 @@ import csv
 from src.paths import paths
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
-from src.loggable import Loggable
+
 from src.viewable import Viewable
 
-DISPLAYSIZE = GetDisplaySize()
-
+# DISPLAYSIZE = GetDisplaySize()
+DISPLAYSIZE = (1000, 900)
 
 class BakeoutParameters(HasTraits):
     setpoint = Float

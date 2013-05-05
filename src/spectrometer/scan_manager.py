@@ -18,7 +18,7 @@
 from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str, \
      on_trait_change, Bool, Int, Button, Event, String, cached_property
 from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
-     ListEditor, InstanceEditor, EnumEditor
+     ListEditor, InstanceEditor, EnumEditor, HSplit
 from traits.api import HasTraits, Range, Float
 # from pyface.timer.api import Timer
 #============= standard library imports ========================
@@ -579,7 +579,7 @@ class ScanManager(Manager):
                           )
         graph_grp = custom('graph')
         v = View(
-                    HGroup(
+                    HSplit(
 #                           VGroup(control_grp, intensity_grp),
                            VGroup(control_grp, display_grp),
                            graph_grp,

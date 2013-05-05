@@ -24,7 +24,7 @@ from numpy import random, char
 
 #=============local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
-from src.traits_editors.color_map_bar_editor import BarGaugeEditor
+# from src.traits_editors.color_map_bar_editor import BarGaugeEditor
 import time
 
 # from numpy import linspace
