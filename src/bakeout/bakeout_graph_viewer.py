@@ -33,9 +33,10 @@ from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 
 from src.viewable import Viewable
+from collections import namedtuple
 
 # DISPLAYSIZE = GetDisplaySize()
-DISPLAYSIZE = (1000, 900)
+DISPLAYSIZE = namedtuple('Size', 'width height')(1000, 900)
 
 class BakeoutParameters(HasTraits):
     setpoint = Float
@@ -76,9 +77,10 @@ class BakeoutGraphViewer(Viewable):
 
     path = Str
 
-    export_button = Button('Export CSV')
+#    export_button = Button('Export CSV')
 
-    def _export_button_fired(self):
+#    def _export_button_fired(self):
+    def export(self):
         self._export_csv()
 
     def _get_export_path(self):

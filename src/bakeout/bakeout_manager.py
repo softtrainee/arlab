@@ -147,9 +147,11 @@ class BakeoutManager(Manager):
         self.info('open last bake')
         db = self.database
         if db.connect():
-            db.selector.load_recent()
-            rec = db.selector.records[-1]
-            db.selector.open_record(rec)
+            sel = db.selector
+            sel.load_recent()
+            if sel.records:
+                rec = sel.records[-1]
+                sel.open_record(rec)
 
     def refresh_scripts(self):
         for c in self._get_controllers():
@@ -525,13 +527,17 @@ class BakeoutManager(Manager):
                         self._classifier_save()
 
                     self.info('commit session to db')
+                    self.database.commit()
+
+                    time.sleep(0.5)
+                    self.open_latest_bake()
                     # database session started in main thread so use do_later for commit
-                    do_later(self.database.commit)
-#                    time.sleep(0.5)
-                    do_after_timer(1000, self.open_latest_bake)
+#                    do_later(self.database.commit)
+#                    do_after_timer(1000, self.open_latest_bake)
 
                 else:
-                    do_later(self._db_rollback)
+                    self._db.rollback()
+#                    do_later(self._db_rollback)
 
             if self.data_manager is not None:
                 self.data_manager.close_file()
@@ -549,7 +555,7 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
-
+#        print 'sdf'
 #        if self.active and not obj.isAlive():
 #            return
 
@@ -571,7 +577,8 @@ class BakeoutManager(Manager):
                 n = len(self._get_controller_names())
 
             if self.data_count_flag >= n:
-                do_after_timer(1, self._do_graph)
+                self._do_graph()
+#                do_after_timer(1, self._do_graph)
 
 #==============================================================================
 # Button handlers

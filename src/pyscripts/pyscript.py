@@ -17,15 +17,18 @@
 #============= enthought library imports =======================
 from traits.api import Str, Any, Bool, DelegatesTo, Dict, Property
 from pyface.timer.do_later import do_later
-from pyface.wx.dialog import confirmation
+# from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
 import time
 import os
 import inspect
-import hashlib
+# import hashlib
+# from threading import Event
 from threading import Thread, Event
+# from PySide.QtCore import QThread as Thread
 #============= local library imports  ==========================
 from src.pyscripts.wait_dialog import WaitDialog
+from pyface.confirmation_dialog import confirm
 from src.loggable import Loggable
 
 
@@ -300,7 +303,7 @@ class PyScript(Loggable):
         pass
     def _cancel_flag_changed(self, v):
         if v:
-            result = confirmation(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
+            result = confirm(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
             if result != 5104:
                 self.cancel()
             else:
@@ -630,7 +633,7 @@ class PyScript(Loggable):
             do_later(wd.edit_traits)
             evt.wait(timeout=timeout + 0.25)
             do_later(wd.stop)
-            
+
             if wd._canceled:
                 self.cancel()
             elif wd._continued:

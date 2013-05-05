@@ -150,9 +150,11 @@ class BakeoutPyScript(PyScript):
 
             self._set_setpoint(temperature)
             # convert back to hours
-            do_later(c.trait_set, duration=duration / 3600.,
-                                 heating=True
-                                 )
+            c.trait_set(duration=duration / 3600.,
+                                 heating=True)
+#            do_later(c.trait_set, duration=duration / 3600.,
+#                                 heating=True
+#                                 )
 #            c.duration = duration / 3600.
 #            c.heating = True
 

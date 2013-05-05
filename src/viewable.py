@@ -40,11 +40,11 @@ class ViewableHandler(Handler):
         if info.initialized:
             if info.ui:
                 info.ui.dispose()
-        
+
     def object_raised_changed(self, info):
         if info.initialized:
             if info.ui:
-                info.ui.control.Raise()
+                info.ui.control.show()
 
     def close(self, info, is_ok):
         return info.object.close(is_ok)
@@ -74,27 +74,27 @@ class Viewable(Loggable):
     disposed = Event
     raised = Event
     initialized = Bool
-    
+
     def opened(self, ui):
         pass
 
     def close(self, ok):
         for ai in self.associated_windows:
             ai.close_ui()
-        
+
         return True
 #        return True
 #
     def closed(self, ok):
         pass
-    
+
     def close_ui(self):
         self.disposed = True
-##        if self.ui is not None:
-##            # disposes 50 ms from now
-##            do_after(50, self.ui.dispose)
-##            # sleep a little so everything has time to update
-##            # time.sleep(0.05)
+# #        if self.ui is not None:
+# #            # disposes 50 ms from now
+# #            do_after(50, self.ui.dispose)
+# #            # sleep a little so everything has time to update
+# #            # time.sleep(0.05)
 
     def show(self, **kw):
         args = tuple()
