@@ -140,7 +140,7 @@ class Loggable(HasTraits):
                 msg = '****** {}'.format(msg)
             self._log_('warning', msg)
 
-    def info(self, msg, decorate=True, dolater=False):
+    def info(self, msg, decorate=True, dolater=False, color=None):
         '''
 
         '''
@@ -153,7 +153,7 @@ class Loggable(HasTraits):
 
                 args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
                         msg))
-                gLoggerDisplay.add_text(args, gui=False)
+                gLoggerDisplay.add_text(args, color=color)
 
             if decorate:
                 msg = '====== {}'.format(msg)

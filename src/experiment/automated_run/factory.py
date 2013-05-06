@@ -36,9 +36,11 @@ from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
 from src.viewable import Viewable
 
 def CBItem(name, **kw):
-    return HGroup(Item(name, **kw), UItem('cb_{}'.format(name),
+    return HGroup(Item(name, height=10, **kw), UItem('cb_{}'.format(name),
                                           visible_when='cbs_enabled'
-                                          ))
+                                          ),
+
+                  )
 
 class AutomatedRunFactory(Viewable, ScriptMixin):
     db = Any
@@ -780,10 +782,10 @@ post_equilibration_script:name
         if self.selected_level and self.selected_level != NULL_STR:
             lns = [str(pi.labnumber.identifier)
                     for pi in self.selected_level.positions]
-            
-        project=self.project
+
+        project = self.project
         if project:
-            project=self.db.get_project(project)
+            project = self.db.get_project(project)
             lns = [str(ln.identifier)
                     for s in project.samples
                         for ln in s.labnumbers]
@@ -1003,10 +1005,11 @@ post_equilibration_script:name
         extract_grp = self._get_extract_group()
         pos_grp = self._get_position_group()
         v = View(
-                 VGroup(info_grp,
+                 Group(info_grp,
                         pos_grp,
                         extract_grp,
                         script_grp,
+                        layout='tabbed'
                         )
                  )
         return v

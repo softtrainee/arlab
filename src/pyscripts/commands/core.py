@@ -101,7 +101,7 @@ class Command(HasTraits):
                             ),
                       Group(
                             readonly('example',
-                                     height= -200
+                                     height=100
                                      ),
                             show_border=True,
                             label='Example',

@@ -13,33 +13,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from src.utils import get_display_size
+from src.displays.display import ErrorDisplay, DisplayController, DisplayModel
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 
-from src.displays.rich_text_display import RichTextDisplay, ErrorDisplay
-try:
-    import wx
-    sw, sh = wx.DisplaySize()
-except:
-    sw, sh = 1200, 900
+# from src.displays.rich_text_display import RichTextDisplay, ErrorDisplay
+# try:
+#    import wx
+#    sw, sh = wx.DisplaySize()
+# except:
+#    sw, sh = 1200, 900
+ds = get_display_size()
 
-gWarningDisplay = RichTextDisplay(
+
+
+gWarningDisplay = DisplayController(DisplayModel(),
                                   title='Warnings',
                                   width=450,
                                   default_color='red'
                                   )
-gLoggerDisplay = RichTextDisplay(title='Logger',
+gLoggerDisplay = DisplayController(DisplayModel(),
+                                   title='Logger',
                                  width=450,
-                                 x=sw - 500,
+                                 x=ds.width - 500,
                                  y=20,
                                  default_color='black',
                                  bg_color='light grey'
                                  )
 
-gMessageDisplay = RichTextDisplay(title='Messages',
+gMessageDisplay = DisplayController(DisplayModel(),
+                                    title='Messages',
                                  width=480,
 #                                 x=(sw-width)/2,
                                  y=100,
@@ -48,9 +55,10 @@ gMessageDisplay = RichTextDisplay(title='Messages',
                                  bg_color='light grey'
                                  )
 
-gTraceDisplay = ErrorDisplay(title='Error Stack',
+gTraceDisplay = ErrorDisplay(DisplayModel(),
+                             title='Error Stack',
                                  width=825,
-                                 x=(sw - 825) / 2,
+                                 x=(ds.width - 825) / 2,
                                  y=100,
                                  default_color='black'
                                  )

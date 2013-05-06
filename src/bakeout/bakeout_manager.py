@@ -47,6 +47,7 @@ from src.database.data_warehouse import DataWarehouse
 import datetime
 from src.bakeout.classifier import Classifier
 from collections import namedtuple
+from src.utils import get_display_size
 
 
 BATCH_SET_BAUDRATE = False
@@ -54,7 +55,7 @@ BAUDRATE = '38400'
 
 # from wx import GetDisplaySize
 # DISPLAYSIZE = GetDisplaySize()
-DISPLAYSIZE = namedtuple('Size', 'width height')(500, 500)
+# DISPLAYSIZE = namedtuple('Size', 'width height')(500, 500)
 
 
 class BakeoutManager(Manager):
@@ -767,7 +768,8 @@ class BakeoutManager(Manager):
                          **kw)
             else:
                 if panel_height is None:
-                    panel_height = DISPLAYSIZE.height * 0.65 / n
+                    ds = get_display_size()
+                    panel_height = ds.height * 0.65 / n
 
                 graph = \
                     TimeSeriesStackedGraph(panel_height=panel_height, **kw)
@@ -890,7 +892,7 @@ class BakeoutManager(Manager):
         controller_grp = HGroup()
         for tr in self._get_controller_names():
             controller_grp.content.append(Item(tr,
-                                     show_label=False, style='custom'))
+                                               show_label=False, style='custom'))
 
         control_grp = HGroup(
                              VGroup(Item('execute',

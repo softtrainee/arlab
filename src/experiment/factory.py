@@ -131,8 +131,8 @@ class ExperimentFactory(Loggable):
                             UItem('clear_button',
                                  tooltip='Clear all runs added using "frequency"'
                                  )
-                            )
-
+                            ),
+                     scrollable=True
                      )
         v = View(grp)
         return v

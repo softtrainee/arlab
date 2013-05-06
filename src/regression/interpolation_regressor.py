@@ -19,7 +19,6 @@ from traits.api import Str
 from src.regression.base_regressor import BaseRegressor
 #============= standard library imports ========================
 from numpy import where, polyval, polyfit, asarray
-from sklearn.gaussian_process.gaussian_process import GaussianProcess
 #============= local library imports  ==========================
 
 class InterpolationRegressor(BaseRegressor):
@@ -115,6 +114,7 @@ class GaussianRegressor(BaseRegressor):
         return ypred, sigma
 
     def _calculate(self):
+        from sklearn.gaussian_process.gaussian_process import GaussianProcess
         import numpy as np
 
         X = self.xs.reshape((self.xs.shape[0], 1))

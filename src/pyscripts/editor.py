@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
 
 #============= enthought library imports =======================
 from traits.api import Str, Enum, Bool, Instance, String, Dict, Property, \
      Event, List, Int
 from traitsui.api import View, Item, HGroup, Group, spring, \
-    VGroup, ListStrEditor, InstanceEditor
+    VGroup, ListStrEditor, InstanceEditor, VSplit
 from traitsui.menu import Action
 #============= standard library imports ========================
 import os
@@ -255,19 +257,20 @@ class PyScriptEditor(Viewable):
 #===============================================================================
     def _get_commands_group(self, name, label):
         return Group(Item(name,
-                   style='custom',
-                   show_label=False,
-                   editor=ListStrEditor(operations=[],
+                          style='custom',
+                          show_label=False,
+                          editor=ListStrEditor(operations=[],
                                         editable=False,
 #                                        right_clicked='',
                                         selected='selected_command'
                                         ),
                          width=200,
-                         height=725,
-                         resizable=False
-                           ),
-                     label=label,
-                     show_border=True,
+#                         height= -200,
+#                         resizable=False,
+#                         scrollable=True
+                        ),
+#                     label=label,
+#                     show_border=True,
                      )
     def _get_parameters_group(self):
         return
@@ -276,26 +279,29 @@ class PyScriptEditor(Viewable):
 # views
 #===============================================================================
     def traits_view(self):
-        help_grp = Group(
-                       Item('selected_command_object',
-                            show_label=False,
-                            style='custom',
-                            height=300,
-                            editor=InstanceEditor(view='help_view')
-                            ),
-                       )
+#        help_grp = Group(
+#
+#                       )
 
-        editor = VGroup(
+        editor = VSplit(
                         Item('body',
-                             height=480,
+                             height=0.75,
                              editor=PyScriptCodeEditor(fontsize=14),
                              show_label=False),
-                        help_grp
+                        Item('selected_command_object',
+                            show_label=False,
+                            style='custom',
+                            height=0.25,
+                            editor=InstanceEditor(view='help_view')
+                            ),
                         )
 
-        command_grp = VGroup(
+#        command_grp = VGroup(
 #                             Item('_kind'),
-                             self._get_commands_group('script_commands', 'Commands'))
+#                             self._get_commands_group('script_commands', 'Commands'),
+#                             show_border=True
+#                             )
+        command_grp = self._get_commands_group('script_commands', 'Commands'),
 
         src_grp = HGroup(
                         command_grp,
@@ -318,7 +324,8 @@ class PyScriptEditor(Viewable):
                           Action(name='Save As', action='save_as')
                           ],
                  width=0.5,
-                 height=850,
+                 height=0.65,
+#                 height=850,
                  handler=ScriptHandler,
                  title=self.title
                  )
@@ -326,14 +333,14 @@ class PyScriptEditor(Viewable):
 
 if __name__ == '__main__':
     from launchers.helpers import build_version
-    build_version('_experiment')
+    build_version('_qt')
     from src.helpers.logger_setup import logging_setup
     logging_setup('scripts')
 #    s = PyScriptEditor(_kind='ExtractionLine')
 #    s = PyScriptEditor(_kind='Bakeout')
     s = PyScriptEditor(kind='Measurement')
 
-    p = os.path.join(paths.scripts_dir, 'extraction', 'jan_uv_all.py')
+    p = os.path.join(paths.scripts_dir, 'extraction', 'jan_diode.py')
     s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================

@@ -32,18 +32,18 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 
 
 # from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay,\
+from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
     gMessageDisplay
 from globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
 
 #
-#if globalv.open_logger_on_launch:
-##    do_later(gLoggerDisplay.edit_traits)
+# if globalv.open_logger_on_launch:
+# #    do_later(gLoggerDisplay.edit_traits)
 #    do_later(gLoggerDisplay.show)
 
-    
+
 
 logger = new_logger('launcher')
 # logger = logging.getLogger('launcher')
@@ -213,13 +213,13 @@ def app_factory():
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
 
-    app=Pychron(plugins=plugins)
-    
-    gLoggerDisplay.application=app
-    gMessageDisplay.application=app
-    gWarningDisplay.application=app
-    gTraceDisplay.application=app
-    
+    app = Pychron(plugins=plugins)
+
+    gLoggerDisplay.application = app
+    gMessageDisplay.application = app
+    gWarningDisplay.application = app
+    gTraceDisplay.application = app
+
     if globalv.open_logger_on_launch:
         do_later(gLoggerDisplay.open_view, gLoggerDisplay)
 
@@ -240,7 +240,7 @@ def check_dependencies():
         return
 
     vargs = __version__.split('.')
-    maj=vargs[0]
+    maj = vargs[0]
     if int(maj) < 2:
         warning(None, 'Update "{}" package. your version={}. required version>={} '.format('uncertainties',
                                                                                            __version__,
@@ -271,8 +271,12 @@ def launch():
 #            run_tests(logger)
 
         app.on_trait_change(start_test, 'started')
+    def foo():
+        for i in range(100):
+            app.info('asdfasdffsa {}'.format(i), color='green')
+    app.on_trait_change(foo, 'started')
 
-    
+
     try:
         app.run()
     except Exception, err:
@@ -287,7 +291,7 @@ def launch():
 #        logger.warning(err)
 #        warning(app.workbench.active_window, tb)
         app.exit()
-    
+
     for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
         gi.close_ui()
 
