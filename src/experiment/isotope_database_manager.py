@@ -22,6 +22,7 @@ from apptools.preferences.preference_binding import bind_preference
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
+from src.progress_dialog import MProgressDialog
 
 
 class IsotopeDatabaseManager(Manager):
@@ -58,4 +59,20 @@ class IsotopeDatabaseManager(Manager):
     def _db_factory(self):
         db = IsotopeAdapter(application=self.application)
         return db
+
+    def _load_analyses(self, ans):
+        progress = self._open_progress(len(ans))
+        for ai in ans:
+            msg = 'loading {}'.format(ai.record_id)
+            progress.change_message(msg)
+            ai.load_isotopes()
+#            ai.initialize()
+            ai.age
+            progress.increment()
+
+    def _open_progress(self, n):
+        pd = MProgressDialog(max=n, size=(550, 15))
+        pd.open()
+        pd.center()
+        return pd
 #============= EOF =============================================

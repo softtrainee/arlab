@@ -285,7 +285,7 @@ class Query(HasTraits):
             if hasattr(db, funcname):
                 display_name = 'name'
                 if param == 'labnumber':
-                    display_name = 'labnumber'
+                    display_name = 'identifier'
                 elif param == 'aliquot':
                     display_name = 'aliquot'
                 elif param == 'step':

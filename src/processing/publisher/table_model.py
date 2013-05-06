@@ -24,7 +24,7 @@ from uncertainties import ufloat
 from src.processing.autoupdate_parser import AutoupdateParser
 from src.processing.publisher.analysis import Marker, PubAnalysis, ComputedValues  # , \
 #    PubAnalysisMean
-from src.constants import ARGON_KEYS
+from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.processing.publisher.loaded_table import LoadedTableAdapter
 
@@ -90,6 +90,13 @@ class LoadedTable(TableModel):
             e = params['{}_blankerr'.format(si)]
             setattr(a, '{}_blank'.format(si), ufloat(v, e))
 
+        for df, _ in DECAY_KEYS:
+            setattr(a, df, params[df])
+
+        for ir, _ in IRRADIATION_KEYS:
+            setattr(a, ir, ufloat(params[ir],
+                                  params['{}_err'.format(ir)]
+                                  ))
         return a
 
 class SelectedTable(TableModel):

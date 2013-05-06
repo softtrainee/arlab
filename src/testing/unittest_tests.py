@@ -33,5 +33,6 @@ paths.build('_test')
 # from device_scan_db_tests import DeviceScanDBTests
 # from isotope_db_tests import IsotopeDBTests
 # from processing_tests import ProcessingTest
-from regression_tests import RegressionTests
+# from regression_tests import RegressionTests
+# from arar_calculation_tests import ArArCalculationTests
 #============= EOF =============================================

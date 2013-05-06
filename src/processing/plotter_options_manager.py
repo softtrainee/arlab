@@ -48,7 +48,11 @@ class PlotterOptionsManager(Viewable):
 
             # dump the default plotter options
             if not os.path.isdir(self.persistence_root):
-                os.mkdir(self.persistence_root)
+                try:
+                    os.mkdir(self.persistence_root)
+                except OSError:
+                    os.mkdir(os.path.dirname(self.persistence_root))
+                    os.mkdir(self.persistence_root)
 
             p = os.path.join(self.persistence_root,
                              '{}.default'.format(self.plotter_options_name))

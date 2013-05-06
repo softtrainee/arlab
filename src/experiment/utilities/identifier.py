@@ -156,7 +156,7 @@ def make_standard_identifier(ln, modifier, ms, aliquot=None):
         ms: int or str 
     '''
     if isinstance(ms, int):
-        ms='{:02n}'.format(ms)
+        ms = '{:02n}'.format(ms)
     try:
         modifier = '{:02n}'.format(modifier)
     except ValueError:
@@ -175,10 +175,10 @@ def make_special_identifier(ln, ed, ms, aliquot=None):
         ed: int extract device id
     '''
     if isinstance(ed, int):
-        ed='{:02n}'.format(ed)
+        ed = '{:02n}'.format(ed)
     if isinstance(ms, int):
-        ms='{:02n}'.format(ms)
-    
+        ms = '{:02n}'.format(ms)
+
     d = '{}-{}-{}'.format(ln, ed, ms)
     if aliquot:
         d = '{}-{:02n}'.format(d, aliquot)
