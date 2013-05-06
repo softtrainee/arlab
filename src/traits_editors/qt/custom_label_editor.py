@@ -20,66 +20,71 @@ from traitsui.api import View, Item, TableEditor, UItem, Label
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 # from traitsui.wx.basic_editor_factory import BasicEditorFactory
-import wx
-import random
+# import wx
 #============= standard library imports ========================
+import random
+from PySide.QtGui import QLabel
 #============= local library imports  ==========================
 
 class _CustomLabelEditor(Editor):
-    txtctrl = Any
+#    txtctrl = Any
 
     def init(self, parent):
         self.control = self._create_control(parent)
 
     def update_editor(self):
-        self.txtctrl.SetLabel(self.value)
+        if self.control:
+            self.control.setText(self.value)
+#            self.control.SetLabel(self.value)
 
     def _create_control(self, parent):
-        panel = wx.Panel(parent, -1)
-        size = None
-        if self.item.width > 1 and self.item.height > 1:
-            size = (self.item.width, self.item.height)
-        txtctrl = wx.StaticText(panel, label=self.value,
-                                size=size
-                                )
-        family = wx.FONTFAMILY_DEFAULT
-        style = wx.FONTSTYLE_NORMAL
-        weight = wx.FONTWEIGHT_NORMAL
-        font = wx.Font(self.item.size, family, style, weight)
-        txtctrl.SetFont(font)
-        txtctrl.SetForegroundColour(self.item.color)
-        self.txtctrl = txtctrl
-
-        vsizer = wx.BoxSizer(wx.VERTICAL)
+        control = QLabel()
+        return control
+#        panel = wx.Panel(parent, -1)
+#        size = None
+#        if self.item.width > 1 and self.item.height > 1:
+#            size = (self.item.width, self.item.height)
+#        txtctrl = wx.StaticText(panel, label=self.value,
+#                                size=size
+#                                )
+#        family = wx.FONTFAMILY_DEFAULT
+#        style = wx.FONTSTYLE_NORMAL
+#        weight = wx.FONTWEIGHT_NORMAL
+#        font = wx.Font(self.item.size, family, style, weight)
+#        txtctrl.SetFont(font)
+#        txtctrl.SetForegroundColour(self.item.color)
+#        self.txtctrl = txtctrl
 #
-        if self.item.top_padding is not None:
-            self.add_linear_space(vsizer, self.item.top_padding)
+#        vsizer = wx.BoxSizer(wx.VERTICAL)
+# #
+#        if self.item.top_padding is not None:
+#            self.add_linear_space(vsizer, self.item.top_padding)
+# #
+#        vsizer.Add(txtctrl)
+# #
+#        if self.item.bottom_padding is not None:
+#            self.add_linear_space(vsizer, self.item.bottom_padding)
+#        sizer = vsizer
 #
-        vsizer.Add(txtctrl)
+#        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+#        if self.item.left_padding is not None:
+#            self.add_linear_space(hsizer, self.item.left_padding)
 #
-        if self.item.bottom_padding is not None:
-            self.add_linear_space(vsizer, self.item.bottom_padding)
-        sizer = vsizer
-
-        hsizer = wx.BoxSizer(wx.HORIZONTAL)
-        if self.item.left_padding is not None:
-            self.add_linear_space(hsizer, self.item.left_padding)
-
-        hsizer.Add(sizer)
-        if self.item.right_padding is not None:
-            self.add_linear_space(hsizer, self.item.right_padding)
-        sizer = hsizer
-
-        panel.SetSizer(sizer)
-        return panel
-
-
-    def add_linear_space(self, sizer, pad):
-        orientation = sizer.GetOrientation()
-        if orientation == wx.HORIZONTAL:
-            sizer.Add((pad, 0))
-        else:
-            sizer.Add((0, pad))
+#        hsizer.Add(sizer)
+#        if self.item.right_padding is not None:
+#            self.add_linear_space(hsizer, self.item.right_padding)
+#        sizer = hsizer
+#
+#        panel.SetSizer(sizer)
+#        return panel
+#
+#
+#    def add_linear_space(self, sizer, pad):
+#        orientation = sizer.GetOrientation()
+#        if orientation == wx.HORIZONTAL:
+#            sizer.Add((pad, 0))
+#        else:
+#            sizer.Add((0, pad))
 
 class CustomLabelEditor(BasicEditorFactory):
     klass = _CustomLabelEditor

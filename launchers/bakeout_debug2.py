@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
 #
@@ -14,31 +15,18 @@
 # limitations under the License.
 #===============================================================================
 
-MANAGERS = []
-def open_manager(app, man, **kw):
-    ui = None
-    if man in MANAGERS:
-        try:
-            man.ui.control.raise_()
-        except AttributeError, e:
-            print e
-            ui = man.edit_traits(**kw)
-    else:
-        ui = man.edit_traits(**kw)
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = "qt4"
 
-        MANAGERS.append(man)
+if __name__ == '__main__':
+    from helpers import build_version
+    build_version('_bakeout', set_path=False)
 
-    if app:
-        if ui is not None and ui not in app.uis:
-            app.uis.append(ui)
+#    from src.envisage.bakedpy_run import launch
+    from src.bakeout.bakedpy_run import launch
+    from src.helpers.logger_setup import logging_setup
 
-def open_protocol(app, protocol):
-    m = app.get_service(protocol)
+    logging_setup('bakeout', level='DEBUG')
+    launch()
 
-    open_manager(app, m)
-
-def open_selector(db, app):
-    db.application = app
-    if db.connect():
-        s = db._selector_factory()
-        open_manager(app, s)
+# ============= EOF ====================================

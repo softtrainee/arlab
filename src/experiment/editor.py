@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance
+from traits.api import HasTraits, on_trait_change, Instance, Str, Int
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom
 
 #============= standard library imports ========================
@@ -27,9 +27,11 @@ from globals import globalv
 from src.experiment.factory import ExperimentFactory
 
 
-class ExperimentEditor(ExperimentManager):
-    experiment_factory = Instance(ExperimentFactory)
 
+class ExperimentEditor(ExperimentManager):
+    foo = Int
+    boo = Str
+    experiment_factory = Instance(ExperimentFactory)
     @on_trait_change('experiment_queue:selected')
     def _update_selected(self, new):
         self.experiment_factory.set_selected_runs(new)
@@ -38,41 +40,65 @@ class ExperimentEditor(ExperimentManager):
 # views
 #===============================================================================
     def traits_view(self):
-        factory_grp = UItem('experiment_factory',
-                            style='custom',
-                            width=0.35,
-                            )
-        exp_grp = UItem('experiment_queue',
-                            style='custom',
-                            width=0.55
-                            )
-
-        sel_grp = UItem('set_selector',
-                       style='custom',
-                       width=0.10,
-                       )
-        v = View(
-                 HGroup(
-                        sel_grp,
-                        factory_grp,
-                        exp_grp
-                       ),
-                 resizable=True,
-#                 width=0.80,
-#                 height=0.90,
-                 buttons=['OK', 'Cancel'] + SaveableButtons,
-#                          Action(name='Save', action='save',
-#                                 enabled_when='dirty'),
-#                          Action(name='Save As',
-#                                 action='save_as',
-# #                                 enabled_when='dirty_save_as'
-#                                 ),
-
-#                          ],
-                 handler=self.handler_klass,
-#                 handler=SaveableManagerHandler,
-                 title='Experiment'
-                 )
+#        factory_grp = UItem('experiment_factory',
+#                            style='custom',
+#                            width=0.35,
+#                            )
+#        factory_grp = VGroup(
+#                            Item('object.experiment_factory.queue_factory.username'),
+# #                       Item('mass_spectrometer',
+# #                            editor=EnumEditor(name='mass_spectrometers'),
+# #                            ),
+# #                       Item('extract_device',
+# #                            editor=EnumEditor(name='extract_devices'),
+# #                            ),
+# # #                       Item('tray',
+# # #                            editor=EnumEditor(name='trays'),
+# # #                            tooltip='Select an sample tray for this set'
+# # #                            ),
+#
+#                       Item('object.experiment_factory.queue_factory.delay_before_analyses',
+# #                            tooltip='Set the time in seconds to delay before starting this queue',
+# #                            label='Delay before Analyses (s)'
+#                            ),
+#                       Item('object.experiment_factory.queue_factory.delay_between_analyses',
+# #                            tooltip='Set the delay between analysis in seconds',
+# #                            label='Delay between Analyses (s)'
+#                            ),
+#                           )
+#        exp_grp = UItem('experiment_queue',
+#                            style='custom',
+#                            width=0.55
+#                            )
+#
+#        sel_grp = UItem('set_selector',
+#                       style='custom',
+#                       width=0.10,
+#                       )
+#        v = View(
+#                 HGroup(
+#                        sel_grp,
+#                        factory_grp,
+#                        exp_grp
+#                       ),
+#                 resizable=True,
+# #                 width=0.80,
+# #                 height=0.90,
+#                 buttons=['OK', 'Cancel'] + SaveableButtons,
+# #                          Action(name='Save', action='save',
+# #                                 enabled_when='dirty'),
+# #                          Action(name='Save As',
+# #                                 action='save_as',
+# # #                                 enabled_when='dirty_save_as'
+# #                                 ),
+#
+# #                          ],
+#                 handler=self.handler_klass,
+# #                 handler=SaveableManagerHandler,
+#                 title='Experiment'
+#                 )
+        factory_grp = VGroup(Item('foo'), Item('boo'))
+        v = View(factory_grp)
         return v
 
     def _experiment_queue_changed(self):
