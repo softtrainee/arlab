@@ -79,7 +79,7 @@ class AnalysisAdapter(TabularAdapter):
         w = wx.FONTWEIGHT_NORMAL
         return wx.Font(s, f, st, w)
 
-    def get_bg_color(self, obj, trait, row):
+    def get_bg_color(self, obj, trait, row, column):
         bgcolor = 'white'
         if self.item.status != 0 or self.item.temp_status != 0:
             bgcolor = '#FF7373'
@@ -263,7 +263,7 @@ class MeanAdapter(AnalysisAdapter):
     def _get_age_sd_text(self):
         return self._get_error('arith_age')
 
-    def get_bg_color(self, obj, trait, row):
+    def get_bg_color(self, obj, trait, row, column):
         bgcolor = 'white'
         if row % 2 == 0:
             bgcolor = '#F0F8FF'

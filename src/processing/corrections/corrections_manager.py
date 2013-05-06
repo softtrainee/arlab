@@ -44,7 +44,7 @@ class GroupedAnalysisAdapter(TabularAdapter):
 #               ('Temp. Status', 'temp_status'),
                ]
 
-    def get_bg_color(self, obj, trait, row):
+    def get_bg_color(self, obj, trait, row, column):
         bgcolor = self.item.bgcolor
         if bgcolor is None:
             bgcolor = 'white'

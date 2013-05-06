@@ -26,6 +26,7 @@ from numpy import random, char
 from src.hardware.core.core_device import CoreDevice
 # from src.traits_editors.color_map_bar_editor import BarGaugeEditor
 import time
+from src.traits_editors.color_map_bar_editor import BarGaugeEditor
 
 # from numpy import linspace
 # def gen():
@@ -53,6 +54,7 @@ class Gauge(HasTraits):
                               ),
                         Item('pressure',
                              show_label=False,
+                             width=self.width,
                              editor=BarGaugeEditor(low=self.low,
                                                    high=self.high,
                                                    color_scalar=self.color_scalar,

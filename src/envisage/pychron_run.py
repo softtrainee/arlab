@@ -271,11 +271,6 @@ def launch():
 #            run_tests(logger)
 
         app.on_trait_change(start_test, 'started')
-    def foo():
-        for i in range(100):
-            app.info('asdfasdffsa {}'.format(i), color='green')
-    app.on_trait_change(foo, 'started')
-
 
     try:
         app.run()

@@ -22,7 +22,8 @@ from apptools.preferences.preference_binding import bind_preference
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
-from src.progress_dialog import MProgressDialog
+from src.traits_editors.progress_dialog import MProgressDialog
+# from src.progress_dialog import MProgressDialog
 
 
 class IsotopeDatabaseManager(Manager):

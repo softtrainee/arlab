@@ -97,7 +97,7 @@ class IrradiatedPositionAdapter(TabularAdapter):
 #    def _get_hole_width(self):
 #        return 35
 
-    def get_bg_color(self, obj, trait, row):
+    def get_bg_color(self, obj, trait, row, column):
         item = getattr(obj, trait)[row]
         if item.auto_assigned:
             return '#B0C4DE'

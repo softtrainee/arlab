@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from numpy import array, vstack, mean, average, hstack
 import math
-from src.geometry.centroid.calculate_centroid import calculate_centroid
+# from src.geometry.centroid.calculate_centroid import calculate_centroid
 
 #============= local library imports  ==========================
 def sort_clockwise(pts, xy, reverse=False):

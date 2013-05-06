@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from launchers.helpers import build_version
-build_version('_experiment')
+# from launchers.helpers import build_version
+# build_version('_experiment_script')
 
 from src.processing.analysis import NonDBAnalysis
 from src.processing.plotters.plotter_options import PlotterOptions

@@ -52,19 +52,21 @@ class SpectrometerManager(Manager):
 
     def load(self):
         self.spectrometer.load()
+        print 'asd'
+#        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
+#        for name in config.sections():
+#            relative_position = self.config_get(config, name, 'relative_position', cast='float')
+#            color = self.config_get(config, name, 'color', default='black')
+#            default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
+#            isotope = self.config_get(config, name, 'isotope')
+#            self.spectrometer.add_detector(name=name,
+#                                            relative_position=relative_position,
+#                                            color=color,
+#                                            active=default_state,
+#                                            isotope=isotope
+#                                            )
+        print 'asdd'
 
-        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
-        for name in config.sections():
-            relative_position = self.config_get(config, name, 'relative_position', cast='float')
-            color = self.config_get(config, name, 'color', default='black')
-            default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
-            isotope = self.config_get(config, name, 'isotope')
-            self.spectrometer.add_detector(name=name,
-                                            relative_position=relative_position,
-                                            color=color,
-                                            active=default_state,
-                                            isotope=isotope
-                                            )
 
         return True
 

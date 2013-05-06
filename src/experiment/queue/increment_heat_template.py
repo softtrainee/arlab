@@ -26,10 +26,10 @@ import csv
 import os
 #============= local library imports  ==========================
 from src.traits_editors.tabular_editor import myTabularEditor
-from src.paths import paths, build_directories
+from src.paths import paths
 from src.viewable import Viewable
-paths.build('_experiment')
-build_directories(paths)
+# paths.build('_experiment')
+# build_directories(paths)
 
 class IncrementalHeatAdapter(TabularAdapter):
     columns = [('Step', 'step_id'),
