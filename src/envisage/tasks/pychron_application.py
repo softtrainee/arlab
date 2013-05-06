@@ -25,6 +25,7 @@ import copy
 #============= local library imports  ==========================
 from src.loggable import Loggable
 import os
+from pyface.tasks.task_window_layout import TaskWindowLayout
 
 
 class Pychron(TasksApplication, Loggable):
@@ -34,7 +35,10 @@ class Pychron(TasksApplication, Loggable):
     name = 'pyExperiment'
 
     uis = List
-
+    default_layout = [TaskWindowLayout(
+                                       'pychron.hardware',
+                                       'pychron.extraction_line',
+                                       size=(800, 800)) ]
     def _about_dialog_default(self):
         '''
         '''

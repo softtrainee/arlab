@@ -15,27 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, List
 from traitsui.api import View, Item
-from pyface.tasks.task import Task
-from pyface.tasks.action.schema import SMenu, SMenuBar
-from pyface.tasks.action.task_toggle_group import TaskToggleGroup
+from envisage.plugin import Plugin
+from envisage.service_offer import ServiceOffer
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTask(Task):
-    def _menu_bar_default(self):
-        return self._menu_bar_factory()
+class BaseTaskPlugin(Plugin):
+    tasks = List(contributes_to='envisage.ui.tasks.tasks')
+    SERVICE_OFFERS = 'envisage.service_offers'
+    service_offers = List(contributes_to=SERVICE_OFFERS)
+    def service_offer_factory(self, **kw):
+        '''
+        
+        '''
+        return ServiceOffer(**kw)
 
-    def _menu_bar_factory(self):
-        view_menu = SMenu(
-                          TaskToggleGroup(),
-                          id='View', name='&View')
-        edit_menu = SMenu(id='Edit', name='&Edit')
+    def check(self):
+        return True
 
-        mb = SMenuBar(
-                      view_menu,
-                      edit_menu
-                      )
-        return mb
 #============= EOF =============================================
