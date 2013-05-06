@@ -101,7 +101,6 @@ class ExtractionLineScene(Scene):
 
     def load(self, pathname):
         self.reset_layers()
-        print pathname
         cp = self._get_canvas_parser(pathname)
 
         xv, yv = self._get_canvas_view_range()
@@ -206,5 +205,7 @@ class ExtractionLineScene(Scene):
                           identifier='bounds_rect',
                           fill=False, line_width=20, default_color=(0, 0, 102))
         self.add_item(brect)
+
+
 
 #============= EOF =============================================

@@ -17,16 +17,16 @@
 from traits.api import Str
 from traitsui.api import View, Group, Item
 from envisage.core_plugin import CorePlugin
-from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
-from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
+# from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
+# from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
 from envisage.api import Plugin
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from pychron_application import Pychron
+# from pychron_application import Pychron
 
-from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
-from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
+# from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
+# from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 
 # from src.helpers.paths import plugins_dir
 
@@ -37,6 +37,9 @@ from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
+from envisage.ui.tasks.tasks_plugin import TasksPlugin
+from src.envisage.tasks.pychron_application import Pychron
+import os
 
 #
 # if globalv.open_logger_on_launch:
@@ -50,75 +53,75 @@ logger = new_logger('launcher')
 # logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 
 PACKAGE_DICT = dict(
-                   DatabasePlugin='src.database.plugins.database_plugin',
-                   DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
-                   ExperimentPlugin='src.experiment.plugins.experiment_plugin',
-                   ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
+#                   DatabasePlugin='src.database.plugins.database_plugin',
+#                   DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
+#                   ExperimentPlugin='src.experiment.plugins.experiment_plugin',
+#                   ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
 #                   ScriptPlugin='src.scripts.plugins.script_plugin',
 #                   ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
-                   ExtractionLinePlugin='src.extraction_line.plugins.extraction_line_plugin',
-                   ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
+                   ExtractionLinePlugin='src.extraction_line.tasks.extraction_line_plugin',
+#                   ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
 #                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
 #                   CanvasDesignerUIPlugin='src.canvas.plugins.canvas_designer_ui_plugin',
-                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
-                   MDDModelerUIPlugin='src.modeling.plugins.mdd_modeler_ui_plugin',
+#                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
+#                   MDDModelerUIPlugin='src.modeling.plugins.mdd_modeler_ui_plugin',
 
 #                   SVNPlugin='src.svn.plugins.svn_plugin',
 #                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
 
-                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
-                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
-                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
-                   FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
-                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
-                   FusionsUVUIPlugin='src.lasers.plugins.fusions.uv.ui_plugin',
+#                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
+#                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
+#                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
+#                   FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
+#                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
+#                   FusionsUVUIPlugin='src.lasers.plugins.fusions.uv.ui_plugin',
 
-                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
-                   SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
+#                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
+#                   SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
 
-                   SpectrometerPlugin='src.spectrometer.plugins.spectrometer_plugin',
-                   SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
+#                   SpectrometerPlugin='src.spectrometer.plugins.spectrometer_plugin',
+#                   SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
 
 #                   GraphPlugin='src.graph.plugins.graph_plugin',
 #                   GraphUIPlugin='src.graph.plugins.graph_ui_plugin',
 
-                   TwitterPlugin='src.social.plugins.twitter_plugin',
-                   TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
-                   EmailPlugin='src.social.plugins.email_plugin',
-                   EmailUIPlugin='src.social.plugins.email_ui_plugin',
+#                   TwitterPlugin='src.social.plugins.twitter_plugin',
+#                   TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
+#                   EmailPlugin='src.social.plugins.email_plugin',
+#                   EmailUIPlugin='src.social.plugins.email_ui_plugin',
 
-                   ProcessingPlugin='src.processing.plugins.processing_plugin',
-                   ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin',
+#                   ProcessingPlugin='src.processing.plugins.processing_plugin',
+#                   ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin',
 
-                   MediaServerPlugin='src.media_server.plugins.media_server_plugin',
-                   MediaServerUIPlugin='src.media_server.plugins.media_server_ui_plugin'
+#                   MediaServerPlugin='src.media_server.plugins.media_server_plugin',
+#                   MediaServerUIPlugin='src.media_server.plugins.media_server_ui_plugin'
                  )
 
-class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):
-    username = Str
-
-    def traits_view(self):
-        user_grp = Group(
-                         Item('username'),
-                         label='User',
-                         show_border=True,
-                         )
-        v = View(user_grp,
-                 Item('prompt_on_exit'),
-                 )
-        return v
-
-class WorkbenchPlugin(ETSWorkbenchPlugin):
-    def _my_preferences_pages_default(self):
-        return [WorkbenchPreferencesPage]
-
-    def _create_preferences_manager_service(self, **properties):
-        from src.envisage.plugins.pychron_preferences_manager import PychronPreferencesManager
-        preferences_manager = PychronPreferencesManager(
-            pages=[factory() for factory in self.preferences_pages]
-        )
-
-        return preferences_manager
+# class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):
+#    username = Str
+#
+#    def traits_view(self):
+#        user_grp = Group(
+#                         Item('username'),
+#                         label='User',
+#                         show_border=True,
+#                         )
+#        v = View(user_grp,
+#                 Item('prompt_on_exit'),
+#                 )
+#        return v
+#
+# class WorkbenchPlugin(ETSWorkbenchPlugin):
+#    def _my_preferences_pages_default(self):
+#        return [WorkbenchPreferencesPage]
+#
+#    def _create_preferences_manager_service(self, **properties):
+#        from src.envisage.plugins.pychron_preferences_manager import PychronPreferencesManager
+#        preferences_manager = PychronPreferencesManager(
+#            pages=[factory() for factory in self.preferences_pages]
+#        )
+#
+#        return preferences_manager
 
 def get_module_name(klass):
     words = []
@@ -141,7 +144,9 @@ def get_hardware_plugins():
     ps = []
     if 'hardware' in ip.get_categories():
         if ip.get_plugins('hardware'):
-            ps = [HardwarePlugin(), HardwareUIPlugin()]
+            ps = [HardwarePlugin(),
+#                  HardwareUIPlugin()
+                  ]
     return ps
 
 
@@ -170,8 +175,8 @@ def get_user_plugins():
         gdict = globals()
         pp.append(p + 'Plugin')
         # add UI
-        uip = p + 'UIPlugin'
-        pp.append(uip)
+#        uip = p + 'UIPlugin'
+#        pp.append(uip)
 
         for pname in pp:
             klass = None
@@ -205,14 +210,15 @@ def app_factory():
     '''
     plugins = [
                CorePlugin(),
-               WorkbenchPlugin(),
-               PychronWorkbenchPlugin(),
-               PychronWorkbenchUIPlugin(),
+               TasksPlugin(),
+#               WorkbenchPlugin(),
+#               PychronWorkbenchPlugin(),
+#               PychronWorkbenchUIPlugin(),
                ]
 
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
-
+    print plugins
     app = Pychron(plugins=plugins)
 
     gLoggerDisplay.application = app
@@ -274,6 +280,11 @@ def launch():
 
     try:
         app.run()
+        logger.info('Quitting Bakedpy')
+        app.exit()
+
+        # force a clean exit
+        os._exit(0)
     except Exception, err:
         logger.exception('Launching error')
 
@@ -287,11 +298,11 @@ def launch():
 #        warning(app.workbench.active_window, tb)
         app.exit()
 
-    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
-        gi.close_ui()
+#    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
+#        gi.close_ui()
 
-    logger.info('Quitting Pychron')
-    app.exit()
+#    logger.info('Quitting Pychron')
+#    app.exit()
 
 
     return

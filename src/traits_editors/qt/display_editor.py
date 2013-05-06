@@ -49,6 +49,7 @@ class _DisplayEditor(Editor):
         '''
         '''
         ctrl = self.control
+        ctrl.clear()
         for v, c in self.value:
             ctrl.setTextColor(c)
             ctrl.insertPlainText('{}\n'.format(v))
