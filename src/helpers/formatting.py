@@ -21,7 +21,7 @@ from traitsui.api import View, Item, TableEditor
 import math
 #============= local library imports  ==========================
 
-def floatfmt(f, n, s=2, max_width=None):
+def floatfmt(f, n=4, s=2, max_width=None):
     if abs(f) < 1e-20:
         v = '0.0'
     else:

@@ -19,10 +19,12 @@ from traits.api import HasTraits, Property, List, cached_property
 # from traitsui.api import View, Item
 #============= standard library imports ========================
 from uncertainties import ufloat
-from numpy import mean
+from numpy import mean, average, array
 #============= local library imports  ==========================
 from src.experiment.utilities.identifier import make_runid
 from src.stats.core import calculate_weighted_mean
+from src.processing.argon_calculations import calculate_plateau_age, \
+    calculate_arar_age
 
 def make_ufloat(*args):
     if not args:
@@ -51,6 +53,13 @@ class ComputedValues(HasTraits):
     labnumber = AnalysisProperty()
     sample = AnalysisProperty()
 
+    plateau_age = AnalysisProperty()
+    plateau_steps = AnalysisProperty()
+    plateau_nsteps = AnalysisProperty()
+    integrated_age = AnalysisProperty()
+
+    plateau = AnalysisProperty()
+
     @cached_property
     def _get_labnumber(self):
         return self.analyses[0].labnumber
@@ -65,13 +74,97 @@ class ComputedValues(HasTraits):
 
     @cached_property
     def _get_wm_age(self):
-        ages, errors = zip(*[(ai.age.nominal_value, ai.age.std_dev) for ai in self.analyses])
+        ages, errors, k39s = zip(*[(ai.age.nominal_value, ai.age.std_dev,
+                                   ai.Ar39.nominal_value
+                                   ) for ai in self.analyses])
         wm, werr = calculate_weighted_mean(ages, errors)
-        return wm
+#        wm, werr = average(ages, weights=k39s, returned=True)
+#        return ufloat(m, ss)
+        return ufloat(wm, werr)
+
+    def _get_integrated_age(self):
+        ans = self.analyses
+
+        '''
+            every analysis has its own decayfactors 
+            correct 37 and 39 and set a37decayfactor and a39decayfactor=1
+        '''
+        isotopes = zip(*[(ai.Ar40,
+                          ai.Ar39 * ai.a39decayfactor,
+                          ai.Ar38,
+                          ai.Ar37 * ai.a37decayfactor,
+                          ai.Ar36)
+                          for ai in ans])
+        isotopes = map(sum, isotopes)
+
+        # make zeros for baselines, blanks and backgrounds
+        baselines = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
+        blanks = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
+        backgrounds = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
+
+        a = ans[0]
+        j = a.j
+        irrad_info = (a.k4039, a.k3839, a.k3739,
+                      a.ca3937, a.ca3837, a.ca3637,
+                      a.cl3638,
+                      [], None)
+
+#        print a.a37decayfactor
+        arar_result = calculate_arar_age(isotopes, baselines, blanks, backgrounds,
+                           j, irrad_info,
+                           a37decayfactor=ans[-1].a37decayfactor,
+#                           a39decayfactor=1  # a.a39decayfactor,
+                           )
+
+        return arar_result['age'] / 1e6
+
+    @cached_property
+    def _get_plateau_age(self):
+        if self.plateau:
+            m, e, pidx = self.plateau
+            si, ei = pidx[0], pidx[-1]
+            if abs(ei - si) == 0:
+                return None
+
+            return ufloat(m, e)
+
+
+    @cached_property
+    def _get_plateau_nsteps(self):
+        if self.plateau:
+            _, _, pidx = self.plateau
+            si, ei = pidx
+            return (ei - si) + 1
+
+    @cached_property
+    def _get_plateau_steps(self):
+        m = ''
+        if self.plateau:
+            _, _, pidx = self.plateau
+            si, ei = pidx
+            if abs(si - ei) > 0:
+                m = '{}-{}'.format(chr(65 + si), chr(65 + ei))
+        return m
+
+    @cached_property
+    def _get_plateau(self):
+        ans = self.analyses
+        age, error, k39 = zip(*[(ai.age.nominal_value,
+                                ai.age.std_dev,
+                                ai.k39)
+                                for ai in ans]
+                              )
+
+        m, e, pidx = calculate_plateau_age(age, error, k39)
+        for i in range(pidx[0], pidx[-1]):
+            self.analyses[i].status = 'P'
+        return m, e, pidx
+
 #        return self._get_value('age')
 #        return mean([ai.age for ai in self.analyses])
 #    def _get_value(self, attr):
 #        return mean([getattr(ai, attr) for ai in self.analyses])
+
 
 class PubAnalysis(HasTraits):
     labnumber = 'A'
@@ -108,6 +201,17 @@ class PubAnalysis(HasTraits):
 
     age = uone()
     blank_fit = 'LR'
+
+    k4039 = uone()
+    k3839 = uone()
+    k3739 = uone()
+    ca3937 = uone()
+    ca3837 = uone()
+    ca3637 = uone()
+    cl3638 = uone()
+    a37decayfactor = 1
+    a39decayfactor = 1
+
     def set_runid(self, rid):
         ln, a = rid.split('-')
         self.labnumber = ln

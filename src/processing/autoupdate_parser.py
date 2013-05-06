@@ -21,7 +21,7 @@
 #============= standard library imports ========================
 import csv
 from src.stats.core import calculate_mswd
-from src.constants import ARGON_KEYS
+from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 #============= local library imports  ==========================
 # from src.stats import calculate_mswd, calculate_weighted_mean
 # from src.data_processing.argon_calculations import calculate_arar_age, find_plateaus
@@ -45,9 +45,12 @@ class Sample(object):
 
 
 class AutoupdateParser(object):
-    def _get_value(self, key, header, line, default=None):
+    def _get_value(self, key, header, line, cast=float, default=None):
         try:
             v = line[header.index(key)]
+            if cast:
+                v = cast(v)
+
         except IndexError:
             v = default
 
@@ -67,7 +70,7 @@ class AutoupdateParser(object):
             for line in reader:
                 get_value = lambda x, **kw: self._get_value(x, header, line, **kw)
 
-                sample = get_value('Sample')
+                sample = get_value('Sample', cast=str)
                 if not sample:
                     break
 
@@ -78,11 +81,11 @@ class AutoupdateParser(object):
 
                 params = dict()
                 params['sample'] = sample
-                params['material'] = get_value('Material')
+                params['material'] = get_value('Material', cast=str)
                 params['sample_group'] = sample_group
                 params['power'] = get_value('Pwr_Achieved')
 
-                params['run_id'] = get_value('Run_ID')
+                params['run_id'] = get_value('Run_ID', cast=str)
                 params['age'] = get_value('Age')
                 params['age_err'] = get_value('Age_Er')
 
@@ -97,12 +100,19 @@ class AutoupdateParser(object):
                 params['rad40'] = get_value('Ar40Rad_Over_Ar39')
                 params['rad40_err'] = get_value('Ar40Rad_Over_Ar39_Er')
 
-
                 for si in ARGON_KEYS:
                     params[si] = get_value('{}_'.format(si))
                     params['{}Er'.format(si)] = get_value('{}_Er'.format(si))
                     params['{}_blank'.format(si)] = get_value('{}_Bkgd'.format(si))
                     params['{}_blankerr'.format(si)] = get_value('{}_BkgdEr'.format(si))
+
+
+                for attr, key in DECAY_KEYS:
+                    params[attr] = float(get_value(key))
+
+                for attr, key in IRRADIATION_KEYS:
+                    params[attr] = get_value(key)
+                    params['{}_err'.format(attr)] = get_value('{}_Er'.format(key))
 
                 sampleObj.add_analysis(params, factory)
 

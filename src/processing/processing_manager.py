@@ -57,7 +57,7 @@ from src.processing.fit_manager import FitManager
 # from src.processing.publisher.writers import CSVWriter, PDFWriter, MassSpecCSVWriter
 
 
-class ProcessingManager(DatabaseManager, BaseAnalysisManager):
+class ProcessingManager(BaseAnalysisManager):
     selector_manager = Instance(SelectorManager)
     search_manager = Instance(SearchManager)
     project_view = Instance(ProjectView)
@@ -910,22 +910,22 @@ Use 'g' to separate groups''', title='Select a DataFile'):
 #===============================================================================
 # defaults
 #===============================================================================
-    def _selector_manager_default(self):
-        db = self.db
-        d = SelectorManager(db=db)
+#    def _selector_manager_default(self):
+#        db = self.db
+#        d = SelectorManager(db=db)
+# #        if not db.connected:
+# #            db.connect()
+#
+# #        d.select_labnumber([61541])
+# #        d.select_labnumber([22233])
+#        return d
+#
+#    def _search_manager_default(self):
+#        db = self.db
+#        d = SearchManager(db=db)
 #        if not db.connected:
 #            db.connect()
-
-#        d.select_labnumber([61541])
-#        d.select_labnumber([22233])
-        return d
-
-    def _search_manager_default(self):
-        db = self.db
-        d = SearchManager(db=db)
-        if not db.connected:
-            db.connect()
-        return d
+#        return d
 
     def _figure_manager_default(self):
         db = self.db

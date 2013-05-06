@@ -185,10 +185,16 @@ def Anchor(tagname, num, s='Normal'):
 
     style = STYLES[s]
 
-    p1 = lambda x: Paragraph(link.format(x), style)
+    def flink(x, extra=None):
+        f = link.format(x)
+        if extra:
+            f = u'{}{}'.format(f, extra)
+        return Paragraph(f, style)
+
+#    p1 = lambda x: Paragraph(link.format(x), style)
     p2 = lambda n, v: Paragraph(tag.format(n, v), style)
 
-    return p1, p2
+    return flink, p2
 
 
 #============= EOF =============================================

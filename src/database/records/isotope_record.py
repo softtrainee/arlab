@@ -276,7 +276,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     def closed(self, isok):
         self.selected = None
-        self.closed_event = True
+
 
 #===============================================================================
 # database record

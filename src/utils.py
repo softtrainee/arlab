@@ -16,9 +16,8 @@
 from collections import namedtuple
 
 def get_display_size():
-    from traits.etsconfig.api import ETSConfig
     size = namedtuple('Size', 'width height')
-    if ETSConfig.toolkit == "qt4":
+    if IsQt():
 #        from PySide.QtGui import QDesktopWidget
         from PySide.QtGui import QApplication
         desktop = QApplication.desktop()
@@ -30,3 +29,7 @@ def get_display_size():
         w, h = rect.width, rect.height
 
     return size(w, h)
+
+def IsQt():
+    from traits.etsconfig.api import ETSConfig
+    return ETSConfig.toolkit == "qt4"
