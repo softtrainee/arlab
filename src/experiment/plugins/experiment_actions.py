@@ -85,6 +85,20 @@ class ExecuteExperimentQueueAction(ExperimentAction):
                 open_manager(event.window.application, man)
 
 
+from traits.api import HasTraits, Int
+from traitsui.api import View, VGroup, Item
+class A(HasTraits):
+    b = Int
+    c = Int
+    def traits_view(self):
+        v = View(VGroup(
+                        Item('c'),
+                        Item('b')
+                        )
+                 )
+
+        return v
+
 class NewExperimentQueueAction(ExperimentAction):
     '''
     '''
@@ -101,6 +115,11 @@ class NewExperimentQueueAction(ExperimentAction):
             if manager.load():
                 manager.new_experiment_queue()
                 open_manager(app, manager)
+#                manager.edit_traits()
+#                A().edit_traits()
+
+
+
 
 
 class OpenExperimentQueueAction(ExperimentAction):

@@ -216,6 +216,17 @@ class Installer(object):
             tree['CFBundleIconFile'] = icon_file
             tree['CFBundleName'] = self.bundle_name
 
+
+            # rewrite __argvemulator
+            argv = '''
+import os
+execfile(os.path.join(os.path.split(__file__)[0], "{}.py"))
+'''.format(self.name)
+
+            p = resource_path('__argvemulator_{}.py'.format(self.name))
+            with open(p, 'w') as fp:
+                fp.write(argv)
+
             plistlib.writePlist(tree, info_plist)
             print 'Created {}'.format(os.path.join(launchers_root,
                     '{}.py'.format(self.name)))

@@ -49,7 +49,7 @@ class ViewableHandler(Handler):
     def object_raised_changed(self, info):
         if info.initialized:
             if info.ui:
-                if isQt():
+                if IsQt():
                     info.ui.control.show()
                 else:
                     info.ui.control.Raise()

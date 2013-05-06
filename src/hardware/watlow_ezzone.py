@@ -372,9 +372,7 @@ class WatlowEZZone(CoreDevice):
         t = self.process_value if t is None else min(t, 2000)
         p = self.heat_power_value if p is None else max(0, min(p, 100))
 
-        self.process_value = t
-        self.heat_power_value = p
-
+        self.trait_set(process_value=t, heat_power_value=p)
         if 'verbose' in kw and kw['verbose']:
             self.info('Temperature= {} Power= {}'.format(t, p))
 

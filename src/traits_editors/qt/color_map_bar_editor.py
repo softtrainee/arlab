@@ -56,14 +56,8 @@ class Bar(QFrame):
         A = 1 / self.high ** N
         nv = A * v ** N
         vs = self._cmap(nv)[:3]
-
-        import random
-        if random.random() < 0.5:
-            self.value = map(lambda x:x * 255, vs)
-        else:
-            self.value = 1, 0, 0
+        self.value = map(lambda x:x * 255, vs)
         self.update()
-#        self.Refresh()
 
 class _BarGaugeEditor(Editor):
     def init(self, parent):

@@ -30,7 +30,11 @@ sys.stdout = sys.stderr
 
 import os
 import MacOS
-import EasyDialogs
+try:
+    import EasyDialogs
+except ImportError:
+    pass
+
 import buildtools
 import getopt
 
@@ -63,78 +67,78 @@ def buildapplet():
 
     # Ask for source text if not specified in sys.argv[1:]
 
-    if not sys.argv[1:]:
-        filename = EasyDialogs.AskFileForOpen(message='Select Python source or applet:',
-                typeList=('TEXT', 'APPL'))
-        if not filename:
-            return
-        tp, tf = os.path.split(filename)
-        if tf[-3:] == '.py':
-            tf = tf[:-3]
-        else:
-            tf = tf + '.applet'
-        dstfilename = EasyDialogs.AskFileForSave(message='Save application as:',
-                savedFileName=tf)
-        if not dstfilename:
-            return
+#    if not sys.argv[1:]:
+#        filename = EasyDialogs.AskFileForOpen(message='Select Python source or applet:',
+#                typeList=('TEXT', 'APPL'))
+#        if not filename:
+#            return
+#        tp, tf = os.path.split(filename)
+#        if tf[-3:] == '.py':
+#            tf = tf[:-3]
+#        else:
+#            tf = tf + '.applet'
+# #        dstfilename = EasyDialogs.AskFileForSave(message='Save application as:',
+# #                savedFileName=tf)
+#        if not dstfilename:
+#            return
+#        cr, tp = MacOS.GetCreatorAndType(filename)
+#        if tp == 'APPL':
+#            buildtools.update(template, filename, dstfilename)
+#        else:
+#            buildtools.process(template, filename, dstfilename, 1)
+#    else:
+
+    SHORTOPTS = "o:r:ne:v?PR"
+    LONGOPTS = ("output=", "resource=", "noargv", "extra=", "verbose", "help", "python=", "destroot=")
+    try:
+        options, args = getopt.getopt(sys.argv[1:], SHORTOPTS, LONGOPTS)
+    except getopt.error:
+        usage()
+    if options and len(args) > 1:
+        sys.stderr.write("Cannot use options when specifying multiple input files")
+        sys.exit(1)
+
+    dstfilename = None
+    rsrcfilename = None
+    raw = 0
+    extras = []
+    verbose = None
+    destroot = ''
+    for opt, arg in options:
+        if opt in ('-o', '--output'):
+            dstfilename = arg
+        elif opt in ('-r', '--resource'):
+            rsrcfilename = arg
+        elif opt in ('-n', '--noargv'):
+            raw = 1
+        elif opt in ('-e', '--extra'):
+            if ':' in arg:
+                arg = arg.split(':')
+            extras.append(arg)
+        elif opt in ('-P', '--python'):
+            # This is a very dirty trick. We set sys.executable
+            # so that bundlebuilder will use this in the #! line
+            # for the applet bootstrap.
+            sys.executable = arg
+        elif opt in ('-v', '--verbose'):
+            verbose = Verbose()
+        elif opt in ('-?', '--help'):
+            usage()
+        elif opt in ('-d', '--destroot'):
+            destroot = arg
+    # On OS9 always be verbose
+    if sys.platform == 'mac' and not verbose:
+        verbose = 'default'
+    # Loop over all files to be processed
+    for filename in args:
+        print filename
         cr, tp = MacOS.GetCreatorAndType(filename)
         if tp == 'APPL':
             buildtools.update(template, filename, dstfilename)
         else:
-            buildtools.process(template, filename, dstfilename, 1)
-    else:
-
-        SHORTOPTS = "o:r:ne:v?PR"
-        LONGOPTS = ("output=", "resource=", "noargv", "extra=", "verbose", "help", "python=", "destroot=")
-        try:
-            options, args = getopt.getopt(sys.argv[1:], SHORTOPTS, LONGOPTS)
-        except getopt.error:
-            usage()
-        if options and len(args) > 1:
-            sys.stderr.write("Cannot use options when specifying multiple input files")
-            sys.exit(1)
-
-        dstfilename = None
-        rsrcfilename = None
-        raw = 0
-        extras = []
-        verbose = None
-        destroot = ''
-        for opt, arg in options:
-            if opt in ('-o', '--output'):
-                dstfilename = arg
-            elif opt in ('-r', '--resource'):
-                rsrcfilename = arg
-            elif opt in ('-n', '--noargv'):
-                raw = 1
-            elif opt in ('-e', '--extra'):
-                if ':' in arg:
-                    arg = arg.split(':')
-                extras.append(arg)
-            elif opt in ('-P', '--python'):
-                # This is a very dirty trick. We set sys.executable
-                # so that bundlebuilder will use this in the #! line
-                # for the applet bootstrap.
-                sys.executable = arg
-            elif opt in ('-v', '--verbose'):
-                verbose = Verbose()
-            elif opt in ('-?', '--help'):
-                usage()
-            elif opt in ('-d', '--destroot'):
-                destroot = arg
-        # On OS9 always be verbose
-        if sys.platform == 'mac' and not verbose:
-            verbose = 'default'
-        # Loop over all files to be processed
-        for filename in args:
-            print filename
-            cr, tp = MacOS.GetCreatorAndType(filename)
-            if tp == 'APPL':
-                buildtools.update(template, filename, dstfilename)
-            else:
-                buildtools.process(template, filename, dstfilename, 1,
-                        rsrcname=rsrcfilename, others=extras, raw=raw,
-                        progress=verbose, destroot=destroot)
+            buildtools.process(template, filename, dstfilename, 1,
+                    rsrcname=rsrcfilename, others=extras, raw=raw,
+                    progress=verbose, destroot=destroot)
 
 def usage():
     print "BuildApplet creates an application from a Python source file"

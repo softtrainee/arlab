@@ -48,6 +48,7 @@ import datetime
 from src.bakeout.classifier import Classifier
 from collections import namedtuple
 from src.utils import get_display_size
+from src.bakeout.bakeout_pyscript_manager import BakeoutPyScriptManager
 
 
 BATCH_SET_BAUDRATE = False
@@ -136,6 +137,18 @@ class BakeoutManager(Manager):
 #            dm.new_array('/{}'.format(n), 'data', d.transpose())
 #
 #        dm.close()
+    def open_script(self):
+        se = BakeoutPyScriptManager()
+        if se.open_script():
+            se.on_trait_change(self.refresh_scripts,
+                               'refresh_scripts_event')
+            self.open_view(se)
+
+    def new_script(self):
+        se = BakeoutPyScriptManager()
+        se.on_trait_change(self.refresh_scripts,
+                           'refresh_scripts_event')
+        self.open_view(se)
 
     def find_bakeout(self):
         db = self.database
@@ -889,32 +902,32 @@ class BakeoutManager(Manager):
     def traits_view(self):
         '''
         '''
-        controller_grp = HGroup()
-        for tr in self._get_controller_names():
-            controller_grp.content.append(Item(tr,
-                                               show_label=False, style='custom'))
+#        controller_grp = HGroup()
+#        for tr in self._get_controller_names():
+#            controller_grp.content.append(Item(tr,
+#                                               show_label=False, style='custom'))
+#
+#        control_grp = HGroup(
+#                             VGroup(Item('execute',
+#                                         editor=ButtonEditor(label_value='execute_label'), show_label=False,
+#                                         enabled_when='execute_ok'),
+#                                    HGroup(spring, Item('training_run', label='Training Run'))
+#                                    ),
+#                             HGroup(Item('configuration',
+#                                         editor=EnumEditor(name='configurations'),
+#                                         show_label=False),
+#                                    Item('save',
+#                                         show_label=False)),
+#                             VGroup('include_pressure',
+#                                    'include_heat',
+#                                    'include_temp', enabled_when='not active'),
+#                             label='Control', show_border=True
+#                             )
 
-        control_grp = HGroup(
-                             VGroup(Item('execute',
-                                         editor=ButtonEditor(label_value='execute_label'), show_label=False,
-                                         enabled_when='execute_ok'),
-                                    HGroup(spring, Item('training_run', label='Training Run'))
-                                    ),
-                             HGroup(Item('configuration',
-                                         editor=EnumEditor(name='configurations'),
-                                         show_label=False),
-                                    Item('save',
-                                         show_label=False)),
-                             VGroup('include_pressure',
-                                    'include_heat',
-                                    'include_temp', enabled_when='not active'),
-                             label='Control', show_border=True
-                             )
-
-        scan_grp = VGroup(Item('update_interval',
-                          label='Sample Period (s)'), Item('scan_window'
-                          , label='Data Window (mins)'), label='Scan',
-                          show_border=True)
+#        scan_grp = VGroup(Item('update_interval',
+#                          label='Sample Period (s)'), Item('scan_window'
+#                          , label='Data Window (mins)'), label='Scan',
+#                          show_border=True)
 
         pressure_grp = VGroup(
                               HGroup(

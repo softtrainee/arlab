@@ -23,6 +23,7 @@ from src.constants import NULL_STR
 import os
 from src.paths import paths
 from ConfigParser import ConfigParser
+from matplotlib.mlab import ma
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -48,24 +49,27 @@ class ExperimentQueueFactory(Loggable):
     def traits_view(self):
         v = View(VGroup(
                        Item('username'),
-                       Item('mass_spectrometer',
-                            editor=EnumEditor(name='mass_spectrometers'),
-                            ),
-                       Item('extract_device',
-                            editor=EnumEditor(name='extract_devices'),
-                            ),
-#                       Item('tray',
-#                            editor=EnumEditor(name='trays'),
-#                            tooltip='Select an sample tray for this set'
+#                       Item('mass_spectrometer',
+#                            editor=EnumEditor(name='mass_spectrometers'),
 #                            ),
+#                       Item('extract_device',
+#                            editor=EnumEditor(name='extract_devices'),
+#                            ),
+# #                       Item('tray',
+# #                            editor=EnumEditor(name='trays'),
+# #                            tooltip='Select an sample tray for this set'
+# #                            ),
 
                        Item('delay_before_analyses',
-                            tooltip='Set the time in seconds to delay before starting this queue',
-                            label='Delay before Analyses (s)'),
+#                            tooltip='Set the time in seconds to delay before starting this queue',
+#                            label='Delay before Analyses (s)'
+                            ),
                        Item('delay_between_analyses',
-                            tooltip='Set the delay between analysis in seconds',
-                            label='Delay between Analyses (s)')
-                       )
+#                            tooltip='Set the delay between analysis in seconds',
+#                            label='Delay between Analyses (s)'
+                            ),
+
+                       ),
                 )
         return v
 #===============================================================================
@@ -116,4 +120,7 @@ class ExperimentQueueFactory(Loggable):
         if config.has_section(section):
             return [config.get(section, option) for option in config.options(section)]
 
+if __name__ == '__main__':
+    g = ExperimentQueueFactory()
+    g.configure_traits()
 #============= EOF =============================================
