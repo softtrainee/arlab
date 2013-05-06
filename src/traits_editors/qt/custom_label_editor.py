@@ -23,7 +23,8 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 # import wx
 #============= standard library imports ========================
 import random
-from PySide.QtGui import QLabel
+from PySide.QtGui import QLabel, QVBoxLayout, QHBoxLayout
+from PySide.QtCore import Qt
 #============= local library imports  ==========================
 
 class _CustomLabelEditor(Editor):
@@ -34,11 +35,43 @@ class _CustomLabelEditor(Editor):
 
     def update_editor(self):
         if self.control:
+
+
+
             self.control.setText(self.value)
 #            self.control.SetLabel(self.value)
 
     def _create_control(self, parent):
         control = QLabel()
+        css = '''QLabel {{ color:{}; font-size:{}px;}}
+'''.format(self.item.color.name(), self.item.size)
+
+        control.setStyleSheet(css)
+#        control.setAlignment(Qt.AlignCenter)
+#        control.setGeometry(0, 0, self.item.width, self.item.height)
+#        vbox = QVBoxLayout()
+#        vbox.setSpacing(0)
+
+#        hbox = QHBoxLayout()
+
+#        hbox.addLayout(vbox)
+#        parent.addLayout(vbox)
+
+        control.setMargin(5)
+        parent.setSpacing(0)
+#        print vbox.getContentsMargins()
+#        vbox.setContentsMargins(5, 5, 5, 5)
+#        vbox.setSpacing(-1)
+#        vbox.addSpacing(5)
+#        vbox.addSpacing(10)
+#        vbox.addWidget(control)
+#        vbox.addSpacing(5)
+#        vbox.addStretch()
+
+#        vbox.setSpacing(-1)
+#        vbox.setMargin(10)
+#        control.setLayout(vbox)
+#        parent.addWidget(control)
         return control
 #        panel = wx.Panel(parent, -1)
 #        size = None
@@ -92,7 +125,7 @@ class CustomLabelEditor(BasicEditorFactory):
 
 class CustomLabel(UItem):
     editor = Instance(CustomLabelEditor, ())
-    size = Int
+    size = Int(12)
     color = Color('green')
     top_padding = Int(5)
     bottom_padding = Int(5)
