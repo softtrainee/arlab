@@ -36,11 +36,16 @@ class ViewableHandler(Handler):
 #        except AttributeError:
 #            pass
 
+    def object_activated_changed(self, info):
+        if info.initialized:
+            if info.ui:
+                info.object.set_active(info.ui.control.IsActive())
+
     def object_disposed_changed(self, info):
         if info.initialized:
             if info.ui:
                 info.ui.dispose()
-        
+
     def object_raised_changed(self, info):
         if info.initialized:
             if info.ui:
@@ -73,28 +78,38 @@ class Viewable(Loggable):
     close_event = Event
     disposed = Event
     raised = Event
+    activated = Event
+
+    _is_active = Bool
     initialized = Bool
-    
+
+    def set_active(self, flag):
+        self._is_active = flag
+
+    def IsActive(self):
+        self.activated = True
+        return self._is_active
+
     def opened(self, ui):
         pass
 
     def close(self, ok):
         for ai in self.associated_windows:
             ai.close_ui()
-        
+
         return True
 #        return True
 #
     def closed(self, ok):
         pass
-    
+
     def close_ui(self):
         self.disposed = True
-##        if self.ui is not None:
-##            # disposes 50 ms from now
-##            do_after(50, self.ui.dispose)
-##            # sleep a little so everything has time to update
-##            # time.sleep(0.05)
+# #        if self.ui is not None:
+# #            # disposes 50 ms from now
+# #            do_after(50, self.ui.dispose)
+# #            # sleep a little so everything has time to update
+# #            # time.sleep(0.05)
 
     def show(self, **kw):
         args = tuple()

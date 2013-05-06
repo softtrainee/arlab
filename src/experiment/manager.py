@@ -154,51 +154,58 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
 
-    def verify_credentials(self, inform=True):
-        # disable for now
-        # change to enter credentials
-        self.can_edit_scripts = True
-        self.max_allowable_runs = 10000
-        return True
-
-
-        if globalv.experiment_debug:
-            return True
-
-        global P_VERIFY_TIME
-
-        verify = True
-        if P_VERIFY_TIME:
-            verify = time.time() - P_VERIFY_TIME > (self._ver_timeout * 60)
-
-        if not verify:
-            return True
-
-        cred = Credentials(db=self.db)
-        info = cred.edit_traits()
-
-        if info.result:
-            if self.db.connect(force=True):
-                rec = self.db.get_user(cred.username)
-                if rec and cred.verify(rec.password, rec.salt):
-                    self.username = cred.username
-                    self._load_permissions(rec, inform)
-                    P_VERIFY_TIME = time.time()
-                    return True
-                else:
-                    self.warning_dialog('Invalid username and password')
+    def verify_database_connection(self, inform=True):
+        if self.db is not None:
+            if self.db.connect():
+                self.db.flush()
+                self.db.reset()
+                return True
+        elif inform:
+            self.warning_dialog('Not Database available')
+#    def verify_credentials(self, inform=True):
+#        # disable for now
+#        # change to enter credentials
+#        self.can_edit_scripts = True
+#        self.max_allowable_runs = 10000
+#        return True
+#
+#        if globalv.experiment_debug:
+#            return True
+#
+#        global P_VERIFY_TIME
+#
+#        verify = True
+#        if P_VERIFY_TIME:
+#            verify = time.time() - P_VERIFY_TIME > (self._ver_timeout * 60)
+#
+#        if not verify:
+#            return True
+#
+#        cred = Credentials(db=self.db)
+#        info = cred.edit_traits()
+#
+#        if info.result:
+#            if self.db.connect(force=True):
+#                rec = self.db.get_user(cred.username)
+#                if rec and cred.verify(rec.password, rec.salt):
+#                    self.username = cred.username
+#                    self._load_permissions(rec, inform)
+#                    P_VERIFY_TIME = time.time()
+#                    return True
+#                else:
+#                    self.warning_dialog('Invalid username and password')
 
     def load(self):
         return self.populate_default_tables()
-
-    def _load_permissions(self, rec, inform):
-        self.max_allowable_runs = int(rec.max_allowable_runs)
-        self.can_edit_scripts = rec.can_edit_scripts
-        if inform:
-            self.information_dialog('''Permissions for {}
-max_runs= {}
-can_edit_scripts= {}
-'''.format(self.username, self.max_allowable_runs, self.can_edit_scripts))
+#
+#    def _load_permissions(self, rec, inform):
+#        self.max_allowable_runs = int(rec.max_allowable_runs)
+#        self.can_edit_scripts = rec.can_edit_scripts
+#        if inform:
+#            self.information_dialog('''Permissions for {}
+# max_runs= {}
+# can_edit_scripts= {}
+# '''.format(self.username, self.max_allowable_runs, self.can_edit_scripts))
 
     def _reload_from_disk(self):
 #        if not self._alive:
@@ -207,7 +214,7 @@ can_edit_scripts= {}
 #                ei._cached_runs = None
             ei.load(ti)
 
-        self._update()
+        self._update(all_info=True)
 
     def check_for_file_mods(self):
         path = self.experiment_queue.path
@@ -372,28 +379,29 @@ can_edit_scripts= {}
         # update run info
         if not all_info:
             ans = ans[-1:]
+
         self._update_info(ans)
-        
+
 #     def _clear_cache(self):
 #         for di in dir(self):
 #             if di.startswith('_cached'):
 #                 setattr(self, di, None)
-                
+
     def _get_labnumber(self, arun):
         '''
             cache labnumbers for quick retrieval
         '''
-        ca='_cached_{}'.format(arun.labnumber)
+        ca = '_cached_{}'.format(arun.labnumber)
 #         print ca, hasattr(self,ca)
-        dbln=None
-        if hasattr(self,ca):
-            dbln=getattr(self, ca)
+        dbln = None
+        if hasattr(self, ca):
+            dbln = getattr(self, ca)
 
         if not dbln:
             db = self.db
             dbln = db.get_labnumber(arun.labnumber)
             setattr(self, ca, dbln)
-            
+
         return dbln
 
     def _update_info(self, ans):

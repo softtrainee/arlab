@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports=======================
-from traits.api import Property, Int, Str, Bool
+from traits.api import Property, Int
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
 from src.paths import paths
-from src.experiment.utilities.identifier import make_runid
+# from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
 # def get_name(func):
 #    def _get_name(obj, trait, item):
@@ -97,15 +97,15 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
         return ln
     def _get_aliquot_text(self, trait, item):
-        it=self.item
-        
+        it = self.item
+
         if  it.step:
-            al='{:02n}{}'.format(it.aliquot, it.step)
+            al = '{:02n}{}'.format(it.aliquot, it.step)
         else:
-            al='{:02n}'.format(it.aliquot)
-            
+            al = '{:02n}'.format(it.aliquot)
+
         return al
-    
+
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
 
@@ -222,12 +222,12 @@ class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
                  ('Irrad.', 'irradiation'),
                  ('Position', 'position'),
 #                 ('Autocenter', 'autocenter'),
-#                 ('Pattern', 'pattern'),
 #                 ('Overlap', 'overlap'),
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
                  ('Duration', 'duration'),
                  ('Cleanup', 'cleanup'),
+                 ('Pattern', 'pattern'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
                  ('Post equilibration', 'post_equilibration_script'),

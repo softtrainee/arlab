@@ -736,7 +736,7 @@ anaylsis_type={}
     #                         signals=dict(),
                              )
             plot_panel.reset()
-            plot_panel.on_trait_change(self._plot_panel_closed, 'closed_event')
+            plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
             self.experiment_manager.open_view(plot_panel)
 
         return plot_panel

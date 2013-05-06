@@ -54,6 +54,7 @@ class IdeogramTable(PDFTable):
     _sample_summary_row1 = None
     _sample_summary_row2 = None
     _footnotes = None
+
     def make(self, analyses):
         self._footnotes = []
 
@@ -64,11 +65,12 @@ class IdeogramTable(PDFTable):
 
         a = analyses[0]
         rows.extend(self._make_sample_summary(a.sample,
-                                          a.labnumber_aliquot, a.j,
-                                         a.material,
-                                         '---',
-                                         a.ic_factor
-                                         )
+                                              a.labnumber_aliquot,
+                                              a.j,
+                                              a.material,
+                                              '---',
+                                              a.ic_factor
+                                              )
                     )
         if self.add_header:
             rows.extend(self._make_header())
@@ -103,16 +105,18 @@ class IdeogramTable(PDFTable):
         if not isinstance(ic, tuple):
             ic = ic.nominal_value, ic.std_dev
 
-#        pm = self._plusminus()
-
         line1 = Row(fontsize=8)
         line1.add_item(value=NamedParameter('Sample', sample), span=5)
         line1.add_item(value=NamedParameter('Lab #', labnumber), span=2)
 
-        js = '{:0.2E} {}{:0.2E}'.format(j[0], PLUSMINUS, j[1])
+        js = u'{:0.2E} {}{:0.2E}'.format(j[0], PLUSMINUS, j[1])
         line1.add_item(value=NamedParameter('J', js), span=3)
-        ics = '{:0.3f} {}{:0.4f}'.format(ic[0], PLUSMINUS, ic[1])
-        line1.add_item(value=NamedParameter('IC', ics), span=3)
+        ics = u'{:0.3f} {}{:0.4f}'.format(ic[0], PLUSMINUS, ic[1])
+
+        foot = self._make_footnote('IC',
+                                   'IC Factor', 'H1/CDD intercalibration',
+                                   '<b>IC</b>', link_extra=': {}'.format(ics))
+        line1.add_item(value=foot, span=3)
 
         line2 = Row(fontsize=8)
         line2.add_item(value=NamedParameter('Material', material), span=5)
@@ -131,10 +135,9 @@ class IdeogramTable(PDFTable):
         _103fa = '(10{} fA)'.format(Superscript(3))
         minus_102fa = '(10{} fA)'.format(Superscript(-2))
 
-        n = len(self._footnotes)
-        link, tag = Anchor('BLANK_{}'.format(id(self)), n + 1)
-
-        self._footnotes.append(tag('Blank Type', 'LR= Linear Regression, AVE= Average'))
+        blank = self._make_footnote('BLANK',
+                                   'Blank Type', 'LR= Linear Regression, AVE= Average',
+                                   'Blank')
 
         line = [
                 ('', ''),
@@ -152,7 +155,7 @@ class IdeogramTable(PDFTable):
                                    Subscript('K')), ''),
                 ('Age', '(Ma)'), (sigma, ''),
                 ('K/Ca', ''),
-                (link('Blank'), 'type'),
+                (blank, 'type'),
                 (super_ar(40), ''), (sigma, ''),
                 (super_ar(39), ''), (sigma, ''),
                 (super_ar(38), ''), (sigma, ''),
@@ -177,7 +180,6 @@ class IdeogramTable(PDFTable):
                 ]
 
     def _make_analysis_row(self, analysis):
-#        floatfmt = self.floatfmt
         def fmt_attr(v, key='nominal_value', n=5, scale=1, **kw):
             if isinstance(v, tuple):
                 if key == 'std_dev':
@@ -259,7 +261,6 @@ class IdeogramTable(PDFTable):
         return nrow
 
     def _make_summary_row(self, analyses):
-#        rows = []
         ages, errors = zip(*[(ai.age.nominal_value, ai.age.std_dev) for ai in analyses])
         n = len(analyses)
         row = SummaryRow(fontsize=6)
@@ -288,7 +289,6 @@ class IdeogramTable(PDFTable):
             row.add_item(value=v, span= -1)
             rows.append(row)
 
-
         for n, d, v, e, r in (
                           (40, 36, 295.5, 0.5, 'Nier (1950)'),
                           (40, 38, 0.1880, 0.5, 'Nier (1950)'),
@@ -297,9 +297,7 @@ class IdeogramTable(PDFTable):
             row.add_item(value='({}Ar/{}Ar){}'.format(
                                                 Superscript(n),
                                                 Superscript(d),
-#                                                'A'
                                                 Subscript('A'),
-
                                                 ),
                          span=3
                          )
@@ -307,7 +305,6 @@ class IdeogramTable(PDFTable):
                          span=2)
             row.add_item(value=r, span= -1)
             rows.append(row)
-
 
         row = FooterRow(fontsize=df)
         row.add_item(value='Interferring isotope production ratios', span= -1)
@@ -351,7 +348,12 @@ class IdeogramTable(PDFTable):
 
         return rows
 
-
+    def _make_footnote(self, tagname, tagName, tagText, linkname, link_extra=None):
+        n = len(self._footnotes)
+        link, tag = Anchor('{}_{}'.format(tagname, id(self)), n + 1)
+        para = link(linkname, extra=link_extra)
+        self._footnotes.append(tag(tagName, tagText))
+        return para
 #===============================================================================
 # table formatting
 #===============================================================================

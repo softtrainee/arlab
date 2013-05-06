@@ -138,6 +138,10 @@ class ExperimentExecutor(ExperimentManager):
     def experiment_blob(self):
         return '{}\n{}'.format(self.experiment_queue.path, self._text)
 
+    def closed(self, ok):
+        self.selected = None
+        return super(ExperimentExecutor, self).closed(ok)
+
     def opened(self, ui):
         self.info_display.clear()
         self.end_at_run_completion = False
@@ -147,13 +151,10 @@ class ExperimentExecutor(ExperimentManager):
         super(ExperimentExecutor, self).opened(ui)
 
     def add_backup(self, uuid_str):
-#        p = os.path.join(paths.hidden_dir, 'backup_recovery')
         with open(paths.backup_recovery_file, 'a') as fp:
             fp.write('{}\n'.format(uuid_str))
 
     def remove_backup(self, uuid_str):
-#        p = os.path.join(paths.hidden_dir, 'backup_recovery')
-
         with open(paths.backup_recovery_file, 'r') as fp:
             r = fp.read()
 
@@ -161,55 +162,15 @@ class ExperimentExecutor(ExperimentManager):
         with open(paths.backup_recovery_file, 'w') as fp:
             fp.write(r)
 
-
-    def _get_all_automated_runs(self):
-        ans = super(ExperimentExecutor, self)._get_all_automated_runs()
-        startid = 0
-        exp = self.experiment_queue
-        if exp and exp._cached_runs:
-            try:
-                startid = exp._cached_runs.index(self._last_ran) + 1
-            except ValueError:
-                pass
-
-        return ans[startid:]
-
-    def _reload_from_disk(self):
-        super(ExperimentExecutor, self)._reload_from_disk()
-        self._update_stats()
-
-    @on_trait_change('experiment_queues[]')
-    def _update_stats(self):
-        self.stats.experiment_queues = self.experiment_queues
-        self.stats.calculate()
-
     def execute_procedure(self, name=None):
         if name is None:
             name = self.open_file_dialog(default_directory=paths.procedures_dir)
             if not name:
                 return
-
             name = os.path.basename(name)
 
         self._execute_procedure(name)
 
-    def _execute_procedure(self, name):
-        self.pyscript_runner.connect()
-
-        root = paths.procedures_dir
-        self.info('executing procedure {}'.format(os.path.join(root, name)))
-
-        els = ExtractionLinePyScript(root=root,
-                                     name=name,
-                                     runner=self.pyscript_runner
-                                     )
-        if els.bootstrap():
-            try:
-                els._test()
-                els.execute(new_thread=True, bootstrap=False)
-            except Exception, e:
-                self.warning(e)
-                self.warning_dialog('Invalid Script {}'.format(name))
 #===============================================================================
 # stats
 #===============================================================================
@@ -223,6 +184,14 @@ class ExperimentExecutor(ExperimentManager):
 #    def stop_stats_timer(self):
 # #        self._alive = False
 #        self.stats.stop_timer()
+
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('experiment_queues[]')
+    def _update_stats(self):
+        self.stats.experiment_queues = self.experiment_queues
+        self.stats.calculate()
 #===============================================================================
 # private
 #===============================================================================
@@ -252,10 +221,6 @@ class ExperimentExecutor(ExperimentManager):
             # check for blank before starting the thread
             exp = self.experiment_queues[0]
             if self._has_preceeding_blank_or_background(exp):
-#                 if self.extraction_line_manager:
-#                     # start the extraction line manager's valve state monitor
-#                     self.extraction_line_manager.start_status_monitor()
-
                 t = Thread(target=self._execute_experiment_queues)
                 t.start()
 
@@ -281,8 +246,8 @@ class ExperimentExecutor(ExperimentManager):
                 if not man.test_connection():
                     nonfound.append(extract_device)
 
-        needs_spec_man=any([ai.measurement_script for ai in self._get_all_automated_runs()])
-        
+        needs_spec_man = any([ai.measurement_script for ai in self._get_all_automated_runs()])
+
         if self.spectrometer_manager is None and needs_spec_man:
             if not globalv.experiment_debug:
                 nonfound.append('spectrometer')
@@ -357,9 +322,24 @@ class ExperimentExecutor(ExperimentManager):
             time.sleep(0.5)
             self.delay_between_runs_readback -= 0.5
         self.delaying_between_runs = False
-#    def check_for_mods(self):
-#        if self.experiment_queue.new_run_gen_needed:
-#            return True
+
+    def _execute_procedure(self, name):
+        self.pyscript_runner.connect()
+
+        root = paths.procedures_dir
+        self.info('executing procedure {}'.format(os.path.join(root, name)))
+
+        els = ExtractionLinePyScript(root=root,
+                                     name=name,
+                                     runner=self.pyscript_runner
+                                     )
+        if els.bootstrap():
+            try:
+                els._test()
+                els.execute(new_thread=True, bootstrap=False)
+            except Exception, e:
+                self.warning(e)
+                self.warning_dialog('Invalid Script {}'.format(name))
 
     def _execute_automated_runs(self, iexp, exp):
 
@@ -491,11 +471,11 @@ class ExperimentExecutor(ExperimentManager):
         if self.massspec_importer:
             db = self.massspec_importer.db
             try:
-                _= int(arv.labnumber)
+                _ = int(arv.labnumber)
                 al = db.get_lastest_analysis_aliquot(arv.labnumber)
                 if al is not None:
                     if al > arv.aliquot:
-                        old=arv.aliquot
+                        old = arv.aliquot
                         arv.aliquot = al + 1
                         self.message('{}-{:02n} exists in secondary database. Modifying aliquot to {:02n}'.format(arv.labnumber,
                                                                                                                   old,
@@ -516,7 +496,7 @@ class ExperimentExecutor(ExperimentManager):
 
 
         arun = arv.make_run()
-                
+
         exp = self.experiment_queue
         exp.current_run = arun
         self.debug('setup run {} of {}'.format(i, exp.name))
@@ -658,6 +638,22 @@ class ExperimentExecutor(ExperimentManager):
     def _end_runs(self):
         self._last_ran = None
         self.stats.stop_timer()
+
+    def _get_all_automated_runs(self):
+        ans = super(ExperimentExecutor, self)._get_all_automated_runs()
+        startid = 0
+        exp = self.experiment_queue
+        if exp and exp._cached_runs:
+            try:
+                startid = exp._cached_runs.index(self._last_ran) + 1
+            except ValueError:
+                pass
+
+        return ans[startid:]
+
+    def _reload_from_disk(self):
+        super(ExperimentExecutor, self)._reload_from_disk()
+        self._update_stats()
 
     def _recall_run(self):
         selected = self.selected
