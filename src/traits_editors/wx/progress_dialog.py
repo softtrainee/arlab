@@ -17,13 +17,17 @@
 #============= enthought library imports =======================
 from pyface.api import ProgressDialog
 #============= standard library imports ========================
-# from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
-#    CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, DisplaySize
+from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
+    CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, DisplaySize
 #============= local library imports  ==========================
 
 class MProgressDialog(ProgressDialog):
+
+    def get_value(self):
+        return self.progress_bar.control.GetValue()
+
     def increment(self, step=1):
-        v = self.progress_bar.control.Value
+        v = self.get_value()
         self.update(v + step)
 
     def increase_max(self, step=1):
@@ -33,38 +37,41 @@ class MProgressDialog(ProgressDialog):
         '''
             center window on screen
         '''
-        pass
-#        (w, h) = DisplaySize()
-#        (ww, _hh) = self.control.GetSize()
-#        self.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
 
-#    def _create_control(self, parent):
-#        '''
-#        '''
-#
-#        style = DEFAULT_FRAME_STYLE | FRAME_NO_WINDOW_MENU \
-#            | CLIP_CHILDREN
-#
-#        dialog = Frame(parent, -1, self.title, style=style)
-#
-#        sizer = BoxSizer(VERTICAL)
-#        dialog.SetSizer(sizer)
-#        dialog.SetAutoLayout(True)
-#        dialog.SetBackgroundColour(NullColor)
-#
-#        self.dialog_size = Size(*self.size)
-#
-#        # The 'guts' of the dialog.
-#
-#        self._create_message(dialog, sizer)
-#        self._create_gauge(dialog, sizer)
-#        self._create_percent(dialog, sizer)
-#        self._create_timer(dialog, sizer)
-#        self._create_buttons(dialog, sizer)
-#
-#        dialog.SetClientSize(self.dialog_size)
-#
-#        # dialog.CentreOnParent()
-#
-#        return dialog
+        (w, h) = DisplaySize()
+        (ww, _hh) = self.control.GetSize()
+        self.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
+
+    def set_size(self, w, h):
+        self.size = (w, h)
+
+    def _create_control(self, parent):
+        '''
+        '''
+
+        style = DEFAULT_FRAME_STYLE | FRAME_NO_WINDOW_MENU \
+            | CLIP_CHILDREN
+
+        dialog = Frame(parent, -1, self.title, style=style)
+
+        sizer = BoxSizer(VERTICAL)
+        dialog.SetSizer(sizer)
+        dialog.SetAutoLayout(True)
+        dialog.SetBackgroundColour(NullColor)
+
+        self.dialog_size = Size(*self.size)
+
+        # The 'guts' of the dialog.
+
+        self._create_message(dialog, sizer)
+        self._create_gauge(dialog, sizer)
+        self._create_percent(dialog, sizer)
+        self._create_timer(dialog, sizer)
+        self._create_buttons(dialog, sizer)
+
+        dialog.SetClientSize(self.dialog_size)
+
+        # dialog.CentreOnParent()
+
+        return dialog
 #============= EOF =============================================

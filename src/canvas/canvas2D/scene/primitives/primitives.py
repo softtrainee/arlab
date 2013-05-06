@@ -20,12 +20,15 @@ from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, I
 from traitsui.api import View, VGroup, HGroup, Item, Group
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
+from kiva.fonttools import str_to_font
+
 #============= standard library imports ========================
 import math
 from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull
 from src.geometry.geometry import calc_point_along_line
+
 
 
 def calc_rotation(x1, y1, x2, y2):
@@ -69,6 +72,7 @@ class Primitive(HasTraits):
 
     primitives = List
     label = Property
+    font = str_to_font('modern 14')
 
     def _get_label(self):
         return '{} {} {}'.format(self.klass_name, self.name, self.identifier)
@@ -165,6 +169,8 @@ class Primitive(HasTraits):
             t = str(self.name)
             tw = gc.get_full_text_extent(t)[0]
             x = x + w / 2.0 - tw / 2.0
+
+            gc.set_font(self.font)
             gc.set_text_position(x, y + h / 2 - 6)
             gc.show_text(str(self.name))
             gc.draw_path()
@@ -199,7 +205,16 @@ class Primitive(HasTraits):
     def _get_group(self):
         pass
 
-class Point(Primitive):
+class QPrimitive(Primitive):
+    def _convert_color(self, c):
+        if not isinstance(c, (list, tuple)):
+#            c = c.red(), c.green(), c.blue()
+            c = c.toTuple()
+
+        c = map(lambda x:x / 255., c)
+        return c
+
+class Point(QPrimitive):
     radius = Float(1)
     def _get_group(self):
         g = VGroup('radius')
@@ -220,7 +235,7 @@ class Point(Primitive):
             gc.stroke_path()
 
 
-class Rectangle(Primitive):
+class Rectangle(QPrimitive):
     width = 0
     height = 0
     x = 0
@@ -250,7 +265,6 @@ class Rectangle(Primitive):
 #            gc.draw_path()
 
     def _render_border(self, gc, x, y, w, h):
-        print gc.get_stroke_color()
 #        gc.set_stroke_color((0, 0, 0))
         gc.rect(x - self.line_width, y - self.line_width,
                 w + self.line_width, h + self.line_width
@@ -297,8 +311,8 @@ class RoundedRectangle(Rectangle):
 #        else:
 #            c = list(self.active_color)
 #
-        c = list(self.default_color)
-        c = self._convert_color(c)
+#        c = list(self.default_color)
+        c = self._convert_color(self.default_color)
         c = tuple([ci / (2.) for ci in c])
         return c
 
@@ -336,7 +350,7 @@ class RoundedRectangle(Rectangle):
                         y, corner_radius)
                 gc.stroke_path()
 
-class BaseValve(Primitive):
+class BaseValve(QPrimitive):
     soft_lock = False
 
     def is_in(self, x, y):
@@ -439,11 +453,15 @@ class Valve(RoundedRectangle, BaseValve):
         self._draw_state_indicator(gc, x, y, w, h)
 
     def _get_border_color(self):
+#        if self.state:
+#            c = list(self.active_color)
+#        else:
+#            c = list(self.default_color)
         if self.state:
-            c = list(self.active_color)
+            c = self.active_color
         else:
-            c = list(self.default_color)
-#
+            c = self.default_color
+
         c = self._convert_color(c)
         c = [ci / (2.) for ci in c]
         return c
@@ -471,7 +489,7 @@ class Valve(RoundedRectangle, BaseValve):
             gc.draw_path()
 
 
-class Line(Primitive):
+class Line(QPrimitive):
     start_point = None
     end_point = None
     screen_rotation = Float
@@ -548,7 +566,7 @@ class Line(Primitive):
         b = calc_rotation(x1, y1, x2, y2)
         self.screen_rotation = b
 
-class Triangle(Primitive):
+class Triangle(QPrimitive):
     draw_text = False
     def __init__(self, *args, **kw):
         super(Triangle, self).__init__(0, 0, **kw)
@@ -586,7 +604,7 @@ class Triangle(Primitive):
                     gc.show_text('{:0.3f}'.format(v))
 
 
-class Circle(Primitive):
+class Circle(QPrimitive):
     radius = Float
     fill = False
     def __init__(self, x, y, radius=10, *args, **kw):
@@ -652,7 +670,7 @@ class CalibrationObject(HasTraits):
 
 
 
-class Label(Primitive):
+class Label(QPrimitive):
     text = String
     use_border = True
     bgcolor = Color('white')
@@ -682,6 +700,7 @@ class Label(Primitive):
             gc.draw_path()
 
         gc.set_fill_color((0, 0, 0))
+        gc.set_font(self.font)
         for i, li in enumerate(lines[::-1]):
             _, h, _, _ = gc.get_full_text_extent(li)
             gc.set_text_position(x, y + i * h)
@@ -691,7 +710,7 @@ class Label(Primitive):
         g = Item('text', style='custom')
         return g
 
-class Indicator(Primitive):
+class Indicator(QPrimitive):
     hline_length = 0.5
     vline_length = 0.5
     use_simple_render = Bool(False)
@@ -803,14 +822,14 @@ class PointIndicator(Indicator):
         g = Group(Item('show_label', label='Display label'))
         return g
 
-class Dot(Primitive):
+class Dot(QPrimitive):
     radius = 5
     def _render_(self, gc):
         x, y = self.get_xy()
         gc.arc(x, y, self.radius, 0, 360)
         gc.fill_path()
 
-class PolyLine(Primitive):
+class PolyLine(QPrimitive):
     points = List
     lines = List
     identifier = Str
@@ -888,7 +907,7 @@ class BorderLine(Line):
         super(BorderLine, self)._render_(gc)
 
 
-class Polygon(Primitive):
+class Polygon(QPrimitive):
     points = List
 #    lines = List
 
@@ -977,7 +996,7 @@ class Polygon(Primitive):
 
 
 #============= EOF ====================================
-# class CalibrationItem(Primitive, CalibrationObject):
+# class CalibrationItem(QPrimitive, CalibrationObject):
 #    center = None
 #    right = None
 #    line = None

@@ -69,7 +69,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     aliquot_text = Property
 
 
-    def get_bg_color(self, obj, trait, row):
+    def get_bg_color(self, obj, trait, row, column):
         if row % 2 == 0:
             color = 'white'
         else:

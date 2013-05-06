@@ -26,6 +26,8 @@ from src.canvas.canvas2D.scene.primitives.primitives import Rectangle, Valve, Li
 from pyface.wx.dialog import confirmation
 from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
+from pyface.action.menu_manager import MenuManager
+from traitsui.menu import Action
 
 W = 2
 H = 2
@@ -127,15 +129,17 @@ class ExtractionLineCanvas2D(SceneCanvas):
         '''
         self.normal_mouse_move(event)
 
-    def OnLock(self, event):
-        item = self.active_item
+    def OnLock(self):
+        item = self._active_item
+        print item
         if item:
             item.soft_lock = lock = not item.soft_lock
             self.manager.set_software_lock(item.name, lock)
+            self.request_redraw()
 
-    def OnSample(self, event):
+    def OnSample(self):
         pass
-    def OnCycle(self, event):
+    def OnCycle(self):
         pass
 #    def OnProperties(self, event):
 #        pass
@@ -149,50 +153,76 @@ class ExtractionLineCanvas2D(SceneCanvas):
     def OnProperties(self, event):
         self.manager.show_valve_properties(self.active_item.name)
 
+    def _action_factory(self, name, func, **kw):
+        '''
+        '''
+        a = Action(name=name, on_perform=getattr(self, func),
+#                   visible_when='0',
+                       **kw)
+
+        return a
+
     def _show_menu(self, event, obj):
-        enabled = True
-        import wx
-
-#        n = self.active_item.name
-#        obj = self.manager.get_valve_by_name()
-        if obj is None:
-            enabled = False
-
-#        self._selected = obj
-        self._popup_menu = wx.Menu()
-
-        panel = event.window.control  # GetEventObject()
+        actions = []
         if self.manager.mode != 'client':
             t = 'Lock'
-            lfunc = self.OnLock
             if obj.soft_lock:
                 t = 'Unlock'
+            action = self._action_factory(t, 'OnLock')
+            actions.append(action)
 
-            item = self._popup_menu.Append(-1, t)
-            item.Enable(enabled)
-            panel.Bind(wx.EVT_MENU, lfunc, item)
+#        actions = [self._action_factory(name, func) for name, func in []]
+        if actions:
+            menu_manager = MenuManager(*actions)
 
-        en = not obj.state
-        try:
-            en = en and not obj.soft_lock
-        except AttributeError:
-            pass
+            self._active_item = self.active_item
+            menu = menu_manager.create_menu(event.window.control, None)
+            menu.show()
 
-        for t, enable in [('Sample', en),
-                           ('Cycle', en),
-                           ('Properties...', True)]:
-            item = self._popup_menu.Append(-1, t)
-            item.Enable(enable and enabled)
-            if t.endswith('...'):
-                t = t[:-3]
-
-            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
-
-        pos = event.x, panel.Size[1] - event.y
-
-        panel.PopupMenu(self._popup_menu, pos)
-        self._popup_menu.Destroy()
-        self.invalidate_and_redraw()
+#    def _show_menu_wx(self, event, obj):
+#        enabled = True
+#        import wx
+#
+# #        n = self.active_item.name
+# #        obj = self.manager.get_valve_by_name()
+#        if obj is None:
+#            enabled = False
+#
+# #        self._selected = obj
+#        self._popup_menu = wx.Menu()
+#
+#        panel = event.window.control  # GetEventObject()
+#        if self.manager.mode != 'client':
+#            t = 'Lock'
+#            lfunc = self.OnLock
+#            if obj.soft_lock:
+#                t = 'Unlock'
+#
+#            item = self._popup_menu.Append(-1, t)
+#            item.Enable(enabled)
+#            panel.Bind(wx.EVT_MENU, lfunc, item)
+#
+#        en = not obj.state
+#        try:
+#            en = en and not obj.soft_lock
+#        except AttributeError:
+#            pass
+#
+#        for t, enable in [('Sample', en),
+#                           ('Cycle', en),
+#                           ('Properties...', True)]:
+#            item = self._popup_menu.Append(-1, t)
+#            item.Enable(enable and enabled)
+#            if t.endswith('...'):
+#                t = t[:-3]
+#
+#            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
+#
+#        pos = event.x, panel.Size[1] - event.y
+#
+#        panel.PopupMenu(self._popup_menu, pos)
+#        self._popup_menu.Destroy()
+#        self.invalidate_and_redraw()
 
     def select_right_down(self, event):
         item = self.active_item
@@ -204,8 +234,8 @@ class ExtractionLineCanvas2D(SceneCanvas):
 #        item = self.valves[self.active_item]
 #        item.soft_lock = lock = not item.soft_lock
 #        self.manager.set_software_lock(item.name, lock)
-#        event.handled = True
-        self.invalidate_and_redraw()
+        event.handled = True
+#        self.invalidate_and_redraw()
 
     def select_left_down(self, event):
         '''

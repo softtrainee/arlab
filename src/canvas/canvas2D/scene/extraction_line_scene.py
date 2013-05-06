@@ -101,7 +101,7 @@ class ExtractionLineScene(Scene):
 
     def load(self, pathname):
         self.reset_layers()
-
+        print pathname
         cp = self._get_canvas_parser(pathname)
 
         xv, yv = self._get_canvas_view_range()
@@ -167,6 +167,7 @@ class ExtractionLineScene(Scene):
                     c = color_dict[key]
                 else:
                     c = (204, 204, 204)
+
                 self._new_rectangle(b, c, bw=5, origin=origin)
 
         for i, l in enumerate(cp.get_elements('label')):

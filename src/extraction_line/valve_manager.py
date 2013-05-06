@@ -145,14 +145,16 @@ class ValveManager(Manager):
                         elm.update_valve_lock_state(k, False)
 
     def get_state_word(self):
-        actuator = self.actuators[0]
-        word = actuator.get_state_word()
-        return self._parse_word(word)
+        if self.actuators:
+            actuator = self.actuators[0]
+            word = actuator.get_state_word()
+            return self._parse_word(word)
 
     def get_lock_word(self):
-        actuator = self.actuators[0]
-        word = actuator.get_lock_word()
-        return self._parse_word(word)
+        if self.actuators:
+            actuator = self.actuators[0]
+            word = actuator.get_lock_word()
+            return self._parse_word(word)
 
     def _parse_word(self, word):
         if word is not None:

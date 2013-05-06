@@ -56,7 +56,7 @@ class ExtractionLineCanvas(HasTraits):
 #        if self.canvas3D is not None:
 #            self.canvas3D.toggle_item_identify(name)
 
-    def Refresh(self):
+    def refresh(self):
         '''
         '''
 #        if self.canvas3D:

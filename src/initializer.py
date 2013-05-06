@@ -19,15 +19,15 @@
 from traits.api import Any
 #============= standard library imports ========================
 import time
-from wx import DisplaySize
 #============= local library imports  ==========================
 from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
-from src.progress_dialog import MProgressDialog
+from src.traits_editors.progress_dialog import MProgressDialog
 import os
 from globals import globalv
+from pyface.timer.do_later import do_later
 
 
 class Initializer(Loggable):
@@ -94,7 +94,8 @@ class Initializer(Loggable):
 
         if self.pd is not None:
             self.pd.update(self.pd.max)
-            self.pd.close()
+            if self.pd.progress_bar:
+                self.pd.close()
         return ok
 
     def info(self, msg, **kw):
@@ -102,12 +103,15 @@ class Initializer(Loggable):
         pd = self.pd
         if pd is not None:
 
-            offset = pd.progress_bar.control.GetValue()
+#            offset = pd.progress_bar.control.GetValue()
+            offset = pd.get_value()
             pd.change_message(msg)
 
             if offset == pd.max - 1:
                 pd.max += 1
-            pd.update(offset + 1)
+
+            pd.increment()
+#            pd.update(offset + 1)
 #            (cont, skip) = pd.update(offset + 1)
 #            if not cont or skip:
 #                return
@@ -390,11 +394,10 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
     def load_progress(self, n):
         '''
         '''
-        pd = MProgressDialog(max=n, size=(550, 15))
-
-        pd.open()
-        pd.center()
+        pd = MProgressDialog(max=n)
+        pd.set_size(500, 50)
         self.pd = pd
+        self.pd.open()
 
 
 # ========================= EOF ===================================

@@ -19,5 +19,5 @@
 #============= local library imports  ==========================
 from src.traits_editors.factory import toolkit_factory
 
-BarGaugeEditor = toolkit_factory('color_map_bar_editor', 'BarGaugeEditor')
+MProgressDialog = toolkit_factory('progress_dialog', 'MProgressDialog')
 #============= EOF =============================================

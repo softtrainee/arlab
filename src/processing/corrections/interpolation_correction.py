@@ -33,7 +33,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
 from src.processing.analysis import Analysis
 from src.database.records.isotope_record import IsotopeRecord
 from src.graph.regression_graph import StackedRegressionGraph
-from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import MProgressDialog
 
 from src.regression.interpolation_regressor import InterpolationRegressor
 from src.helpers.traitsui_shortcuts import listeditor
@@ -44,6 +44,7 @@ from src.helpers.datetime_tools import convert_timestamp
 from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import OLSRegressor
 from apptools.preferences.preference_binding import bind_preference
+from src.traits_editors.progress_dialog import MProgressDialog
 
 class InterpolationGraph(StackedRegressionGraph):
     pass
