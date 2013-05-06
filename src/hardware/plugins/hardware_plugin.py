@@ -95,6 +95,7 @@ class HardwarePlugin(CorePlugin):
 
         ini = Initializer(device_prefs=dp)
 
+        print self.managers
         for m in self.managers:
             ini.add_initialization(m)
 

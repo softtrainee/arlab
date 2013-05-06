@@ -15,28 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List
+from traits.api import HasTraits, Any
 from traitsui.api import View, Item
-
-from envisage.plugin import Plugin
-from envisage.ui.tasks.task_factory import TaskFactory
-from src.bakeout.tasks.bakeout_task import BakeoutTask
-from src.bakeout.bakeout_manager import BakeoutManager
-from src.envisage.tasks.base_task import BaseTaskPlugin
+from pyface.tasks.task import Task
+from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane
+from pyface.tasks.task_layout import TaskLayout, PaneItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BakeoutPlugin(BaseTaskPlugin):
+class ExtractionLineTask(Task):
+    manager = Any
+    def _default_layout_default(self):
+        return TaskLayout(top=PaneItem('extraction_line.gauges')
+                          )
+    def activated(self):
+        self.manager.activate()
 
-    def _tasks_default(self):
-        ts = [TaskFactory(id='bakeout',
-                        name='Main',
-                        factory=self._bakeout_factory)]
-        return ts
+    def create_central_pane(self):
+        g = CanvasPane(model=self.manager)
+        return g
 
-    def _bakeout_factory(self):
-        bm = BakeoutManager(application=self.application)
-        bm.load()
-        bt = BakeoutTask(bakeout=bm)
-        return bt
+    def create_dock_panes(self):
+        panes = [GaugePane(model=self.manager)]
+        return panes
 #============= EOF =============================================

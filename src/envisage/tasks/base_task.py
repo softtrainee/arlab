@@ -17,26 +17,13 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List
 from traitsui.api import View, Item
-
 from envisage.plugin import Plugin
-from envisage.ui.tasks.task_factory import TaskFactory
-from src.bakeout.tasks.bakeout_task import BakeoutTask
-from src.bakeout.bakeout_manager import BakeoutManager
-from src.envisage.tasks.base_task import BaseTaskPlugin
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BakeoutPlugin(BaseTaskPlugin):
+class BaseTaskPlugin(Plugin):
+    tasks = List(contributes_to='envisage.ui.tasks.tasks')
+    def check(self):
+        return True
 
-    def _tasks_default(self):
-        ts = [TaskFactory(id='bakeout',
-                        name='Main',
-                        factory=self._bakeout_factory)]
-        return ts
-
-    def _bakeout_factory(self):
-        bm = BakeoutManager(application=self.application)
-        bm.load()
-        bt = BakeoutTask(bakeout=bm)
-        return bt
 #============= EOF =============================================

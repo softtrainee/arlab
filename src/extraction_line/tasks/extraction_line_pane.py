@@ -15,28 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List
-from traitsui.api import View, Item
-
-from envisage.plugin import Plugin
-from envisage.ui.tasks.task_factory import TaskFactory
-from src.bakeout.tasks.bakeout_task import BakeoutTask
-from src.bakeout.bakeout_manager import BakeoutManager
-from src.envisage.tasks.base_task import BaseTaskPlugin
+from traits.api import HasTraits
+from traitsui.api import View, UItem
+from pyface.tasks.traits_task_pane import TraitsTaskPane
+from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BakeoutPlugin(BaseTaskPlugin):
+class CanvasPane(TraitsTaskPane):
+    id = 'extraction_line.canvas'
+    name = 'Extraction Line'
+    def traits_view(self):
+        v = View(UItem('canvas', style='custom'))
+        return v
 
-    def _tasks_default(self):
-        ts = [TaskFactory(id='bakeout',
-                        name='Main',
-                        factory=self._bakeout_factory)]
-        return ts
-
-    def _bakeout_factory(self):
-        bm = BakeoutManager(application=self.application)
-        bm.load()
-        bt = BakeoutTask(bakeout=bm)
-        return bt
+class GaugePane(TraitsDockPane):
+    name = 'Gauges'
+    id = 'extraction_line.gauges'
+    def traits_view(self):
+        v = View(UItem('gauge_manager',
+                              style='custom',
+                              height=125,
+#                              springy=False,
+                              defined_when='gauge_manager'
+                              ),
+                 )
+        return v
 #============= EOF =============================================

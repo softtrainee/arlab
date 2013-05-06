@@ -30,6 +30,7 @@ from src.pyscripts.manager import PyScriptManager
 from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
+from pyface.timer.do_later import do_later
 # from src.managers.multruns_report_manager import MultrunsReportManager
 
 # Macro = None
@@ -131,6 +132,7 @@ class ExtractionLineManager(Manager):
                                          )
             self.monitor.monitor()
 
+
 #        if self.gauge_manager is not None:
 #            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
 #    def close(self, isok):
@@ -148,17 +150,32 @@ class ExtractionLineManager(Manager):
             self.monitor.stop()
         return True
 
-    def opened(self, ui):
-        super(ExtractionLineManager, self).opened(ui)
+#    def opened(self, ui):
+#        super(ExtractionLineManager, self).opened(ui)
+#        self.reload_scene_graph()
+#        p = os.path.join(paths.hidden_dir, 'show_explanantion')
+#        if os.path.isfile(p):
+#            with open(p, 'rb') as f:
+#                try:
+#                    self.show_explanation = pickle.load(f)
+#                except pickle.PickleError:
+#                    pass
+#
+#        if self.mode == 'client':
+#            self.start_status_monitor()
+#        else:
+#            if self.gauge_manager:
+#                self.info('start gauge scans')
+#                self.gauge_manager.start_scans()
+    def activate(self):
         self.reload_scene_graph()
-        p = os.path.join(paths.hidden_dir, 'show_explanantion')
-        if os.path.isfile(p):
-            with open(p, 'rb') as f:
-                try:
-                    self.show_explanation = pickle.load(f)
-                except pickle.PickleError:
-                    pass
-
+#        p = os.path.join(paths.hidden_dir, 'show_explanantion')
+#        if os.path.isfile(p):
+#            with open(p, 'rb') as f:
+#                try:
+#                    self.show_explanation = pickle.load(f)
+#                except pickle.PickleError:
+#                    pass
         if self.mode == 'client':
             self.start_status_monitor()
         else:
@@ -255,7 +272,13 @@ class ExtractionLineManager(Manager):
                         except:
                             pass
 
-#            self.canvas.Refresh()
+            do_later(self.canvas.refresh)
+            self.canvas.refresh()
+#            canvas = self.canvas.canvas2D
+
+#            canvas._layout_needed = True
+#            canvas.request_redraw()
+#            canvas._layout_needed = False
 #            self.view_controller = self._view_controller_factory()
 
     def load_canvas(self):
@@ -484,28 +507,28 @@ class ExtractionLineManager(Manager):
             if selected:
                 self.explanation.selected = selected
 
-    def traits_view(self):
-        '''
-        '''
-        v = View(
-                 VSplit(
-                         Item('gauge_manager',
-                              style='custom', show_label=False,
-                              height=0.2,
-                              springy=False,
-                              defined_when='gauge_manager'
-                              ),
-                         Item('canvas',
-                              style='custom',
-                              show_label=False,
-                              height=0.8)
-                        ),
-               handler=self.handler_klass,
-               title='Extraction Line Manager',
-               resizable=True,
-               id='pychron.extraction_line_window'
-               )
-        return v
+#    def traits_view(self):
+#        '''
+#        '''
+#        v = View(
+#                 VSplit(
+#                         Item('gauge_manager',
+#                              style='custom', show_label=False,
+#                              height=0.2,
+#                              springy=False,
+#                              defined_when='gauge_manager'
+#                              ),
+#                         Item('canvas',
+#                              style='custom',
+#                              show_label=False,
+#                              height=0.8)
+#                        ),
+#               handler=self.handler_klass,
+#               title='Extraction Line Manager',
+#               resizable=True,
+#               id='pychron.extraction_line_window'
+#               )
+#        return v
 
 #=================== factories ==========================
 
