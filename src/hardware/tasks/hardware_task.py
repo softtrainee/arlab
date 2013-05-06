@@ -15,27 +15,34 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Any
 from traitsui.api import View, Item
-from pyface.tasks.task import Task
-from pyface.tasks.action.schema import SMenu, SMenuBar
-from pyface.tasks.action.task_toggle_group import TaskToggleGroup
+# from pyface.tasks.task import Task
+from src.hardware.tasks.hardware_pane import CurrentDevicePane, DevicesPane, InfoPane
+from pyface.tasks.task_layout import PaneItem, TaskLayout, VSplitter
+from src.envisage.tasks.base_task import BaseTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTask(Task):
-    def _menu_bar_default(self):
-        return self._menu_bar_factory()
+class HardwareTask(BaseTask):
+    id = 'pychron.hardware'
+    name = 'Hardware'
+    manager = Any
 
-    def _menu_bar_factory(self):
-        view_menu = SMenu(
-                          TaskToggleGroup(),
-                          id='View', name='&View')
-        edit_menu = SMenu(id='Edit', name='&Edit')
+    def _default_layout_default(self):
+        l = TaskLayout(left=VSplitter(
+                                      PaneItem('hardware.devices'),
+                                      PaneItem('hardware.info')
+                          )
+                       )
+        return l
 
-        mb = SMenuBar(
-                      view_menu,
-                      edit_menu
-                      )
-        return mb
+    def create_central_pane(self):
+        pane = CurrentDevicePane(model=self.manager)
+        return pane
+
+    def create_dock_panes(self):
+        return [DevicesPane(model=self.manager),
+                InfoPane(model=self.manager)
+                ]
 #============= EOF =============================================

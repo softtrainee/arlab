@@ -20,16 +20,23 @@ from traitsui.api import View, Item
 from pyface.tasks.task import Task
 from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane
 from pyface.tasks.task_layout import TaskLayout, PaneItem
+from src.envisage.tasks.base_task import BaseTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ExtractionLineTask(Task):
+class ExtractionLineTask(BaseTask):
+    id = 'pychron.extraction_line'
+    name = 'Extraction Line'
     manager = Any
+
     def _default_layout_default(self):
         return TaskLayout(top=PaneItem('extraction_line.gauges')
                           )
     def activated(self):
         self.manager.activate()
+
+#    def prepare_destroy(self):
+#        print 'deeeee'
 
     def create_central_pane(self):
         g = CanvasPane(model=self.manager)

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import List, Instance
-from src.envisage.tasks.base_task import BaseTaskPlugin
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -24,7 +24,7 @@ from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from src.extraction_line.tasks.extraction_line_task import ExtractionLineTask
 
 class ExtractionLinePlugin(BaseTaskPlugin):
-    id = 'extraction_line'
+    id = 'pychron.extraction_line.plugin'
 
     managers = List(contributes_to='pychron.hardware.managers')
 
@@ -54,9 +54,8 @@ class ExtractionLinePlugin(BaseTaskPlugin):
                 ]
 
     def _tasks_default(self):
-        ts = [TaskFactory(id='extraction_line',
-                        name='Extraction Line',
-                        factory=self._factory)]
+        ts = [TaskFactory(id='pychron.extraction_line',
+                         factory=self._factory)]
         return ts
 
     def _factory(self):
