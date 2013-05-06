@@ -15,12 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = "qt4"
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 
-version_id = '_experiment'
+version_id = '_qt'
 from helpers import build_version
 '''
     set_path=True inserts the pychron source directory into the PYTHONPATH

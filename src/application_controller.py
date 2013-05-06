@@ -15,11 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Any
+from traitsui.handler import Controller
+from pyface.timer.do_later import do_after
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
 
-LEDEditor = toolkit_factory('led_editor', 'LEDEditor')
-ButtonLED = toolkit_factory('led_editor', 'ButtonLED')
-LED = toolkit_factory('led_editor', 'LED')
+class ApplicationController(Controller):
+    application = Any
+    def add_window(self, ui):
+        try:
+            if self.application is not None:
+                self.application.uis.append(ui)
+        except AttributeError:
+            pass
+
+    def open_view(self, obj, **kw):
+        def _open_():
+            ui = obj.edit_traits(**kw)
+            self.add_window(ui)
+
+        do_after(1, _open_)
 #============= EOF =============================================

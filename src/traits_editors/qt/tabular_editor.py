@@ -35,60 +35,65 @@ class _TabularEditor(qtTabularEditor):
         super(_TabularEditor, self).init(parent)
 
         control = self.control
-        control.Bind(wx.EVT_KEY_DOWN, self._on_key)
+
+#        control.itemClicked.connect(self._on_key)
+#        print control
+#        control.Bind(wx.EVT_KEY_DOWN, self._on_key)
 
         # binding to the EVT_MOTION prevents the EVT_LIST_BEGIN_DRAG from firing
         # remove binding added by wxTabularEditor
-        control.Bind(wx.EVT_MOTION, None)
+#        control.Bind(wx.EVT_MOTION, None)
+
         self.sync_value(self.factory.rearranged, 'rearranged', 'to')
         self.sync_value(self.factory.pasted, 'pasted', 'to')
         self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
 
-    def update_editor(self):
-        super(_TabularEditor, self).update_editor()
+#    def update_editor(self):
+#        super(_TabularEditor, self).update_editor()
+#
+#        control = self.control
+#        if self.factory.scroll_to_bottom:
+#            if not self.selected and not self.multi_selected:
+#                control.
+# #                control.EnsureVisible(control.GetItemCount() - 1)
+#            else:
+#
+#                if self.selected_row != -1:
+#                    control.EnsureVisible(self.selected_row + 1)
+#                elif self.multi_selected_rows:
+#                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
+#
+#        else:
+#            if not self.selected and not self.multi_selected:
+#                control.EnsureVisible(0)
 
-        control = self.control
-        if self.factory.scroll_to_bottom:
-            if not self.selected and not self.multi_selected:
-                control.EnsureVisible(control.GetItemCount() - 1)
-            else:
-
-                if self.selected_row != -1:
-                    control.EnsureVisible(self.selected_row + 1)
-                elif self.multi_selected_rows:
-                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
-
-        else:
-            if not self.selected and not self.multi_selected:
-                control.EnsureVisible(0)
-
-    def _on_key(self, event):
-        key = event.GetKeyCode()
-        if event.CmdDown():
-            if key == 67:
-#            self.copy_selection = self.selected
-                if self.multi_selected:
-                    sel = self.multi_selected
-                elif self.selected:
-                    sel = self.selected
-
-                self.copy_cache = sel
-                if sel and wx.TheClipboard.Open():
-                    dataObj = wx.TextDataObject()
-                    dataObj.SetText('\n'.join([si.to_string() for si in sel]))
-                    wx.TheClipboard.SetData(dataObj)
-                    wx.TheClipboard.Close()
-            elif key == 86:
-                if self.copy_cache:
-                    self.pasted = True
-
-#        print event.GetModifiers()
-        else:
-            super(_TabularEditor, self)._key_down(event)
-
-    def wx_dropped_on (self, x, y, data, drag_result):
-        super(_TabularEditor, self).wx_dropped_on (x, y, data, drag_result)
-        self.rearranged = True
+#    def _on_key(self, event):
+#        key = event.GetKeyCode()
+#        if event.CmdDown():
+#            if key == 67:
+# #            self.copy_selection = self.selected
+#                if self.multi_selected:
+#                    sel = self.multi_selected
+#                elif self.selected:
+#                    sel = self.selected
+#
+#                self.copy_cache = sel
+#                if sel and wx.TheClipboard.Open():
+#                    dataObj = wx.TextDataObject()
+#                    dataObj.SetText('\n'.join([si.to_string() for si in sel]))
+#                    wx.TheClipboard.SetData(dataObj)
+#                    wx.TheClipboard.Close()
+#            elif key == 86:
+#                if self.copy_cache:
+#                    self.pasted = True
+#
+# #        print event.GetModifiers()
+#        else:
+#            super(_TabularEditor, self)._key_down(event)
+#
+#    def wx_dropped_on (self, x, y, data, drag_result):
+#        super(_TabularEditor, self).wx_dropped_on (x, y, data, drag_result)
+#        self.rearranged = True
 
     def _move_up_current (self):
         super(_TabularEditor, self)._move_up_current()

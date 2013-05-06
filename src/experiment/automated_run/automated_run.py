@@ -36,7 +36,7 @@ from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
-from src.repo.repository import Repository
+# from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, make_rid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
@@ -93,7 +93,7 @@ class AutomatedRun(Loggable):
     db = Instance(IsotopeAdapter)
     local_lab_db = Instance(LocalLabAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
-    repository = Instance(Repository)
+#    repository = Instance(Repository)
 
 #    run_info = Instance(RunInfo, ())
     script_info = Instance(ScriptInfo, ())

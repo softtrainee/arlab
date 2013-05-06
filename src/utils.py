@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2013 Jake Ross
+# Copyright 2011 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from collections import namedtuple
 
-#============= enthought library imports =======================
-#============= standard library imports ========================
-#============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
+def get_display_size():
+    from traits.etsconfig.api import ETSConfig
+    size = namedtuple('Size', 'width height')
+    if ETSConfig.toolkit == "qt4":
+#        from PySide.QtGui import QDesktopWidget
+        from PySide.QtGui import QApplication
+        desktop = QApplication.desktop()
+        rect = desktop.screenGeometry()
+        w, h = rect.width(), rect.height()
+    else:
+        import wx
+        rect = wx.GetDisplaySize()
+        w, h = rect.width, rect.height
 
-LEDEditor = toolkit_factory('led_editor', 'LEDEditor')
-ButtonLED = toolkit_factory('led_editor', 'ButtonLED')
-LED = toolkit_factory('led_editor', 'LED')
-#============= EOF =============================================
+    return size(w, h)

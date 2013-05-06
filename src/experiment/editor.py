@@ -40,7 +40,7 @@ class ExperimentEditor(ExperimentManager):
     def traits_view(self):
         factory_grp = UItem('experiment_factory',
                             style='custom',
-                            width=0.35
+                            width=0.35,
                             )
         exp_grp = UItem('experiment_queue',
                             style='custom',
@@ -58,8 +58,8 @@ class ExperimentEditor(ExperimentManager):
                         exp_grp
                        ),
                  resizable=True,
-                 width=0.80,
-                 height=0.90,
+#                 width=0.80,
+#                 height=0.90,
                  buttons=['OK', 'Cancel'] + SaveableButtons,
 #                          Action(name='Save', action='save',
 #                                 enabled_when='dirty'),
