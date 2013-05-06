@@ -65,11 +65,11 @@ class MeasurementPyScript(ValvePyScript):
             self._use_abbreviated_counts = True
         super(MeasurementPyScript, self).truncate(style=style)
 
-    def get_script_commands(self):
-        cmds = super(MeasurementPyScript, self).get_script_commands()
-
-        cmds += []
-        return cmds
+#    def get_script_commands(self):
+#        cmds = super(MeasurementPyScript, self).get_script_commands()
+#
+#        cmds += []
+#        return cmds
 
     def get_variables(self):
         return ['truncated']

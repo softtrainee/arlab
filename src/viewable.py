@@ -22,7 +22,7 @@ from traitsui.api import Handler
 from pyface.timer.do_later import do_after, do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
+from src.utils import IsQt
 from src.loggable import Loggable
 
 
@@ -36,6 +36,11 @@ class ViewableHandler(Handler):
 #        except AttributeError:
 #            pass
 
+    def object_activated_changed(self, info):
+        if info.initialized:
+            if info.ui:
+                info.object.set_active(info.ui.control.IsActive())
+
     def object_disposed_changed(self, info):
         if info.initialized:
             if info.ui:
@@ -44,7 +49,10 @@ class ViewableHandler(Handler):
     def object_raised_changed(self, info):
         if info.initialized:
             if info.ui:
-                info.ui.control.show()
+                if isQt():
+                    info.ui.control.show()
+                else:
+                    info.ui.control.Raise()
 
     def close(self, info, is_ok):
         return info.object.close(is_ok)
@@ -73,7 +81,17 @@ class Viewable(Loggable):
     close_event = Event
     disposed = Event
     raised = Event
+    activated = Event
+
+    _is_active = Bool
     initialized = Bool
+
+    def set_active(self, flag):
+        self._is_active = flag
+
+    def IsActive(self):
+        self.activated = True
+        return self._is_active
 
     def opened(self, ui):
         pass

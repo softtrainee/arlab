@@ -79,7 +79,8 @@ class ExecuteExperimentQueueAction(ExperimentAction):
         from globals import globalv
         man = self._get_executor(event)
 #        man.experiment_set_path = p
-        if man.verify_credentials(inform=False):
+#        if man.verify_credentials(inform=False):
+        if man.verify_database_connection(inform=True):
             if man.load_experiment_queue(path=globalv.test_experiment_set):
                 open_manager(event.window.application, man)
 
@@ -95,7 +96,8 @@ class NewExperimentQueueAction(ExperimentAction):
         '''
         app = event.window.application
         manager = self._get_editor(event)
-        if manager.verify_credentials():
+        if manager.verify_database_connection(inform=True):
+#        if manager.verify_credentials():
             if manager.load():
                 manager.new_experiment_queue()
                 open_manager(app, manager)
@@ -111,7 +113,8 @@ class OpenExperimentQueueAction(ExperimentAction):
         '''
         '''
         manager = self._get_editor(event)
-        if manager.verify_credentials():
+        if manager.verify_database_connection(inform=True):
+#        if manager.verify_credentials():
             if manager.load():
                 if manager.load_experiment_queue(saveable=True):
                     open_manager(event.window.application, manager)
@@ -133,8 +136,9 @@ class LabnumberEntryAction(ExperimentAction):
     accelerator = 'Ctrl+Shift+l'
     def perform(self, event):
         manager = self._get_manager(event)
-        lne = manager._labnumber_entry_factory()
-        open_manager(event.window.application, lne)
+        if manager.verify_database_connection(inform=True):
+            lne = manager._labnumber_entry_factory()
+            open_manager(event.window.application, lne)
 
 #===============================================================================
 # Utilities

@@ -52,4 +52,15 @@ ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
                                         for b in seeds]
 
 ARGON_KEYS = ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36')
+IRRADIATION_KEYS = [('k4039', 'K_40_Over_39'),
+                    ('k3839', 'K_38_Over_39'),
+                    ('k3739', 'K_37_Over_39'),
+                    ('ca3937', 'Ca_39_Over_37'),
+                    ('ca3837', 'Ca_38_Over_37'),
+                    ('ca3637', 'Ca_36_Over_37'),
+                    ('cl3638', 'P36Cl_Over_38Cl')
+                    ]
+DECAY_KEYS = [('a37decayfactor', '37_Decay'),
+              ('a39decayfactor', '39_Decay'),
+              ]
 #============= EOF =============================================

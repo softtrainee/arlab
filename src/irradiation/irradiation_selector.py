@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Any, cached_property, Str
+from traits.api import HasTraits, Property, Any, cached_property, String
 from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -25,8 +25,8 @@ class IrradiationSelector(HasTraits):
     irradiations = Property
     levels = Property(depends_on='irradiation')
 
-    irradiation = Str
-    level = Str
+    irradiation = String
+    level = String
     def traits_view(self):
         v = View(
                  HGroup(
@@ -50,6 +50,7 @@ class IrradiationSelector(HasTraits):
             self.irradiation = r[-1]
         return r
 
+    @cached_property
     def _get_levels(self):
         r = []
         irrad = self.db.get_irradiation(self.irradiation)

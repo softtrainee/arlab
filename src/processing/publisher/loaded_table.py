@@ -22,6 +22,7 @@ from traitsui.api import View, Item, Controller, SetEditor, UItem, \
 #============= standard library imports ========================
 import os
 from uncertainties import ufloat
+from functools import partial
 #============= local library imports  ==========================
 from src.processing.autoupdate_parser import AutoupdateParser
 from src.processing.publisher.analysis import PubAnalysis, Marker
@@ -30,12 +31,14 @@ from src.traits_editors.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 from pyface.action.menu_manager import MenuManager
 from pyface.action.action import Action
+from src.helpers.formatting import floatfmt
 
 
 class LoadedTableAdapter(TabularAdapter):
     columns = Property(depends_on='visible_columns,visible_columns[]')
-    visible_columns = List(['runid', 'age', 'age_error', 'k_ca'])
+    visible_columns = List(['runid', 'status', 'age', 'age_error', 'k_ca'])
     column_m = {'runid':('RunID', 'runid'),
+                'status':('Status', 'status'),
                 'age':('Age', 'age'),
                 'age_error':(u'{}1s'.format(PLUSMINUS), 'age_error'),
                 'k_ca':('K/Ca', 'k_ca'),
@@ -43,6 +46,17 @@ class LoadedTableAdapter(TabularAdapter):
                 }
     age_text = Property
     age_error_text = Property
+    status_text = Property
+    k_ca_text = Property
+    def _get_k_ca_text(self):
+        return floatfmt(self._get_nominal_value('k_ca'), n=2)
+
+    def _get_status_text(self):
+        s = self.item.status
+        if s == 0 or s == '0':
+            s = ''
+        return s
+
     def _get_age_error_text(self):
         return self._get_std_dev('age')
 
@@ -73,8 +87,57 @@ class LoadedTableAdapter(TabularAdapter):
 class ComputedValuesTabularAdapter(TabularAdapter):
     columns = [('Lab. #', 'labnumber'),
                ('Sample', 'sample'),
+               ('Plateau', 'plateau_age'),
+               ('{}1s'.format(PLUSMINUS), 'plateau_error'),
+               ('Steps', 'plateau_steps'),
+               ('Integrated', 'integrated_age'),
+               ('{}1s'.format(PLUSMINUS), 'integrated_error'),
                ('Weighted Mean Age.', 'wm_age'),
                ]
+
+    plateau_age_text = Property
+    plateau_error_text = Property
+    integrated_age_text = Property
+    integrated_error_text = Property
+    plateau_steps_text = Property
+    def _get_plateau_steps_text(self):
+        s = self.item.plateau_steps
+        n = self.item.plateau_nsteps
+        if n > 1:
+            m = 'n= {}, {}'.format(n, s)
+        else:
+            m = ''
+        return m
+
+    def _get_plateau_error_text(self):
+        return self._get_std_dev('plateau_age')
+
+    def _get_plateau_age_text(self):
+        return self._get_nominal_value('plateau_age')
+
+    def _get_integrated_error_text(self):
+        return self._get_std_dev('integrated_age')
+
+    def _get_integrated_age_text(self):
+        return self._get_nominal_value('integrated_age')
+
+    def _get_nominal_value(self, attr):
+        return self._get_value('nominal_value', attr, partial(floatfmt, n=8))
+
+    def _get_std_dev(self, attr):
+        return self._get_value('std_dev', attr, partial(floatfmt, n=9))
+
+    def _get_value(self, key, attr, fmt):
+        v = getattr(self.item, attr)
+        if v is not None:
+            v = getattr(v, key)
+            if isinstance(fmt, str):
+                m = fmt.format(v)
+            else:
+                m = fmt(v)
+        else:
+            m = ''
+        return m
 # class MeanLoadedTableAdapter(LoadedTableAdapter):
 #    visible_columns = ['labnumber', 'age']
 
@@ -127,7 +190,7 @@ class LoadedTableController(Controller):
                        **kw)
 
     def controller_load_button_changed(self, info):
-        p = '/Users/ross/Sandbox/autoupdate_stepheat.txt'
+        p = '/Users/ross/Sandbox/autoupdate_stepheat_61526.txt'
         self.model.load(p)
 
 #    def controller_columns_button_changed(self, info):

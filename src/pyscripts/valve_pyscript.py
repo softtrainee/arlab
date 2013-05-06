@@ -28,7 +28,6 @@ command_register = makeRegistry()
 named_register = makeNamedRegistry(command_register)
 
 
-
 class ValvePyScript(PyScript):
     runner = Any
     def _runner_changed(self):

@@ -237,7 +237,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         sid = obj.record_id
         if sid in self.opened_windows:
             self.opened_windows.pop(sid)
-        obj.on_trait_change(self._record_closed, 'closed_event', remove=True)
+        obj.on_trait_change(self._record_closed, 'close_event', remove=True)
 #        obj.on_trait_change(self._changed, '_changed', remove=True)
 
     def open_record(self, records):
@@ -378,7 +378,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _record_factory(self, di):
-        di.on_trait_change(self._record_closed, 'closed_event')
+        di.on_trait_change(self._record_closed, 'close_event')
         return di
 #===============================================================================
 # views

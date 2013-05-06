@@ -144,11 +144,10 @@ class Analysis(Loggable):
 #        rr = self.isotope_record.arar_result
 #        return rr['rad40']
 
-#    def __getattr__(self, attr):
-# #        if self.isotope_record:
-#
-# #        if hasattr(self.isotope_record, attr):
-#        return getattr(self.isotope_record, attr)
+    def __getattr__(self, attr):
+        if self.isotope_record:
+            if hasattr(self.isotope_record, attr):
+                return getattr(self.isotope_record, attr)
 #            else:
 #                raise AttributeError('Analysis has not attribute= {}'.format(attr))
 

@@ -17,14 +17,40 @@
 #=============enthought library imports=======================
 
 #============= standard library imports ========================
-from numpy import asarray, argmax
+from numpy import asarray, argmax, average
 
 from uncertainties import ufloat, umath
 import math
-from copy import deepcopy
+# from copy import deepcopy
 from src.processing.arar_constants import ArArConstants
+from src.stats.core import calculate_weighted_mean
 
 #============= local library imports  ==========================
+
+def calculate_plateau_age(ages, errors, k39, kind='inverse_variance'):
+    '''
+        ages: list of ages
+        errors: list of corresponding  1sigma errors
+        k39: list of 39ArK signals
+        
+        return age, error
+    '''
+    ages = asarray(ages)
+    errors = asarray(errors)
+
+    k39 = asarray(k39)
+    pidx = find_plateaus(ages, errors, k39,
+                       overlap_sigma=2)
+
+    plateau_ages = ages[pidx]
+    if kind == 'vol_fraction':
+        weights = k39[pidx]
+        wm, we = average(plateau_ages, weights=weights)
+    else:
+        plateau_errors = errors[pidx]
+        wm, we = calculate_weighted_mean(plateau_ages, plateau_errors)
+
+    return wm, we, pidx
 
 
 
@@ -49,6 +75,10 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
     j = (umath.exp(age * arar_constants.lambda_k) - 1) / r
     return j.nominal_value, j.std_dev
 #    return j
+def calculate_decay_time(dc, f):
+    print dc, f
+    return math.log(f) / dc
+
 
 def calculate_decay_factor(dc, segments):
     '''
@@ -149,7 +179,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     ic = to_ufloat(ic)
     j = to_ufloat(j)
 #    temp_ic = ufloat(ic)
-
+#    print j, ic, arar_constants.atm4036
 #===============================================================================
 #
 #===============================================================================
@@ -164,7 +194,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     # apply intercalibration factor to corrected 36
     s36 *= ic
 
-    # correct for abundant sensitivity
+    # correct for abundance sensitivity
     # assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundance_sensitivity * (s39 + s39)
     n39 = s39 - abundance_sensitivity * (s40 + s38)
@@ -173,7 +203,12 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     n36 = s36 - abundance_sensitivity * (s37 + s37)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
 
-    # calculate decay factors
+    if decay_time is None:
+        decay_time = calculate_decay_time(arar_constants.lambda_Ar37.nominal_value,
+                                          a37decayfactor)
+        a37decayfactor = 1
+
+    # calculate decay factor
     if a37decayfactor is None:
         try:
             dc = arar_constants.lambda_Ar37.nominal_value
@@ -188,21 +223,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         except ZeroDivisionError:
             a39decayfactor = 1
 
+
+#    print type(s37), type(a37decayfactor)
     # calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
     k37 = ufloat(0, 1e-20)
-#    if arar_constants.k3739_mode == 'fixed':
-#        k3739 = arar_constants.fixed_k3739
-#
-#    # iteratively calculate 37, 39
-#    for _ in range(5):
-#        ca37 = s37dec_cor - k37
-#        ca39 = ca3937 * ca37
-#        k39 = s39dec_cor - ca39
-#        k37 = k3739 * k39
-
     if arar_constants.k3739_mode.lower() == 'normal':
         # iteratively calculate 37, 39
         for _ in range(5):
@@ -231,7 +258,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k38 = k3839 * k39
     ca36 = ca3637 * ca37
     ca38 = ca3837 * ca37
-#    ca39 = ca3937 * ca37
 
     '''
         McDougall and Harrison
@@ -240,6 +266,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         
         iteratively calculate atm36
     '''
+
     m = cl3638 * arar_constants.lambda_Cl36.nominal_value * decay_time
     atm36 = ufloat(0, 1e-20)
     for _ in range(5):
@@ -250,11 +277,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     # calculate rodiogenic
     # dont include error in 40/36
-
-#    pc = sc.node('pychron').node('experiment')
-#    print pc
-#    print pc.get('constants')
-#    print pc.node_names()
     atm40 = atm36 * arar_constants.atm4036.nominal_value
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
@@ -463,6 +485,10 @@ def overlap(a1, a2, e1, e2, overlap_sigma):
 # non-recursive
 #===============================================================================
 def find_plateaus(ages, errors, signals, overlap_sigma=1, exclude=None):
+    '''
+        return list of plateau indices
+    '''
+
     if exclude is None:
         exclude = []
     plats = []

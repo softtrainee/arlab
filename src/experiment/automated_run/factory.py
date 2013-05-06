@@ -339,21 +339,24 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if excludes is None:
             excludes = []
 
-        excludes.extend(['extract_value', 'extract_units', 'pattern'] if special else [])
+#        excludes.extend(['extract_value', 'extract_units', 'pattern'] if special else [])
 
 #        ln = self.labnumber
 #        if '-' in ln:
 #            ln = ln.split('-')[0]
 
-        if ln in ('ba', 'bg', 'bc', 'a', 'c'):
-            excludes.extend(('position',))
-
-        if arv.analysis_type != 'unknown':
-            if arv.analysis_type != 'degas':
-                excludes.extend(('extract_value', 'extract_units', 'pattern'))
-        else:
-            if arv.extract_group:
-                excludes.extend(('extract_value', 'cleanup', 'duration', 'pattern'))
+#        if ln in ('ba', 'bg', 'bc', 'a', 'c'):
+#            excludes.extend(('position', 'extract_value', 'extract_units', 'pattern'))
+#        if arv.analysis_type != 'unknown':
+#            if arv.analysis_type != 'degas':
+#                excludes.extend(('extract_value', 'extract_units', 'pattern'))
+#        else:
+#            if arv.extract_group:
+#                excludes.extend(('extract_value', 'cleanup', 'duration', 'pattern'))
+        if arv.analysis_type not in ('unknown', 'blank_unknown', 'degas'):
+            excludes.extend(('position', 'extract_value', 'extract_units',
+                             'cleanup', 'duration',
+                             'pattern'))
 
         self._set_run_values(arv, excludes=excludes)
         return arv
@@ -434,15 +437,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
                 self.labnumber = self.labnumber.replace('##', str(mod))
 
-
     def _set_cb_defaults(self, run):
         if run.analysis_type == 'unknown':
             if not run.extract_group:
-                self.cb_extract_value = True
-                self.cb_extract_units = True
-                self.cb_duration = True
-                self.cb_cleanup = True
-                self.cb_pattern = True
+                v = True
+            else:
+                v = False
+
+            for attr in  ('extract_value', 'extract_units', 'duration', 'cleanup', 'pattern'):
+                setattr(self, 'cb_{}'.format(attr), v)
 
         for si in SCRIPT_NAMES:
             sc = getattr(self, si)
@@ -505,7 +508,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
 pattern,
-position''')
+position,
+weight, comment''')
     def _edit_handler(self, name, new):
         if self._selected_runs:
             cb = True
