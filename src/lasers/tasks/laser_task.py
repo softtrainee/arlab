@@ -21,12 +21,15 @@ from src.envisage.tasks.base_task import BaseTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \
     FusionsDiodeControlPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout
+from pyface.tasks.action.schema import SMenu
+from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class BaseLaserTask(BaseTask):
     manager = Any
-
+    def activated(self):
+        self.manager.stage_manager.keyboard_focus = True
 
 class FusionsTask(BaseLaserTask):
     pass
@@ -37,6 +40,15 @@ class FusionsDiodeTask(FusionsTask):
     def _default_layout_default(self):
         return TaskLayout(left=PaneItem('fusions.diode.control')
                           )
+    def _menu_bar_default(self):
+        menus = [SMenu(
+                       OpenScannerAction(manager=self.manager,
+                                         manager_name='fusions_diode'),
+                       id='fusions.diode', name='Diode')
+                 ]
+
+        return self._menu_bar_factory(menus)
+
     def create_central_pane(self):
         return FusionsDiodePane(model=self.manager)
     def create_dock_panes(self):

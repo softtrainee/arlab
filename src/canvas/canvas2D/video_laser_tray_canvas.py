@@ -29,9 +29,11 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
     def set_stage_position(self, x, y):
         '''
         '''
+
         super(VideoLaserTrayCanvas, self).set_stage_position(x, y)
         self.adjust_limits('x', x)
         self.adjust_limits('y', y)
+
     def clear_desired_position(self):
         self._desired_position = None
         self.request_redraw()

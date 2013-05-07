@@ -103,8 +103,9 @@ class FusionsDiodeManager(FusionsLaserManager):
         s.new_function(gen, name='Temp. Pyrometer (C)', directory='diode_reflector_scans')
         s.new_function(gen, name='Power (%)')
 
-        func = partial(tm.read_temperature, verbose=False)
-        s.new_function(func, name='Reflector Temp (C)')
+        if tm is not None:
+            func = partial(tm.read_temperature, verbose=False)
+            s.new_function(func, name='Reflector Temp (C)')
 
         # bind to request_power change. set Setpoint static value
         s.new_static_value('Setpoint')

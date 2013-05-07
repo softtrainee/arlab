@@ -64,7 +64,6 @@ class MotionController(CoreDevice):
     def update_axes(self):
         for a in self.axes:
             pos = self.get_current_position(a)
-#            print 'pos', pos, a
             if pos is not None:
                 setattr(self, '_{}_position'.format(a), pos)
 #            time.sleep(0.075)
@@ -201,8 +200,11 @@ class MotionController(CoreDevice):
     def _inprogress_update(self):
         '''
         '''
-        print 'aaaa'
         if not self._moving_():
+            self._not_moving_count += 1
+
+        if self._not_moving_count > 2:
+            self._not_moving_count = 0
             self.timer.Stop()
             self.parent.canvas.clear_desired_position()
             self.update_axes()

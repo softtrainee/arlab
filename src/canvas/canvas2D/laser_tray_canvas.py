@@ -135,6 +135,8 @@ class LaserTrayCanvas(MapCanvas):
     _new_transect = True
     _new_polygon = True
 
+    aspect_ratio = 4 / 3.
+
     def __init__(self, *args, **kw):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
         self._add_bounds_rect()
@@ -494,18 +496,18 @@ class LaserTrayCanvas(MapCanvas):
             elif c in ('a', 'A'):
                 self.parent.accept_point()
 
-    def normal_key_up(self, event):
+    def key_released(self, char):
         '''
-             this method is not called by the normal interactor dispatcher like for "normal_key_pressed"
-             LaserComponentEditor calls when wx.EVT_KEY_UP is fired. therefore event is not an Enable event
-             but a wx.Event
+            called from outside by StageCompnentEditor
         '''
         if not self._frozen:
-            c = event.GetKeyCode()
-            if c in (314, 316):  # left, right
+#            c = event.GetKeyCode()
+            if char in ('left', 'right'):
+#            if char in (314, 316):  # left, right
                 self.parent.stop(ax_key='x', verbose=False)
                 self.parent.update_axes()
-            elif c in (315, 317):  # up, down
+            elif char in ('up', 'down'):
+#            elif char in (315, 317):  # up, down
                 self.parent.stop(ax_key='y', verbose=False)
                 self.parent.update_axes()
 

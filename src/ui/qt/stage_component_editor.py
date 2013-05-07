@@ -18,31 +18,62 @@
 #============= enthought library imports =======================
 from traits.api import Event, Str
 from enable.component_editor import ComponentEditor, _ComponentEditor
-
+from enable.window import Window as EWindow
+from PySide.QtCore.Qt import Key_Left, Key_Right, Key_Up, Key_Down
 #============= standard library imports ========================
-from wx import EVT_KEY_UP
+# from wx import EVT_KEY_UP
 
 #============= local library imports  ==========================
+class Window(EWindow):
+    on_key_release = None
+
+    def _on_key_released(self, event):
+        if self.on_key_release:
+            self.on_key_release(event)
 
 class _LaserComponentEditor(_ComponentEditor):
     keyboard_focus = Event
+
     def init(self, parent):
         '''
         Finishes initializing the editor by creating the underlying toolkit
         widget.
    
         '''
-        super(_LaserComponentEditor, self).init(parent)
-#        self.control.Bind(EVT_KEY_UP, self.onKeyUp)
+
+        size = self._get_initial_size()
+        self._window = Window(parent,
+                              size=size,
+                              component=self.value)
+
+        self.control = self._window.control
+        self._window.bgcolor = self.factory.bgcolor
+        self._parent = parent
 
         self.sync_value('keyboard_focus', 'keyboard_focus', mode='both')
+        self._window.on_key_release = self.onKeyUp
 
     def onKeyUp(self, event):
-        self.value.normal_key_up(event)
+
+
+        '''
+            key_released looking for text repr
+            
+            <-- = left
+            --> = right
+        '''
+        k = event.key()
+        for sk, n in ((Key_Left, 'left'),
+                    (Key_Right, 'right'),
+                    (Key_Up, 'up'),
+                    (Key_Down, 'down')):
+
+            if k.matches(sk):
+                self.value.key_released(n)
+                break
 
     def _keyboard_focus_changed(self):
-        pass
-#        self.control.SetFocus()
+        self.control.setFocus()
 
 class LaserComponentEditor(ComponentEditor):
     klass = _LaserComponentEditor

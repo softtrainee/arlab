@@ -165,7 +165,7 @@ def get_user_plugins():
             traceback.print_exc()
             klass = None
             logger.warning('****** {} could not be imported {} ******'.format(name, e),
-                           extra={'threadName_':'None'}
+                           extra={'threadName_':'Launcher'}
                            )
         return klass
 
@@ -192,7 +192,7 @@ def get_user_plugins():
             elif not pname.endswith('UIPlugin'):
                 # dont warn if uiplugin not available
                 logger.warning('***** {} not available ******'.format(pname),
-                               extra={'threadName_':'launcher'}
+                               extra={'threadName_':'Launcher'}
                                )
 
             if klass is not None:
@@ -203,9 +203,11 @@ def get_user_plugins():
                     if check is True:
                         plugins.append(plugin)
                     else:
-                        logger.warning('****** {} not available {}******'.format(klass, check))
+                        logger.warning('****** {} not available {}******'.format(klass, check),
+                                       extra={'threadName_':'Launcher'})
                 else:
-                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass))
+                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass),
+                                   extra={'threadName_':'Launcher'})
 
     return plugins
 
@@ -286,7 +288,7 @@ def launch():
 
     try:
         app.run()
-        logger.info('Quitting Bakedpy')
+        logger.info('Quitting {}'.format(app.name), extra={'threadName_':'Launcher'})
         app.exit()
 
         # force a clean exit

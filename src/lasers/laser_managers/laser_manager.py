@@ -446,7 +446,7 @@ class LaserManager(BaseLaserManager):
     def _use_video_changed(self):
         if not self.use_video:
             try:
-                self.stage_manager.video.shutdown()
+                self.stage_manager.video.close()
             except AttributeError, e:
                 print e
 

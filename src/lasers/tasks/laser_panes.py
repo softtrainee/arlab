@@ -40,7 +40,8 @@ class ControlPane(TraitsDockPane):
                            ),
                      label='Calibrated Position',
                      show_border=True)
-        hgrp = HGroup(SItem('home'),
+        hgrp = HGroup(SItem('stop_button'),
+                      SItem('home'),
                       SItem('home_option', editor=EnumEditor(name='object.stage_manager.home_options'))
                       )
         cgrp = Group(
