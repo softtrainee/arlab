@@ -15,10 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Any
+from traitsui.api import View, Item
+from src.envisage.tasks.base_task import BaseTask
+from src.lasers.tasks.laser_panes import FusionsDiodePane, \
+    FusionsDiodeControlPane
+from pyface.tasks.task_layout import PaneItem, TaskLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
 
-PyScriptCodeEditor = toolkit_factory('code_editor', 'PyScriptCodeEditor')
+class BaseLaserTask(BaseTask):
+    manager = Any
+
+
+class FusionsTask(BaseLaserTask):
+    pass
+
+class FusionsDiodeTask(FusionsTask):
+    id = 'pychron.lasers.fusions.diode'
+    name = 'Fusions Diode'
+    def _default_layout_default(self):
+        return TaskLayout(left=PaneItem('fusions.diode.control')
+                          )
+    def create_central_pane(self):
+        return FusionsDiodePane(model=self.manager)
+    def create_dock_panes(self):
+        return [FusionsDiodeControlPane(model=self.manager)]
 #============= EOF =============================================

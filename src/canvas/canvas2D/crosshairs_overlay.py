@@ -47,7 +47,6 @@ class CrosshairsOverlay(AbstractOverlay):
 
                 self._draw_radius_ch(gc, pos, radius, color=comp.crosshairs_color)
 
-
     def _draw_simple_ch(self, gc, pt, length=4, color=None):
         if color is not None:
             gc.set_stroke_color(color)
@@ -63,6 +62,10 @@ class CrosshairsOverlay(AbstractOverlay):
     def _draw_radius_ch(self, gc, pt, radius, color=None, circle_only=False):
         if color is not None:
             rgb = lambda x: 0 <= x <= 1.
+#            print color
+            if not isinstance(color, (list, tuple)):
+                color = color.toTuple()
+
             if not all(map(rgb, color)):
                 f = lambda x:x / 255.
                 color = map(f, color)

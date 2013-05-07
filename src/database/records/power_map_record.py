@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, Instance, Enum, Range, on_trait_change
+from traits.api import Bool, Instance, Enum, Range, on_trait_change, Any
 from traitsui.api import View, HGroup, Group, Item, spring , VGroup
 from src.database.records.sqlite_record import SQLiteRecord
 #============= standard library imports ========================
-import os
+# import os
 import csv
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.graph.graph3D import Graph3D
+
 from src.graph.contour_graph import ContourGraph
 #============= local library imports  ==========================
 #    def load_graph(self, graph=None, xoffset=0):
@@ -62,7 +62,8 @@ from src.graph.contour_graph import ContourGraph
 class PowerMapRecord(SQLiteRecord):
     title_str = 'PowerMap'
     resizable = True
-    graph3D = Instance(Graph3D, ())
+#    graph3D = Instance(Graph3D, ())
+    graph3D = Any  # Instance(Graph3D, ())
     graph = Instance(ContourGraph)
     vertical_ex = Range(1, 100)
     surf = Bool(True)
@@ -163,7 +164,9 @@ class PowerMapRecord(SQLiteRecord):
                                    outline=self.contour_outline
                                    )
 
-
+    def _graph3D_default(self):
+        from src.graph.graph3D import Graph3D
+        return Graph3D()
 #    def traits_view(self):
 #        v = View()
 #        return v

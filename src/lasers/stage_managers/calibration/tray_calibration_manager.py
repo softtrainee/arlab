@@ -21,7 +21,7 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 from src.lasers.stage_managers.calibration.free_calibrator import FreeCalibrator
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
 import os

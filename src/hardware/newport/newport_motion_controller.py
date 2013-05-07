@@ -517,6 +517,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 #            cmd = self._build_command('OR', xx = axis, nn = )
 
         self.timer = self.timer_factory()
+
         if self.group_commands:
             self.tell(cmd)
 

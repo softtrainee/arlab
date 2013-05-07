@@ -18,6 +18,6 @@
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
+from src.ui.factory import toolkit_factory
 CustomLabel = toolkit_factory('custom_label_editor', 'CustomLabel')
 #============= EOF =============================================

@@ -26,7 +26,7 @@ import os
 #============= local library imports  ==========================
 from globals import globalv
 from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from src.experiment.manager import ExperimentManager
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner

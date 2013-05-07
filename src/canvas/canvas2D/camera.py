@@ -21,7 +21,6 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import numpy as np
 #============= local library imports  ==========================
-from src.graph.regression_graph import RegressionGraph
 from src.config_loadable import ConfigLoadable
 
 
@@ -38,7 +37,7 @@ class CalibrationData(HasTraits):
 
     xcoeff_str = String(enter_set=True, auto_set=False)
     ycoeff_str = String(enter_set=True, auto_set=False)
-    graph = Instance(RegressionGraph)
+    graph = Any
 
     def get_xcoeffs(self):
         return map(float, self.xcoeff_str.split(','))
@@ -53,6 +52,8 @@ class CalibrationData(HasTraits):
         g.set_data(ys, series=4, axis=1)
 
     def _graph_default(self):
+        from src.graph.regression_graph import RegressionGraph
+
         g = RegressionGraph()
         g.new_plot()
         xs, ys = self._get_data()

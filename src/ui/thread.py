@@ -15,11 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from src.ui.factory import toolkit_factory
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
 
-LEDEditor = toolkit_factory('led_editor', 'LEDEditor')
-ButtonLED = toolkit_factory('led_editor', 'ButtonLED')
-LED = toolkit_factory('led_editor', 'LED')
+Thread = toolkit_factory('thread', 'Thread')
+currentThreadName = toolkit_factory('thread', 'currentThreadName')
+
+
+
 #============= EOF =============================================

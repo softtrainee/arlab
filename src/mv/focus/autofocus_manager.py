@@ -26,7 +26,8 @@ import time
 import os
 #============= local library imports  ==========================
 from src.time_series.time_series import smooth
-from src.image.cvwrapper import grayspace, get_focus_measure, crop, resize
+from src.image.cv_wrapper import grayspace, crop, resize
+# from src.image.cvwrapper import grayspace, get_focus_measure, crop, resize
 from scipy.ndimage.measurements import variance
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel
 from scipy.ndimage import sum as ndsum
@@ -34,10 +35,11 @@ from src.paths import paths
 from src.managers.manager import Manager
 from src.image.image import Image
 # from src.machine_vision.focus_parameters import FocusParameters
-from src.image.image_editor import ImageEditor
+# from src.image.image_editor import ImageEditor
 from src.graph.graph import Graph
 from pyface.timer.do_later import do_later
 from src.mv.focus.focus_parameters import FocusParameters
+from src.ui.image_editor import ImageEditor
 
 
 class ConfigureHandler(Handler):

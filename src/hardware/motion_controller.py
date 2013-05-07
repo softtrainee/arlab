@@ -17,8 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import Property, Dict, Float, Any, Instance
 from traitsui.api import View, VGroup, Item, RangeEditor
-from pyface.timer.api import Timer
-# from src.helpers.timer import Timer
+# from pyface.timer.api import Timer
+from src.helpers.timer import Timer
 #============= standard library imports ========================
 import os
 
@@ -26,8 +26,8 @@ import os
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
 import time
-from pyface.timer.do_later import do_later
-from threading import Thread
+# from pyface.timer.do_later import do_later
+# from threading import Thread
 
 
 class MotionController(CoreDevice):
@@ -87,7 +87,12 @@ class MotionController(CoreDevice):
         if func is None:
             func = self._inprogress_update
         self._not_moving_count = 0
-        return Timer(250, func)
+#        print func
+        t = Timer(250, func)
+#        print t
+#        self.timer = t
+#        t.start()
+        return t
 
     def set_z(self, v, **kw):
         self.single_axis_move('z', v, **kw)
@@ -196,7 +201,7 @@ class MotionController(CoreDevice):
     def _inprogress_update(self):
         '''
         '''
-
+        print 'aaaa'
         if not self._moving_():
             self.timer.Stop()
             self.parent.canvas.clear_desired_position()

@@ -29,7 +29,7 @@ from numpy import array
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.helpers.parsers.xml_parser import XMLParser
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 # from src.graph.tools.xy_inspector import XYInspectorOverlay, XYInspector
 # from src.graph.image_underlay import ImageUnderlay
 from src.geometry.reference_point import ReferencePoint

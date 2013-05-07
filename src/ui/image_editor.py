@@ -15,9 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+
+from src.ui.factory import toolkit_factory
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
 
-MProgressDialog = toolkit_factory('progress_dialog', 'MProgressDialog')
+ImageEditor = toolkit_factory('image_editor', 'ImageEditor')
 #============= EOF =============================================

@@ -17,7 +17,9 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
+from src.ui.factory import toolkit_factory
 
-BarGaugeEditor = toolkit_factory('color_map_bar_editor', 'BarGaugeEditor')
+LEDEditor = toolkit_factory('led_editor', 'LEDEditor')
+ButtonLED = toolkit_factory('led_editor', 'ButtonLED')
+LED = toolkit_factory('led_editor', 'LED')
 #============= EOF =============================================

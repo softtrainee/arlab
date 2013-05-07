@@ -23,7 +23,7 @@ from traitsui.tabular_adapter import TabularAdapter
 from src.processing.publisher.writers.pdf_writer import PDFWriter
 from src.processing.publisher.writers.csv_writer import CSVWriter
 from src.processing.publisher.writers.mass_spec_writer import MassSpecCSVWriter
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from src.processing.publisher.writers.excel_writer import ExcelWriter
 
 

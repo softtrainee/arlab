@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
     Enum, List, Int
-from traitsui.api import View, Item, VGroup, HGroup
+from traitsui.api import View, Item, VGroup, HGroup, ColorEditor
 from chaco.api import AbstractOverlay
 from kiva import constants
 
@@ -112,7 +112,11 @@ class LaserTrayCanvas(MapCanvas):
 
     beam_radius = Float(0)
     crosshairs_kind = Enum('BeamRadius', 'UserRadius', 'MaskRadius')
-    crosshairs_color = Color('maroon')
+
+
+    crosshairs_color = Color  # Property(Color('maroon'), depends_on='_crosshairs_color')
+#    _crosshairs_color = Any
+
     crosshairs_offset_color = Color('blue')
 
     crosshairs_radius = Range(0.0, 4.0, 1.0)
@@ -366,7 +370,10 @@ class LaserTrayCanvas(MapCanvas):
 #                       Item('render_map'),
                        Item('show_grids'),
                        HGroup(Item('show_laser_position'),
-                              Item('crosshairs_color', springy=True, show_label=False)),
+                              Item('crosshairs_color',
+                                   editor=ColorEditor(),
+                                   springy=True, show_label=False)
+                              ),
                        Item('crosshairs_kind'),
                        Item('crosshairs_radius'),
                        HGroup(
@@ -606,6 +613,13 @@ class LaserTrayCanvas(MapCanvas):
 #===============================================================================
 # property get/set
 #===============================================================================
+    def _get_crosshairs_color(self):
+        return self._crosshairs_color
+#
+#    def _set_crosshairs__color(self, v):
+#        print v, 'craaerwer'
+#        self._crosshairs_color
+
     def _get_current_position(self):
 
         md = self.map_data(self.cur_pos)

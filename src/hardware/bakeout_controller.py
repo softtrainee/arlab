@@ -27,7 +27,7 @@ from src.paths import paths
 from watlow_ezzone import WatlowEZZone
 from src.constants import NULL_STR
 from src.pyscripts.bakeout_pyscript import BakeoutPyScript
-from src.traits_editors.led_editor import ButtonLED, LEDEditor
+from src.ui.led_editor import ButtonLED, LEDEditor
 
 # class BakeoutMonitor():
 #    pass

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Bool, Any, String, List
 from traitsui.api import View, Item, HGroup
-# from src.traits_editors.custom_label_editor import CustomLabel
+# from src.ui.custom_label_editor import CustomLabel
 # from src.geometry.geometry import calculate_reference_frame_center, calc_length
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
 from src.geometry.reference_point import ReferencePoint

@@ -25,7 +25,7 @@ from src.processing.autoupdate_parser import AutoupdateParser
 from src.processing.publisher.analysis import Marker, PubAnalysis, ComputedValues  # , \
 #    PubAnalysisMean
 from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from src.processing.publisher.loaded_table import LoadedTableAdapter
 
 class Group(HasTraits):

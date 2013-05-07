@@ -22,7 +22,7 @@ from traitsui.api import View, Item, spring, HGroup
 import hashlib
 import uuid
 #============= local library imports  ==========================
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 from src.loggable import Loggable
 class NewAccount(HasTraits):
     username = Str

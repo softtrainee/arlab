@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2013 Jake Ross
+# Copyright 2011 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,15 +14,37 @@
 # limitations under the License.
 #===============================================================================
 
+
 #============= enthought library imports =======================
-from traits.etsconfig.api import ETSConfig
+from traits.api import Event, Str
+from enable.component_editor import ComponentEditor, _ComponentEditor
+
 #============= standard library imports ========================
+from wx import EVT_KEY_UP
+
 #============= local library imports  ==========================
-def toolkit_factory(name, klass):
-    if ETSConfig.toolkit == 'wx':
-        pkg = 'src.traits_editors.wx'
-    else:
-        pkg = 'src.traits_editors.qt'
-    mod = __import__('{}.{}'.format(pkg, name), fromlist=[klass])
-    return getattr(mod, klass)
+
+class _LaserComponentEditor(_ComponentEditor):
+    keyboard_focus = Event
+    def init(self, parent):
+        '''
+        Finishes initializing the editor by creating the underlying toolkit
+        widget.
+   
+        '''
+        super(_LaserComponentEditor, self).init(parent)
+#        self.control.Bind(EVT_KEY_UP, self.onKeyUp)
+
+        self.sync_value('keyboard_focus', 'keyboard_focus', mode='both')
+
+    def onKeyUp(self, event):
+        self.value.normal_key_up(event)
+
+    def _keyboard_focus_changed(self):
+        pass
+#        self.control.SetFocus()
+
+class LaserComponentEditor(ComponentEditor):
+    klass = _LaserComponentEditor
+    keyboard_focus = Str
 #============= EOF =============================================

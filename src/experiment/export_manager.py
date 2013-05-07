@@ -34,9 +34,9 @@ from src.database.database_connection_spec import DBConnectionSpec
 import csv
 from src.database.records.isotope_record import IsotopeRecordView
 from threading import Thread
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
-from src.traits_editors.progress_dialog import MProgressDialog
+from src.ui.progress_dialog import MProgressDialog
 
 class ExportedAdapter(TabularAdapter):
     columns = [('', 'n'), ('RID', 'rid')]

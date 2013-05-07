@@ -48,21 +48,21 @@ class ManagerHandler(ViewableHandler):
         info.object.initialized = True
         super(ManagerHandler, self).init(info)
 
-    def closed(self, info, is_ok):
-        '''
-        '''
-        super(ManagerHandler, self).closed(info, is_ok)
-        info.object.kill()
-        try:
-            MANAGERS.remove(info.object)
-            info.object.application.uis.remove(info.ui)
-        except ValueError:
-            pass
-
-#        import gc
-#        gc.collect()
-
-        return True
+#    def closed(self, info, is_ok):
+#        '''
+#        '''
+#        super(ManagerHandler, self).closed(info, is_ok)
+#        info.object.kill()
+#        try:
+#            MANAGERS.remove(info.object)
+#            info.object.application.uis.remove(info.ui)
+#        except ValueError:
+#            pass
+#
+# #        import gc
+# #        gc.collect()
+#
+#        return True
 
     def close(self, info, isok):
         info.object.close(isok)

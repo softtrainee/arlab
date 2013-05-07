@@ -20,6 +20,7 @@ from traits.api import Instance, String, DelegatesTo, Property, Button, \
 from traitsui.api import Group, Item, HGroup, VGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
+from chaco.plot_graphics_context import PlotGraphicsContext
 #============= standard library imports ========================
 import time
 from threading import Thread, Condition, Timer
@@ -38,11 +39,11 @@ from src.canvas.canvas2D.camera import Camera
 
 from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
-from video_component_editor import VideoComponentEditor
-from chaco.plot_graphics_context import PlotGraphicsContext
+# from video_component_editor import VideoComponentEditor
 from src.helpers.media import play_sound
 from src.mv.autocenter_manager import AutoCenterManager
 from src.mv.focus.autofocus_manager import AutoFocusManager
+from src.ui.stage_component_editor import VideoComponentEditor
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas

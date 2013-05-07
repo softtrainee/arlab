@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Instance, Int, Color, Str, List
 from traitsui.api import View, Item, UItem
 from src.lasers.scanner import ApplicationController
-from src.traits_editors.display_editor import DisplayEditor
+from src.ui.display_editor import DisplayEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.viewable import Viewable
