@@ -16,16 +16,20 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Bool, Instance, List, Dict
-from traitsui.api import View, Item
+# from traitsui.api import View, Item
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.extension_point import ExtensionPoint
 from src.managers.hardware_manager import HardwareManager
-from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
+# from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from src.hardware.flag_manager import FlagManager
-from apptools.preferences.preference_binding import bind_preference
+# from apptools.preferences.preference_binding import bind_preference
 from src.hardware.core.i_core_device import ICoreDevice
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.hardware.tasks.hardware_task import HardwareTask
+from envisage.ui.tasks.task_extension import TaskExtension
+from pyface.tasks.action.task_action import TaskAction
+from pyface.action.action import Action
+from pyface.tasks.action.schema_addition import SchemaAddition
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Preference(HasTraits):
@@ -40,6 +44,15 @@ class DevicePreferences(HasTraits):
     def _serial_preference_default(self):
         return SerialPreference()
 
+class OpenFlagManagerAction(Action):
+    name = 'Flag Manager'
+    def perform(self, event):
+        app = event.task.window.application
+        man = app.get_service('src.hardware.flag_manager.FlagManager')
+
+        app.open_view(man)
+
+
 class HardwarePlugin(BaseTaskPlugin):
     '''
         
@@ -48,7 +61,12 @@ class HardwarePlugin(BaseTaskPlugin):
     managers = ExtensionPoint(List(Dict),
                               id='pychron.hardware.managers')
 
-    mans = List(contributes_to='pychron.hardware.managers')
+    my_managers = List(contributes_to='pychron.hardware.managers')
+
+    def _my_task_extensions_default(self):
+        return [TaskExtension(actions=[SchemaAddition(id='Flag Manager',
+                                                      factory=OpenFlagManagerAction,
+                                                      path='MenuBar/Tools'), ])]
 
     def _tasks_default(self):
         return [TaskFactory(id='pychron.hardware',
@@ -89,7 +107,7 @@ class HardwarePlugin(BaseTaskPlugin):
 #    def _remote_hardware_manager_factory(self):
 #        return RemoteHardwareManager(application=self.application)
 
-    def _mans_default(self):
+    def _my_managers_default(self):
         return [dict(name='hardware', manager=self._hardware_manager_factory())]
 #    def _system_lock_manager_factory(self):
 #        return SystemLockManager(application=self.application)

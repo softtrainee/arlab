@@ -143,9 +143,12 @@ class Paths():
         join = path.join
 
         self.root = root = join(HOME, home)
-        self.resources = join('..', 'resources',)
+#        self.resources = join('..', '..', '..', 'resources',)
+
+        self.resources = join(path.dirname(path.dirname(__file__)), 'resources')
         self.icons = join(self.resources, 'icons')
         self.splashes = join(self.resources, 'splashes')
+
         self.abouts = join(self.resources, 'abouts')
         self.sounds = join(self.resources, 'sounds')
         self.bullets = join(self.resources, 'bullets')

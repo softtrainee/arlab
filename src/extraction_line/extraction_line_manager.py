@@ -239,6 +239,7 @@ class ExtractionLineManager(Manager):
         self.valve_manager.claim_section(name.split('_')[0], value.lower)
 
     def reload_scene_graph(self):
+        self.info('reloading canvas scene')
         iddict = dict()
         # remember the explanation settings
         exp = self.explanation
@@ -273,7 +274,6 @@ class ExtractionLineManager(Manager):
                             pass
 
             do_later(self.canvas.refresh)
-            self.canvas.refresh()
 #            canvas = self.canvas.canvas2D
 
 #            canvas._layout_needed = True
