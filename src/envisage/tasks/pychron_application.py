@@ -40,7 +40,7 @@ class Pychron(BaseTasksApplication):
 #                                       'pychron.extraction_line',
 #                                       'pychron.hardware',
                                        'pychron.lasers.fusions.diode',
-                                       size=(800, 800)) ]
+                                       size=(1150, 650)) ]
     def _about_dialog_default(self):
         '''
         '''

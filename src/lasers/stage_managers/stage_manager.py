@@ -82,37 +82,13 @@ class StageManager(Manager):
     joystick = Bool(False)
     joystick_timer = None
 
-    buttons = List([('home', None, None),
-#                    ('jog', 'jog_label', None),
-                    ('stop_button', 'stop_label', None)
-                      ])
+#    buttons = List([('home', None, None),
+# #                    ('jog', 'jog_label', None),
+#                    ('stop_button', 'stop_label', None)
+#                      ])
 
-#    program_points = Event
-#    program_points_label = Property(depends_on='canvas.markup')
-#    load_points = Button
-#    save_points = Button
-#    clear_points = Button
-#
-#    accept_point = Button
     back_button = Button
-
-#    pattern_manager = Instance(PatternManager)
-    stop_button = Button()
-    stop_label = String('Stop')
-
-#    move_thread = None
-#    move_thread = None
-#    move_thread = None
-    move_thread = None
-
-
-#    hole = String(enter_set=True, auto_set=False)
-#    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
-#    _hole = String
-
-#    move_thread = None
-#    point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
-#    _point = Int
+    stop_button = Button('Stop')
 
     canvas_editor_klass = LaserComponentEditor
 
@@ -122,14 +98,16 @@ class StageManager(Manager):
 
     visualizer = Instance(StageVisualizer)
 
+    move_thread = None
     temp_position = None
     _temp_hole = None
     linear_move_history = List
 
     keyboard_focus = Event
 
-    calibrated_position_entry = Property(String(enter_set=True, auto_set=False))
-    _calibrated_position = Str
+#    calibrated_position_entry = Property(String(enter_set=True, auto_set=False))
+#    _calibrated_position = Str
+    calibrated_position_entry = String(enter_set=True, auto_set=False)
 
     use_modified = Bool(True)  # set true to use modified affine calculation
     def __init__(self, *args, **kw):
@@ -231,14 +209,6 @@ class StageManager(Manager):
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
         self.canvas.parent = self
 
-#        x_range=(self.stage_controller.xaxes_min,
-#                self.stage_controller.xaxes_max)
-#        y_range=(self.stage_controller.yaxes_min,
-#                self.stage_controller.yaxes_max)
-#        print x_range
-#        self.canvas.set_mapper_limits('x', x_range)
-#        self.canvas.set_mapper_limits('y', y_range)
-
     def save_calibration(self, name):
         self.tray_calibration_manager.save_calibration(name=name)
 
@@ -249,9 +219,6 @@ class StageManager(Manager):
             self._stage_maps.remove(psm)
 
         self._stage_maps.append(sm)
-#        print v, psm
-#        print self.stage_maps
-#        print self._stage_maps
 
     def accept_point(self):
         self.points_programmer.accept_point()
@@ -259,22 +226,13 @@ class StageManager(Manager):
     def set_stage_map(self, v):
         return self._set_stage_map(v)
 
-    def add_output(self, msg, color=None):
-        '''
-
-        '''
-        if not color:
-            color = colors['black']
-
-        self.output.add_text(msg=msg, color=color)
-
     def single_axis_move(self, *args, **kw):
         return self.stage_controller.single_axis_move(*args, **kw)
 
     def linear_move(self, x, y, update_hole=True, use_calibration=True, **kw):
         cpos = self.get_uncalibrated_xy()
         self.linear_move_history.append((cpos, {}))
-        self.trait_set(hole='')  # , trait_change_notify=False)
+#        self.trait_set(hole='')  # , trait_change_notify=False)
 #        if update_hole:
 #            hole = self.get_calibrated_hole(x, y)
 #            if hole is not None:
@@ -289,58 +247,19 @@ class StageManager(Manager):
         self.stage_controller.linear_move(*pos, **kw)
 
     def move_to_hole(self, hole, **kw):
-        if self.move_thread:
-            self.stage_controller.stop()
-
-        self.move_thread = Thread(name='stage.move_to_hole',
-                                target=self._move_to_hole, args=(hole,), kwargs=kw)
-        self.move_thread.start()
+        self._move(self._move_to_hole, hole, name='move_to_hole' ** kw)
 
     def move_to_point(self, pt):
-        if pt is None:
-            return
-
-        if self.move_thread is not None:
-            self.stage_controller.stop()
-
-        self.move_thread = Thread(name='stage.move_to_point',
-                                      target=self._move_to_point, args=(pt,))
-        self.move_thread.start()
-#        self._move_to_point(pt)
+        self._move(self._move_to_point, pt, name='move_to_point')
 
     def move_polyline(self, line):
-        if line is None:
-            return
-
-        if self.move_thread is not None:
-            self.stage_controller.stop()
-
-        self.move_thread = Thread(name='stage.move_to_point',
-                                      target=self._move_polyline, args=(line,))
-        self.move_thread.start()
-#        self._move_polyline(line)
+        self._move(self._move_to_line, line, name='move_to_line')
 
     def move_polygon(self, poly):
-        if poly is None:
-            return
-
-        if self.move_thread is not None:
-            self.stage_controller.stop()
-
-        self.move_thread = Thread(name='stage.move_polygon',
-                                      target=self._move_polygon, args=(poly,))
-        self.move_thread.start()
+        self._move(self._move_polygon, poly, name='move_polygon')
 
     def drill_point(self, pt):
-        if pt is None:
-            return
-
-        if self.move_thread is not None:
-            self.stage_controller.stop()
-
-        self.move_thread = Thread(name='stage.drill_point',
-                                      target=self._drill_point, args=(pt,))
-        self.move_thread.start()
+        self._move(self._drill_point, pt, name='drill_point')
 
     def set_x(self, value, **kw):
         return self.stage_controller.single_axis_move('x', value, **kw)
@@ -354,7 +273,8 @@ class StageManager(Manager):
     def set_xy(self, x, y, **kw):
         hole = self._get_hole_by_position(x, y)
         if hole:
-            self._set_hole(hole.id)
+            self.move_to_hole(hole)
+#            self._set_hole(hole.id)
             # self.move_to_hole(hole.id)
 #            self._set_hole(hole.id)
         else:
@@ -391,11 +311,8 @@ class StageManager(Manager):
         self.stage_controller._set_z(z)
         self.stage_controller._block_()
 
-    @on_trait_change('stop_button')
     def stop(self, ax_key=None, verbose=False):
-        self.stage_controller.stop(ax_key=ax_key, verbose=verbose)
-        if self.parent.pattern_executor:
-            self.parent.pattern_executor.stop()
+        self._stop(ax_key, verbose)
 
     def relative_move(self, *args, **kw):
         self.stage_controller.relative_move(*args, **kw)
@@ -558,6 +475,24 @@ class StageManager(Manager):
 #===============================================================================
 # special move
 #===============================================================================
+    def _stop(self, ax_key=None, verbose=False):
+        self.stage_controller.stop(ax_key=ax_key, verbose=verbose)
+        if self.parent.pattern_executor:
+            self.parent.pattern_executor.stop()
+
+    def _move(self, func, pos, name=None, *args, **kw):
+        if pos is None:
+            return
+
+        if self.move_thread:
+            self.stage_controller.stop()
+        if name is None:
+            name = func.func_name
+
+        self.move_thread = Thread(name='stage.{}'.format(name),
+                                target=self._move_to_hole, args=(pos,) + args, kwargs=kw)
+        self.move_thread.start()
+
     def _drill_point(self, pt):
         zend = pt.zend
         vel = pt.velocity
@@ -870,6 +805,8 @@ class StageManager(Manager):
         self.temp_position = self._stage_map.get_hole_pos(key)
         pos = self._stage_map.get_corrected_hole_pos(key)
         if pos is not None:
+            self.visualizer.set_current_hole(key)
+
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
                 # map the position to calibrated space
@@ -882,7 +819,6 @@ class StageManager(Manager):
                     self.info('using an interpolated value')
                 else:
                     self.info('using previously calculated corrected position')
-
             self.stage_controller.linear_move(block=True, *pos)
 #            if self.tray_calibration_manager.calibration_style == 'MassSpec':
             if not self.tray_calibration_manager.isCalibrating():
@@ -938,7 +874,9 @@ class StageManager(Manager):
 #            vg.content.append(getattr(self, h)())
 
 #        return View(HSplit(vg, canvas_group), handler=self.handler_klass)
-        return View(canvas_grp, handler=self.handler_klass)
+        return View(canvas_grp,
+#                    handler=self.handler_klass
+                    )
 #===============================================================================
 # view groups
 #===============================================================================
@@ -1087,11 +1025,17 @@ class StageManager(Manager):
 
         return nv
 
-    def _get_calibrated_position_entry(self):
-        return self._calibrated_position
-
-    def _set_calibrated_position_entry(self, v):
-        self._calibrated_position = v
+#    def _get_calibrated_position_entry(self):
+#        return self._calibrated_position
+#
+#    def _set_calibrated_position_entry(self, v):
+#        self._calibrated_position = v
+#        if XY_REGEX.match(v):
+#            self._move_to_calibrated_position(v)
+#        else:
+#            self.move_to_hole(v)
+    def _calibrated_position_entry_changed(self):
+        v = self.calibrated_position_entry
         if XY_REGEX.match(v):
             self._move_to_calibrated_position(v)
         else:
@@ -1101,36 +1045,36 @@ class StageManager(Manager):
         x, y = map(float, pos.split(','))
         self.linear_move(x, y, use_calibration=True, block=False)
 
-    def _set_hole(self, v):
-        if v is None:
-            return
-
-        if self.canvas.calibrate:
-            self.warning_dialog('Cannot move while calibrating')
-            return
-
-        if self.canvas.markup:
-            self.warning_dialog('Cannot move while adding/editing points')
-            return
-
-        v = str(v)
-
-        if self.move_thread is not None:
-            self.stage_controller.stop()
-
-#        if self.move_thread is None:
-
-        pos = self._stage_map.get_hole_pos(v)
-        if pos is not None:
-            self.visualizer.set_current_hole(v)
-            self._hole = v
-            self.move_thread = Thread(name='stage.move_to_hole',
-                                      target=self._move_to_hole, args=(v,))
-            self.move_thread.start()
-        else:
-            err = 'Invalid hole {}'.format(v)
-            self.warning(err)
-            return  err
+#    def _set_hole(self, v):
+#        if v is None:
+#            return
+#
+#        if self.canvas.calibrate:
+#            self.warning_dialog('Cannot move while calibrating')
+#            return
+#
+#        if self.canvas.markup:
+#            self.warning_dialog('Cannot move while adding/editing points')
+#            return
+#
+#        v = str(v)
+#
+#        if self.move_thread is not None:
+#            self.stage_controller.stop()
+#
+# #        if self.move_thread is None:
+#
+#        pos = self._stage_map.get_hole_pos(v)
+#        if pos is not None:
+#            self.visualizer.set_current_hole(v)
+# #            self._hole = v
+#            self.move_thread = Thread(name='stage.move_to_hole',
+#                                      target=self._move_to_hole, args=(v,))
+#            self.move_thread.start()
+#        else:
+#            err = 'Invalid hole {}'.format(v)
+#            self.warning(err)
+#            return  err
 
 #    def _get_hole(self):
 #        return self._hole
@@ -1161,8 +1105,8 @@ class StageManager(Manager):
 #===============================================================================
 # handlers
 #===============================================================================
-        '''
-        '''
+    def _stop_button_fired(self):
+        self._stop()
 
     def _back_button_fired(self):
         pos, kw = self.linear_move_history.pop(-1)
@@ -1203,51 +1147,6 @@ class StageManager(Manager):
     def _test_fired(self):
 #        self.do_pattern('testpattern')
         self.do_pattern('pattern003')
-
-#    def _clear_points_fired(self):
-#        self.canvas.clear_points()
-#        self._point = 0
-#
-#    def _program_points_fired(self):
-#        if not self.canvas.markup:
-#            self.canvas.tool_state = 'point'
-#        else:
-#            self.canvas.tool_state = 'select'
-#            if self.canvas.selected_element:
-#                self.canvas.selected_element.set_state(False)
-#                self.canvas.request_redraw()
-#        self.canvas.markup = not self.canvas.markup
-#
-#    def _accept_point_fired(self):
-#        npt = self.canvas.new_point()
-#        if npt:
-#            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
-#
-#    def _load_points_fired(self):
-#        p = self.open_file_dialog(default_directory=paths.user_points_dir)
-#        if p:
-#            self.canvas.load_points_file(p)
-#
-#    def _save_points_fired(self):
-#        p = self.save_file_dialog(default_directory=paths.user_points_dir)
-#
-#        if p:
-#            if not p.endswith('.txt'):
-#                p='{}.txt'.format(p)
-#
-#            with open(p, 'w') as f:
-#                f.write('{},{}\n'.format(0.1,'circle'))
-#                f.write('\n') #valid holes
-#                f.write('\n') #calibration holes
-#                pts=self.canvas.get_points()
-#                for _vid,x,y in pts:
-#                    f.write('{}\n'.format(x,y))
-#
-#            sm=StageMap(file_path=p)
-#            self._stage_maps.append(sm)
-#
-#
-# #            self.canvas.save_points(p)
 
 #===============================================================================
 # factories
@@ -1297,12 +1196,13 @@ class StageManager(Manager):
 
     def _canvas_editor_factory(self):
 
-        canvas = self.canvas
-
-        w = 640 * canvas.scaling
-        h = w * 0.75
-        return self.canvas_editor_klass(width=w + canvas.padding_left + canvas.padding_right,
-                                          height=h + canvas.padding_top + canvas.padding_bottom,
+#        canvas = self.canvas
+#
+#        w = 640 * canvas.scaling
+#        h = w * 0.75
+        return self.canvas_editor_klass(
+#                                        width=w + canvas.padding_left + canvas.padding_right,
+#                                          height=h + canvas.padding_top + canvas.padding_bottom,
                                           keyboard_focus='keyboard_focus'
                                           )
 #===============================================================================

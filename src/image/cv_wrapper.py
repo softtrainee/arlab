@@ -21,7 +21,7 @@
 try:
     from cv2 import VideoCapture, VideoWriter, imwrite, line
     from cv import ConvertImage, fromarray, LoadImage, Flip, \
-        Resize, CreateImage, CvtColor, Scalar
+        Resize, CreateImage, CvtColor, Scalar, CreateMat
 
     from cv import CV_CVTIMG_SWAP_RB, CV_8UC1, CV_BGR2GRAY, CV_GRAY2BGR, \
         CV_8UC3, CV_RGB
@@ -63,10 +63,11 @@ def grayspace(src):
 
 def resize(src, w, h, dst=None):
     if isinstance(dst, tuple):
-        dst = CreateImage(*dst)
+        dst = CreateMat(*dst)
 
     if dst is None:
-        dst = CreateImage(w, h, src.depth)
+        dst = CreateMat(int(h), int(w), CV_8UC3)
+
     Resize(src, dst)
     return dst
 

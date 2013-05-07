@@ -49,7 +49,7 @@ class _VideoComponentEditor(_LaserComponentEditor):
 
     def update(self):
         if self.control:
-            self.control.update()
+            self.control.repaint()
 
 #    def onClose(self):
 #        self.playTimer.Stop()

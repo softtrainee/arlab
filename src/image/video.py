@@ -61,7 +61,7 @@ class Video(Image):
     def is_open(self):
         return self.cap is not None
 
-    def open(self, user=None, identifier=0, force=False):
+    def open(self, user=None, identifier=1, force=False):
         '''
 
         '''
@@ -150,7 +150,7 @@ class Video(Image):
         if frame is not None:
             return asarray(frame[:, :])
 
-            return frame.ndarray
+
 # #        print arr.shape
 #        if cmap is not None:
 #            _, _, colors = transpose(arr)

@@ -41,7 +41,7 @@ class MapCanvas(SceneCanvas):
     use_valid_holes = Bool(True)
     show_indicators = Bool(True)
 
-    scaling = Float(10.0)
+    scaling = Float(1.0)
 
 
 #    def normal_key_pressed(self, event):

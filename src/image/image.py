@@ -121,8 +121,8 @@ class Image(HasTraits):
 
     def update_bounds(self, obj, name, old, new):
         if new:
-            self.width = new[0]
-            self.height = new[1]
+            self.width = int(new[0])
+            self.height = int(new[1])
 
     def _get_frame(self, **kw):
         return self.source_frame
@@ -182,6 +182,8 @@ class Image(HasTraits):
 
     def modify_frame(self, frame, vflip=None, hflip=None , gray=False, swap_rb=None,
                   clone=False, croprect=None, size=None):
+#        print size
+#        size = (100, 100)
         if frame is not None:
             def _get_param(param, p):
                 if param is None:
@@ -217,7 +219,7 @@ class Image(HasTraits):
                 frame = asMat(frame.ndarray[cs:ce, rs:re])
 
             if size:
-                resize(frame, *size)
+                frame = resize(frame, *size)
 
             if not globalv.video_test:
                 if vflip:

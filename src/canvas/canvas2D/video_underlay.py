@@ -43,7 +43,7 @@ class VideoUnderlay(AbstractOverlay):
                         component.width, component.height)
 
             if self.video:
-                img = self.video.get_image_data()
+                img = self.video.get_image_data(size=(component.outer_width, component.outer_height))
             else:
                 img = self._cached_image
 #            if not self.pause:

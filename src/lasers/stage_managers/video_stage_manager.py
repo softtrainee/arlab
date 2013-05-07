@@ -637,21 +637,23 @@ class VideoStageManager(StageManager):
         self.camera.parent = v
         return v
 
-    def _canvas_editor_factory(self):
-        camera = self.camera
-        canvas = self.canvas
-        if camera:
-            w = camera.width * int(canvas.scaling * 10) / 10.
-            h = camera.height * int(canvas.scaling * 10) / 10.
-        else:
-            w = 640
-            h = 480
-        l = canvas.padding_left
-        r = canvas.padding_right
-        t = canvas.padding_top
-        b = canvas.padding_bottom
-        return self.canvas_editor_klass(width=w + l + r,
-                                        height=h + t + b)
+#    def _canvas_editor_factory(self):
+#        camera = self.camera
+#        canvas = self.canvas
+#        if camera:
+#            w = camera.width * int(canvas.scaling * 10) / 10.
+#            h = camera.height * int(canvas.scaling * 10) / 10.
+#        else:
+#            w = 640
+#            h = 480
+#
+#        l = canvas.padding_left
+#        r = canvas.padding_right
+#        t = canvas.padding_top
+#        b = canvas.padding_bottom
+#        print w, h
+#        return self.canvas_editor_klass(width=w + l + r,
+#                                        height=h + t + b)
 #===============================================================================
 # defaults
 #===============================================================================

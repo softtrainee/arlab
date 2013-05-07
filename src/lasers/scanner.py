@@ -72,11 +72,13 @@ class Scanner(Loggable):
     functions = List
     static_values = List
 
-    _scanning = Bool
     scan_period = Int  # ms
     stop_event = Event
     setpoint = Float(enter_set=True, auto_set=False)
     control_path = File
+
+    _warned = False
+    _scanning = Bool
 
     def new_static_value(self, name, *args, **kw):
         self.static_values.append((name, None))
@@ -141,7 +143,7 @@ class Scanner(Loggable):
             self._starttime = time.time()
             # starts automatically
             yd = self._read_control_path()
-            if yd is not None:
+            if yd is None:
                 sp = 1000
             else:
                 sp = yd['period']
@@ -201,7 +203,9 @@ class Scanner(Loggable):
 
                 v = float(func())
                 data.append(v)
-                record(v, plotid=i, x=x, do_after=100)
+
+                # do_after no longer necessary with Qt
+                record(v, plotid=i, x=x, do_after=None)
             except Exception, e:
                 print e
 
@@ -214,11 +218,14 @@ class Scanner(Loggable):
         data = [x] + data + sv
         self.data_manager.write_to_frame(data)
 
-
     def _read_control_path(self):
         if os.path.isfile(self.control_path):
+            self._warned = False
             return yaml.load(open(self.control_path).read())
+        elif not self._warned:
 
+            self.warning_dialog('Not Scanner Control file found at {}'.format(self.control_path))
+            self._warned = True
 #===============================================================================
 # defaults
 #===============================================================================
@@ -233,10 +240,10 @@ class PIDScanner(Scanner):
     def _write_metadata(self):
         if self.control_path:
             yd = self._read_control_path()
-            self.pid = tuple(yd['pid'])
-
-        pid = ['pid= {}, {}, {}'.format(*self.pid)]
-        self.data_manager.write_to_frame(pid)
+            if yd:
+                self.pid = tuple(yd['pid'])
+                pid = ['pid= {}, {}, {}'.format(*self.pid)]
+                self.data_manager.write_to_frame(pid)
 
 #    def _control_path_changed(self):
 

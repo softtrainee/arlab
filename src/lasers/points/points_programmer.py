@@ -68,6 +68,9 @@ class PointsProgrammer(Manager):
 #    show_scene_viewer = Button('Scene Viewer')
 
     _path = None
+    def accept_point(self):
+        if self.is_programming:
+            self.maker._accept_point_fired()
 
     def load_stage_map(self, sm):
 
