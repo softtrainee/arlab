@@ -18,14 +18,15 @@
 from traits.api import HasTraits, Instance, Float
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
+import time
+from threading import Timer
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.image.video import Video
 from src.image.image import StandAloneImage
-from threading import Timer
-from src.image.cvwrapper import get_size, crop, grayspace
-from pyface.timer.do_later import do_later
-import time
+from src.image.cv_wrapper import get_size, crop, grayspace
+# from src.image.cvwrapper import get_size, crop, grayspace
+# from pyface.timer.do_later import do_later
 
 
 class MachineVisionManager(Manager):

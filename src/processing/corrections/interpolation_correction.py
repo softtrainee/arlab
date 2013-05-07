@@ -44,7 +44,7 @@ from src.helpers.datetime_tools import convert_timestamp
 from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import OLSRegressor
 from apptools.preferences.preference_binding import bind_preference
-from src.traits_editors.progress_dialog import MProgressDialog
+from src.ui.progress_dialog import MProgressDialog
 
 class InterpolationGraph(StackedRegressionGraph):
     pass

@@ -23,7 +23,7 @@ import apptools.sweet_pickle as pickle
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.constants import FIT_TYPES
-# from src.traits_editors.bound_enum_editor import BoundEnumEditor
+# from src.ui.bound_enum_editor import BoundEnumEditor
 import os
 from src.paths import paths
 

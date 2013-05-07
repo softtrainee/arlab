@@ -16,15 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
-from traitsui.api import View, Item
-from pyface.tasks.task import Task
-from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane
+from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane, \
+    ExplanationPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem
 from src.envisage.tasks.base_task import BaseTask
 from pyface.tasks.action.schema import SMenu
-from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction, \
-    RefreshCanvasAction
-from pyface.tasks.action.task_action import TaskAction
+from src.extraction_line.tasks.extraction_line_actions import RefreshCanvasAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -41,8 +38,7 @@ class ExtractionLineTask(BaseTask):
 #
         menus = [SMenu(
                        RefreshCanvasAction(),
-# #                      TaskAction(name='Load Canvas', method='load_canvas'),
-                      id='ExtractionLine', name='ExtractionLine')
+                       id='ExtractionLine', name='ExtractionLine')
                  ]
         mm = self._menu_bar_factory(menus)
         return mm
@@ -58,6 +54,8 @@ class ExtractionLineTask(BaseTask):
         return g
 
     def create_dock_panes(self):
-        panes = [GaugePane(model=self.manager)]
+        panes = [GaugePane(model=self.manager),
+                 ExplanationPane(model=self.manager)
+                 ]
         return panes
 #============= EOF =============================================

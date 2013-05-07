@@ -36,6 +36,8 @@ from pyface.confirmation_dialog import confirm, ConfirmationDialog
 from globals import globalv
 from src.helpers.color_generators import colorname_generator
 from src.helpers.logger_setup import new_logger, NAME_WIDTH
+from threading import current_thread
+from src.ui.thread import currentThreadName
 
 color_name_gen = colorname_generator()
 
@@ -174,11 +176,23 @@ class Loggable(HasTraits):
 
         self._log_('debug', msg)
 
+
     def _log_(self, func, msg):
+
+        def get_thread_name():
+
+            ct = current_thread()
+            name = ct.name
+            if name.startswith('Dummy'):
+                name = currentThreadName()
+
+            return name
+
         if self.logger is None:
             return
 
+        extras = {'threadName_':get_thread_name()}
         func = getattr(self.logger, func)
-        func(msg)
-
+        func(msg, extra=extras)
+#        func(msg)
 #============= EOF =============================================

@@ -20,18 +20,22 @@
 from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change
 
 #=============standard library imports ========================
-import wx
+# import wx
 from numpy import asarray, flipud, ndarray
 from globals import globalv
-from src.image.pyopencv_image_helper import colorspace
+# from src.image.pyopencv_image_helper import colorspace
 #=============local library imports  ==========================
-try:
-    from cvwrapper import swapRB, grayspace, cvFlip, \
-    draw_lines, new_dst, \
-    resize, asMat, save_image, load_image, \
-    get_size, cv_swap_rb
-except ImportError:
-    pass
+from cv_wrapper import load_image, asMat, get_size, grayspace, resize, \
+    save_image, draw_lines, colorspace
+from cv_wrapper import swap_rb as cv_swap_rb
+from cv_wrapper import flip as cv_flip
+# try:
+#    from cvwrapper import swapRB, grayspace, cvFlip, \
+#    draw_lines, new_dst, \
+#    resize, asMat, save_image, load_image, \
+#    get_size, cv_swap_rb
+# except ImportError:
+#    pass
 # class GraphicsContainer(object):
 #
 #    _lines = None
@@ -48,6 +52,7 @@ except ImportError:
 # from numpy.core.numeric import zeros
 # import Image as PILImage
 from pyface.timer.do_later import do_later, do_after
+from src.ui.image_editor import ImageEditor
 
 # from src.helpers.memo import memoized
 class Image(HasTraits):
@@ -126,7 +131,8 @@ class Image(HasTraits):
         f = self.source_frame
         if swap_rb:
             f = self.source_frame.clone()
-            f = swapRB(f)
+            f = cv_swap_rb(f)
+#            f = swapRB(f)
 #            f = clone(self.source_frame)
 #            cv.convertImage(f, f, CV_CVTIMG_SWAP_RB)
 
@@ -166,6 +172,7 @@ class Image(HasTraits):
         try:
             return frame.to_wx_bitmap()
         except AttributeError:
+            import wx
             if frame is not None:
 #                self._frame = frame
                 return wx.BitmapFromBuffer(frame.width,
@@ -190,7 +197,7 @@ class Image(HasTraits):
                 frame = frame.clone()
 
             if swap_rb:
-                frame = swapRB(frame)
+                frame = cv_swap_rb(frame)
 
             if gray:
                 frame = grayspace(frame)
@@ -215,11 +222,11 @@ class Image(HasTraits):
             if not globalv.video_test:
                 if vflip:
                     if hflip:
-                        cvFlip(frame, -1)
+                        cv_flip(frame, -1)
                     else:
-                        cvFlip(frame, 0)
+                        cv_flip(frame, 0)
                 elif hflip:
-                    cvFlip(frame, 1)
+                    cv_flip(frame, 1)
 
         return frame
 
@@ -234,7 +241,8 @@ class Image(HasTraits):
         h = self.height - 15
 #        display =
         try:
-            return resize(self.frames[0], w, h, dst=new_dst(w, h, 3))
+#            return resize(self.frames[0], w, h, dst=new_dst(w, h, 3))
+            return resize(self.frames[0], w, h, dst=(w, h, 3))
         except IndexError:
             pass
 #        return display
@@ -282,7 +290,10 @@ class Image(HasTraits):
 
 #        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
 #        src = swapRB(src)
-        save_image(resize(src, width, height, dst=new_dst(width, height, 3)), path)
+#        save_image(resize(src, width, height, dst=new_dst(width, height, 3)), path)
+        save_image(resize(src, width, height,
+                          dst=(width, height, 3)
+                          ), path)
 
     def _draw_crosshairs(self, src):
         r = 10
@@ -297,7 +308,7 @@ class Image(HasTraits):
 
 from traits.api import Instance
 from traitsui.api import View, Item, Handler
-from src.image.image_editor import ImageEditor
+# from src.image.image_editor import ImageEditor
 
 class StandAloneImage(HasTraits):
     _image = Instance(Image, ())
@@ -370,7 +381,8 @@ class StandAloneImage(HasTraits):
 
     def traits_view(self):
 
-        imgrp = Item('_image', show_label=False, editor=ImageEditor(),
+        imgrp = Item('_image', show_label=False,
+                      editor=ImageEditor(),
                       width=self.width,
                       height=self.height,
                       style='custom'

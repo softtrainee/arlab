@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter, \
     UVAutomatedRunAdapter
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from src.experiment.uv_automated_run import UVAutomatedRun
 
 #============= standard library imports ========================

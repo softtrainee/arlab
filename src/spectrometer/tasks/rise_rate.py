@@ -24,7 +24,7 @@ from numpy import polyfit, linspace
 from spectrometer_task import SpectrometerTask
 from traitsui.tabular_adapter import TabularAdapter
 from src.graph.guide_overlay import GuideOverlay
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 
 class ResultsAdapter(TabularAdapter):
     columns = [('N', 'cnt'), ('Endpoints', 'endpoints'), ('Linear', 'linear')]

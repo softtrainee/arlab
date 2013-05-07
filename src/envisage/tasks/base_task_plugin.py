@@ -29,6 +29,15 @@ class BaseTaskPlugin(Plugin):
     tasks = List(contributes_to=TASKS)
     service_offers = List(contributes_to=SERVICE_OFFERS)
     my_task_extensions = List(contributes_to=TASK_EXTENSIONS)
+#    preferences = List(contributes_to='envisage.preferences')
+    preferences_panes = List(
+        contributes_to='envisage.ui.tasks.preferences_panes')
+
+    def _preferences_panes_default(self):
+        return []
+
+    def _preferences_default(self):
+        return []
 
     def service_offer_factory(self, **kw):
         '''

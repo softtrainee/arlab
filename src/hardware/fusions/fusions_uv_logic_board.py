@@ -25,9 +25,9 @@ import time
 from fusions_logic_board import FusionsLogicBoard
 from threading import Timer, Thread, Lock, Event as TEvent
 from src.hardware.kerr.kerr_device import KerrDevice
-from src.traits_editors.led_editor import LEDEditor, LED
+from src.ui.led_editor import LEDEditor, LED
 from pyface.timer.do_later import do_later
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 from datetime import datetime, timedelta
 # from src.hardware.kerr.kerr_motor import KerrMotor
 FLOW_STATES = {'on':'Stop Flow', 'off':'Start Flow', 'purge':'Purging'}

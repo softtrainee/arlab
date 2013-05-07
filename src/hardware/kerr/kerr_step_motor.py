@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import CInt, Str, Bool, Dict, Float, HasTraits, Any
 from traitsui.api import View, Item, EnumEditor, RangeEditor, Label, Group
-# from src.traits_editors.custom_label_editor import CustomLabel
+# from src.ui.custom_label_editor import CustomLabel
 from src.hardware.core.data_helper import make_bitarray
 
 #============= standard library imports ========================

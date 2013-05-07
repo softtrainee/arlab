@@ -21,7 +21,7 @@ from traitsui.tabular_adapter import TabularAdapter
 from apptools.preferences.preference_binding import bind_preference
 from src.processing.database_manager import DatabaseManager
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 from src.loggable import Loggable
 from src.database.database_connection_spec import DBConnectionSpec
 #============= standard library imports ========================

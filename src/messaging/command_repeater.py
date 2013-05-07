@@ -26,7 +26,7 @@ from threading import Lock
 from src.config_loadable import ConfigLoadable
 from src.remote_hardware.errors import PychronCommErrorCode
 from globals import globalv
-from src.traits_editors.led_editor import LED, LEDEditor
+from src.ui.led_editor import LED, LEDEditor
 
 
 class CRHandler(Handler):

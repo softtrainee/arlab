@@ -25,7 +25,7 @@ from traitsui.tabular_adapter import TabularAdapter
 import csv
 import os
 #============= local library imports  ==========================
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from src.paths import paths
 from src.viewable import Viewable
 # paths.build('_experiment')

@@ -32,12 +32,12 @@ from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 # from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
-from src.progress_dialog import MProgressDialog
-from src.lasers.power.power_calibration_manager import PowerCalibrationManager
+# from src.progress_dialog import MProgressDialog
+# from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 
 from laser_manager import LaserManager
-from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
+# from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
 from src.viewable import Viewable
 from src.helpers.filetools import str_to_bool
 
@@ -102,7 +102,7 @@ class FusionsLaserManager(LaserManager):
 
     _current_rid = None
 
-    brightness_meter = Instance(BrightnessPIDManager)
+#    brightness_meter = Instance(BrightnessPIDManager)
 
     chiller = Any
 
@@ -359,6 +359,7 @@ class FusionsLaserManager(LaserManager):
             motor = self.laser_controller.get_motor(name)
             if motor is not None:
                 n = 4
+                from src.ui.progress_dialog import MProgressDialog
                 pd = MProgressDialog(max=n, size=(550, 15))
                 pd.open()
                 motor.initialize(progress=pd)
@@ -629,12 +630,12 @@ class FusionsLaserManager(LaserManager):
 #        return ArduinoSubsystem(name='arduino_subsystem_2')
 
 
-    def _brightness_meter_default(self):
-        if self.use_video:
-            b = BrightnessPIDManager(parent=self)
-#            b.brightness_manager.video = self.stage_manager.video
-
-            return b
+#    def _brightness_meter_default(self):
+#        if self.use_video:
+#            b = BrightnessPIDManager(parent=self)
+# #            b.brightness_manager.video = self.stage_manager.video
+#
+#            return b
 
     def _fiber_light_default(self):
         '''

@@ -22,7 +22,7 @@ import math
 import apptools.sweet_pickle as pickle
 import os
 from src.paths import paths
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 #============= standard library imports ========================
 #============= local library imports  ==========================
 SIMPLE_HELP = '''1. Locate center hole

@@ -19,7 +19,7 @@ from traits.api import HasTraits, Float, String
 from traitsui.api import View, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 
 HELP_TAG = '''Enter the x, y for this point {:0.3f},{:0.3f}
 in data space i.e mm

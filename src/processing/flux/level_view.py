@@ -24,7 +24,7 @@ import struct
 from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.constants import PLUSMINUS
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 
 
 class LevelAdapter(TabularAdapter):

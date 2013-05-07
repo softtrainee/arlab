@@ -27,7 +27,7 @@ from functools import partial
 from src.processing.autoupdate_parser import AutoupdateParser
 from src.processing.publisher.analysis import PubAnalysis, Marker
 from src.constants import ARGON_KEYS, PLUSMINUS
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 from pyface.action.menu_manager import MenuManager
 from pyface.action.action import Action

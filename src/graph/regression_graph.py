@@ -30,7 +30,7 @@ from src.graph.stacked_graph import StackedGraph
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from src.graph.context_menu_mixin import RegressionContextMenuMixin
-from src.displays.rich_text_display import RichTextDisplay
+# from src.displays.rich_text_display import RichTextDisplay
 from src.graph.tools.regression_inspector import RegressionInspectorTool, \
     RegressionInspectorOverlay
 from src.graph.tools.point_inspector import PointInspector, \

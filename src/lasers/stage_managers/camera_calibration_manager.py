@@ -19,12 +19,13 @@
 #============= enthought library imports ======================
 from traits.api import HasTraits, on_trait_change, Range, Bool, List, Str, Int, Float, Button, Instance
 from traitsui.api import View, Item, Group, HGroup, VGroup, TableEditor, Handler
-from src.image.image_editor import ImageEditor
+# from src.image.image_editor import ImageEditor
 from src.image.image import Image
 from traitsui.menu import OKButton, CancelButton
 from traitsui.extras.checkbox_column import CheckboxColumn
 from traitsui.table_column import ObjectColumn
 from src.managers.manager import Manager
+from src.ui.image_editor import ImageEditor
 
 
 #============= standard library imports =======================

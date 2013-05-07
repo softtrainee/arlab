@@ -41,4 +41,14 @@ class GaugePane(TraitsDockPane):
                               ),
                  )
         return v
+
+class ExplanationPane(TraitsDockPane):
+    name = 'Explanation'
+    id = 'extraction_line.gauges'
+    def traits_view(self):
+        v = View(UItem('explanation',
+                       style='custom'
+                       )
+                 )
+        return v
 #============= EOF =============================================

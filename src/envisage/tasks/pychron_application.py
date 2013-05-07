@@ -32,13 +32,14 @@ class Pychron(BaseTasksApplication):
 # class Pychron(TasksApplication, Loggable):
     '''
     '''
-    id = 'pychron.valve'
+    id = 'tasks.pychron.valve'
     name = 'pyValve'
 
 
     default_layout = [TaskWindowLayout(
-                                       'pychron.extraction_line',
-                                       'pychron.hardware',
+#                                       'pychron.extraction_line',
+#                                       'pychron.hardware',
+                                       'pychron.lasers.fusions.diode',
                                        size=(800, 800)) ]
     def _about_dialog_default(self):
         '''

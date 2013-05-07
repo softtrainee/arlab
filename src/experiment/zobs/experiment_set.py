@@ -29,7 +29,7 @@ from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
 from src.experiment.stats import ExperimentStats
 # from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-# from src.traits_editors.tabular_editor import myTabularEditor
+# from src.ui.tabular_editor import myTabularEditor
 from src.experiment.utilities.identifier import convert_identifier
 from src.constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule

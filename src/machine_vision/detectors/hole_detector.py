@@ -30,10 +30,11 @@ import random
 import os
 
 #============= local library imports  ==========================
-from src.image.cvwrapper import draw_polygons, crop, centroid, \
-    new_point, contour, get_polygons, \
-    draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
-    asMat, sharpen_src, smooth_src, draw_contour_list
+# from src.image.cvwrapper import draw_polygons, crop, centroid, \
+#    new_point, contour, get_polygons, \
+#    draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
+#    asMat, sharpen_src, smooth_src, draw_contour_list
+from src.image.cv_wrapper import draw_polygons, draw_rectangle
 
 from src.paths import paths
 from src.helpers.filetools import unique_path

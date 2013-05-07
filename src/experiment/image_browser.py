@@ -33,7 +33,7 @@ import os
 import httplib
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths

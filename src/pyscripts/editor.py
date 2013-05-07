@@ -30,7 +30,7 @@ from src.pyscripts.pyscript_runner import PyScriptRunner
 from src.saveable import SaveableHandler
 # from src.pyscripts.code_editor import PyScriptCodeEditor
 from src.viewable import Viewable
-from src.traits_editors.code_editor import PyScriptCodeEditor
+from src.ui.code_editor import PyScriptCodeEditor
 
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
                     ExtractionLine='src.pyscripts.extraction_line_pyscript',

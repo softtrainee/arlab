@@ -18,6 +18,7 @@
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.traits_editors.factory import toolkit_factory
-DisplayEditor = toolkit_factory('display_editor', 'DisplayEditor')
+from src.ui.factory import toolkit_factory
+
+PyScriptCodeEditor = toolkit_factory('code_editor', 'PyScriptCodeEditor')
 #============= EOF =============================================

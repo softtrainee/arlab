@@ -32,7 +32,7 @@ from src.config_loadable import ConfigLoadable
 from src.messaging.command_repeater import CommandRepeater
 from src.helpers.datetime_tools import diff_timestamp
 from src.remote_hardware.command_processor import CommandProcessor
-from src.traits_editors.led_editor import LED, LEDEditor
+from src.ui.led_editor import LED, LEDEditor
 from globals import globalv
 
 LOCAL = False

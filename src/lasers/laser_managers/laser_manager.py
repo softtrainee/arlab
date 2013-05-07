@@ -36,7 +36,7 @@ from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 # from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
-from src.traits_editors.led_editor import LED, LEDEditor
+from src.ui.led_editor import LED, LEDEditor
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
 

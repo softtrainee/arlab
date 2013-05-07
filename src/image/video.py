@@ -21,12 +21,17 @@ from threading import Thread, Lock, Event
 import time
 import os
 import shutil
+from numpy import asarray
 #=============local library imports ===========================
 from src.image.image import Image
-from src.image.pyopencv_image_helper import swapRB
-from cvwrapper import get_capture_device, query_frame, write_frame, \
-    new_video_writer, grayspace, get_nframes, \
-    set_frame_index, get_fps, set_video_pos, crop
+# from src.image.pyopencv_image_helper import swapRB
+from cv_wrapper import get_capture_device
+from cv_wrapper import swap_rb as cv_swap_rb
+# query_frame, write_frame, \
+#    new_video_writer, grayspace, get_nframes, \
+#    set_frame_index, get_fps, set_video_pos, crop, swapRB
+#
+
 from globals import globalv
 
 
@@ -70,7 +75,8 @@ class Video(Image):
             else:
                 # ideally an identifier is passed in
                 try:
-                    self.cap = get_capture_device(identifier)
+                    self.cap = get_capture_device()
+                    self.cap.open(identifier)
                 except Exception, e:
                     print 'video.open', e
                     self.cap = None
@@ -78,27 +84,28 @@ class Video(Image):
         if not user in self.users:
             self.users.append(user)
 
-    def shutdown(self):
-        self.users = []
-        del(self.cap)
-
-    def get_nframes(self):
-        if self.cap is not None:
-            return get_nframes(self.cap)
-
-    def get_fps(self):
-        if self.cap is not None:
-            return get_fps(self.cap)
-
-    def set_video_pos(self, pos):
-        if self.cap is not None:
-            set_video_pos(self.cap, pos)
+#    def shutdown(self):
+#        self.users = []
+#        del(self.cap)
+#
+#    def get_nframes(self):
+#        if self.cap is not None:
+#            return get_nframes(self.cap)
+#
+#    def get_fps(self):
+#        if self.cap is not None:
+#            return get_fps(self.cap)
+#
+#    def set_video_pos(self, pos):
+#        if self.cap is not None:
+#            set_video_pos(self.cap, pos)
 
     def close(self, user=None, force=False):
         '''
   
         '''
         if force:
+            self.cap.release()
             self.cap = None
             return
 
@@ -106,12 +113,13 @@ class Video(Image):
             i = self.users.index(user)
             self.users.pop(i)
             if not self.users:
+                self.cap.release()
                 self.cap = None
 
-    def set_frame_index(self, ind):
-        cap = self.cap
-        if cap:
-            set_frame_index(cap, ind)
+#    def set_frame_index(self, ind):
+#        cap = self.cap
+#        if cap:
+#            set_frame_index(cap, ind)
 
     def _get_frame(self, lock=True, **kw):
         cap = self.cap
@@ -128,7 +136,11 @@ class Video(Image):
                     return f
 #                f = self.current_frame.clone()
                 else:
-                    return query_frame(cap)
+                    s, img = self.cap.read()
+                    if s:
+                        return img
+#                    return self.cap.read()
+#                    return query_frame(cap)
 #                    pass
 #                    self.source_frame = query_frame(cap, frame=self.source_frame)
 #                    return self.source_frame
@@ -136,6 +148,8 @@ class Video(Image):
     def get_image_data(self, cmap=None, **kw):
         frame = self.get_frame(**kw)
         if frame is not None:
+            return asarray(frame[:, :])
+
             return frame.ndarray
 # #        print arr.shape
 #        if cmap is not None:
@@ -232,7 +246,7 @@ class Video(Image):
 
         if renderer is None:
             frame = self.get_frame()
-            save = lambda x: self.save(x, src=swapRB(frame))
+            save = lambda x: self.save(x, src=cv_swap_rb(frame))
         else:
             save = lambda x:renderer(x)
 

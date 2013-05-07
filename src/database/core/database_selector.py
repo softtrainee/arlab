@@ -30,9 +30,9 @@ from src.database.core.query import Query, compile_query
 from src.viewable import Viewable
 
 from traits.api import HasTraits
-from src.traits_editors.tabular_editor import myTabularEditor
+from src.ui.tabular_editor import myTabularEditor
 # from src.database.core.base_results_adapter import BaseResultsAdapter
-from src.traits_editors.custom_label_editor import CustomLabel
+from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
 
 class BaseTabularAdapter(TabularAdapter):

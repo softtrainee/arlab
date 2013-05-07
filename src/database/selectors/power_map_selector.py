@@ -15,17 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Instance, Enum, on_trait_change, Bool, \
-    Range
-from traitsui.api import Group, VGroup, Item, HGroup, spring
+# from traits.api import String, Instance, Enum, on_trait_change, Bool, \
+#    Range
+# from traitsui.api import Group, VGroup, Item, HGroup, spring
 #============= standard library imports ========================
-import os
-import csv
+# import os
+# import csv
 #============= local library imports  ==========================
 from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.power_map_orm import PowerMapTable
-from src.database.core.base_db_result import DBResult
-from src.graph.graph3D import Graph3D
+# from src.database.core.base_db_result import DBResult
+# from src.graph.graph3D import Graph3D
 from src.database.core.query import PowerMapQuery, compile_query
 from src.database.records.power_map_record import PowerMapRecord
 

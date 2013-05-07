@@ -31,7 +31,7 @@ from filetools import unique_path
 import shutil
 
 NAME_WIDTH = 40
-gFORMAT = '%(name)-{}s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'.format(NAME_WIDTH)
+gFORMAT = '%(name)-{}s: %(asctime)s %(levelname)-7s (%(threadName_)-10s) %(message)s'.format(NAME_WIDTH)
 gLEVEL = logging.DEBUG
 
 # LOGGER_LIST = []

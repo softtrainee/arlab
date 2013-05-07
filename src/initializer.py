@@ -24,7 +24,7 @@ from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
-from src.traits_editors.progress_dialog import MProgressDialog
+from src.ui.progress_dialog import MProgressDialog
 import os
 from globals import globalv
 from pyface.timer.do_later import do_later
@@ -267,8 +267,6 @@ class Initializer(Loggable):
             if man is None:
                 self.debug('trouble creating manager {}'.format(mi))
                 break
-
-
 
 
             if self.application is not None:

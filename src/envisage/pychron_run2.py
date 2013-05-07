@@ -69,6 +69,7 @@ PACKAGE_DICT = dict(
 #                   SVNPlugin='src.svn.plugins.svn_plugin',
 #                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
 
+                   FusionsDiodePlugin='src.lasers.tasks.laser_plugin',
 #                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
 #                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
 #                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
@@ -163,7 +164,9 @@ def get_user_plugins():
             import traceback
             traceback.print_exc()
             klass = None
-            logger.warning('****** {} could not be imported {} ******'.format(name, e))
+            logger.warning('****** {} could not be imported {} ******'.format(name, e),
+                           extra={'threadName_':'None'}
+                           )
         return klass
 
     # append plugins dir to the sys path
@@ -188,7 +191,9 @@ def get_user_plugins():
                 klass = get_klass(package, pname)
             elif not pname.endswith('UIPlugin'):
                 # dont warn if uiplugin not available
-                logger.warning('***** {} not available ******'.format(pname))
+                logger.warning('***** {} not available ******'.format(pname),
+                               extra={'threadName_':'launcher'}
+                               )
 
             if klass is not None:
                 plugin = klass()
