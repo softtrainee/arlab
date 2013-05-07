@@ -22,14 +22,33 @@ from envisage.ui.tasks.task_factory import TaskFactory
 #============= local library imports  ==========================
 from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from src.extraction_line.tasks.extraction_line_task import ExtractionLineTask
+from pyface.tasks.action.schema_addition import SchemaAddition
+from envisage.ui.tasks.task_extension import TaskExtension
+from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction
 
 class ExtractionLinePlugin(BaseTaskPlugin):
     id = 'pychron.extraction_line.plugin'
 
     managers = List(contributes_to='pychron.hardware.managers')
 
-    manager = Instance(ExtractionLineManager)
-    def _manager_default(self):
+#    manager = Instance(ExtractionLineManager)
+    def _service_offers_default(self):
+        '''
+        '''
+        so = self.service_offer_factory(
+                          protocol=ExtractionLineManager,
+                          factory=self._factory
+#                            factory=ExtractionLineManager
+                            )
+
+#        so1 = self.service_offer_factory(
+#                          protocol = GaugeManager,
+#                          #protocol = GM_PROTOCOL,
+#                          factory = self._gm_factory)
+
+        return [so]
+
+    def _factory(self):
         from src.helpers.parsers.initialization_parser import InitializationParser
         ip = InitializationParser()
         try:
@@ -50,19 +69,21 @@ class ExtractionLinePlugin(BaseTaskPlugin):
         return [
                 dict(
                      name='extraction_line',
-                     manager=self.manager),
+                     manager=self.application.get_service(ExtractionLineManager)),
                 ]
 
     def _tasks_default(self):
         ts = [TaskFactory(id='pychron.extraction_line',
-                         factory=self._factory)]
+                         factory=self._task_factory)]
         return ts
 
-    def _factory(self):
-
-        t = ExtractionLineTask(manager=self.manager)
-
-#        print self.application.get_service()
+    def _task_factory(self):
+        elm = self.application.get_service(ExtractionLineManager)
+        t = ExtractionLineTask(manager=elm)
         return t
 
+#    def _my_task_extensions_default(self):
+#        return [TaskExtension(actions=[SchemaAddition(id='Load Canvas',
+#                                                      factory=LoadCanvasAction,
+#                                                      path='MenuBar/ExtractionLine')])]
 #============= EOF =============================================

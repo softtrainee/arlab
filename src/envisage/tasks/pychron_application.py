@@ -15,29 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List
+# from traits.api import List
 # from envisage.ui.workbench.api import WorkbenchApplication
 from pyface.api import AboutDialog, SplashScreen
 from pyface.image_resource import ImageResource
-from envisage.ui.tasks.tasks_application import TasksApplication
+# from envisage.ui.tasks.tasks_application import TasksApplication
 #============= standard library imports ========================
-import copy
+# import copy
 #============= local library imports  ==========================
-from src.loggable import Loggable
+# from src.loggable import Loggable
 import os
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from src.envisage.tasks.base_tasks_application import BaseTasksApplication
 
-
-class Pychron(TasksApplication, Loggable):
+class Pychron(BaseTasksApplication):
+# class Pychron(TasksApplication, Loggable):
     '''
     '''
-    id = 'pychron.experiment'
-    name = 'pyExperiment'
+    id = 'pychron.valve'
+    name = 'pyValve'
 
-    uis = List
+
     default_layout = [TaskWindowLayout(
-                                       'pychron.hardware',
                                        'pychron.extraction_line',
+                                       'pychron.hardware',
                                        size=(800, 800)) ]
     def _about_dialog_default(self):
         '''
@@ -58,21 +59,20 @@ class Pychron(TasksApplication, Loggable):
 
         sp = SplashScreen(
                           image=ImageResource(name='splash{}.png'.format(paths.version),
-                                              search_path=[p, paths.splashes]
+                                              search_path=[paths.splashes]
                                             ),
                           )
-
         return sp
 
-    def exit(self):
-        uis = copy.copy(self.uis)
-        for ui in uis:
-            try:
-                ui.dispose(abort=True)
-            except AttributeError:
-                pass
-
-        super(Pychron, self).exit()
+#    def exit(self):
+#        uis = copy.copy(self.uis)
+#        for ui in uis:
+#            try:
+#                ui.dispose(abort=True)
+#            except AttributeError:
+#                pass
+#
+#        super(Pychron, self).exit()
 #    def _started_fired(self):
 #        elm = self.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
 #        elm.window_x = 25

@@ -15,36 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from pyface.tasks.task import Task
-from pyface.tasks.action.schema import SMenu, SMenuBar
-from pyface.tasks.action.task_toggle_group import TaskToggleGroup
+from traits.api import List
+from src.loggable import Loggable
+from envisage.ui.tasks.tasks_application import TasksApplication
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTask(Task):
-    def _menu_bar_default(self):
-        return self._menu_bar_factory()
+class BaseTasksApplication(TasksApplication, Loggable):
+    uis = List
 
-    def _menu_bar_factory(self, menus=None):
-        if menus is None:
-            menus = tuple()
+    def open_view(self, obj, **kw):
+        info = obj.edit_traits(**kw)
+        self.uis.append(info)
 
-        file_menu = SMenu(id='File', name='&File')
-        tools_menu = SMenu(id='Tools', name='&Tools')
+    def exit(self):
+        import copy
+        uis = copy.copy(self.uis)
+        for ui in uis:
+            try:
+                ui.dispose(abort=True)
+            except AttributeError:
+                pass
 
-        view_menu = SMenu(
-                          TaskToggleGroup(),
-                          id='View', name='&View')
-        edit_menu = SMenu(id='Edit', name='&Edit')
-
-        mb = SMenuBar(
-                      file_menu,
-                      view_menu,
-                      edit_menu,
-                      tools_menu,
-                      *menus
-                      )
-        return mb
+        super(BaseTasksApplication, self).exit()
 #============= EOF =============================================

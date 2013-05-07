@@ -28,7 +28,7 @@ import time
 from src.viewable import Viewable, ViewableHandler
 from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
-from src.envisage.core.action_helper import MANAGERS
+# from src.envisage.core.action_helper import MANAGERS
 from src.saveable import SaveableHandler
 from src.hardware.core.i_core_device import ICoreDevice
 
@@ -440,14 +440,14 @@ class Manager(Viewable, RPCable):
             return dlg.path
 
 
-    def _led_editor_factory(self, window, editor):
-        '''
-        '''
-        import wx
-
-        p = wx.Panel(window, -1)
-        p.Add()
-        return p
+#    def _led_editor_factory(self, window, editor):
+#        '''
+#        '''
+#        import wx
+#
+#        p = wx.Panel(window, -1)
+#        p.Add()
+#        return p
 
     def _led_factory(self, name, color='green'):
         '''

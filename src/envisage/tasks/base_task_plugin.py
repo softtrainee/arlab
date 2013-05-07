@@ -16,16 +16,20 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List
-from traitsui.api import View, Item
 from envisage.plugin import Plugin
 from envisage.service_offer import ServiceOffer
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class BaseTaskPlugin(Plugin):
-    tasks = List(contributes_to='envisage.ui.tasks.tasks')
     SERVICE_OFFERS = 'envisage.service_offers'
+    TASK_EXTENSIONS = 'envisage.ui.tasks.task_extensions'
+    TASKS = 'envisage.ui.tasks.tasks'
+
+    tasks = List(contributes_to=TASKS)
     service_offers = List(contributes_to=SERVICE_OFFERS)
+    my_task_extensions = List(contributes_to=TASK_EXTENSIONS)
+
     def service_offer_factory(self, **kw):
         '''
         

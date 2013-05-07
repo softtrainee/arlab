@@ -21,6 +21,10 @@ from pyface.tasks.task import Task
 from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane
 from pyface.tasks.task_layout import TaskLayout, PaneItem
 from src.envisage.tasks.base_task import BaseTask
+from pyface.tasks.action.schema import SMenu
+from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction, \
+    RefreshCanvasAction
+from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -32,6 +36,17 @@ class ExtractionLineTask(BaseTask):
     def _default_layout_default(self):
         return TaskLayout(top=PaneItem('extraction_line.gauges')
                           )
+
+    def _menu_bar_default(self):
+#
+        menus = [SMenu(
+                       RefreshCanvasAction(),
+# #                      TaskAction(name='Load Canvas', method='load_canvas'),
+                      id='ExtractionLine', name='ExtractionLine')
+                 ]
+        mm = self._menu_bar_factory(menus)
+        return mm
+
     def activated(self):
         self.manager.activate()
 
