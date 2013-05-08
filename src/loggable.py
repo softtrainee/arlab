@@ -148,14 +148,15 @@ class Loggable(HasTraits):
         '''
         if self.logger is not None:
             if self.use_logger_display:
-                from src.helpers.gdisplays import gLoggerDisplay
                 if globalv.show_infos:
+                    from src.helpers.gdisplays import gLoggerDisplay
                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
-                        do_later(gLoggerDisplay.edit_traits)
+                        gLoggerDisplay.edit_traits()
+#                        do_later(gLoggerDisplay.edit_traits)
 
-                args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
-                        msg))
-                gLoggerDisplay.add_text(args, color=color)
+                    args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
+                            msg))
+                    gLoggerDisplay.add_text(args, color=color)
 
             if decorate:
                 msg = '====== {}'.format(msg)

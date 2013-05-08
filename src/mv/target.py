@@ -19,18 +19,22 @@ from traits.api import HasTraits, cached_property, Property, Tuple, Any, Float
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
+# from src.geometry.convex_hull import convex_hull_area
+from src.geometry.centroid import calculate_centroid
+from src.simple_timeit import timethis
 from src.geometry.convex_hull import convex_hull_area
-from src.geometry.centroid.calculate_centroid import calculate_centroid
+# from src.geometry.centroid.calculate_centroid import calculate_centroid
 
 class Target(HasTraits):
     poly_points = Any
     bounding_rect = Any
 #    threshold = None
     area = Float
-
+    convex_hull_area = Float
     origin = Tuple
     convexity = Property
-    centroid = Property
+    centroid = Tuple
+    min_enclose_area = Float
 
     @property
     def dev_centroid(self):
@@ -43,12 +47,20 @@ class Target(HasTraits):
 
     @cached_property
     def _get_convexity(self):
-        return self.area / convex_hull_area(self.poly_points)
+        return self.area / self.min_enclose_area
+#        return self.
+#        r = timethis(convex_hull_area, args=(self.poly_points,))
 
-    @cached_property
-    def _get_centroid(self):
-        pts = array([(pt.x, pt.y) for pt in self.poly_points], dtype=float)
-        return calculate_centroid(pts)
+#        return self.area / convex_hull_area()
+#        return self.area / convex_hull_area(self.poly_points)
+
+#    @cached_property
+#    def _get_centroid(self):
+# #        pts = array([(pt.x, pt.y) for pt in self.poly_points], dtype=float)
+# #        v = timethis(calculate_centroid, args=(self.poly_points,))
+#        return calculate_centroid(self.poly_points)
+# #        print v
+#        return v
 
     #    @property
 #    def dev_br(self):
@@ -56,6 +68,9 @@ class Target(HasTraits):
 #                (self.origin[1] - self.bounding_rect[1]))
 #    @property
 #    def bounding_area(self):
-#        return self.bounding_rect.width * self.bounding_rect.height
+#        return self.bounding_rect[1] ** 2 * 3.1415
+#        print self.bounding_rect
+#        return 1
+#        return self.bounding_rect[2] * self.bounding_rect[3]
 
 #============= EOF =============================================

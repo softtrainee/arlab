@@ -17,8 +17,8 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change
-
+from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change, \
+    Event
 #=============standard library imports ========================
 # import wx
 from numpy import asarray, flipud, ndarray
@@ -115,7 +115,8 @@ class Image(HasTraits):
         img = self.new_frame(img, swap_rb)
         self.source_frame = img
 #        self.current_frame = img.clone()
-        self.frames = [img.clone()]
+#        self.frames = [img.clone()]
+        self.frames = [img]
 
 #        self.frames = [clone(img)]
 
@@ -235,7 +236,7 @@ class Image(HasTraits):
 #    @memoized
 #    def render_images(self, src):
     def render(self):
-
+        return self.frames[0]
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
 #        print w,h, src[0].size()
@@ -312,108 +313,109 @@ from traits.api import Instance
 from traitsui.api import View, Item, Handler
 # from src.image.image_editor import ImageEditor
 
-class StandAloneImage(HasTraits):
-    _image = Instance(Image, ())
-    width = Int(300)
-    height = Int(300)
-    view_identifier = None
-    title = None
-    ui = Any
-#    thresholdv = Int
-#    osrc = None
-#    def _thresholdv_changed(self):
-#        if self.osrc is None:
-#            self.osrc = grayspace(self._image.get_frame(0))
-#            self.osrc = crop(self.osrc, 640 / 2, 480 / 2, 200, 200)
-
-#        print 'fff'
-#        im = self.get_frame(0)
-#        tim = threshold(im, self.thresholdv)
-#        self.source_frame = tim
-#        self.set_frame(0, None)
-#        self.load(self.source_frame)
-#        self.set_frame(0, self.source_frame)
-#        print self._image.frames[0] == self.source_frame
-#        sc = self._image.source_frame
-#        tim = threshold(self.osrc, self.thresholdv)
-# #        self._image = Image(width=self.width, height=self.height)
-# #        self.load(colorspace(tim))
-#        self.set_frame(0, colorspace(tim))
+# class StandAloneImage(HasTraits):
+#    _image = Instance(Image, ())
+#    width = Int(300)
+#    height = Int(300)
+#    view_identifier = None
+#    title = None
+#    update_needed = Event
+# #    ui = Any
+# #    thresholdv = Int
+# #    osrc = None
+# #    def _thresholdv_changed(self):
+# #        if self.osrc is None:
+# #            self.osrc = grayspace(self._image.get_frame(0))
+# #            self.osrc = crop(self.osrc, 640 / 2, 480 / 2, 200, 200)
 #
-    def __image_default(self):
-        return Image(width=self.width, height=self.height)
-
-#    def __getattr__(self, attr):
-#        if hasattr(self._image, attr):
-#            return getattr(self._image, attr)
-#        else:
-#            pass
-    @on_trait_change('width, height')
-    def wh_update(self, obj, name, old, new):
-        setattr(self._image, name, getattr(self, name))
-
-    def show(self):
-        do_after(1, self.edit_traits)
-
-    def close(self):
-        if self.ui is not None:
-            do_later(self.ui.dispose)
-        self.ui = None
-
-    def load(self, src, **kw):
-        self._image.load(src, **kw)
-
-    @property
-    def source_frame(self):
-        return self._image.source_frame
-
-    def set_frames(self, fs):
-        self._image.frames = fs
-
-    def set_frame(self, i, src):
-        if isinstance(src, ndarray):
-            src = asMat(src)
-        self._image.frames[i] = colorspace(src)
-
-    def get_frame(self, i):
-        return self._image.frames[i]
-
-    def save(self, *args, **kw):
-        self._image.save(*args, **kw)
-
-    def traits_view(self):
-
-        imgrp = Item('_image', show_label=False,
-                      editor=ImageEditor(),
-                      width=self.width,
-                      height=self.height,
-                      style='custom'
-                      )
-
-        v = View(
-#                 Item('thresholdv'),
-                 imgrp,
-                 handler=ImageHandler,
-                 x=0.55,
-                 y=35,
-                 width=self.width,
-                 height=self.height + 22,
-                 resizable=True
-                 )
-
-        if self.title is not None:
-            v.title = self.title
-
-        if self.view_identifier is not None:
-            v.id = self.view_identifier
-
-        return v
-
-class ImageHandler(Handler):
-    def init(self, info):
-        info.object.ui = info.ui
-
-
+# #        print 'fff'
+# #        im = self.get_frame(0)
+# #        tim = threshold(im, self.thresholdv)
+# #        self.source_frame = tim
+# #        self.set_frame(0, None)
+# #        self.load(self.source_frame)
+# #        self.set_frame(0, self.source_frame)
+# #        print self._image.frames[0] == self.source_frame
+# #        sc = self._image.source_frame
+# #        tim = threshold(self.osrc, self.thresholdv)
+# # #        self._image = Image(width=self.width, height=self.height)
+# # #        self.load(colorspace(tim))
+# #        self.set_frame(0, colorspace(tim))
+# #
+#    def __image_default(self):
+#        return Image(width=self.width, height=self.height)
+#
+# #    def __getattr__(self, attr):
+# #        if hasattr(self._image, attr):
+# #            return getattr(self._image, attr)
+# #        else:
+# #            pass
+#    @on_trait_change('width, height')
+#    def wh_update(self, obj, name, old, new):
+#        setattr(self._image, name, getattr(self, name))
+#
+#    def show(self):
+#        do_after(1, self.edit_traits)
+#
+#    def close(self):
+#        if self.ui is not None:
+#            do_later(self.ui.dispose)
+#        self.ui = None
+#
+#    def load(self, src, **kw):
+#        self._image.load(src, **kw)
+#
+#    @property
+#    def source_frame(self):
+#        return self._image.source_frame
+#
+#    def set_frames(self, fs):
+#        self._image.frames = fs
+#
+#    def set_frame(self, i, src):
+#        if isinstance(src, ndarray):
+#            src = asMat(src)
+#        self._image.frames[i] = colorspace(src)
+#        self.update_needed = True
+#
+#    def get_frame(self, i):
+#        return self._image.frames[i]
+#
+#    def save(self, *args, **kw):
+#        self._image.save(*args, **kw)
+#
+#    def traits_view(self):
+#
+#        imgrp = Item('_image', show_label=False,
+#                      editor=ImageEditor(),
+#                      width=self.width,
+#                      height=self.height,
+#                      style='custom'
+#                      )
+#
+#        v = View(
+# #                 Item('thresholdv'),
+#                 imgrp,
+#                 handler=ImageHandler,
+#                 x=0.55,
+#                 y=35,
+#                 width=self.width,
+#                 height=self.height + 22,
+#                 resizable=True
+#                 )
+#
+#        if self.title is not None:
+#            v.title = self.title
+#
+#        if self.view_identifier is not None:
+#            v.id = self.view_identifier
+#
+#        return v
+#
+# class ImageHandler(Handler):
+#    def init(self, info):
+#        info.object.ui = info.ui
+#
 
 if __name__ == '__main__':
     src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'

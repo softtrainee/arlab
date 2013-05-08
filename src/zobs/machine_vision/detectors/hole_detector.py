@@ -34,8 +34,9 @@ import os
 #    new_point, contour, get_polygons, \
 #    draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
 #    asMat, sharpen_src, smooth_src, draw_contour_list
-from src.image.cv_wrapper import draw_polygons, draw_rectangle
-
+from src.image.cv_wrapper import draw_polygons, draw_rectangle, get_size, \
+    crop, colorspace, contour, draw_contour_list, get_polygons, get_centroid
+from src.image.cv_wrapper import sharpen as cv_sharpen
 from src.paths import paths
 from src.helpers.filetools import unique_path
 from detector import Detector
@@ -43,6 +44,7 @@ from src.image.image import StandAloneImage
 from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
 from globals import globalv
+
 
 # from src.image.pyopencv_image_helper import grayspace
 
@@ -122,7 +124,7 @@ class HoleDetector(Detector):
     def sharpen(self, src, verbose=True):
         if verbose:
             self.info('sharpening image')
-        src = sharpen_src(src)
+        src = cv_sharpen(src)
         return src
 
     def smooth(self, src, verbose=True):
@@ -136,21 +138,24 @@ class HoleDetector(Detector):
         if verbose:
             self.info('maximizing contrast')
 
-        if hasattr(src, 'ndarray'):
-            src = src.ndarray
+#        if hasattr(src, 'ndarray'):
+#            src = src.ndarray
         # Contrast stretching
         p2 = percentile(src, 2)
         p98 = percentile(src, 98)
-        img_rescale = rescale_intensity(src, in_range=(p2, p98))
+#        img_rescale = rescale_intensity(src, in_range=(p2, p98))
+        return rescale_intensity(asarray(src), in_range=(p2, p98))
 
-        src = asMat(img_rescale)
-        return src
+#        src = asMat(img_rescale)
+#        return src
 
     def _locate_helper(self, src, *args, **kw):
-        try:
-            src = asMat(asarray(src, 'uint8'))
-        except ValueError:
-            pass
+#        try:
+#            src = asMat(asarray(src, 'uint8'))
+#        except ValueError:
+#            pass
+
+        src = asarray(src, 'uint8')
 
         t = self._locate_targets(src, **kw)
         if self.display_processed_image:
@@ -161,7 +166,7 @@ class HoleDetector(Detector):
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
         contours, hieararchy = contour(src)
-        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
+        draw_contour_list(asarray(self.target_image.get_frame(0)), contours, hieararchy)
 
 #        do polygon approximation
         polygons, brs, areas = get_polygons(contours, hieararchy,
@@ -174,10 +179,11 @@ class HoleDetector(Detector):
 
         targets = []
         for pi, br, ai in zip(polygons, brs, areas):
+            pi = pi[0]
             if len(pi) < 4:
                 continue
 
-            cx, cy = centroid(pi)
+            cx, cy = get_centroid(pi)
 
             tr = Target()
             tr.origin = self._get_true_xy(src)
@@ -332,6 +338,7 @@ class HoleDetector(Detector):
         else:
             pii = pi
         # 3. recalc centroid
+
         return centroid(pii), pii
 
     def _get_center(self):
@@ -370,7 +377,8 @@ class HoleDetector(Detector):
 
         if image:
 #            image.set_frame(colorspace(src))
-            image.set_frame(0, colorspace(src.clone()))
+#            image.set_frame(0, colorspace(src.clone()))
+            image.set_frame(0, colorspace(src[:]))
 #            image.save('/Users/ross/Sandbox/machine_vision/crop.jpg', width=cw_px, height=ch_px)
 
         return src
@@ -436,10 +444,10 @@ class HoleDetector(Detector):
 #        if smooth:
 #            src = self.smooth(src)
 
-        try:
-            return asMat(src)
-        except TypeError:
-            return src
+#        try:
+#            return asMat(src)
+#        except TypeError:
+        return src
 
     def _segment_source(self, src, style, verbose=True, **kw):
         if verbose:

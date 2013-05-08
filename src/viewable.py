@@ -137,7 +137,8 @@ class Viewable(Loggable):
             ui = obj.edit_traits(**kw)
             self.add_window(ui)
 
-        do_after(1, _open_)
+        _open_()
+#        do_after(1, _open_)
 
     def view_factory(self, *args, **kw):
         if self.window_x:

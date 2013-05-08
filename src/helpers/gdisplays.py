@@ -30,7 +30,6 @@ from src.displays.display import ErrorDisplay, DisplayController, DisplayModel
 ds = get_display_size()
 
 
-
 gWarningDisplay = DisplayController(DisplayModel(),
                                   title='Warnings',
                                   width=450,
@@ -38,11 +37,11 @@ gWarningDisplay = DisplayController(DisplayModel(),
                                   )
 gLoggerDisplay = DisplayController(DisplayModel(),
                                    title='Logger',
-                                 width=450,
-                                 x=ds.width - 500,
-                                 y=20,
-                                 default_color='black',
-                                 bg_color='light grey'
+                                   width=450,
+                                   x=ds.width - 500,
+                                   y=20,
+                                   default_color='black',
+                                   bg_color='light grey'
                                  )
 
 gMessageDisplay = DisplayController(DisplayModel(),

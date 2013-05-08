@@ -14,6 +14,9 @@
 # limitations under the License.
 #===============================================================================
 
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
 #============= enthought library imports =======================
 # from traits.api import HasTraits, Instance
 # from traitsui.api import View, Item, TableEditor
@@ -69,14 +72,21 @@ class AutocenterManager(MachineVisionManager):
     def _test_fired(self):
 
         c = lambda: self.locate_target(-13, -10, 55)
-        from threading import Thread
-        t = Thread(target=c)
-        t.start()
+        c()
+#        from threading import Thread
+#        t = Thread(target=c)
+#        t.start()
 
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('autocenter')
+    from src.paths import  paths
+    paths.build('_qt')
+    from globals import globalv
+    from src.helpers.parsers.initialization_parser import InitializationParser
+    globalv.build(InitializationParser())
     am = AutocenterManager()
+
     am.configure_traits()
 #============= EOF =============================================
