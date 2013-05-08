@@ -365,29 +365,29 @@ class LaserTrayCanvas(MapCanvas):
         drill = self.get_drill(v)
         return drill
 
-    def config_view(self):
-        v = View(
-                VGroup(
-                       Item('show_bounds_rect'),
-#                       Item('render_map'),
-                       Item('show_grids'),
-                       HGroup(Item('show_laser_position'),
-                              Item('crosshairs_color',
-                                   editor=ColorEditor(),
-                                   springy=True, show_label=False)
-                              ),
-                       Item('crosshairs_kind'),
-                       Item('crosshairs_radius'),
-                       HGroup(
-                              Item('crosshairs_offsetx', label='Offset'),
-                              Item('crosshairs_offsety', show_label=False)
-                              ),
-                       Item('crosshairs_offset_color'),
-                       HGroup(Item('show_desired_position'),
-                              Item('desired_position_color', springy=True, show_label=False)),
-                       )
-            )
-        return v
+#    def config_view(self):
+#        v = View(
+#                VGroup(
+#                       Item('show_bounds_rect'),
+# #                       Item('render_map'),
+#                       Item('show_grids'),
+#                       HGroup(Item('show_laser_position'),
+#                              Item('crosshairs_color',
+#                                   editor=ColorEditor(),
+#                                   springy=True, show_label=False)
+#                              ),
+#                       Item('crosshairs_kind'),
+#                       Item('crosshairs_radius'),
+#                       HGroup(
+#                              Item('crosshairs_offsetx', label='Offset'),
+#                              Item('crosshairs_offsety', show_label=False)
+#                              ),
+#                       Item('crosshairs_offset_color'),
+#                       HGroup(Item('show_desired_position'),
+#                              Item('desired_position_color', springy=True, show_label=False)),
+#                       )
+#            )
+#        return v
 
 
     def valid_position(self, x, y):

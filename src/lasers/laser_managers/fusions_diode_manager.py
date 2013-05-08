@@ -88,6 +88,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         p = os.path.join(paths.scripts_dir, 'scanner.yaml')
 
         s = PIDScanner(control_path=p,
+                       manager=self
                        )
 
         tc = self.temperature_controller
@@ -100,7 +101,8 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         # populate scanner with functions
         gen = tc_gen()
-        s.new_function(gen, name='Temp. Pyrometer (C)', directory='diode_reflector_scans')
+        s.setup(directory='diode_pid_scans')
+        s.new_function(gen, name='Temp. Pyrometer (C)')
         s.new_function(gen, name='Power (%)')
 
         if tm is not None:
@@ -115,7 +117,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         s.on_trait_change(lambda: self.set_laser_temperature(0), 'stop_event')
 
         # bind to Scanners setpoint
-        s.on_trait_change(lambda v: self.set_laser_temperature(v), 'setpoint')
+#        s.on_trait_change(lambda v: self.set_laser_temperature(v), 'setpoint')
 
         sc = ScannerController(model=s,
                                application=self.application)

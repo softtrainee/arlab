@@ -33,6 +33,7 @@ class _DisplayEditor(Editor):
         '''
         if self.control is None:
             self.control = Display()
+            self.control.setReadOnly(True)
 #            self.control = self._create_control(parent)
 #            self.value.on_trait_change(self.update_object, 'state')
 

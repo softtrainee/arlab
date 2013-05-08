@@ -24,6 +24,9 @@ from src.helpers.parsers.initialization_parser import InitializationParser
 import os
 from src.paths import paths
 from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane
+from pyface.tasks.action.schema_addition import SchemaAddition
+from envisage.ui.tasks.task_extension import TaskExtension
+from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -32,6 +35,7 @@ class BaseLaserPlugin(BaseTaskPlugin):
 
     klass = None
     name = None
+
 
     def _service_offers_default(self):
         '''
@@ -110,21 +114,31 @@ class FusionsDiodePlugin(FusionsPlugin):
     name = 'fusions_diode'
     klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
 
+    def _my_task_extensions_default(self):
+        def factory():
+            return OpenScannerAction(self._get_manager())
+
+        return [TaskExtension(actions=[SchemaAddition(id='open_scan',
+                                                        factory=factory,
+#                                                      factory=OpenScannerAction,
+#                                                      factory=OpenFlagManagerAction,
+                                                        path='MenuBar/Extraction'), ])]
+
     def _preferences_default(self):
         root = paths.preferences_dir
         path = os.path.join(root, 'preferences.ini')
         if not os.path.isfile(path):
             with open(path, 'w') as fp:
                 pass
-        print path
         return ['file://{}'.format(path)]
 
     def _preferences_panes_default(self):
         return [FusionsDiodePreferencesPane]
 
     def _tasks_default(self):
-        return [TaskFactory(id='pychron.lasers.fusions.diode',
-                            factory=self._task_factory
+        return [TaskFactory(id='tasks.fusions.diode',
+                            factory=self._task_factory,
+                            name='Fusions Diode'
                             )
                 ]
 

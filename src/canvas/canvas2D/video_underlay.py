@@ -39,11 +39,14 @@ class VideoUnderlay(AbstractOverlay):
 
         '''
         with gc:
-            gc.clip_to_rect(component.x, component.y,
-                        component.width, component.height)
+            gc.clip_to_rect(self.component.x, self.component.y,
+                            self.component.width, self.component.height)
+            gc.translate_ctm(self.component.x, self.component.y)
 
             if self.video:
-                img = self.video.get_image_data(size=(component.outer_width, component.outer_height))
+                img = self.video.get_image_data(
+                                                size=(component.width, component.height)
+                                                )
             else:
                 img = self._cached_image
 #            if not self.pause:

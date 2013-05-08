@@ -105,7 +105,8 @@ class Video(Image):
   
         '''
         if force:
-            self.cap.release()
+            if not isinstance(self.cap, int):
+                self.cap.release()
             self.cap = None
             return
 
@@ -128,9 +129,9 @@ class Video(Image):
 #            with self._lock:
 #            with self._lock:
         if globalv.video_test:
-            if self.source_frame is None:
-                p = globalv.video_test_path
-                self.load(p)
+#            if self.source_frame is None:
+            p = globalv.video_test_path
+            self.load(p, swap_rb=False)
 
             f = self.source_frame
             return f

@@ -498,42 +498,42 @@ class VideoStageManager(StageManager):
 #===============================================================================
 # view groups
 #===============================================================================
-    def _sconfig__group__(self):
-        g = super(VideoStageManager, self)._sconfig__group__()
-        mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
-                          Item('autocenter_button', show_label=False,
-                               enabled_when='use_autocenter'),
-                          Item('configure_autocenter_button', show_label=False),
-                          ),
-                   label='Machine Vision', show_border=True)
-
-        g.content.append(Group(Item('camera_xcoefficients'),
-                               Item('camera_ycoefficients'),
-                               # Item('drive_xratio'),
-                               # Item('drive_yratio'),
-                               mv,
-                               VGroup(
-                                     HGroup(Item('snapshot_button', show_label=False),
-                                            VGroup(Item('auto_save_snapshot'),
-                                             Item('render_with_markup'))),
-                                     self._button_factory('record', 'record_label'),
-                                     show_border=True,
-                                     label='Recording'
-                                     ),
-                               Item('autofocus_manager', show_label=False, style='custom'),
-                               # HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
-#                               Item('pxpercmx'),
-#                               Item('pxpercmy'),
-#                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
-#                                                                                          springy=False),
-#                                      Item('focus_z',
-#                                            label='Focus',
-#                                            style='readonly'
-#                                            )),
-                               label='Camera')
-                         )
-
-        return g
+#    def _sconfig__group__(self):
+#        g = super(VideoStageManager, self)._sconfig__group__()
+#        mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
+#                          Item('autocenter_button', show_label=False,
+#                               enabled_when='use_autocenter'),
+#                          Item('configure_autocenter_button', show_label=False),
+#                          ),
+#                   label='Machine Vision', show_border=True)
+#
+#        g.content.append(Group(Item('camera_xcoefficients'),
+#                               Item('camera_ycoefficients'),
+#                               # Item('drive_xratio'),
+#                               # Item('drive_yratio'),
+#                               mv,
+#                               VGroup(
+#                                     HGroup(Item('snapshot_button', show_label=False),
+#                                            VGroup(Item('auto_save_snapshot'),
+#                                             Item('render_with_markup'))),
+#                                     self._button_factory('record', 'record_label'),
+#                                     show_border=True,
+#                                     label='Recording'
+#                                     ),
+#                               Item('autofocus_manager', show_label=False, style='custom'),
+#                               # HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
+# #                               Item('pxpercmx'),
+# #                               Item('pxpercmy'),
+# #                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
+# #                                                                                          springy=False),
+# #                                      Item('focus_z',
+# #                                            label='Focus',
+# #                                            style='readonly'
+# #                                            )),
+#                               label='Camera')
+#                         )
+#
+#        return g
 #===============================================================================
 # handlers
 #===============================================================================

@@ -116,7 +116,7 @@ class Image(HasTraits):
         self.source_frame = img
 #        self.current_frame = img.clone()
 #        self.frames = [img.clone()]
-        self.frames = [img]
+#        self.frames = [img]
 
 #        self.frames = [clone(img)]
 

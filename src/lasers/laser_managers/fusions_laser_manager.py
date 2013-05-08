@@ -38,17 +38,17 @@ from src.database.adapters.power_calibration_adapter import PowerCalibrationAdap
 
 from laser_manager import LaserManager
 # from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
-from src.viewable import Viewable
+# from src.viewable import Viewable
 from src.helpers.filetools import str_to_bool
 
-class OpticsView(Viewable):
-#    title = 'Optics'
-    laser_controller = Instance(FusionsLogicBoard)
-    def traits_view(self):
-        item = Item('laser_controller', show_label=False,
-                    editor=InstanceEditor(view='control_view'),
-                    style='custom')
-        return self.view_factory(item, id='optics_view')
+# class OpticsView(Viewable):
+# #    title = 'Optics'
+#    laser_controller = Instance(FusionsLogicBoard)
+#    def traits_view(self):
+#        item = Item('laser_controller', show_label=False,
+#                    editor=InstanceEditor(view='control_view'),
+#                    style='custom')
+#        return self.view_factory(item, id='optics_view')
 
 
 class FusionsLaserManager(LaserManager):

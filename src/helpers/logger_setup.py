@@ -128,7 +128,7 @@ def logging_setup(name, **kw):
             hi.setFormatter(logging.Formatter(gFORMAT))
             root.addHandler(hi)
 
-#    new_logger('main')
+    new_logger('main')
 
 
 

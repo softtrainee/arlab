@@ -19,10 +19,10 @@ from traits.api import HasTraits, Any
 from traitsui.api import View, Item
 from src.envisage.tasks.base_task import BaseTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \
-    FusionsDiodeControlPane
-from pyface.tasks.task_layout import PaneItem, TaskLayout
-from pyface.tasks.action.schema import SMenu
-from src.lasers.tasks.laser_actions import OpenScannerAction
+    FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
+# from pyface.tasks.action.schema import SMenu
+# from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -38,19 +38,35 @@ class FusionsDiodeTask(FusionsTask):
     id = 'pychron.lasers.fusions.diode'
     name = 'Fusions Diode'
     def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('fusions.diode.control')
-                          )
-    def _menu_bar_default(self):
-        menus = [SMenu(
-                       OpenScannerAction(manager=self.manager,
-                                         manager_name='fusions_diode'),
-                       id='fusions.diode', name='Diode')
-                 ]
+        return TaskLayout(left=PaneItem('fusions.diode.stage'),
+                          top=Splitter(
+                                       PaneItem('fusions.diode.control',
+                                                width=200
+                                                ),
+                                       PaneItem('pychron.lasers.pulse',
+                                                width=300),
+                                       PaneItem('pychron.lasers.optics',
 
-        return self._menu_bar_factory(menus)
+                                                )
+                                       )
+                          )
+#    def _menu_bar_default(self):
+#        menus = [SMenu(
+#                       OpenScannerAction(manager=self.manager,
+#                                         manager_name='fusions_diode'),
+#                       id='fusions.diode', name='Diode')
+#                 ]
+#
+#        return self._menu_bar_factory(menus)
 
     def create_central_pane(self):
         return FusionsDiodePane(model=self.manager)
     def create_dock_panes(self):
-        return [FusionsDiodeControlPane(model=self.manager)]
+        return [
+                FusionsDiodeStagePane(model=self.manager),
+                FusionsDiodeControlPane(model=self.manager),
+                PulsePane(model=self.manager),
+                OpticsPane(model=self.manager),
+
+                ]
 #============= EOF =============================================

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from traits.api import List
+from traits.api import Instance
 # from envisage.ui.workbench.api import WorkbenchApplication
 from pyface.api import AboutDialog, SplashScreen
 from pyface.image_resource import ImageResource
@@ -27,20 +27,26 @@ from pyface.image_resource import ImageResource
 import os
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.base_tasks_application import BaseTasksApplication
+from src.lasers.tasks.laser_preferences import FusionsLaserPreferences
 
 class Pychron(BaseTasksApplication):
-# class Pychron(TasksApplication, Loggable):
     '''
     '''
-    id = 'tasks.pychron.valve'
-    name = 'pyValve'
+    id = 'tasks.pychron.diode'
+    name = 'pyDiode'
 
-
-    default_layout = [TaskWindowLayout(
+    default_layout = [
+                      TaskWindowLayout(
+                                       'tasks.hardware',
+                                       size=(700, 500)),
+                      TaskWindowLayout(
 #                                       'pychron.extraction_line',
 #                                       'pychron.hardware',
-                                       'pychron.lasers.fusions.diode',
-                                       size=(1150, 650)) ]
+                                       'tasks.fusions.diode',
+                                       size=(1150, 650)),
+                       ]
+
+
     def _about_dialog_default(self):
         '''
         '''

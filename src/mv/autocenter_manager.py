@@ -15,14 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+from traits.api import HasTraits, Float
+from traitsui.api import View, Item
 from src.mv.machine_vision_manager import MachineVisionManager
-from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class AutoCenterManager(MachineVisionManager):
+    crop_size = Float(3)
     def locate_center(self, cx, cy, holenum, dim=1.5):
         frame = self.new_image_frame()
         im = self.new_image(frame)
@@ -30,7 +31,7 @@ class AutoCenterManager(MachineVisionManager):
         self.view_image(im)
 
         loc = self.new_co2_locator()
-        cw = ch = dim * 3
+        cw = ch = dim * self.crop_size
         frame = self._crop_image(self.target_image.source_frame, cw, ch)
 #        loc.croppixels=(cw,ch)
         dx, dy = loc.find(self.target_image, frame, dim=dim * self.pxpermm)
@@ -42,4 +43,9 @@ class AutoCenterManager(MachineVisionManager):
 
             return  cx + mdx, cy - mdy
 
+    def configure_view(self):
+        v = View(Item('crop_size'),
+                 buttons=['OK', 'Cancel']
+                 )
+        return v
 #============= EOF =============================================

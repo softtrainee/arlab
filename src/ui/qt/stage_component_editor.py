@@ -19,7 +19,7 @@
 from traits.api import Event, Str
 from enable.component_editor import ComponentEditor, _ComponentEditor
 from enable.window import Window as EWindow
-from PySide.QtCore.Qt import Key_Left, Key_Right, Key_Up, Key_Down
+from PySide.QtCore import Qt
 #============= standard library imports ========================
 # from wx import EVT_KEY_UP
 
@@ -62,13 +62,13 @@ class _LaserComponentEditor(_ComponentEditor):
             <-- = left
             --> = right
         '''
-        k = event.key()
-        for sk, n in ((Key_Left, 'left'),
-                    (Key_Right, 'right'),
-                    (Key_Up, 'up'),
-                    (Key_Down, 'down')):
+        ekey = event.key()
+        for sk, n in ((Qt.Key_Left, 'left'),
+                    (Qt.Key_Right, 'right'),
+                    (Qt.Key_Up, 'up'),
+                    (Qt.Key_Down, 'down')):
 
-            if k.matches(sk):
+            if ekey == sk:
                 self.value.key_released(n)
                 break
 

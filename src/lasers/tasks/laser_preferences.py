@@ -18,16 +18,38 @@
 from traits.api import HasTraits, Bool, Str, Enum, File, Int, Directory, \
     Color, Range
 from traitsui.api import View, UItem, Item, VGroup, HGroup, Group
-from apptools.preferences.preferences_helper import PreferencesHelper
+from apptools.preferences.api import PreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 #============= standard library imports ========================
 #============= local library imports  ==========================
+# def qt_color_convert(value):
+#    value = value.split('(')[1]
+#    value = value[:-1]
+#    value = map(float, value.split(','))
+#    value = map(lambda x: x * 255, value)
+#    return value
+# #            PySide.QtGui.QColor.fromRgbF(1.000000, 0.128695, 0.235080, 1.000000)
 
-class LaserPreferences(PreferencesHelper):
+
+class LaserPreferences(BasePreferencesHelper):
     pass
+#    def _get_value(self, name, value):
+#        print name , value
+#        if name == 'crosshairs_color':
+#            value = value.split('(')[1]
+#            value = value[:-1]
+#            value = map(float, value.split(','))
+#            value = map(lambda x: x * 255, value)
+#  #            PySide.QtGui.QColor.fromRgbF(1.000000, 0.128695, 0.235080, 1.000000)
+#        else:
+#            value = super(LaserPreferences, self)._get_value(name, value)
+#        return value
+
 
 class FusionsLaserPreferences(LaserPreferences):
     preferences_path = 'pychron.fusions.diode'
+
     use_video = Bool(False)
     video_output_mode = Enum('MPEG', 'Raw')
     ffmpeg_path = File
@@ -72,8 +94,20 @@ class FusionsLaserPreferences(LaserPreferences):
     use_calibrated_power = Bool(True)
     show_bounds_rect = Bool(True)
 
+    def _get_value(self, name, value):
+        if 'color' in name:
+            value = value.split('(')[1]
+            value = value[:-1]
+            value = map(float, value.split(','))
+            value = ','.join(map(lambda x: str(int(x * 255)), value))
+ #  #            PySide.QtGui.QColor.fromRgbF(1.000000, 0.128695, 0.235080, 1.000000)
+        else:
+            value = super(LaserPreferences, self)._get_value(name, value)
+        return value
+
 class FusionsLaserPreferencesPane(PreferencesPane):
     model_factory = FusionsLaserPreferences
+
     def traits_view(self):
         grps = self.get_additional_groups()
         v = View(Group(*grps, layout='tabbed'))
@@ -155,7 +189,9 @@ class FusionsLaserPreferencesPane(PreferencesPane):
         patgrp = Group(Item('record_patterning'),
                        Item('show_patterning'), label='Pattern')
         powergrp = self.get_power_group()
-        return [canvasgrp, videogrp, patgrp, powergrp]
+        return [canvasgrp, videogrp,
+#                 patgrp, powergrp
+                 ]
 
     def get_power_group(self):
         powergrp = Group(
@@ -163,6 +199,7 @@ class FusionsLaserPreferencesPane(PreferencesPane):
                         Item('use_calibrated_power'),
                          label='Power')
         return powergrp
+
 class FusionsDiodePreferencesPane(FusionsLaserPreferencesPane):
     pass
 #============= EOF =============================================

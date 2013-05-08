@@ -15,38 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List
-from envisage.plugin import Plugin
-from envisage.service_offer import ServiceOffer
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from apptools.preferences.api import PreferencesHelper
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTaskPlugin(Plugin):
-    SERVICE_OFFERS = 'envisage.service_offers'
-    TASK_EXTENSIONS = 'envisage.ui.tasks.task_extensions'
-    TASKS = 'envisage.ui.tasks.tasks'
-
-    tasks = List(contributes_to=TASKS)
-    service_offers = List(contributes_to=SERVICE_OFFERS)
-    my_task_extensions = List(contributes_to=TASK_EXTENSIONS)
-
-    preferences = List(contributes_to='envisage.preferences')
-    preferences_panes = List(
-        contributes_to='envisage.ui.tasks.preferences_panes')
-
-    def _preferences_panes_default(self):
-        return []
-
-    def _preferences_default(self):
-        return []
-
-    def service_offer_factory(self, **kw):
-        '''
-        
-        '''
-        return ServiceOffer(**kw)
-
-    def check(self):
-        return True
-
+class BasePreferencesHelper(PreferencesHelper):
+    pass
 #============= EOF =============================================
