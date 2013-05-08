@@ -123,22 +123,22 @@ class Video(Image):
 
     def _get_frame(self, lock=True, **kw):
         cap = self.cap
-        if cap is not None:
-#            if lock:
-            with self._lock:
-#            with self._lock:
-                if globalv.video_test:
-                    if self.source_frame is None:
-                        p = globalv.video_test_path
-                        self.load(p)
 
-                    f = self.source_frame.clone()
-                    return f
+#            if lock:
+#            with self._lock:
+#            with self._lock:
+        if globalv.video_test:
+            if self.source_frame is None:
+                p = globalv.video_test_path
+                self.load(p)
+
+            f = self.source_frame
+            return f
 #                f = self.current_frame.clone()
-                else:
-                    s, img = self.cap.read()
-                    if s:
-                        return img
+        elif cap is not None:
+            s, img = self.cap.read()
+            if s:
+                return img
 #                    return self.cap.read()
 #                    return query_frame(cap)
 #                    pass

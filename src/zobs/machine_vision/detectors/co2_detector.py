@@ -19,7 +19,7 @@ from traits.api import Bool
 #============= standard library imports ========================
 from numpy import histogram, array, argmax
 #============= local library imports  ==========================
-from src.image.cvwrapper import  grayspace
+from src.image.cv_wrapper import  grayspace
 
 from src.image.image import StandAloneImage
 from hole_detector import HoleDetector
@@ -92,7 +92,7 @@ class CO2HoleDetector(HoleDetector):
                 self.info('cropping image to {:0.3f}mm x {:0.3f}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch, image=im)
 
-        return src.clone()
+        return src[:]  # .clone()
 
     def locate_sample_well(self, cx, cy, holenum, holedim, new_image=True, **kw):
         '''

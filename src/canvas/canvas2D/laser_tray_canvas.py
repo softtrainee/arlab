@@ -501,13 +501,10 @@ class LaserTrayCanvas(MapCanvas):
             called from outside by StageCompnentEditor
         '''
         if not self._frozen:
-#            c = event.GetKeyCode()
             if char in ('left', 'right'):
-#            if char in (314, 316):  # left, right
                 self.parent.stop(ax_key='x', verbose=False)
                 self.parent.update_axes()
             elif char in ('up', 'down'):
-#            elif char in (315, 317):  # up, down
                 self.parent.stop(ax_key='y', verbose=False)
                 self.parent.update_axes()
 

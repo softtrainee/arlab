@@ -51,8 +51,8 @@ Recursively eliminates points that lie inside two neighbouring points until only
         convex hull surrounding points
 '''
 
-    if not isinstance(points[0], (tuple, np.ndarray)):
-        points = [(pi.x, pi.y) for pi in points]
+#    if not isinstance(points[0], (tuple, np.ndarray)):
+#        points = [(pi.x, pi.y) for pi in points]
 
     points = np.asarray(points)
     points = points.T
@@ -83,7 +83,9 @@ def convex_hull_area(pts):
     '''
         http://en.wikipedia.org/wiki/Polygon#Area_and_centroid
     '''
-    hull = convex_hull(pts)
+    from src.simple_timeit import timethis
+    hull = timethis(convex_hull, args=(pts,))
+#    hull = convex_hull(pts)
     x, y = zip(*hull)
     ind_arr = np.arange(len(x)) - 1  # for indexing convenience
     s = np.sum([x[ii] * y[ii + 1] - x[ii + 1] * y[ii] for ii in ind_arr])

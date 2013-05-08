@@ -18,7 +18,7 @@
 from traits.api import Int, Property, Bool
 from traitsui.api import View, Item
 #============= standard library imports ========================
-from numpy import zeros_like, invert
+from numpy import zeros_like, invert, asarray
 from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
@@ -48,7 +48,8 @@ class RegionSegmenter(BaseSegmenter):
                     )
 
     def segment(self, src):
-        image = src.ndarray[:]
+        image = asarray(src[:, :])
+#        image = src.ndarray[:]
         if self.use_adaptive_threshold:
             block_size = 25
             markers = threshold_adaptive(image, block_size) * 255

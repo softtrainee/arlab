@@ -30,11 +30,11 @@ from scipy import ndimage
 # from src.geometry.centroid.calculate_centroid import calculate_centroid
 from src.loggable import Loggable
 from src.mv.segment.region import RegionSegmenter
-from src.image.cvwrapper import grayspace, draw_contour_list, contour, asMat, \
+from src.image.cv_wrapper import grayspace, draw_contour_list, contour, asMat, \
     colorspace, get_polygons, get_size, new_point, draw_circle, draw_rectangle, draw_lines, \
     draw_polygons
 from src.mv.target import Target
-from src.image.image import StandAloneImage
+# from src.image.image import StandAloneImage
 from src.geometry.geometry import sort_clockwise, approximate_polygon_center, \
     calc_length
 from src.geometry.convex_hull import convex_hull
@@ -44,7 +44,7 @@ import math
 class Locator(Loggable):
     pxpermm = Float
     use_histogram = False
-    use_circle_minimization = True
+    use_circle_minimization = False
     def find(self, image, frame, dim):
         '''
             image is a stand alone image
@@ -63,22 +63,30 @@ class Locator(Loggable):
         targets = self._find_targets(image, frame, dim, step=2,
                                      preprocess=True,
                                      filter_targets=True)
+#
         if targets:
             self.info('found {} potential targets'.format(len(targets)))
 
             # draw center indicator
-            src = image.get_frame(0)
+#            src = image.get_frame(0)
+            src = image.source_frame
             self._draw_center_indicator(src, size=2, shape='rect', radius=int(dim))
 
             # draw targets
             self._draw_targets(src, targets)
 
+
             if self.use_circle_minimization:
-                # calculate circle_minimization position
+
+#                # calculate circle_minimization position
                 dx, dy = self._circle_minimization(src, targets[0], dim)
+#                dx, dy = self._calculate_error(targets)
             else:
-                # calculate error
+#                # calculate error
                 dx, dy = self._calculate_error(targets)
+
+            # force repaint
+            image.source_frame = src[:]
 
         return dx, dy
 
@@ -93,10 +101,13 @@ class Locator(Loggable):
         tol = 0.98
         if target.convexity < tol:
             tx, ty = self._get_frame_center(src)
-            pts = array([(p.x - tx, p.y - ty) for p in target.poly_points], dtype=float)
+            pts = target.poly_points
+            pts[:, 1] = pts[:, 1] - ty
+            pts[:, 0] = pts[:, 0] - tx
             cx, cy = approximate_polygon_center(pts, dim)
-            self._draw_indicator(src, (cx + tx, cy + ty), color=(255, 0, 128), shape='rect')
-            draw_circle(src, (cx + tx, cy + ty), int(dim), color=(255, 0, 128),)
+            cx, cy = cx + tx, cy + ty
+            self._draw_indicator(src, (cx, cy), color=(255, 0, 128), shape='rect')
+            draw_circle(src, (cx, cy), int(dim), color=(255, 0, 128),)
 
         else:
             cx, cy = self._calculate_error([target])
@@ -126,26 +137,27 @@ class Locator(Loggable):
         return -dx, dy
 
     def _find_targets(self, image, frame, dim, n=20, w=10, start=None, step=1,
-                      preprocess=False, filter_targets=True, depth=0):
+                      preprocess=False, filter_targets=True, depth=0, set_image=True):
         '''
             use a segmentor to segment the image
         '''
+
         if preprocess:
-            src = self._preprocess(image, frame)
+            src = self._preprocess(frame)
         else:
             src = grayspace(frame)
-            image.set_frame(0, src)
-
-
+#            image.set_frame(0, src)
+#        image.set_frame(0, src)
+#        return
         seg = RegionSegmenter(use_adaptive_threshold=False)
 #        if seg.use_adaptive_threshold:
 #            n = 1
-
         if start is None:
-            start = int(src.ndarray.mean()) - 3 * w
+#            start = int(src.ndarray.mean()) - 3 * w
+            start = int(asarray(src).mean()) - 3 * w
 
         fa = self._get_filter_target_area(dim)
-#        print '----------------------'
+
         for i in range(n):
 #            print i, start + i - w, start + i + w
             seg.threshold_low = start + i * step - w
@@ -155,26 +167,31 @@ class Locator(Loggable):
 #            print seg.threshold_low, seg.threshold_high, src.ndarray.mean()
 
             # convert to Mat
-            nsrc = asMat(nsrc)
+#            nsrc = asMat(nsrc)
+#            nsrc = asarray(nsrc)
+
+            nf = asarray(colorspace(nsrc))
 
             # find the contours
             contours, hieararchy = contour(nsrc)
-
             # convert to color for display
-            nsrc = colorspace(nsrc)
 
             # draw contours
-            draw_contour_list(nsrc, contours, hieararchy)
+            draw_contour_list(nf, contours, hieararchy)
 
-            # update the image
-            image.set_frame(0, nsrc)
+            if set_image:
+                # update the image
+                image.set_frame(0, nf)
+#            time.sleep(0.1)
 
+#            return
             # do polygon approximation
             origin = self._get_frame_center(nsrc)
-            pargs = get_polygons(contours, hieararchy)
+#            print origin
+            pargs = get_polygons(nsrc, contours, hieararchy)
             targets = self._make_targets(pargs, origin)
 
-#            print 'i=', i, len(targets)
+#            continue
             # filter targets
             if filter_targets:
                 targets = self._filter_targets(image, frame, dim, targets, fa)
@@ -187,15 +204,17 @@ class Locator(Loggable):
          convenience function for assembling target list
         '''
         targets = []
-        for pi, br, ai in zip(*pargs):
+        for pi, ai, co, ci in zip(*pargs):
             if len(pi) < 4:
                 continue
 
             tr = Target()
             tr.origin = origin
             tr.poly_points = pi
-            tr.bounding_rect = br
+#            tr.bounding_rect = br
             tr.area = ai
+            tr.min_enclose_area = co
+            tr.centroid = ci
 
             targets.append(tr)
 
@@ -213,15 +232,23 @@ class Locator(Loggable):
 #===============================================================================
 # filter
 #===============================================================================
-    def _filter_targets(self, image, frame, dim, targets, fa, threshold=0.8):
+    def _filter_targets(self, image, frame, dim, targets, fa, threshold=0.5):
         '''
             filter targets using the _filter_test function
             
             return list of Targets that pass _filter_test
         '''
+#        import time
         test_target = self._filter_test
         ts = [test_target(image, frame, ti, dim, threshold, fa[0], fa[1]) for ti in targets]
         return [ta[0] for ta in ts if ta[1]]
+#        ts = []
+#        for i, ti in enumerate(targets):
+#            ta = self._filter_test(image, frame, ti, dim, threshold, fa[0], fa[1])
+#            if ta[1]:
+#                ts.append(ta[0])
+#
+#        return ts
 
     def _near_center(self, xy, frame, tol=0.75):
         '''
@@ -231,11 +258,11 @@ class Locator(Loggable):
 #        x, y = xy
 #        tol *= self.pxpermm
 #        return abs(x - cx) < tol and abs(y - cy) < tol
-        from scipy.spatial.distance import cdist
+#        from scipy.spatial.distance import cdist
         cxy = self._get_frame_center(frame)
         d = calc_length(xy, cxy)
         tol *= self.pxpermm
-
+#        print 'dddddd', d, xy, cxy
         return d < tol
 
 
@@ -244,7 +271,7 @@ class Locator(Loggable):
             calculate min and max bounds of valid polygon areas
         '''
 
-        miholedim = 0.8 * dim
+        miholedim = 0.5 * dim
         maholedim = 1.25 * dim
         mi = miholedim ** 2 * 3.1415
         ma = maholedim ** 2 * 3.1415
@@ -263,8 +290,9 @@ class Locator(Loggable):
             ctest = ti.convexity > cthreshold
             centtest = self._near_center(ti.centroid, frame)
             atest = ma > ti.area > mi
-#            print ma, ti.area, mi
-#                print ctest, centtest, atest
+#            print ma, ti.area, mi, ti.convexity > cthreshold
+#            print ti.convexity , cthreshold
+#            print ctest, centtest, atest
             return ctest, centtest, atest
 
         # find the label with the max area ie max of histogram
@@ -282,19 +310,23 @@ class Locator(Loggable):
 
             return bil, biu, ind
 
-
         ctest, centtest, atest = test(target)
+#        print not ctest and (atest and centtest)
         if not ctest and (atest and centtest):
-            src = image.get_frame(0)
-            draw_polygons(src, [target.poly_points], color=(0, 255, 255))
+            src = image.source_frame[:]
+
+ #            return
+ #            src = image.get_frame(0)
+ #            draw_polygons(src, [target.poly_points], color=(0, 255, 255))
 
             wh = get_size(src)
             # make image with polygon
             im = zeros(wh)
             points = asarray(target.poly_points)
+            rr, cc = polygon(*points.T)
 
-            points = asarray([(pi.x, pi.y) for pi in points])
-            rr, cc = polygon(points[:, 0], points[:, 1])
+ #            points = asarray([(pi.x, pi.y) for pi in points])
+ #            rr, cc = polygon(points[:, 0], points[:, 1])
 
             im[cc, rr] = 255
 
@@ -320,17 +352,18 @@ class Locator(Loggable):
             nimage[wsrc > biu] = 0
 
             nimage = invert(nimage)
-            img = asMat(nimage)
+            img = nimage
+ #            img = asMat(nimage)
             # locate new polygon from the segmented image
-            tars = self._find_targets(image, img, dim, start=10, w=4, n=2)
-#                do_later(lambda: self.debug_show(im, distance, wsrc, nimage))
-
+            tars = self._find_targets(image, img, dim, start=10, w=4, n=2, set_image=False)
+#            tars = None
+ #                do_later(lambda: self.debug_show(im, distance, wsrc, nimage))
             if tars:
                 target = tars[0]
                 ctest, centtest, atest = test(target)
             else:
                 return None, False
-
+#        print ctest, atest, centtest
         return target, ctest and atest and centtest
 
 #===============================================================================
@@ -389,45 +422,47 @@ class Locator(Loggable):
 #===============================================================================
 # preprocessing
 #===============================================================================
-    def _preprocess(self, image, frame,
+    def _preprocess(self, frame,
                     contrast=True, denoise=10, display=False):
         '''
             1. convert frame to grayscale
             2. remove noise from frame. increase denoise value for move noise filtering
             3. stretch contrast
         '''
-        if display:
-            # open original crop
-            im = StandAloneImage()
-            im.load(colorspace(frame))
-            do_later(im.edit_traits)
-
+#        if display:
+#            # open original crop
+#            im = StandAloneImage()
+#            im.load(colorspace(frame))
+#            do_later(im.edit_traits)
+#        print type(frame), frame.shape
         frm = grayspace(frame)
-
-        if display:
-            # open original grayscale crop
-            im = StandAloneImage()
-            im.load(colorspace(frm))
-            do_later(im.edit_traits)
-
-        src = frm.ndarray[:]
-
+#        print frm
+#        if display:
+#            # open original grayscale crop
+#            im = StandAloneImage()
+#            im.load(colorspace(frm))
+#            do_later(im.edit_traits)
+#        src = frm
+#        print src
+#        src = frm.ndarray[:]
+#        src = asarray(frm[:, :])
+#        denoise = 0
         # preprocess
         if denoise:
-            src = self._denoise(src, weight=denoise)
-
+            frm = self._denoise(frm, weight=denoise)
+#        contrast = False
         if contrast:
-            src = self._contrast_equalization(src)
+            frm = self._contrast_equalization(frm)
 
-        frm = asMat(src)
-
-        if display:
-            # open preprocessed
-            vim = StandAloneImage()
-            vim.load(colorspace(frm))
-            do_later(vim.edit_traits)
-
-        image.set_frame(0, frm)
+#        frm = asMat(src)
+#        frm = asMat(src)
+#        if display:
+#            # open preprocessed
+#            vim = StandAloneImage()
+#            vim.load(colorspace(frm))
+#            do_later(vim.edit_traits)
+#        image.set_frame(0, frm)
+#        image.source_frame = asarray(colorspace(frm))
         return frm
 
     def _denoise(self, img, weight):
@@ -438,7 +473,8 @@ class Locator(Loggable):
             http://en.wikipedia.org/wiki/Total_variation_denoising
         '''
         from skimage.filter import tv_denoise
-        return tv_denoise(img, weight=weight).astype('uint8')
+
+        return tv_denoise(asarray(img), weight=weight).astype('uint8')
 
     def _contrast_equalization(self, img):
         '''

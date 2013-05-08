@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Bool
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import zeros_like, invert, percentile, ones_like
+from numpy import zeros_like, invert, percentile, ones_like, asarray
 from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
@@ -37,8 +37,8 @@ class RegionSegmenter(BaseSegmenter):
         '''
             src: preprocessing cv.Mat
         '''
-        image = src.ndarray[:]
-
+#        image = src.ndarray[:]
+        image = asarray(src)
 
         if self.use_adaptive_threshold:
 #            block_size = 25

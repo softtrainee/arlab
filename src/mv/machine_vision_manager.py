@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Float
@@ -20,14 +23,16 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import time
 from threading import Timer
+from numpy import asarray
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.image.video import Video
-from src.image.image import StandAloneImage
+# from src.image.image import StandAloneImage
 from src.image.cv_wrapper import get_size, crop, grayspace
+from src.image.standalone_image import StandAloneImage
 # from src.image.cvwrapper import get_size, crop, grayspace
 # from pyface.timer.do_later import do_later
-
+from src.mv.co2_locator import CO2Locator
 
 class MachineVisionManager(Manager):
     video = Instance(Video)
@@ -35,7 +40,6 @@ class MachineVisionManager(Manager):
     pxpermm = Float(23)
 
     def new_co2_locator(self):
-        from src.mv.co2_locator import CO2Locator
         c = CO2Locator(pxpermm=self.pxpermm)
         return c
 
@@ -68,8 +72,14 @@ class MachineVisionManager(Manager):
 #        print cw, w / (cw * self.pxpermm)
 #        self.croppixels = (cw_px, ch_px)
 #        self.croprect = (x, y, cw_px, ch_px)
+#        cw_px = ch_px = 107
 
-        return crop(src, x, y, cw_px, ch_px)
+        r = 4 - cw_px % 4
+        cw_px = ch_px = cw_px + r
+
+
+
+        return asarray(crop(src, x, y, cw_px, ch_px))
 
     def _gray_image(self, src):
         return grayspace(src)
@@ -77,14 +87,15 @@ class MachineVisionManager(Manager):
     def view_image(self, im, auto_close=True):
         # use a manager to open so will auto close on quit
         self.open_view(im)
-        if auto_close:
-            minutes = 1
-            t = Timer(60 * minutes, im.close)
-            t.start()
+#        if auto_close:
+#            minutes = 1
+#            t = Timer(60 * minutes, im.close)
+#            t.start()
 
     def new_image(self, frame=None):
+
         if self.target_image is not None:
-            self.target_image.close()
+            self.target_image.close_ui()
 
         im = StandAloneImage(
 #                             title=self.title,
@@ -94,56 +105,64 @@ class MachineVisionManager(Manager):
         self.target_image = im
         if frame is not None:
             self.target_image.load(frame, swap_rb=True)
+
         return im
 
     def _test(self):
+
         paths = (
-                 ('/Users/ross/Sandbox/pos_err/snapshot007.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-005.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_207_0-002.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_209_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_210_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_220_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-002.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-003.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-004.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_200_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_200_0-002.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_201_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_202_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_203_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_204_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/snapshot007.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-005.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_207_0-002.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_209_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_210_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_220_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-002.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-003.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_221_0-004.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_200_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_200_0-002.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_201_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_202_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_203_0-001.jpg', 1.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_204_0-001.jpg', 1.25),
                  ('/Users/ross/Sandbox/pos_err/pos_err_206_0-001.jpg', 1.25),
                  ('/Users/ross/Sandbox/pos_err/pos_err_206_1-001.jpg', 1.25),
                  ('/Users/ross/Sandbox/pos_err/pos_err_207_0-001.jpg', 1.25),
                  ('/Users/ross/Sandbox/pos_err/pos_err_52001.jpg', 2.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_52001.tiff', 2.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_52001.tiff', 2.25),
                  ('/Users/ross/Sandbox/pos_err/pos_err_52002.jpg', 2.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_53001.jpg', 2.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_53002.jpg', 2.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_53003.jpg', 2.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_54001.jpg', 2.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_53001.jpg', 2.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_53002.jpg', 2.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_53003.jpg', 2.25),
+#                 ('/Users/ross/Sandbox/pos_err/pos_err_54001.jpg', 2.25),
                 )
         fails = 0
         times = []
-        for p, dim in paths:
+
+        im = self.target_image
+        for p, dim in paths[:]:
             from globals import globalv
             # force video to reload test image
             self.video.source_frame = None
             globalv.video_test_path = p
-            frame = self.new_image_frame()
-            im = self.new_image(frame)
-
-            self.view_image(im)
-
-            loc = self.new_co2_locator()
+            self.target_image.load(self.new_image_frame())
+#            return
 
             cw = ch = dim * 3.2
-            frame = self._crop_image(self.target_image.source_frame, cw, ch)
+#            cw = ch = dim
+            frame = self._crop_image(im.source_frame, cw, ch)
+            im.source_frame = frame
+#            time.sleep(1)
+#            continue
+#            self.target_image.set_frame(0, frame)
+
 #            loc.pxpermm = self.cpxpermm
 
 #            loc.croppixels = (cw * self.pxpermm, ch * self.pxpermm)
+
+            loc = self.new_co2_locator()
 
             st = time.time()
             dx, dy = loc.find(self.target_image, frame, dim * self.pxpermm)
@@ -156,20 +175,32 @@ class MachineVisionManager(Manager):
                 self.info('FAIL    path={}'.format(p))
             time.sleep(1)
 
-        n = len(paths)
-        self.info('failed to find center {}/{} times'.format(fails, n))
-        self.info('execution times: min={} max={} avg={}'.format(min(times), max(times), sum(times) / n))
+        if times:
+            n = len(paths)
+            self.info('failed to find center {}/{} times'.format(fails, n))
+            self.info('execution times: min={} max={} avg={}'.format(min(times), max(times), sum(times) / n))
 
-        def foo():
-            from pylab import show, plot
-            plot(times)
-            show()
+#        def foo():
+#            from pylab import show, plot
+#            plot(times)
+#            show()
 #        do_later(foo)
+    def setup_image(self):
+        frame = self.new_image_frame()
+        im = self.new_image(frame)
+        self.view_image(im)
 
     def _test_fired(self):
-        from threading import Thread
+        self.setup_image()
+#        self._test()
+
+        from src.ui.thread import Thread
         t = Thread(target=self._test)
         t.start()
+        self._t = t
+#        from threading import Thread
+#        t = Thread(target=self._test)
+#        t.start()
 
     def traits_view(self):
         return View('test')
@@ -186,6 +217,7 @@ def test():
     video.open()
     mv = MachineVisionManager(video=video)
     mv.configure_traits()
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('mv')

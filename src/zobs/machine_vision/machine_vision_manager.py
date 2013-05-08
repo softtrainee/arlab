@@ -42,16 +42,14 @@ class MachineVisionManager(Manager):
     detector = Instance(HoleDetector)
 
     def get_new_frame(self):
-        src = self.video.get_frame()
-        return src
+        return self.video.get_frame()
 
     def _video_default(self):
         if self.parent is None:
             v = Video()
-            v.open(identifier=1)
+#            v.open(identifier=0)
         else:
             v = self.parent.video
-
         return v
 
     @on_trait_change('laser_manager:zoom')
