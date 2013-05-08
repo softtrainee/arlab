@@ -53,9 +53,8 @@ class VideoCanvas(SceneCanvas):
             o = getattr(self, key)
             o.trait_set(**d)
 
-
-        if self.video:
-            self.on_trait_change(self.video.update_bounds, 'bounds')
+#        if self.video:
+#            self.on_trait_change(self.video.update_bounds, 'bounds')
 
         if self.camera:
             self.fps = self.camera.fps

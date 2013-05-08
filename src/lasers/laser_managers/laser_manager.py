@@ -134,15 +134,15 @@ class BaseLaserManager(Manager):
     def set_motors_for_point(self, pt):
         pass
 
-    def get_control_button_group(self):
-        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
-#                                  springy=True
-                    )
-        return grp
-
-    def get_control_buttons(self):
-        return [('enable', 'enable_label', None)]
+#    def get_control_button_group(self):
+#        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+#                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
+# #                                  springy=True
+#                    )
+#        return grp
+#
+#    def get_control_buttons(self):
+#        return [('enable', 'enable_label', None)]
 
     def _get_enable_label(self):
         '''
@@ -402,29 +402,29 @@ class LaserManager(BaseLaserManager):
         '''
         return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='enabled'))])
 
-    def traits_view(self):
-        '''
-        '''
-
-        vg = VSplit(self.get_control_group(),
-                    self.get_stage_group()
-                    )
-
-#        hooks = [h for h in dir(self) if '__group__' in h]
-#        for h in hooks:
-#            vg.content.append(getattr(self, h)())
-
-        return View(
-                    vg,
-                    id=self.get_unique_view_id(),
-                    resizable=True,
-                    title=self.__class__.__name__ if self.title == '' else self.title,
-                    handler=self.handler_klass,
-                    height=self.window_height,
-                    x=self.window_x,
-                    y=self.window_y,
-                    statusbar='status_text',
-                    )
+#    def traits_view(self):
+#        '''
+#        '''
+#
+#        vg = VSplit(self.get_control_group(),
+#                    self.get_stage_group()
+#                    )
+#
+# #        hooks = [h for h in dir(self) if '__group__' in h]
+# #        for h in hooks:
+# #            vg.content.append(getattr(self, h)())
+#
+#        return View(
+#                    vg,
+#                    id=self.get_unique_view_id(),
+#                    resizable=True,
+#                    title=self.__class__.__name__ if self.title == '' else self.title,
+#                    handler=self.handler_klass,
+#                    height=self.window_height,
+#                    x=self.window_x,
+#                    y=self.window_y,
+#                    statusbar='status_text',
+#                    )
 
 #===============================================================================
 # ##handlers

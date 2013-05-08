@@ -45,7 +45,10 @@ class _VideoComponentEditor(_LaserComponentEditor):
         self.value.on_trait_change(self.stop, 'closed_event')
 
     def stop(self):
-        self.playTimer.stop()
+        try:
+            self.playTimer.stop()
+        except RuntimeError:
+            del self.playTimer
 
     def update(self):
         if self.control:

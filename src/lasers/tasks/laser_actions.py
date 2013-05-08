@@ -36,8 +36,8 @@ class BaseLaserAction(Action):
 
 class LocalLaserAction(BaseLaserAction):
     client_action = False
-    def __init__(self, manager, window=None, *args, **kw):
-        super(LocalLaserAction, self).__init__(window=window, *args, **kw)
+    def __init__(self, manager, *args, **kw):
+        super(LocalLaserAction, self).__init__(*args, **kw)
 
 #        man = self._get_manager(None, app=self.window.application)
         if isinstance(manager, PychronLaserManager) and not self.client_action:

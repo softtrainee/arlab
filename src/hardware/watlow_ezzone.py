@@ -274,7 +274,7 @@ class WatlowEZZone(CoreDevice):
 
             return True
         else:
-            self.warning('Failed connecting to Diode Temperature Controller')
+            self.warning('Failed connecting to Temperature Controller')
 
     def is_programmed(self):
         r = self.get_temp_and_power()
@@ -308,8 +308,12 @@ class WatlowEZZone(CoreDevice):
         self.info('read pid parameters')
         pid_vals = self.read(1890, nregisters=8, nbytes=21, response_type='float')
         if pid_vals:
+            self.info('======================== PID ====================='.format())
             for pa, pv in zip(pid_attrs, pid_vals):
                 setattr(self, pa, pv)
+
+                self.info('{} set to {}'.format(pa, pv))
+            self.info('=================================================='.format())
 
         self.info('read input/output scaling')
         if not self.simulation:

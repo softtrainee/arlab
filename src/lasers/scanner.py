@@ -30,9 +30,7 @@ from threading import Thread
 import os
 import yaml
 from src.application_controller import ApplicationController
-
-
-
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
 
 class ScannerController(ApplicationController):
@@ -64,6 +62,7 @@ class Scanner(Loggable):
     '''
 
     graph = Instance(StreamStackedGraph)
+    manager = Instance(ILaserManager)
 
     data_manager = Instance(CSVDataManager, ())
     '''
@@ -99,8 +98,11 @@ class Scanner(Loggable):
         if plotid is not None:
             self.graph.add_horizontal_rule(value, plotid=plotid)
 
-    def new_function(self, function, name=None, directory=None,
-                     base_frame_name=None):
+    def setup(self, directory=None, base_frame_name=None):
+        self.data_manager.new_frame(directory=directory,
+                                    base_frame_name=base_frame_name)
+
+    def new_function(self, function, name=None):
         if name is None:
             name = function.func_name
 
@@ -117,17 +119,18 @@ class Scanner(Loggable):
         g.new_series(plotid=n)
 
         self.functions.append((function, name))
-        if not self.data_manager._current_frame:
-            self.data_manager.new_frame(directory=directory,
-                                        base_frame_name=base_frame_name)
+
 
     def stop(self):
         self._timer.Stop()
         self._scanning = False
         self.stop_event = True
         self.info('scan stopped')
+        if self.manager:
+            self.manager.disable_device()
 
     def execute(self):
+
         if self._scanning:
             self.stop()
         else:
@@ -141,28 +144,35 @@ class Scanner(Loggable):
             self.data_manager.write_to_frame(header)
 
             self._starttime = time.time()
-            # starts automatically
             yd = self._read_control_path()
             if yd is None:
                 sp = 1000
             else:
                 sp = yd['period']
 
-            self._timer = Timer(sp, self._scan)
-            self.info('scan started')
-            self._scanning = True
-#            yd = self._read_control_path()
-            if yd is not None:
-                # start a control thread
-                self._control_thread = Thread(target=self._control,
-                                              args=(yd,)
-                                              )
-                self._control_thread.start()
-                self.info('control started')
+            if self.manager.enable_device():
+
+                # starts automatically
+                self._timer = Timer(sp, self._scan)
+
+                self.info('scan started')
+                self._scanning = True
+    #            yd = self._read_control_path()
+                if yd is not None:
+                    # start a control thread
+                    self._control_thread = Thread(target=self._control,
+                                                  args=(yd,)
+                                                  )
+                    self._control_thread.start()
+                    self.info('control started')
+            else:
+                self.info('no manager available')
 
         return self._scanning
 
     def _control(self, ydict):
+        self.start_control_hook()
+
         start_delay = ydict['start_delay']
         end_delay = ydict['end_delay']
         setpoints = ydict['setpoints']
@@ -172,6 +182,10 @@ class Scanner(Loggable):
         for t, d in setpoints:
             if self._scanning:
                 self.setpoint = t
+
+                if self.manager:
+                    self.manager.set_laser_temperature(t)
+
                 self.set_static_value('Setpoint', t, plotid=0)
                 self.info('setting setpoint to {} for {}s'.format(t, d))
                 st = time.time()
@@ -183,6 +197,13 @@ class Scanner(Loggable):
             self.set_static_value('Setpoint', 0)
             time.sleep(end_delay)
             self.stop()
+
+        self.end_control_hook(self._scanning)
+
+    def start_control_hook(self):
+        pass
+    def end_control_hook(self, ok):
+        pass
 
     def _make_func_names(self):
         return [name for _, name in self.functions]
@@ -245,6 +266,20 @@ class PIDScanner(Scanner):
                 pid = ['pid= {}, {}, {}'.format(*self.pid)]
                 self.data_manager.write_to_frame(pid)
 
+    def start_control_hook(self):
+        if self.manager:
+            tc = self.manager.temperature_controller
+
+            if tc:
+
+                p, i, d = self.pid
+                tc.set_time_integral(i)
+                tc.set_time_derivative(d)
+            else:
+                self.debug('no manager temperature controol available')
+
+        else:
+            self.debug('no manager available')
 #    def _control_path_changed(self):
 
 if __name__ == '__main__':

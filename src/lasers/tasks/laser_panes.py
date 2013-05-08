@@ -17,41 +17,116 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, UItem, Group, InstanceEditor, HGroup, \
-    EnumEditor
+    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.ui.led_editor import LEDEditor
+
+
 class BaseLaserPane(TraitsTaskPane):
     def traits_view(self):
         v = View(UItem('stage_manager', style='custom'))
         return v
 
 
-class ControlPane(TraitsDockPane):
+class StageControlPane(TraitsDockPane):
     def traits_view(self):
+        #=======================================================================
+        # convienience functions
+        #=======================================================================
+        def make_sm_name(name):
+            return 'object.stage_manager.{}'.format(name)
+
         def SItem(name, **kw):
+            return Item(make_sm_name(name), **kw)
+
+        def SUItem(name, **kw):
             return UItem('object.stage_manager.{}'.format(name), **kw)
 
-        agrp = SItem('stage_controller', style='custom')
+        def CItem(name, **kw):
+            return Item('object.stage_manager.canvas.{}'.format(name), **kw)
+
+        def CUItem(name, **kw):
+            return UItem('object.stage_manager.canvas.{}'.format(name), **kw)
+        #=======================================================================
+        #
+        #=======================================================================
+
+        agrp = SUItem('stage_controller', style='custom')
         pgrp = Group(
-                     SItem('calibrated_position_entry',
+                     SUItem('calibrated_position_entry',
                            tooltip='Enter a positon e.g 1 for a hole, or 3,4 for X,Y'
                            ),
                      label='Calibrated Position',
                      show_border=True)
-        hgrp = HGroup(SItem('stop_button'),
-                      SItem('home'),
-                      SItem('home_option', editor=EnumEditor(name='object.stage_manager.home_options'))
+        hgrp = HGroup(SUItem('stop_button'),
+                      SUItem('home'),
+                      SUItem('home_option', editor=EnumEditor(name='object.stage_manager.home_options'))
                       )
+        cngrp = VGroup(
+                       CItem('show_bounds_rect'),
+ #                       Item('render_map'),
+                       CItem('show_grids'),
+                       HGroup(CItem('show_laser_position'),
+                              CUItem('crosshairs_color',
+#                                   editor=ColorEditor(),
+#                                    springy=True,
+#                                    show_label=False
+                                    )
+                              ),
+                       CItem('crosshairs_kind'),
+                       CItem('crosshairs_radius'),
+                       HGroup(
+                              CItem('crosshairs_offsetx', label='Offset'),
+                              CUItem('crosshairs_offsety')
+                              ),
+                       CItem('crosshairs_offset_color'),
+                       HGroup(CItem('show_desired_position'),
+                              CUItem('desired_position_color',
+#                                     springy=True
+                                     )
+                              ),
+                       label='Canvas'
+                       )
+
+        mvgrp = VGroup(
+                      HGroup(SItem('use_autocenter', label='Enabled'),
+                             SUItem('autocenter_button',
+                                  enabled_when='use_autocenter'),
+                             SUItem('configure_autocenter_button')
+                          ),
+                      SUItem('autofocus_manager', style='custom'),
+                      label='Machine Vision', show_border=True
+                      )
+
+        recgrp = VGroup(
+                      HGroup(SItem('snapshot_button', show_label=False),
+                            VGroup(SItem('auto_save_snapshot'),
+                             SItem('render_with_markup'))),
+                     SUItem('record', editor=ButtonEditor(label_value=make_sm_name('record_label'))),
+                     show_border=True,
+                     label='Recording'
+                     )
+
+        cagrp = VGroup(
+                       mvgrp,
+                       recgrp,
+#                   label='Machine Vision', show_border=True)
+                       visible_when='use_video',
+                       label='Camera'
+                       )
         cgrp = Group(
-                     SItem('canvas',
-                           editor=InstanceEditor(view='config_view'),
-                           style='custom'),
-                     SItem('points_programmer',
+                     cngrp,
+                     cagrp,
+#                     SUItem('canvas',
+#                           editor=InstanceEditor(view='config_view'),
+#                           style='custom'),
+                     SUItem('points_programmer',
                           label='Points',
                           style='custom'),
-                     SItem('tray_calibration_manager',
+                     SUItem('tray_calibration_manager',
                           label='Calibration',
                           style='custom'),
                      layout='tabbed'
@@ -63,12 +138,65 @@ class ControlPane(TraitsDockPane):
                  )
         return v
 
+class ControlPane(TraitsDockPane):
+    name = 'Control'
+    def traits_view(self):
+        v = View()
+        return v
+
+class PulsePane(TraitsDockPane):
+    id = 'pychron.lasers.pulse'
+    name = 'Pulse'
+    def traits_view(self):
+        v = View(Group(UItem('pulse', style='custom'), show_border=True))
+        return v
+
+class OpticsPane(TraitsDockPane):
+    id = 'pychron.lasers.optics'
+    name = 'Optics'
+    def traits_view(self):
+        v = View(Group(UItem('laser_controller',
+                             editor=InstanceEditor(view='control_view'),
+                             style='custom'),
+                       show_border=True
+                       )
+                 )
+        return v
+
+#===============================================================================
+# Diode
+#===============================================================================
+
 class FusionsDiodePane(BaseLaserPane):
     pass
 
+class FusionsDiodeStagePane(StageControlPane):
+    id = 'fusions.diode.stage'
+    name = 'Stage'
+
 class FusionsDiodeControlPane(ControlPane):
     id = 'fusions.diode.control'
-    name = 'Control'
+    def traits_view(self):
+        v = View(
+                 VGroup(
+                        HGroup(
+                               UItem('enabled_led', editor=LEDEditor()),
+                               UItem('enable', editor=ButtonEditor(label_value='enable_label'))
+                               ),
+                       HGroup(
+                              Item('requested_power',
+                                 style='readonly',
+                                 format_str='%0.2f',
+                                 width=100
+                                 ),
+                            Spring(springy=False, width=50),
+                            UItem('units', style='readonly'),
+                            spring),
+                        show_border=True
+                        ),
+                 )
+        return v
+
 # FusionsDiodePane = BaseLaserPane
 
 # FusionsDiodeControlPane = ControlPane

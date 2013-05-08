@@ -19,7 +19,7 @@ from traits.api import DelegatesTo, Int, Property, Instance, \
     Button, List, String, Event, Bool, on_trait_change, Str
 from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, spring, \
      EnumEditor, InstanceEditor
-from apptools.preferences.preference_binding import bind_preference
+# from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports =======================
 import os
 # from threading import Thread
@@ -43,6 +43,7 @@ from src.lasers.stage_managers.calibration.tray_calibration_manager import TrayC
 from src.regex import TRANSECT_REGEX, XY_REGEX
 from src.ui.stage_component_editor import LaserComponentEditor
 from src.ui.thread import Thread
+from src.ui.preference_binding import bind_preference, ColorPreferenceBinding
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -139,27 +140,29 @@ class StageManager(Manager):
 
     def bind_preferences(self, pref_id):
         bind_preference(self.canvas, 'show_grids', '{}.show_grids'.format(pref_id))
-
-        self.canvas.change_grid_visibility()
-
         bind_preference(self.canvas, 'show_laser_position', '{}.show_laser_position'.format(pref_id))
         bind_preference(self.canvas, 'show_desired_position', '{}.show_laser_position'.format(pref_id))
-        bind_preference(self.canvas, 'render_map', '{}.render_map'.format(pref_id))
-
+        bind_preference(self.canvas, 'desired_position_color', '{}.desired_position_color'.format(pref_id),
+                        factory=ColorPreferenceBinding
+                        )
+#        bind_preference(self.canvas, 'render_map', '{}.render_map'.format(pref_id))
+#
         bind_preference(self.canvas, 'crosshairs_kind', '{}.crosshairs_kind'.format(pref_id))
-        bind_preference(self.canvas, 'crosshairs_color', '{}.crosshairs_color'.format(pref_id))
+        bind_preference(self.canvas, 'crosshairs_color',
+                        '{}.crosshairs_color'.format(pref_id),
+                        factory=ColorPreferenceBinding
+                        )
         bind_preference(self.canvas, 'crosshairs_radius', '{}.crosshairs_radius'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_offsetx', '{}.crosshairs_offsetx'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_offsety', '{}.crosshairs_offsety'.format(pref_id))
-
+#
         bind_preference(self.canvas, 'scaling', '{}.scaling'.format(pref_id))
-
-        bind_preference(self.tray_calibration_manager, 'style', '{}.calibration_style'.format(pref_id))
+#
+#        bind_preference(self.tray_calibration_manager, 'style', '{}.calibration_style'.format(pref_id))
         bind_preference(self.canvas, 'show_bounds_rect',
                         '{}.show_bounds_rect'.format(pref_id))
 
         self.canvas.request_redraw()
-#        self.canvas.change_indicator_visibility()
 
     def load(self):
         self._stage_maps = []
@@ -896,23 +899,23 @@ class StageManager(Manager):
 #                  show_border=True)
 #        return g
 
-    def _button__group__(self):
-        '''
-        '''
-        vg = VGroup()
-
-        home = self._button_factory(*self.buttons[0])
-        calibrate_stage = self._button_factory(*self.buttons[1])
-
-        vg.content.append(HGroup(calibrate_stage, home,
-                                 Item('home_option',
-                                      editor=EnumEditor(values=self.home_options),
-                                      show_label=False)))
-
-        if len(self.buttons) > 2:
-        # vg.content.append(self._button_group_factory(self.buttons[:2], orientation = 'h'))
-            vg.content.append(self._button_group_factory(self.buttons[2:], orientation='h'))
-        return vg
+#    def _button__group__(self):
+#        '''
+#        '''
+#        vg = VGroup()
+#
+#        home = self._button_factory(*self.buttons[0])
+#        calibrate_stage = self._button_factory(*self.buttons[1])
+#
+#        vg.content.append(HGroup(calibrate_stage, home,
+#                                 Item('home_option',
+#                                      editor=EnumEditor(values=self.home_options),
+#                                      show_label=False)))
+#
+#        if len(self.buttons) > 2:
+#        # vg.content.append(self._button_group_factory(self.buttons[:2], orientation = 'h'))
+#            vg.content.append(self._button_group_factory(self.buttons[2:], orientation='h'))
+#        return vg
 
 #    def _axis__group__(self):
 #        '''

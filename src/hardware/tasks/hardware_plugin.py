@@ -69,7 +69,8 @@ class HardwarePlugin(BaseTaskPlugin):
                                                       path='MenuBar/Tools'), ])]
 
     def _tasks_default(self):
-        return [TaskFactory(id='pychron.hardware',
+        return [TaskFactory(id='tasks.hardware',
+                            name='Hardware',
                             factory=self._factory
                             )
                 ]
