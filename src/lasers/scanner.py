@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Instance, List, Bool, Button, Event, String, \
     Property, Float, Str, Tuple, File, Any, Int
 from traitsui.api import View, Item, Controller, UItem, ButtonEditor
-from pyface.timer.do_later import do_after
+# from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 import time
 #============= local library imports  ==========================
@@ -26,11 +26,12 @@ from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.graph.stream_graph import StreamStackedGraph
 from src.helpers.timer import Timer
 from src.loggable import Loggable
-from threading import Thread
+# from threading import Thread
 import os
 import yaml
 from src.application_controller import ApplicationController
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from src.ui.thread import Thread
 
 
 class ScannerController(ApplicationController):
@@ -46,8 +47,10 @@ class ScannerController(ApplicationController):
         return v
 
     def controller_execute_button_changed(self, info):
+        graph = self.model.make_graph()
         if self.model.execute():
-            self.open_view(self.model.graph)
+            self.model.do_scan()
+            self.open_view(graph)
 
     def _get_execute_label(self):
         return 'Stop' if self.model._scanning else 'Start'
@@ -61,7 +64,7 @@ class Scanner(Loggable):
         of a single or multiple values
     '''
 
-    graph = Instance(StreamStackedGraph)
+    _graph = Instance(StreamStackedGraph)
     manager = Instance(ILaserManager)
 
     data_manager = Instance(CSVDataManager, ())
@@ -78,6 +81,8 @@ class Scanner(Loggable):
 
     _warned = False
     _scanning = Bool
+    _directory = None
+    _base_frame_name = None
 
     def new_static_value(self, name, *args, **kw):
         self.static_values.append((name, None))
@@ -96,30 +101,40 @@ class Scanner(Loggable):
             self.static_values[name_or_idx] = (name, value)
 
         if plotid is not None:
-            self.graph.add_horizontal_rule(value, plotid=plotid)
+            self._graph.add_horizontal_rule(value, plotid=plotid)
 
     def setup(self, directory=None, base_frame_name=None):
-        self.data_manager.new_frame(directory=directory,
-                                    base_frame_name=base_frame_name)
+        self._directory = directory
+        self._base_frame_name = base_frame_name
 
     def new_function(self, function, name=None):
         if name is None:
             name = function.func_name
 
-        g = self.graph
-        func = self.functions
-        kw = dict(ytitle=name,)
-        n = len(func)
-        if n == 0:
-            kw['xtitle'] = 'Time'
-
-        g.new_plot(
-                   data_limit=1000,
-                   **kw)
-        g.new_series(plotid=n)
+#        g = self.graph
+#        func = self.functions
+#        kw = dict(ytitle=name,)
+#        n = len(func)
+#        if n == 0:
+#            kw['xtitle'] = 'Time'
 
         self.functions.append((function, name))
 
+    def make_graph(self):
+        g = StreamStackedGraph(window_x=50,
+                               window_y=100)
+
+        for i, (_, name) in enumerate(self.functions):
+            kw = dict(ytitle=name,)
+            if i == 0:
+                kw['xtitle'] = 'Time'
+
+            g.new_plot(
+                       data_limit=1000,
+                       **kw)
+            g.new_series(plotid=i)
+        self._graph = g
+        return g
 
     def stop(self):
         self._timer.Stop()
@@ -128,12 +143,15 @@ class Scanner(Loggable):
         self.info('scan stopped')
         if self.manager:
             self.manager.disable_device()
+            self.manager.set_laser_temperature(0)
 
     def execute(self):
 
         if self._scanning:
             self.stop()
         else:
+            self.data_manager.new_frame(directory=self._directory,
+                                    base_frame_name=self._base_frame_name)
             # write metadata if available
             self._write_metadata()
 
@@ -143,35 +161,68 @@ class Scanner(Loggable):
                             [n for n, _ in self.static_values]
             self.data_manager.write_to_frame(header)
 
-            self._starttime = time.time()
-            yd = self._read_control_path()
-            if yd is None:
-                sp = 1000
-            else:
-                sp = yd['period']
-
-            if self.manager.enable_device():
-
-                # starts automatically
-                self._timer = Timer(sp, self._scan)
-
-                self.info('scan started')
-                self._scanning = True
-    #            yd = self._read_control_path()
-                if yd is not None:
-                    # start a control thread
-                    self._control_thread = Thread(target=self._control,
-                                                  args=(yd,)
-                                                  )
-                    self._control_thread.start()
-                    self.info('control started')
-            else:
-                self.info('no manager available')
+            self._scanning = True
+            if self.manager:
+                if self.manager.enable_device():
+                    self._scanning = True
 
         return self._scanning
 
+    def do_scan(self):
+        self._starttime = time.time()
+        self._execute()
+
+    def _execute(self):
+
+        yd = self._read_control_path()
+
+        if yd is None:
+            sp = 1000
+        else:
+            sp = yd['period']
+
+        # starts automatically
+        self.debug('scan starting')
+        self._timer = Timer(sp, self._scan)
+
+        self.info('scan started')
+
+#            yd = self._read_control_path()
+        if yd is not None:
+            # start a control thread
+            self._control_thread = Thread(target=self._control,
+                                          args=(yd,)
+                                          )
+            self._control_thread.start()
+            self.info('control started')
+#        if self.manager:
+#            if self.manager.enable_device():
+#
+#                # starts automatically
+#                self.debug('scan starting')
+#                self._timer = Timer(sp, self._scan)
+#
+#                self.info('scan started')
+#                self._scanning = True
+#    #            yd = self._read_control_path()
+#                if yd is not None:
+#                    # start a control thread
+#                    self._control_thread = Thread(target=self._control,
+#                                                  args=(yd,)
+#                                                  )
+#                    self._control_thread.start()
+#                    self.info('control started')
+#            else:
+#                self.warning('Could not enable device')
+#        else:
+#            self.warning('no manager available')
+
     def _control(self, ydict):
         self.start_control_hook()
+
+#        if self.manager:
+#            if self.manager.temperature_controller:
+#                self.manager.temperature_controller.enable_tru_tune = True
 
         start_delay = ydict['start_delay']
         end_delay = ydict['end_delay']
@@ -195,6 +246,9 @@ class Scanner(Loggable):
         if self._scanning:
             self.setpoint = 0
             self.set_static_value('Setpoint', 0)
+            if self.manager:
+                self.manager.set_laser_temperature(0)
+
             time.sleep(end_delay)
             self.stop()
 
@@ -214,7 +268,8 @@ class Scanner(Loggable):
     def _scan(self):
         functions = self.functions
         data = []
-        record = self.graph.record
+        record = self._graph.record
+#        record = self.graph.record
 
         x = time.time() - self._starttime
         for i, (func, _) in enumerate(functions):
@@ -250,14 +305,16 @@ class Scanner(Loggable):
 #===============================================================================
 # defaults
 #===============================================================================
-    def _graph_default(self):
-        g = StreamStackedGraph(window_x=50,
-                               window_y=100)
-
-        return g
+#    def _graph_default(self):
+#        g = StreamStackedGraph(window_x=50,
+#                               window_y=100)
+#
+#        return g
 
 class PIDScanner(Scanner):
     pid = Tuple
+    dead_band = Float(0)
+
     def _write_metadata(self):
         if self.control_path:
             yd = self._read_control_path()
@@ -266,21 +323,31 @@ class PIDScanner(Scanner):
                 pid = ['pid= {}, {}, {}'.format(*self.pid)]
                 self.data_manager.write_to_frame(pid)
 
+                if 'dead_band' in yd:
+                    self.dead_band = yd['dead_band']
+
+                self.data_manager.write_to_frame(['dead_band={}'.format(self.dead_band)])
+
     def start_control_hook(self):
-        if self.manager:
+        if self.manager is not None:
             tc = self.manager.temperature_controller
 
             if tc:
 
                 p, i, d = self.pid
+
+                tc.set_heat_proportional_band(p)
                 tc.set_time_integral(i)
                 tc.set_time_derivative(d)
+
+                tc.set_dead_band(self.dead_band)
+
             else:
                 self.debug('no manager temperature controol available')
 
         else:
             self.debug('no manager available')
-#    def _control_path_changed(self):
+
 
 if __name__ == '__main__':
     import random

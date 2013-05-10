@@ -38,6 +38,11 @@ def main():
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
 
+    # import application
+    from src.applications.pyexperiment import PyExperiment as app
+#    from src.applications.pydiode import PyDiode as app
+
+
     # build directories
     build_directories(paths)
 
@@ -59,7 +64,8 @@ def main():
     from globals import globalv
     globalv._test = False
 
-    launch()
+
+    launch(app)
     os._exit(0)
 
 

@@ -540,22 +540,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 #        exp.automated_runs.append(arun)
         self.experiment_queue = exp
         self.experiment_queues.append(exp)
-#===============================================================================
-# experiment set
-#===============================================================================
-#    def new_experiment_set(self, clear=True):
-#        if clear:
-#            self.experiment_queues = []
-#
-#        exp = self._experiment_set_factory()
-# #        arun = exp.automated_run_factory()
-# #        exp.automated_run = arun
-# #        exp.automated_runs.append(arun)
-#        self.experiment_set = exp
-#        self.experiment_queues.append(exp)
 
-#    def close(self, isok):
-#        self.dirty_save_as = False
 #===============================================================================
 # persistence
 #===============================================================================
@@ -669,6 +654,8 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
                         )
         return s
 
+    def _experiment_queue_default(self):
+        return self._experiment_queue_factory()
 #    def _db_default(self):
 #        return self._db_factory()
 

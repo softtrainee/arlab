@@ -17,9 +17,10 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance
 from traitsui.api import View, Item
-from src.displays.rich_text_display import RichTextDisplay
-from pyface.timer.do_later import do_later
+# from src.displays.rich_text_display import RichTextDisplay
+# from pyface.timer.do_later import do_later
 import math
+from src.displays.display import DisplayModel
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # def fixed_width(m, i):
@@ -30,7 +31,7 @@ import math
 #    else:
 #        return '{{:0.{}f}}'.format(i).format(m)
 class Summary(HasTraits):
-    display = Instance(RichTextDisplay)
+    display = Instance(DisplayModel)
     record = Any
 
 
@@ -110,7 +111,7 @@ class Summary(HasTraits):
         pass
 
     def _display_default(self):
-        return RichTextDisplay(default_size=12,
+        return DisplayModel(default_size=12,
                                width=self.record.item_width - 10,
                                selectable=True,
                                default_color='black',

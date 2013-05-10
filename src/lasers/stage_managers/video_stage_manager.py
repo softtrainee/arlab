@@ -76,7 +76,6 @@ class VideoStageManager(StageManager):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
 
-    use_autocenter = Bool
     use_auto_center_interpolation = Bool(False)
 
     autocenter_button = Button('AutoCenter')

@@ -111,6 +111,9 @@ class StageManager(Manager):
     calibrated_position_entry = String(enter_set=True, auto_set=False)
 
     use_modified = Bool(True)  # set true to use modified affine calculation
+    use_autocenter = Bool
+
+
     def __init__(self, *args, **kw):
         '''
 

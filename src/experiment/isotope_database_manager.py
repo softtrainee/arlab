@@ -51,9 +51,10 @@ class IsotopeDatabaseManager(Manager):
 
         bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
 
-#        if not self.db.connect():
-#            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
-#            self.db = None
+        if not self.db.connect():
+            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+            self.db = None
+
     def _db_default(self):
         return self._db_factory()
 

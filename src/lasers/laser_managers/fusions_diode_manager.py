@@ -81,13 +81,19 @@ class FusionsDiodeManager(FusionsLaserManager):
 #
 #        self.pyrometer.start_scan()
 # #        self.control_module_manager.start_scan()
-
     def open_scanner(self):
-        from src.lasers.scanner import ScannerController, PIDScanner
-        p = '/Users/ross/Sandbox/foo.yaml'
-        p = os.path.join(paths.scripts_dir, 'scanner.yaml')
+        from src.lasers.scanner import PIDScanner
+        self._open_scanner(PIDScanner, 'scanner.yaml')
 
-        s = PIDScanner(control_path=p,
+    def open_autotuner(self):
+        from src.lasers.autotuner import AutoTuner
+        self._open_scanner(AutoTuner, 'autotuner.yaml')
+
+    def _open_scanner(self, klass, name):
+        from src.lasers.scanner import ScannerController
+        p = os.path.join(paths.scripts_dir, name)
+
+        s = klass(control_path=p,
                        manager=self
                        )
 
@@ -101,7 +107,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         # populate scanner with functions
         gen = tc_gen()
-        s.setup(directory='diode_pid_scans')
+        s.setup(directory='diode_autotune_scans')
         s.new_function(gen, name='Temp. Pyrometer (C)')
         s.new_function(gen, name='Power (%)')
 

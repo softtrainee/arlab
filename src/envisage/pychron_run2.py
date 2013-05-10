@@ -55,7 +55,7 @@ logger = new_logger('launcher')
 PACKAGE_DICT = dict(
 #                   DatabasePlugin='src.database.plugins.database_plugin',
 #                   DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
-#                   ExperimentPlugin='src.experiment.plugins.experiment_plugin',
+                   ExperimentPlugin='src.experiment.tasks.experiment_plugin',
 #                   ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
 #                   ScriptPlugin='src.scripts.plugins.script_plugin',
 #                   ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
@@ -70,6 +70,7 @@ PACKAGE_DICT = dict(
 #                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
 
                    FusionsDiodePlugin='src.lasers.tasks.laser_plugin',
+                   FusionsCO2Plugin='src.lasers.tasks.laser_plugin',
 #                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
 #                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
 #                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
@@ -211,7 +212,7 @@ def get_user_plugins():
 
     return plugins
 
-def app_factory():
+def app_factory(klass):
     '''
         assemble the plugins 
         return a Pychron WorkbenchApplication
@@ -226,8 +227,9 @@ def app_factory():
 
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
+
 #    print plugins
-    app = Pychron(plugins=plugins)
+    app = klass(plugins=plugins)
 
     gLoggerDisplay.application = app
     gMessageDisplay.application = app
@@ -267,7 +269,7 @@ def check_dependencies():
 
 
 app = None
-def launch():
+def launch(klass):
     '''
     '''
 
@@ -275,7 +277,7 @@ def launch():
         return
 
     global app
-    app = app_factory()
+    app = app_factory(klass)
 
     if globalv.test:
 

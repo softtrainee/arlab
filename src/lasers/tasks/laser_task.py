@@ -16,57 +16,67 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task import BaseTask
+from traitsui.api import View, Item, TextEditor
+from src.envisage.tasks.base_task import BaseHardwareTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \
-    FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane
-from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
+    FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane, \
+    FusionsCO2Pane, FusionsCO2StagePane, FusionsCO2ControlPane, \
+    FusionsDiodeSupplementalPane
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseLaserTask(BaseTask):
-    manager = Any
+class BaseLaserTask(BaseHardwareTask):
     def activated(self):
         self.manager.stage_manager.keyboard_focus = True
 
 class FusionsTask(BaseLaserTask):
-    pass
-
-class FusionsDiodeTask(FusionsTask):
-    id = 'pychron.lasers.fusions.diode'
-    name = 'Fusions Diode'
     def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('fusions.diode.stage'),
+        return TaskLayout(left=PaneItem('{}.stage'.format(self.id)),
                           top=Splitter(
-                                       PaneItem('fusions.diode.control',
+                                       PaneItem('{}.control'.format(self.id),
                                                 width=200
                                                 ),
                                        PaneItem('pychron.lasers.pulse',
                                                 width=300),
-                                       PaneItem('pychron.lasers.optics',
-
-                                                )
+                                       Tabbed(
+                                              PaneItem('pychron.lasers.optics'),
+                                              PaneItem('{}.supplemental'.format(self.id))
+                                              )
                                        )
                           )
-#    def _menu_bar_default(self):
-#        menus = [SMenu(
-#                       OpenScannerAction(manager=self.manager,
-#                                         manager_name='fusions_diode'),
-#                       id='fusions.diode', name='Diode')
-#                 ]
-#
-#        return self._menu_bar_factory(menus)
+
+class FusionsCO2Task(FusionsTask):
+    id = 'pychron.fusions.co2'
+    name = 'Fusions CO2'
+    def create_central_pane(self):
+        return FusionsCO2Pane(model=self.manager)
+
+    def create_dock_panes(self):
+        return [
+                FusionsCO2StagePane(model=self.manager),
+                FusionsCO2ControlPane(model=self.manager),
+                PulsePane(model=self.manager),
+                OpticsPane(model=self.manager),
+                ]
+
+class FusionsDiodeTask(FusionsTask):
+    id = 'fusions.diode'
+    name = 'Fusions Diode'
 
     def create_central_pane(self):
         return FusionsDiodePane(model=self.manager)
+
     def create_dock_panes(self):
         return [
                 FusionsDiodeStagePane(model=self.manager),
                 FusionsDiodeControlPane(model=self.manager),
+                FusionsDiodeSupplementalPane(model=self.manager),
+
+#                TestPane(model=self.manager),
                 PulsePane(model=self.manager),
                 OpticsPane(model=self.manager),
-
                 ]
 #============= EOF =============================================

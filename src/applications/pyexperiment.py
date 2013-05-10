@@ -15,34 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item
-# from pyface.tasks.task import Task
-from src.hardware.tasks.hardware_pane import CurrentDevicePane, DevicesPane, InfoPane
-from pyface.tasks.task_layout import PaneItem, TaskLayout, VSplitter
-from src.envisage.tasks.base_task import BaseHardwareTask
+# from traits.api import HasTraits
+# from traitsui.api import View, Item
+from src.applications.pychron_application import PychronApplication
+from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class HardwareTask(BaseHardwareTask):
-    id = 'pychron.hardware'
-    name = 'Hardware'
-
-
-    def _default_layout_default(self):
-        l = TaskLayout(left=VSplitter(
-                                      PaneItem('hardware.devices'),
-                                      PaneItem('hardware.info')
-                          )
-                       )
-        return l
-
-    def create_central_pane(self):
-        pane = CurrentDevicePane(model=self.manager)
-        return pane
-
-    def create_dock_panes(self):
-        return [DevicesPane(model=self.manager),
-                InfoPane(model=self.manager)
-                ]
+class PyExperiment(PychronApplication):
+    id = 'pychron.experiment.application'
+    name = 'pyExperiment'
+    default_layout = [TaskWindowLayout('pychron.experiment',),
+                      ]
 #============= EOF =============================================

@@ -24,14 +24,16 @@ import time
 from PySide.QtCore import QThread
 #============= local library imports  ==========================
 class Timer(QThread):
-    def __init__(self, period, func, *args, **kw):
+    def __init__(self, period, func, delay=0, *args, **kw):
         super(Timer, self).__init__()
         self._period = period / 1000.0
         self._func = func
         self._flag = Event()
 
+        self._delay = delay
         self._args = args
         self._kwargs = kw
+
         self.start()
 
     def run(self):
@@ -40,6 +42,10 @@ class Timer(QThread):
         flag = self._flag
         args = self._args
         kwargs = self._kwargs
+        delay = self._delay
+
+        if delay:
+            flag.wait(delay)
 
         while not flag.isSet():
 #            if t is not None:

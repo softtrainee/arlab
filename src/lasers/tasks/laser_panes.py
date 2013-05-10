@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Any
 from traitsui.api import View, UItem, Group, InstanceEditor, HGroup, \
     EnumEditor, Item, spring, Spring, ButtonEditor, VGroup
 from pyface.tasks.traits_task_pane import TraitsTaskPane
@@ -23,15 +23,21 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.ui.led_editor import LEDEditor
+from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+
 
 
 class BaseLaserPane(TraitsTaskPane):
     def traits_view(self):
-        v = View(UItem('stage_manager', style='custom'))
+        v = View(UItem('stage_manager', style='custom'),
+                 HGroup(UItem('status_text', style='readonly'), spring),
+                 statusbar='status_text'
+                 )
         return v
 
 
 class StageControlPane(TraitsDockPane):
+    name = 'Stage'
     def traits_view(self):
         #=======================================================================
         # convienience functions
@@ -91,7 +97,8 @@ class StageControlPane(TraitsDockPane):
                        label='Canvas'
                        )
 
-        mvgrp = VGroup(
+        if isinstance(self.model.stage_manager, VideoStageManager):
+            mvgrp = VGroup(
                       HGroup(SItem('use_autocenter', label='Enabled'),
                              SUItem('autocenter_button',
                                   enabled_when='use_autocenter'),
@@ -100,8 +107,7 @@ class StageControlPane(TraitsDockPane):
                       SUItem('autofocus_manager', style='custom'),
                       label='Machine Vision', show_border=True
                       )
-
-        recgrp = VGroup(
+            recgrp = VGroup(
                       HGroup(SItem('snapshot_button', show_label=False),
                             VGroup(SItem('auto_save_snapshot'),
                              SItem('render_with_markup'))),
@@ -109,6 +115,9 @@ class StageControlPane(TraitsDockPane):
                      show_border=True,
                      label='Recording'
                      )
+        else:
+            mvgrp = Group()
+            recgrp = Group()
 
         cagrp = VGroup(
                        mvgrp,
@@ -117,12 +126,10 @@ class StageControlPane(TraitsDockPane):
                        visible_when='use_video',
                        label='Camera'
                        )
+
         cgrp = Group(
                      cngrp,
                      cagrp,
-#                     SUItem('canvas',
-#                           editor=InstanceEditor(view='config_view'),
-#                           style='custom'),
                      SUItem('points_programmer',
                           label='Points',
                           style='custom'),
@@ -138,44 +145,9 @@ class StageControlPane(TraitsDockPane):
                  )
         return v
 
+
 class ControlPane(TraitsDockPane):
     name = 'Control'
-    def traits_view(self):
-        v = View()
-        return v
-
-class PulsePane(TraitsDockPane):
-    id = 'pychron.lasers.pulse'
-    name = 'Pulse'
-    def traits_view(self):
-        v = View(Group(UItem('pulse', style='custom'), show_border=True))
-        return v
-
-class OpticsPane(TraitsDockPane):
-    id = 'pychron.lasers.optics'
-    name = 'Optics'
-    def traits_view(self):
-        v = View(Group(UItem('laser_controller',
-                             editor=InstanceEditor(view='control_view'),
-                             style='custom'),
-                       show_border=True
-                       )
-                 )
-        return v
-
-#===============================================================================
-# Diode
-#===============================================================================
-
-class FusionsDiodePane(BaseLaserPane):
-    pass
-
-class FusionsDiodeStagePane(StageControlPane):
-    id = 'fusions.diode.stage'
-    name = 'Stage'
-
-class FusionsDiodeControlPane(ControlPane):
-    id = 'fusions.diode.control'
     def traits_view(self):
         v = View(
                  VGroup(
@@ -197,6 +169,101 @@ class FusionsDiodeControlPane(ControlPane):
                  )
         return v
 
+class SupplementalPane(TraitsDockPane):
+    pass
+
+#===============================================================================
+# generic
+#===============================================================================
+class PulsePane(TraitsDockPane):
+    id = 'pychron.lasers.pulse'
+    name = 'Pulse'
+    def traits_view(self):
+        v = View(Group(UItem('pulse', style='custom'), show_border=True))
+        return v
+
+
+class OpticsPane(TraitsDockPane):
+    id = 'pychron.lasers.optics'
+    name = 'Optics'
+    def traits_view(self):
+        v = View(Group(UItem('laser_controller',
+                             editor=InstanceEditor(view='control_view'),
+                             style='custom'),
+                       show_border=True
+                       )
+                 )
+        return v
+
+#===============================================================================
+# co2
+#===============================================================================
+class FusionsCO2Pane(BaseLaserPane):
+    pass
+
+
+class FusionsCO2StagePane(StageControlPane):
+    id = 'pychron.fusions.co2.stage'
+
+class FusionsCO2ControlPane(ControlPane):
+    id = 'pychron.fusions.co2.control'
+
+#===============================================================================
+# Diode
+#===============================================================================
+class FusionsDiodePane(BaseLaserPane):
+    pass
+
+
+class FusionsDiodeStagePane(StageControlPane):
+    id = 'pychron.fusions.diode.stage'
+
+
+class FusionsDiodeControlPane(ControlPane):
+    id = 'pychron.fusions.diode.control'
+
+
+class FusionsDiodeSupplementalPane(SupplementalPane):
+    id = 'pychron.fusions.diode.supplemental'
+    name = 'Diode'
+    def traits_view(self):
+        v = View(
+               VGroup(Item('temperature_controller', style='custom',
+                               editor=InstanceEditor(view='control_view'),
+                               show_label=False,
+                               ),
+                      label='Watlow',
+#                      show_border = True,
+                      ),
+                 VGroup(Item('pyrometer', show_label=False, style='custom',
+                              ),
+#                      show_border = True,
+                      label='Pyrometer',
+
+                      ),
+                 VGroup(Item('control_module_manager', show_label=False, style='custom',
+                             ),
+#                      show_border = True,
+                      label='ControlModule',
+
+                      ),
+                  VGroup(Item('fiber_light', style='custom', show_label=False),
+                         label='FiberLight'
+                         )
+               )
+        return v
+
+
+# from pyface.tasks.enaml_dock_pane import EnamlDockPane
+# import enaml
+# class TestPane(EnamlDockPane):
+#    model = Any
+#    def create_component(self):
+#        with enaml.imports():
+#            from test_view import TestView
+#
+#        view = TestView(model=self.model)
+#        return view
 # FusionsDiodePane = BaseLaserPane
 
 # FusionsDiodeControlPane = ControlPane

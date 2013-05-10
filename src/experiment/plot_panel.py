@@ -20,7 +20,8 @@ from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
-from src.displays.rich_text_display import RichTextDisplay
+
+# from src.displays.rich_text_display import DisplayModel
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
 from pyface.timer.do_later import do_later
@@ -28,6 +29,7 @@ from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
 from src.helpers.formatting import floatfmt
+from src.displays.display import DisplayModel
 
 #============= standard library imports ========================
 # from numpy import Inf
@@ -58,10 +60,11 @@ class PlotPanel(Viewable):
 
     stack_order = 'bottom_to_top'
     series_cnt = 0
-    ratio_display = Instance(RichTextDisplay)
-    signal_display = Instance(RichTextDisplay)
-    summary_display = Instance(RichTextDisplay)
-    fit_display = Instance(RichTextDisplay)
+
+    ratio_display = Instance(DisplayModel)
+    signal_display = Instance(DisplayModel)
+    summary_display = Instance(DisplayModel)
+    fit_display = Instance(DisplayModel)
 
     signals = Dict
     baselines = Dict
