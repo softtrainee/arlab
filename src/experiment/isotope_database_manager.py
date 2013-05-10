@@ -23,6 +23,7 @@ from apptools.preferences.preference_binding import bind_preference
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
 from src.ui.progress_dialog import MProgressDialog
+# from src.loggable import Loggable
 # from src.progress_dialog import MProgressDialog
 
 
@@ -31,6 +32,28 @@ class IsotopeDatabaseManager(Manager):
     def __init__(self, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
         self.bind_preferences()
+
+    def load(self):
+        return self.populate_default_tables()
+
+    def populate_default_tables(self):
+        self.debug('populating default tables')
+        db = self.db
+        if self.db:
+            if db.connect(force=False):
+                from src.database.defaults import load_isotopedb_defaults
+                load_isotopedb_defaults(db)
+                return True
+
+    def verify_database_connection(self, inform=True):
+        if self.db is not None:
+            if self.db.connect():
+                self.db.flush()
+                self.db.reset()
+                return True
+        elif inform:
+            self.warning_dialog('Not Database available')
+
     def bind_preferences(self):
         if self.db is None:
             self.db = self._db_factory()

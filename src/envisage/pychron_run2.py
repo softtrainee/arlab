@@ -38,7 +38,7 @@ from globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
-from src.envisage.tasks.pychron_application import Pychron
+# from src.envisage.tasks.pychron_application import Pychron
 import os
 
 #

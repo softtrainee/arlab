@@ -54,6 +54,7 @@ class StatsPane(TraitsDockPane):
         return v
 
 class ControlsPane(TraitsDockPane):
+    name = 'Controls'
     id = 'pychron.experiment.controls'
     def traits_view(self):
         v = View(

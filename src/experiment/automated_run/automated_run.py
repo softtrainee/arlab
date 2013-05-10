@@ -49,6 +49,7 @@ from src.experiment.automated_run.condition import TruncationCondition, \
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
+from src.ui.qt.gui import invoke_in_main_thread
 
 
 class RunInfo(HasTraits):
@@ -167,9 +168,6 @@ class AutomatedRun(Loggable):
     _runtime = None
     _timestamp = None
 
-#    executable = Property
-#    check_executable = Bool(True)
-
     valid_scripts = Dict
     _alive = False
 
@@ -211,6 +209,7 @@ class AutomatedRun(Loggable):
             return
 
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+        self.plot_panel = p
 
         # set plot_panels, baselines, backgrounds
         p.baselines = baselines = self.experiment_manager._prev_baselines
@@ -238,7 +237,6 @@ class AutomatedRun(Loggable):
         spec = self.spectrometer_manager.spectrometer
         self._active_detectors = [spec.get_detector(n) for n in dets]
         p.create(self._active_detectors)
-        self.plot_panel = p
 
 #        g = p.graph
 #        g.suppress_regression = True
@@ -336,8 +334,11 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
 
+        self.debug('basssssss')
         ion = self.ion_optics_manager
-        self.plot_panel.show()
+        invoke_in_main_thread(self.plot_panel.show)
+#        self.plot_panel.show()
+
         if mass:
             if ion is not None:
                 if detector is None:
@@ -539,6 +540,7 @@ anaylsis_type={}
     def finish(self):
 #        del self.info_display
         if self.plot_panel:
+
             self.plot_panel.automated_run = None
             self.plot_panel.close_ui()
             del self.plot_panel
@@ -720,7 +722,8 @@ anaylsis_type={}
             self.info('======== Post Equilibration Finished unsuccessfully ========')
 
     def _plot_panel_closed(self):
-        self.truncate('Immediate')
+        if self.measuring:
+            self.truncate('Immediate')
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
         if plot_panel is None:
@@ -735,9 +738,13 @@ anaylsis_type={}
                              irradiation=self.irradiation
     #                         signals=dict(),
                              )
+
             plot_panel.reset()
             plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
-            self.experiment_manager.open_view(plot_panel)
+
+            invoke_in_main_thread(self.experiment_manager.open_view, plot_panel)
+            # wait for the window to open
+            time.sleep(2)
 
         return plot_panel
 
@@ -923,6 +930,7 @@ anaylsis_type={}
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series, fits, check_conditions):
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts))
+
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
             return True
@@ -1262,7 +1270,7 @@ anaylsis_type={}
                           sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
                           )
 
-        exp = db.add_script(self.experiment_manager.experiment_set.name,
+        exp = db.add_script(self.experiment_manager.experiment_queue.name,
                           self.experiment_manager.experiment_blob()
                           )
         exp.experiments.append(ext)
@@ -1531,7 +1539,6 @@ anaylsis_type={}
         func = getattr(self, '{}_script_factory'.format(name))
         s = func()
         valid = True
-#        self._executable = True
         if s and os.path.isfile(s.filename):
             if s.bootstrap():
                 s.set_default_context()
@@ -1725,27 +1732,7 @@ anaylsis_type={}
         self._extraction_script = self._load_script('extraction')
         return self._extraction_script
 
-#    @property
-#    def runid(self):
-# #        return #'{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
-#
-#        if self.analysis_type!='unknown':
-#            return make_special_identifier(self.labnumber, )
-#
-#
-#        return make_runid(self.labnumber, self.aliquot, self.step)
 
-#    @property
-#    def _get_executable(self):
-#        a = True
-# #        print self.extraction_script, self.measurement_script, self._executable
-#        if self.check_executable:
-#            a = self.script_info.extraction_script_name is not None and \
-#                        self.script_info.measurement_script_name is not None
-#            if self.valid_scripts:
-#                a = a and all(self.valid_scripts.itervalues())
-# #                            self._executable
-#        return a
 
 #============= EOF =============================================
 

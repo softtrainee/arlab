@@ -36,14 +36,17 @@ def mkaction(name, path):
 
 
 class ExperimentAction(Action):
-    def _get_manager(self, event):
-        return self._get_service(event, 'src.experiment.manager.ExperimentManager')
+#    def _get_manager(self, event):
+#        return self._get_service(event, 'src.experiment.manager.ExperimentManager')
+#
+#    def _get_executor(self, event):
+#        return self._get_service(event, 'src.experiment.executor.ExperimentExecutor')
+#
+#    def _get_editor(self, event):
+#        return self._get_service(event, 'src.experiment.editor.ExperimentEditor')
 
-    def _get_executor(self, event):
-        return self._get_service(event, 'src.experiment.executor.ExperimentExecutor')
-
-    def _get_editor(self, event):
-        return self._get_service(event, 'src.experiment.editor.ExperimentEditor')
+    def _get_experimentor(self, event):
+        return self._get_service(event, 'src.experiment.experimentor.Experimentor')
 
     def _get_service(self, event, name):
         app = event.task.window.application
@@ -92,8 +95,7 @@ class NewExperimentQueueAction(ExperimentAction):
     def perform(self, event):
         '''
         '''
-#        app = event.window.application
-        manager = self._get_editor(event)
+        manager = self._get_experimentor(event)
         if manager.verify_database_connection(inform=True):
 #        if manager.verify_credentials():
             if manager.load():
@@ -110,7 +112,7 @@ class OpenExperimentQueueAction(ExperimentAction):
     def perform(self, event):
         '''
         '''
-        manager = self._get_editor(event)
+        manager = self._get_experimentor(event)
         if manager.verify_database_connection(inform=True):
 #        if manager.verify_credentials():
             if manager.load():

@@ -16,18 +16,18 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, Any, on_trait_change, String
+    Instance, Str, Any, on_trait_change, String, List
 from traitsui.api import View, Item, HGroup, Group, spring
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
-from threading import Thread
+# from threading import Thread
 import time
 import os
 #============= local library imports  ==========================
 from globals import globalv
 from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
-from src.ui.tabular_editor import myTabularEditor
-from src.experiment.manager import ExperimentManager
+# from src.ui.tabular_editor import myTabularEditor
+# from src.experiment.manager import ExperimentManager
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
@@ -35,7 +35,7 @@ from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabas
 # from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
 from src.helpers.parsers.initialization_parser import InitializationParser
-from src.experiment.set_selector import SetSelector
+# from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
@@ -48,11 +48,14 @@ from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.displays.display import DisplayController
+from src.experiment.experimentable import Experimentable
+from src.ui.thread import Thread
+# from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
 
-class ExperimentExecutor(IsotopeDatabaseManager):
+class ExperimentExecutor(Experimentable):
     spectrometer_manager = Instance(Manager)
     extraction_line_manager = Instance(Manager)
     ion_optics_manager = Instance(Manager)
@@ -125,7 +128,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.info_display.add_text(msg, color=color)
 
         if log:
-            super(ExperimentManager, self).info(msg, *args, **kw)
+            super(ExperimentExecutor, self).info(msg, *args, **kw)
 
     def bind_preferences(self):
         super(ExperimentExecutor, self).bind_preferences()
@@ -207,10 +210,10 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     arun.cancel()
                 self._alive = False
         else:
-            if self._was_executed:
-                self.load_experiment_queue(self.experiment_queue.path)
+#            if self._was_executed:
+#                self.load_experiment_queue(self.experiment_queue.path)
 
-            self.stop_file_listener()
+#            self.stop_file_listener()
 
             # test runs first
             for exp in self.experiment_queues:
@@ -220,11 +223,13 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.warning('experiment canceled')
                     return
 
+
             # check for blank before starting the thread
             exp = self.experiment_queues[0]
             if self._has_preceeding_blank_or_background(exp):
                 t = Thread(target=self._execute_experiment_queues)
                 t.start()
+                self._execute_thread = t
 
                 self.err_message = False
                 self._was_executed = True
@@ -257,7 +262,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         return nonfound
 
     def _execute_experiment_queues(self):
-        self.stats.calculate()
+#        self.stats.calculate()
         self.stats.start_timer()
         self.stats.nruns_finished = 0
 
@@ -275,6 +280,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             return
         else:
             mon, isok = self._monitor_factory()
+
             if mon and not isok:
                 self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
                 self.info('experiment canceled because automated_run_monitor is not setup properly')
@@ -292,7 +298,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
 
-        self.set_selector.selected_index = -2
+#        self.set_selector.selected_index = -2
         rc = 0
         ec = 0
         for i, exp in enumerate(self.experiment_queues):
@@ -347,7 +353,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         self.info('Starting automated runs set= Set{}'.format(iexp))
 
-        self.set_selector.selected_index = iexp - 1
+#        self.set_selector.selected_index = iexp - 1
         exp._alive = True
 
         self.db.reset()
@@ -356,7 +362,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self.info('saving experiment {} to database'.format(exp.name))
 
         self.db.add_experiment(exp.name)
-        self.db.flush()
+        self.db.commit()
 
         rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0
@@ -367,7 +373,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             force_delay = False
 
             # check for mods
-            if self.check_for_file_mods():
+            if self._check_for_file_mods():
                 self._reload_from_disk()
                 cnt = 0
                 self.info('the experiment set was modified')
@@ -383,9 +389,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
             runargs = None
             try:
-                if cnt >= self.max_allowable_runs:
-                    self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self.max_allowable_runs))
-                    break
+#                if cnt >= self.max_allowable_runs:
+#                    self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self.max_allowable_runs))
+#                    break
 
                 runspec = rgen.next()
                 if not runspec.skip:
@@ -405,6 +411,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 else:
                     t.join()
 
+                self.debug('current run finished')
                 if self.isAlive():
                     totalcnt += 1
                     if run.analysis_type.startswith('blank'):
@@ -643,6 +650,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def _get_all_automated_runs(self):
         ans = super(ExperimentExecutor, self)._get_all_automated_runs()
+
         startid = 0
         exp = self.experiment_queue
         if exp and exp._cached_runs:
@@ -682,8 +690,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 self.new_run_gen_needed = True
                 self.save_enabled = True
 
-    def _load_experiment_queue_hook(self):
-        self.executable = all([ei.executable for ei in self.experiment_queues])
+#    def _load_experiment_queue_hook(self):
+#        self.executable = all([ei.executable for ei in self.experiment_queues])
 
 #===============================================================================
 # handlers
@@ -723,8 +731,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 self.stats.calculate()
 #            self.experiment_queue.selected = sel#[self.selected]
 
-    def _execute_button_fired(self):
-        self._execute()
+#    def _execute_button_fired(self):
+#        self._execute()
 
     def _truncate_button_fired(self):
         self.experiment_queue.truncate_run(self.truncate_style)
@@ -844,18 +852,19 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                                  default_color='limegreen'
                                  )
 
-    def _set_selector_default(self):
-        s = SetSelector(
-                        experiment_manager=self,
-                        # experiment_sets=self.experiment_sets,
-                        editable=False
-                        )
-
-        return s
+#    def _set_selector_default(self):
+#        s = SetSelector(
+#                        experiment_manager=self,
+#                        # experiment_sets=self.experiment_sets,
+#                        editable=False
+#                        )
+#
+#        return s
 
     def _monitor_factory(self):
         mon = None
         isok = True
+        self.debug('mode={}'.format(self.mode))
         if self.mode == 'client':
             ip = InitializationParser()
             exp = ip.get_plugin('Experiment', category='general')
