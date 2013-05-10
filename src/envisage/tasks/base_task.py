@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from traits.api import HasTraits, Str
+from traits.api import Any
 # from traitsui.api import View, Item
 from pyface.tasks.task import Task
 from pyface.tasks.action.schema import SMenu, SMenuBar
@@ -68,29 +68,45 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
 class BaseTask(Task):
     def _menu_bar_default(self):
         return self._menu_bar_factory()
-
-    def _menu_bar_factory(self, menus=None):
-        if menus is None:
-            menus = tuple()
-
-        file_menu = SMenu(id='File', name='&File')
-        tools_menu = SMenu(id='Tools', name='&Tools')
-        extraction_menu = SMenu(id='Extraction', name='&Extraction')
-
+    def _view_menu(self):
         view_menu = SMenu(
 #                          TaskToggleGroup(),
                           myTaskWindowLaunchGroup(),
 #                          TaskWindowToggleGroup(),
                           id='View', name='&View')
+        return view_menu
+
+    def _edit_menu(self):
         edit_menu = SMenu(id='Edit', name='&Edit')
+        return edit_menu
+
+    def _file_menu(self):
+        file_menu = SMenu(id='File', name='&File')
+        return file_menu
+
+    def _tools_menu(self):
+        tools_menu = SMenu(id='Tools', name='&Tools')
+        return tools_menu
+
+class BaseManagerTask(BaseTask):
+    def _menu_bar_factory(self, menus=None):
+        if menus is None:
+            menus = tuple()
 
         mb = SMenuBar(
-                      file_menu,
-                      view_menu,
-                      edit_menu,
-                      tools_menu,
-                      extraction_menu,
+                      self._file_menu(),
+                      self._view_menu(),
+                      self._edit_menu(),
+                      self._tools_menu(),
                       *menus
                       )
         return mb
+
+class BaseHardwareTask(BaseManagerTask):
+    def _menu_bar_factory(self, menus=None):
+        extraction_menu = SMenu(id='Extraction', name='&Extraction')
+        return super(BaseHardwareTask, self)._menu_bar_factory(menus=[extraction_menu])
+# class BaseManagerTask(BaseTask):
+#    manager = Any
+
 #============= EOF =============================================

@@ -15,46 +15,31 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
-from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane, \
-    ExplanationPane
-from pyface.tasks.task_layout import TaskLayout, PaneItem
-from src.envisage.tasks.base_task import BaseHardwareTask
-from pyface.tasks.action.schema import SMenu
-from src.extraction_line.tasks.extraction_line_actions import RefreshCanvasAction
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from src.envisage.tasks.base_task import BaseManagerTask
+from src.experiment.tasks.experiment_panes import AnalysesPane, \
+    ExperimentFactoryPane
+from pyface.tasks.task_layout import PaneItem, TaskLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ExtractionLineTask(BaseHardwareTask):
-    id = 'pychron.extraction_line'
-    name = 'Extraction Line'
+class ExperimentEditorTask(BaseManagerTask):
+    def _menu_bar_factory(self, menus=None):
+        menus = []
+        return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
 
     def _default_layout_default(self):
-        return TaskLayout(top=PaneItem('extraction_line.gauges')
+        return TaskLayout(left=PaneItem('experiment_factory')
                           )
 
-    def _menu_bar_default(self):
-#
-        menus = [SMenu(
-                       RefreshCanvasAction(),
-                       id='ExtractionLine', name='ExtractionLine')
-                 ]
-        mm = self._menu_bar_factory(menus)
-        return mm
-
-    def activated(self):
-        self.manager.activate()
-
-#    def prepare_destroy(self):
-#        print 'deeeee'
-
     def create_central_pane(self):
-        g = CanvasPane(model=self.manager)
-        return g
+        return AnalysesPane(model=self.manager)
 
     def create_dock_panes(self):
-        panes = [GaugePane(model=self.manager),
-                 ExplanationPane(model=self.manager)
-                 ]
-        return panes
+        return [
+                ExperimentFactoryPane(model=self.manager)
+
+                ]
+
 #============= EOF =============================================

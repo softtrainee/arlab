@@ -39,7 +39,7 @@ class ExperimentEditor(ExperimentManager):
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
+#    def traits_view(self):
 #        factory_grp = UItem('experiment_factory',
 #                            style='custom',
 #                            width=0.35,
@@ -97,9 +97,9 @@ class ExperimentEditor(ExperimentManager):
 # #                 handler=SaveableManagerHandler,
 #                 title='Experiment'
 #                 )
-        factory_grp = VGroup(Item('foo'), Item('boo'))
-        v = View(factory_grp)
-        return v
+# #        factory_grp = VGroup(Item('foo'), Item('boo'))
+# #        v = View(factory_grp)
+#        return v
 
     def _experiment_queue_changed(self):
         eq = self.experiment_queue

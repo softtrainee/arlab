@@ -23,7 +23,7 @@ from PySide.QtCore import QRect, QPoint, QSize
 
 class MProgressDialog(ProgressDialog):
     show_percent = True
-
+    show_time = True
     def get_value(self):
         if self.progress_bar:
             return self.progress_bar.value()

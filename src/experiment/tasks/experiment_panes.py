@@ -15,34 +15,33 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item
-# from pyface.tasks.task import Task
-from src.hardware.tasks.hardware_pane import CurrentDevicePane, DevicesPane, InfoPane
-from pyface.tasks.task_layout import PaneItem, TaskLayout, VSplitter
-from src.envisage.tasks.base_task import BaseHardwareTask
+from traits.api import HasTraits
+from traitsui.api import View, Item, UItem, VGroup
+from pyface.tasks.traits_task_pane import TraitsTaskPane
+from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class HardwareTask(BaseHardwareTask):
-    id = 'pychron.hardware'
-    name = 'Hardware'
+class AnalysesPane(TraitsTaskPane):
+    def traits_view(self):
+        v = View(
+                 UItem('experiment_queue', style='custom'),
+                 )
+        return v
+
+class ExperimentFactoryPane(TraitsDockPane):
+    id = 'experiment_factory'
+    name = 'Experiment Editor'
+    def traits_view(self):
+        v = View(
+                 VGroup(
+                        Item('object.experiment_factory.queue_factory.username'),
+                        Item('object.experiment_factory.queue_factory.delay_before_analyses'),
+                        Item('object.experiment_factory.queue_factory.delay_between_analyses')
+                        ),
+                 UItem('experiment_factory', style='custom'),
+                 )
+        return v
 
 
-    def _default_layout_default(self):
-        l = TaskLayout(left=VSplitter(
-                                      PaneItem('hardware.devices'),
-                                      PaneItem('hardware.info')
-                          )
-                       )
-        return l
-
-    def create_central_pane(self):
-        pane = CurrentDevicePane(model=self.manager)
-        return pane
-
-    def create_dock_panes(self):
-        return [DevicesPane(model=self.manager),
-                InfoPane(model=self.manager)
-                ]
 #============= EOF =============================================

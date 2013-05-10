@@ -15,18 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List
+from traits.api import List, Str
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
-from src.lasers.tasks.laser_task import FusionsDiodeTask
+from src.lasers.tasks.laser_task import FusionsDiodeTask, FusionsCO2Task
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.helpers.parsers.initialization_parser import InitializationParser
 import os
 from src.paths import paths
-from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane
+from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane, \
+    FusionsCO2PreferencesPane
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
-from src.lasers.tasks.laser_actions import OpenScannerAction
+from src.lasers.tasks.laser_actions import OpenScannerAction, \
+    OpenAutoTunerAction
+from traits.util.camel_case import camel_case_to_python
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -106,41 +109,68 @@ class BaseLaserPlugin(BaseTaskPlugin):
     def _get_manager(self):
         return self.application.get_service(ILaserManager, 'name=="{}"'.format(self.name))
 
+    def _preferences_default(self):
+        root = paths.preferences_dir
+        path = os.path.join(root, 'preferences.ini')
+        if not os.path.isfile(path):
+            with open(path, 'w'):
+                pass
+        return ['file://{}'.format(path)]
+
 class FusionsPlugin(BaseLaserPlugin):
-    pass
+    task_name = Str
+    def _tasks_default(self):
+        return [TaskFactory(id=self.id,
+                            factory=self._task_factory,
+                            name=self.task_name
+                            )
+                ]
+
+
+class FusionsCO2Plugin(FusionsPlugin):
+    id = 'pychron.fusions.co2'
+    name = 'fusions_co2'
+    klass = ('src.lasers.laser_managers.fusions_co2_manager', 'FusionsCO2Manager')
+    task_name = 'Fusions CO2'
+    def _task_factory(self):
+        t = FusionsCO2Task(manager=self._get_manager())
+        return t
+
+    def _preferences_panes_default(self):
+        return [FusionsCO2PreferencesPane]
+
 
 class FusionsDiodePlugin(FusionsPlugin):
     id = 'pychron.fusions.diode'
     name = 'fusions_diode'
     klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
-
+    task_name = 'Fusions Diode'
     def _my_task_extensions_default(self):
-        def factory():
+        def factory_scan():
             return OpenScannerAction(self._get_manager())
+        def factory_tune():
+            return OpenAutoTunerAction(self._get_manager())
 
-        return [TaskExtension(actions=[SchemaAddition(id='open_scan',
-                                                        factory=factory,
+        return [TaskExtension(actions=[
+                                       SchemaAddition(id='open_scan',
+                                                        factory=factory_scan,
 #                                                      factory=OpenScannerAction,
 #                                                      factory=OpenFlagManagerAction,
-                                                        path='MenuBar/Extraction'), ])]
+                                                        path='MenuBar/Extraction'),
+                                       SchemaAddition(id='open_autotune',
+                                                        factory=factory_tune,
+#                                                      factory=OpenScannerAction,
+#                                                      factory=OpenFlagManagerAction,
+                                                        path='MenuBar/Extraction'),
+                                       ]
+                              )
+                ]
 
-    def _preferences_default(self):
-        root = paths.preferences_dir
-        path = os.path.join(root, 'preferences.ini')
-        if not os.path.isfile(path):
-            with open(path, 'w') as fp:
-                pass
-        return ['file://{}'.format(path)]
+
 
     def _preferences_panes_default(self):
         return [FusionsDiodePreferencesPane]
 
-    def _tasks_default(self):
-        return [TaskFactory(id='tasks.fusions.diode',
-                            factory=self._task_factory,
-                            name='Fusions Diode'
-                            )
-                ]
 
     def _task_factory(self):
 #        print self._get_manager()

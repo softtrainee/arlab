@@ -15,34 +15,37 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
+from traits.api import HasTraits
 from traitsui.api import View, Item
-# from pyface.tasks.task import Task
-from src.hardware.tasks.hardware_pane import CurrentDevicePane, DevicesPane, InfoPane
-from pyface.tasks.task_layout import PaneItem, TaskLayout, VSplitter
-from src.envisage.tasks.base_task import BaseHardwareTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class HardwareTask(BaseHardwareTask):
-    id = 'pychron.hardware'
-    name = 'Hardware'
+'''
+    http://stackoverflow.com/questions/10991991/pyside-easier-way-of-updating-gui-from-another-thread
+'''
+
+from PySide import QtCore
+
+class InvokeEvent(QtCore.QEvent):
+    EVENT_TYPE = QtCore.QEvent.Type(QtCore.QEvent.registerEventType())
+
+    def __init__(self, fn, *args, **kwargs):
+        QtCore.QEvent.__init__(self, InvokeEvent.EVENT_TYPE)
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
 
 
-    def _default_layout_default(self):
-        l = TaskLayout(left=VSplitter(
-                                      PaneItem('hardware.devices'),
-                                      PaneItem('hardware.info')
-                          )
-                       )
-        return l
+class Invoker(QtCore.QObject):
+    def event(self, event):
+        event.fn(*event.args, **event.kwargs)
 
-    def create_central_pane(self):
-        pane = CurrentDevicePane(model=self.manager)
-        return pane
+        return True
 
-    def create_dock_panes(self):
-        return [DevicesPane(model=self.manager),
-                InfoPane(model=self.manager)
-                ]
+_invoker = Invoker()
+
+
+def invoke_in_main_thread(fn, *args, **kwargs):
+    QtCore.QCoreApplication.postEvent(_invoker,
+        InvokeEvent(fn, *args, **kwargs))
 #============= EOF =============================================

@@ -26,12 +26,15 @@ from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 class BaseLaserAction(Action):
     manager_name = None
     def _get_manager(self, event, app=None):
-        if app is None:
-            app = event.task.window.application
+        if self.manager is not None:
+            manager = self.manager
+        else:
+            if app is None:
+                app = event.task.window.application
 
-        manager = app.get_service(ILaserManager,
-                                  'name=="{}"'.format(self.manager_name),
-                                  )
+            manager = app.get_service(ILaserManager,
+                                      'name=="{}"'.format(self.manager_name),
+                                      )
         return manager
 
 class LocalLaserAction(BaseLaserAction):
@@ -43,6 +46,8 @@ class LocalLaserAction(BaseLaserAction):
         if isinstance(manager, PychronLaserManager) and not self.client_action:
             self.enabled = False
 
+        self.manager = manager
+
 class OpenScannerAction(LocalLaserAction):
     name = 'Open Scanner...'
     accelerator = 'Ctrl+T'
@@ -50,4 +55,13 @@ class OpenScannerAction(LocalLaserAction):
         manager = self._get_manager(event)
         if manager is not None:
             manager.open_scanner()
+
+
+class OpenAutoTunerAction(LocalLaserAction):
+    name = 'Open AutoTuner...'
+    # accelerator = 'Ctrl+T'
+    def perform(self, event):
+        manager = self._get_manager(event)
+        if manager is not None:
+            manager.open_autotuner()
 #============= EOF =============================================

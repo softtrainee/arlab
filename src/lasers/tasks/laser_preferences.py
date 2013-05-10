@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Bool, Str, Enum, File, Int, Directory, \
     Color, Range
 from traitsui.api import View, UItem, Item, VGroup, HGroup, Group
-from apptools.preferences.api import PreferencesHelper
+# from apptools.preferences.api import PreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 #============= standard library imports ========================
@@ -188,18 +188,17 @@ class FusionsLaserPreferencesPane(PreferencesPane):
 
         patgrp = Group(Item('record_patterning'),
                        Item('show_patterning'), label='Pattern')
-        powergrp = self.get_power_group()
-        return [canvasgrp, videogrp,
-#                 patgrp, powergrp
-                 ]
-
-    def get_power_group(self):
         powergrp = Group(
                         Item('record_lasing_power'),
                         Item('use_calibrated_power'),
                          label='Power')
-        return powergrp
+        return [canvasgrp, videogrp,
+                 patgrp, powergrp
+                 ]
+
 
 class FusionsDiodePreferencesPane(FusionsLaserPreferencesPane):
+    pass
+class FusionsCO2PreferencesPane(FusionsLaserPreferencesPane):
     pass
 #============= EOF =============================================

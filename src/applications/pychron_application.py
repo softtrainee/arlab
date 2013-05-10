@@ -25,26 +25,32 @@ from pyface.image_resource import ImageResource
 #============= local library imports  ==========================
 # from src.loggable import Loggable
 import os
-from pyface.tasks.task_window_layout import TaskWindowLayout
+# from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.base_tasks_application import BaseTasksApplication
-from src.lasers.tasks.laser_preferences import FusionsLaserPreferences
+# from src.lasers.tasks.laser_preferences import FusionsLaserPreferences
 
-class Pychron(BaseTasksApplication):
+class PychronApplication(BaseTasksApplication):
     '''
     '''
-    id = 'tasks.pychron.diode'
-    name = 'pyDiode'
-
-    default_layout = [
-                      TaskWindowLayout(
-                                       'tasks.hardware',
-                                       size=(700, 500)),
-                      TaskWindowLayout(
-#                                       'pychron.extraction_line',
-#                                       'pychron.hardware',
-                                       'tasks.fusions.diode',
-                                       size=(1150, 650)),
-                       ]
+#    id = 'tasks.pychron.diode'
+#    name = 'pyDiode'
+#
+#    default_layout = [
+# #                      TaskWindowLayout(
+# #                                       'tasks.hardware',
+# #                                       size=(700, 500)),
+# #                      TaskWindowLayout(
+# #                                        'pychron.extraction_line',),
+#                      TaskWindowLayout(
+#                                        'pychron.experiment',),
+#
+# #                      TaskWindowLayout(
+# # #                                       'pychron.extraction_line',
+# # #                                       'pychron.hardware',
+# #                                       'pychron.fusions.diode',
+# #                                       'pychron.fusions.co2',
+# #                                       size=(1150, 650)),
+#                       ]
 
 
     def _about_dialog_default(self):

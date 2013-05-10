@@ -741,64 +741,64 @@ class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
 
 
-class AnnotatedRegressionGraph(HasTraits):
-    klass = RegressionGraph
-    graph = Instance(RegressionGraph)
-    display = Instance(RichTextDisplay)
-
-    graph_dict = Dict
-    display_dict = Dict
-#===============================================================================
-#  view attrs
-#===============================================================================
-    window_width = 500
-    window_height = 500
-    window_x = 20
-    window_y = 20
-    window_title = ' '
-    def __init__(self, graph_dict=None, display_dict=None, *args, **kw):
-        if graph_dict:
-            self.graph_dict = graph_dict
-        if display_dict:
-            self.display_dict = display_dict
-        super(AnnotatedRegressionGraph, self).__init__(*args, **kw)
-
-    @on_trait_change('graph:regression_results')
-    def _update_display(self, new):
-        if new:
-            disp = self.display
-            disp.clear()
-            for ri in new:
-                eq = ri.make_equation()
-                if eq:
-                    # mean regressor doesnt display an equation
-                    self.display.add_text(eq)
-
-                self.display.add_text(ri.tostring())
-
-    def traits_view(self):
-        v = View(Item('graph', show_label=False, style='custom'),
-               Item('display', show_label=False, style='custom'),
-               resizable=True,
-               x=self.window_x,
-               y=self.window_y,
-               width=self.window_width,
-               height=self.window_height,
-               title=self.window_title
-               )
-        return v
-
-    def _graph_default(self):
-        return self.klass(**self.graph_dict)
-
-    def _display_default(self):
-        d = RichTextDisplay(height=100,
-                            width=200,
-                            default_color='black', default_size=12)
-        return d
-
-class AnnotatedRegresssionTimeSeriesGraph(AnnotatedRegressionGraph):
-    klass = RegressionTimeSeriesGraph
+# class AnnotatedRegressionGraph(HasTraits):
+#    klass = RegressionGraph
+#    graph = Instance(RegressionGraph)
+#    display = Instance(RichTextDisplay)
+#
+#    graph_dict = Dict
+#    display_dict = Dict
+##===============================================================================
+# #  view attrs
+##===============================================================================
+#    window_width = 500
+#    window_height = 500
+#    window_x = 20
+#    window_y = 20
+#    window_title = ' '
+#    def __init__(self, graph_dict=None, display_dict=None, *args, **kw):
+#        if graph_dict:
+#            self.graph_dict = graph_dict
+#        if display_dict:
+#            self.display_dict = display_dict
+#        super(AnnotatedRegressionGraph, self).__init__(*args, **kw)
+#
+#    @on_trait_change('graph:regression_results')
+#    def _update_display(self, new):
+#        if new:
+#            disp = self.display
+#            disp.clear()
+#            for ri in new:
+#                eq = ri.make_equation()
+#                if eq:
+#                    # mean regressor doesnt display an equation
+#                    self.display.add_text(eq)
+#
+#                self.display.add_text(ri.tostring())
+#
+#    def traits_view(self):
+#        v = View(Item('graph', show_label=False, style='custom'),
+#               Item('display', show_label=False, style='custom'),
+#               resizable=True,
+#               x=self.window_x,
+#               y=self.window_y,
+#               width=self.window_width,
+#               height=self.window_height,
+#               title=self.window_title
+#               )
+#        return v
+#
+#    def _graph_default(self):
+#        return self.klass(**self.graph_dict)
+#
+#    def _display_default(self):
+#        d = RichTextDisplay(height=100,
+#                            width=200,
+#                            default_color='black', default_size=12)
+#        return d
+#
+# class AnnotatedRegresssionTimeSeriesGraph(AnnotatedRegressionGraph):
+#    klass = RegressionTimeSeriesGraph
 
 if __name__ == '__main__':
 

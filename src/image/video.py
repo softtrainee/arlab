@@ -104,7 +104,7 @@ class Video(Image):
         '''
   
         '''
-        if force:
+        if force and self.cap:
             if not isinstance(self.cap, int):
                 self.cap.release()
             self.cap = None

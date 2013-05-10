@@ -75,7 +75,7 @@ class BaseLaserManager(Manager):
         pass
 
     def enable_device(self):
-        self.enable_laser()
+        return self.enable_laser()
 
     def disable_device(self):
         self.disable_laser()
@@ -376,26 +376,25 @@ class LaserManager(BaseLaserManager):
 #===============================================================================
 # views
 #===============================================================================
-    def get_stage_group(self):
-        return Item('stage_manager', height=0.70, style='custom', show_label=False)
-
-    def get_control_group(self):
-        return VGroup()
-
+#    def get_stage_group(self):
+#        return Item('stage_manager', height=0.70, style='custom', show_label=False)
+#
+#    def get_control_group(self):
+#        return VGroup()
     def get_unique_view_id(self):
         return 'pychron.{}'.format(self.__class__.__name__.lower())
 
-    def get_control_buttons(self):
-        '''
-        '''
-        return [('enable', 'enable_label', None)
-                ]
-
-    def get_control_items(self):
-        pass
-
-    def get_additional_controls(self, *args):
-        pass
+#    def get_control_buttons(self):
+#        '''
+#        '''
+#        return [('enable', 'enable_label', None)
+#                ]
+#
+#    def get_control_items(self):
+#        pass
+#
+#    def get_additional_controls(self, *args):
+#        pass
 
     def get_power_slider(self):
         '''
@@ -427,7 +426,7 @@ class LaserManager(BaseLaserManager):
 #                    )
 
 #===============================================================================
-# ##handlers
+# handlers
 #===============================================================================
     @on_trait_change('stage_manager:canvas:current_position')
     def update_status_bar(self, obj, name, old, new):
