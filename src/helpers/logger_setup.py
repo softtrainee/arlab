@@ -112,22 +112,22 @@ def logging_setup(name, **kw):
         shutil.copyfile(logpath, backup_logpath)
         os.remove(logpath)
 
-#    if sys.version.split(' ')[0] < '2.4.0':
-#        logging.basicConfig()
-#    else:
+    if sys.version.split(' ')[0] < '2.4.0':
+        logging.basicConfig()
+    else:
 #        return
 #
-#        root = logging.getLogger()
-#        shandler = logging.StreamHandler()
+        root = logging.getLogger()
+        shandler = logging.StreamHandler()
 #
 # #        global rhandler
-# #        rhandler = logging.handlers.RotatingFileHandler(
-# #              logpath, maxBytes=1e7, backupCount=5)
+        rhandler = logging.handlers.RotatingFileHandler(
+               logpath, maxBytes=1e7, backupCount=5)
 #
-#        for hi in [shandler, rhandler]:
-#            hi.setLevel(gLEVEL)
-#            hi.setFormatter(logging.Formatter(gFORMAT))
-#            root.addHandler(hi)
+        for hi in [shandler, rhandler]:
+            hi.setLevel(gLEVEL)
+            hi.setFormatter(logging.Formatter(gFORMAT))
+            root.addHandler(hi)
 
 #    new_logger('main')
 
@@ -145,9 +145,9 @@ def new_logger(name):
 #    print name
     l.setLevel(gLEVEL)
 
-    handler = logging.StreamHandler(stream=sys.stdout)
-    handler.setFormatter(logging.Formatter(gFORMAT))
-    l.addHandler(handler)
+#    handler = logging.StreamHandler(stream=sys.stdout)
+#    handler.setFormatter(logging.Formatter(gFORMAT))
+#    l.addHandler(handler)
 
     return l
 #    '''

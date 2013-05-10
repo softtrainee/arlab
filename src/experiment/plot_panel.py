@@ -21,7 +21,6 @@ from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
 
-# from src.displays.rich_text_display import DisplayModel
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
 from pyface.timer.do_later import do_later
@@ -29,7 +28,7 @@ from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
 from src.helpers.formatting import floatfmt
-from src.displays.display import DisplayModel
+from src.displays.display import DisplayController
 
 #============= standard library imports ========================
 # from numpy import Inf
@@ -61,10 +60,10 @@ class PlotPanel(Viewable):
     stack_order = 'bottom_to_top'
     series_cnt = 0
 
-    ratio_display = Instance(DisplayModel)
-    signal_display = Instance(DisplayModel)
-    summary_display = Instance(DisplayModel)
-    fit_display = Instance(DisplayModel)
+    ratio_display = Instance(DisplayController)
+    signal_display = Instance(DisplayController)
+    summary_display = Instance(DisplayController)
+    fit_display = Instance(DisplayController)
 
     signals = Dict
     baselines = Dict
@@ -425,10 +424,10 @@ class PlotPanel(Viewable):
         return [d.isotope for d in self.detectors]
 
     def _display_factory(self):
-        return  RichTextDisplay(height=HEIGHT,
+        return  DisplayController(height=HEIGHT,
                                default_color='black',
                                default_size=12,
-                               scroll_to_bottom=False,
+#                               scroll_to_bottom=False,
                                bg_color='#FFFFCC'
                                )
 #===============================================================================

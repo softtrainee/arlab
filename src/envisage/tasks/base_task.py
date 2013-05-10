@@ -68,6 +68,7 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
 class BaseTask(Task):
     def _menu_bar_default(self):
         return self._menu_bar_factory()
+
     def _view_menu(self):
         view_menu = SMenu(
 #                          TaskToggleGroup(),

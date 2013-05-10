@@ -41,17 +41,21 @@ class DisplayController(ApplicationController):
     default_color = Color
     default_size = Int
     bg_color = Color
+    def __init__(self, *args, **kw):
+        super(DisplayController, self).__init__(model=DisplayModel(),
+                                                *args, **kw)
 
     def add_text(self, txt, **kw):
-        if 'color' not in kw:
+        if 'color' not in kw or kw['color'] is None:
             kw['color'] = self.default_color
 
         self.model.add_text(txt, **kw)
 
     def traits_view(self):
-        v = View(UItem('messages', editor=DisplayEditor()),
+        v = View(UItem('messages', editor=DisplayEditor(bg_color=self.bg_color)),
                  x=self.x, y=self.y, width=self.width,
-                 height=self.height)
+                 height=self.height,
+                 title=self.title)
         return v
 
     def close_ui(self):

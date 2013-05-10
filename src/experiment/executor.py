@@ -32,7 +32,7 @@ from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
-from src.displays.rich_text_display import RichTextDisplay
+# from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
 from src.helpers.parsers.initialization_parser import InitializationParser
 from src.experiment.set_selector import SetSelector
@@ -44,18 +44,20 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTa
 from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
-from src.experiment.automated_run.automated_run import AutomatedRun
+# from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.factory import AutomatedRunFactory
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.displays.display import DisplayController
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
 
-class ExperimentExecutor(ExperimentManager):
+class ExperimentExecutor(IsotopeDatabaseManager):
     spectrometer_manager = Instance(Manager)
     extraction_line_manager = Instance(Manager)
     ion_optics_manager = Instance(Manager)
     massspec_importer = Instance(MassSpecDatabaseImporter)
-    info_display = Instance(RichTextDisplay)
+    info_display = Instance(DisplayController)
     pyscript_runner = Instance(PyScriptRunner)
     data_manager = Instance(H5DataManager, ())
 
@@ -737,79 +739,79 @@ class ExperimentExecutor(ExperimentManager):
         else:
             self.open_view(lm)
 
-    def traits_view(self):
-        editor = myTabularEditor(adapter=ExecuteAutomatedRunAdapter(),
-                                 dclicked='dclicked',
-                                 right_clicked='right_clicked',
-                                 selected='selected',
-                                 editable=False,
-                                 auto_resize=True,
-                                 multi_select=True,
-                                 auto_update=True,
-                                 scroll_to_bottom=False
-                                 )
-
-        tb = HGroup(
-                    Item('resume_button', enabled_when='object.delaying_between_runs', show_label=False),
-                    Item('delay_between_runs_readback',
-                         label='Delay Countdown',
-                         style='readonly', format_str='%i',
-                         width= -50),
-
-                    spring,
-                    Item('show_sample_map', show_label=False,
-                         enabled_when='object.experiment_queue.sample_map'
-                         ),
-                    spring,
-                    Item('end_at_run_completion'),
-                    Item('truncate_button', show_label=False,
-                         enabled_when='object.measuring'),
-                    Item('truncate_style', show_label=False,
-                         enabled_when='object.measuring'),
-                    self._button_factory('execute_button',
-                                             label='execute_label',
-                                             enabled='executable',
-                                             ))
-        sel_grp = Item('set_selector', show_label=False, style='custom')
-        exc_grp = Group(tb,
-                        HGroup(sel_grp,
-#                               Item('object.experiment_queue.stats',
-                               Item('stats',
-                                   style='custom'),
-                             spring,
-                             Item('info_display',
-                                  style='custom'),
-                               show_labels=False,
-                              ),
-                       show_labels=False,
-                       show_border=True,
-                       label='Execute')
-        v = View(
-#                 sel_grp,
-                 exc_grp,
-                 HGroup(
-                        Item('object.experiment_queue.mass_spectrometer', style='readonly'),
-                        Item('object.experiment_queue.extract_device', style='readonly'),
-                        Item('object.experiment_queue.tray', style='readonly')
-                        ),
-                 Item('object.experiment_queue.automated_runs',
-                      style='custom',
-                      show_label=False,
-                      editor=editor
-                      ),
-                 HGroup(Item('recall_run', enabled_when='recall_enabled'),
-                        Item('edit_run', enabled_when='edit_enabled'),
-                        Item('save_button', enabled_when='save_enabled'),
-                        Item('save_as_button'),
-                        show_labels=False),
-                 statusbar='statusbar',
-                 width=1150,
-                 height=800,
-                 resizable=True,
-                 title=self.title,
-                 handler=self.handler_klass,
-                 )
-        return v
+#    def traits_view(self):
+#        editor = myTabularEditor(adapter=ExecuteAutomatedRunAdapter(),
+#                                 dclicked='dclicked',
+#                                 right_clicked='right_clicked',
+#                                 selected='selected',
+#                                 editable=False,
+#                                 auto_resize=True,
+#                                 multi_select=True,
+#                                 auto_update=True,
+#                                 scroll_to_bottom=False
+#                                 )
+#
+#        tb = HGroup(
+#                    Item('resume_button', enabled_when='object.delaying_between_runs', show_label=False),
+#                    Item('delay_between_runs_readback',
+#                         label='Delay Countdown',
+#                         style='readonly', format_str='%i',
+#                         width= -50),
+#
+#                    spring,
+#                    Item('show_sample_map', show_label=False,
+#                         enabled_when='object.experiment_queue.sample_map'
+#                         ),
+#                    spring,
+#                    Item('end_at_run_completion'),
+#                    Item('truncate_button', show_label=False,
+#                         enabled_when='object.measuring'),
+#                    Item('truncate_style', show_label=False,
+#                         enabled_when='object.measuring'),
+#                    self._button_factory('execute_button',
+#                                             label='execute_label',
+#                                             enabled='executable',
+#                                             ))
+#        sel_grp = Item('set_selector', show_label=False, style='custom')
+#        exc_grp = Group(tb,
+#                        HGroup(sel_grp,
+# #                               Item('object.experiment_queue.stats',
+#                               Item('stats',
+#                                   style='custom'),
+#                             spring,
+#                             Item('info_display',
+#                                  style='custom'),
+#                               show_labels=False,
+#                              ),
+#                       show_labels=False,
+#                       show_border=True,
+#                       label='Execute')
+#        v = View(
+# #                 sel_grp,
+#                 exc_grp,
+#                 HGroup(
+#                        Item('object.experiment_queue.mass_spectrometer', style='readonly'),
+#                        Item('object.experiment_queue.extract_device', style='readonly'),
+#                        Item('object.experiment_queue.tray', style='readonly')
+#                        ),
+#                 Item('object.experiment_queue.automated_runs',
+#                      style='custom',
+#                      show_label=False,
+#                      editor=editor
+#                      ),
+#                 HGroup(Item('recall_run', enabled_when='recall_enabled'),
+#                        Item('edit_run', enabled_when='edit_enabled'),
+#                        Item('save_button', enabled_when='save_enabled'),
+#                        Item('save_as_button'),
+#                        show_labels=False),
+#                 statusbar='statusbar',
+#                 width=1150,
+#                 height=800,
+#                 resizable=True,
+#                 title=self.title,
+#                 handler=self.handler_klass,
+#                 )
+#        return v
 
 #===============================================================================
 # property get/set
@@ -835,13 +837,12 @@ class ExperimentExecutor(ExperimentManager):
 
 #    def _experiment_set_default(self):
 #        return ExperimentSet(db=self.db)
-
+#
     def _info_display_default(self):
-        return  RichTextDisplay(height=300,
-                                width=575,
-                                default_size=12,
-                                bg_color='black',
-                                default_color='limegreen')
+        return DisplayController(
+                                 bg_color='black',
+                                 default_color='limegreen'
+                                 )
 
     def _set_selector_default(self):
         s = SetSelector(

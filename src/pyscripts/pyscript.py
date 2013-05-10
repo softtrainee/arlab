@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Str, Any, Bool, DelegatesTo, Dict, Property
 from pyface.timer.do_later import do_later
-from pyface.confirmation_dialog import confirm# from pyface.wx.dialog import confirmation
+from pyface.confirmation_dialog import confirm  # from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
 import time
 import os
@@ -92,7 +92,7 @@ def verbose_skip(func):
                                                                                            args, kw))
 #        if obj.testing_syntax or obj._cancel:
 #            return
-        if obj._cancel:
+        if obj.testing_syntax or obj._cancel:
             return
 
         obj.debug('{} {} {}'.format(fname, args, kw))
@@ -218,28 +218,28 @@ class PyScript(Loggable):
             return _ex_()
 
     def test(self):
+        if not self.syntax_checked:
+            self.testing_syntax = True
+            self._syntax_error = True
 
-        self.testing_syntax = True
-        self._syntax_error = True
+            self.info('testing syntax')
 
-        self.info('testing syntax')
+            r = self._execute()
 
-        r = self._execute(test=True)
+            if r is not None:
+                self.info('invalid syntax')
+                ee = PyscriptError(self.filename, r)
+                raise ee
 
-        if r is not None:
-            self.info('invalid syntax')
-            ee = PyscriptError(self.filename, r)
-            raise ee
+            elif not self._interval_stack.empty():
+                raise IntervalError()
 
-        elif not self._interval_stack.empty():
-            raise IntervalError()
+            else:
+                self.info('syntax checking passed')
+                self._syntax_error = False
 
-        else:
-            self.info('syntax checking passed')
-            self._syntax_error = False
-
-        self.syntax_checked = True
-        self.testing_syntax = False
+            self.syntax_checked = True
+            self.testing_syntax = False
 
     def compile_snippet(self, snippet):
         try:
@@ -253,7 +253,7 @@ class PyScript(Loggable):
 
     def execute_snippet(self, snippet):
         safe_dict = self.get_context()
-        code_or_err = self._compile_snippet(snippet)
+        code_or_err = self.compile_snippet(snippet)
         if not isinstance(code_or_err, Exception):
             try:
                 exec code_or_err in safe_dict
@@ -539,7 +539,10 @@ class PyScript(Loggable):
 #===============================================================================
     def _cancel_flag_changed(self, v):
         if v:
-            result = confirmation(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
+            result = confirm(None,
+                             'Are you sure you want to cancel {}'.format(self.logger_name),
+                             title='Cancel Script')
+#            result = confirmation(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
             if result != 5104:
                 self.cancel()
             else:
