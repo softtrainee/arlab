@@ -34,6 +34,8 @@ class BaseTaskPlugin(Plugin):
     preferences_panes = List(
         contributes_to='envisage.ui.tasks.preferences_panes')
 
+    managers = List(contributes_to='pychron.hardware.managers')
+
     def _preferences_panes_default(self):
         return []
 

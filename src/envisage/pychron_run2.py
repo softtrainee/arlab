@@ -81,7 +81,7 @@ PACKAGE_DICT = dict(
 #                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
 #                   SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
 
-#                   SpectrometerPlugin='src.spectrometer.plugins.spectrometer_plugin',
+                   SpectrometerPlugin='src.spectrometer.tasks.spectrometer_plugin',
 #                   SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
 
 #                   GraphPlugin='src.graph.plugins.graph_plugin',

@@ -29,7 +29,6 @@ from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction
 class ExtractionLinePlugin(BaseTaskPlugin):
     id = 'pychron.extraction_line.plugin'
 
-    managers = List(contributes_to='pychron.hardware.managers')
 
 #    manager = Instance(ExtractionLineManager)
     def _service_offers_default(self):

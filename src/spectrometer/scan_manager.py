@@ -29,8 +29,8 @@ import pickle
 from src.managers.manager import Manager
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.spectrometer.detector import Detector
-from src.spectrometer.tasks.magnet_scan import MagnetScan
-from src.spectrometer.tasks.rise_rate import RiseRate
+from src.spectrometer.jobs.magnet_scan import MagnetScan
+from src.spectrometer.jobs.rise_rate import RiseRate
 from src.paths import paths
 # from src.graph.tools.data_tool import DataTool, DataToolOverlay
 # import csv

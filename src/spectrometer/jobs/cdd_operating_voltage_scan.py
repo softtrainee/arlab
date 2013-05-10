@@ -23,7 +23,7 @@ import numpy as np
 from ConfigParser import ConfigParser
 import os
 #============= local library imports  ==========================
-from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
+from src.spectrometer.jobs.spectrometer_task import SpectrometerTask
 from src.graph.graph import Graph
 from src.time_series.time_series import smooth
 from globals import globalv

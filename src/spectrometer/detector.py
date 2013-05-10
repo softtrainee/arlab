@@ -28,6 +28,7 @@ from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
 import wx
 from src.constants import NULL_STR
+from src.ui.qt.color_square_editor import ColorSquareEditor
 
 
 charge = 1.6021764874e-19
@@ -125,22 +126,35 @@ class Detector(SpectrometerDevice):
         c[-1] -= dac
         return optimize.newton(poly1d(c), 1)
 
-    def color_square_factory(self, width=10, height=10):
-        def color_factory(window, editor):
-            panel = wx.Panel(window,
-                           - 1,
-                           size=(width, height)
-                           )
-            panel.SetBackgroundColour(self.color)
-            return panel
-        return color_factory
+#    def color_square_factory(self, width=10, height=10):
+#        def color_factory(window, editor):
+# #            panel = wx.Panel(window,
+# #                           - 1,
+# #                           size=(width, height)
+# #                           )
+# #            panel.SetBackgroundColour(self.color)
+#            from PySide.QtGui import QWidget, QPalette, QLabel
+#            panel = QLabel()
+#
+#            panel.setFixedWidth(width)
+#            panel.setFixedHeight(height)
+# #            panel.setGeometry(0, 0, width, height)
+#            p = QPalette()
+#            p.setColor(QPalette.Base, self.color)
+#            panel.setPalette(p)
+#            print self.color
+#            return panel
+#
+#        return color_factory
 
     def intensity_view(self):
         v = View(HGroup(
                         Item('name', style='readonly'),
                         spring,
-                        Item('color_square',
-                             editor=CustomEditor(factory=self.color_square_factory()),
+                        Item('color',
+                             editor=ColorSquareEditor(),
+#                             editor=CustomEditor(factory=self.color_square_factory()),
+                             width=20,
                              show_label=False
                              ),
                         Spring(width=50, springy=False),
@@ -166,8 +180,10 @@ class Detector(SpectrometerDevice):
 #                                     ),
                                 Item('active',),
                                 Item('deflection'),
-                                Item('color_square',
-                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
+                                Item('color',
+                                     width=40,
+                                     editor=ColorSquareEditor(),
+#                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
                                      ),
                                 show_labels=False
                                 )
