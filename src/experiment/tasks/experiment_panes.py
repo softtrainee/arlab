@@ -17,11 +17,37 @@
 #============= enthought library imports =======================
 # from traits.api import HasTraits
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor
+    ButtonEditor, EnumEditor, UCustom, Group, Spring
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
+from src.experiment.utilities.identifier import SPECIAL_NAMES
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+
+def CBItem(name, maker,**kw):
+
+
+    return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
+                                          visible_when=maker('cbs_enabled')
+                                          ),
+
+                  )
+    
+def make_qf_name(name):
+            return 'object.queue_factory.{}'.format(name)
+        
+def make_rf_name(name):
+    return 'object.run_factory.{}'.format(name)
+
+def QFItem(name, **kw):
+    return Item(make_qf_name(name), **kw)
+
+def RFItem(name, **kw):
+    return Item(make_rf_name(name), **kw)
+
+def RF_CBItem(name,**kw):
+    return CBItem(name, make_rf_name,**kw)
 
 class AnalysesPane(TraitsTaskPane):
     def traits_view(self):
@@ -34,15 +60,153 @@ class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
     name = 'Experiment Editor'
     def traits_view(self):
+        
+        
         v = View(
                  VGroup(
-                        Item('object.experiment_factory.queue_factory.username'),
-                        Item('object.experiment_factory.queue_factory.delay_before_analyses'),
-                        Item('object.experiment_factory.queue_factory.delay_between_analyses')
-                        ),
-                 UItem('experiment_factory', style='custom'),
+                     VGroup(
+                            QFItem('username'),
+                            QFItem('mass_spectrometer',
+                                 editor=EnumEditor(name=make_qf_name('mass_spectrometers')),
+                             ),
+                            QFItem('extract_device',
+                                 editor=EnumEditor(name=make_qf_name('extract_devices')),
+                             ),
+                            QFItem('delay_before_analyses'),
+                            QFItem('delay_between_analyses')
+                            ), 
+                     
+                     HGroup(UItem('add_button', enabled_when='ok_add'), spring),
+                     
+    #                  UCustom('run_factory', enabled_when='ok_run'),
+                     Group(
+                          self._get_info_group(),
+                          layout='tabbed'),                 
+                     
+                     HGroup(
+                            UItem('add_button', enabled_when='ok_add'),
+                            Item('auto_increment'),
+                            UItem('clear_button',
+                                     tooltip='Clear all runs added using "frequency"'
+                                     )
+                            )
+                        )
                  )
         return v
+    
+    def _get_info_group(self):
+        grp = Group(
+                   RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
+                       ),
+                   HGroup(
+                          RFItem('selected_irradiation',
+                               label='Irradiation',
+                               editor=EnumEditor(name=make_rf_name('irradiations'))),
+                          RFItem('selected_level',
+                               label='Level',
+                               editor=EnumEditor(name=make_rf_name('levels'))),
+                          ),
+
+                   HGroup(RFItem('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
+                               ),
+                          RFItem('frequency')
+                          ),
+                   HGroup(RFItem('labnumber',
+                              tooltip='Enter a Labnumber'
+                              ),
+                          RFItem('_labnumber', show_label=False,
+                              editor=EnumEditor(name=make_rf_name('labnumbers')),
+                              width=100,
+                              ),
+                         ),
+                   RFItem('aliquot'),
+                   RFItem('sample',
+                        tooltip='Sample info retreived from Database',
+                        style='readonly'
+                        ),
+                   RFItem('irradiation',
+                          tooltip='Irradiation info retreived from Database',
+                          style='readonly'
+                          ),
+                   RF_CBItem('weight',
+                        label='Weight (mg)',
+                        tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
+                        ),
+                   RF_CBItem('comment',
+                        tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
+                        ),
+#                       extract_grp,
+                       show_border=True,
+                       label='Info'
+                       )
+        return grp
+
+    def _get_script_group(self):
+        script_grp = VGroup(
+                        Item('extraction_script', style='custom', show_label=False),
+                        Item('measurement_script', style='custom', show_label=False),
+                        Item('post_equilibration_script', style='custom', show_label=False),
+                        Item('post_measurement_script', style='custom', show_label=False),
+                        show_border=True,
+                        label='Scripts'
+                        )
+        return script_grp
+
+    def _get_position_group(self):
+        grp = VGroup(
+ #                         Item('autocenter',
+ #                              tooltip='Should the extract device try to autocenter on the sample'
+ #                              ),
+                         HGroup(CBItem('position',
+                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
+                                     ),
+                                Item('endposition', label='End',
+                                     enabled_when='position'
+                                     )
+                                ),
+ #                         Item('multiposition', label='Multi. position run'),
+                         show_border=True,
+                         label='Position'
+                     )
+        return grp
+
+    def _get_extract_group(self):
+        sspring = lambda width = 17:Spring(springy=False, width=width)
+
+        extract_grp = VGroup(
+                             HGroup(sspring(width=33),
+                                    CBItem('extract_value', label='Extract',
+                                         tooltip='Set the extract value in extract units',
+                                         enabled_when='extractable'
+                                         ),
+                                    CBItem('extract_units',
+                                            show_label=False,
+                                            editor=EnumEditor(name='extract_units_names')),
+                                    spring,
+#                                     Label('Step Heat Template'),
+                                    ),
+                             HGroup(
+                                 Item('template',
+                                       label='Step Heat Template',
+                                       editor=EnumEditor(name='templates')),
+                                 UItem('edit_template',
+                                      editor=ButtonEditor(label_value='edit_template_label')
+                                      )
+                                    ),
+
+                             CBItem('duration', label='Duration (s)',
+                                  tooltip='Set the number of seconds to run the extraction device.'
+
+                                  ),
+                             CBItem('cleanup', label='Cleanup (s)',
+                                  tooltip='Set the number of seconds to getter the sample gas'
+                                  ),
+                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
+                             CBItem('pattern', editor=EnumEditor(name='patterns')),
+                             label='Extract',
+                             show_border=True
+                             )
+        return extract_grp
 
 class StatsPane(TraitsDockPane):
     id = 'pychron.experiment.stats'

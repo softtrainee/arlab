@@ -26,7 +26,8 @@ class PyExperiment(PychronApplication):
     id = 'pychron.experiment.application'
     name = 'pyExperiment'
     default_layout = [
-#                      TaskWindowLayout('pychron.experiment',),
-                      TaskWindowLayout('pychron.spectrometer',),
+                    TaskWindowLayout('tasks.hardware',),
+#                     TaskWindowLayout('pychron.experiment',),
+#                       TaskWindowLayout('pychron.spectrometer',),
                       ]
 #============= EOF =============================================

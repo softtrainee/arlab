@@ -68,18 +68,19 @@ class WindowGroup(Group):
     
     def _make_actions(self, vs):
         items=[]
-        application = self.manager.controller.task.window.application
+        if self.manager.controller.task.window is not None:
+            application = self.manager.controller.task.window.application
         
-        added=[]
-        for vi in application.windows+vs:
-            if not vi.active_task.id in added:
-                checked=vi== application.active_window
-                items.append(ActionItem(action=RaiseAction(window=vi,
-                                                           checked=checked,
-                                                           name=vi.active_task.name
-                                                       )))
-                added.append(vi.active_task.id)
-                
+            added=[]
+            for vi in application.windows+vs:
+                if not vi.active_task.id in added:
+                    checked=vi== application.active_window
+                    items.append(ActionItem(action=RaiseAction(window=vi,
+                                                               checked=checked,
+                                                               name=vi.active_task.name
+                                                           )))
+                    added.append(vi.active_task.id)
+                    
         return items
     
     def _rebuild(self, vs):
