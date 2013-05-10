@@ -46,32 +46,32 @@ class ExperimentQueueFactory(Loggable):
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
-        v = View(VGroup(
-                       Item('username'),
-#                       Item('mass_spectrometer',
-#                            editor=EnumEditor(name='mass_spectrometers'),
-#                            ),
-#                       Item('extract_device',
-#                            editor=EnumEditor(name='extract_devices'),
-#                            ),
-# #                       Item('tray',
-# #                            editor=EnumEditor(name='trays'),
-# #                            tooltip='Select an sample tray for this set'
+#     def traits_view(self):
+#         v = View(VGroup(
+#                        Item('username'),
+# #                       Item('mass_spectrometer',
+# #                            editor=EnumEditor(name='mass_spectrometers'),
 # #                            ),
-
-                       Item('delay_before_analyses',
-#                            tooltip='Set the time in seconds to delay before starting this queue',
-#                            label='Delay before Analyses (s)'
-                            ),
-                       Item('delay_between_analyses',
-#                            tooltip='Set the delay between analysis in seconds',
-#                            label='Delay between Analyses (s)'
-                            ),
-
-                       ),
-                )
-        return v
+# #                       Item('extract_device',
+# #                            editor=EnumEditor(name='extract_devices'),
+# #                            ),
+# # #                       Item('tray',
+# # #                            editor=EnumEditor(name='trays'),
+# # #                            tooltip='Select an sample tray for this set'
+# # #                            ),
+# 
+#                        Item('delay_before_analyses',
+# #                            tooltip='Set the time in seconds to delay before starting this queue',
+# #                            label='Delay before Analyses (s)'
+#                             ),
+#                        Item('delay_between_analyses',
+# #                            tooltip='Set the delay between analysis in seconds',
+# #                            label='Delay between Analyses (s)'
+#                             ),
+# 
+#                        ),
+#                 )
+#         return v
 #===============================================================================
 # property get/set
 #===============================================================================

@@ -46,7 +46,7 @@ class ExperimentEditorTask(BaseManagerTask):
 
     def create_dock_panes(self):
         return [
-                ExperimentFactoryPane(model=self.manager),
+                ExperimentFactoryPane(model=self.manager.experiment_factory),
                 StatsPane(model=self.manager),
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor)

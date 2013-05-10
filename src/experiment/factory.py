@@ -119,24 +119,24 @@ class ExperimentFactory(Loggable):
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
-        grp = VGroup(
-                     HGroup(UItem('add_button', enabled_when='ok_add'), spring),
-#                     UCustom('queue_factory'),
-
-                     UCustom('run_factory', enabled_when='ok_run'),
-                     HGroup(
-                            UItem('add_button', enabled_when='ok_add'),
-                            Item('auto_increment'),
-#                            spring,
-                            UItem('clear_button',
-                                 tooltip='Clear all runs added using "frequency"'
-                                 )
-                            ),
-#                     scrollable=True
-                     )
-        v = View(grp)
-        return v
+#     def traits_view(self):
+#         grp = VGroup(
+#                      HGroup(UItem('add_button', enabled_when='ok_add'), spring),
+# #                     UCustom('queue_factory'),
+# 
+#                      UCustom('run_factory', enabled_when='ok_run'),
+#                      HGroup(
+#                             UItem('add_button', enabled_when='ok_add'),
+#                             Item('auto_increment'),
+# #                            spring,
+#                             UItem('clear_button',
+#                                  tooltip='Clear all runs added using "frequency"'
+#                                  )
+#                             ),
+# #                     scrollable=True
+#                      )
+#         v = View(grp)
+#         return v
 
     def _run_factory_factory(self):
         if self._extract_device == 'Fusions UV':

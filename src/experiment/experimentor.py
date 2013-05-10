@@ -109,7 +109,7 @@ class Experimentor(Experimentable):
                 ws = exp._warned_labnumbers
 
             self._update(all_info=True)
-            self.test_runs()
+#             self.test_runs()
             if self.experiment_queues:
                 self.experiment_queue = self.experiment_queues[0]
                 self.start_file_listener(self.experiment_queue.path)
@@ -156,7 +156,7 @@ class Experimentor(Experimentable):
             ans = ans[-1:]
 
         self._update_info(ans)
-
+        self.debug('info updated')
 #     def _clear_cache(self):
 #         for di in dir(self):
 #             if di.startswith('_cached'):
