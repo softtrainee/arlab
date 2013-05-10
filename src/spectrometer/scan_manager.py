@@ -45,6 +45,7 @@ from src.helpers.timer import Timer
 from src.constants import NULL_STR
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from src.spectrometer.readout_view import ReadoutView
+from src.deprecate import deprecated
 # class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
 #        self._file = open(p, mode)
@@ -114,9 +115,27 @@ class ScanManager(Manager):
                 iso = NULL_STR
 
             self.trait_set(isotope=iso, trait_change_notify=False)
-
+    
+    @deprecated
+    def close(self,isok):
+        self.stop_scan()
+    
+    @deprecated
     def opened(self, ui):
+        self.setup_scan()
+    
+    def stop_scan(self):
+        self.dump_settings()
+        self._stop_timer()
 
+        # clear our graph settings so on reopen events will fire
+        del self.graph_scale
+        del self._graph_ymax
+        del self._graph_ymin
+        del self.graph_y_auto
+        del self.graph_scan_width
+        
+    def setup_scan(self):
         self.graph = self._graph_factory()
 
         self._start_timer()
@@ -183,16 +202,7 @@ class ScanManager(Manager):
                 'graph_scan_width'
                 ]
 
-    def close(self, isok):
-        self.dump_settings()
-        self._stop_timer()
-
-        # clear our graph settings so on reopen events will fire
-        del self.graph_scale
-        del self._graph_ymax
-        del self._graph_ymin
-        del self.graph_y_auto
-        del self.graph_scan_width
+   
 
     def _update(self, data):
         keys, signals = data
@@ -207,7 +217,8 @@ class ScanManager(Manager):
     def _update_scan_graph(self):
         data = self.spectrometer.get_intensities()
         if data:
-            do_later(self._update, data)
+            self._update(data)
+#             do_later(self._update, data)
 #            self._write_data(x, keys, signals)
 
 #    def _write_data(self, x, keys, signals):
@@ -380,9 +391,6 @@ class ScanManager(Manager):
             func = self._update_scan_graph
 
         mult = 1000
-
-
-
         return Timer((self.integration_time + 0.025) * mult, self._update_scan_graph)
 
     def _graph_factory(self):
@@ -508,89 +516,89 @@ class ScanManager(Manager):
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
-        custom = lambda n:Item(n, style='custom', show_label=False)
-        magnet_grp = VGroup(
-                            HGroup(
-                                Item('detector',
-                                     show_label=False,
-                                     editor=EnumEditor(name='detectors')),
-                                Item('isotope',
-                                     show_label=False,
-                                     editor=EnumEditor(name='isotopes')
-                                     )),
-                            custom('magnet'),
-                            custom('scanner'),
-                            label='Magnet'
-                            )
-        detector_grp = VGroup(
-                              HGroup(
-                                     spring,
-                                     Label('Deflection'),
-                                     Spring(springy=False, width=70),
-                                     ),
-                              Item('detectors',
-                                   show_label=False,
-                                   editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
-                              label='Detectors'
-                              )
-
-        rise_grp = custom('rise_rate')
-        source_grp = custom('source')
-
-        right_spring = Spring(springy=False, width=275)
-        def hitem(n, l, **kw):
-            return HGroup(Label(l), spring, Item(n, show_label=False, **kw), right_spring)
-
-        graph_cntrl_grp = VGroup(
-                                 hitem('graph_scan_width', 'Scan Width (mins)'),
-                                 hitem('graph_scale', 'Scale'),
-                                 hitem('graph_y_auto', 'Autoscale Y'),
-                                 hitem('graph_ymax', 'Max', format_str='%0.3f'),
-                                 hitem('graph_ymin', 'Min', format_str='%0.3f'),
-                                 HGroup(self._button_factory('record_button', label='record_label'),
-                                        Item('add_marker_button',
-                                             show_label=False,
-                                             enabled_when='_recording')),
-                                 label='Graph'
-                                 )
-        control_grp = Group(
-                          graph_cntrl_grp,
-                          detector_grp,
-                          rise_grp,
-                          magnet_grp,
-                          source_grp,
-                          layout='tabbed')
-        intensity_grp = VGroup(
-                               HGroup(spring, Label('Intensity'),
-                                      Spring(springy=False, width=90),
-                                      Label(u'1\u03c3'),
-                                      Spring(springy=False, width=87)),
-                               Item('detectors',
-                                   show_label=False,
-                                   editor=ListEditor(style='custom', mutable=False,
-                                                     editor=InstanceEditor(view='intensity_view'))),
-                               label='Intensities',
-                               show_border=True
-                               )
-        display_grp = VGroup(
-                          Group(custom('readout_view'), show_border=True, label='Readout'),
-                          intensity_grp,
-                          )
-        graph_grp = custom('graph')
-        v = View(
-                    HSplit(
-#                           VGroup(control_grp, intensity_grp),
-                           VGroup(control_grp, display_grp),
-                           graph_grp,
-                           ),
-                    title='Scan',
-                    resizable=True,
-                    handler=self.handler_klass,
-                    width=0.8,
-                    height=0.6
-                    )
-        return v
+#     def traits_view(self):
+#         custom = lambda n:Item(n, style='custom', show_label=False)
+#         magnet_grp = VGroup(
+#                             HGroup(
+#                                 Item('detector',
+#                                      show_label=False,
+#                                      editor=EnumEditor(name='detectors')),
+#                                 Item('isotope',
+#                                      show_label=False,
+#                                      editor=EnumEditor(name='isotopes')
+#                                      )),
+#                             custom('magnet'),
+#                             custom('scanner'),
+#                             label='Magnet'
+#                             )
+#         detector_grp = VGroup(
+#                               HGroup(
+#                                      spring,
+#                                      Label('Deflection'),
+#                                      Spring(springy=False, width=70),
+#                                      ),
+#                               Item('detectors',
+#                                    show_label=False,
+#                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
+#                               label='Detectors'
+#                               )
+# 
+#         rise_grp = custom('rise_rate')
+#         source_grp = custom('source')
+# 
+#         right_spring = Spring(springy=False, width=275)
+#         def hitem(n, l, **kw):
+#             return HGroup(Label(l), spring, Item(n, show_label=False, **kw), right_spring)
+# 
+#         graph_cntrl_grp = VGroup(
+#                                  hitem('graph_scan_width', 'Scan Width (mins)'),
+#                                  hitem('graph_scale', 'Scale'),
+#                                  hitem('graph_y_auto', 'Autoscale Y'),
+#                                  hitem('graph_ymax', 'Max', format_str='%0.3f'),
+#                                  hitem('graph_ymin', 'Min', format_str='%0.3f'),
+#                                  HGroup(self._button_factory('record_button', label='record_label'),
+#                                         Item('add_marker_button',
+#                                              show_label=False,
+#                                              enabled_when='_recording')),
+#                                  label='Graph'
+#                                  )
+#         control_grp = Group(
+#                           graph_cntrl_grp,
+#                           detector_grp,
+#                           rise_grp,
+#                           magnet_grp,
+#                           source_grp,
+#                           layout='tabbed')
+#         intensity_grp = VGroup(
+#                                HGroup(spring, Label('Intensity'),
+#                                       Spring(springy=False, width=90),
+#                                       Label(u'1\u03c3'),
+#                                       Spring(springy=False, width=87)),
+#                                Item('detectors',
+#                                    show_label=False,
+#                                    editor=ListEditor(style='custom', mutable=False,
+#                                                      editor=InstanceEditor(view='intensity_view'))),
+#                                label='Intensities',
+#                                show_border=True
+#                                )
+#         display_grp = VGroup(
+#                           Group(custom('readout_view'), show_border=True, label='Readout'),
+#                           intensity_grp,
+#                           )
+#         graph_grp = custom('graph')
+#         v = View(
+#                     HSplit(
+# #                           VGroup(control_grp, intensity_grp),
+#                            VGroup(control_grp, display_grp),
+#                            graph_grp,
+#                            ),
+#                     title='Scan',
+#                     resizable=True,
+#                     handler=self.handler_klass,
+#                     width=0.8,
+#                     height=0.6
+#                     )
+#         return v
 
 
 if __name__ == '__main__':

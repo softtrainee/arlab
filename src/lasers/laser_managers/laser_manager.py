@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, Float, \
-    on_trait_change, Interface, implements
+    on_trait_change, Interface, implements, Any
 from traitsui.api import View, Item, VGroup, HGroup, spring, VSplit
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -49,7 +49,13 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
-
+    
+    stage_manager=Any
+    requested_power=Any
+    status_text=Str
+    pulse=Any
+    laser_controller=Any
+    
     def is_ready(self):
         return True
 

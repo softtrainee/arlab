@@ -46,7 +46,9 @@ class ExperimentPlugin(BaseTaskPlugin):
 #        def factory_tune():
 #            return OpenAutoTunerAction(self._get_manager())
 
-        return [TaskExtension(actions=[
+        return [TaskExtension(
+                              task_id='pychron.experiment',
+                              actions=[
                                        SchemaAddition(id='open_experiment',
                                                         factory=OpenExperimentQueueAction,
                                                         path='MenuBar/File'),

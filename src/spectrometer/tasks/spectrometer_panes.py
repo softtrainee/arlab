@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item, VGroup, HGroup, EnumEditor, spring, \
-    Label, Spring, ListEditor, Group, InstanceEditor, HSplit, UItem
+    Label, Spring, ListEditor, Group, InstanceEditor, HSplit, UItem, ButtonEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
@@ -28,9 +28,39 @@ class ScanPane(TraitsTaskPane):
         v = View(UItem('graph', style='custom'))
         return v
 
+class ReadoutPane(TraitsDockPane):
+    id='pychron.spectrometer.readout'
+    name='Readout'
+    def traits_view(self):
+        v=View(Group(UItem('readout_view', style='custom'), show_border=True))
+        return v
+    
+class IntensitiesPane(TraitsDockPane):
+    id='pychron.spectrometer.intensities'
+    name='Intensities'
+    def traits_view(self):
+        intensity_grp = VGroup(
+                   HGroup(spring, Label('Intensity'),
+                          Spring(springy=False, width=90),
+                          Label(u'1\u03c3'),
+                          Spring(springy=False, width=87)),
+                   Item('detectors',
+                       show_label=False,
+                       editor=ListEditor(style='custom', mutable=False,
+                                         editor=InstanceEditor(view='intensity_view'))),
+                   show_border=True
+                   )
+        v=View(intensity_grp)
+        return v
+    
 class ControlsPane(TraitsDockPane):
     id = 'pychron.spectrometer.controls'
+    name='Controls'
     def traits_view(self):
+        def hitem(n, l, **kw):
+            return HGroup(Label(l), spring, Item(n, show_label=False, **kw), 
+                          Spring(springy=False, width=275))
+        
         magnet_grp = VGroup(
                             HGroup(
                                 UItem('detector',
@@ -53,13 +83,38 @@ class ControlsPane(TraitsDockPane):
                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
                               label='Detectors'
                               )
+        
+        rise_grp = UItem('rise_rate',style='custom')
+        source_grp = UItem('source', style='custom')
+        
+        graph_cntrl_grp = VGroup(
+                                 hitem('graph_scan_width', 'Scan Width (mins)'),
+                                 hitem('graph_scale', 'Scale'),
+                                 hitem('graph_y_auto', 'Autoscale Y'),
+                                 hitem('graph_ymax', 'Max', format_str='%0.3f'),
+                                 hitem('graph_ymin', 'Min', format_str='%0.3f'),
+                                 HGroup(UItem('record_button', editor=ButtonEditor(label_value='record_label')),
+                                        Item('add_marker_button',
+                                             show_label=False,
+                                             enabled_when='_recording')),
+                                 label='Graph'
+                                 )
+        control_grp = Group(
+                          graph_cntrl_grp,
+                          detector_grp,
+                          rise_grp,
+                          magnet_grp,
+                          source_grp,
+                          layout='tabbed')
+
         v = View(
-                 Group(
-                       magnet_grp,
-                       detector_grp,
-                       layout='tabbed'
+                 control_grp
+#                  Group(
+#                        magnet_grp,
+#                        detector_grp,
+#                        layout='tabbed'
                        )
-                 )
+#                  )
         return v
 #
 #        custom = lambda n:Item(n, style='custom', show_label=False)

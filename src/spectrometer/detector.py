@@ -149,15 +149,14 @@ class Detector(SpectrometerDevice):
 
     def intensity_view(self):
         v = View(HGroup(
-                        Item('name', style='readonly'),
-                        spring,
                         Item('color',
                              editor=ColorSquareEditor(),
 #                             editor=CustomEditor(factory=self.color_square_factory()),
                              width=20,
-                             show_label=False
                              ),
-                        Spring(width=50, springy=False),
+                        Item('name', style='readonly'),
+#                         Spring(width=25, springy=False),
+                        spring,
                         Item('intensity', style='readonly',
                              ),
                         Spring(springy=False, width=150),
@@ -169,9 +168,15 @@ class Detector(SpectrometerDevice):
                         )
                  )
         return v
+    
     def traits_view(self):
         v = View(VGroup(
                         HGroup(
+                                Item('color',
+                                     width=40,
+                                     editor=ColorSquareEditor(),
+#                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
+                                     ),
                                 Item('name', style='readonly'),
                                 spring,
 
@@ -180,11 +185,6 @@ class Detector(SpectrometerDevice):
 #                                     ),
                                 Item('active',),
                                 Item('deflection'),
-                                Item('color',
-                                     width=40,
-                                     editor=ColorSquareEditor(),
-#                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
-                                     ),
                                 show_labels=False
                                 )
                       )

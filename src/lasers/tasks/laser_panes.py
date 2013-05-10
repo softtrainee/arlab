@@ -23,16 +23,21 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.ui.led_editor import LEDEditor
-from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+# from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 
 
 
 class BaseLaserPane(TraitsTaskPane):
     def traits_view(self):
-        v = View(UItem('stage_manager', style='custom'),
+#         if self.model.mode!='client':
+        v = View(UItem('stage_manager', 
+                       #defined_when='mode!="client"',
+                       style='custom'),
                  HGroup(UItem('status_text', style='readonly'), spring),
-                 statusbar='status_text'
+#                  statusbar='status_text'
                  )
+#         else:
+#             v=View()
         return v
 
 
@@ -46,16 +51,24 @@ class StageControlPane(TraitsDockPane):
             return 'object.stage_manager.{}'.format(name)
 
         def SItem(name, **kw):
-            return Item(make_sm_name(name), **kw)
+            return Item(make_sm_name(name),
+                        defined_when='mode!="client"',
+                         **kw)
 
         def SUItem(name, **kw):
-            return UItem('object.stage_manager.{}'.format(name), **kw)
+            return UItem('object.stage_manager.{}'.format(name),
+                        defined_when='mode!="client"',
+                         **kw)
 
         def CItem(name, **kw):
-            return Item('object.stage_manager.canvas.{}'.format(name), **kw)
-
+            return Item('object.stage_manager.canvas.{}'.format(name), 
+                        defined_when='mode!="client"',
+                        **kw)
+            
         def CUItem(name, **kw):
-            return UItem('object.stage_manager.canvas.{}'.format(name), **kw)
+            return UItem('object.stage_manager.canvas.{}'.format(name), 
+                        defined_when='mode!="client"',
+                         **kw)
         #=======================================================================
         #
         #=======================================================================
@@ -97,52 +110,58 @@ class StageControlPane(TraitsDockPane):
                        label='Canvas'
                        )
 
-        if isinstance(self.model.stage_manager, VideoStageManager):
-            mvgrp = VGroup(
-                      HGroup(SItem('use_autocenter', label='Enabled'),
-                             SUItem('autocenter_button',
-                                  enabled_when='use_autocenter'),
-                             SUItem('configure_autocenter_button')
-                          ),
-                      SUItem('autofocus_manager', style='custom'),
-                      label='Machine Vision', show_border=True
-                      )
-            recgrp = VGroup(
-                      HGroup(SItem('snapshot_button', show_label=False),
-                            VGroup(SItem('auto_save_snapshot'),
-                             SItem('render_with_markup'))),
-                     SUItem('record', editor=ButtonEditor(label_value=make_sm_name('record_label'))),
-                     show_border=True,
-                     label='Recording'
+        if self.model.mode!='client':
+            if self.model.stage_manager.__class__.__name___=='VidoeStageManager':
+    #             isinstance(self.model.stage_manager, VideoStageManager):
+                    mvgrp = VGroup(
+                              HGroup(SItem('use_autocenter', label='Enabled'),
+                                     SUItem('autocenter_button',
+                                          enabled_when='use_autocenter'),
+                                     SUItem('configure_autocenter_button')
+                                  ),
+                              SUItem('autofocus_manager', style='custom'),
+                              label='Machine Vision', show_border=True
+                              )
+                    recgrp = VGroup(
+                              HGroup(SItem('snapshot_button', show_label=False),
+                                    VGroup(SItem('auto_save_snapshot'),
+                                     SItem('render_with_markup'))),
+                             SUItem('record', editor=ButtonEditor(label_value=make_sm_name('record_label'))),
+                             show_border=True,
+                             label='Recording'
+                             )
+            else:
+                mvgrp = Group()
+                recgrp = Group()
+    
+            cagrp = VGroup(
+                           mvgrp,
+                           recgrp,
+    #                   label='Machine Vision', show_border=True)
+                           visible_when='use_video',
+                           label='Camera'
+                           )
+    
+            cgrp = Group(
+                         cngrp,
+                         cagrp,
+                         SUItem('points_programmer',
+                              label='Points',
+                              style='custom'),
+                         SUItem('tray_calibration_manager',
+                              label='Calibration',
+                              style='custom'),
+                         layout='tabbed'
+                         )
+            v = View(agrp,
+                     hgrp,
+                     pgrp,
+                     cgrp
                      )
         else:
-            mvgrp = Group()
-            recgrp = Group()
-
-        cagrp = VGroup(
-                       mvgrp,
-                       recgrp,
-#                   label='Machine Vision', show_border=True)
-                       visible_when='use_video',
-                       label='Camera'
-                       )
-
-        cgrp = Group(
-                     cngrp,
-                     cagrp,
-                     SUItem('points_programmer',
-                          label='Points',
-                          style='custom'),
-                     SUItem('tray_calibration_manager',
-                          label='Calibration',
-                          style='custom'),
-                     layout='tabbed'
-                     )
-        v = View(agrp,
-                 hgrp,
-                 pgrp,
-                 cgrp
-                 )
+            v=View() 
+            
+        
         return v
 
 
