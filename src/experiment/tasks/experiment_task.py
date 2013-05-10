@@ -37,6 +37,7 @@ class ExperimentEditorTask(BaseManagerTask):
                                          PaneItem('pychron.experiment.console'),
                                          orientation='vertical'
                                          ),
+                          bottom=PaneItem('pychron.experiment.console'),
                           top=PaneItem('pychron.experiment.controls')
                           )
 

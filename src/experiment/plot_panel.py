@@ -23,7 +23,7 @@ from src.viewable import ViewableHandler, Viewable
 
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
-from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
@@ -102,7 +102,6 @@ class PlotPanel(Viewable):
 
         self._print_results()
 
-
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
@@ -143,6 +142,8 @@ class PlotPanel(Viewable):
 
     @on_trait_change('correct_for_baseline, correct_for_blank')
     def _print_results(self):
+        return
+
         def wrapper(display, *args):
             display.freeze()
             display.clear(gui=False)
@@ -150,23 +151,24 @@ class PlotPanel(Viewable):
                 ai(display)
             display.thaw()
 
-        def func():
-            wrapper(self.signal_display,
-                    self._print_signals,
-                    self._print_baselines
-                    )
-            wrapper(self.ratio_display,
-                    self._print_ratios,
-                    self._print_blanks
-                    )
-            wrapper(self.summary_display,
-                    self._print_summary
-                    )
-            wrapper(self.fit_display,
-                    self._print_fits
-                    )
+#        def func():
+        wrapper(self.signal_display,
+                self._print_signals,
+                self._print_baselines
+                )
+        wrapper(self.ratio_display,
+                self._print_ratios,
+                self._print_blanks
+                )
+        wrapper(self.summary_display,
+                self._print_summary
+                )
+        wrapper(self.fit_display,
+                self._print_fits
+                )
 
-        do_later(func)
+
+#        do_later(func)
 
     def add_text(self, disp, *args, **kw):
         kw['gui'] = False

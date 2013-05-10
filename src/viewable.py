@@ -24,6 +24,7 @@ from pyface.timer.do_later import do_after, do_later
 #============= local library imports  ==========================
 from src.utils import IsQt
 from src.loggable import Loggable
+from src.ui.qt.gui import invoke_in_main_thread
 
 
 # class ViewableHandler(Controller):
@@ -107,12 +108,8 @@ class Viewable(Loggable):
         pass
 
     def close_ui(self):
-        self.disposed = True
-# #        if self.ui is not None:
-# #            # disposes 50 ms from now
-# #            do_after(50, self.ui.dispose)
-# #            # sleep a little so everything has time to update
-# #            # time.sleep(0.05)
+        self.debug('disposed')
+        invoke_in_main_thread(self.trait_set, disposed=True)
 
     def show(self, **kw):
         args = tuple()
@@ -122,7 +119,8 @@ class Viewable(Loggable):
             func = self.trait_set
             kw['raised'] = True
 
-        do_later(func, *args, **kw)
+        func(*args, **kw)
+#        do_later(func, *args, **kw)
 
     def add_window(self, ui):
 

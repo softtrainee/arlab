@@ -17,8 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance, List, Property, \
     on_trait_change
+from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
+#============= standard library imports ========================
+
+#============= local library imports  ==========================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.experiment.set_selector import SetSelector
@@ -26,10 +30,12 @@ from src.experiment.factory import ExperimentFactory
 from src.constants import ALPHAS
 from src.experiment.stats import StatsGroup
 from src.experiment.executor import ExperimentExecutor
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.paths import paths
+from src.experiment.utilities.file_listener import FileListener
+from src.experiment.experimentable import Experimentable
 
-class Experimentor(IsotopeDatabaseManager):
+
+class Experimentor(Experimentable):
     experiment_factory = Instance(ExperimentFactory)
     experiment_queue = Instance(ExperimentQueue)
     executor = Instance(ExperimentExecutor)
@@ -37,14 +43,12 @@ class Experimentor(IsotopeDatabaseManager):
     set_selector = Instance(SetSelector)
     stats = Instance(StatsGroup, ())
 
-    experiment_queues = List
+
 
     title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
     filelistener = None
     username = Str
 
-    _text = None
-    _experiment_hash = None
 
     #===========================================================================
     # permissions
@@ -54,15 +58,87 @@ class Experimentor(IsotopeDatabaseManager):
     _last_ver_time = None
     _ver_timeout = 10
 
+    def test_runs(self):
+        for ei in self.experiment_queues:
+            ei.test_runs()
+
+    def test_connections(self):
+        if not self.db:
+            return
+
+        if not self.db.connect():
+            self.warning_dialog('Failed connecting to database. {}'.format(self.db.url))
+            return
+
+#        if not self.repository.connect():
+#            self.warning_dialog('Failed connecting to repository {}'.format(self.repository.url))
+#            return
+
+        return True
+
+    def load_experiment_queue(self, path=None, edit=True, saveable=False):
+
+#        self.bind_preferences()
+        # make sure we have a database connection
+        if not self.test_connections():
+            return
+
+        if path is None:
+            dlg = FileDialog(default_directory=paths.experiment_dir)
+            if dlg.open():
+                path = dlg.path
+#            path = self.open_file_dialog(default_directory=paths.experiment_dir)
+
+        if path is not None:
+
+            self.experiment_queue = None
+            self.experiment_queues = []
+            # parse the file into individual experiment sets
+            ts = self._parse_experiment_file(path)
+            ws = []
+            for text in ts:
+                exp = self._experiment_queue_factory(path=path, add=False)
+
+                exp._warned_labnumbers = ws
+                if exp.load(text):
+                    self.experiment_queues.append(exp)
+#
+#                    if edit:
+#                        exp.automated_run = exp.automated_runs[-1].clone_traits()
+#                        exp.set_script_names()
+                ws = exp._warned_labnumbers
+
+            self._update(all_info=True)
+            self.test_runs()
+            if self.experiment_queues:
+                self.experiment_queue = self.experiment_queues[0]
+                self.start_file_listener(self.experiment_queue.path)
+#                def func():
+#                self.set_selector.selected_index = -2
+#                self.set_selector.selected_index = 0
+
+#                do_later(func)
+                self._load_experiment_queue_hook()
+                self.save_enabled = True
+
+                return True
+
+    def start_file_listener(self, path):
+        fl = FileListener(
+                          path,
+                          callback=self._reload_from_disk,
+                          check=self._check_for_file_mods
+                          )
+        self.filelistener = fl
+
+    def stop_file_listener(self):
+        self.filelistener.stop()
+
+
 
 #===============================================================================
 # info update
 #===============================================================================
-    def _get_all_automated_runs(self):
-        return [ai for ei in self.experiment_queues
-                    for ai in ei.automated_runs
-                        if ai.executable]
-
     def _update(self, all_info=False):
         self.debug('update runs')
 
@@ -223,9 +299,25 @@ class Experimentor(IsotopeDatabaseManager):
 #             print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
+
+    def _load_experiment_queue_hook(self):
+        self.executor.executable = all([ei.executable for ei in self.experiment_queues])
+
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('executor:execute_button')
+    def _execute_fired(self):
+        self.stop_file_listener()
+
+        self.executor.trait_set(experiment_queues=self.experiment_queues,
+                                experiment_queue=self.experiment_queues[0],
+                                _experiment_hash=self._experiment_hash,
+                                _text=self._text
+                                )
+
+        self.executor._execute()
+
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):
 
@@ -249,17 +341,24 @@ class Experimentor(IsotopeDatabaseManager):
                       'delay_before_analyses', 'delay_between_analyses'
                       ):
                 setattr(qf, a, getattr(eq, a))
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_title(self):
+        if self.experiment_queue:
+            return 'Experiment {}'.format(self.experiment_queue.name)
 
 #===============================================================================
 # defaults
 #===============================================================================
-    def _experiment_queue_factory(self, **kw):
+    def _experiment_queue_factory(self, add=True, **kw):
         exp = ExperimentQueue(
                              db=self.db,
                              application=self.application,
                              **kw)
         exp.on_trait_change(self._update, 'update_needed')
-        self.experiment_queues.append(exp)
+        if add:
+            self.experiment_queues.append(exp)
 #        exp.on_trait_change(self._update_dirty, 'dirty')
         return exp
 

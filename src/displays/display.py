@@ -19,6 +19,7 @@ from traits.api import HasTraits, Instance, Int, Color, Str, List
 from traitsui.api import View, Item, UItem
 from src.lasers.scanner import ApplicationController
 from src.ui.display_editor import DisplayEditor
+from src.deprecate import deprecated
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.viewable import Viewable
@@ -44,6 +45,16 @@ class DisplayController(ApplicationController):
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
                                                 *args, **kw)
+    def clear(self, **kw):
+        self.model.messages = []
+
+    @deprecated
+    def freeze(self):
+        pass
+
+    @deprecated
+    def thaw(self):
+        pass
 
     def add_text(self, txt, **kw):
         if 'color' not in kw or kw['color'] is None:

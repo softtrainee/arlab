@@ -298,14 +298,14 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 
         return True
 
-    def populate_default_tables(self):
-        self.debug('populating default tables')
-        db = self.db
-        if self.db:
-            if db.connect(force=False):
-                from src.database.defaults import load_isotopedb_defaults
-                load_isotopedb_defaults(db)
-                return True
+#    def populate_default_tables(self):
+#        self.debug('populating default tables')
+#        db = self.db
+#        if self.db:
+#            if db.connect(force=False):
+#                from src.database.defaults import load_isotopedb_defaults
+#                load_isotopedb_defaults(db)
+#                return True
 
 #    def bind_preferences(self):
 #        super(ExperimentManager, self).bind_preferences()
@@ -339,23 +339,23 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         ts = self._parse_experiment_file(path)
         return ts[i]
 
-    def _parse_experiment_file(self, path):
-        with open(path, 'r') as f:
-            ts = []
-            tis = []
-            a = ''
-            for l in f:
-                a += l
-                if l.startswith('*' * 80):
-                    ts.append(''.join(tis))
-                    tis = []
-                    continue
-
-                tis.append(l)
-            ts.append(''.join(tis))
-            self._experiment_hash = hashlib.sha1(a).hexdigest()
-            self._text = a
-            return ts
+#    def _parse_experiment_file(self, path):
+#        with open(path, 'r') as f:
+#            ts = []
+#            tis = []
+#            a = ''
+#            for l in f:
+#                a += l
+#                if l.startswith('*' * 80):
+#                    ts.append(''.join(tis))
+#                    tis = []
+#                    continue
+#
+#                tis.append(l)
+#            ts.append(''.join(tis))
+#            self._experiment_hash = hashlib.sha1(a).hexdigest()
+#            self._text = a
+#            return ts
 
     def _get_all_automated_runs(self):
         return [ai for ei in self.experiment_queues

@@ -38,7 +38,12 @@ class Thread(QThread):
     def run(self):
         if self._target:
             self._target(*self._args, **self._kwargs)
-        self.exec_()
+
+    def join(self, timeout=None):
+        if timeout:
+            self.wait(timeout)
+        else:
+            self.wait()
 
 def currentThreadName():
     return QThread.currentThread().objectName()
