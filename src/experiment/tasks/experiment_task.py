@@ -17,20 +17,27 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item
-from src.envisage.tasks.base_task import BaseManagerTask
-from src.experiment.tasks.experiment_panes import AnalysesPane, \
-    ExperimentFactoryPane
-from pyface.tasks.task_layout import PaneItem, TaskLayout
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_task import BaseManagerTask
+from src.experiment.tasks.experiment_panes import AnalysesPane, \
+    ExperimentFactoryPane, StatsPane, ControlsPane, ConsolePane
 
 class ExperimentEditorTask(BaseManagerTask):
+
     def _menu_bar_factory(self, menus=None):
-        menus = []
         return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
 
     def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('experiment_factory')
+        return TaskLayout(
+                          left=PaneItem('pychron.experiment.factory'),
+                          right=Splitter(
+                                         PaneItem('pychron.experiment.stats'),
+                                         PaneItem('pychron.experiment.console'),
+                                         orientation='vertical'
+                                         ),
+                          top=PaneItem('pychron.experiment.controls')
                           )
 
     def create_central_pane(self):
@@ -38,8 +45,10 @@ class ExperimentEditorTask(BaseManagerTask):
 
     def create_dock_panes(self):
         return [
-                ExperimentFactoryPane(model=self.manager)
-
+                ExperimentFactoryPane(model=self.manager),
+                StatsPane(model=self.manager),
+                ControlsPane(model=self.manager.executor),
+                ConsolePane(model=self.manager.executor)
                 ]
 
 #============= EOF =============================================

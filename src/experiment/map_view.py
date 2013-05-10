@@ -28,14 +28,16 @@ import numpy as np
 from src.lasers.stage_managers.stage_map import StageMap
 from src.graph.graph import Graph
 from src.paths import paths
-from src.displays.rich_text_display import RichTextDisplay
+# from src.displays.rich_text_display import RichTextDisplay
 from src.viewable import Viewable
+from src.displays.display import  DisplayController
 
 
 class MapItemSummary(HasTraits):
-    display = Instance(RichTextDisplay)
+    display = Instance(DisplayController)
     def _display_default(self):
-        r = RichTextDisplay(width=180, height=80)
+        r = DisplayController(
+                              width=180, height=80)
         return r
 
     def traits_view(self):

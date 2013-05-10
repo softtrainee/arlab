@@ -645,7 +645,6 @@ post_equilibration_script:name
             self.user_defined_aliquot = False
 
     def _labnumber_changed(self, old, new):
-        print old, new
         def _load_scripts(_old, _new):
             '''
                 load default steps if 

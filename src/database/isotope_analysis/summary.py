@@ -20,7 +20,7 @@ from traitsui.api import View, Item
 # from src.displays.rich_text_display import RichTextDisplay
 # from pyface.timer.do_later import do_later
 import math
-from src.displays.display import DisplayModel
+from src.displays.display import  DisplayController
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # def fixed_width(m, i):
@@ -31,7 +31,7 @@ from src.displays.display import DisplayModel
 #    else:
 #        return '{{:0.{}f}}'.format(i).format(m)
 class Summary(HasTraits):
-    display = Instance(DisplayModel)
+    display = Instance(DisplayController)
     record = Any
 
 
@@ -111,11 +111,11 @@ class Summary(HasTraits):
         pass
 
     def _display_default(self):
-        return DisplayModel(default_size=12,
+        return DisplayController(default_size=12,
                                width=self.record.item_width - 10,
-                               selectable=True,
-                               default_color='black',
-                               scroll_to_bottom=False,
+#                               selectable=True,
+#                               default_color='black',
+#                               scroll_to_bottom=False,
                                font_name='courier'
 #                               font_name='Bitstream Vera Sans Mono'
 #                               font_name='monospace'

@@ -18,8 +18,8 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
-from src.experiment.manager import ExperimentManager
-from src.experiment.editor import ExperimentEditor
+# from src.experiment.manager import ExperimentManager
+# from src.experiment.editor import ExperimentEditor
 from src.pyscripts.manager import PyScriptManager
 from src.experiment.signal_calculator import SignalCalculator
 from envisage.import_manager import ImportManager
@@ -30,11 +30,33 @@ from envisage.ui.tasks.task_factory import TaskFactory
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
     ExperimentPreferencesPane
+from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
+    OpenExperimentQueueAction
+from pyface.tasks.action.schema_addition import SchemaAddition
+from envisage.ui.tasks.task_extension import TaskExtension
+from src.experiment.experimentor import Experimentor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class ExperimentPlugin(BaseTaskPlugin):
     id = 'pychron.experiment'
+    def _my_task_extensions_default(self):
+#        def factory_scan():
+#            return OpenScannerAction(self._get_manager())
+#        def factory_tune():
+#            return OpenAutoTunerAction(self._get_manager())
+
+        return [TaskExtension(actions=[
+                                       SchemaAddition(id='open_experiment',
+                                                        factory=OpenExperimentQueueAction,
+                                                        path='MenuBar/File'),
+                                       SchemaAddition(id='new_experiment',
+                                                      factory=NewExperimentQueueAction,
+                                                      path='MenuBar/File'),
+                                       ]
+                              )
+                ]
+
     def _service_offers_default(self):
 #        so_experiment_manager = self.service_offer_factory(
 #                          protocol=ExperimentManager,
@@ -44,9 +66,13 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                          protocol=ExperimentExecutor,
 #                          factory=self._executor_factory
 #                          )
-        so_exp_editor = self.service_offer_factory(
-                          protocol=ExperimentEditor,
-                          factory=self._editor_factory
+#        so_exp_editor = self.service_offer_factory(
+#                          protocol=ExperimentEditor,
+#                          factory=self._editor_factory
+#                          )
+        so_exp = self.service_offer_factory(
+                          protocol=Experimentor,
+                          factory=self._experimentor_factory
                           )
 
         so_pyscript_manager = self.service_offer_factory(
@@ -78,7 +104,7 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so_exp_editor]
-        return [so_exp_editor, so_pyscript_manager, so_signal_calculator, so_import_manager, so_image_browser, so_export_manager]
+        return [so_exp, so_pyscript_manager, so_signal_calculator, so_import_manager, so_image_browser, so_export_manager]
 
 
 
@@ -107,8 +133,10 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                                 mode=mode
 #                                 )
 
-    def _editor_factory(self, *args, **kw):
-        return ExperimentEditor(application=self.application)
+    def _experimentor_factory(self, *args, **kw):
+        return Experimentor(application=self.application)
+#    def _editor_factory(self, *args, **kw):
+#        return ExperimentEditor(application=self.application)
 
     def _signal_calculator_factory(self, *args, **kw):
         return SignalCalculator()
@@ -135,7 +163,7 @@ class ExperimentPlugin(BaseTaskPlugin):
         return ExperimentEditorTask(manager=self._get_manager())
 
     def _get_manager(self):
-        return self.application.get_service(ExperimentEditor)
+        return self.application.get_service(Experimentor)
 
     def _preferences_panes_default(self):
         return [ExperimentPreferencesPane]

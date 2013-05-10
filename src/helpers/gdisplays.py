@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from src.utils import get_display_size
-from src.displays.display import ErrorDisplay, DisplayController, DisplayModel
+from src.displays.display import ErrorDisplay, DisplayController
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
@@ -30,12 +30,13 @@ from src.displays.display import ErrorDisplay, DisplayController, DisplayModel
 ds = get_display_size()
 
 
-gWarningDisplay = DisplayController(DisplayModel(),
+gWarningDisplay = DisplayController(
                                   title='Warnings',
                                   width=450,
                                   default_color='red'
                                   )
-gLoggerDisplay = DisplayController(DisplayModel(),
+gLoggerDisplay = DisplayController(
+
                                    title='Logger',
                                    width=450,
                                    x=ds.width - 500,
@@ -44,7 +45,8 @@ gLoggerDisplay = DisplayController(DisplayModel(),
                                    bg_color='light grey'
                                  )
 
-gMessageDisplay = DisplayController(DisplayModel(),
+gMessageDisplay = DisplayController(
+
                                     title='Messages',
                                  width=480,
 #                                 x=(sw-width)/2,
@@ -54,7 +56,8 @@ gMessageDisplay = DisplayController(DisplayModel(),
                                  bg_color='light grey'
                                  )
 
-gTraceDisplay = ErrorDisplay(DisplayModel(),
+gTraceDisplay = ErrorDisplay(
+
                              title='Error Stack',
                                  width=825,
                                  x=(ds.width - 825) / 2,

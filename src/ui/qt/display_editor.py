@@ -15,11 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Color
 from traitsui.api import View, Item
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
-from PySide.QtGui import QLabel, QTextEdit, QTextCursor
+from PySide.QtGui import QLabel, QTextEdit, QTextCursor, QPalette
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -33,6 +33,10 @@ class _DisplayEditor(Editor):
         '''
         if self.control is None:
             self.control = Display()
+            if self.factory.bg_color:
+                p = QPalette()
+                p.setColor(QPalette.Base, self.factory.bg_color)
+                self.control.setPalette(p)
             self.control.setReadOnly(True)
 #            self.control = self._create_control(parent)
 #            self.value.on_trait_change(self.update_object, 'state')
@@ -62,4 +66,5 @@ class _DisplayEditor(Editor):
 
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
+    bg_color = Color
 #============= EOF =============================================

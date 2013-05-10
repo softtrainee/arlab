@@ -28,6 +28,9 @@ from src.ui.progress_dialog import MProgressDialog
 
 class IsotopeDatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
+    def __init__(self, *args, **kw):
+        super(IsotopeDatabaseManager, self).__init__(*args, **kw)
+        self.bind_preferences()
     def bind_preferences(self):
         if self.db is None:
             self.db = self._db_factory()

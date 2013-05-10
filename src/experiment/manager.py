@@ -302,7 +302,7 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
         self.debug('populating default tables')
         db = self.db
         if self.db:
-            if db.connect(force=True):
+            if db.connect(force=False):
                 from src.database.defaults import load_isotopedb_defaults
                 load_isotopedb_defaults(db)
                 return True
