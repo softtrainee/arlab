@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
+from traits.api import Any, on_trait_change, Event, List
 # from traitsui.api import View, Item
 from pyface.tasks.task import Task
 from pyface.tasks.action.schema import SMenu, SMenuBar
@@ -26,19 +26,91 @@ from pyface.action.api import ActionItem, Group
 # from pyface.tasks.action.task_action import TaskAction
 from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAction
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from pyface.workbench.action.view_menu_manager import ViewMenuManager
+from pyface.tasks.action.task_action import TaskAction
+from pyface.action.group import Separator
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class MinimizeAction(TaskAction):
+    name='Minimize'
+    accelerator='Ctrl+m'
+    def perform(self, event):        
+        app=self.task.window.application
+        app.active_window.control.showMinimized()
+        
+class RaiseAction(TaskAction):
+    window=Any
+    style='toggle'
+    def perform(self,event):
+        self.window.activate()
+        self.checked=True
+        
+    @on_trait_change('window:deactivated')
+    def _on_deactivate(self):
+        self.checked=False
+        
+class WindowGroup(Group):
+    items = List
+    manager = Any
+    def _manager_default(self):
+        manager = self
+        while isinstance(manager, Group):
+            manager = manager.parent
+        return manager
 
+    def _items_default(self):
+
+        application = self.manager.controller.task.window.application
+        application.on_trait_change(self._rebuild, 'active_window, windows, uis[]')
+        
+        return []
+    
+    def _make_actions(self, vs):
+        items=[]
+        application = self.manager.controller.task.window.application
+        
+        added=[]
+        for vi in application.windows+vs:
+            if not vi.active_task.id in added:
+                checked=vi== application.active_window
+                items.append(ActionItem(action=RaiseAction(window=vi,
+                                                           checked=checked,
+                                                           name=vi.active_task.name
+                                                       )))
+                added.append(vi.active_task.id)
+                
+        return items
+    
+    def _rebuild(self, vs):
+        self.destroy()
+        if not isinstance(vs, list):
+            vs=[vs]
+        self.items=self._make_actions(vs)
+        self.manager.changed=True
+#         manager = self
+#         while isinstance(manager, Group):
+#             manager = manager.parent
+#         manager.changed=True
+#         manager = self
+#         while isinstance(manager, Group):
+#             manager = manager.parent
+# 
+#         application = manager.controller.task.window.application
+
+#         print self.items
+#         print vs, 'asd'
+    
 class myTaskWindowLaunchAction(TaskWindowLaunchAction):
     '''
         modified TaskWIndowLaunchAction default behaviour
         
         .perform() previously created a new window on every event. 
         
-        now raise the window if its available else create ita
+        now raise the window if its available else create it
     '''
 
+    style='toggle'
     def perform(self, event):
         application = event.task.window.application
         for win in application.windows:
@@ -48,7 +120,51 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
         else:
             window = application.create_window(TaskWindowLayout(self.task_id))
             window.open()
+            
+        self.checked=True
+        
+    @on_trait_change('task:window:opened')
+    def _window_opened(self):
+        if self.task:
+            if self.task_id==self.task.id:
+                print 'setting check true'
+                self.checked=True
+                
+    @on_trait_change('task:window:closed')
+    def _window_closed(self):
+        if self.task:
+            if self.task_id==self.task.id:
+                print 'setting check false'
+                self.checked=False
+                
+    
+#             window = self.task.window
+#             print win, window
+#             print self.task_id, self.task.id
+#             self.checked=self.task.window==win
+#             print window.active_task, self.task
+#             
+#             self.checked = (window is not None 
+#                             and window.active_task == self.task)
+            
+#     @on_trait_change('task:window:opened')
+#     def _window_o(self):
+#         self.checked=True
 
+#     @on_trait_change('task:window:closed')
+#     def _window_c(self):
+#         self.checked=False
+#         print 'asdfsafdasdf'
+        
+#     @on_trait_change('foo')
+#     def _update_checked(self):
+#         print 'fffff'
+#         self.checked=True
+# #         if self.task:
+#             window = self.task.window
+#             self.checked = (window is not None
+#                             and window.active_task == self.task)
+#         print self.checked
 class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
     '''
         uses myTaskWindowLaunchAction instead of enthoughts TaskWindowLaunchLaunchGroup 
@@ -57,23 +173,33 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
         manager = self
         while isinstance(manager, Group):
             manager = manager.parent
-        application = manager.controller.task.window.application
+            
+        task=manager.controller.task
+        application = task.window.application
 
         items = []
         for factory in application.task_factories:
-            action = myTaskWindowLaunchAction(task_id=factory.id)
+            for win in application.windows:
+                if win.active_task.id==factory.id:
+                    checked=True
+                    break
+            else:
+                checked=False
+                
+            action = myTaskWindowLaunchAction(task_id=factory.id, checked=checked)
+
             items.append(ActionItem(action=action))
         return items
 
 class BaseTask(Task):
     def _menu_bar_default(self):
         return self._menu_bar_factory()
-
+    
     def _view_menu(self):
         view_menu = SMenu(
-#                          TaskToggleGroup(),
+#                         TaskToggleGroup(),
                           myTaskWindowLaunchGroup(),
-#                          TaskWindowToggleGroup(),
+#                         TaskWindowToggleGroup(),
                           id='View', name='&View')
         return view_menu
 
@@ -89,6 +215,14 @@ class BaseTask(Task):
         tools_menu = SMenu(id='Tools', name='&Tools')
         return tools_menu
 
+    def _window_menu(self):
+        window_menu=SMenu(
+                          Group(MinimizeAction()),
+                          WindowGroup(),
+                          name='&Window')
+        
+        return window_menu
+        
 class BaseManagerTask(BaseTask):
     def _menu_bar_factory(self, menus=None):
         if menus is None:
@@ -99,8 +233,22 @@ class BaseManagerTask(BaseTask):
                       self._view_menu(),
                       self._edit_menu(),
                       self._tools_menu(),
-                      *menus
+                      self._window_menu(),
+                      SMenu(
+                            id='help.menu',
+                           name='&Help'),
+#                       SMenu(
+#                             ViewMenuManager(),
+#                             id='Window', name='&Window'),
+                      
+                      
+#                       *menus
                       )
+        if menus:
+            for mi in reversed(menus):
+                print mi
+                mb.items.insert(4, mi)
+                
         return mb
 
 class BaseHardwareTask(BaseManagerTask):

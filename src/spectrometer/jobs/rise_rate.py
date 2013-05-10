@@ -123,7 +123,7 @@ class RiseRate(SpectrometerTask):
                         ),
                  HGroup(UItem('clear_results_button')),
                  UItem('results',
-                       width= -100,
+#                        width= -100,
                        editor=myTabularEditor(operations=[],
                                                        editable=False,
                                                        adapter=ResultsAdapter())),
