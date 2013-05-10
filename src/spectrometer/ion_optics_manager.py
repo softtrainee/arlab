@@ -20,7 +20,7 @@ from traits.api import Range, Instance, Bool, \
 from traitsui.api import View, Item, EnumEditor
 from src.managers.manager import Manager
 from src.graph.graph import Graph
-from src.spectrometer.tasks.peak_center import PeakCenter
+from src.spectrometer.jobs.peak_center import PeakCenter
 from threading import Thread
 from pyface.timer.do_later import do_later
 from src.spectrometer.detector import Detector

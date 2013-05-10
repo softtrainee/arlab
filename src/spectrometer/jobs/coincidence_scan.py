@@ -21,9 +21,9 @@ from ConfigParser import ConfigParser
 import os
 import time
 #============= local library imports  ==========================
-from src.spectrometer.tasks.peak_center import calculate_peak_center
+from src.spectrometer.jobs.peak_center import calculate_peak_center
 from src.paths import paths
-from src.spectrometer.tasks.magnet_scan import MagnetScan
+from src.spectrometer.jobs.magnet_scan import MagnetScan
 from src.graph.graph import Graph
 from globals import globalv
 

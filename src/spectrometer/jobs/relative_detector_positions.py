@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any
 from traitsui.api import View, Item, ButtonEditor
-from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
+from src.spectrometer.jobs.spectrometer_task import SpectrometerTask
 import os
 from src.paths import paths
 import ConfigParser

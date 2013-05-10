@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,60 +15,35 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Event, Property, Bool
-# from traitsui.api import View, Item, spring, ButtonEditor, HGroup
+from traits.api import HasTraits, Any
+from traitsui.api import View, Item
+from src.envisage.tasks.base_task import BaseHardwareTask
+from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane
+from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter
+# from src.experiment.tasks. import ControlsPane
 #============= standard library imports ========================
-from numpy import linspace
 #============= local library imports  ==========================
-from src.loggable import Loggable
-from threading import Thread
-# from src.spectrometer.spectrometer import Spectrometer
 
-class SpectrometerTask(Loggable):
-    spectrometer = Any
-    execute_button = Event
-    execute_label = Property(depends_on='_alive')
-    _alive = Bool
+class SpectrometerTask(BaseHardwareTask):
+    scan_manager = Any
+    def _default_layout_default(self):
+        return TaskLayout(
+                          left=PaneItem('pychron.spectrometer.controls'),
+#                          right=Splitter(
+#                                         PaneItem('pychron.experiment.stats'),
+#                                         PaneItem('pychron.experiment.console'),
+#                                         orientation='vertical'
+#                                         ),
+#                          bottom=PaneItem('pychron.experiment.console'),
+#                          top=PaneItem('pychron.experiment.controls')
+                          )
 
-    graph = Any
+    def create_central_pane(self):
+        g = ScanPane(
+                     model=self.scan_manager,
+                     )
+        return g
 
-    def _get_execute_label(self):
-        return 'Stop' if self.isAlive() else 'Start'
-
-    def isAlive(self):
-        return self._alive
-
-    def stop(self):
-        self._alive = False
-
-    def _execute_button_fired(self):
-        if self.isAlive():
-            self.stop()
-            self._end()
-        else:
-            self.execute()
-
-    def execute(self):
-        self._alive = True
-        t = Thread(name=self.__class__.__name__, target=self._execute)
-        t.start()
-        return t
-
-    def _execute(self):
-        pass
-
-    def _end(self):
-        pass
-
-    def _graph_factory(self):
-        pass
-
-    def _graph_default(self):
-        return self._graph_factory()
-
-    def _calc_step_values(self, start, end, width):
-        sign = 1 if start < end else -1
-        nsteps = abs(end - start + width * sign) / width
-
-        return linspace(start, end, nsteps)
+    def create_dock_panes(self):
+        return [ControlsPane(model=self.scan_manager)]
 #============= EOF =============================================

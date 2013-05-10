@@ -22,9 +22,9 @@ import os
 from src.managers.manager import Manager
 from src.spectrometer.spectrometer import Spectrometer
 from src.paths import paths
-from src.spectrometer.tasks.relative_detector_positions import RelativeDetectorPositions
-from src.spectrometer.tasks.coincidence_scan import CoincidenceScan
-from src.spectrometer.tasks.cdd_operating_voltage_scan import CDDOperatingVoltageScan
+from src.spectrometer.jobs.relative_detector_positions import RelativeDetectorPositions
+from src.spectrometer.jobs.coincidence_scan import CoincidenceScan
+from src.spectrometer.jobs.cdd_operating_voltage_scan import CDDOperatingVoltageScan
 
 
 class SpectrometerManager(Manager):
@@ -51,21 +51,21 @@ class SpectrometerManager(Manager):
         return d
 
     def load(self):
+        self.debug('******************************* LOAD Spec')
         self.spectrometer.load()
-        print 'asd'
-#        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
-#        for name in config.sections():
-#            relative_position = self.config_get(config, name, 'relative_position', cast='float')
-#            color = self.config_get(config, name, 'color', default='black')
-#            default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
-#            isotope = self.config_get(config, name, 'isotope')
-#            self.spectrometer.add_detector(name=name,
-#                                            relative_position=relative_position,
-#                                            color=color,
-#                                            active=default_state,
-#                                            isotope=isotope
-#                                            )
-        print 'asdd'
+
+        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
+        for name in config.sections():
+            relative_position = self.config_get(config, name, 'relative_position', cast='float')
+            color = self.config_get(config, name, 'color', default='black')
+            default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
+            isotope = self.config_get(config, name, 'isotope')
+            self.spectrometer.add_detector(name=name,
+                                            relative_position=relative_position,
+                                            color=color,
+                                            active=default_state,
+                                            isotope=isotope
+                                            )
 
 
         return True
