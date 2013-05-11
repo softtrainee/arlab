@@ -17,25 +17,15 @@
 
 
 #============= enthought library imports =======================
+from traits.api import Any
 from pyface.action.api import Action
+from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 
-def mkaction(name, path):
-    def action(cls, event):
-        man = cls._get_executor(event)
-        if man.load_experiment_queue(path=path):
-            open_manager(event.window.application, man)
-
-    nname = '{}Action'.format(name)
-    klass = type(nname, (ExperimentAction,), dict(perform=action,
-                                                    name=name
-                                                    ))
-    globals()[nname] = klass
-
-
 class ExperimentAction(Action):
+    task_id = 'pychron.experiment'
 #    def _get_manager(self, event):
 #        return self._get_service(event, 'src.experiment.manager.ExperimentManager')
 #
@@ -52,101 +42,198 @@ class ExperimentAction(Action):
         app = event.task.window.application
         return app.get_service(name)
 
+    def _open_editor(self, event):
+        application = event.task.window.application
+        for wi in application.windows:
+            if wi.active_task.id == self.task_id:
+                wi.activate()
+                break
+        else:
+            win = application.create_window(TaskWindowLayout(self.task_id))
+            win.open()
+
+class QueueAction(ExperimentAction):
+    pass
+
+
+class NewExperimentQueueAction(QueueAction):
+    '''
+    '''
+    description = 'Create a new experiment queue'
+    name = 'New...'
+    accelerator = 'Ctrl+N'
+
+    def perform(self, event):
+        '''
+        '''
+        manager = self._get_experimentor(event)
+        if manager.verify_database_connection(inform=True):
+#        if manager.verify_credentials():
+            if manager.load():
+                if manager.load_experiment_queue(saveable=True):
+                    self._open_editor(event)
+
+class OpenExperimentQueueAction(QueueAction):
+    '''
+    '''
+    description = 'Open experiment set'
+    name = 'Open...'
+    accelerator = 'Shift+Ctrl+O'
+
+    def perform(self, event):
+        '''
+        '''
+        manager = self._get_experimentor(event)
+        if manager.verify_database_connection(inform=True):
+#        if manager.verify_credentials():
+            if manager.load():
+                if manager.load_experiment_queue(saveable=True):
+                    self._open_editor(event)
+
+
+class SaveExperimentQueueAction(ExperimentAction):
+    name = 'Save'
+    manager = Any
+    enabled = False
+
+    def __init__(self, manager, *args, **kw):
+        super(SaveExperimentQueueAction, self).__init__(*args, **kw)
+
+        manager.on_trait_change(self._update_state, 'save_enabled')
+        if manager.save_enabled:
+            self.enabled = True
+
+        self.manager = manager
+
+    def perform(self, event):
+        manager = self._get_experimentor(event)
+        manager.save_experiment_queue()
+
+    def _update_state(self, v):
+
+        self.enabled = v
+
+class SaveAsExperimentQueueAction(ExperimentAction):
+    name = 'Save As...'
+    enabled = False
+    def __init__(self, manager, *args, **kw):
+        super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
+        application = manager.application
+        application.on_trait_change(self._update_state, 'active_window')
+
+    def _update_state(self, win):
+        self.enabled = win.active_task.id == self.task_id
+
+    def perform(self, event):
+        manager = self._get_experimentor(event)
+        manager.save_experiment_queue()
+
+
+#===============================================================================
+# database actions
+#===============================================================================
+class LabnumberEntryAction(ExperimentAction):
+    name = 'Labnumber Entry'
+    accelerator = 'Ctrl+Shift+l'
+
+    task_id = 'pychron.labnumber_entry'
+
+    def perform(self, event):
+        app = event.task.window.application
+
+        manager = app.get_service('src.experiment.entry.labnumber_entry.LabnumberEntry')
+#        manager = self._get_labnumber_entry(event)
+        if manager.verify_database_connection(inform=True):
+#            lne = manager._labnumber_entry_factory()
+            self._open_editor(event)
+#            open_manager(event.window.application, lne)
+
+#===============================================================================
+# Utilities
+#===============================================================================
+class SignalCalculatorAction(ExperimentAction):
+    name = 'Signal Calculator'
+    def perform(self, event):
+        obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
+        app = event.task.window.application
+        app.open_view(obj)
+
+#===============================================================================
+# deprecated
+#===============================================================================
+# def mkaction(name, path):
+#    def action(cls, event):
+#        man = cls._get_executor(event)
+#        if man.load_experiment_queue(path=path):
+#            open_manager(event.window.application, man)
+#
+#    nname = '{}Action'.format(name)
+#    klass = type(nname, (ExperimentAction,), dict(perform=action,
+#                                                    name=name
+#                                                    ))
+#    globals()[nname] = klass
 #===============================================================================
 # scripts
 #===============================================================================
-class OpenScriptAction(ExperimentAction):
-    def perform(self, event):
-        script_manager = self._get_service(event, 'src.pyscripts.manager.PyScriptManager')
-        editor = script_manager.open_script()
-        if editor:
-            open_manager(event.window.application, editor)
-
-class NewScriptAction(ExperimentAction):
-    def perform(self, event):
-        script_editor = self._get_service(event, 'src.pyscripts.manager.PyScriptManager')
-#        if script_editor.open_script():
-        open_manager(event.window.application, script_editor)
+# class OpenScriptAction(ExperimentAction):
+#    def perform(self, event):
+#        script_manager = self._get_service(event, 'src.pyscripts.manager.PyScriptManager')
+#        editor = script_manager.open_script()
+#        if editor:
+#            open_manager(event.window.application, editor)
+#
+# class NewScriptAction(ExperimentAction):
+#    def perform(self, event):
+#        script_editor = self._get_service(event, 'src.pyscripts.manager.PyScriptManager')
+# #        if script_editor.open_script():
+#        open_manager(event.window.application, script_editor)
 
 # class ExecuteProcedureAction(ExperimentAction):
 #    def perform(self, event):
 #        man = self._get_executor(event)
 #        man.execute_procedure()
 
-class ExecuteExperimentQueueAction(ExperimentAction):
-    name = 'Execute'
-    accelerator = 'Ctrl+W'
-    def perform(self, event):
-        from globals import globalv
-        man = self._get_executor(event)
-#        man.experiment_set_path = p
-#        if man.verify_credentials(inform=False):
-        if man.verify_database_connection(inform=True):
-            if man.load_experiment_queue(path=globalv.test_experiment_set):
-                open_manager(event.window.application, man)
+# class ExecuteExperimentQueueAction(ExperimentAction):
+#    name = 'Execute'
+#    accelerator = 'Ctrl+W'
+#    def perform(self, event):
+#        from globals import globalv
+#        man = self._get_executor(event)
+# #        man.experiment_set_path = p
+# #        if man.verify_credentials(inform=False):
+#        if man.verify_database_connection(inform=True):
+#            if man.load_experiment_queue(path=globalv.test_experiment_set):
+#                open_manager(event.window.application, man)
 
 
-class NewExperimentQueueAction(ExperimentAction):
-    '''
-    '''
-    description = 'Create a new experiment queue'
-    name = 'New...'
-    accelerator = 'Ctrl+N'
-    def perform(self, event):
-        '''
-        '''
-        manager = self._get_experimentor(event)
-        if manager.verify_database_connection(inform=True):
-#        if manager.verify_credentials():
-            if manager.load():
-                manager.new_experiment_queue()
-#                open_manager(app, manager)
 
+# class OpenRecentTableAction(ExperimentAction):
+#    description = 'Open the Recent Analysis Table'
+#    name = 'Lab Table'
+#    accelerator = 'Ctrl+R'
+#
+#    def perform(self, event):
+#        manager = self._get_manager(event)
+#        manager.open_recent()
 
-class OpenExperimentQueueAction(ExperimentAction):
-    '''
-    '''
-    description = 'Open experiment set'
-    name = 'Open...'
-    accelerator = 'Shift+Ctrl+O'
-    def perform(self, event):
-        '''
-        '''
-        manager = self._get_experimentor(event)
-        if manager.verify_database_connection(inform=True):
-#        if manager.verify_credentials():
-            if manager.load():
-                manager.load_experiment_queue(saveable=True)
-#                    open_manager(event.window.application, manager)
-
-
-class OpenRecentTableAction(ExperimentAction):
-    description = 'Open the Recent Analysis Table'
-    name = 'Lab Table'
-    accelerator = 'Ctrl+R'
-
-    def perform(self, event):
-        manager = self._get_manager(event)
-        manager.open_recent()
-
-#===============================================================================
-# database actions
-#===============================================================================
-class LabnumberEntryAction(ExperimentAction):
-    accelerator = 'Ctrl+Shift+l'
-    def perform(self, event):
-        manager = self._get_manager(event)
-        if manager.verify_database_connection(inform=True):
-            lne = manager._labnumber_entry_factory()
-            open_manager(event.window.application, lne)
-
-#===============================================================================
-# Utilities
-#===============================================================================
-class SignalCalculatorAction(ExperimentAction):
-    def perform(self, event):
-        obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
-        open_manager(event.window.application, obj)
+##===============================================================================
+# # database actions
+##===============================================================================
+# class LabnumberEntryAction(ExperimentAction):
+#    accelerator = 'Ctrl+Shift+l'
+#    def perform(self, event):
+#        manager = self._get_manager(event)
+#        if manager.verify_database_connection(inform=True):
+#            lne = manager._labnumber_entry_factory()
+#            open_manager(event.window.application, lne)
+#
+##===============================================================================
+# # Utilities
+##===============================================================================
+# class SignalCalculatorAction(ExperimentAction):
+#    def perform(self, event):
+#        obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
+#        open_manager(event.window.application, obj)
 
 class OpenImportManagerAction(ExperimentAction):
     accelerator = 'Ctrl+i'

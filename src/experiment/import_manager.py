@@ -164,12 +164,12 @@ class MassSpecExtractor(Extractor):
         irs = [ImportName(name='{}'.format(i[0])) for i in self.db.get_irradiation_names()]
         return irs
 
-    def traits_view(self):
-        cred_grp = VGroup(Item('dbconn_spec', style='custom', show_label=False),
-                          Item('connect_button', show_label=False)
-                          )
-        v = View(cred_grp)
-        return v
+#    def traits_view(self):
+#        cred_grp = VGroup(Item('dbconn_spec', style='custom', show_label=False),
+#                          Item('connect_button', show_label=False)
+#                          )
+#        v = View(cred_grp)
+#        return v
 
 #    def _import_irradiation(self, dest, msrecord):
 #        #get irradiation position
@@ -226,23 +226,6 @@ class MassSpecExtractor(Extractor):
 #                dblevel = dest.add_irradiation_level(level, dbirrad, holder)
 
 
-class ImportNameAdapter(TabularAdapter):
-    columns = [('Name', 'name')]
-
-class ImportedNameAdapter(TabularAdapter):
-    columns = [('Name', 'name'), ('Skipped', 'skipped')]
-    skipped_text = Property
-
-    def _get_skipped_text(self):
-        return 'Yes' if self.item.skipped else ''
-
-    def get_bg_color(self, obj, trait, row, column=0):
-        color = 'white'
-        if self.item.skipped:
-            color = 'red'
-        return color
-
-
 class ImportManager(DatabaseManager):
     data_source = Enum('MassSpec', 'File')
     importer = Instance(Extractor)
@@ -288,29 +271,30 @@ class ImportManager(DatabaseManager):
     def _data_source_default(self):
         return 'MassSpec'
 
-    def traits_view(self):
-        v = View(Item('data_source'),
-                 Item('importer', style='custom', show_label=False),
-                 Item('import_kind', show_label=False),
-                 Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
-                                                    editable=False,
-                                                    selected='selected',
-                                                    multi_select=True
-                                                    )),
-                 CustomLabel('custom_label1',
-                             color='blue',
-                             size=10),
-                 Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
-                                                    editable=False,
-                                                    )),
-
-                 HGroup(spring, Item('import_button', show_label=False)),
-                 width=500,
-                 height=700,
-                 title='Importer',
-                 resizable=True
-                 )
-        return v
+#    def traits_view(self):
+#        v = View(
+#                 Item('data_source'),
+#                 Item('importer', style='custom', show_label=False),
+#                 Item('import_kind', show_label=False),
+#                 Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
+#                                                    editable=False,
+#                                                    selected='selected',
+#                                                    multi_select=True
+#                                                    )),
+#                 CustomLabel('custom_label1',
+#                             color='blue',
+#                             size=10),
+#                 Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
+#                                                    editable=False,
+#                                                    )),
+#
+#                 HGroup(spring, Item('import_button', show_label=False)),
+#                 width=500,
+#                 height=700,
+#                 title='Importer',
+#                 resizable=True
+#                 )
+#        return v
 
 if __name__ == '__main__':
     im = ImportManager()

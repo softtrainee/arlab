@@ -634,9 +634,9 @@ class ExperimentManager(IsotopeDatabaseManager, Saveable):
 # #        exp.on_trait_change(self._update_dirty, 'dirty')
 #        return exp
 
-    def _labnumber_entry_factory(self):
-        lne = LabnumberEntry(db=self.db)
-        return lne
+#    def _labnumber_entry_factory(self):
+#        lne = LabnumberEntry(db=self.db)
+#        return lne
 
 #    def _db_factory(self):
 #        db = IsotopeAdapter(application=self.application)
