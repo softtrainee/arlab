@@ -23,25 +23,18 @@ import os
 
 version_id = '_experiment'
 from helpers import build_version
-'''
-    set_path=True inserts the pychron source directory into the PYTHONPATH
-    necessary if you are launching from commandline or eclipse(?). 
-    Use false (default) if your are launching from a standalone bundle. 
-'''
-build_version(version_id, set_path=True)
+build_version(version_id)
+
+# PYC = os.path.join(merc, 'pychron_source.zip')
+# sys.path.insert(0, PYC)
 
 def main():
     '''
         entry point
     '''
-    from src.envisage.pychron_run2 import launch
+    from src.envisage.pychron_run import launch
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
-
-    # import application
-    from src.applications.pyexperiment import PyExperiment as app
-#    from src.applications.pydiode import PyDiode as app
-
 
     # build directories
     build_directories(paths)
@@ -64,28 +57,28 @@ def main():
     from globals import globalv
     globalv._test = False
 
-
-    launch(app)
+    launch()
     os._exit(0)
 
 
-# def profile_code():
-#    '''
-#    '''
-#
-#    import cProfile
-# #    app_path = '/Users/Ross/Programming/pychron_beta/application_launch.py'
-# #    l = open(app_path, 'r')
-#    cProfile.run('main()', 'profile.out')
-#    import pstats
-#    p = pstats.Stats('profile.out')
-#    p.strip_dirs()
-#    p.sort_stats('time')
-#
-#    p.print_stats(1000)
-#
-#    os._exit(0)
-# #    sys.exit()
+def profile_code():
+    '''
+    '''
+
+    import cProfile
+#    app_path = '/Users/Ross/Programming/pychron_beta/application_launch.py'
+#    l = open(app_path, 'r')
+    cProfile.run('main()', 'profile.out')
+    import pstats
+    p = pstats.Stats('profile.out')
+    p.strip_dirs()
+    p.sort_stats('time')
+
+    p.print_stats(1000)
+
+    os._exit(0)
+#    sys.exit()
 if __name__ == '__main__':
+
     main()
 #============= EOF =============================================
