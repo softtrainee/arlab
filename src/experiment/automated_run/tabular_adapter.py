@@ -70,19 +70,23 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
 
     def get_bg_color(self, obj, trait, row, column):
-        if row % 2 == 0:
-            color = 'white'
+        
+    
+        item = self.item
+        if not item.executable:
+            color = 'red'
+        if item.skip:
+            color = '#33CCFF'  # light blue
+        elif item.state == 'success':
+            color = '#66FF33'  # light green
         else:
-            color = '#E6F2FF'  # light gray blue
+            if row % 2 == 0:
+                color = 'white'
+            else:
+                color = '#E6F2FF'  # light gray blue
+    
         return color
-#        item = getattr(obj, trait)[row]
-#        if not item.executable:
-#            color = 'red'
-#        if item.skip:
-#            color = '#33CCFF'  # light blue
-#        elif item.state == 'success':
-#            color = '#66FF33'  # light green
-#        return color
+
     def _get_labnumber_text(self, trait, item):
         it = self.item
         ln = it.labnumber

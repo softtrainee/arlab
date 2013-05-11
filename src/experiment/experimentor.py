@@ -90,7 +90,7 @@ class Experimentor(Experimentable):
                 path = dlg.path
 #            path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
-        if path is not None:
+        if path:
 
             self.experiment_queue = None
             self.experiment_queues = []
@@ -109,9 +109,9 @@ class Experimentor(Experimentable):
 #                        exp.set_script_names()
                 ws = exp._warned_labnumbers
 
-            self._update(all_info=True)
-#             self.test_runs()
+            self._update(all_info=True, stats=False)
             if self.experiment_queues:
+                self.test_runs()
                 self.experiment_queue = self.experiment_queues[0]
                 self.start_file_listener(self.experiment_queue.path)
 #                def func():
@@ -121,7 +121,6 @@ class Experimentor(Experimentable):
 #                do_later(func)
                 self._load_experiment_queue_hook()
                 self.save_enabled = True
-                print 'ss', self.save_enabled, self
 
                 return True
 
@@ -152,13 +151,17 @@ class Experimentor(Experimentable):
 #===============================================================================
 # info update
 #===============================================================================
-    def _update(self, all_info=False):
+    def _update(self, all_info=False, stats=True):
         self.debug('update runs')
-
-        self.stats.calculate()
+        
+        if stats:
+            self.debug('updating stats')
+            self.stats.calculate()
 
         ans = self._get_all_automated_runs()
         # update the aliquots
+        
+        
         self._modify_aliquots(ans)
 
         # update the steps
@@ -209,6 +212,8 @@ class Experimentor(Experimentable):
                     ai.irradiation = '{}{}'.format(irrad.name, level.name)
 
     def _modify_steps(self, ans):
+        self.debug('modifying steps')
+
 #        db = self.db
         idcnt_dict = dict()
         stdict = dict()
@@ -267,6 +272,7 @@ class Experimentor(Experimentable):
             arun.aliquot += aoff
 
     def _modify_aliquots(self, ans):
+        self.debug('modifying aliquots')
 #        print ans
         offset = 0
 #        if self.experiment_set and self.experiment_set.selected:
@@ -314,8 +320,13 @@ class Experimentor(Experimentable):
             stdict[arunid] = st
 
     def _load_experiment_queue_hook(self):
-        self.executor.executable = all([ei.executable for ei in self.experiment_queues])
-
+        
+        for ei in self.experiment_queues:
+            self.debug('ei executable={}'.format(ei.executable))
+        self.executor.executable = all([ei.executable 
+                                        for ei in self.experiment_queues])
+        self.debug('setting executor executable={}'.format(self.executor.executable))
+        
     def _validate_experiment_queues(self):
         for exp in self.experiment_queues:
             if exp.test_runs():
@@ -346,15 +357,16 @@ class Experimentor(Experimentable):
 #===============================================================================
     @on_trait_change('executor:execute_button')
     def _execute_fired(self):
+        self.debug('stop file listener')
         self.stop_file_listener()
 
+        self.debug('setup executor')
         self.executor.trait_set(experiment_queues=self.experiment_queues,
                                 experiment_queue=self.experiment_queues[0],
                                 _experiment_hash=self._experiment_hash,
                                 _text=self._text
                                 )
-
-        self.executor._execute()
+        self.executor.execute()
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):

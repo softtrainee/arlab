@@ -18,9 +18,9 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
-from pyface.message_dialog import information, warning as nonmodal_warning, \
-    MessageDialog
-from pyface.confirmation_dialog import confirm, ConfirmationDialog
+# from pyface.message_dialog import information, warning as nonmodal_warning, \
+#     MessageDialog
+# from pyface.confirmation_dialog import confirm, ConfirmationDialog
 # from pyface.api import confirm
 #
 # from traits.etsconfig.api import ETSConfig
@@ -38,6 +38,8 @@ from src.helpers.color_generators import colorname_generator
 from src.helpers.logger_setup import new_logger, NAME_WIDTH
 from threading import current_thread
 from src.ui.thread import currentThreadName
+# from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.dialogs import myConfirmationDialog, myMessageDialog
 
 color_name_gen = colorname_generator()
 
@@ -75,15 +77,16 @@ class Loggable(HasTraits):
             c = color_name_gen.next()
         self.logcolor = c
 
-    def warning_dialog(self, msg, sound=None, title=''):
-        dialog = MessageDialog(
-                               parent=None, message=msg, title=title,
+    def warning_dialog(self, msg, sound=None, title='Warning'):
+        dialog = myMessageDialog(
+                               parent=None, message=msg, 
+                               title=title,
                                severity='warning'
                                )
-        if sound:
-            from src.helpers.media import loop_sound
-            evt = loop_sound(sound)
-            dialog.close = lambda: self._close_warning(evt)
+#         if sound:
+#             from src.helpers.media import loop_sound
+#             evt = loop_sound(sound)
+#             dialog.close = lambda: self._close_warning(evt)
 
         dialog.open()
 
@@ -95,24 +98,34 @@ class Loggable(HasTraits):
 
     def confirmation_dialog(self, msg, title=''):
 #        return False
-        dlg = ConfirmationDialog(
-                                 message=msg,
-                                 title=title,
-                                 style='modal')
-        dlg.control = dlg._create_control(None)
-        dlg._show_modal()
-#        print result
-        return False
+
+        dlg = myConfirmationDialog(
+                                message=msg,
+                                title=title,
+                                style='modal')
+        retval=dlg.open()
+#         
+        from pyface.api import OK
+        return retval==OK 
+#         dlg.control = dlg._create_control(None)
+#         
+# #         invoke_in_main_thread
+#         dlg._show_modal()
+# #        print result
+#         return False
 #        result = confirmation(None, msg, title=title)
         # NO==5104, YES==5103
 #        return result == 5103
+        
 
-
-    def information_dialog(self, msg, title=None):
-        if title is None:
-            information(None, msg)
-        else:
-            information(None, msg, title=title)
+    def information_dialog(self, msg, title='Information'):
+        dlg=myMessageDialog(parent=None, message=msg, title, 
+                            severity='information')
+        dlg.open()
+#         if title is None:
+#             information(None, msg)
+#         else:
+#             information(None, msg, title=title)
 
     def db_save_dialog(self):
         return self.confirmation_dialog('Save to Database')

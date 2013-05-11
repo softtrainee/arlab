@@ -21,6 +21,7 @@ from traits.api import List, Any
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 from PySide.QtGui import QLabel, QImage, QPixmap
+from src.ui.qt.gui import invoke_in_main_thread
 
 #=============standard library imports ========================
 
@@ -51,6 +52,7 @@ class _ImageEditor(Editor):
             image = self.value
 
         self.control = QLabel()
+        print 'pix map init'
         self.control.setPixmap(convert_bitmap(image))
 
         self.set_tooltip()
@@ -61,8 +63,12 @@ class _ImageEditor(Editor):
             image = self.value
 
         qsize = self.control.size()
-        self.control.setPixmap(convert_bitmap(image, qsize.width()))
+        print 'pix map update editor'
+        invoke_in_main_thread(self.set_pixmap, image, qsize.width())
+#         self.control.setPixmap(convert_bitmap(image, qsize.width()))
 
+    def set_pixmap(self,image, w):
+        self.control.setPixmap(convert_bitmap(image, w))
 
 #    '''
 #    '''

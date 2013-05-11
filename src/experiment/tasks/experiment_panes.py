@@ -21,6 +21,8 @@ from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
+from src.ui.tabular_editor import myTabularEditor
+from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -49,10 +51,35 @@ def RFItem(name, **kw):
 def RF_CBItem(name,**kw):
     return CBItem(name, make_rf_name,**kw)
 
+
+def make_rt_name(name):
+    return 'object.experiment_queue.runs_table.{}'.format(name)
+
+def RTItem(name, **kw):
+    return Item(make_rt_name(name), **kw)
+    
 class AnalysesPane(TraitsTaskPane):
     def traits_view(self):
-        v = View(
-                 UItem('experiment_queue', style='custom'),
+        
+        v = View(RTItem('automated_runs',
+                               show_label=False,
+                               editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+                                            operations=['delete',
+                                                        'move',
+#                                                        'edit'
+                                                        ],
+                                            editable=True,
+#                                             selected='selected',
+#                                             rearranged='rearranged',
+#                                             pasted='pasted',
+#                                             copy_cache='copy_cache',
+#                                             update='update_needed',
+                                            drag_move=True,
+                                            auto_update=True,
+                                            multi_select=True,
+                                            scroll_to_bottom=False
+                                            )
+                      )
                  )
         return v
 

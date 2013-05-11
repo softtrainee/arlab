@@ -175,7 +175,14 @@ class ExperimentExecutor(Experimentable):
             name = os.path.basename(name)
 
         self._execute_procedure(name)
-
+    
+    def execute(self):
+        self.debug('starting execution')
+        t=Thread(self._execute)
+        t.start()
+        self.debug('execution started')
+        self._execute_thread=t
+        
 #===============================================================================
 # stats
 #===============================================================================
@@ -223,13 +230,33 @@ class ExperimentExecutor(Experimentable):
                     self.warning('experiment canceled')
                     return
 
-
             # check for blank before starting the thread
             exp = self.experiment_queues[0]
             if self._has_preceeding_blank_or_background(exp):
-                t = Thread(target=self._execute_experiment_queues)
-                t.start()
-                self._execute_thread = t
+                if not self.massspec_importer.connect():
+                    if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
+                        self._alive = False
+                        return
+ 
+                exp = self.experiment_queues[0]
+                nonfound = self._check_for_managers(exp)
+                if nonfound:
+                    self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+                    self.info('experiment canceled because could not find managers {}'.format(nonfound))
+                    self._alive = False
+                    return
+                else:
+                    mon, isok = self._monitor_factory()
+         
+                    if mon and not isok:
+                        self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
+                        self.info('experiment canceled because automated_run_monitor is not setup properly')
+                        self._alive = False
+                        return
+                
+#                 t = Thread(target=self._execute_experiment_queues)
+#                 t.start()
+#                 self._execute_thread = t
 
                 self.err_message = False
                 self._was_executed = True
@@ -266,26 +293,26 @@ class ExperimentExecutor(Experimentable):
         self.stats.start_timer()
         self.stats.nruns_finished = 0
 
-        if not self.massspec_importer.connect():
-            if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
-                self._alive = False
-                return
-
-        exp = self.experiment_queues[0]
-        nonfound = self._check_for_managers(exp)
-        if nonfound:
-            self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
-            self.info('experiment canceled because could not find managers {}'.format(nonfound))
-            self._alive = False
-            return
-        else:
-            mon, isok = self._monitor_factory()
-
-            if mon and not isok:
-                self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
-                self.info('experiment canceled because automated_run_monitor is not setup properly')
-                self._alive = False
-                return
+#         if not self.massspec_importer.connect():
+#             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
+#                 self._alive = False
+#                 return
+#  
+#         exp = self.experiment_queues[0]
+#         nonfound = self._check_for_managers(exp)
+#         if nonfound:
+#             self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+#             self.info('experiment canceled because could not find managers {}'.format(nonfound))
+#             self._alive = False
+#             return
+#         else:
+#             mon, isok = self._monitor_factory()
+#  
+#             if mon and not isok:
+#                 self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
+#                 self.info('experiment canceled because automated_run_monitor is not setup properly')
+#                 self._alive = False
+#                 return
 
         self.pyscript_runner.connect()
         self._alive = True
@@ -702,11 +729,11 @@ class ExperimentExecutor(Experimentable):
     def _save_as_button_fired(self):
         self.save_as()
 
-    def _experiment_queue_changed(self):
-        if self.experiment_queue:
-            nonfound = self._check_for_managers(self.experiment_queue)
-            if nonfound:
-                self.warning_dialog('Could not find managers {}'.format(','.join(nonfound)))
+#     def _experiment_queue_changed(self):
+#         if self.experiment_queue:
+#             nonfound = self._check_for_managers(self.experiment_queue)
+#             if nonfound:
+#                 self.warning_dialog('Could not find managers {}'.format(','.join(nonfound)))
 
     def _resume_button_fired(self):
         self.resume_runs = True
