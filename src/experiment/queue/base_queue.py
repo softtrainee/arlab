@@ -385,22 +385,22 @@ tray: {}
 #===============================================================================
 # groups
 #===============================================================================
-    def _get_copy_paste_group(self):
-        return HGroup(
-             Item('copy_button', enabled_when='object.selected'),
-             Item('paste_button', enabled_when='object._copy_cache'),
-             Item('update_aliquots'),
-              show_labels=False)
+#     def _get_copy_paste_group(self):
+#         return HGroup(
+#              Item('copy_button', enabled_when='object.selected'),
+#              Item('paste_button', enabled_when='object._copy_cache'),
+#              Item('update_aliquots'),
+#               show_labels=False)
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
-        analysis_table = VGroup(
-#                                self._get_copy_paste_group(),
-                                Item('runs_table', show_label=False, style='custom'),
-                                show_border=True,
-                                label='Analyses',
-                                )
-        v = View(analysis_table)
-        return v
+#     def traits_view(self):
+#         analysis_table = VGroup(
+# #                                self._get_copy_paste_group(),
+#                                 Item('runs_table', show_label=False, style='custom'),
+#                                 show_border=True,
+#                                 label='Analyses',
+#                                 )
+#         v = View(analysis_table)
+#         return v
 #============= EOF =============================================

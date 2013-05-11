@@ -71,5 +71,4 @@ class AutomatedRunsTable(HasTraits):
                       )
                  )
         return v
-        return v
 #============= EOF =============================================

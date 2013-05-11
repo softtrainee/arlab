@@ -65,8 +65,8 @@ class FileListener(object):
         while self._alive:
             time.sleep(1 / self._freq)
             if self._check():
-                do_later(self._callback)
-#                self._callback()
+#                 do_later(self._callback)
+                self._callback()
                 self._otime = self.otime
 
     def _check(self):
