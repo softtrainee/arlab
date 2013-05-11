@@ -30,7 +30,7 @@ from src.ui.led_editor import LEDEditor
 class BaseLaserPane(TraitsTaskPane):
     def traits_view(self):
 #         if self.model.mode!='client':
-        v = View(UItem('stage_manager', 
+        v = View(UItem('stage_manager',
                        #defined_when='mode!="client"',
                        style='custom'),
                  HGroup(UItem('status_text', style='readonly'), spring),
@@ -61,12 +61,12 @@ class StageControlPane(TraitsDockPane):
                          **kw)
 
         def CItem(name, **kw):
-            return Item('object.stage_manager.canvas.{}'.format(name), 
+            return Item('object.stage_manager.canvas.{}'.format(name),
                         defined_when='mode!="client"',
                         **kw)
-            
+
         def CUItem(name, **kw):
-            return UItem('object.stage_manager.canvas.{}'.format(name), 
+            return UItem('object.stage_manager.canvas.{}'.format(name),
                         defined_when='mode!="client"',
                          **kw)
         #=======================================================================
@@ -110,8 +110,8 @@ class StageControlPane(TraitsDockPane):
                        label='Canvas'
                        )
 
-        if self.model.mode!='client':
-            if self.model.stage_manager.__class__.__name___=='VidoeStageManager':
+        if self.model.mode != 'client':
+            if self.model.stage_manager.__class__.__name__ == 'VidoeStageManager':
     #             isinstance(self.model.stage_manager, VideoStageManager):
                     mvgrp = VGroup(
                               HGroup(SItem('use_autocenter', label='Enabled'),
@@ -133,7 +133,7 @@ class StageControlPane(TraitsDockPane):
             else:
                 mvgrp = Group()
                 recgrp = Group()
-    
+
             cagrp = VGroup(
                            mvgrp,
                            recgrp,
@@ -141,7 +141,7 @@ class StageControlPane(TraitsDockPane):
                            visible_when='use_video',
                            label='Camera'
                            )
-    
+
             cgrp = Group(
                          cngrp,
                          cagrp,
@@ -159,9 +159,9 @@ class StageControlPane(TraitsDockPane):
                      cgrp
                      )
         else:
-            v=View() 
-            
-        
+            v = View()
+
+
         return v
 
 

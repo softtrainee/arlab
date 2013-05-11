@@ -21,14 +21,14 @@ ETSConfig.toolkit = "qt4"
 import os
 #============= local library imports  ==========================
 
-version_id = '_qt'
+version_id = '_diode'
 from helpers import build_version
 '''
     set_path=True inserts the pychron source directory into the PYTHONPATH
     necessary if you are launching from commandline or eclipse(?). 
     Use false (default) if your are launching from a standalone bundle. 
 '''
-build_version(version_id, set_path=True)
+build_version(version_id, set_path=False)
 
 def main():
     '''
@@ -39,8 +39,8 @@ def main():
     from src.paths import build_directories, paths
 
     # import application
-    from src.applications.pyexperiment import PyExperiment as app
-#    from src.applications.pydiode import PyDiode as app
+#    from src.applications.pyexperiment import PyExperiment as app
+    from src.applications.pydiode import PyDiode as app
 
 
     # build directories

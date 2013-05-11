@@ -53,7 +53,7 @@ class FusionsCO2Task(FusionsTask):
     id = 'pychron.fusions.co2'
     name = 'Fusions CO2'
     def create_central_pane(self):
-        
+
         return FusionsCO2Pane(model=self.manager)
 
     def create_dock_panes(self):
@@ -73,10 +73,10 @@ class FusionsDiodeTask(FusionsTask):
 
     def create_dock_panes(self):
         return [
-#                 FusionsDiodeStagePane(model=self.manager),
-#                 FusionsDiodeControlPane(model=self.manager),
-#                 FusionsDiodeSupplementalPane(model=self.manager),
- 
+                 FusionsDiodeStagePane(model=self.manager),
+                 FusionsDiodeControlPane(model=self.manager),
+                 FusionsDiodeSupplementalPane(model=self.manager),
+
 #                TestPane(model=self.manager),
                 PulsePane(model=self.manager),
                 OpticsPane(model=self.manager),

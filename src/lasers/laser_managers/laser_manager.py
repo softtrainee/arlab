@@ -49,13 +49,14 @@ class BaseLaserManager(Manager):
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
-    
-    stage_manager=Any
-    requested_power=Any
-    status_text=Str
-    pulse=Any
-    laser_controller=Any
-    
+
+    stage_manager = Any
+    requested_power = Any
+    status_text = Str
+    pulse = Any
+    laser_controller = Any
+    mode = 'normal'
+
     def is_ready(self):
         return True
 

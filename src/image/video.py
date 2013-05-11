@@ -61,7 +61,7 @@ class Video(Image):
     def is_open(self):
         return self.cap is not None
 
-    def open(self, user=None, identifier=1, force=False):
+    def open(self, user=None, identifier=0, force=False):
         '''
 
         '''
@@ -114,7 +114,8 @@ class Video(Image):
             i = self.users.index(user)
             self.users.pop(i)
             if not self.users:
-                self.cap.release()
+                if self.cap is not None:
+                    self.cap.release()
                 self.cap = None
 
 #    def set_frame_index(self, ind):
