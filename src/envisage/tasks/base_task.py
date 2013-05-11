@@ -33,23 +33,30 @@ from pyface.action.group import Separator
 #============= local library imports  ==========================
 
 class MinimizeAction(TaskAction):
-    name='Minimize'
-    accelerator='Ctrl+m'
-    def perform(self, event):        
-        app=self.task.window.application
+    name = 'Minimize'
+    accelerator = 'Ctrl+m'
+    def perform(self, event):
+        app = self.task.window.application
         app.active_window.control.showMinimized()
-        
+
 class RaiseAction(TaskAction):
-    window=Any
-    style='toggle'
-    def perform(self,event):
+    window = Any
+    style = 'toggle'
+    def perform(self, event):
         self.window.activate()
-        self.checked=True
-        
+        self.checked = True
+
     @on_trait_change('window:deactivated')
     def _on_deactivate(self):
-        self.checked=False
-        
+        self.checked = False
+
+class RaiseUIAction(TaskAction):
+    style = 'toggle'
+    def perform(self, event):
+#        self.ui.control.activate()
+        self.checked = True
+
+
 class WindowGroup(Group):
     items = List
     manager = Any
@@ -63,45 +70,41 @@ class WindowGroup(Group):
 
         application = self.manager.controller.task.window.application
         application.on_trait_change(self._rebuild, 'active_window, windows, uis[]')
-        
+
         return []
-    
+
     def _make_actions(self, vs):
-        items=[]
+        items = []
         if self.manager.controller.task.window is not None:
             application = self.manager.controller.task.window.application
-        
-            added=[]
-            for vi in application.windows+vs:
-                if not vi.active_task.id in added:
-                    checked=vi== application.active_window
-                    items.append(ActionItem(action=RaiseAction(window=vi,
-                                                               checked=checked,
-                                                               name=vi.active_task.name
+
+            added = []
+            for vi in application.windows + vs:
+                if hasattr(vi, 'active_task'):
+                    if not vi.active_task.id in added:
+                        checked = vi == application.active_window
+                        items.append(ActionItem(action=RaiseAction(window=vi,
+                                                                   checked=checked,
+                                                                   name=vi.active_task.name
+                                                               )))
+                        added.append(vi.active_task.id)
+                else:
+                    items.append(ActionItem(action=RaiseUIAction(
+                                                                 name=vi.title,
+                                                                 ui=vi,
+                                                                 checked=checked,
                                                            )))
-                    added.append(vi.active_task.id)
-                    
+
         return items
-    
+
     def _rebuild(self, vs):
         self.destroy()
         if not isinstance(vs, list):
-            vs=[vs]
-        self.items=self._make_actions(vs)
-        self.manager.changed=True
-#         manager = self
-#         while isinstance(manager, Group):
-#             manager = manager.parent
-#         manager.changed=True
-#         manager = self
-#         while isinstance(manager, Group):
-#             manager = manager.parent
-# 
-#         application = manager.controller.task.window.application
+            vs = [vs]
+        self.items = self._make_actions(vs)
+        self.manager.changed = True
 
-#         print self.items
-#         print vs, 'asd'
-    
+
 class myTaskWindowLaunchAction(TaskWindowLaunchAction):
     '''
         modified TaskWIndowLaunchAction default behaviour
@@ -111,7 +114,7 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
         now raise the window if its available else create it
     '''
 
-    style='toggle'
+    style = 'toggle'
     def perform(self, event):
         application = event.task.window.application
         for win in application.windows:
@@ -121,33 +124,30 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
         else:
             window = application.create_window(TaskWindowLayout(self.task_id))
             window.open()
-            
-        self.checked=True
-        
+
+        self.checked = True
+
     @on_trait_change('task:window:opened')
     def _window_opened(self):
         if self.task:
-            if self.task_id==self.task.id:
-                print 'setting check true'
-                self.checked=True
-                
+            if self.task_id == self.task.id:
+                self.checked = True
+
     @on_trait_change('task:window:closed')
     def _window_closed(self):
         if self.task:
-            if self.task_id==self.task.id:
-                print 'setting check false'
-                self.checked=False
-                
-    
+            if self.task_id == self.task.id:
+                self.checked = False
+
 #             window = self.task.window
 #             print win, window
 #             print self.task_id, self.task.id
 #             self.checked=self.task.window==win
 #             print window.active_task, self.task
-#             
-#             self.checked = (window is not None 
+#
+#             self.checked = (window is not None
 #                             and window.active_task == self.task)
-            
+
 #     @on_trait_change('task:window:opened')
 #     def _window_o(self):
 #         self.checked=True
@@ -156,7 +156,7 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
 #     def _window_c(self):
 #         self.checked=False
 #         print 'asdfsafdasdf'
-        
+
 #     @on_trait_change('foo')
 #     def _update_checked(self):
 #         print 'fffff'
@@ -174,19 +174,19 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
         manager = self
         while isinstance(manager, Group):
             manager = manager.parent
-            
-        task=manager.controller.task
+
+        task = manager.controller.task
         application = task.window.application
 
         items = []
         for factory in application.task_factories:
             for win in application.windows:
-                if win.active_task.id==factory.id:
-                    checked=True
+                if win.active_task.id == factory.id:
+                    checked = True
                     break
             else:
-                checked=False
-                
+                checked = False
+
             action = myTaskWindowLaunchAction(task_id=factory.id, checked=checked)
 
             items.append(ActionItem(action=action))
@@ -195,7 +195,7 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
 class BaseTask(Task):
     def _menu_bar_default(self):
         return self._menu_bar_factory()
-    
+
     def _view_menu(self):
         view_menu = SMenu(
 #                         TaskToggleGroup(),
@@ -217,13 +217,13 @@ class BaseTask(Task):
         return tools_menu
 
     def _window_menu(self):
-        window_menu=SMenu(
+        window_menu = SMenu(
                           Group(MinimizeAction()),
                           WindowGroup(),
                           name='&Window')
-        
+
         return window_menu
-        
+
 class BaseManagerTask(BaseTask):
     def _menu_bar_factory(self, menus=None):
         if menus is None:
@@ -231,8 +231,8 @@ class BaseManagerTask(BaseTask):
 
         mb = SMenuBar(
                       self._file_menu(),
-                      self._view_menu(),
                       self._edit_menu(),
+                      self._view_menu(),
                       self._tools_menu(),
                       self._window_menu(),
                       SMenu(
@@ -241,15 +241,15 @@ class BaseManagerTask(BaseTask):
 #                       SMenu(
 #                             ViewMenuManager(),
 #                             id='Window', name='&Window'),
-                      
-                      
+
+
 #                       *menus
                       )
         if menus:
             for mi in reversed(menus):
                 print mi
                 mb.items.insert(4, mi)
-                
+
         return mb
 
 class BaseHardwareTask(BaseManagerTask):

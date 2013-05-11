@@ -16,14 +16,14 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance, List, Property, \
-    on_trait_change
+    on_trait_change, Bool
 from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.experiment.set_selector import SetSelector
 from src.experiment.factory import ExperimentFactory
@@ -49,6 +49,7 @@ class Experimentor(Experimentable):
     filelistener = None
     username = Str
 
+    save_enabled = Bool
 
     #===========================================================================
     # permissions
@@ -120,6 +121,7 @@ class Experimentor(Experimentable):
 #                do_later(func)
                 self._load_experiment_queue_hook()
                 self.save_enabled = True
+                print 'ss', self.save_enabled, self
 
                 return True
 
@@ -134,7 +136,18 @@ class Experimentor(Experimentable):
     def stop_file_listener(self):
         self.filelistener.stop()
 
+    def save_as_experiment_queues(self):
+        # test sets before saving
+        if self._validate_experiment_queues():
+            p = self.save_file_dialog(default_directory=paths.experiment_dir)
+            if p:
+                p = self._dump_experiment_queues(p)
+                self.save_enabled = True
 
+    def save_experiment_queues(self):
+        if self._validate_experiment_queues():
+            self._dump_experiment_queues(self.experiment_queue.path)
+            self.save_enabled = False
 
 #===============================================================================
 # info update
@@ -303,6 +316,31 @@ class Experimentor(Experimentable):
     def _load_experiment_queue_hook(self):
         self.executor.executable = all([ei.executable for ei in self.experiment_queues])
 
+    def _validate_experiment_queues(self):
+        for exp in self.experiment_queues:
+            if exp.test_runs():
+                return
+
+        return True
+
+    def _dump_experiment_queues(self, p):
+
+        if not p:
+            return
+        if not p.endswith('.txt'):
+            p += '.txt'
+
+        self.info('saving experiment to {}'.format(p))
+        with open(p, 'wb') as fp:
+            n = len(self.experiment_queues)
+            for i, exp in enumerate(self.experiment_queues):
+                exp.path = p
+                exp.dump(fp)
+                if i < (n - 1):
+                    fp.write('\n')
+                    fp.write('*' * 80)
+
+        return p
 #===============================================================================
 # handlers
 #===============================================================================

@@ -22,7 +22,7 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 # from src.experiment.editor import ExperimentEditor
 from src.pyscripts.manager import PyScriptManager
 from src.experiment.signal_calculator import SignalCalculator
-from envisage.import_manager import ImportManager
+# from envisage.import_manager import ImportManager
 from src.experiment.image_browser import ImageBrowser
 from src.helpers.parsers.initialization_parser import InitializationParser
 from src.experiment.export_manager import ExportManager
@@ -31,10 +31,14 @@ from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
     ExperimentPreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
-    OpenExperimentQueueAction
+    OpenExperimentQueueAction, LabnumberEntryAction, SaveExperimentQueueAction, \
+    SaveAsExperimentQueueAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.experiment.experimentor import Experimentor
+from src.experiment.entry.labnumber_entry import LabnumberEntry
+from src.experiment.tasks.labnumber_entry_task import LabnumberEntryTask
+from src.experiment.import_manager import ImportManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -45,17 +49,36 @@ class ExperimentPlugin(BaseTaskPlugin):
 #            return OpenScannerAction(self._get_manager())
 #        def factory_tune():
 #            return OpenAutoTunerAction(self._get_manager())
+        def save_factory():
+            return SaveExperimentQueueAction(self._get_manager())
+        def save_as_factory():
+            return SaveAsExperimentQueueAction(self._get_manager())
 
         return [TaskExtension(
-                              task_id='pychron.experiment',
                               actions=[
                                        SchemaAddition(id='open_experiment',
                                                         factory=OpenExperimentQueueAction,
                                                         path='MenuBar/File'),
+
                                        SchemaAddition(id='new_experiment',
                                                       factory=NewExperimentQueueAction,
                                                       path='MenuBar/File'),
+
+                                       SchemaAddition(id='save_experiment',
+                                                      factory=save_factory,
+                                                      path='MenuBar/File'),
+
+                                       SchemaAddition(id='save_as_experiment',
+                                                      factory=save_as_factory,
+                                                      path='MenuBar/File'),
+
+                                       SchemaAddition(id='labnumber_entry',
+                                                      factory=LabnumberEntryAction,
+                                                      path='MenuBar/Edit'
+                                                      )
+
                                        ]
+
                               )
                 ]
 
@@ -75,6 +98,10 @@ class ExperimentPlugin(BaseTaskPlugin):
         so_exp = self.service_offer_factory(
                           protocol=Experimentor,
                           factory=self._experimentor_factory
+                          )
+        so_lab_entry = self.service_offer_factory(
+                          protocol=LabnumberEntry,
+                          factory=self._labnumber_entry_factory
                           )
 
         so_pyscript_manager = self.service_offer_factory(
@@ -106,7 +133,11 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so_exp_editor]
-        return [so_exp, so_pyscript_manager, so_signal_calculator, so_import_manager, so_image_browser, so_export_manager]
+        return [so_exp, so_pyscript_manager,
+                so_signal_calculator, so_import_manager,
+                so_image_browser, so_export_manager,
+                so_lab_entry
+                ]
 
 
 
@@ -153,6 +184,10 @@ class ExperimentPlugin(BaseTaskPlugin):
         return exp
 #    def _editor_factory(self, *args, **kw):
 #        return ExperimentEditor(application=self.application)
+    def _labnumber_entry_factory(self):
+        exp = self.application.get_service(Experimentor)
+        ln = LabnumberEntry(db=exp.db)
+        return ln
 
     def _signal_calculator_factory(self, *args, **kw):
         return SignalCalculator()
@@ -169,11 +204,21 @@ class ExperimentPlugin(BaseTaskPlugin):
         return ImageBrowser(application=self.application)
 
     def _tasks_default(self):
-        return [TaskFactory(id=self.id,
+        return [
+                TaskFactory(id=self.id,
                             factory=self._task_factory,
                             name='Experiment'
+                            ),
+                TaskFactory(id='pychron.labnumber_entry',
+                            factory=self._labnumber_task_factory,
+                            name='Labnumber'
                             )
                 ]
+
+    def _labnumber_task_factory(self):
+        return LabnumberEntryTask(manager=self.application.get_service(LabnumberEntry),
+                                  importer=self.application.get_service(ImportManager)
+                                  )
 
     def _task_factory(self):
         return ExperimentEditorTask(manager=self._get_manager())

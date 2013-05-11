@@ -32,9 +32,10 @@ from src.experiment.entry.db_entry import DBEntry
 from src.irradiation.irradiated_position import IrradiatedPosition, \
     IrradiatedPositionAdapter
 from src.constants import NULL_STR, ALPHAS
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 
 
-class LabnumberEntry(DBEntry):
+class LabnumberEntry(IsotopeDatabaseManager):
 
     irradiation = Str
     level = Str

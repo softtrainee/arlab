@@ -86,14 +86,26 @@ class IrradiatedPositionAdapter(TabularAdapter):
                ('Sample', 'sample'),
                ('Project', 'project'),
                ('Material', 'material'),
-               ('Size', 'size'),
+#               ('Size', 'size'),
                ('Weight', 'weight'),
                ('J', 'j'),
                (u'{}J'.format(PLUSMINUS), 'j_err'),
                ('Note', 'note')
              ]
+
+    labnumber_width = Int(80)
+    hole_width = Int(50)
+    sample_width = Int(50)
+    project_width = Int(50)
+    material_width = Int(50)
+    size_width = Int(50)
+    weight_width = Int(50)
+    j_width = Int(100)
+    j_err_width = Int(100)
+
+
 #    hole_can_edit = False
-    hole_width = Int(45)
+
 #    def _get_hole_width(self):
 #        return 35
 

@@ -124,7 +124,7 @@ class ExperimentPreferences(BasePreferencesHelper):
 
 class ExperimentPreferencesPane(PreferencesPane):
     model_factory = ExperimentPreferences
-
+    category = 'Experiment'
     def traits_view(self):
 
         db_auth_grp = Group(
