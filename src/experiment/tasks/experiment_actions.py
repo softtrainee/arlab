@@ -122,7 +122,8 @@ class SaveAsExperimentQueueAction(ExperimentAction):
         application.on_trait_change(self._update_state, 'active_window')
 
     def _update_state(self, win):
-        self.enabled = win.active_task.id == self.task_id
+        if win.active_task:
+            self.enabled = win.active_task.id == self.task_id
 
     def perform(self, event):
         manager = self._get_experimentor(event)

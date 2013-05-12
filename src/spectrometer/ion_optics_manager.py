@@ -21,10 +21,12 @@ from traitsui.api import View, Item, EnumEditor
 from src.managers.manager import Manager
 from src.graph.graph import Graph
 from src.spectrometer.jobs.peak_center import PeakCenter
-from threading import Thread
-from pyface.timer.do_later import do_later
+# from threading import Thread
+# from pyface.timer.do_later import do_later
 from src.spectrometer.detector import Detector
 from src.constants import NULL_STR
+from src.ui.thread import Thread
+from src.ui.qt.gui import invoke_in_main_thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -120,7 +122,8 @@ class IonOpticsManager(Manager):
     def do_peak_center(self, detector=None, isotope=None, center_dac=None,
                        save=True,
                        confirm_save=False,
-                       warn=False
+                       warn=False,
+                       new_thread=True
                        ):
 #        spec = self.spectrometer
         if detector is None or isotope is None:
@@ -140,17 +143,23 @@ class IonOpticsManager(Manager):
         self.canceled = False
         self.alive = True
 
-
-        t = Thread(name='ion_optics.peak_center', target=self._peak_center,
-                   args=(detector, isotope, center_dac,
-                         self.directions,
-                         save, confirm_save, warn))
-        t.start()
-        return t
+        if new_thread:
+            t = Thread(name='ion_optics.peak_center', target=self._peak_center,
+                       args=(detector, isotope, center_dac,
+                             self.directions,
+                             save, confirm_save, warn))
+            t.start()
+            return t
+        else:
+            self._peak_center(detector, isotope, center_dac,
+                             self.directions,
+                             save, confirm_save, warn)
 
     def _peak_center(self, detector, isotope, center_dac,
                      directions,
                      save, confirm_save, warn):
+
+        self.debug('doing pc')
 #        graph = self._graph_factory()
 
 
@@ -173,7 +182,9 @@ class IonOpticsManager(Manager):
         pc.graph.close_func = self.close
         # set graph window attributes
         pc.graph.window_title = 'Peak Center {}({}) @ {:0.3f}'.format(detector, isotope, center_dac)
+
         self.open_view(pc.graph)
+
 
         dac_d = pc.get_peak_center()
         self.peak_center_result = dac_d
@@ -212,8 +223,9 @@ class IonOpticsManager(Manager):
 
         # needs to be called on the main thread to properly update
         # the menubar actions. alive=False enables IonOptics>Peak Center
-        d = lambda:self.trait_set(alive=False)
-        do_later(d)
+#        d = lambda:self.trait_set(alive=False)
+#        do_later(d)
+        self.trait_set(alive=False)
 
     def close(self):
         self.cancel_peak_center()

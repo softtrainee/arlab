@@ -48,7 +48,7 @@ def build_sys_path(ver, root):
     if os.path.isfile(egg_path):
         # use a pychron.pth to get additional egg paths
         with open(egg_path, 'r') as fp:
-            eggs = [ei.strip() for ei in fp.split('\n')]
+            eggs = [ei.strip() for ei in fp.read().split('\n')]
             eggs = [ei for ei in eggs if ei]
 
             for egg_name in eggs:

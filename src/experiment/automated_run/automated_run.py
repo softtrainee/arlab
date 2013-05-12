@@ -379,12 +379,13 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
         ion = self.ion_optics_manager
-        if ion is not None:
 
-            t = ion.do_peak_center(**kw)
+        if ion is not None:
+            self.debug('peak center started')
+            t = ion.do_peak_center(new_thread=False, **kw)
 
             # block until finished
-            t.join()
+#            t.join()
 
             pc = ion.peak_center
             self.peak_center = pc
@@ -911,7 +912,7 @@ anaylsis_type={}
                                                                              **kw
                                                                              )
                         else:
-                            graph_kw = dict(series=series, 
+                            graph_kw = dict(series=series,
 #                                             do_after=100,
                                             update_y_limits=True,
                                             ypadding='0.5')
@@ -965,7 +966,9 @@ anaylsis_type={}
             if data is not None:
                 keys, signals = data
             else:
-                continue
+
+                keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
+#                continue
 
             # if user forgot to set the time zero in measurement script
             # do it here
@@ -997,7 +1000,7 @@ anaylsis_type={}
                 func(x, signal, graph_kw)
 
             data_write_hook(x, keys, signals)
-            graph._update_graph
+            graph._update_graph()
 #             do_after(100, graph._update_graph)
 
         return True

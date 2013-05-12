@@ -153,15 +153,15 @@ class Experimentor(Experimentable):
 #===============================================================================
     def _update(self, all_info=False, stats=True):
         self.debug('update runs')
-        
+
         if stats:
             self.debug('updating stats')
             self.stats.calculate()
 
         ans = self._get_all_automated_runs()
         # update the aliquots
-        
-        
+
+
         self._modify_aliquots(ans)
 
         # update the steps
@@ -320,13 +320,13 @@ class Experimentor(Experimentable):
             stdict[arunid] = st
 
     def _load_experiment_queue_hook(self):
-        
+
         for ei in self.experiment_queues:
             self.debug('ei executable={}'.format(ei.executable))
-        self.executor.executable = all([ei.executable 
+        self.executor.executable = all([ei.executable
                                         for ei in self.experiment_queues])
         self.debug('setting executor executable={}'.format(self.executor.executable))
-        
+
     def _validate_experiment_queues(self):
         for exp in self.experiment_queues:
             if exp.test_runs():
@@ -438,8 +438,8 @@ class Experimentor(Experimentable):
             e.queue_factory.mass_spectrometer = 'Jan'
             e.queue_factory.extract_device = 'Fusions Diode'
 
-            e.queue_factory.delay_between_analyses = 100
-            e.queue_factory.delay_before_analyses = 10312
+#            e.queue_factory.delay_between_analyses = 100
+#            e.queue_factory.delay_before_analyses = 10312
         return e
 
 #============= EOF =============================================

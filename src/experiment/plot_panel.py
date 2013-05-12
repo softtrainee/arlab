@@ -142,7 +142,6 @@ class PlotPanel(Viewable):
 
     @on_trait_change('correct_for_baseline, correct_for_blank')
     def _print_results(self):
-        return
 
         def wrapper(display, *args):
             display.freeze()
