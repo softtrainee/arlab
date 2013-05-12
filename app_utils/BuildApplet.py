@@ -57,7 +57,7 @@ def main():
         EasyDialogs.Message(detail)
 
 
-def buildapplet():
+def buildapplet(*filenames):
     buildtools.DEBUG = 1
 
     # Find the template
@@ -88,15 +88,15 @@ def buildapplet():
 #            buildtools.process(template, filename, dstfilename, 1)
 #    else:
 
-    SHORTOPTS = "o:r:ne:v?PR"
-    LONGOPTS = ("output=", "resource=", "noargv", "extra=", "verbose", "help", "python=", "destroot=")
-    try:
-        options, args = getopt.getopt(sys.argv[1:], SHORTOPTS, LONGOPTS)
-    except getopt.error:
-        usage()
-    if options and len(args) > 1:
-        sys.stderr.write("Cannot use options when specifying multiple input files")
-        sys.exit(1)
+#    SHORTOPTS = "o:r:ne:v?PR"
+#    LONGOPTS = ("output=", "resource=", "noargv", "extra=", "verbose", "help", "python=", "destroot=")
+#    try:
+#        options, args = getopt.getopt(sys.argv[1:], SHORTOPTS, LONGOPTS)
+#    except getopt.error:
+#        usage()
+#    if options and len(args) > 1:
+#        sys.stderr.write("Cannot use options when specifying multiple input files")
+#        sys.exit(1)
 
     dstfilename = None
     rsrcfilename = None
@@ -104,34 +104,37 @@ def buildapplet():
     extras = []
     verbose = None
     destroot = ''
-    for opt, arg in options:
-        if opt in ('-o', '--output'):
-            dstfilename = arg
-        elif opt in ('-r', '--resource'):
-            rsrcfilename = arg
-        elif opt in ('-n', '--noargv'):
-            raw = 1
-        elif opt in ('-e', '--extra'):
-            if ':' in arg:
-                arg = arg.split(':')
-            extras.append(arg)
-        elif opt in ('-P', '--python'):
-            # This is a very dirty trick. We set sys.executable
-            # so that bundlebuilder will use this in the #! line
-            # for the applet bootstrap.
-            sys.executable = arg
-        elif opt in ('-v', '--verbose'):
-            verbose = Verbose()
-        elif opt in ('-?', '--help'):
-            usage()
-        elif opt in ('-d', '--destroot'):
-            destroot = arg
+#    for opt, arg in options:
+#        if opt in ('-o', '--output'):
+#            dstfilename = arg
+#        elif opt in ('-r', '--resource'):
+#            rsrcfilename = arg
+#        elif opt in ('-n', '--noargv'):
+#            raw = 1
+#        elif opt in ('-e', '--extra'):
+#            if ':' in arg:
+#                arg = arg.split(':')
+#            extras.append(arg)
+#        elif opt in ('-P', '--python'):
+#            # This is a very dirty trick. We set sys.executable
+#            # so that bundlebuilder will use this in the #! line
+#            # for the applet bootstrap.
+#            sys.executable = arg
+#        elif opt in ('-v', '--verbose'):
+#            verbose = Verbose()
+#        elif opt in ('-?', '--help'):
+#            usage()
+#        elif opt in ('-d', '--destroot'):
+#            destroot = arg
     # On OS9 always be verbose
     if sys.platform == 'mac' and not verbose:
         verbose = 'default'
     # Loop over all files to be processed
-    for filename in args:
+    for filename in filenames:
         print filename
+
+        print os.getcwd()
+
         cr, tp = MacOS.GetCreatorAndType(filename)
         if tp == 'APPL':
             buildtools.update(template, filename, dstfilename)

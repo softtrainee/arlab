@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from globals import globalv
+from src.globals import globalv
 
 #============= standard library imports ========================
 

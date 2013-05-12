@@ -461,7 +461,7 @@ if __name__ == '__main__':
 
     from src.helpers.logger_setup import logging_setup
     logging_setup('machine_vision')
-    from globals import globalv
+    from src.globals import globalv
     globalv._test = True
 
     m = MachineVisionManager(

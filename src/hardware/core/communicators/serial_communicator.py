@@ -28,7 +28,7 @@ import sys
 
 #=============local library imports  ==========================
 from communicator import Communicator
-from globals import globalv
+from src.globals import globalv
 
 
 def get_ports():

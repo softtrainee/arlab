@@ -63,7 +63,7 @@ class BrightnessManager(MachineVisionManager):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
-#    from globals import globalv
+#    from src.globals import globalv
 #    globalv._test = False
     logging_setup('bm')
     b = BrightnessManager()

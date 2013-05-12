@@ -20,7 +20,7 @@ from src.envisage.core.action_helper import open_manager
 from pyface.image_resource import ImageResource
 from src.paths import paths
 # from src.envisage.core.action_helper import open_manager
-# from globals import globalv
+# from src.globals import globalv
 #============= standard library imports ========================
 
 #============= local library imports  ==========================

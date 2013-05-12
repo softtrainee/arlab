@@ -26,7 +26,7 @@ import logging.handlers
 #=============local library imports  =========================
 from src.paths import paths
 from filetools import unique_path
-# from globals import globalv
+# from src.globals import globalv
 # from pyface.timer.do_later import do_later
 import shutil
 

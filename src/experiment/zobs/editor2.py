@@ -23,7 +23,7 @@
 # from src.experiment.manager import ExperimentManager
 # # from src.paths import paths
 # from src.saveable import SaveableButtons
-# from globals import globalv
+# from src.globals import globalv
 # from src.experiment.factory import ExperimentFactory
 #
 #

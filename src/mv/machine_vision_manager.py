@@ -143,7 +143,7 @@ class MachineVisionManager(Manager):
 
         im = self.target_image
         for p, dim in paths[:]:
-            from globals import globalv
+            from src.globals import globalv
             # force video to reload test image
             self.video.source_frame = None
             globalv.video_test_path = p
@@ -206,7 +206,7 @@ class MachineVisionManager(Manager):
         return View('test')
 
 def test():
-    from globals import globalv
+    from src.globals import globalv
     globalv.video_test = True
     globalv.video_test_path = '/Users/ross/Sandbox/pos_err/snapshot007.jpg'
 #    globalv.video_test_path = '/Users/ross/Sandbox/pos_err/pos_err_53002.jpg'

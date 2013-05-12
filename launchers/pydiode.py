@@ -1,3 +1,4 @@
+
 #===============================================================================
 # Copyright 2012 Jake Ross
 #
@@ -61,7 +62,7 @@ def main():
 # set if you want to execute tests after startup
 # explicitly set the flag here once. mode is a readonly property
 #===============================================================================
-    from globals import globalv
+    from src.globals import globalv
     globalv._test = False
 
 

@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,19 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, String, on_trait_change, Dict, List, Str, Int
-from traitsui.api import View, Item, EnumEditor, Group, VGroup, HGroup
-from apptools.preferences.ui.api import PreferencesPage
-
-
+from traits.api import Bool, List, on_trait_change, String, Dict
+from traitsui.api import View, Item, Group, VGroup, HGroup, EnumEditor
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+from envisage.ui.tasks.preferences_pane import PreferencesPane
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
 
-
-class HardwarePreferencesPage(PreferencesPage):
-    '''
-    '''
+class HardwarePreferences(BasePreferencesHelper):
     name = 'Hardware'
     preferences_path = 'pychron.hardware'
     enable_hardware_server = Bool
@@ -55,51 +50,20 @@ class HardwarePreferencesPage(PreferencesPage):
             return
 
         self.system_lock_address = addr
-#
-#    def __init__(self, *args, **kw):
-#
-#        config = ConfigParser.ConfigParser()
-#        p = os.path.join(setup_dir, 'system_locks.cfg')
-#        config.read(p)
-#        self.system_lock_names = []
-#        self.system_lock_addresses = dict()
-#
-#        for sect in config.sections():
-#            name = config.get(sect, 'name')
-#            host = config.get(sect, 'host')
-#
-#            self.system_lock_names.append(name)
-#            self.system_lock_addresses[name] = host
-#
-#        pref = ConfigParser.ConfigParser()
-#        p = os.path.join(os.path.expanduser('~'), '.enthought', 'pychron', 'preferences.ini')
-#        pref.read(p)
-#
-#        pref.set('pychron.hardware', 'system_lock_names', value)
-#        with open(p, 'w') as fp:
-#            pref.write(fp)
-#
-#        #you must open the preference window and hit ok for changes in the configuration file to be passed into the master preference file
-#        if not self.system_lock_addresses.has_key(self.system_lock_name):
-#            self.system_lock_name = self.system_lock_names[0]
-#
-#        self.system_lock_address = self.system_lock_addresses[self.system_lock_name]
-#
-#        super(HardwarePreferencesPage, self).__init__(*args, **kw)
 
-
+class HardwarePreferencesPane(PreferencesPane):
+    model_factory = HardwarePreferences
+    category = 'Hardware'
     def traits_view(self):
-        '''
-        '''
         v = View(
                  VGroup(
                      Group(
                            HGroup('enable_hardware_server', Item('enable_system_lock', enabled_when='enable_hardware_server')),
-                           Group(
-                                 Item('system_lock_name', editor=EnumEditor(values=self.system_lock_names),
-                                      enabled_when='enable_system_lock'),
-                                 Item('system_lock_address', style='readonly', label='Host'),
-                                      enabled_when='enable_hardware_server'),
+#                           Group(
+#                                 Item('system_lock_name', editor=EnumEditor(values=self.system_lock_names),
+#                                      enabled_when='enable_system_lock'),
+#                                 Item('system_lock_address', style='readonly', label='Host'),
+#                                      enabled_when='enable_hardware_server'),
                            label='Remote Hardware Server',
                            show_border=True
                            ),
@@ -121,5 +85,4 @@ class HardwarePreferencesPage(PreferencesPage):
                  scrollable=True
                  )
         return v
-#============= views ===================================
-#============= EOF ====================================
+#============= EOF =============================================

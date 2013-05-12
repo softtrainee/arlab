@@ -433,7 +433,7 @@ class Experimentor(Experimentable):
                               can_edit_scripts=self.can_edit_scripts
                               )
 
-        from globals import globalv
+        from src.globals import globalv
         if globalv.experiment_debug:
             e.queue_factory.mass_spectrometer = 'Jan'
             e.queue_factory.extract_device = 'Fusions Diode'

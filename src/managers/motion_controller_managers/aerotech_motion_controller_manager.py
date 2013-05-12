@@ -24,7 +24,7 @@
 from src.managers.motion_controller_managers.motion_controller_manager import MotionControllerManager
 from src.hardware.aerotech.aerotech_motion_controller import AerotechMotionController
 from src.paths import paths
-from globals import globalv
+from src.globals import globalv
 
 
 class AerotechMotionControllerManager(MotionControllerManager):

@@ -23,10 +23,10 @@ from envisage.api import Plugin
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from pychron_application import Pychron
+# from pychron_application import Pychron
 
-from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
-from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
+# from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
+# from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 
 # from src.helpers.paths import plugins_dir
 
@@ -34,7 +34,7 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 # from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
     gMessageDisplay
-from globals import globalv
+from src.globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
 

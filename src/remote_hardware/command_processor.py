@@ -27,7 +27,7 @@ from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors import SystemLockErrorCode, \
     SecurityErrorCode
-from globals import globalv
+from src.globals import globalv
 BUFSIZE = 2048
 
 def end_request(fn):

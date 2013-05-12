@@ -20,7 +20,7 @@ from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
     makeNamedRegistry
 #============= standard library imports ========================
 import time
-from globals import globalv
+from src.globals import globalv
 #============= local library imports  ==========================
 
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'

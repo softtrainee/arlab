@@ -22,7 +22,7 @@ from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change, \
 #=============standard library imports ========================
 # import wx
 from numpy import asarray, flipud, ndarray
-from globals import globalv
+from src.globals import globalv
 # from src.image.pyopencv_image_helper import colorspace
 #=============local library imports  ==========================
 from cv_wrapper import load_image, asMat, get_size, grayspace, resize, \

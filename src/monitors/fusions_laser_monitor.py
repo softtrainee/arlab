@@ -110,7 +110,7 @@ class FusionsLaserMonitor(LaserMonitor):
                 self._coolant_check_status_cnt = 0
 
     def _chiller_unavailable(self):
-        from globals import globalv
+        from src.globals import globalv
 
         if not globalv.ignore_chiller_unavailable:
             if self._unavailable_cnt >= self.max_unavailable:
