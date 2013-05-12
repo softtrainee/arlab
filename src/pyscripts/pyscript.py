@@ -31,6 +31,7 @@ from src.loggable import Loggable
 
 from Queue import Queue, Empty
 from src.globals import globalv
+from src.ui.qt.gui import invoke_in_main_thread
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
         self.info('open valve')
@@ -633,9 +634,11 @@ class PyScript(Loggable):
                                 message='Waiting for {:0.1f}  {}'.format(timeout, message)
                                 )
 
-            do_later(wd.edit_traits)
+            invoke_in_main_thread(wd.edit_traits)
+#             do_later(wd.edit_traits)
             evt.wait(timeout=timeout + 0.25)
-            do_later(wd.stop)
+            wd.stop()
+#             do_later(wd.stop)
 
             if wd._canceled:
                 self.cancel()

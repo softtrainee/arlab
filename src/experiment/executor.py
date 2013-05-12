@@ -178,7 +178,7 @@ class ExperimentExecutor(Experimentable):
     
     def execute(self):
         self.debug('starting execution')
-        t=Thread(self._execute)
+        t=Thread(target=self._execute)
         t.start()
         self.debug('execution started')
         self._execute_thread=t
@@ -254,6 +254,7 @@ class ExperimentExecutor(Experimentable):
                         self._alive = False
                         return
                 
+                self._execute_experiment_queues()
 #                 t = Thread(target=self._execute_experiment_queues)
 #                 t.start()
 #                 self._execute_thread = t
@@ -317,6 +318,8 @@ class ExperimentExecutor(Experimentable):
         self.pyscript_runner.connect()
         self._alive = True
 
+        exp=self.experiment_queue
+        
         # check the first aliquot before delaying
         arv = exp.cleaned_automated_runs[0]
         self._check_run_aliquot(arv)
