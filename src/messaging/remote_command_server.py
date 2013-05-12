@@ -33,7 +33,7 @@ from src.messaging.command_repeater import CommandRepeater
 from src.helpers.datetime_tools import diff_timestamp
 from src.remote_hardware.command_processor import CommandProcessor
 from src.ui.led_editor import LED, LEDEditor
-from globals import globalv
+from src.globals import globalv
 
 LOCAL = False
 class RCSHandler(Handler):

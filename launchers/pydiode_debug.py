@@ -34,6 +34,12 @@ def main():
     '''
         entry point
     '''
+
+
+    import sys
+    for si in sys.path:
+        print si
+
     from src.envisage.pychron_run2 import launch
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
@@ -42,11 +48,8 @@ def main():
 #    from src.applications.pyexperiment import PyExperiment as app
     from src.applications.pydiode import PyDiode as app
 
-
     # build directories
     build_directories(paths)
-
-    #
 
 #    from src.helpers.paths import hidden_dir
 #    path = os.path.join(hidden_dir, 'version_info')
@@ -61,7 +64,7 @@ def main():
 # set if you want to execute tests after startup
 # explicitly set the flag here once. mode is a readonly property
 #===============================================================================
-    from globals import globalv
+    from src.globals import globalv
     globalv._test = False
 
 

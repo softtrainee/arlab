@@ -83,7 +83,7 @@ if __name__ == '__main__':
     logging_setup('autocenter')
     from src.paths import  paths
     paths.build('_qt')
-    from globals import globalv
+    from src.globals import globalv
     from src.helpers.parsers.initialization_parser import InitializationParser
     globalv.build(InitializationParser())
     am = AutocenterManager()

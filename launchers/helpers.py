@@ -21,32 +21,39 @@ import sys
 #============= local library imports  ==========================
 
 def build_version(ver, set_path=False):
+    root = os.path.dirname(__file__)
     if set_path:
 #       insert pychron src dir into sys.path
-        build_sys_path(ver)
+        build_sys_path(ver, root)
 
     # can now use src.
-    # build the global path structure
-    from src.paths import paths
 
-    paths.bundle_root = os.path.dirname(__file__)
+    from src.paths import paths
+    paths.bundle_root = root
+
     paths.build(ver)
 
     # build globals
     build_globals()
 
-def build_sys_path(ver):
+def build_sys_path(ver, root):
+
     merc = os.path.join(os.path.expanduser('~'),
                         'Programming',
                         'mercurial')
     src = os.path.join(merc, 'pychron{}'.format(ver))
     sys.path.insert(0, src)
 
+    # use a pychron.pth to get additional egg paths
+    eggs = open(os.path.join(root, 'pychron.pth'))
+    for egg_name in eggs:
+        sys.path.insert(0, os.path.join(root, egg_name))
+
 def build_globals():
     from src.helpers.parsers.initialization_parser import InitializationParser
     ip = InitializationParser()
 
-    from globals import globalv
+    from src.globals import globalv
     globalv.build(ip)
 # #    use_ipc = ip.get_global('use_ipc')
 #    boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False

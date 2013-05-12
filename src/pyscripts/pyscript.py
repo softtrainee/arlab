@@ -30,7 +30,7 @@ from src.loggable import Loggable
 
 
 from Queue import Queue, Empty
-from globals import globalv
+from src.globals import globalv
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
         self.info('open valve')

@@ -34,7 +34,7 @@ from pyface.timer.do_later import do_later
 # from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
     gMessageDisplay
-from globals import globalv
+from src.globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
 from envisage.ui.tasks.tasks_plugin import TasksPlugin

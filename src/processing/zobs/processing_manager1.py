@@ -178,7 +178,7 @@
 #        return View('test')
 #
 # if __name__ == '__main__':
-#    from globals import globalv
+#    from src.globals import globalv
 #    globalv.show_infos = False
 #    globalv.show_warnings = False
 #    from launchers.helpers import build_version

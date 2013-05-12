@@ -32,7 +32,7 @@ from cv_wrapper import swap_rb as cv_swap_rb
 #    set_frame_index, get_fps, set_video_pos, crop, swapRB
 #
 
-from globals import globalv
+from src.globals import globalv
 
 
 class Video(Image):

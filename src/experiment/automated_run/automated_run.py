@@ -29,7 +29,7 @@ import struct
 from threading import Thread, Event as TEvent
 from uncertainties import ufloat
 #============= local library imports  ==========================
-from globals import globalv
+from src.globals import globalv
 
 from src.loggable import Loggable
 from src.pyscripts.measurement_pyscript import MeasurementPyScript

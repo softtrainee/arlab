@@ -213,7 +213,7 @@ if __name__ == '__main__':
     build_version('_experiment')
     from src.paths import build_directories
     build_directories(paths)
-    from globals import globalv
+    from src.globals import globalv
     globalv.show_infos = False
     globalv.show_warnings = False
 

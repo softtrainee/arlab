@@ -26,7 +26,7 @@ from traitsui.api import Item, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
-from globals import globalv
+from src.globals import globalv
 # from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.kerr.kerr_microcontroller import KerrMicrocontroller

@@ -27,7 +27,7 @@ from src.managers.manager import Manager
 from src.helpers.parsers.initialization_parser import InitializationParser
 from src.remote_hardware.command_processor import CommandProcessor
 from src.messaging.remote_command_server import RemoteCommandServer
-from globals import globalv
+from src.globals import globalv
 from src.paths import paths
 
 # from src.messaging.directory_server import DirectoryServer
@@ -55,6 +55,7 @@ class RemoteHardwareManager(Manager):
 
 
     def bind_preferences(self, cp):
+        print cp, 'dddfda'
         try:
             bind_preference(self, 'system_lock', 'pychron.hardware.enable_system_lock')
 

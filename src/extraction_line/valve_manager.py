@@ -25,7 +25,7 @@ from threading import Timer, Thread, Event
 import time
 import random
 #=============local library imports  ==========================
-from globals import globalv
+from src.globals import globalv
 from src.managers.manager import Manager
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve

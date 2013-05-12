@@ -30,6 +30,9 @@ from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.task_action import TaskAction
 from pyface.action.action import Action
 from pyface.tasks.action.schema_addition import SchemaAddition
+from src.hardware.tasks.hardware_preferences import HardwarePreferencesPane
+from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Preference(HasTraits):
@@ -84,20 +87,20 @@ class HardwarePlugin(BaseTaskPlugin):
         '''
         '''
 
-        so = self.service_offer_factory(
+        so_hm = self.service_offer_factory(
                           protocol=HardwareManager,
                           factory=self._hardware_manager_factory)
 
-#        so1 = self.service_offer_factory(
-#                          protocol=RemoteHardwareManager,
-#                          factory=self._remote_hardware_manager_factory)
+        so_rhm = self.service_offer_factory(
+                          protocol=RemoteHardwareManager,
+                          factory=self._remote_hardware_manager_factory)
 
-        so2 = self.service_offer_factory(
+        so_fm = self.service_offer_factory(
                           protocol=FlagManager,
                           factory=self._flag_manager_factory
                           )
 #        return [so, so1, so2]
-        return [so, so2]
+        return [so_hm, so_rhm, so_fm]
 
     def _flag_manager_factory(self):
         return FlagManager(application=self.application)
@@ -105,8 +108,11 @@ class HardwarePlugin(BaseTaskPlugin):
     def _hardware_manager_factory(self):
         return HardwareManager(application=self.application)
 
-#    def _remote_hardware_manager_factory(self):
-#        return RemoteHardwareManager(application=self.application)
+    def _remote_hardware_manager_factory(self):
+        return RemoteHardwareManager(application=self.application)
+
+    def _preferences_panes_default(self):
+        return [HardwarePreferencesPane]
 
     def _my_managers_default(self):
         return [dict(name='hardware', manager=self._hardware_manager_factory())]
@@ -138,10 +144,11 @@ class HardwarePlugin(BaseTaskPlugin):
             return
 
         # create the hardware server
-#        rhm = self.application.get_service(RemoteHardwareManager)
-#        bind_preference(rhm, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
-#        bind_preference(rhm, 'enable_directory_server', 'pychron.hardware.enable_directory_server')
-#        rhm.bootstrap()
+        rhm = self.application.get_service(RemoteHardwareManager)
+        bind_preference(rhm, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
+        bind_preference(rhm, 'enable_directory_server', 'pychron.hardware.enable_directory_server')
+        print rhm
+        rhm.bootstrap()
 
     def stop(self):
 

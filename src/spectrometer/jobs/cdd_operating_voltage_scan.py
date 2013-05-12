@@ -26,7 +26,7 @@ import os
 from src.spectrometer.jobs.spectrometer_task import SpectrometerTask
 from src.graph.graph import Graph
 from src.time_series.time_series import smooth
-from globals import globalv
+from src.globals import globalv
 from src.paths import paths
 
 

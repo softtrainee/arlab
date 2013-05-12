@@ -76,7 +76,7 @@ class ExecuteExperimentQueueAction(ExperimentAction):
     name = 'Execute'
     accelerator = 'Ctrl+W'
     def perform(self, event):
-        from globals import globalv
+        from src.globals import globalv
         man = self._get_executor(event)
 #        man.experiment_set_path = p
 #        if man.verify_credentials(inform=False):

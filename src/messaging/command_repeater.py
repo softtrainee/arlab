@@ -25,7 +25,7 @@ from threading import Lock
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 from src.remote_hardware.errors import PychronCommErrorCode
-from globals import globalv
+from src.globals import globalv
 from src.ui.led_editor import LED, LEDEditor
 
 

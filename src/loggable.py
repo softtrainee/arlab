@@ -33,7 +33,7 @@ from pyface.timer.api import do_later
 # import wx
 #============= local library imports  ==========================
 # from src.helpers.logger_setup import add_console
-from globals import globalv
+from src.globals import globalv
 from src.helpers.color_generators import colorname_generator
 from src.helpers.logger_setup import new_logger, NAME_WIDTH
 from threading import current_thread
@@ -79,7 +79,7 @@ class Loggable(HasTraits):
 
     def warning_dialog(self, msg, sound=None, title='Warning'):
         dialog = myMessageDialog(
-                               parent=None, message=msg, 
+                               parent=None, message=msg,
                                title=title,
                                severity='warning'
                                )
@@ -103,12 +103,12 @@ class Loggable(HasTraits):
                                 message=msg,
                                 title=title,
                                 style='modal')
-        retval=dlg.open()
-#         
+        retval = dlg.open()
+#
         from pyface.api import OK
-        return retval==OK 
+        return retval == OK
 #         dlg.control = dlg._create_control(None)
-#         
+#
 # #         invoke_in_main_thread
 #         dlg._show_modal()
 # #        print result
@@ -116,10 +116,11 @@ class Loggable(HasTraits):
 #        result = confirmation(None, msg, title=title)
         # NO==5104, YES==5103
 #        return result == 5103
-        
+
 
     def information_dialog(self, msg, title='Information'):
-        dlg=myMessageDialog(parent=None, message=msg, title, 
+        dlg = myMessageDialog(parent=None, message=msg,
+                            title=title,
                             severity='information')
         dlg.open()
 #         if title is None:

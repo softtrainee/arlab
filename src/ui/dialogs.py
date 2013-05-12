@@ -23,12 +23,11 @@
 #============= local library imports  ==========================
 from src.ui.factory import toolkit_factory
 
-myMessageDialog=toolkit_factory('dialogs','myMessageDialog')    
-myConfirmationDialog=toolkit_factory('dialogs','myConfirmationDialog')    
-myInformationDialog=toolkit_factory('dialogs','myInformationDialog')    
-    
-    
-    
-     
+myMessageDialog = toolkit_factory('dialogs', 'myMessageDialog')
+myConfirmationDialog = toolkit_factory('dialogs', 'myConfirmationDialog')
+
+
+
+
 
 #============= EOF =============================================

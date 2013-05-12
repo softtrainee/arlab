@@ -23,7 +23,7 @@ import random
 import time
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
-from globals import globalv
+from src.globals import globalv
 
 def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
     x = linspace(start, stop, step)

@@ -44,7 +44,7 @@ class OpenRemoteHardwareServerAction(Action):
     name = 'Remote Hardware Server'
 
     def __init__(self, *args, **kw):
-        from globals import globalv
+        from src.globals import globalv
         self.enabled = not globalv.use_ipc
         super(OpenRemoteHardwareServerAction, self).__init__(*args, **kw)
 

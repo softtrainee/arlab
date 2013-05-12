@@ -58,25 +58,27 @@ def install_pychron_suite():
         help='set the root directory',
         )
 
-    parser.add_argument(
-        'name',
-        metavar='N',
-        type=str,
-        nargs=1,
-        default='pychron',
-        help='name of the cloned source directory',
-        )
+#    parser.add_argument(
+#        'name',
+#        metavar='N',
+#        type=str,
+#        nargs=1,
+#        default='pychron',
+#        help='name of the cloned source directory',
+#        )
 
     args = parser.parse_args()
 
     # if args.root[0]:
 
     root = args.root[0]
-    name = args.name[0]
+#    name = args.name[0]
 
+    print root
     version = args.version[0]
 
-    src_dir = os.path.join(root, name)
+    src_dir = root
+#    src_dir = os.path.join(root, name)
 
     print 'Using {} as working dir'.format(root)
     if args.source:

@@ -43,7 +43,7 @@ from detector import Detector
 from src.image.image import StandAloneImage
 from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
-from globals import globalv
+from src.globals import globalv
 
 
 # from src.image.pyopencv_image_helper import grayspace

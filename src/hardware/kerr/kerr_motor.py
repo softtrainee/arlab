@@ -26,7 +26,7 @@ import binascii
 from kerr_device import KerrDevice
 from src.hardware.core.data_helper import make_bitarray
 import time
-from globals import globalv
+from src.globals import globalv
 from src.ui.custom_label_editor import CustomLabel
 from pyface.timer.api import do_after
 
