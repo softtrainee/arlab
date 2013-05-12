@@ -81,13 +81,14 @@ class WindowGroup(Group):
             added = []
             for vi in application.windows + vs:
                 if hasattr(vi, 'active_task'):
-                    if not vi.active_task.id in added:
-                        checked = vi == application.active_window
-                        items.append(ActionItem(action=RaiseAction(window=vi,
-                                                                   checked=checked,
-                                                                   name=vi.active_task.name
-                                                               )))
-                        added.append(vi.active_task.id)
+                    if vi.active_task:
+                        if not vi.active_task.id in added:
+                            checked = vi == application.active_window
+                            items.append(ActionItem(action=RaiseAction(window=vi,
+                                                                       checked=checked,
+                                                                       name=vi.active_task.name
+                                                                   )))
+                            added.append(vi.active_task.id)
                 else:
                     items.append(ActionItem(action=RaiseUIAction(
                                                                  name=vi.title,

@@ -106,7 +106,7 @@ class MagnetScan(SpectrometerTask):
         mag.settling_time = 0.5
         if globalv.experiment_debug:
             delay = 1
-            mag.settling_time = 0.01
+            mag.settling_time = 0.5
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
@@ -139,7 +139,7 @@ class MagnetScan(SpectrometerTask):
             graph.add_datum(
                             (di, intensity),
 #                            update_y_limits=True,
-                            do_after=1,
+#                            do_after=1,
                             **kw
                             )
 

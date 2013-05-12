@@ -142,6 +142,7 @@ class HardwareValve(Loggable):
         '''
         '''
         actuator = self.actuator
+        r = True
         if mode == 'debug':
             r = True
         elif self.actuator is not None:
@@ -155,16 +156,18 @@ class HardwareValve(Loggable):
                 else:
                     r = True if actuator.open_channel(self) else False
 
-        if actuator.simulation:
-            r = True
+            if actuator.simulation:
+                r = True
         return r
 
     def _close_(self, mode='normal'):
         '''
         '''
+        r = True
         actuator = self.actuator
         if mode == 'debug':
             r = True
+
         elif actuator is not None:
             if mode.startswith('client'):
                 print 'close', self.state
@@ -176,8 +179,8 @@ class HardwareValve(Loggable):
                 else:
                     r = True if actuator.close_channel(self) else False
 
-        if actuator.simulation:
-            r = True
+            if actuator.simulation:
+                r = True
         return r
 
 #    def _get_shaft_low(self):

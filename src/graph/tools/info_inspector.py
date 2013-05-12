@@ -18,6 +18,7 @@
 from traits.api import  Event, Instance, on_trait_change
 from chaco.abstract_overlay import AbstractOverlay
 from enable.base_tool import BaseTool
+from kiva.fonttools import Font
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class InfoInspector(BaseTool):
@@ -78,6 +79,7 @@ class InfoOverlay(AbstractOverlay):
     def _draw_info(self, gc, lines):
         x, y = self.tool.current_screen
 
+        gc.set_font(Font('Arial'))
         gc.set_fill_color((0.8, 0.8, 0.8))
 
         lws, lhs = zip(*[gc.get_full_text_extent(mi)[:2] for mi in lines])
