@@ -44,10 +44,16 @@ def build_sys_path(ver, root):
     src = os.path.join(merc, 'pychron{}'.format(ver))
     sys.path.insert(0, src)
 
-    # use a pychron.pth to get additional egg paths
-    eggs = open(os.path.join(root, 'pychron.pth'))
-    for egg_name in eggs:
-        sys.path.insert(0, os.path.join(root, egg_name))
+    egg_path = os.path.join(root, 'pychron.pth')
+    if os.path.isfile(egg_path):
+        # use a pychron.pth to get additional egg paths
+        with open(egg_path, 'r') as fp:
+            eggs = [ei.strip() for ei in fp.split('\n')]
+            eggs = [ei for ei in eggs if ei]
+
+            for egg_name in eggs:
+                sys.path.insert(0, os.path.join(root, egg_name))
+
 
 def build_globals():
     from src.helpers.parsers.initialization_parser import InitializationParser

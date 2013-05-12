@@ -17,8 +17,8 @@
 from traits.api import Str
 from traitsui.api import View, Group, Item
 from envisage.core_plugin import CorePlugin
-# from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
-# from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
+from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
+from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
 from envisage.api import Plugin
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
@@ -37,9 +37,6 @@ from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from src.globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
-from envisage.ui.tasks.tasks_plugin import TasksPlugin
-# from src.envisage.tasks.pychron_application import Pychron
-import os
 
 #
 # if globalv.open_logger_on_launch:
@@ -53,77 +50,75 @@ logger = new_logger('launcher')
 # logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 
 PACKAGE_DICT = dict(
-#                   DatabasePlugin='src.database.plugins.database_plugin',
-#                   DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
-                   ExperimentPlugin='src.experiment.tasks.experiment_plugin',
-#                   ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
+                   DatabasePlugin='src.database.plugins.database_plugin',
+                   DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
+                   ExperimentPlugin='src.experiment.plugins.experiment_plugin',
+                   ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
 #                   ScriptPlugin='src.scripts.plugins.script_plugin',
 #                   ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
-                   ExtractionLinePlugin='src.extraction_line.tasks.extraction_line_plugin',
-#                   ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
+                   ExtractionLinePlugin='src.extraction_line.plugins.extraction_line_plugin',
+                   ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
 #                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
 #                   CanvasDesignerUIPlugin='src.canvas.plugins.canvas_designer_ui_plugin',
-#                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
-#                   MDDModelerUIPlugin='src.modeling.plugins.mdd_modeler_ui_plugin',
+                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
+                   MDDModelerUIPlugin='src.modeling.plugins.mdd_modeler_ui_plugin',
 
 #                   SVNPlugin='src.svn.plugins.svn_plugin',
 #                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
 
-                   FusionsDiodePlugin='src.lasers.tasks.laser_plugin',
-                   FusionsCO2Plugin='src.lasers.tasks.laser_plugin',
-#                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
-#                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
-#                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
-#                   FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
-#                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
-#                   FusionsUVUIPlugin='src.lasers.plugins.fusions.uv.ui_plugin',
+                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
+                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
+                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
+                   FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
+                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
+                   FusionsUVUIPlugin='src.lasers.plugins.fusions.uv.ui_plugin',
 
-#                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
-#                   SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
+                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
+                   SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
 
-                   SpectrometerPlugin='src.spectrometer.tasks.spectrometer_plugin',
-#                   SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
+                   SpectrometerPlugin='src.spectrometer.plugins.spectrometer_plugin',
+                   SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
 
 #                   GraphPlugin='src.graph.plugins.graph_plugin',
 #                   GraphUIPlugin='src.graph.plugins.graph_ui_plugin',
 
-#                   TwitterPlugin='src.social.plugins.twitter_plugin',
-#                   TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
-#                   EmailPlugin='src.social.plugins.email_plugin',
-#                   EmailUIPlugin='src.social.plugins.email_ui_plugin',
+                   TwitterPlugin='src.social.plugins.twitter_plugin',
+                   TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
+                   EmailPlugin='src.social.plugins.email_plugin',
+                   EmailUIPlugin='src.social.plugins.email_ui_plugin',
 
-#                   ProcessingPlugin='src.processing.plugins.processing_plugin',
-#                   ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin',
+                   ProcessingPlugin='src.processing.plugins.processing_plugin',
+                   ProcessingUIPlugin='src.processing.plugins.processing_ui_plugin',
 
-#                   MediaServerPlugin='src.media_server.plugins.media_server_plugin',
-#                   MediaServerUIPlugin='src.media_server.plugins.media_server_ui_plugin'
+                   MediaServerPlugin='src.media_server.plugins.media_server_plugin',
+                   MediaServerUIPlugin='src.media_server.plugins.media_server_ui_plugin'
                  )
 
-# class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):
-#    username = Str
-#
-#    def traits_view(self):
-#        user_grp = Group(
-#                         Item('username'),
-#                         label='User',
-#                         show_border=True,
-#                         )
-#        v = View(user_grp,
-#                 Item('prompt_on_exit'),
-#                 )
-#        return v
-#
-# class WorkbenchPlugin(ETSWorkbenchPlugin):
-#    def _my_preferences_pages_default(self):
-#        return [WorkbenchPreferencesPage]
-#
-#    def _create_preferences_manager_service(self, **properties):
-#        from src.envisage.plugins.pychron_preferences_manager import PychronPreferencesManager
-#        preferences_manager = PychronPreferencesManager(
-#            pages=[factory() for factory in self.preferences_pages]
-#        )
-#
-#        return preferences_manager
+class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):
+    username = Str
+
+    def traits_view(self):
+        user_grp = Group(
+                         Item('username'),
+                         label='User',
+                         show_border=True,
+                         )
+        v = View(user_grp,
+                 Item('prompt_on_exit'),
+                 )
+        return v
+
+class WorkbenchPlugin(ETSWorkbenchPlugin):
+    def _my_preferences_pages_default(self):
+        return [WorkbenchPreferencesPage]
+
+    def _create_preferences_manager_service(self, **properties):
+        from src.envisage.plugins.pychron_preferences_manager import PychronPreferencesManager
+        preferences_manager = PychronPreferencesManager(
+            pages=[factory() for factory in self.preferences_pages]
+        )
+
+        return preferences_manager
 
 def get_module_name(klass):
     words = []
@@ -140,16 +135,13 @@ def get_module_name(klass):
 def get_hardware_plugins():
     from src.helpers.parsers.initialization_parser import InitializationParser
     ip = InitializationParser()
-#    from src.hardware.plugins.hardware_plugin import HardwarePlugin
-#    from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
+    from src.hardware.plugins.hardware_plugin import HardwarePlugin
+    from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
 
     ps = []
     if 'hardware' in ip.get_categories():
-        from src.hardware.tasks.hardware_plugin import HardwarePlugin
         if ip.get_plugins('hardware'):
-            ps = [HardwarePlugin(),
-#                  HardwareUIPlugin()
-                  ]
+            ps = [HardwarePlugin(), HardwareUIPlugin()]
     return ps
 
 
@@ -165,9 +157,7 @@ def get_user_plugins():
             import traceback
             traceback.print_exc()
             klass = None
-            logger.warning('****** {} could not be imported {} ******'.format(name, e),
-                           extra={'threadName_':'Launcher'}
-                           )
+            logger.warning('****** {} could not be imported {} ******'.format(name, e))
         return klass
 
     # append plugins dir to the sys path
@@ -180,8 +170,8 @@ def get_user_plugins():
         gdict = globals()
         pp.append(p + 'Plugin')
         # add UI
-#        uip = p + 'UIPlugin'
-#        pp.append(uip)
+        uip = p + 'UIPlugin'
+        pp.append(uip)
 
         for pname in pp:
             klass = None
@@ -192,9 +182,7 @@ def get_user_plugins():
                 klass = get_klass(package, pname)
             elif not pname.endswith('UIPlugin'):
                 # dont warn if uiplugin not available
-                logger.warning('***** {} not available ******'.format(pname),
-                               extra={'threadName_':'Launcher'}
-                               )
+                logger.warning('***** {} not available ******'.format(pname))
 
             if klass is not None:
                 plugin = klass()
@@ -204,32 +192,28 @@ def get_user_plugins():
                     if check is True:
                         plugins.append(plugin)
                     else:
-                        logger.warning('****** {} not available {}******'.format(klass, check),
-                                       extra={'threadName_':'Launcher'})
+                        logger.warning('****** {} not available {}******'.format(klass, check))
                 else:
-                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass),
-                                   extra={'threadName_':'Launcher'})
+                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass))
 
     return plugins
 
-def app_factory(klass):
+def app_factory():
     '''
         assemble the plugins 
         return a Pychron WorkbenchApplication
     '''
     plugins = [
                CorePlugin(),
-               TasksPlugin(),
-#               WorkbenchPlugin(),
-#               PychronWorkbenchPlugin(),
-#               PychronWorkbenchUIPlugin(),
+               WorkbenchPlugin(),
+               PychronWorkbenchPlugin(),
+               PychronWorkbenchUIPlugin(),
                ]
 
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
 
-#    print plugins
-    app = klass(plugins=plugins)
+    app = Pychron(plugins=plugins)
 
     gLoggerDisplay.application = app
     gMessageDisplay.application = app
@@ -269,7 +253,7 @@ def check_dependencies():
 
 
 app = None
-def launch(klass):
+def launch():
     '''
     '''
 
@@ -277,7 +261,7 @@ def launch(klass):
         return
 
     global app
-    app = app_factory(klass)
+    app = app_factory()
 
     if globalv.test:
 
@@ -290,11 +274,6 @@ def launch(klass):
 
     try:
         app.run()
-        logger.info('Quitting {}'.format(app.name), extra={'threadName_':'Launcher'})
-        app.exit()
-
-        # force a clean exit
-        os._exit(0)
     except Exception, err:
         logger.exception('Launching error')
 
@@ -308,11 +287,11 @@ def launch(klass):
 #        warning(app.workbench.active_window, tb)
         app.exit()
 
-#    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
-#        gi.close_ui()
+    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
+        gi.close_ui()
 
-#    logger.info('Quitting Pychron')
-#    app.exit()
+    logger.info('Quitting Pychron')
+    app.exit()
 
 
     return

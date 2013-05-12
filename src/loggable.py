@@ -106,6 +106,7 @@ class Loggable(HasTraits):
         retval = dlg.open()
 #
         from pyface.api import OK
+        print 'asdfasfd', retval, OK
         return retval == OK
 #         dlg.control = dlg._create_control(None)
 #
