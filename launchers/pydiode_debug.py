@@ -35,12 +35,7 @@ def main():
         entry point
     '''
 
-
-    import sys
-    for si in sys.path:
-        print si
-
-    from src.envisage.pychron_run2 import launch
+    from src.envisage.pychron_run import launch
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
 

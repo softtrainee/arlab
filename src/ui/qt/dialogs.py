@@ -33,15 +33,15 @@ class myMessageMixin(object):
         '''        
             open the confirmation dialog on the GUI thread but wait for return 
         '''
-        evt=Event()
+        evt = Event()
         invoke_in_main_thread(self._open, evt)
         while not evt.is_set():
             time.sleep(0.1)
-             
-        return self.return_code 
-    
+
+        return self.return_code
+
     def _open(self, evt):
-        
+
         if self.control is None:
             self._create()
 
@@ -53,21 +53,22 @@ class myMessageMixin(object):
             self.show(True)
             self.return_code = OK
 
+        evt.set()
         return self.return_code
 
 class myMessageDialog(myMessageMixin, MessageDialog):
     pass
 class myConfirmationDialog(myMessageMixin, ConfirmationDialog):
-    pass        
-    
-    
+    pass
 
 
-    
-    
-    
-    
-    
-     
+
+
+
+
+
+
+
+
 
 #============= EOF =============================================
