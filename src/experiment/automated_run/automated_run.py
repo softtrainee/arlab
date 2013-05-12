@@ -911,7 +911,8 @@ anaylsis_type={}
                                                                              **kw
                                                                              )
                         else:
-                            graph_kw = dict(series=series, do_after=100,
+                            graph_kw = dict(series=series, 
+#                                             do_after=100,
                                             update_y_limits=True,
                                             ypadding='0.5')
                             func = lambda xi, yi, kw: graph.add_datum((xi, yi), **kw)
@@ -922,7 +923,8 @@ anaylsis_type={}
                         func(x, signal, graph_kw)
 
                     data_write_hook(x, dets, vs)
-                    do_after(100, graph._update_graph)
+                    graph._update_graph()
+#                     do_after(100, graph._update_graph)
                     time.sleep(integration_time)
 
         return True
@@ -981,7 +983,7 @@ anaylsis_type={}
                                                                  **kw
                                                                  )
             else:
-                graph_kw = dict(series=series, do_after=100,
+                graph_kw = dict(series=series, do_after=None,
                                 update_y_limits=True,
                                 ypadding='0.5')
                 func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
@@ -995,7 +997,8 @@ anaylsis_type={}
                 func(x, signal, graph_kw)
 
             data_write_hook(x, keys, signals)
-            do_after(100, graph._update_graph)
+            graph._update_graph
+#             do_after(100, graph._update_graph)
 
         return True
 
