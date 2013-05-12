@@ -622,23 +622,20 @@ class PyScript(Loggable):
         if dialog:
             if message is None:
                 message = ''
-            st = time.time()
-#            c = Condition()
-#            c.acquire()
+
             evt = Event()
             self._wait_dialog = wd = WaitDialog(wtime=timeout,
-#                                condition=c,
                                 end_evt=evt,
                                 parent=self,
                                 title='{} - Wait'.format(self.logger_name),
                                 message='Waiting for {:0.1f}  {}'.format(timeout, message)
                                 )
 
+            st = time.time()
+#            wd.edit_traits(kind='livemoadl')
             invoke_in_main_thread(wd.edit_traits)
-#             do_later(wd.edit_traits)
             evt.wait(timeout=timeout + 0.25)
-            wd.stop()
-#             do_later(wd.stop)
+#            wd.stop()
 
             if wd._canceled:
                 self.cancel()
@@ -647,7 +644,6 @@ class PyScript(Loggable):
 
         else:
             st = time.time()
-            time.sleep(1)
             while time.time() - st < timeout:
                 if self._cancel:
                     break

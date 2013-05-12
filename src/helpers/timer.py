@@ -30,7 +30,7 @@ class Timer(QThread):
         self._func = func
         self._flag = Event()
 
-        self._delay = delay
+        self._delay = delay / 1000.0
         self._args = args
         self._kwargs = kw
 
