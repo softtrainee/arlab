@@ -17,7 +17,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
-from pyface.timer.api import do_later
+
 # from pyface.message_dialog import information, warning as nonmodal_warning, \
 #     MessageDialog
 # from pyface.confirmation_dialog import confirm, ConfirmationDialog
@@ -38,8 +38,9 @@ from src.helpers.color_generators import colorname_generator
 from src.helpers.logger_setup import new_logger, NAME_WIDTH
 from threading import current_thread
 from src.ui.thread import currentThreadName
-# from src.ui.qt.gui import invoke_in_main_thread
+
 from src.ui.dialogs import myConfirmationDialog, myMessageDialog
+from src.ui.gui import invoke_in_main_thread
 
 color_name_gen = colorname_generator()
 
@@ -133,8 +134,6 @@ class Loggable(HasTraits):
         return self.confirmation_dialog('Save to Database')
 
     def message(self, msg):
-#        if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
-#            do_later(gWarningDisplay.edit_traits)
         from src.helpers.gdisplays import gMessageDisplay
         gMessageDisplay.show()
         gMessageDisplay.add_text(msg)
@@ -149,7 +148,7 @@ class Loggable(HasTraits):
                 from src.helpers.gdisplays import gWarningDisplay
                 if globalv.show_warnings:
                     if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
-                        do_later(gWarningDisplay.edit_traits)
+                        invoke_in_main_thread(gWarningDisplay.edit_traits)
 
                 gWarningDisplay.add_text('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(), msg))
 
@@ -166,8 +165,8 @@ class Loggable(HasTraits):
                 from src.helpers.gdisplays import gLoggerDisplay
                 if globalv.show_infos:
                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
-                        gLoggerDisplay.edit_traits()
-#                        do_later(gLoggerDisplay.edit_traits)
+                        invoke_in_main_thread(gLoggerDisplay.edit_traits)
+
 
                 args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
                         msg))

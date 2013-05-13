@@ -55,9 +55,6 @@ if __name__ == '__main__':
 #    dbs._execute_query()
     dbs.load_recent()
 #    si = dbs.results[0]
-#    from pyface.timer.do_later import do_later
-#    from pyface.timer.do_later import do_after
-#    do_after(10, si.edit_traits)
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'

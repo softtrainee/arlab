@@ -49,7 +49,7 @@ from src.experiment.automated_run.condition import TruncationCondition, \
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 
 
 class RunInfo(HasTraits):
@@ -382,10 +382,7 @@ class AutomatedRun(Loggable):
 
         if ion is not None:
             self.debug('peak center started')
-            t = ion.do_peak_center(new_thread=False, **kw)
-
-            # block until finished
-#            t.join()
+            ion.do_peak_center(new_thread=False, **kw)
 
             pc = ion.peak_center
             self.peak_center = pc

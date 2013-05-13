@@ -37,9 +37,9 @@ from src.image.image import Image
 # from src.machine_vision.focus_parameters import FocusParameters
 # from src.image.image_editor import ImageEditor
 from src.graph.graph import Graph
-from pyface.timer.do_later import do_later
 from src.mv.focus.focus_parameters import FocusParameters
 from src.ui.image_editor import ImageEditor
+from src.ui.gui import invoke_in_main_thread
 
 
 class ConfigureHandler(Handler):
@@ -125,7 +125,8 @@ class AutoFocusManager(Manager):
         g.new_series()
         g.new_series()
 
-        do_later(self._open_graph)
+        invoke_in_main_thread(self._open_graph)
+
 
         target = self._passive_focus
         self._passive_focus_thread = Thread(name='autofocus', target=target,
@@ -185,8 +186,8 @@ class AutoFocusManager(Manager):
 ImageGradmin={} (z={})
 ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
-            do_later(self.graph.add_vertical_rule, fma)
-            do_later(self.graph.redraw)
+            self.graph.add_vertical_rule(fma)
+            self.graph.redraw()
 #            self.graph.add_vertical_rule(fma)
 
             self.info('calculated focus z= {}'.format(fma))

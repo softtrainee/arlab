@@ -37,7 +37,7 @@ from src.paths import paths
 # from src.helpers.filetools import unique_path
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 # import time
-from pyface.timer.do_later import do_later
+
 import time
 from threading import Thread
 from Queue import Queue
@@ -46,6 +46,7 @@ from src.constants import NULL_STR
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from src.spectrometer.readout_view import ReadoutView
 from src.deprecate import deprecated
+from src.graph.tools.data_tool import DataTool, DataToolOverlay
 # class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
 #        self._file = open(p, mode)
@@ -115,15 +116,15 @@ class ScanManager(Manager):
                 iso = NULL_STR
 
             self.trait_set(isotope=iso, trait_change_notify=False)
-    
+
     @deprecated
-    def close(self,isok):
+    def close(self, isok):
         self.stop_scan()
-    
+
     @deprecated
     def opened(self, ui):
         self.setup_scan()
-    
+
     def stop_scan(self):
         self.dump_settings()
         self._stop_timer()
@@ -134,7 +135,7 @@ class ScanManager(Manager):
         del self._graph_ymin
         del self.graph_y_auto
         del self.graph_scan_width
-        
+
     def setup_scan(self):
         self.graph = self._graph_factory()
 
@@ -202,7 +203,7 @@ class ScanManager(Manager):
                 'graph_scan_width'
                 ]
 
-   
+
 
     def _update(self, data):
         keys, signals = data
@@ -218,7 +219,6 @@ class ScanManager(Manager):
         data = self.spectrometer.get_intensities()
         if data:
             self._update(data)
-#             do_later(self._update, data)
 #            self._write_data(x, keys, signals)
 
 #    def _write_data(self, x, keys, signals):
@@ -356,14 +356,11 @@ class ScanManager(Manager):
             self._recording = True
 
     def _add_marker_button_fired(self):
-#        self.add_recording_marker()
-#        xs = self.graph.get_data('x0')
-        def do():
-            xs = self.graph.plots[0].data.get_data('x0')
+        xs = self.graph.plots[0].data.get_data('x0')
 
-            self.record_data_manager.write_to_frame(tuple(' '))
-            self.graph.add_vertical_rule(xs[-1])
-        do_later(do)
+        self.record_data_manager.write_to_frame(tuple(' '))
+        self.graph.add_vertical_rule(xs[-1])
+
 
     def _consume(self, dm):
 
@@ -416,25 +413,23 @@ class ScanManager(Manager):
             g.set_series_label(det.name)
             det.series_id = i
 
-#        p = g.plots[0]
+        p = g.plots[0]
 #        print p, p.plots
-#        cp = p.plots[det.name][0]
-#        dt = DataTool(plot=cp, component=p,
-#                      normalize_time=True,
-#                      use_date_str=False)
-#        dto = DataToolOverlay(
-#                              component=p,
-#                              tool=dt)
-#        p.tools.append(dt)
-#        p.overlays.append(dto)
+        cp = p.plots[det.name][0]
+        dt = DataTool(plot=cp, component=p,
+                      normalize_time=True,
+                      use_date_str=False)
+        dto = DataToolOverlay(
+                              component=p,
+                              tool=dt)
+        p.tools.append(dt)
+        p.overlays.append(dto)
 
 #        self.graph_ymax_auto = True
 #        self.graph_ymin_auto = True
 #        p.value_range.low_setting = 'auto'
 #        p.value_range.high_setting = 'auto'
 #        p.value_range.tight_bounds = False
-#        for det in self.detectors:
-#            g.set_series_visiblity(det.active, series=det.name, do_later=10)
 
         n = self.graph_scan_width
         n = max(n, 1 / 60.)
@@ -542,14 +537,14 @@ class ScanManager(Manager):
 #                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
 #                               label='Detectors'
 #                               )
-# 
+#
 #         rise_grp = custom('rise_rate')
 #         source_grp = custom('source')
-# 
+#
 #         right_spring = Spring(springy=False, width=275)
 #         def hitem(n, l, **kw):
 #             return HGroup(Label(l), spring, Item(n, show_label=False, **kw), right_spring)
-# 
+#
 #         graph_cntrl_grp = VGroup(
 #                                  hitem('graph_scan_width', 'Scan Width (mins)'),
 #                                  hitem('graph_scale', 'Scale'),

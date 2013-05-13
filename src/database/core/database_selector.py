@@ -19,12 +19,11 @@ from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event, \
     on_trait_change, Str, Instance
 from traitsui.api import View, Item, \
     HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup
-from pyface.timer.do_later import do_later
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
 
-from src.graph.time_series_graph import TimeSeriesGraph
 
 from src.database.core.query import Query, compile_query
 from src.viewable import Viewable
@@ -34,6 +33,7 @@ from src.ui.tabular_editor import myTabularEditor
 # from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
+from src.ui.gui import invoke_in_main_thread
 
 class BaseTabularAdapter(TabularAdapter):
     columns = [('ID', 'record_id'),
@@ -281,7 +281,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                 self._open_window(sid, info)
 
             self.debug('do later open')
-            do_later(do, si, sid)
+            invoke_in_main_thread(do, si, sid)
 
         except Exception, e:
             import traceback

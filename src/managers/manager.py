@@ -19,14 +19,13 @@ from traits.api import Str, Float, Any, Button, Int, List, Bool
 from traitsui.api import  Item, HGroup, VGroup, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
-from pyface.api import FileDialog, OK, warning, DirectoryDialog
+from pyface.api import FileDialog, OK, DirectoryDialog
 #=============standard library imports ========================
 import os
 from threading import Thread
 import time
 #=============local library imports  ==========================
 from src.viewable import Viewable, ViewableHandler
-from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
 # from src.envisage.core.action_helper import MANAGERS
 from src.saveable import SaveableHandler

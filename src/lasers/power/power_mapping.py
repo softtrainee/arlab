@@ -19,7 +19,6 @@
 #============= enthought library imports =======================
 from traits.api import Float, Int, Any, Instance
 from traitsui.api import View, Item, VGroup, HGroup
-from pyface.timer.do_later import do_after
 from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import time
@@ -178,7 +177,7 @@ class PowerMapping(Loggable):
 
 
                 datum = (i, j, mag)
-                do_after(10, canvas.set_cell_value, *datum)
+                canvas.set_cell_value(*datum)
 #                self.data_manager.write_to_frame(datum)
 #
                 # write to the table

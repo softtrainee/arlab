@@ -26,11 +26,9 @@ from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEdi
 #                               'Programming', 'mercurial', 'pychron_beta'))
 
 from core.core_device import CoreDevice
-from src.graph.time_series_graph import TimeSeriesStreamGraph, \
-    TimeSeriesStreamStackedGraph
-from pyface.timer.do_later import do_later
+from src.graph.time_series_graph import TimeSeriesStreamStackedGraph
 
-from src.helpers.timer import Timer
+
 from src.graph.plot_record import PlotRecord
 import time
 from src.hardware.meter_calibration import MeterCalibration

@@ -18,7 +18,6 @@
 from traits.api import HasTraits, Float
 from traitsui.api import View, Item
 from src.mv.machine_vision_manager import MachineVisionManager
-# from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

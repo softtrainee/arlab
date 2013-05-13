@@ -19,8 +19,6 @@
 #============= enthought library imports =======================
 from traits.api import  Instance, Int, Property, List, \
     Any, Enum, Str, DelegatesTo, Event
-# from pyface.timer.api import Timer, do_later, do_after
-# from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 import random

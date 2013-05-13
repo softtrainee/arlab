@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from traits.api import CInt
 #============= standard library imports ========================
-# from pyface.timer.api import do_later
 #============= local library imports  ==========================
 from src.hardware.kerr.kerr_step_motor import KerrStepMotor
 import time

@@ -17,14 +17,14 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Either, Int, Float, Any, Str, List, Event, \
     Bool
-from traitsui.api import View, Item, TableEditor, Controller
+from traitsui.api import View
 from traitsui.api import Handler
-from pyface.timer.do_later import do_after, do_later
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.utils import IsQt
 from src.loggable import Loggable
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 
 
 # class ViewableHandler(Controller):
@@ -120,7 +120,7 @@ class Viewable(Loggable):
             kw['raised'] = True
 
         func(*args, **kw)
-#        do_later(func, *args, **kw)
+
 
     def add_window(self, ui):
 

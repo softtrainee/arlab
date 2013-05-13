@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-#from traits.etsconfig.etsconfig import ETSConfig
-#ETSConfig.toolkit = 'qt4'
+# from traits.etsconfig.etsconfig import ETSConfig
+# ETSConfig.toolkit = 'qt4'
 
 
 #============= enthought library imports =======================
@@ -31,7 +31,7 @@ from src.image.video import Video
 from src.image.cv_wrapper import get_size, crop, grayspace
 from src.image.standalone_image import StandAloneImage
 # from src.image.cvwrapper import get_size, crop, grayspace
-# from pyface.timer.do_later import do_later
+
 from src.mv.co2_locator import CO2Locator
 
 class MachineVisionManager(Manager):

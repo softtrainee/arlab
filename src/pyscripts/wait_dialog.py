@@ -18,7 +18,7 @@
 from traits.etsconfig.etsconfig import ETSConfig
 from src.helpers.timer import Timer
 ETSConfig.toolkit = 'qt4'
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 #============= enthought library imports =======================
 from traits.api import Float, Property, Bool, Str
 from traitsui.api import View, Item, RangeEditor

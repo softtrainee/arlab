@@ -268,7 +268,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #        def d():
 # #            self.selected = None
 #            self.selected = 'summary'
-#        do_later(d)
+
         self.selected = 'summary'
 #        self.selected = 'notes'
 #        self.selected = 'error'

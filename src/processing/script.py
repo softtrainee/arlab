@@ -22,7 +22,7 @@ from src.processing.plotters.plotter_options import PlotterOptions
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Int, Any, Either, Float, Dict, Str
 from traitsui.api import View, Item, ShellEditor
-# from pyface.timer.do_later import do_later
+
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import and_
 #============= local library imports  ==========================

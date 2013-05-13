@@ -17,21 +17,21 @@
 # from pyface.api import OK
 # import time
 # from threading import Event
-# from src.ui.qt.gui import invoke_in_main_thread
+
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 from pyface.message_dialog import MessageDialog as myMessageDialog
 from pyface.confirmation_dialog import ConfirmationDialog as myConfirmationDialog
-    
 
 
-    
-    
-    
-    
-    
-     
+
+
+
+
+
+
+
 
 #============= EOF =============================================

@@ -22,8 +22,7 @@ from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
 from PySide.QtGui import QImage, QLabel, QColor, QPixmap
-from enthought.pyface.timer.do_later import do_later
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 #============= local library imports  ==========================
 #============= views ===================================
 COLORS = ['red', 'yellow', 'green', 'black']

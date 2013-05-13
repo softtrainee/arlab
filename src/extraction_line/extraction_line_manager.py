@@ -30,7 +30,7 @@ from src.pyscripts.manager import PyScriptManager
 from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
-from pyface.timer.do_later import do_later
+
 # from src.managers.multruns_report_manager import MultrunsReportManager
 
 # Macro = None
@@ -273,7 +273,7 @@ class ExtractionLineManager(Manager):
                         except:
                             pass
 
-            do_later(self.canvas.refresh)
+            self.canvas.refresh()
 #            canvas = self.canvas.canvas2D
 
 #            canvas._layout_needed = True

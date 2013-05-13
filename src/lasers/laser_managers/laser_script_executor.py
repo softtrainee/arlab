@@ -23,8 +23,6 @@ from src.loggable import Loggable
 import os
 from src.paths import paths
 from src.helpers.filetools import unique_path
-from pyface.timer.do_later import do_later
-from src.graph.graph import Graph
 from src.graph.stream_graph import StreamStackedGraph
 
 class LaserScriptExecutor(Loggable):
@@ -141,7 +139,8 @@ class LaserScriptExecutor(Loggable):
             py_t = py.read_temperature(verbose=False)
             tc_t = tc.read_temperature(verbose=False)
 #            t = time.time() - st
-            do_later(func, py_t, tc_t)
+            func(py_t, tc_t)
+
 
             temps.append(py_t)
 #            ttemps.append(tc_t)
@@ -165,7 +164,8 @@ class LaserScriptExecutor(Loggable):
 #            t = sti - st
             py_t = py.read_temperature(verbose=False)
             tc_t = tc.read_temperature(verbose=False)
-            do_later(func, py_t, tc_t)
+            func(py_t, tc_t)
+
             ptemps.append(py_t)
             ctemps.append(tc_t)
             elapsed = time.time() - sti
@@ -241,7 +241,8 @@ class LaserScriptExecutor(Loggable):
 
                 py_t = py.read_temperature(verbose=False)
                 tc_t = tc.read_temperature(verbose=False)
-                do_later(gfunc, py_t, tc_t)
+                gfunc(py_t, tc_t)
+
                 writer.writerow((ti, pi, t, py_t, tc_t))
                 ti += 1
 

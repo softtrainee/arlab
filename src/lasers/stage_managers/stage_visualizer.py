@@ -20,7 +20,7 @@ from traits.api import Instance, Str, on_trait_change, \
 from traitsui.api import View, Item
 from enable.component_editor import ComponentEditor
 import apptools.sweet_pickle as pickle
-from pyface.timer.do_later import do_later
+
 #============= standard library imports ========================
 import os
 import random
@@ -226,7 +226,8 @@ class StageVisualizer(Manager):
         ca.build_map(sm, calibration=[self.center,
                                       self.rotation] if self.use_calibration else None
                       )
-        do_later(ca.invalidate_and_redraw)
+        ca.invalidate_and_redraw()
+
         # set some correction values
         vs = range(61)
 #        vs.remove(17)
@@ -280,7 +281,8 @@ class StageVisualizer(Manager):
             nx = args[0]
             ny = args[1]
             self.record_interpolation(h, nx, ny, color, dump=False)
-        do_later(ca.invalidate_and_redraw)
+        ca.invalidate_and_redraw()
+
 
     def _test_interpolate_all(self):
         sm = self.stage_map
@@ -329,7 +331,8 @@ class StageVisualizer(Manager):
             if not n or not s:
                 break
 
-        do_later(ca.invalidate_and_redraw)
+        ca.invalidate_and_redraw()
+
         self.dump()
         self.info('noncorrected holes = {}'.format(n))
 

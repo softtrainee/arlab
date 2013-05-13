@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, Any, Bool, DelegatesTo, Dict, Property
-from pyface.timer.do_later import do_later
 from pyface.confirmation_dialog import confirm  # from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
 import time
@@ -31,7 +30,7 @@ from src.loggable import Loggable
 
 from Queue import Queue, Empty
 from src.globals import globalv
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
         self.info('open valve')

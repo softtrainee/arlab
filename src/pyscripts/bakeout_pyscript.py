@@ -23,7 +23,7 @@ from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import PyScript, makeRegistry
 import time
-from pyface.timer.do_later import do_later
+
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
 command_register = makeRegistry()
@@ -152,11 +152,6 @@ class BakeoutPyScript(PyScript):
             # convert back to hours
             c.trait_set(duration=duration / 3600.,
                                  heating=True)
-#            do_later(c.trait_set, duration=duration / 3600.,
-#                                 heating=True
-#                                 )
-#            c.duration = duration / 3600.
-#            c.heating = True
 
         self._block(duration)
 

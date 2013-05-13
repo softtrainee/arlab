@@ -29,11 +29,11 @@ import os
 from src.managers.manager import Manager
 # from src.scripts.laser.power_map_script import PowerMapScript
 # from src.canvas.canvas2D.raster_canvas import RasterCanvas
-from threading import Thread
 
 from src.lasers.power.power_mapping import PowerMapping
 from src.paths import paths
-from pyface.timer.do_later import do_later
+from src.ui.gui import invoke_in_main_thread
+from src.ui.thread import Thread
 # from src.helpers.datetime_tools import get_datetime
 # from src.database.adapters.power_map_adapter import PowerMapAdapter
 
@@ -142,6 +142,7 @@ class PowerMapManager(Manager):
         t = Thread(name='power_map.execute',
                    target=self._execute_)
         t.start()
+        self._execute_thread = t
 
     def _open_power_map(self, pi):
         ui = pi.edit_traits()
@@ -158,8 +159,8 @@ class PowerMapManager(Manager):
             pi.window_x = x + i * 10
             pi.window_y = y + i * 20
 
-            do_later(self._open_power_map, pi)
-#            do_later(pi.edit_traits)
+            invoke_in_main_thread(self._open_power_map, pi)
+
 
             try:
                 pi.center_x = self.laser_manager.stage_manager.x

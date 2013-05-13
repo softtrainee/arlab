@@ -22,11 +22,10 @@ from src.managers.manager import Manager
 from src.graph.graph import Graph
 from src.spectrometer.jobs.peak_center import PeakCenter
 # from threading import Thread
-# from pyface.timer.do_later import do_later
 from src.spectrometer.detector import Detector
 from src.constants import NULL_STR
 from src.ui.thread import Thread
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -224,7 +223,8 @@ class IonOpticsManager(Manager):
         # needs to be called on the main thread to properly update
         # the menubar actions. alive=False enables IonOptics>Peak Center
 #        d = lambda:self.trait_set(alive=False)
-#        do_later(d)
+        # still necessary with qt? and tasks
+
         self.trait_set(alive=False)
 
     def close(self):

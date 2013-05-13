@@ -23,7 +23,6 @@ from src.viewable import ViewableHandler, Viewable
 
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
-# from pyface.timer.do_later import do_later
 from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
@@ -31,8 +30,6 @@ from src.helpers.formatting import floatfmt
 from src.displays.display import DisplayController
 
 #============= standard library imports ========================
-# from numpy import Inf
-# from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 
 HEIGHT = 250
@@ -166,8 +163,6 @@ class PlotPanel(Viewable):
                 self._print_fits
                 )
 
-
-#        do_later(func)
 
     def add_text(self, disp, *args, **kw):
         kw['gui'] = False

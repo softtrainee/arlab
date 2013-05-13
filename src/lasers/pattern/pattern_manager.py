@@ -18,15 +18,15 @@
 from traits.api import Enum, Instance, Button, Str, Property, Event, Bool, DelegatesTo
 from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor, spring
 import apptools.sweet_pickle as pickle
-from pyface.timer.do_later import do_later
+
 #============= standard library imports ========================
 import os
-from threading import Thread
 import time
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
 from src.lasers.stage_managers.pattern.patterns import Pattern
+from src.ui.thread import Thread
 
 class PatternManager(Manager):
     kind = Property(Enum(
@@ -97,11 +97,12 @@ class PatternManager(Manager):
         self._alive = True
         if self.show_patterning:
             self.open_view(self)
-#            do_later(self.edit_traits)
+
 
         t = Thread(name='pattern.execute',
                    target=self._execute_)
         t.start()
+        self._execute_thread = t
 
 
     def load_pattern(self, path=None):

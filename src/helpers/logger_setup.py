@@ -27,7 +27,6 @@ import logging.handlers
 from src.paths import paths
 from filetools import unique_path
 # from src.globals import globalv
-# from pyface.timer.do_later import do_later
 import shutil
 
 NAME_WIDTH = 40

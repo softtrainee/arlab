@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross
 #
@@ -27,7 +26,6 @@ from loggable import Loggable
 from src.ui.progress_dialog import MProgressDialog
 import os
 from src.globals import globalv
-from pyface.timer.do_later import do_later
 
 
 class Initializer(Loggable):
