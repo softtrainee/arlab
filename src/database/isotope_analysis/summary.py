@@ -18,7 +18,6 @@
 from traits.api import HasTraits, Any, Instance
 from traitsui.api import View, Item
 # from src.displays.rich_text_display import RichTextDisplay
-# from pyface.timer.do_later import do_later
 import math
 from src.displays.display import  DisplayController
 #============= standard library imports ========================

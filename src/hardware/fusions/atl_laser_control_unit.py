@@ -26,7 +26,6 @@ from src.hardware.core.checksum_helper import computeBCC
 import time
 from src.hardware.core.data_helper import make_bitarray
 from threading import Lock
-from pyface.timer.do_later import do_later
 STX = chr(2)
 ETX = chr(3)
 EOT = chr(4)
@@ -181,7 +180,7 @@ class ATLLaserControlUnit(CoreDevice):
             high = make_bitarray(int(high, 16), width=16)
             low = make_bitarray(int(low, 16), width=16)
             v = int(high + low, 2)
-#            do_later(self.trait_set, burst_readback=v)
+
 
         return v
 

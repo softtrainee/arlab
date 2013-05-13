@@ -26,8 +26,6 @@ import os
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
 import time
-# from pyface.timer.do_later import do_later
-# from threading import Thread
 
 
 class MotionController(CoreDevice):
@@ -75,7 +73,7 @@ class MotionController(CoreDevice):
                                               self._y_position)
 
 
-#        do_later(_update)
+
 
     def timer_factory(self, func=None):
         '''

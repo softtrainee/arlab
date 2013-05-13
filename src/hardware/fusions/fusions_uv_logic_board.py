@@ -20,13 +20,12 @@ from traits.api import HasTraits, Any, Int, Instance, Property, Bool, Event, \
     Enum, String
 from traitsui.api import View, Item, VGroup, ButtonEditor, HGroup, Spring
 #============= standard library imports ========================
-import time
 #============= local library imports  ==========================
 from fusions_logic_board import FusionsLogicBoard
-from threading import Timer, Thread, Lock, Event as TEvent
+from threading import Timer, Event as TEvent
 from src.hardware.kerr.kerr_device import KerrDevice
 from src.ui.led_editor import LEDEditor, LED
-from pyface.timer.do_later import do_later
+
 from src.ui.custom_label_editor import CustomLabel
 from datetime import datetime, timedelta
 # from src.hardware.kerr.kerr_motor import KerrMotor
@@ -70,8 +69,7 @@ class NitrogenFlower(KerrDevice):
         self._ready_signal.clear()
         self._stop_flow()
 
-#         do_later(self.trait_set, _flow_state='off', message=' ')
-        do_later(self._set_state_off)
+        self._set_state_off()
 
     def _set_state_off(self):
         self._flow_state = 'off'
@@ -102,7 +100,8 @@ class NitrogenFlower(KerrDevice):
             # start purge
             self._start_flow()
 
-            do_later(self._set_state_purge)
+            self._set_state_purge()
+
 #             self._flow_state = 'purge'
 #             self.led.state = 1
             self._start_delay_timer()
@@ -193,7 +192,8 @@ class NitrogenFlower(KerrDevice):
             self._ready_signal.set()
 #             self.led.state = 2
 
-            do_later(self._set_state_on)
+            self._set_state_on()
+
 #             do_later(self.trait_set, _flow_state='on',
 #                     message='Timeout at {}'.format(st)
 #                      )

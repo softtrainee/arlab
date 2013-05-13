@@ -19,6 +19,7 @@ from traits.api import HasTraits, Property, Instance, on_trait_change, Any, \
     cached_property, Int, Button, Event, DelegatesTo
 from traitsui.api import View, Item, HGroup, Group, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
+from kiva.fonttools import Font
 #============= standard library imports ========================
 # import numpy as np
 from numpy import Inf, array, random
@@ -27,7 +28,6 @@ import re
 from src.database.isotope_analysis.summary import Summary
 from src.graph.graph import Graph
 from src.database.orms.isotope_orm import proc_SelectedHistoriesTable
-from pyface.timer.do_later import do_later
 from src.constants import PLUSMINUS
 import time
 
@@ -80,12 +80,9 @@ class HistoryTabularAdapter(TabularAdapter):
     def get_font(self, obj, trait, row):
         import wx
         s = 9
-        f = wx.FONTFAMILY_DEFAULT
-        st = wx.FONTSTYLE_NORMAL
-#        w = wx.FONTWEIGHT_BOLD
-        w = wx.FONTWEIGHT_NORMAL
         name = 'Bitstream Vera Sans Mono'
-        return wx.Font(s, f, st, w, False, name)
+        return Font(name)
+
 
     def _get_user_text(self):
         u = self.item.user
@@ -126,13 +123,14 @@ class HistorySummary(Summary):
             hist = getattr(selh, self.apply_name)
 
             sh = next((hi for hi in self.histories if hi.history == hist), None)
-            def up():
-                self.oselected_history = sh
-                self.selected_history = None
-                self.selected_history = sh
 
             super(HistorySummary, self).build_summary(history=hist)
-            do_later(up)
+
+            self.oselected_history = sh
+            self.selected_history = None
+            self.selected_history = sh
+
+
 
     def _get_isotope_keys(self, history, name):
         isokeys = sorted([bi.isotope for bi in getattr(history, name)

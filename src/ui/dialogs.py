@@ -13,11 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-# from traits.api import HasTraits
-# from pyface.api import OK
-# import time
-# from threading import Event
-# from src.ui.qt.gui import invoke_in_main_thread
+
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================

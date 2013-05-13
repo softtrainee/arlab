@@ -430,66 +430,7 @@ class VideoStageManager(StageManager):
 
         return rpos, corrected, interp
 
-    def _calculate_indicator_positions(self, shift=None):
-        ccm = self.camera_calibration_manager
 
-        zoom = self.parent.zoom
-        src, name = self.video_manager.snapshot(identifier=zoom)
-        ccm.image_factory(src=src)
-
-        ccm.process_image()
-        ccm.title = name
-
-        cond = Condition()
-        ccm.cond = cond
-        cond.acquire()
-        do_later(ccm.edit_traits, view='snapshot_view')
-        if shift:
-            self.stage_controller.linear_move(*shift, block=False)
-
-        cond.wait()
-        cond.release()
-
-    def _calculate_camera_parameters(self):
-        ccm = self.camera_calibration_manager
-        self._calculate_indicator_positions()
-        if ccm.result:
-            if self.calculate_offsets:
-                rdxmm = 5
-                rdymm = 5
-
-                x = self.stage_controller.x + rdxmm
-                y = self.stage_controller.y + rdymm
-                self.stage_controller.linear_move(x, y, block=True)
-
-                time.sleep(2)
-
-                polygons1 = ccm.polygons
-                x = self.stage_controller.x - rdxmm
-                y = self.stage_controller.y - rdymm
-                self._calculate_indicator_positions(shift=(x, y))
-
-                polygons2 = ccm.polygons
-
-                # compare polygon sets
-                # calculate pixel displacement
-                dxpx = sum([sum([(pts1.x - pts2.x)
-                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
-                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
-                dypx = sum([sum([(pts1.y - pts2.y)
-                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
-                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
-
-                # convert pixel displacement to mm using defined mapping
-                dxmm = dxpx / self.pxpercmx
-                dymm = dypx / self.pxpercmy
-
-                # calculate drive offset. ratio of request/actual
-                try:
-                    self.drive_xratio = rdxmm / dxmm
-                    self.drive_yratio = rdymm / dymm
-                except ZeroDivisionError:
-                    self.drive_xratio = 100
 
 #===============================================================================
 # views
@@ -716,6 +657,73 @@ class VideoStageManager(StageManager):
                                 canvas=self.canvas,
                                 application=self.application
                                 )
+
+
+#===============================================================================
+# calcualte camera params
+#===============================================================================
+# def _calculate_indicator_positions(self, shift=None):
+#        ccm = self.camera_calibration_manager
+#
+#        zoom = self.parent.zoom
+#        src, name = self.video_manager.snapshot(identifier=zoom)
+#        ccm.image_factory(src=src)
+#
+#        ccm.process_image()
+#        ccm.title = name
+#
+#        cond = Condition()
+#        ccm.cond = cond
+#        cond.acquire()
+#        do_later(ccm.edit_traits, view='snapshot_view')
+#        if shift:
+#            self.stage_controller.linear_move(*shift, block=False)
+#
+#        cond.wait()
+#        cond.release()
+#
+#    def _calculate_camera_parameters(self):
+#        ccm = self.camera_calibration_manager
+#        self._calculate_indicator_positions()
+#        if ccm.result:
+#            if self.calculate_offsets:
+#                rdxmm = 5
+#                rdymm = 5
+#
+#                x = self.stage_controller.x + rdxmm
+#                y = self.stage_controller.y + rdymm
+#                self.stage_controller.linear_move(x, y, block=True)
+#
+#                time.sleep(2)
+#
+#                polygons1 = ccm.polygons
+#                x = self.stage_controller.x - rdxmm
+#                y = self.stage_controller.y - rdymm
+#                self._calculate_indicator_positions(shift=(x, y))
+#
+#                polygons2 = ccm.polygons
+#
+#                # compare polygon sets
+#                # calculate pixel displacement
+#                dxpx = sum([sum([(pts1.x - pts2.x)
+#                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
+#                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
+#                dypx = sum([sum([(pts1.y - pts2.y)
+#                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
+#                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
+#
+#                # convert pixel displacement to mm using defined mapping
+#                dxmm = dxpx / self.pxpercmx
+#                dymm = dypx / self.pxpercmy
+#
+#                # calculate drive offset. ratio of request/actual
+#                try:
+#                    self.drive_xratio = rdxmm / dxmm
+#                    self.drive_yratio = rdymm / dymm
+#                except ZeroDivisionError:
+#                    self.drive_xratio = 100
+
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 

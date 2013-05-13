@@ -22,7 +22,7 @@ from traitsui.api import View, Item
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.hardware.fusions.vue_diode_control_module import VueDiodeControlModule
-from pyface.timer.api import do_later
+
 
 
 class VueMetrixManager(Manager):
@@ -98,7 +98,6 @@ if __name__ == '__main__':
     logging_setup('vue_metrix')
     v = VueMetrixManager()
     v.control.bootstrap()
-    do_later(v.start)
     v.configure_traits()
 
 #============= EOF ====================================

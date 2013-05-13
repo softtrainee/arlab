@@ -875,7 +875,7 @@ class BakeoutManager(Manager):
             track_y_pad=5e-3,
             track_x=False,
             plotid=self.plotids[2],
-            do_later=10,
+#            do_later=10,
             )
 
         if self.use_pressure_monitor:
@@ -899,9 +899,9 @@ class BakeoutManager(Manager):
                             dtime)
                     ac.end(error=error)
 
-    def traits_view(self):
-        '''
-        '''
+#    def traits_view(self):
+#        '''
+#        '''
 #        controller_grp = HGroup()
 #        for tr in self._get_controller_names():
 #            controller_grp.content.append(Item(tr,
@@ -928,31 +928,31 @@ class BakeoutManager(Manager):
 #                          label='Sample Period (s)'), Item('scan_window'
 #                          , label='Data Window (mins)'), label='Scan',
 #                          show_border=True)
-
-        pressure_grp = VGroup(
-                              HGroup(
-                                     Item('use_pressure_monitor'),
-                                     Item('_pressure_sampling_period',
-                                          label='Sample Period (s)')),
-                              VGroup(
-                                     Item('_max_duration',
-                                          label='Max. Duration (hrs)'),
-                                     Item('_pressure_monitor_std_threshold'),
-                                     Item('_pressure_monitor_threshold'),
-                                          enabled_when='use_pressure_monitor'
-                                     ),
-                                     label='Pressure', show_border=True
-                            )
-        v = View(VGroup(
-                        HGroup(control_grp,
-                               HGroup(scan_grp, pressure_grp,
-                                      enabled_when='not active')
-                               ),
-                        controller_grp,
-                        Item('graph', show_label=False, style='custom')),
-                 handler=AppHandler,
-                 resizable=True, title='Bakedpy', height=830)
-        return v
+#
+#        pressure_grp = VGroup(
+#                              HGroup(
+#                                     Item('use_pressure_monitor'),
+#                                     Item('_pressure_sampling_period',
+#                                          label='Sample Period (s)')),
+#                              VGroup(
+#                                     Item('_max_duration',
+#                                          label='Max. Duration (hrs)'),
+#                                     Item('_pressure_monitor_std_threshold'),
+#                                     Item('_pressure_monitor_threshold'),
+#                                          enabled_when='use_pressure_monitor'
+#                                     ),
+#                                     label='Pressure', show_border=True
+#                            )
+#        v = View(VGroup(
+#                        HGroup(control_grp,
+#                               HGroup(scan_grp, pressure_grp,
+#                                      enabled_when='not active')
+#                               ),
+#                        controller_grp,
+#                        Item('graph', show_label=False, style='custom')),
+#                 handler=AppHandler,
+#                 resizable=True, title='Bakedpy', height=830)
+#        return v
 # def launch_bakeout():
 #    b = BakeoutManager()
 #    b.load()

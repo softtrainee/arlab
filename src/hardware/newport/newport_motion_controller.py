@@ -27,7 +27,6 @@ from src.hardware.motion_controller import MotionController
 from newport_axis import NewportAxis
 from newport_joystick import Joystick
 from newport_group import NewportGroup
-from pyface.timer.do_later import do_later
 
 class NewportMotionController(MotionController):
     '''
@@ -356,8 +355,6 @@ ABLE TO USE THE HARDWARE JOYSTICK
         tol = 0.001  # should be set to the motion controllers resolution
         if d > tol:
             kw['displacement'] = d
-#            do_later(self.parent.canvas.set_desired_position, x,y)
-#            time.sleep(0.075)
             self.parent.canvas.set_desired_position(x, y)
             self._x_position = x
             self._y_position = y

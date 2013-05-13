@@ -18,7 +18,6 @@
 from traits.api import HasTraits, Instance, List, Bool, Button, Event, String, \
     Property, Float, Str, Tuple, File, Any, Int
 from traitsui.api import View, Item, Controller, UItem, ButtonEditor
-# from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 import time
 #============= local library imports  ==========================

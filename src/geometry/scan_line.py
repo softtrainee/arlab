@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 # from traits.api import HasTraits
 # from traitsui.api import View, Item, TableEditor
-from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import numpy as np
 import time

@@ -20,7 +20,6 @@ from envisage.core_plugin import CorePlugin
 # from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
 # from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
 from envisage.api import Plugin
-from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from pychron_application import Pychron
@@ -40,11 +39,6 @@ from src.helpers.logger_setup import new_logger
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 # from src.envisage.tasks.pychron_application import Pychron
 import os
-
-#
-# if globalv.open_logger_on_launch:
-# #    do_later(gLoggerDisplay.edit_traits)
-#    do_later(gLoggerDisplay.show)
 
 
 
@@ -235,9 +229,6 @@ def app_factory(klass):
     gMessageDisplay.application = app
     gWarningDisplay.application = app
     gTraceDisplay.application = app
-
-    if globalv.open_logger_on_launch:
-        do_later(gLoggerDisplay.open_view, gLoggerDisplay)
 
     return app
 

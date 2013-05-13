@@ -108,15 +108,7 @@ class ProductionRatioInput(Saveable):
     def _name_changed(self):
         if self.name in self.names:
             self._db_name = '{}'.format(self.name)
-#            print self.db_name
-#            self._db_name = self.name.capitalize()
-
-#            print self.db_name
-#            d = lambda: setattr(self, 'db_name', self.name.capitalize())
-#            from pyface.timer.do_later import do_later
-#            do_later(d)
-#            self.db_name = self.name
-
+#
     def __db_name_changed(self):
         ip = self.db.get_irradiation_production(self.db_name)
         self.name = self._db_name

@@ -152,10 +152,6 @@ class Graph(Viewable, ContextMenuMixin):
     def closed(self, *args):
         if self.close_func:
             self.close_func()
-#    def close_ui(self):
-#        if self.ui is not None:
-#            #disposes 50 ms from now
-#            do_later(self.ui.dispose)
 
     def update_group_attribute(self, plot, attr, value, dataid=0):
         pass

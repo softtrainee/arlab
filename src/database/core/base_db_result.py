@@ -66,11 +66,6 @@ class DBResult(BaseDBResult):
     exportable = True
     resizable = True
 
-#    def opened(self):
-#        ctrl = self.ui.control
-#        from pyface.timer.do_later import do_later
-#        do_later(ctrl.Raise)
-
     @classmethod
     def make_timestamp(cls, rd, rt):
         timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))

@@ -27,7 +27,6 @@ from threading import Thread, Event as TEvent
 from src.paths import paths
 from src.pyscripts.wait_dialog import WaitDialog
 import time
-from pyface.timer.do_later import do_later
 
 
 
@@ -92,7 +91,8 @@ class Pulse(HasTraits):
         while not evt.isSet():
             time.sleep(0.5)
 
-        do_later(self.trait_set, pulsing=False)
+        self.pulsing = False
+
 
         if man is not None:
             if self.disable_at_end:

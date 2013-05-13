@@ -38,11 +38,6 @@ from src.globals import globalv
 # import logging
 from src.helpers.logger_setup import new_logger
 
-#
-# if globalv.open_logger_on_launch:
-# #    do_later(gLoggerDisplay.edit_traits)
-#    do_later(gLoggerDisplay.show)
-
 
 
 logger = new_logger('launcher')

@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 # from traitsui.api import View, Item, TableEditor
-from pyface.timer.api import do_later
 #============= standard library imports ========================
 import os
 import time
@@ -27,6 +26,7 @@ from src.graph.regression_graph import RegressionGraph
 from src.paths import paths
 from src.helpers.filetools import unique_dir
 from src.graph.graph import Graph
+from src.ui.gui import invoke_in_main_thread
 class DeflectionCalibraiton(HasTraits):
     def do_calibration(self):
         self.info('Deflection Calibration')
@@ -127,7 +127,7 @@ class DeflectionCalibraiton(HasTraits):
                 rgraph.add_datum((ni, np.mean(ds), np.std(ds)))
 
             if i == 2:
-                do_later(rgraph.edit_traits)
+                invoke_in_main_thread(rgraph.edit_traits)
 
             # delay so we can view graph momonetarily
             if not self.simulation and self.isAlive():

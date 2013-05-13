@@ -18,7 +18,6 @@
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float, Any
 from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, InstanceEditor, View, Group
-from pyface.timer.do_later import do_later
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
 from threading import Thread, Timer as DoLaterTimer, Lock
@@ -40,6 +39,7 @@ from laser_manager import LaserManager
 # from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
 # from src.viewable import Viewable
 from src.helpers.filetools import str_to_bool
+from src.ui.gui import invoke_in_main_thread
 
 # class OpticsView(Viewable):
 # #    title = 'Optics'
@@ -178,7 +178,8 @@ class FusionsLaserManager(LaserManager):
         if self.record_brightness:
             g.new_series()
 
-        do_later(self._open_power_graph, g)
+        invoke_in_main_thread(self._open_power_graph, g)
+
 
     def start_power_recording(self, rid):
         self._recording_power_state = True

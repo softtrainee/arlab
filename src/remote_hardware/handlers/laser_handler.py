@@ -24,7 +24,6 @@ from src.remote_hardware.errors import InvalidArgumentsErrorCode
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode, \
     InvalidMotorErrorCode
-# from pyface.timer.do_later import do_later
 # from src.remote_hardware.errors.error import InvalidDirectoryErrorCode
 # from src.paths import paths
 # import os

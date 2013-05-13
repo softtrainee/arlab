@@ -118,7 +118,7 @@ class Experimentor(Experimentable):
 #                self.set_selector.selected_index = -2
 #                self.set_selector.selected_index = 0
 
-#                do_later(func)
+
                 self._load_experiment_queue_hook()
                 self.save_enabled = True
 

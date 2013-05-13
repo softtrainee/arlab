@@ -21,7 +21,7 @@ from traits.api import List, Any
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 from PySide.QtGui import QLabel, QImage, QPixmap
-from src.ui.qt.gui import invoke_in_main_thread
+from src.ui.gui import invoke_in_main_thread
 
 #=============standard library imports ========================
 

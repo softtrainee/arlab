@@ -15,26 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
-from traitsui.handler import Controller
-from src.ui.gui import invoke_in_main_thread
-
+from src.ui.factory import toolkit_factory
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ApplicationController(Controller):
-    application = Any
-    def add_window(self, ui):
-        try:
-            if self.application is not None:
-                self.application.uis.append(ui)
-        except AttributeError:
-            pass
-
-    def open_view(self, obj, **kw):
-        def _open_():
-            ui = obj.edit_traits(**kw)
-            self.add_window(ui)
-
-        invoke_in_main_thread(1, _open_)
+invoke_in_main_thread = toolkit_factory('gui', 'invoke_in_main_thread')
 #============= EOF =============================================
