@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 # from traits.api import HasTraits
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring
+    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
@@ -27,8 +27,9 @@ from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 #============= local library imports  ==========================
 
 
-def CBItem(name, maker, **kw):
-
+def CBItem(name, maker=None, **kw):
+    if maker is None:
+        maker=make_rf_name
 
     return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
                                           visible_when=maker('cbs_enabled')
@@ -106,9 +107,14 @@ class ExperimentFactoryPane(TraitsDockPane):
                      HGroup(UItem('add_button', enabled_when='ok_add'), spring),
 
     #                  UCustom('run_factory', enabled_when='ok_run'),
-                     Group(
-                          self._get_info_group(),
-                          layout='tabbed'),
+                    VFold(
+                     self._get_info_group(),
+                     self._get_extract_group(),
+                     self._get_position_group(),
+                     self._get_script_group()
+                     ),
+#                      Group(
+#                           layout='tabbed'),
 
                      HGroup(
                             UItem('add_button', enabled_when='ok_add'),
@@ -162,7 +168,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                    RF_CBItem('comment',
                         tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
                         ),
-#                       extract_grp,
+                        
                        show_border=True,
                        label='Info'
                        )
@@ -170,10 +176,10 @@ class ExperimentFactoryPane(TraitsDockPane):
 
     def _get_script_group(self):
         script_grp = VGroup(
-                        Item('extraction_script', style='custom', show_label=False),
-                        Item('measurement_script', style='custom', show_label=False),
-                        Item('post_equilibration_script', style='custom', show_label=False),
-                        Item('post_measurement_script', style='custom', show_label=False),
+                        RFItem('extraction_script', style='custom', show_label=False),
+                        RFItem('measurement_script', style='custom', show_label=False),
+                        RFItem('post_equilibration_script', style='custom', show_label=False),
+                        RFItem('post_measurement_script', style='custom', show_label=False),
                         show_border=True,
                         label='Scripts'
                         )
@@ -187,7 +193,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                          HGroup(CBItem('position',
                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
                                      ),
-                                Item('endposition', label='End',
+                                RFItem('endposition', label='End',
                                      enabled_when='position'
                                      )
                                 ),
@@ -204,20 +210,21 @@ class ExperimentFactoryPane(TraitsDockPane):
                              HGroup(sspring(width=33),
                                     CBItem('extract_value', label='Extract',
                                          tooltip='Set the extract value in extract units',
-                                         enabled_when='extractable'
+                                         enabled_when=make_rf_name('extractable')
                                          ),
                                     CBItem('extract_units',
                                             show_label=False,
-                                            editor=EnumEditor(name='extract_units_names')),
+                                            editor=EnumEditor(name=make_rf_name('extract_units_names'))),
                                     spring,
 #                                     Label('Step Heat Template'),
                                     ),
                              HGroup(
-                                 Item('template',
+                                 RFItem('template',
                                        label='Step Heat Template',
-                                       editor=EnumEditor(name='templates')),
-                                 UItem('edit_template',
-                                      editor=ButtonEditor(label_value='edit_template_label')
+                                       editor=EnumEditor(name=make_rf_name('templates'))),
+                                 RFItem('edit_template',
+                                        show_label=False, 
+                                      editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
                                       )
                                     ),
 
@@ -229,7 +236,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                   tooltip='Set the number of seconds to getter the sample gas'
                                   ),
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
-                             CBItem('pattern', editor=EnumEditor(name='patterns')),
+                             CBItem('pattern', editor=EnumEditor(name=make_rf_name('patterns'))),
                              label='Extract',
                              show_border=True
                              )
