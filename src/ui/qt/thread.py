@@ -45,6 +45,8 @@ class Thread(QThread):
         else:
             self.wait()
 
+
+
 def currentThreadName():
     return QThread.currentThread().objectName()
 

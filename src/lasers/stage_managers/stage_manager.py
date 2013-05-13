@@ -253,7 +253,7 @@ class StageManager(Manager):
         self.stage_controller.linear_move(*pos, **kw)
 
     def move_to_hole(self, hole, **kw):
-        self._move(self._move_to_hole, hole, name='move_to_hole' ** kw)
+        self._move(self._move_to_hole, hole, name='move_to_hole', ** kw)
 
     def move_to_point(self, pt):
         self._move(self._move_to_point, pt, name='move_to_point')
@@ -298,6 +298,7 @@ class StageManager(Manager):
         '''
         self.info('querying axis positions')
         self.stage_controller.update_axes()
+
 #        if update_hole:
 #            #check to see if we are at a hole
 #            hole = self.get_calibrated_hole(self.stage_controller._x_position,
@@ -490,7 +491,7 @@ class StageManager(Manager):
         if pos is None:
             return
 
-        if self.move_thread:
+        if self.move_thread and self.move_thread.isRunning():
             self.stage_controller.stop()
         if name is None:
             name = func.func_name
@@ -759,7 +760,7 @@ class StageManager(Manager):
 
             self.linear_move(xi, yi, velocity=vi,
                              block=block,
-                             mode='absolute',  # use absolute mode because commands are queued
+                             mode='absolute', # use absolute mode because commands are queued
                              set_stage=False)
             if block:
                 if end_callback:
@@ -804,7 +805,7 @@ class StageManager(Manager):
         self._move_to_point_hook()
 
         self.info('Move complete')
-        self.move_thread = None
+#        self.move_thread = None
 
     def _move_to_hole(self, key, correct_position=True):
         self.info('Move to hole {}'.format(key))
@@ -835,7 +836,7 @@ class StageManager(Manager):
             self.info('Move complete')
             self.update_axes()  # update_hole=False)
 
-        self.move_thread = None
+#        self.move_thread = None
 
     def _move_to_hole_hook(self, *args):
         pass
@@ -1094,7 +1095,9 @@ class StageManager(Manager):
             self.warning_dialog('Cannot move while adding/editing points')
             return
 
-        if self.move_thread is None and v is not self._point:
+        if (self.move_thread is None or \
+            not self.move_thread.isRunning()) and \
+                 v is not self._point:
             pos = self.canvas.get_item('point', int(v) - 1)
             if pos is not None:
                 self._point = v
@@ -1118,6 +1121,7 @@ class StageManager(Manager):
         pos, kw = self.linear_move_history.pop(-1)
         t = Thread(target=self.stage_controller.linear_move, args=pos, kwargs=kw)
         t.start()
+        self.move_thread = t
 #        self.stage_controller.linear_move(*pos, **kw)
 
     def __stage_map_changed(self):

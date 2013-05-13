@@ -61,6 +61,8 @@ class Timer(QThread):
             flag.wait(max(0, p - time.time() + st))
 
 #            t = time.time()
+    def stop(self):
+        self.Stop()
 
     def Stop(self):
         self._flag.set()
