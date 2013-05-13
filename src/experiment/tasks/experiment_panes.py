@@ -72,7 +72,7 @@ class AnalysesPane(TraitsTaskPane):
                                             selected='selected',
 #                                             rearranged='rearranged',
                                             pasted='pasted',
-                                            copy_cache='copy_cache',
+#                                             copy_cache='copy_cache',
 #                                             update='update_needed',
                                             drag_move=True,
                                             auto_update=True,
