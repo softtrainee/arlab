@@ -91,12 +91,6 @@ class Loggable(HasTraits):
 
         dialog.open()
 
-
-    def _close_warning(self, evt):
-        print evt
-        evt.set()
-        return True
-
     def confirmation_dialog(self, msg, title=''):
 #        return False
 
@@ -106,9 +100,8 @@ class Loggable(HasTraits):
                                 style='modal')
         retval = dlg.open()
 #
-        from pyface.api import OK
-        print 'asdfasfd', retval, OK
-        return retval == OK
+        from pyface.api import YES
+        return retval == YES
 #         dlg.control = dlg._create_control(None)
 #
 # #         invoke_in_main_thread
