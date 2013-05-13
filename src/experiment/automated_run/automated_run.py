@@ -921,7 +921,7 @@ anaylsis_type={}
                         func(x, signal, graph_kw)
 
                     data_write_hook(x, dets, vs)
-                    graph._update_graph()
+                    invoke_in_main_thread(graph._update_graph)
 #                     do_after(100, graph._update_graph)
                     time.sleep(integration_time)
 
@@ -997,7 +997,7 @@ anaylsis_type={}
                 func(x, signal, graph_kw)
 
             data_write_hook(x, keys, signals)
-            graph._update_graph()
+            invoke_in_main_thread(graph._update_graph)
 #             do_after(100, graph._update_graph)
 
         return True

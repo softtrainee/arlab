@@ -43,6 +43,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     #===========================================================================
 
     sample_width = Int(80)
+    aliquot_width = Int(50)
     position_width = Int(50)
     duration_width = Int(60)
     cleanup_width = Int(60)
@@ -144,7 +145,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         cols = [
 #                ('', 'state'),
                  ('Labnumber', 'labnumber'),
-#                 ('Aliquot', 'aliquot'),
+                ('Aliquot', 'aliquot'),
                  ('Sample', 'sample'),
                  ('Position', 'position'),
 #                 ('Autocenter', 'autocenter'),

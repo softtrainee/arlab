@@ -70,8 +70,7 @@ class NewExperimentQueueAction(QueueAction):
         if manager.verify_database_connection(inform=True):
 #        if manager.verify_credentials():
             if manager.load():
-                if manager.load_experiment_queue(saveable=True):
-                    self._open_editor(event)
+                self._open_editor(event)
 
 class OpenExperimentQueueAction(QueueAction):
     '''
@@ -107,7 +106,7 @@ class SaveExperimentQueueAction(ExperimentAction):
 
     def perform(self, event):
         manager = self._get_experimentor(event)
-        manager.save_experiment_queue()
+        manager.save_experiment_queues()
 
     def _update_state(self, v):
 
@@ -127,7 +126,7 @@ class SaveAsExperimentQueueAction(ExperimentAction):
 
     def perform(self, event):
         manager = self._get_experimentor(event)
-        manager.save_experiment_queue()
+        manager.save_as_experiment_queues()
 
 
 #===============================================================================
