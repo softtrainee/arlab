@@ -15,14 +15,31 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from PySide.QtGui import QKeySequence
 from traits.api import Bool, on_trait_change, Any, Str, Event, List
-# from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
-from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
-
+from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
+    _TableView
+# from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 #============= standard library imports ========================
-import wx
 #============= local library imports  ==========================
+
+class _myTableView(_TableView):
+    _copy_cache = None
+    def keyPressEvent(self, event):
+#        print event.key(), event.text()
+#        print event.nativeModifiers()
+
+        if event.matches(QKeySequence.Copy):
+            self._copy_cache = self.selectionModel().selectedRows()
+        elif event.matches(QKeySequence.Paste):
+            if self._copy_cache:
+                for ci in self._copy_cache:
+
+                    obj = self._editor.value[ci.row()]
+#                    ri=self.selectionModel()
+                    self._editor.model.insertRow(0, obj=obj)
+                self._editor.pasted = True
 
 class _TabularEditor(qtTabularEditor):
 #    drop_target = Any
@@ -31,10 +48,15 @@ class _TabularEditor(qtTabularEditor):
 
     copy_cache = List
 
+    widget_factory = _myTableView
+
     def init(self, parent):
         super(_TabularEditor, self).init(parent)
 
-        control = self.control
+#        control = self.control
+#        control.connect()
+#        control.keyPressEvent.connect(self._on_key)
+#        control.connect(control, SIGNAL("keyPressEvent(event)"), self._on_key)
 
 #        control.itemClicked.connect(self._on_key)
 #        print control
@@ -67,7 +89,8 @@ class _TabularEditor(qtTabularEditor):
 #            if not self.selected and not self.multi_selected:
 #                control.EnsureVisible(0)
 
-#    def _on_key(self, event):
+    def _on_key(self, event):
+        print event
 #        key = event.GetKeyCode()
 #        if event.CmdDown():
 #            if key == 67:
