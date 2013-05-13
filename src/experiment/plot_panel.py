@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
     Str, CInt
-from traitsui.api import View, Item, Group, HGroup, spring
+from traitsui.api import View, Item, Group, HGroup, spring, VSplit
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
 
@@ -141,13 +141,10 @@ class PlotPanel(Viewable):
     def _print_results(self):
 
         def wrapper(display, *args):
-            display.freeze()
-            display.clear(gui=False)
+            display.clear()
             for ai in args:
                 ai(display)
-            display.thaw()
-
-#        def func():
+            
         wrapper(self.signal_display,
                 self._print_signals,
                 self._print_baselines
@@ -381,32 +378,39 @@ class PlotPanel(Viewable):
                                       use_inspector_tool=True
                                       )
     def traits_view(self):
+        
+        graph_grp=Item('graph', show_label=False, 
+                       height=0.6,
+                       style='custom')
+        display_grp=Group(Group(
+                                HGroup(
+                                      Item('correct_for_baseline'),
+                                      Item('correct_for_blank'),
+                                      spring),
+                               HGroup(
+                                   Item('signal_display', width=0.5, show_label=False, style='custom'),
+                                   Item('ratio_display', width=0.5, show_label=False, style='custom'),
+                               ),
+                               label='Results'
+                               ),
+                         Group(
+                               instance_item('fit_display'),
+                               label='Fit'),
+                         Group(
+                               instance_item('summary_display'),
+                               label='Summary'),
+                         Group(
+                               Item('ncounts'),
+                               label='Controls',
+                               ),
+                           layout='tabbed'
+                           )
         v = View(
-                 Item('graph', show_label=False, style='custom'),
-                 Group(
-                     Group(
-                           HGroup(
-                                  Item('correct_for_baseline'),
-                                  Item('correct_for_blank'),
-                                  spring),
-                           HGroup(
-                               Item('signal_display', width=0.5, show_label=False, style='custom'),
-                               Item('ratio_display', width=0.5, show_label=False, style='custom'),
-                           ),
-                           label='Results'
-                           ),
-                     Group(
-                           instance_item('fit_display'),
-                           label='Fit'),
-                     Group(
-                           instance_item('summary_display'),
-                           label='Summary'),
-                     Group(
-                           Item('ncounts'),
-                           label='Controls',
-                           ),
-                       layout='tabbed'
-                       ),
+                 VSplit(
+                        graph_grp,
+                        display_grp
+                        
+                        ),
                  width=600,
                  height=0.90,
                  x=self.window_x,

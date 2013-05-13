@@ -45,8 +45,8 @@ class ExtractionLineTask(BaseHardwareTask):
     def activated(self):
         self.manager.activate()
 
-#    def prepare_destroy(self):
-#        print 'deeeee'
+    def prepare_destroy(self):
+        self.manager.closed(True)
 
     def create_central_pane(self):
         g = CanvasPane(model=self.manager)

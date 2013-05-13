@@ -37,9 +37,9 @@ class WDHandler(ViewableHandler):
 #    def init(self, info):
 #        info.object.ui = info.ui
 #
-    def closed(self, info, is_ok):
-        info.object.closed(is_ok)
-        return True
+#    def closed(self, info, is_ok):
+#        info.object.closed(is_ok)
+#        return True
 #    def close(self, info, isok):
 #        print 'close', isok
 #
@@ -76,7 +76,13 @@ class WaitDialog(Viewable):
 #                self.end_evt.clear()
 #            self.timer = Timer(1000, self._update_time)
             self.start(evt=self.end_evt)
-
+    
+    def was_canceled(self):
+        return self._canceled
+    
+    def was_continued(self):
+        return self._continued
+    
     def start(self, evt=None):
         if evt:
             evt.clear()
@@ -107,19 +113,21 @@ class WaitDialog(Viewable):
     def _update_time(self):
         self._current_time -= 1
 
-    def _end(self):
+    def _end(self, dispose=True):
         if self.timer is not None:
             self.timer.Stop()
         if self.end_evt is not None:
             self.end_evt.set()
 
-        if self.dispose_at_end:
+        if self.dispose_at_end and dispose:
             self.debug('disposing {}'.format(self))
             self.disposed = True
 
-    def closed(self, isok):
-        self._end()
-        return True
+    def close(self, isok):
+        super(WaitDialog, self).close(isok)
+        self._canceled=not isok
+        self._end(dispose=False)
+        
 
     def _continue(self):
         self._canceled = False
@@ -178,6 +186,10 @@ class Demo(HasTraits):
                             )
         invoke_in_main_thread(wd.edit_traits)
         evt.wait(timeout=timeout + 0.25)
+        print wd._canceled
+        print 'c',wd.was_canceled()
+        print 'o',wd.was_continued()
+        
 #        wd.edit_traits(kind='livemodal')
 
 #
@@ -205,7 +217,7 @@ class Demo(HasTraits):
 #        wd.stop()
 
 if __name__ == '__main__':
-    logging_setup('foo')
+#     logging_setup('foo')
     Demo().configure_traits()
 #============= views ===================================
 #============= EOF ====================================

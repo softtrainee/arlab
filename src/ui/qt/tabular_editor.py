@@ -40,6 +40,8 @@ class _myTableView(_TableView):
 #                    ri=self.selectionModel()
                     self._editor.model.insertRow(0, obj=obj)
                 self._editor.pasted = True
+        else:
+            super(_myTableView,self).keyPressEvent(event)
 
 class _TabularEditor(qtTabularEditor):
 #    drop_target = Any
@@ -89,31 +91,6 @@ class _TabularEditor(qtTabularEditor):
 #            if not self.selected and not self.multi_selected:
 #                control.EnsureVisible(0)
 
-    def _on_key(self, event):
-        print event
-#        key = event.GetKeyCode()
-#        if event.CmdDown():
-#            if key == 67:
-# #            self.copy_selection = self.selected
-#                if self.multi_selected:
-#                    sel = self.multi_selected
-#                elif self.selected:
-#                    sel = self.selected
-#
-#                self.copy_cache = sel
-#                if sel and wx.TheClipboard.Open():
-#                    dataObj = wx.TextDataObject()
-#                    dataObj.SetText('\n'.join([si.to_string() for si in sel]))
-#                    wx.TheClipboard.SetData(dataObj)
-#                    wx.TheClipboard.Close()
-#            elif key == 86:
-#                if self.copy_cache:
-#                    self.pasted = True
-#
-# #        print event.GetModifiers()
-#        else:
-#            super(_TabularEditor, self)._key_down(event)
-#
 #    def wx_dropped_on (self, x, y, data, drag_result):
 #        super(_TabularEditor, self).wx_dropped_on (x, y, data, drag_result)
 #        self.rearranged = True

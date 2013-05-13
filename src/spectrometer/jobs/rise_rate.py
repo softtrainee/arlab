@@ -90,7 +90,7 @@ class RiseRate(SpectrometerTask):
         self.graph.add_vertical_rule(ti)
         self.graph.redraw()
         self.calculated = True
-        self.info('calculated rise rate {:0.1f} {:0.3f}/{:0.3f}, {:0.3f}'.format(rrendpoints, rise, run, rrfit))
+        self.info('calculated rise rate endpoint={:0.2f}(rise/run= {:0.3f}/{:0.3f}), linear={:0.3f}'.format(rrendpoints, rise, run, rrfit))
 
         self.result_endpoints = rrendpoints
         self.result_fit = rrfit
