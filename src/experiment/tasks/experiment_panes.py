@@ -27,7 +27,7 @@ from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 #============= local library imports  ==========================
 
 
-def CBItem(name, maker,**kw):
+def CBItem(name, maker, **kw):
 
 
     return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
@@ -35,10 +35,10 @@ def CBItem(name, maker,**kw):
                                           ),
 
                   )
-    
+
 def make_qf_name(name):
             return 'object.queue_factory.{}'.format(name)
-        
+
 def make_rf_name(name):
     return 'object.run_factory.{}'.format(name)
 
@@ -48,8 +48,8 @@ def QFItem(name, **kw):
 def RFItem(name, **kw):
     return Item(make_rf_name(name), **kw)
 
-def RF_CBItem(name,**kw):
-    return CBItem(name, make_rf_name,**kw)
+def RF_CBItem(name, **kw):
+    return CBItem(name, make_rf_name, **kw)
 
 
 def make_rt_name(name):
@@ -57,10 +57,10 @@ def make_rt_name(name):
 
 def RTItem(name, **kw):
     return Item(make_rt_name(name), **kw)
-    
+
 class AnalysesPane(TraitsTaskPane):
     def traits_view(self):
-        
+
         v = View(RTItem('automated_runs',
                                show_label=False,
                                editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
@@ -69,10 +69,10 @@ class AnalysesPane(TraitsTaskPane):
 #                                                        'edit'
                                                         ],
                                             editable=True,
-#                                             selected='selected',
+                                            selected='selected',
 #                                             rearranged='rearranged',
-#                                             pasted='pasted',
-#                                             copy_cache='copy_cache',
+                                            pasted='pasted',
+                                            copy_cache='copy_cache',
 #                                             update='update_needed',
                                             drag_move=True,
                                             auto_update=True,
@@ -87,8 +87,8 @@ class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
     name = 'Experiment Editor'
     def traits_view(self):
-        
-        
+
+
         v = View(
                  VGroup(
                      VGroup(
@@ -101,15 +101,15 @@ class ExperimentFactoryPane(TraitsDockPane):
                              ),
                             QFItem('delay_before_analyses'),
                             QFItem('delay_between_analyses')
-                            ), 
-                     
+                            ),
+
                      HGroup(UItem('add_button', enabled_when='ok_add'), spring),
-                     
+
     #                  UCustom('run_factory', enabled_when='ok_run'),
                      Group(
                           self._get_info_group(),
-                          layout='tabbed'),                 
-                     
+                          layout='tabbed'),
+
                      HGroup(
                             UItem('add_button', enabled_when='ok_add'),
                             Item('auto_increment'),
@@ -120,7 +120,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                         )
                  )
         return v
-    
+
     def _get_info_group(self):
         grp = Group(
                    RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),

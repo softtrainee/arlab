@@ -50,25 +50,25 @@ class AutomatedRunsTable(HasTraits):
                     ri = nri
                 self.automated_runs.append(ri)
 
-    def traits_view(self):
-        v = View(Item('automated_runs',
-                      show_label=False,
-                      editor=myTabularEditor(adapter=self.adapter_klass(),
-                                            operations=['delete',
-                                                        'move',
-#                                                        'edit'
-                                                        ],
-                                            editable=False,
-                                            selected='selected',
-                                            rearranged='rearranged',
-                                            pasted='pasted',
-                                            copy_cache='copy_cache',
-                                            update='update_needed',
-                                            drag_move=True,
-                                            auto_update=True,
-                                            multi_select=True,
-                                            scroll_to_bottom=False)
-                      )
-                 )
-        return v
+#    def traits_view(self):
+#        v = View(Item('automated_runs',
+#                      show_label=False,
+#                      editor=myTabularEditor(adapter=self.adapter_klass(),
+#                                            operations=['delete',
+#                                                        'move',
+# #                                                        'edit'
+#                                                        ],
+#                                            editable=False,
+#                                            selected='selected',
+#                                            rearranged='rearranged',
+#                                            pasted='pasted',
+#                                            copy_cache='copy_cache',
+#                                            update='update_needed',
+#                                            drag_move=True,
+#                                            auto_update=True,
+#                                            multi_select=True,
+#                                            scroll_to_bottom=False)
+#                      )
+#                 )
+#        return v
 #============= EOF =============================================
