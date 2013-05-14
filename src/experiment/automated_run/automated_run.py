@@ -208,8 +208,16 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
 
+        if not self.spectrometer_manager:
+            self.warning('no spectrometer manager')
+            return
+
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
+
+        spec = self.spectrometer_manager.spectrometer
+        self._active_detectors = [spec.get_detector(n) for n in dets]
+        p.create(self._active_detectors)
 
         # set plot_panels, baselines, backgrounds
         p.baselines = baselines = self.experiment_manager._prev_baselines
@@ -230,14 +238,7 @@ class AutomatedRun(Loggable):
             for iso, v in baselines.iteritems():
                 self.arar_age.set_baseline(iso, v)
 
-        if not self.spectrometer_manager:
-            self.warning('no spectrometer manager')
-            return
-
-        spec = self.spectrometer_manager.spectrometer
-        self._active_detectors = [spec.get_detector(n) for n in dets]
-        p.create(self._active_detectors)
-
+        
 #        g = p.graph
 #        g.suppress_regression = True
 #        # construct plot panels graph
@@ -741,10 +742,8 @@ anaylsis_type={}
             plot_panel.reset()
             plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
 
-            invoke_in_main_thread(self.experiment_manager.open_view, plot_panel)
-            # wait for the window to open
-            time.sleep(2)
-
+            self.experiment_manager.open_view(plot_panel)
+            
         return plot_panel
 
     def _set_table_attr(self, name, grp, attr, value):
