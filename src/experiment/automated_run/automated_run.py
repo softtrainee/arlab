@@ -195,6 +195,8 @@ class AutomatedRun(Loggable):
     skip = Bool
     fits = List
     runid = Str
+    
+    info_color=None
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -566,7 +568,8 @@ anaylsis_type={}
         if self.experiment_manager:
             if color is None:
                 color = self.info_color
-            else:
+            
+            if color is None:
                 color = 'light green'
 
             self.experiment_manager.info(msg, color=color, log=False)
@@ -652,9 +655,9 @@ anaylsis_type={}
         if not self._alive:
             return
 
+        self.info_color = EXTRACTION_COLOR
         self.info('======== Extraction Started ========')
         self.state = 'extraction'
-        self.info_color = EXTRACTION_COLOR
         self.extraction_script.manager = self.experiment_manager
         self.extraction_script.run_identifier = self.runid
 
@@ -662,12 +665,14 @@ anaylsis_type={}
         if self.extraction_script.execute():
             self._post_extraction_save()
             self.info('======== Extraction Finished ========')
+            self.info_color=None
             return True
         else:
             self.do_post_measurement()
             self.finish()
 
-            self.info('======== Extraction Finished unsuccessfully ========')
+            self.info('======== Extraction Finished unsuccessfully ========', color='red')
+            self.info_color=None
             return False
 
     def do_measurement(self):
@@ -677,9 +682,9 @@ anaylsis_type={}
         self.measurement_script.manager = self.experiment_manager
         # use a measurement_script to explicitly define
         # measurement sequence
+        self.info_color = MEASUREMENT_COLOR
         self.info('======== Measurement Started ========')
         self.state = 'measurement'
-        self.info_color = MEASUREMENT_COLOR
 
         self._pre_measurement_save()
         self.measuring = True
@@ -689,13 +694,15 @@ anaylsis_type={}
 
             self.info('======== Measurement Finished ========')
             self.measuring = False
+            self.info_color=None
             return True
         else:
             self.do_post_measurement()
             self.finish()
 
-            self.info('======== Measurement Finished unsuccessfully ========')
+            self.info('======== Measurement Finished unsuccessfully ========', color='red')
             self.measuring = False
+            self.info_color=None
             return False
 
     def do_post_measurement(self):

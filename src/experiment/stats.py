@@ -26,7 +26,8 @@ import time
 
 
 class ExperimentStats(Loggable):
-    elapsed = String
+    elapsed = Property(depends_on='_elapsed')
+    _elapsed=Float
     nruns = Int
     nruns_finished = Int
     etf = String
@@ -67,6 +68,9 @@ class ExperimentStats(Loggable):
             dur += (self.delay_between_analyses * ni)
         return dur
 
+    def _get_elapsed(self):
+        return str(datetime.timedelta(seconds=self._elapsed))
+    
     def _get_total_time(self):
         dur = datetime.timedelta(seconds=round(self._total_time))
         return str(dur)
@@ -96,8 +100,7 @@ class ExperimentStats(Loggable):
         self._start_time = st
         def update_time():
             e = round(time.time() - st)
-            e = str(datetime.timedelta(seconds=e))
-            self.trait_set(elapsed=e)
+            self.trait_set(_elapsed=e)
 
         self._timer = Timer(1000, update_time)
         self._timer.start()
