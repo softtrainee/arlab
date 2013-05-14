@@ -124,7 +124,7 @@ class ExperimentExecutor(Experimentable):
         self.statusbar = msg
         if self.info_display:
             if color is None:
-                color = 'yellow'
+                color = 'green'
             self.info_display.add_text(msg, color=color)
 
         if log:

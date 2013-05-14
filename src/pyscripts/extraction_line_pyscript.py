@@ -37,7 +37,7 @@ command_register = makeRegistry()
 
 class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
-    info_color = 'red'
+    info_color = 'yellow'
     snapshot_paths = List
 
     def get_command_register(self):
@@ -371,7 +371,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
         while s:
             if self._cancel:
-                break            
+                break
             self._sleep(1)
             s = r.isSet()
 

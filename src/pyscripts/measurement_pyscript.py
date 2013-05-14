@@ -20,7 +20,6 @@ from traits.api import Any, on_trait_change
 
 import time
 import os
-import random
 from ConfigParser import ConfigParser
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
@@ -37,7 +36,7 @@ command_register = makeRegistry()
 class MeasurementPyScript(ValvePyScript):
     automated_run = Any
     ncounts = 0
-    info_color = 'orange'
+    info_color = 'magenta'
     _time_zero = None
 
     _series_count = 0
