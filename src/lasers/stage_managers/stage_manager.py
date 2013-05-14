@@ -808,9 +808,10 @@ class StageManager(Manager):
 #        self.move_thread = None
 
     def _move_to_hole(self, key, correct_position=True):
-        self.info('Move to hole {}'.format(key))
+        self.info('Move to hole {} type={}'.format(key, str(type(key))))
         self.temp_position = self._stage_map.get_hole_pos(key)
         pos = self._stage_map.get_corrected_hole_pos(key)
+        self.info('position {}'.format(pos))
         if pos is not None:
             self.visualizer.set_current_hole(key)
 

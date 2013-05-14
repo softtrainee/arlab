@@ -253,7 +253,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def GoToHole(self, manager, data, *args):
         try:
             data = int(data)
-            err = manager.stage_manager._set_hole(data)
+            err = manager.stage_manager.move_to_hole(str(data))
         except (ValueError, TypeError):
             err = InvalidArgumentsErrorCode('GoToHole', data)
 

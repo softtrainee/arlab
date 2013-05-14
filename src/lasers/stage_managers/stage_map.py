@@ -335,8 +335,11 @@ class StageMap(Loggable):
         return next((h for h in self.sample_holes if h.id == str(key)), None)
 
     def get_hole_pos(self, key):
+        '''
+            hole ids are str so convert key to str
+        '''
         return next(((h.x, h.y)
-                     for h in self.sample_holes if h.id == key), None)
+                     for h in self.sample_holes if h.id == str(key)), None)
 
     def get_corrected_hole_pos(self, key):
         return next(((h.x_cor, h.y_cor)
