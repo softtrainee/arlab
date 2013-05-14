@@ -147,7 +147,7 @@ class HardwarePlugin(BaseTaskPlugin):
         rhm = self.application.get_service(RemoteHardwareManager)
         bind_preference(rhm, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
         bind_preference(rhm, 'enable_directory_server', 'pychron.hardware.enable_directory_server')
-        print rhm
+
         rhm.bootstrap()
 
     def stop(self):
