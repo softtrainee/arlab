@@ -559,7 +559,7 @@ anaylsis_type={}
         if self.monitor:
             self.monitor.stop()
 
-    def info(self, msg, color='green', *args, **kw):
+    def info(self, msg, color='light green', *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.experiment_manager:
             self.experiment_manager.info(msg, color=color, log=False)
@@ -673,6 +673,7 @@ anaylsis_type={}
         self._pre_measurement_save()
         self.measuring = True
         if self.measurement_script.execute():
+            self.state = 'measurement'
             if self._alive:
                 self._post_measurement_save()
 
@@ -803,7 +804,7 @@ anaylsis_type={}
         self.info('equilibrating for {}sec'.format(eqtime))
         time.sleep(eqtime)
         if self._alive:
-            self.info('====== Equilibration Finished ======')
+            self.info('======== Equilibration Finished ========')
             if elm and inlet:
                 elm.close_valve(inlet)
 

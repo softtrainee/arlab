@@ -17,11 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import Property, Str, Float, Any, Int, List
 from traitsui.api import View, Item, VGroup
-from pyface.timer.api import Timer
 #============= standard library imports ========================
 import datetime
 import time
 from src.loggable import Loggable
+from src.helpers.timer import Timer
 #============= local library imports  ==========================
 
 
