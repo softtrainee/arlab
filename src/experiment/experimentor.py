@@ -206,7 +206,7 @@ class Experimentor(Experimentable):
                 if sample:
                     ai.sample = sample.name
                     self.debug('sample {}'.format(ai.sample))
-                    
+
                 ipos = dbln.irradiation_position
                 if not ipos is None:
                     level = ipos.level
@@ -367,7 +367,8 @@ class Experimentor(Experimentable):
         self.executor.trait_set(experiment_queues=self.experiment_queues,
                                 experiment_queue=self.experiment_queues[0],
                                 _experiment_hash=self._experiment_hash,
-                                _text=self._text
+                                _text=self._text,
+                                stats=self.stats
                                 )
         self.executor.execute()
 

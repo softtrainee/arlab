@@ -15,22 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Str, Float, Any, Int, List
+from src.helpers.timer import Timer
+from src.loggable import Loggable
+from traits.api import Property, String, Float, Any, Int, List
 from traitsui.api import View, Item, VGroup
-#============= standard library imports ========================
 import datetime
 import time
-from src.loggable import Loggable
-from src.helpers.timer import Timer
+#============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class ExperimentStats(Loggable):
-    elapsed = Str
+    elapsed = String
     nruns = Int
     nruns_finished = Int
-    etf = Str
-    time_at = Str
+    etf = String
+    time_at = String
     total_time = Property(depends_on='_total_time')
     _total_time = Float
     _timer = Any(transient=True)
@@ -96,9 +96,10 @@ class ExperimentStats(Loggable):
         self._start_time = st
         def update_time():
             e = round(time.time() - st)
-            self.elapsed = str(datetime.timedelta(seconds=e))
+            e = str(datetime.timedelta(seconds=e))
+            self.trait_set(elapsed=e)
 
-        self._timer = Timer(500, update_time)
+        self._timer = Timer(1000, update_time)
         self._timer.start()
 
     def stop_timer(self):
