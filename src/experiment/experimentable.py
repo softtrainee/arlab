@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any
+from traits.api import HasTraits, List, Any, Event
 from traitsui.api import View, Item
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 import hashlib
@@ -27,7 +27,9 @@ class Experimentable(IsotopeDatabaseManager):
     experiment_queue = Any
     _text = None
     _experiment_hash = None
-
+    
+    update_needed=Event
+    
     def _get_all_automated_runs(self):
         return [ai for ei in self.experiment_queues
                     for ai in ei.automated_runs
@@ -40,8 +42,17 @@ class Experimentable(IsotopeDatabaseManager):
 #                ei._cached_runs = None
             ei.load(ti)
 
+        #both executor and experimentor are subclasses of experimentable
+        # executor is also and attributre of experimentor
+        # experimentor reimplements _update, but executor does not
+        # so executor triggers and update with update_needed
+        
+        self.update_needed=True
         self._update(all_info=True)
-
+        
+    def _update(self, *args, **kw):
+        pass
+    
     def _check_for_file_mods(self):
         path = self.experiment_queue.path
         if path:

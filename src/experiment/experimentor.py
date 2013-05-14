@@ -21,7 +21,7 @@ from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
 #============= standard library imports ========================
-
+from functools import partial
 #============= local library imports  ==========================
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
@@ -427,6 +427,9 @@ class Experimentor(Experimentable):
         e = ExperimentExecutor(db=self.db,
                                application=self.application
                                )
+        
+        pfunc=lambda *args, **kw: self._update(all_info=True)
+        e.on_trait_change(pfunc, 'update_needed')
         return e
 
     def _experiment_factory_default(self):
