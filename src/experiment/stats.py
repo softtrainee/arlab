@@ -26,8 +26,7 @@ from src.helpers.timer import Timer
 
 
 class ExperimentStats(Loggable):
-    elapsed = Property(depends_on='_elapsed')
-    _elapsed = Float
+    elapsed = Str
     nruns = Int
     nruns_finished = Int
     etf = Str
@@ -72,9 +71,6 @@ class ExperimentStats(Loggable):
         dur = datetime.timedelta(seconds=round(self._total_time))
         return str(dur)
 
-    def _get_elapsed(self):
-        return str(datetime.timedelta(seconds=self._elapsed))
-
     def traits_view(self):
         v = View(VGroup(
                         Item('nruns',
@@ -99,10 +95,11 @@ class ExperimentStats(Loggable):
         st = time.time()
         self._start_time = st
         def update_time():
-            self._elapsed = round(time.time() - st)
+            e = round(time.time() - st)
+            self.elapsed = str(datetime.timedelta(seconds=e))
 
         self._timer = Timer(500, update_time)
-        self._timer.Start()
+        self._timer.start()
 
     def stop_timer(self):
         tt = self._total_time

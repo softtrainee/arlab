@@ -670,10 +670,10 @@ anaylsis_type={}
         # use a measurement_script to explicitly define
         # measurement sequence
         self.info('======== Measurement Started ========')
+        self.state = 'measurement'
         self._pre_measurement_save()
         self.measuring = True
         if self.measurement_script.execute():
-            self.state = 'measurement'
             if self._alive:
                 self._post_measurement_save()
 
