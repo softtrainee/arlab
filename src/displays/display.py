@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Color, Str, List
+from traits.api import HasTraits, Instance, Int, Color, Str, List, Tuple
 from traitsui.api import View, Item, UItem
 from src.lasers.scanner import ApplicationController
 from src.ui.display_editor import DisplayEditor
@@ -25,12 +25,16 @@ from src.deprecate import deprecated
 # from src.viewable import Viewable
 
 class DisplayModel(HasTraits):
-    messages = List
-    max_messages = Int(300)
-    def add_text(self, txt, color, **kw):
-        ms = self.messages[-self.max_messages:]
-        ms.append((txt, color))
-        self.messages = ms
+#     messages = List
+#     max_messages = Int(300)
+    message=Tuple
+    def add_text(self, txt, color, force=False,**kw):
+        '''
+            if txt,color same as previous txt,color than message only added if force=True
+        '''
+#         ms = self.messages[-self.max_messages:]
+#         ms.append((txt, color))
+        self.message = (txt,color, force)
 
 class DisplayController(ApplicationController):
     x = Int
@@ -45,8 +49,10 @@ class DisplayController(ApplicationController):
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
                                                 *args, **kw)
+    
     def clear(self, **kw):
-        self.model.messages = []
+        self.model.message=('%%clear%%',)
+#         self.model.messages = []
 
     @deprecated
     def freeze(self):
@@ -63,7 +69,7 @@ class DisplayController(ApplicationController):
         self.model.add_text(txt, **kw)
 
     def traits_view(self):
-        v = View(UItem('messages', editor=DisplayEditor(bg_color=self.bg_color)),
+        v = View(UItem('message', editor=DisplayEditor(bg_color=self.bg_color)),
                  x=self.x, y=self.y, width=self.width,
                  height=self.height,
                  title=self.title)

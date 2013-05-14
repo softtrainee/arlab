@@ -27,6 +27,8 @@ class Display(QTextEdit):
     pass
 
 class _DisplayEditor(Editor):
+    _pv=None
+    _pc=None
     def init(self, parent):
         '''
 
@@ -54,10 +56,22 @@ class _DisplayEditor(Editor):
         '''
         '''
         ctrl = self.control
-        ctrl.clear()
-        for v, c in self.value:
-            ctrl.setTextColor(c)
-            ctrl.insertPlainText('{}\n'.format(v))
+        if self.value:
+            if len(self.value)==1:
+                v=self.value[0]
+                if v=='%%clear%%':
+                    ctrl.clear()
+            else:
+                v,c, force=self.value
+                if force or v!=self._pv or c!=self._pc:
+                    ctrl.setTextColor(c)
+                    ctrl.insertPlainText('{}\n'.format(v))
+                    self._pc=c
+                    self._pv=v
+#         ctrl.clear()
+#         
+#         for v, c in self.value:
+
 
         self.control.moveCursor(QTextCursor.End)
         self.control.ensureCursorVisible()
