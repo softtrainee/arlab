@@ -15,12 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Password, Enum, List, Button, Any, Int, \
+from traits.api import Str, Password, Enum, List, Button, Any, Int, \
     on_trait_change
 from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 from traitsui.list_str_adapter import ListStrAdapter
 from envisage.ui.tasks.preferences_pane import PreferencesPane
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class FavoritesAdapter(ListStrAdapter):
@@ -121,6 +122,7 @@ class ExperimentPreferences(BasePreferencesHelper):
                 self.favorites.append(fv)
 
             self.selected = fv
+
 
 class ExperimentPreferencesPane(PreferencesPane):
     model_factory = ExperimentPreferences

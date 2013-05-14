@@ -43,7 +43,8 @@ from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.constants import NULL_STR, SCRIPT_KEYS
+from src.constants import NULL_STR, SCRIPT_KEYS, MEASUREMENT_COLOR, \
+    EXTRACTION_COLOR
 from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from src.processing.arar_age import ArArAge
@@ -238,7 +239,7 @@ class AutomatedRun(Loggable):
             for iso, v in baselines.iteritems():
                 self.arar_age.set_baseline(iso, v)
 
-        
+
 #        g = p.graph
 #        g.suppress_regression = True
 #        # construct plot panels graph
@@ -560,9 +561,14 @@ anaylsis_type={}
         if self.monitor:
             self.monitor.stop()
 
-    def info(self, msg, color='light green', *args, **kw):
+    def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.experiment_manager:
+            if color is None:
+                color = self.info_color
+            else:
+                color = 'light green'
+
             self.experiment_manager.info(msg, color=color, log=False)
 
     def get_measurement_parameter(self, key, default=None):
@@ -648,6 +654,7 @@ anaylsis_type={}
 
         self.info('======== Extraction Started ========')
         self.state = 'extraction'
+        self.info_color = EXTRACTION_COLOR
         self.extraction_script.manager = self.experiment_manager
         self.extraction_script.run_identifier = self.runid
 
@@ -672,6 +679,8 @@ anaylsis_type={}
         # measurement sequence
         self.info('======== Measurement Started ========')
         self.state = 'measurement'
+        self.info_color = MEASUREMENT_COLOR
+
         self._pre_measurement_save()
         self.measuring = True
         if self.measurement_script.execute():
@@ -743,7 +752,7 @@ anaylsis_type={}
             plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
 
             self.experiment_manager.open_view(plot_panel)
-            
+
         return plot_panel
 
     def _set_table_attr(self, name, grp, attr, value):
@@ -929,7 +938,8 @@ anaylsis_type={}
 
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series, fits, check_conditions):
-        self.info('measuring {}. ncounts={}'.format(grpname, ncounts))
+        self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
+                  color=MEASUREMENT_COLOR)
 
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')

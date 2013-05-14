@@ -20,6 +20,7 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
 from src.paths import paths
+from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR
 # from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
 # def get_name(func):
@@ -79,9 +80,9 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         elif item.state == 'success':
             color = '#66FF33'  # light green
         elif item.state == 'extraction':
-            color = '#FFFF66'  # light yellow
+            color = EXTRACTION_COLOR  # '#FFFF66'  # light yellow
         elif item.state == 'measurement':
-            color = '#FF7EDF'  # magenta
+            color = MEASUREMENT_COLOR  # '#FF7EDF'  # magenta
         else:
             if row % 2 == 0:
                 color = 'white'

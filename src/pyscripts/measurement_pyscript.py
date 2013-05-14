@@ -26,6 +26,7 @@ from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
     makeRegistry
 from src.paths import paths
 from src.pyscripts.valve_pyscript import ValvePyScript
+from src.constants import MEASUREMENT_COLOR
 
 estimated_duration_ff = 1.35
 
@@ -36,7 +37,7 @@ command_register = makeRegistry()
 class MeasurementPyScript(ValvePyScript):
     automated_run = Any
     ncounts = 0
-    info_color = 'magenta'
+    info_color = MEASUREMENT_COLOR
     _time_zero = None
 
     _series_count = 0

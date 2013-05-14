@@ -63,4 +63,7 @@ IRRADIATION_KEYS = [('k4039', 'K_40_Over_39'),
 DECAY_KEYS = [('a37decayfactor', '37_Decay'),
               ('a39decayfactor', '39_Decay'),
               ]
+
+MEASUREMENT_COLOR = '#FF7EDF'  # magenta
+EXTRACTION_COLOR = '#FFFF66'
 #============= EOF =============================================

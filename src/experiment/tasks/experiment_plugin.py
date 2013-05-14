@@ -39,6 +39,7 @@ from src.experiment.experimentor import Experimentor
 from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.tasks.labnumber_entry_task import LabnumberEntryTask
 from src.experiment.import_manager import ImportManager
+from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -227,5 +228,7 @@ class ExperimentPlugin(BaseTaskPlugin):
         return self.application.get_service(Experimentor)
 
     def _preferences_panes_default(self):
-        return [ExperimentPreferencesPane]
+        return [ExperimentPreferencesPane,
+                ConstantsPreferencesPane
+                ]
 #============= EOF =============================================
