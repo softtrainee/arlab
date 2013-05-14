@@ -24,13 +24,20 @@ from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from src.extraction_line.tasks.extraction_line_task import ExtractionLineTask
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
-from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction
+from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction, \
+    RefreshCanvasAction
 
 class ExtractionLinePlugin(BaseTaskPlugin):
     id = 'pychron.extraction_line.plugin'
 
 
 #    manager = Instance(ExtractionLineManager)
+    def _my_task_extensions(self):
+        return [TaskExtension(actions=[SchemaAddition(id='refresh_canvas',
+                                                      factory=RefreshCanvasAction,
+                                                      path='MenuBar/Extraction'
+                                                      )])]
+
     def _service_offers_default(self):
         '''
         '''

@@ -144,7 +144,7 @@ class PlotPanel(Viewable):
             display.clear()
             for ai in args:
                 ai(display)
-            
+
         wrapper(self.signal_display,
                 self._print_signals,
                 self._print_baselines
@@ -378,11 +378,11 @@ class PlotPanel(Viewable):
                                       use_inspector_tool=True
                                       )
     def traits_view(self):
-        
-        graph_grp=Item('graph', show_label=False, 
-                       height=0.6,
+
+        graph_grp = Item('graph', show_label=False,
+                       height=0.72,
                        style='custom')
-        display_grp=Group(Group(
+        display_grp = Group(Group(
                                 HGroup(
                                       Item('correct_for_baseline'),
                                       Item('correct_for_blank'),
@@ -409,9 +409,9 @@ class PlotPanel(Viewable):
                  VSplit(
                         graph_grp,
                         display_grp
-                        
+
                         ),
-                 width=600,
+                 width=650,
                  height=0.90,
                  x=self.window_x,
                  y=self.window_y,

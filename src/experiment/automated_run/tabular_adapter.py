@@ -71,8 +71,6 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
 
     def get_bg_color(self, obj, trait, row, column):
-        
-    
         item = self.item
         if not item.executable:
             color = 'red'
@@ -80,12 +78,16 @@ class AutomatedRunSpecAdapter(TabularAdapter):
             color = '#33CCFF'  # light blue
         elif item.state == 'success':
             color = '#66FF33'  # light green
+        elif item.state == 'extraction':
+            color = '#FFFF66'  # light yellow
+        elif item.state == 'measurement':
+            color = '#FF7EDF'  # magenta
         else:
             if row % 2 == 0:
                 color = 'white'
             else:
                 color = '#E6F2FF'  # light gray blue
-    
+
         return color
 
     def _get_labnumber_text(self, trait, item):
@@ -175,72 +177,72 @@ class UVAutomatedRunSpecAdapter(AutomatedRunSpecAdapter):
 COLOR_STATES = dict(extraction='yellow', measurement='orange',
                      success='green', fail='red', truncate='blue')
 
-class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
-    state_width = Int(20)
-    aliquot_width = Int(50)
-    irradiation_width = Int(80)
-    state_image = Property
-    def get_bg_color(self, *args, **kw):
-        item = self.item
-        if not item.executable:
-            color = 'red'
-        if item.skip:
-            color = '#33CCFF'  # light blue
-        elif item.state == 'success':
-            color = '#66FF33'  # light green
-        else:
-            color = super(ExecuteAutomatedRunAdapter, self).get_bg_color(*args, **kw)
-
-        return color
-
-    def _get_state_image(self):
-        im = 'gray'
-        if self.item:
-            if self.item.state in COLOR_STATES:
-                im = COLOR_STATES[self.item.state]
-
-        def debug_path(img):
-            root = os.path.split(__file__)[0]
-            while not root.endswith('src'):
-                root = os.path.split(root)[0]
-
-            root = os.path.split(root)[0]
-            root = os.path.join(root, 'resources', 'balls')
-            return os.path.join(root, '{}_ball.png'.format(img))
-
-        if paths.app_resources:
-            root = paths.app_resources
-            p = os.path.join(root, '{}_ball.png'.format(im))
-            if not os.path.isfile(p):
-                p = debug_path(im)
-        else:
-            p = debug_path(im)
-
-        return p
-
-    def _columns_factory(self):
-        cols = [
-                 ('', 'state'),
-                 ('Labnumber', 'labnumber'),
-                 ('Aliquot', 'aliquot'),
-                 ('Sample', 'sample'),
-                 ('Irrad.', 'irradiation'),
-                 ('Position', 'position'),
-#                 ('Autocenter', 'autocenter'),
-#                 ('Overlap', 'overlap'),
-                 ('Extract', 'extract_value'),
-                 ('Units', 'extract_units'),
-                 ('Duration', 'duration'),
-                 ('Cleanup', 'cleanup'),
-                 ('Pattern', 'pattern'),
-                 ('Extraction', 'extraction_script'),
-                 ('Measurement', 'measurement_script'),
-                 ('Post equilibration', 'post_equilibration_script'),
-                 ('Post Measurement', 'post_measurement_script'),
-                 ('Comment', 'comment')
-                 ]
-
-        return cols
+# class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
+#    state_width = Int(20)
+#    aliquot_width = Int(50)
+#    irradiation_width = Int(80)
+#    state_image = Property
+#    def get_bg_color(self, *args, **kw):
+#        item = self.item
+#        if not item.executable:
+#            color = 'red'
+#        if item.skip:
+#            color = '#33CCFF'  # light blue
+#        elif item.state == 'success':
+#            color = '#66FF33'  # light green
+#        else:
+#            color = super(ExecuteAutomatedRunAdapter, self).get_bg_color(*args, **kw)
+#
+#        return color
+#
+#    def _get_state_image(self):
+#        im = 'gray'
+#        if self.item:
+#            if self.item.state in COLOR_STATES:
+#                im = COLOR_STATES[self.item.state]
+#
+#        def debug_path(img):
+#            root = os.path.split(__file__)[0]
+#            while not root.endswith('src'):
+#                root = os.path.split(root)[0]
+#
+#            root = os.path.split(root)[0]
+#            root = os.path.join(root, 'resources', 'balls')
+#            return os.path.join(root, '{}_ball.png'.format(img))
+#
+#        if paths.app_resources:
+#            root = paths.app_resources
+#            p = os.path.join(root, '{}_ball.png'.format(im))
+#            if not os.path.isfile(p):
+#                p = debug_path(im)
+#        else:
+#            p = debug_path(im)
+#
+#        return p
+#
+#    def _columns_factory(self):
+#        cols = [
+#                 ('', 'state'),
+#                 ('Labnumber', 'labnumber'),
+#                 ('Aliquot', 'aliquot'),
+#                 ('Sample', 'sample'),
+#                 ('Irrad.', 'irradiation'),
+#                 ('Position', 'position'),
+# #                 ('Autocenter', 'autocenter'),
+# #                 ('Overlap', 'overlap'),
+#                 ('Extract', 'extract_value'),
+#                 ('Units', 'extract_units'),
+#                 ('Duration', 'duration'),
+#                 ('Cleanup', 'cleanup'),
+#                 ('Pattern', 'pattern'),
+#                 ('Extraction', 'extraction_script'),
+#                 ('Measurement', 'measurement_script'),
+#                 ('Post equilibration', 'post_equilibration_script'),
+#                 ('Post Measurement', 'post_measurement_script'),
+#                 ('Comment', 'comment')
+#                 ]
+#
+#        return cols
 
 # class AutomatedRunAdapter(TabularAdapter):
 #    show_state = Bool(True)
