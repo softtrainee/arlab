@@ -19,5 +19,5 @@
 #============= local library imports  ==========================
 from src.ui.factory import toolkit_factory
 
-MProgressDialog = toolkit_factory('progress_dialog', 'MProgressDialog')
+myProgressDialog = toolkit_factory('progress_dialog', 'myProgressDialog')
 #============= EOF =============================================

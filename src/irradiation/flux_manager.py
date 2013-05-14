@@ -249,7 +249,7 @@ class FluxManager(BaseAnalysisManager):
 # from src.database.records.isotope_record import IsotopeRecord
 # from threading import Thread
 # from src.helpers.thread_pool import ThreadPool
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 #
 # plusminus = u'\u00b1'
 # one_sigma = u'1\u03c3'

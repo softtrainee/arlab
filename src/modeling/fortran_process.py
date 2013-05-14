@@ -27,7 +27,7 @@ import time
 
 #============= local library imports  ==========================
 from src.loggable import Loggable
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 
 class FortranProcess(Loggable):
     _thread = None
@@ -68,7 +68,7 @@ class FortranProcess(Loggable):
             return
 
 #        n = 5
-#        pd = MProgressDialog(max=n, size=(550, 15))
+#        pd = myProgressDialog(max=n, size=(550, 15))
 #        do_later(pd.open)
 #        do_later(pd.change_message, '{} process started'.format(self.name))
         try:

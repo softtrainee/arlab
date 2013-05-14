@@ -41,7 +41,7 @@
 # from src.processing.export.csv_exporter import CSVExporter
 # from src.processing.export.excel_exporter import ExcelExporter
 # from src.processing.figures.figure_store import FigureStore
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 # from src.saveable import Saveable, SaveableHandler, SaveButton
 # from src.graph.graph_container import HGraphContainer
 # from enable.component_editor import ComponentEditor
@@ -276,7 +276,7 @@
 ##===============================================================================
 # #     serial load
 ##===============================================================================
-#        pd = MProgressDialog(max=n + 2, size=(550, 15))
+#        pd = myProgressDialog(max=n + 2, size=(550, 15))
 #        import wx
 #        pd.open()
 #        (w, h) = wx.DisplaySize()

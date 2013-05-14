@@ -21,7 +21,7 @@ from pyface.api import ProgressDialog
 from PySide.QtCore import QRect, QPoint, QSize
 #============= local library imports  ==========================
 
-class MProgressDialog(ProgressDialog):
+class myProgressDialog(ProgressDialog):
     show_percent = True
     show_time = True
     def get_value(self):
@@ -39,5 +39,7 @@ class MProgressDialog(ProgressDialog):
         self.max += step
 
     def set_size(self, w, h):
-        self.dialog_size = QRect(QPoint(0, 0), QSize(w, h))
+#        self.dialog_size = QRect(QPoint(0, 0), QSize(w, h))
+        self.size = (w, h)
+        print self.size
 #============= EOF =============================================

@@ -31,7 +31,7 @@ from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 # from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 # from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 
@@ -360,8 +360,8 @@ class FusionsLaserManager(LaserManager):
             motor = self.laser_controller.get_motor(name)
             if motor is not None:
                 n = 4
-                from src.ui.progress_dialog import MProgressDialog
-                pd = MProgressDialog(max=n, size=(550, 15))
+                from src.ui.progress_dialog import myProgressDialog
+                pd = myProgressDialog(max=n, size=(550, 15))
                 pd.open()
                 motor.initialize(progress=pd)
                 pd.close()
