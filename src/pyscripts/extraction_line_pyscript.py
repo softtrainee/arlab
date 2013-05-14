@@ -24,6 +24,7 @@ from src.pyscripts.pyscript import verbose_skip, makeRegistry
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 # from src.lasers.laser_managers.extraction_device import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
+from src.constants import EXTRACTION_COLOR
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
 
@@ -37,7 +38,7 @@ command_register = makeRegistry()
 
 class ExtractionLinePyScript(ValvePyScript):
     _resource_flag = None
-    info_color = 'yellow'
+    info_color = EXTRACTION_COLOR
     snapshot_paths = List
 
     def get_command_register(self):

@@ -97,8 +97,8 @@ class ArArAge(HasTraits):
 
 
     ic_factor = Property(depends_on='ic_factor_v, ic_factor_e')
-    ic_factor_v = Float
-    ic_factor_e = Float
+    ic_factor_v = Float(1)
+    ic_factor_e = Float(0)
 
     arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
@@ -129,7 +129,6 @@ class ArArAge(HasTraits):
             bind_preference(self, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
             bind_preference(self, 'ic_factor_v', 'pychron.experiment.constants.ic_factor')
             bind_preference(self, 'ic_factor_e', 'pychron.experiment.constants.ic_factor_error')
-
 
         except AttributeError, e:
             self.debug(e)
