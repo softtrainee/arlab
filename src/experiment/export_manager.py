@@ -30,13 +30,13 @@ from src.experiment.utilities.identifier import convert_special_name, make_runid
 from src.experiment.automated_run.automated_run import assemble_script_blob
 from src.processing.search.selector_manager import SelectorManager
 from src.database.database_connection_spec import DBConnectionSpec
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 import csv
 from src.database.records.isotope_record import IsotopeRecordView
 from threading import Thread
 from src.ui.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
-from src.ui.progress_dialog import MProgressDialog
+from src.ui.progress_dialog import myProgressDialog
 
 class ExportedAdapter(TabularAdapter):
     columns = [('', 'n'), ('RID', 'rid')]
@@ -116,7 +116,7 @@ class ExportManager(IsotopeDatabaseManager):
         from pyface.timer.do_later import do_later
         records = self.records
         n = len(records)
-        pd = MProgressDialog(max=n + 1, size=(550, 15))
+        pd = myProgressDialog(max=n + 1, size=(550, 15))
         def open_progress():
             pd.open()
             pd.center()

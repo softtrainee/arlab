@@ -22,9 +22,9 @@ from apptools.preferences.preference_binding import bind_preference
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
-from src.ui.progress_dialog import MProgressDialog
+from src.ui.progress_dialog import myProgressDialog
 # from src.loggable import Loggable
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 
 
 class IsotopeDatabaseManager(Manager):
@@ -99,7 +99,7 @@ class IsotopeDatabaseManager(Manager):
             progress.increment()
 
     def _open_progress(self, n):
-        pd = MProgressDialog(max=n, size=(550, 15))
+        pd = myProgressDialog(max=n, size=(550, 15))
         pd.open()
         pd.center()
         return pd

@@ -23,11 +23,12 @@ from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
-from src.ui.progress_dialog import MProgressDialog
+from src.ui.progress_dialog import myProgressDialog
 import os
 from src.globals import globalv
+from src.ui.gui import invoke_in_main_thread
 
-
+from pyface.ui.qt4.progress_dialog import ProgressDialog
 class Initializer(Loggable):
 
     '''
@@ -103,6 +104,7 @@ class Initializer(Loggable):
 
 #            offset = pd.progress_bar.control.GetValue()
             offset = pd.get_value()
+
             pd.change_message(msg)
 
             if offset == pd.max - 1:
@@ -114,7 +116,7 @@ class Initializer(Loggable):
 #            if not cont or skip:
 #                return
 
-            # time.sleep(0.1)
+            time.sleep(0.1)
 
         super(Initializer, self).info(msg, **kw)
 
@@ -390,8 +392,9 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
     def load_progress(self, n):
         '''
         '''
-        pd = MProgressDialog(max=n)
-        pd.set_size(500, 50)
+        pd = myProgressDialog(max=n, message='Welcome',
+                              size=(500, 50)
+                              )
         self.pd = pd
         self.pd.open()
 

@@ -21,7 +21,7 @@ from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
     CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, DisplaySize
 #============= local library imports  ==========================
 
-class MProgressDialog(ProgressDialog):
+class myProgressDialog(ProgressDialog):
 
     def get_value(self):
         return self.progress_bar.control.GetValue()

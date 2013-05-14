@@ -25,7 +25,7 @@ import time
 import os
 #============= local library imports  ==========================
 from src.globals import globalv
-from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
+# from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
 # from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.manager import ExperimentManager
 from src.managers.manager import Manager

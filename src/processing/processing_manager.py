@@ -27,7 +27,7 @@ from src.processing.database_manager import DatabaseManager
 from src.processing.analysis import Analysis, NonDBAnalysis
 # from src.processing.script import ProcessScript
 # from src.constants import NULL_STR
-# from src.progress_dialog import MProgressDialog
+# from src.progress_dialog import myProgressDialog
 from src.processing.plotter_options_manager import PlotterOptionsManager, \
     IdeogramOptionsManager, SpectrumOptionsManager, IsochronOptionsManager
 from src.processing.window import Window

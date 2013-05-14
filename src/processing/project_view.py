@@ -229,7 +229,7 @@ if __name__ == '__main__':
 #        from Queue import Queue
 #
 #        n = len(ans)
-#        pd = MProgressDialog(max=n, size=(550, 15))
+#        pd = myProgressDialog(max=n, size=(550, 15))
 #        def open_progress():
 #            pd.open()
 #            (w, h) = wx.DisplaySize()
