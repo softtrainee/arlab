@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
 from traitsui.api import View, UItem, Group, InstanceEditor, HGroup, \
-    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup
+    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup, RangeEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
@@ -214,6 +214,22 @@ class OpticsPane(TraitsDockPane):
                  )
         return v
 
+
+class ClientPane(TraitsTaskPane):
+    def traits_view(self):
+        v = View(
+                 Item('test_connection_button', show_label=False),
+                 HGroup(
+                       UItem('enabled_led', editor=LEDEditor()),
+                       UItem('enable', editor=ButtonEditor(label_value='enable_label'))
+                       ),                 
+                 Item('position'),
+                 Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
+                 title='Laser Manager',
+                 )
+        return v
 #===============================================================================
 # co2
 #===============================================================================
@@ -230,6 +246,9 @@ class FusionsCO2ControlPane(ControlPane):
 #===============================================================================
 # Diode
 #===============================================================================
+class FusionsDiodeClientPane(ClientPane):
+    pass
+
 class FusionsDiodePane(BaseLaserPane):
     pass
 

@@ -205,14 +205,14 @@ class Experimentor(Experimentable):
                 sample = dbln.sample
                 if sample:
                     ai.sample = sample.name
-                    self.debug('sample {}'.format(ai.sample))
+                    #self.debug('sample {}'.format(ai.sample))
 
                 ipos = dbln.irradiation_position
                 if not ipos is None:
                     level = ipos.level
                     irrad = level.irradiation
                     ai.irradiation = '{}{}'.format(irrad.name, level.name)
-                    self.debug('irrad {}'.format(ai.irradiation))
+                    #self.debug('irrad {}'.format(ai.irradiation))
 
     def _modify_steps(self, ans):
         self.debug('modifying steps')

@@ -585,7 +585,9 @@ class ExperimentExecutor(Experimentable):
         dbs = q.all()
 
         sel.load_records(dbs, load=False)
-
+        
+        sel.selected=sel.records[-1]
+        
         info = sel.edit_traits(kind='livemodal')
         if info.result:
             dbr = sel.selected
@@ -613,20 +615,13 @@ class ExperimentExecutor(Experimentable):
             ind, an = fa
             if ind == 0:
                 if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                    if not self._get_blank(an.analysis_type):
-                        return
-                else:
-                    return
+                    return self._get_blank(an.analysis_type)
             else:
                 pa = aruns[ind - 1]
 #                print pa, pa.analysis_type, btypes
                 if not pa.analysis_type in btypes or pa.skip:
                     if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                        if not self._get_blank(an.analysis_type):
-                            return
-                    else:
-                        return
-
+                        return self._get_blank(an.analysis_type)
         return True
 
     def _do_automated_run(self, arun):

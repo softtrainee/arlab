@@ -74,20 +74,22 @@ class _TabularEditor(qtTabularEditor):
 
     def update_editor(self):
         super(_TabularEditor, self).update_editor()
-#
-        control = self.control
+        
+        m=len(self.value)-1
         if self.factory.scroll_to_bottom:
             if not self.selected and not self.multi_selected:
-                self.scroll_to_row = len(self.value)
+                self.scroll_to_row=m
 #                 control.EnsureVisible(control.GetItemCount() - 1)
             else:
                 if self.selected_row != -1:
-                    self.scroll_to_row = self.selected_row + 1
+                    self.scroll_to_row =min(m,self.selected_row + 1)
+                    
 #                    control.EnsureVisible(self.selected_row + 1)
                 elif self.multi_selected_rows:
-                    self.scroll_to_row = self.multi_selected_rows[-1] + 1
+                    self.scroll_to_row =min(m,self.multi_selected_rows[-1] + 1)
+                    
 #                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
-
+        
 #        else:
 #            if not self.selected and not self.multi_selected:
 #                control.EnsureVisible(0)
@@ -127,7 +129,7 @@ class _TabularEditor(qtTabularEditor):
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
-    scroll_to_row_hint = 'center'
+    scroll_to_row_hint = 'visible'
     drag_move = Bool(False)
     rearranged = Str
     pasted = Str

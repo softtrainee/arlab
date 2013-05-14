@@ -222,8 +222,6 @@ class PyScript(Loggable):
             self.testing_syntax = True
             self._syntax_error = True
 
-            self.info('testing syntax')
-
             r = self._execute()
 
             if r is not None:

@@ -21,7 +21,7 @@ from src.envisage.tasks.base_task import BaseHardwareTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \
     FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane, \
     FusionsCO2Pane, FusionsCO2StagePane, FusionsCO2ControlPane, \
-    FusionsDiodeSupplementalPane
+    FusionsDiodeSupplementalPane, FusionsDiodeClientPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
@@ -69,10 +69,16 @@ class FusionsDiodeTask(FusionsTask):
     name = 'Fusions Diode'
 
     def create_central_pane(self):
-        return FusionsDiodePane(model=self.manager)
+        if self.manager.mode=='client':
+            return FusionsDiodeClientPane(model=self.manager)
+        else:
+            return FusionsDiodePane(model=self.manager)
 
     def create_dock_panes(self):
-        return [
+        if self.manager.mode=='client':
+            return []
+        else:
+            return [
                  FusionsDiodeStagePane(model=self.manager),
                  FusionsDiodeControlPane(model=self.manager),
                  FusionsDiodeSupplementalPane(model=self.manager),

@@ -341,19 +341,24 @@ class PychronLaserManager(BaseLaserManager):
         else:
             if self.enable_laser():
                 self.enabled = True
-
-    def traits_view(self):
-        v = View(
-                 Item('test_connection_button', show_label=False),
-                 self.get_control_button_group(),
-                 Item('position'),
-                 Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
-                 Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
-                 Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
-                 title='Laser Manager',
-                 handler=self.handler_klass
-                 )
-        return v
+    
+    def _position_changed(self):
+        if self.position is not None:
+            t = Thread(target=self._move_to_position, args=(self.position,))
+            t.start()
+            self._position_thread=t
+#     def traits_view(self):
+#         v = View(
+#                  Item('test_connection_button', show_label=False),
+#                  self.get_control_button_group(),
+#                  Item('position'),
+#                  Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
+#                  Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
+#                  Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
+#                  title='Laser Manager',
+#                  handler=self.handler_klass
+#                  )
+#         return v
 
     def _set_x(self, v):
         self._ask('SetX {}'.format(v))
@@ -433,11 +438,11 @@ class PychronUVLaserManager(PychronLaserManager):
 
         self._ask('Fire {}'.format(mode))
 
-    def _position_changed(self):
-        if self.position is not None:
-            t = Thread(target=self._move_to_position, args=(self.position,))
-            t.start()
-#            self._move_to_position(self.position)
+#     def _position_changed(self):
+#         if self.position is not None:
+#             t = Thread(target=self._move_to_position, args=(self.position,))
+#             t.start()
+# #            self._move_to_position(self.position)
 
     @on_trait_change('mask, attenuator, zoom')
     def _motor_changed(self, name, new):
