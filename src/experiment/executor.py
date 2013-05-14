@@ -109,7 +109,7 @@ class ExperimentExecutor(Experimentable):
     mode = 'normal'
 
     measuring = Bool(False)
-    stats = Instance(StatsGroup, ())
+    stats = Instance(StatsGroup)
 
     new_run_gen_needed = False
 
@@ -181,6 +181,9 @@ class ExperimentExecutor(Experimentable):
                     # check for blank before starting the thread
 
         if self._pre_execute_check():
+            self.stats.start_timer()
+            self.stats.nruns_finished = 0
+
             t = Thread(target=self._execute)
             t.start()
             self.debug('execution started')
@@ -226,10 +229,10 @@ class ExperimentExecutor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('experiment_queues[]')
-    def _update_stats(self):
-        self.stats.experiment_queues = self.experiment_queues
-        self.stats.calculate()
+#    @on_trait_change('experiment_queues[]')
+#    def _update_stats(self):
+#        self.stats.experiment_queues = self.experiment_queues
+#        self.stats.calculate()
 #===============================================================================
 # private
 #===============================================================================
@@ -294,8 +297,6 @@ class ExperimentExecutor(Experimentable):
 
     def _execute_experiment_queues(self):
 #        self.stats.calculate()
-        self.stats.start_timer()
-        self.stats.nruns_finished = 0
 
 #         if not self.massspec_importer.connect():
 #             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):

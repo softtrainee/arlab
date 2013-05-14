@@ -41,7 +41,7 @@ class _myTableView(_TableView):
                     self._editor.model.insertRow(0, obj=obj)
                 self._editor.pasted = True
         else:
-            super(_myTableView,self).keyPressEvent(event)
+            super(_myTableView, self).keyPressEvent(event)
 
 class _TabularEditor(qtTabularEditor):
 #    drop_target = Any
@@ -72,21 +72,22 @@ class _TabularEditor(qtTabularEditor):
         self.sync_value(self.factory.pasted, 'pasted', 'to')
         self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
 
-#    def update_editor(self):
-#        super(_TabularEditor, self).update_editor()
+    def update_editor(self):
+        super(_TabularEditor, self).update_editor()
 #
-#        control = self.control
-#        if self.factory.scroll_to_bottom:
-#            if not self.selected and not self.multi_selected:
-#                control.
-# #                control.EnsureVisible(control.GetItemCount() - 1)
-#            else:
-#
-#                if self.selected_row != -1:
+        control = self.control
+        if self.factory.scroll_to_bottom:
+            if not self.selected and not self.multi_selected:
+                self.scroll_to_row = len(self.value)
+#                 control.EnsureVisible(control.GetItemCount() - 1)
+            else:
+                if self.selected_row != -1:
+                    self.scroll_to_row = self.selected_row + 1
 #                    control.EnsureVisible(self.selected_row + 1)
-#                elif self.multi_selected_rows:
+                elif self.multi_selected_rows:
+                    self.scroll_to_row = self.multi_selected_rows[-1] + 1
 #                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
-#
+
 #        else:
 #            if not self.selected and not self.multi_selected:
 #                control.EnsureVisible(0)
@@ -126,6 +127,7 @@ class _TabularEditor(qtTabularEditor):
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
+    scroll_to_row_hint = 'center'
     drag_move = Bool(False)
     rearranged = Str
     pasted = Str

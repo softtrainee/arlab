@@ -21,7 +21,7 @@ ETSConfig.toolkit = 'qt4'
 from src.ui.gui import invoke_in_main_thread
 #============= enthought library imports =======================
 from traits.api import Float, Property, Bool, Str
-from traitsui.api import View, Item, RangeEditor
+from traitsui.api import View, Item, RangeEditor, spring, HGroup
 # from pyface.timer.timer import Timer
 from traitsui.menu import Action
 from src.viewable import ViewableHandler, Viewable
@@ -53,6 +53,9 @@ class WaitDialog(Viewable):
     end_evt = None
     wtime = Float
     low_name = Float(2)
+
+    high = Float(enter_set=True, auto_set=False)
+
     current_time = Property(depends_on='_current_time')
     _current_time = Float
     auto_start = Bool(True)
@@ -69,35 +72,31 @@ class WaitDialog(Viewable):
     def __init__(self, *args, **kw):
         super(WaitDialog, self).__init__(*args, **kw)
         self._current_time = self.wtime
+        self.high = self.wtime
         if self.auto_start:
-#            if self.condition is not None:
-#                self.condition.acquire()
-#            if self.end_evt is not None:
-#                self.end_evt.clear()
-#            self.timer = Timer(1000, self._update_time)
             self.start(evt=self.end_evt)
-    
+
     def was_canceled(self):
         return self._canceled
-    
+
     def was_continued(self):
         return self._continued
-    
+
     def start(self, evt=None):
         if evt:
             evt.clear()
             self.end_evt = evt
-#        self.condition = condition
-#        if self.condition is not None:
-#            self.condition.acquire()
+
         self.timer = Timer(1000, self._update_time,
                            delay=1000)
-#        self.timer = Timer(1000, self._update_time)
-#        print self.timer
         self._continued = False
 
     def stop(self):
         self._end()
+
+    def _high_changed(self, v):
+        self.wtime = v
+        self._current_time = v
 
     def _get_current_time(self):
         return self._current_time
@@ -125,9 +124,9 @@ class WaitDialog(Viewable):
 
     def close(self, isok):
         super(WaitDialog, self).close(isok)
-        self._canceled=not isok
+        self._canceled = not isok
         self._end(dispose=False)
-        
+
 
     def _continue(self):
         self._canceled = False
@@ -150,6 +149,7 @@ class WaitDialog(Viewable):
         return View(
 
                     Item('message', width=1.0, show_label=False, style='readonly'),
+                    HGroup(Item('high', label='Set Max. Seconds'), spring),
                     Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
                                                            low_name='low_name',
                                                            high_name='wtime',
@@ -174,10 +174,9 @@ class Demo(HasTraits):
         self._t = t
 
     def _wait(self):
-        timeout = 5
+        timeout = 50
         message = 'foo'
         evt = Event()
-
         wd = WaitDialog(wtime=timeout,
                             end_evt=evt,
     #                        parent=self,
@@ -186,10 +185,11 @@ class Demo(HasTraits):
                             )
         invoke_in_main_thread(wd.edit_traits)
         evt.wait(timeout=timeout + 0.25)
+#        print time.time() - st
         print wd._canceled
-        print 'c',wd.was_canceled()
-        print 'o',wd.was_continued()
-        
+        print 'c', wd.was_canceled()
+        print 'o', wd.was_continued()
+
 #        wd.edit_traits(kind='livemodal')
 
 #

@@ -36,5 +36,5 @@ class ApplicationController(Controller):
             ui = obj.edit_traits(**kw)
             self.add_window(ui)
 
-        invoke_in_main_thread(1, _open_)
+        invoke_in_main_thread(_open_)
 #============= EOF =============================================
