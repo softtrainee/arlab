@@ -31,21 +31,24 @@ class ExplanableItem(HasTraits):
     '''
     '''
     name = Str
-    state_property = Property(depends_on='state')
-    state = Bool(False)
+    state = Property(depends_on='state')
+    _state = Bool(False)
     description = Str
     identify = Bool(False)
 
-    lock_property = Property(depends_on='soft_lock')
+    lock = Property(depends_on='soft_lock')
     soft_lock = Bool(False)
 
     canvas = Any
 
-    def _get_lock_property(self):
+    def _get_lock(self):
         return 'Yes' if self.soft_lock else 'No'
 
-    def _get_state_property(self):
-        return 'Open' if self.state else 'Closed'
+    def _get_state(self):
+        return 'Open' if self._state else 'Closed'
+
+    def _set_state(self, v):
+        self._state = v
 
     def _identify_changed(self):
         '''
@@ -57,7 +60,7 @@ class ExplanableItem(HasTraits):
 class ExplanableTurbo(ExplanableItem):
     '''
     '''
-    def _get_state_property(self):
+    def _get_state(self):
         return 'On' if self.state else 'Off'
 
 class ExplanableValve(ExplanableItem):

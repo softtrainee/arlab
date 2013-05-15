@@ -20,7 +20,7 @@ from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum
 import uuid
 #============= local library imports  ==========================
 from src.experiment.automated_run.automated_run import AutomatedRun
-from src.experiment.utilities.identifier import get_analysis_type
+from src.experiment.utilities.identifier import get_analysis_type, make_rid
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
 from src.loggable import Loggable
 
@@ -87,7 +87,7 @@ class AutomatedRunSpec(Loggable):
     frequency_added = False
 
     _estimated_duration = 0
-    
+
     def to_string(self):
         attrs = ['labnumber', 'aliquot', 'step',
                    'extract_value', 'extract_units',
@@ -116,7 +116,7 @@ class AutomatedRunSpec(Loggable):
                     if name not in warned:
                         self.debug('{:<30s} in script context. using previous estimated duration'.format(name))
                         warned.append(name)
-                        
+
                     script, ok = script_context[name]
                     s += script.get_estimated_duration()
                     script_oks.append(ok)
@@ -167,7 +167,7 @@ class AutomatedRunSpec(Loggable):
         def get_attr(attrname):
             if attrname == 'labnumber':
                 if self.user_defined_aliquot:
-                    v = '{}-{}'.format(self.labnumber, self.aliquot)
+                    v = make_rid(self.labnumber, self.aliquot)
                 else:
                     v = self.labnumber
             else:

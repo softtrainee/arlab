@@ -353,15 +353,18 @@ class IsotopeAdapter(DatabaseAdapter):
         iso = meas_IsotopeTable(**kw)
         analysis = self.get_analysis(analysis)
         if analysis:
-            analysis.isotopes.append(iso)
+            iso.analysis_id = analysis.id
+#            analysis.isotopes.append(iso)
 
         det = self.get_detector(det)
         if det is not None:
-            det.isotopes.append(iso)
+            iso.detector_id = det.id
+#            det.isotopes.append(iso)
 
         molweight = self.get_molecular_weight(molweight)
         if molweight is not None:
-            molweight.isotopes.append(iso)
+            iso.molecular_weight_id = molweight.id
+#            molweight.isotopes.append(iso)
 
         self._add_item(iso)
         return iso

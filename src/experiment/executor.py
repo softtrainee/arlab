@@ -143,17 +143,17 @@ class ExperimentExecutor(Experimentable):
     def experiment_blob(self):
         return '{}\n{}'.format(self.experiment_queue.path, self._text)
 
-    def closed(self, ok):
-        self.selected = None
-        return super(ExperimentExecutor, self).closed(ok)
-
-    def opened(self, ui):
-        self.info_display.clear()
-        self.end_at_run_completion = False
-        self._was_executed = False
-        self.stats.reset()
-        self.statusbar = ''
-        super(ExperimentExecutor, self).opened(ui)
+#    def closed(self, ok):
+#        self.selected = None
+#        return super(ExperimentExecutor, self).closed(ok)
+#
+#    def opened(self, ui):
+#        self.info_display.clear()
+#        self.end_at_run_completion = False
+#        self._was_executed = False
+#        self.stats.reset()
+#        self.statusbar = ''
+#        super(ExperimentExecutor, self).opened(ui)
 
     def add_backup(self, uuid_str):
         with open(paths.backup_recovery_file, 'a') as fp:
@@ -181,6 +181,7 @@ class ExperimentExecutor(Experimentable):
                     # check for blank before starting the thread
 
         if self._pre_execute_check():
+            self.info_display.clear()
             self.stats.start_timer()
             self.stats.nruns_finished = 0
 
@@ -497,8 +498,9 @@ class ExperimentExecutor(Experimentable):
 #        runner = self.pyscript_runner
         run = self._setup_automated_run(cnt, run)
 #        self._setup_automated_run(cnt, run, repo, dm, runner)
-
         run.pre_extraction_save()
+        self.info('========== {} =========='.format(run.runid))
+
         ta = Thread(name=run.runid,
                    target=self._do_automated_run,
                    args=(run,)
@@ -585,9 +587,9 @@ class ExperimentExecutor(Experimentable):
         dbs = q.all()
 
         sel.load_records(dbs, load=False)
-        
-        sel.selected=sel.records[-1]
-        
+
+        sel.selected = sel.records[-1]
+
         info = sel.edit_traits(kind='livemodal')
         if info.result:
             dbr = sel.selected

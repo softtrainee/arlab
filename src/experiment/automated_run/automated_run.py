@@ -195,8 +195,8 @@ class AutomatedRun(Loggable):
     skip = Bool
     fits = List
     runid = Str
-    
-    info_color=None
+
+    info_color = None
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -568,7 +568,7 @@ anaylsis_type={}
         if self.experiment_manager:
             if color is None:
                 color = self.info_color
-            
+
             if color is None:
                 color = 'light green'
 
@@ -665,14 +665,14 @@ anaylsis_type={}
         if self.extraction_script.execute():
             self._post_extraction_save()
             self.info('======== Extraction Finished ========')
-            self.info_color=None
+            self.info_color = None
             return True
         else:
             self.do_post_measurement()
             self.finish()
 
             self.info('======== Extraction Finished unsuccessfully ========', color='red')
-            self.info_color=None
+            self.info_color = None
             return False
 
     def do_measurement(self):
@@ -694,7 +694,7 @@ anaylsis_type={}
 
             self.info('======== Measurement Finished ========')
             self.measuring = False
-            self.info_color=None
+            self.info_color = None
             return True
         else:
             self.do_post_measurement()
@@ -702,7 +702,7 @@ anaylsis_type={}
 
             self.info('======== Measurement Finished unsuccessfully ========', color='red')
             self.measuring = False
-            self.info_color=None
+            self.info_color = None
             return False
 
     def do_post_measurement(self):
@@ -1134,6 +1134,7 @@ anaylsis_type={}
         # save to a database
         db = self.db
         if db and db.connect(force=True):
+            pt = time.time()
 
             lab = db.get_labnumber(ln)
             experiment = db.get_experiment(self.experiment_name)
@@ -1190,8 +1191,12 @@ anaylsis_type={}
             # tell the executor to remove this run from backup run recovery
             self.experiment_manager.remove_backup(self.uuid)
 
+            self.debug('pychron save time= {:0.3f} '.format(time.time() - pt))
+
         # save to massspec
+        mt = time.time()
         self._save_to_massspec()
+        self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
 
     def _preliminary_processing(self, p):
         self.info('organizing data for database save')
@@ -1236,121 +1241,142 @@ anaylsis_type={}
 
         return rsignals, peak_center
 
+    def _time_save(self, func, name, *args, **kw):
+        st = time.time()
+        r = func(*args, **kw)
+        self.debug('save {} time= {:0.3f}'.format(name, time.time() - st))
+        return r
+
     def _save_sensitivity(self, extraction, measurement):
         self.info('saving sensitivity')
-        # get the lastest sensitivity entry for this spectrometr
-        spec = measurement.mass_spectrometer
-        if spec:
-            sens = spec.sensitivities
-            if sens:
-                extraction.sensitivity = sens[-1]
+        def func():
+            # get the lastest sensitivity entry for this spectrometr
+            spec = measurement.mass_spectrometer
+            if spec:
+                sens = spec.sensitivities
+                if sens:
+                    extraction.sensitivity = sens[-1]
+
+        return self._time_save(func, 'sensitivity')
+
+
 
     def _save_peak_center(self, analysis, tab):
         self.info('saving peakcenter')
-        if tab is not None:
-            db = self.db
-            packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
-            points = ''.join(packed_xy)
-            center = tab.attrs.center_dac
-            pc = db.add_peak_center(
-                               analysis,
-                               center=float(center), points=points)
-            return pc
+        def func():
+            if tab is not None:
+                db = self.db
+                packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
+                points = ''.join(packed_xy)
+                center = tab.attrs.center_dac
+                pc = db.add_peak_center(
+                                   analysis,
+                                   center=float(center), points=points)
+                return pc
+        return self._time_save(func, 'peakcenter')
 
     def _save_measurement(self, analysis):
         self.info('saving measurement')
-        db = self.db
+        def func():
+            db = self.db
 
-        meas = db.add_measurement(
-                              analysis,
-                              self.analysis_type,
-                              self.mass_spectrometer,
-#                              self.measurement_script.name,
-#                              script_blob=self.measurement_script.toblob()
-                              )
-        script = db.add_script(self.measurement_script.name,
-                            self.measurement_script.toblob())
-        script.measurements.append(meas)
+            meas = db.add_measurement(
+                                  analysis,
+                                  self.analysis_type,
+                                  self.mass_spectrometer,
+    #                              self.measurement_script.name,
+    #                              script_blob=self.measurement_script.toblob()
+                                  )
+            script = db.add_script(self.measurement_script.name,
+                                self.measurement_script.toblob())
+            script.measurements.append(meas)
 
-        return meas
+            return meas
+        return self._time_save(func, 'measurement')
 
     def _save_extraction(self, analysis):
         self.info('saving extraction')
-        db = self.db
-        ext = db.add_extraction(analysis,
-#                          self.extraction_script.name,
-#                          script_blob=self._assemble_extraction_blob(),
-                          extract_device=self.extract_device,
-#                          experiment_blob=self.experiment_manager.experiment_blob(),
-                          extract_value=self.extract_value,
-#                          position=self.position,
-                          extract_duration=self.duration,
-                          cleanup_duration=self.cleanup,
-                          weight=self.weight,
-                          sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
-                          )
+        def func():
+            db = self.db
+            ext = db.add_extraction(analysis,
+    #                          self.extraction_script.name,
+    #                          script_blob=self._assemble_extraction_blob(),
+                              extract_device=self.extract_device,
+    #                          experiment_blob=self.experiment_manager.experiment_blob(),
+                              extract_value=self.extract_value,
+    #                          position=self.position,
+                              extract_duration=self.duration,
+                              cleanup_duration=self.cleanup,
+                              weight=self.weight,
+                              sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
+                              )
 
-        exp = db.add_script(self.experiment_manager.experiment_queue.name,
-                          self.experiment_manager.experiment_blob()
-                          )
-        exp.experiments.append(ext)
+            exp = db.add_script(self.experiment_manager.experiment_queue.name,
+                              self.experiment_manager.experiment_blob()
+                              )
+            exp.experiments.append(ext)
 
-        if self.extraction_script:
-            script = db.add_script(self.extraction_script.name,
-                                   self._assemble_extraction_blob())
-            script.extractions.append(ext)
+            if self.extraction_script:
+                script = db.add_script(self.extraction_script.name,
+                                       self._assemble_extraction_blob())
+                script.extractions.append(ext)
 
-        for pi in self.get_position_list():
-            if isinstance(pi, tuple):
-                if len(pi) > 1:
-                    db.add_analysis_position(ext, x=pi[0], y=pi[1])
-                    if len(pi) == 3:
-                        db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
+            for pi in self.get_position_list():
+                if isinstance(pi, tuple):
+                    if len(pi) > 1:
+                        db.add_analysis_position(ext, x=pi[0], y=pi[1])
+                        if len(pi) == 3:
+                            db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
 
-            else:
-                db.add_analysis_position(ext, pi)
+                else:
+                    db.add_analysis_position(ext, pi)
 
-        return ext
+            return ext
+        return self._time_save(func, 'extraction')
+
 
     def _save_spectrometer_info(self, meas):
         self.info('saving spectrometer info')
-        db = self.db
-
-        if self.spectrometer_manager:
-            spec_dict = self.spectrometer_manager.make_parameters_dict()
-            db.add_spectrometer_parameters(meas, spec_dict)
-            for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
-                det = db.add_detector(det)
-                db.add_deflection(meas, det, deflection)
+        def func():
+            db = self.db
+            if self.spectrometer_manager:
+                spec_dict = self.spectrometer_manager.make_parameters_dict()
+                db.add_spectrometer_parameters(meas, spec_dict)
+                for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
+                    det = db.add_detector(det)
+                    db.add_deflection(meas, det, deflection)
+        return self._time_save(func, 'spectrometer_info')
 
     def _save_detector_intercalibration(self, analysis):
+        self.info('saving detector intercalibration')
+
         if self.arar_age:
             self.ic_factor = ic = self.arar_age.ic_factor
 
         else:
             self.ic_factor = ic = ArArAge(application=self.application).ic_factor
 
-        self.info('saving detector intercalibration')
-        self.info('default ic_factor={}'.format(ic))
+        def func():
+            self.info('default ic_factor={}'.format(ic))
+            db = self.db
+            user = self.username
+            user = user if user else NULL_STR
 
-        db = self.db
-        user = self.username
-        user = user if user else NULL_STR
+            name = 'detector_intercalibration'
+            funchist = getattr(db, 'add_{}_history'.format(name))
+            self.info('{} adding {} history for {}'.format(user, name, self.runid))
+            history = funchist(analysis, user=user)
 
-        name = 'detector_intercalibration'
-        funchist = getattr(db, 'add_{}_history'.format(name))
-        self.info('{} adding {} history for {}'.format(user, name, self.runid))
-        history = funchist(analysis, user=user)
+            setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
 
-        setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
-
-        func = getattr(db, 'add_{}'.format(name))
-        uv, ue = ic.nominal_value, ic.std_dev
-        func(history, 'CDD', user_value=uv, user_error=float(ue))
+            func = getattr(db, 'add_{}'.format(name))
+            uv, ue = ic.nominal_value, ic.std_dev
+            func(history, 'CDD', user_value=uv, user_error=float(ue))
+        return self._time_save(func, 'detector intercalibration')
 
     def _save_blank_info(self, analysis):
         self.info('saving blank info')
-        self._save_history_info(analysis, 'blanks')
+        return self._time_save(self._save_history_info, 'blank info', analysis, 'blanks')
 
     def _save_history_info(self, analysis, name):
         db = self.db
@@ -1380,53 +1406,71 @@ anaylsis_type={}
 
     def _save_isotope_info(self, analysis, signals):
         self.info('saving isotope info')
-        db = self.db
+        def func():
+            db = self.db
 
-        # add fit history
-        dbhist = db.add_fit_history(analysis, user=self.username)
-        for iso, detname, kind in self._save_isotopes:
-            det = db.get_detector(detname)
-            if det is None:
-                det = db.add_detector(detname)
+            # add fit history
+            dbhist = db.add_fit_history(analysis, user=self.username)
+            for iso, detname, kind in self._save_isotopes:
+                st = time.time()
 
-            # add isotope
-            dbiso = db.add_isotope(analysis, iso, det, kind=kind)
+                det = db.get_detector(detname)
+                if det is None:
+                    det = db.add_detector(detname)
+#                    db.flush()
 
-            s = signals['{}{}'.format(iso, kind)]
+                t = time.time()
+                # add isotope
+                dbiso = db.add_isotope(analysis, iso, det, kind=kind)
+                self.debug('add isotope time {:0.3f}'.format(time.time() - t))
 
-            # add signal data
-            data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
-            db.add_signal(dbiso, data)
+                s = signals['{}{}'.format(iso, kind)]
 
-            if s.fit:
-                # add fit
-                db.add_fit(dbhist, dbiso, fit=s.fit)
+                # add signal data
+                t = time.time()
+                data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
+                self.debug('pack time {:0.3f}'.format(time.time() - t))
 
-            if kind in ['signal', 'baseline']:
-                # add isotope result
-                db.add_isotope_result(dbiso,
-                                      dbhist,
-                                      signal_=float(s.value), signal_err=float(s.error),
-                                      )
+                t = time.time()
+                db.add_signal(dbiso, data)
+                self.debug('add signal time {:0.3f}'.format(time.time() - t))
 
-            db.flush()
+                if s.fit:
+                    # add fit
+                    db.add_fit(dbhist, dbiso, fit=s.fit)
+
+                if kind in ['signal', 'baseline']:
+                    # add isotope result
+                    db.add_isotope_result(dbiso,
+                                          dbhist,
+                                          signal_=float(s.value), signal_err=float(s.error),
+                                          )
+
+                t = time.time()
+                db.flush()
+                self.debug('flush time= {:0.3f}'.format(iso, kind, time.time() - t))
+
+                self.debug('isotope {}{} save time= {:0.3f}'.format(iso, kind, time.time() - st))
+
+        return self._time_save(func, 'isotope info')
 
 #        if globalv.experiment_savedb:
 #            db.commit()
     def _save_monitor_info(self, analysis):
-        self.info('saving monitor info')
         if self.monitor:
-            for ci in self.monitor.checks:
-                data = ''.join([struct.pack('>ff', x, y) for x, y in ci.data])
-                params = dict(name=ci.name,
-                              parameter=ci.parameter, criterion=ci.criterion,
-                              comparator=ci.comparator, tripped=ci.tripped,
-                              data=data)
+            self.info('saving monitor info')
+            def func():
+                for ci in self.monitor.checks:
+                    data = ''.join([struct.pack('>ff', x, y) for x, y in ci.data])
+                    params = dict(name=ci.name,
+                                  parameter=ci.parameter, criterion=ci.criterion,
+                                  comparator=ci.comparator, tripped=ci.tripped,
+                                  data=data)
 
-                self.db.add_monitor(analysis, **params)
+                    self.db.add_monitor(analysis, **params)
+            return self._time_save(func, 'monitor info')
 
     def _save_to_massspec(self):
-        db = self.db
 
         h = self.massspec_importer.db.host
         dn = self.massspec_importer.db.name
