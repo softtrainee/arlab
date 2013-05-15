@@ -27,24 +27,24 @@ class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
     current_run=Any
     def test_runs(self):
-        self.executable=True
-#         runs = self.cleaned_automated_runs
-# 
-#         tested = []
-#         ar = runs[0].make_run()
-#         self.executable = False
-#         for ri in runs:
-#             for si in SCRIPT_NAMES:
-#                 sn = getattr(ri, si)
-#                 if not sn in tested:
-#                     setattr(ar.script_info, '{}_name'.format(si), sn)
-#                     script = getattr(ar, si)
-#                     if script is not None:
-#                         tested.append(sn)
-#                         if not script.syntax_ok():
-#                             return 'Error in script {}'.format(script.name)
-#         else:
-#             self.executable = True
+#         self.executable=True
+        runs = self.cleaned_automated_runs
+ 
+        tested = []
+        ar = runs[0].make_run()
+        self.executable = False
+        for ri in runs:
+            for si in SCRIPT_NAMES:
+                sn = getattr(ri, si)
+                if not sn in tested:
+                    setattr(ar.script_info, '{}_name'.format(si), sn)
+                    script = getattr(ar, si)
+                    if script is not None:
+                        tested.append(sn)
+                        if not script.syntax_ok():
+                            return 'Error in script {}'.format(script.name)
+        else:
+            self.executable = True
 
     def new_runs_generator(self, last_ran=None):
         runs = self.cleaned_automated_runs

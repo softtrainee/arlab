@@ -44,7 +44,7 @@ class ExperimentQueueFactory(Loggable):
     tray = Str
     trays = Property
     
-    ok_make=Property(depends_on='mass_spectrometer, extract_device, username')
+    ok_make=Property(depends_on='mass_spectrometer, username')
     def _get_ok_make(self):
         ms=self.mass_spectrometer.strip()
         un=self.username.strip()

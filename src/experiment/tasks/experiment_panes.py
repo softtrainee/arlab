@@ -74,7 +74,7 @@ class AnalysesPane(TraitsTaskPane):
                                             editable=True,
                                             selected='selected',
 #                                             rearranged='rearranged',
-#                                             pasted='pasted',
+                                            pasted='pasted',
 #                                             copy_cache='copy_cache',
 #                                             update='update_needed',
                                             drag_move=True,
@@ -90,8 +90,6 @@ class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
     name = 'Experiment Editor'
     def traits_view(self):
-
-
         v = View(
                  VGroup(
                      VGroup(

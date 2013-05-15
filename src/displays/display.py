@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Color, Str, List, Tuple
+from traits.api import HasTraits, Instance, Int, Color, Str, List, Tuple, Event
 from traitsui.api import View, Item, UItem
 from src.lasers.scanner import ApplicationController
 from src.ui.display_editor import DisplayEditor
@@ -28,6 +28,7 @@ class DisplayModel(HasTraits):
 #     messages = List
 #     max_messages = Int(300)
     message=Tuple
+    clear_event=Event
     def add_text(self, txt, color, force=False,**kw):
         '''
             if txt,color same as previous txt,color than message only added if force=True
@@ -43,15 +44,17 @@ class DisplayController(ApplicationController):
     height = Int(500)
     title = Str
 
-    default_color = Color
+    default_color = Color('black')
     default_size = Int
     bg_color = Color
+    
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
                                                 *args, **kw)
     
     def clear(self, **kw):
-        self.model.message=('%%clear%%',)
+        self.model.clear_event=True
+#         self.model.message=('%%clear%%',)
 #         self.model.messages = []
 
     @deprecated
@@ -69,7 +72,9 @@ class DisplayController(ApplicationController):
         self.model.add_text(txt, **kw)
 
     def traits_view(self):
-        v = View(UItem('message', editor=DisplayEditor(bg_color=self.bg_color)),
+        v = View(UItem('message', editor=DisplayEditor(bg_color=self.bg_color,
+                                                       clear='clear_event'
+                                                       )),
                  x=self.x, y=self.y, width=self.width,
                  height=self.height,
                  title=self.title)
@@ -82,4 +87,6 @@ class DisplayController(ApplicationController):
 
 class ErrorDisplay(DisplayController):
     pass
+
+
 #============= EOF =============================================

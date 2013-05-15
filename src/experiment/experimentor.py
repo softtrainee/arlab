@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance, List, Property, \
-    on_trait_change, Bool, Any
+    on_trait_change, Bool, Any,Event
 from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
@@ -33,6 +33,8 @@ from src.experiment.executor import ExperimentExecutor
 from src.paths import paths
 from src.experiment.utilities.file_listener import FileListener
 from src.experiment.experimentable import Experimentable
+from src.experiment.utilities.identifier import convert_labnumber,\
+    convert_identifier
 
 
 class Experimentor(Experimentable):
@@ -42,8 +44,6 @@ class Experimentor(Experimentable):
 
     set_selector = Instance(SetSelector)
     stats = Instance(StatsGroup, ())
-
-
 
     title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
     filelistener = None
@@ -60,6 +60,7 @@ class Experimentor(Experimentable):
     _ver_timeout = 10
 
     selected=Any
+    pasted=Event
     
     def test_runs(self):
         for ei in self.experiment_queues:
@@ -189,10 +190,12 @@ class Experimentor(Experimentable):
         dbln = None
         if hasattr(self, ca):
             dbln = getattr(self, ca)
-
+        
         if not dbln:
             db = self.db
-            dbln = db.get_labnumber(arun.labnumber)
+            ln=arun.labnumber
+            ln=convert_identifier(ln)
+            dbln = db.get_labnumber(ln)
             setattr(self, ca, dbln)
 
         return dbln
@@ -207,14 +210,14 @@ class Experimentor(Experimentable):
                 sample = dbln.sample
                 if sample:
                     ai.sample = sample.name
-                    #self.debug('sample {}'.format(ai.sample))
+                    self.debug('sample {}'.format(ai.sample))
 
                 ipos = dbln.irradiation_position
                 if not ipos is None:
                     level = ipos.level
                     irrad = level.irradiation
                     ai.irradiation = '{}{}'.format(irrad.name, level.name)
-                    #self.debug('irrad {}'.format(ai.irradiation))
+                    self.debug('irrad {}'.format(ai.irradiation))
 
     def _modify_steps(self, ans):
         self.debug('modifying steps')
@@ -387,8 +390,11 @@ class Experimentor(Experimentable):
 
     @on_trait_change('selected')
     def _update_selected(self, new):
+        self.experiment_factory.run_factory.suppress_update=True
         self.experiment_factory.set_selected_runs(new)
-
+        
+    def _pasted_changed(self):
+        self._update()
 #    @on_trait_change('can_edit_script, max_allowable_runs')
 #    def _update_value(self, name, value):
 #        setattr(self.experiment_factory, name, value)

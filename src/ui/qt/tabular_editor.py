@@ -31,14 +31,14 @@ class _myTableView(_TableView):
 #        print event.nativeModifiers()
 
         if event.matches(QKeySequence.Copy):
-            self._copy_cache = self.selectionModel().selectedRows()
+            self._copy_cache = [self._editor.value[ci.row()] for ci in 
+                                    self.selectionModel().selectedRows()]
+            
         elif event.matches(QKeySequence.Paste):
             if self._copy_cache:
+                si=self.selectedIndexes()[0]
                 for ci in self._copy_cache:
-
-                    obj = self._editor.value[ci.row()]
-#                    ri=self.selectionModel()
-                    self._editor.model.insertRow(0, obj=obj)
+                    self._editor.model.insertRow(si.row(), obj=ci.clone_traits())
                 self._editor.pasted = True
         else:
             super(_myTableView, self).keyPressEvent(event)

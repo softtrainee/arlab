@@ -129,6 +129,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     extractable = Property(depends_on='labnumber')
     cbs_enabled = Property(depends_on='_selected_runs')
 
+    suppress_update=False
+    
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -150,6 +152,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             run = runs[0]
             self._clone_run(run)
         self._selected_runs = runs
+        self.suppress_update=False
 
     def _make_short_labnumber(self, labnumber=None):
         if labnumber is None:
@@ -508,11 +511,12 @@ pattern,
 position,
 weight, comment''')
     def _edit_handler(self, name, new):
-        if self._selected_runs:
+        if self._selected_runs and not self.suppress_update:
             cb = True
             cbname = 'cb_{}'.format(name)
             if hasattr(self, cbname):
                 cb = getattr(self, cbname)
+                
             if cb:
                 for si in self._selected_runs:
 #                    setattr(si, '_prev_{}'.format(name), getattr(si, name))
@@ -583,7 +587,7 @@ post_measurement_script:name,
 post_equilibration_script:name
     ''')
     def _edit_script_handler(self, obj, name, new):
-        if obj.cb:
+        if obj.cb and not self.suppress_update:
             if obj.label == 'Extraction':
                 self._load_extraction_info(obj)
 

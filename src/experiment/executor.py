@@ -222,7 +222,8 @@ class ExperimentExecutor(Experimentable):
                     self.info('experiment canceled because automated_run_monitor is not setup properly')
                     self._alive = False
                     return
-        return True
+            return True
+        
 #===============================================================================
 # stats
 #===============================================================================
@@ -628,12 +629,17 @@ class ExperimentExecutor(Experimentable):
             if ind == 0:
                 if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
                     return self._get_blank(an.analysis_type)
+                else:
+                    return
             else:
                 pa = aruns[ind - 1]
 #                print pa, pa.analysis_type, btypes
                 if not pa.analysis_type in btypes or pa.skip:
                     if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
                         return self._get_blank(an.analysis_type)
+                    else:
+                        return
+                    
         return True
 
     def _do_automated_run(self, arun):

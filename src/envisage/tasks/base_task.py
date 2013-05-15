@@ -252,7 +252,6 @@ class BaseManagerTask(BaseTask):
                       )
         if menus:
             for mi in reversed(menus):
-                print mi
                 mb.items.insert(4, mi)
 
         return mb
