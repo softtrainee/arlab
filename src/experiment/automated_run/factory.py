@@ -39,7 +39,7 @@ from src.viewable import Viewable
 #     return HGroup(Item(name, height=10, **kw), UItem('cb_{}'.format(name),
 #                                           visible_when='cbs_enabled'
 #                                           ),
-# 
+#
 #                   )
 
 class AutomatedRunFactory(Viewable, ScriptMixin):
@@ -174,7 +174,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         else:
             arvs = self._new_runs()
 
-
         if auto_increment:
             if self.position:
                 increment = 1
@@ -238,7 +237,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 arvs.append(arv)
 
         self._extract_group_cnt += 1
-
         return arvs
 
     def _new_runs(self):
@@ -885,7 +883,7 @@ post_equilibration_script:name
 #     def _frequency_group(self):
 #         grp = Group(Item('frequency'))
 #         return grp
-# 
+#
 #     def _get_info_group(self):
 #         grp = Group(
 #                    Item('project', editor=EnumEditor(name='projects'),
@@ -898,7 +896,7 @@ post_equilibration_script:name
 #                                label='Level',
 #                                editor=EnumEditor(name='levels')),
 #                           ),
-# 
+#
 #                    HGroup(Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
 #                                ),
 #                           Item('frequency')
@@ -932,7 +930,7 @@ post_equilibration_script:name
 #                        label='Info'
 #                        )
 #         return grp
-# 
+#
 #     def _get_script_group(self):
 #         script_grp = VGroup(
 #                         Item('extraction_script', style='custom', show_label=False),
@@ -943,7 +941,7 @@ post_equilibration_script:name
 #                         label='Scripts'
 #                         )
 #         return script_grp
-# 
+#
 #     def _get_position_group(self):
 #         grp = VGroup(
 #  #                         Item('autocenter',
@@ -961,10 +959,10 @@ post_equilibration_script:name
 #                          label='Position'
 #                      )
 #         return grp
-# 
+#
 #     def _get_extract_group(self):
 #         sspring = lambda width = 17:Spring(springy=False, width=width)
-# 
+#
 #         extract_grp = VGroup(
 #                              HGroup(sspring(width=33),
 #                                     CBItem('extract_value', label='Extract',
@@ -985,10 +983,10 @@ post_equilibration_script:name
 #                                       editor=ButtonEditor(label_value='edit_template_label')
 #                                       )
 #                                     ),
-# 
+#
 #                              CBItem('duration', label='Duration (s)',
 #                                   tooltip='Set the number of seconds to run the extraction device.'
-# 
+#
 #                                   ),
 #                              CBItem('cleanup', label='Cleanup (s)',
 #                                   tooltip='Set the number of seconds to getter the sample gas'
@@ -1016,7 +1014,7 @@ post_equilibration_script:name
 #                         )
 #                  )
 #         return v
-# 
+#
 #     def edit_view(self):
 #         extract_group = self._get_extract_group()
 #         v = View(
