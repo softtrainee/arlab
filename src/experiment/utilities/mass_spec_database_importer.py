@@ -259,7 +259,7 @@ class MassSpecDatabaseImporter(Loggable):
             
             aliquot =  paliquot+ 1    
             rid = '{}-{:02n}'.format(rid, aliquot)
-            spec.aliquot = aliquot
+            spec.aliquot = '{:02n}'.format(aliquot)
 
 
         else:

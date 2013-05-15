@@ -35,6 +35,7 @@ class AutomatedRunsTable(HasTraits):
     klass = AutomatedRunSpec
     adapter_klass = AutomatedRunSpecAdapter
 
+        
     def set_runs(self, runs):
         if runs:
             klass = self.klass

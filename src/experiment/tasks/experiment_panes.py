@@ -15,14 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from traits.api import HasTraits
+from traits.api import Color
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold
+    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
+from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR,\
+    NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -72,7 +74,7 @@ class AnalysesPane(TraitsTaskPane):
                                             editable=True,
                                             selected='selected',
 #                                             rearranged='rearranged',
-                                            pasted='pasted',
+#                                             pasted='pasted',
 #                                             copy_cache='copy_cache',
 #                                             update='update_needed',
                                             drag_move=True,
@@ -111,7 +113,8 @@ class ExperimentFactoryPane(TraitsDockPane):
                      self._get_info_group(),
                      self._get_extract_group(),
                      self._get_position_group(),
-                     self._get_script_group()
+                     self._get_script_group(),
+                     enabled_when=make_qf_name('ok_make')
                      ),
 #                      Group(
 #                           layout='tabbed'),
@@ -282,5 +285,42 @@ class ConsolePane(TraitsDockPane):
     name = 'Console'
     def traits_view(self):
         v = View(UItem('info_display', style='custom'))
+        return v
+    
+class ExplanationPane(TraitsDockPane):
+    id='pychron.experiment.explanation'
+    name='Explanation'
+    measurement=Color(MEASUREMENT_COLOR)
+    extraction=Color(EXTRACTION_COLOR)
+    success=Color(SUCCESS_COLOR)
+    skip=Color(SKIP_COLOR)
+    not_executable=Color(NOT_EXECUTABLE_COLOR)
+    
+    def traits_view(self):
+        v=View(
+               VGroup(
+                   HGroup(Label('Extraction'), spring, 
+                          UItem('extraction',                            
+                                style='readonly')
+                          ),
+                   HGroup(Label('Measurement'), spring, 
+                          UItem('measurement',                            
+                                style='readonly')
+                          ),
+                   HGroup(Label('Skip'), spring, 
+                          UItem('skip',                            
+                                style='readonly')
+                          ),
+                   HGroup(Label('Success'), spring, 
+                          UItem('success',                            
+                                style='readonly')
+                          ),
+                   HGroup(Label('Not Executable'), spring, 
+                          UItem('not_executable',                            
+                                style='readonly')
+                          ),
+                      )
+               
+               )
         return v
 #============= EOF =============================================

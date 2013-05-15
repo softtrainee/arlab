@@ -43,6 +43,16 @@ class ExperimentQueueFactory(Loggable):
     delay_before_analyses = Int(5)
     tray = Str
     trays = Property
+    
+    ok_make=Property(depends_on='mass_spectrometer, extract_device, username')
+    def _get_ok_make(self):
+        ms=self.mass_spectrometer.strip()
+        un=self.username.strip()
+        ed=self.extract_device.strip()
+        
+        return ms and ms !=NULL_STR and \
+                ed and ed !=NULL_STR and  \
+                    un
 #===============================================================================
 # views
 #===============================================================================

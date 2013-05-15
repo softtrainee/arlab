@@ -78,7 +78,8 @@ class ExperimentQueue(BaseExperimentQueue):
                 newruns = runs[startid:]
                 
                 run=newruns[0]
-                runid=make_runid(run.labnumber, run.aliquot, run.step)
+                runid=run.runid
+#                 runid=make_runid(run.labnumber, run.aliquot, run.step)
                 
                 self.info('starting at analysis {} (startid={} of {})'.format(runid, startid + 1, n))
                 n = len(newruns)

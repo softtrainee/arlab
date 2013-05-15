@@ -41,7 +41,7 @@ class HardwareValve(Loggable):
     state = Bool(False)
 #    debug = False
 #    error = None
-    software_lock = False
+    software_lock = Bool(False)
 
     cycle_period = Float(1)
     cycle_n = Int(10)
@@ -140,7 +140,7 @@ class HardwareValve(Loggable):
 
     def _state_changed(self):
         if self.evalve:
-            self.evalve.state = self.state
+            self.evalve._state = self.state            
 
     def _software_lock_changed(self):
         if self.evalve:

@@ -20,7 +20,8 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
 from src.paths import paths
-from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR
+from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR,\
+    SKIP_COLOR, NOT_EXECUTABLE_COLOR
 # from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
 # def get_name(func):
@@ -74,11 +75,11 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
         if not item.executable:
-            color = 'red'
+            color = NOT_EXECUTABLE_COLOR
         if item.skip:
-            color = '#33CCFF'  # light blue
+            color = SKIP_COLOR#'#33CCFF'  # light blue
         elif item.state == 'success':
-            color = '#66FF33'  # light green
+            color = SUCCESS_COLOR#'#66FF33'  # light green
         elif item.state == 'extraction':
             color = EXTRACTION_COLOR  # '#FFFF66'  # light yellow
         elif item.state == 'measurement':

@@ -37,9 +37,9 @@ import datetime
 class BaseExperimentQueue(Loggable):
     runs_table = Instance(AutomatedRunsTable, ())
     automated_runs = DelegatesTo('runs_table')
-    selected = DelegatesTo('runs_table')
-    rearranged = DelegatesTo('runs_table')
-    pasted = DelegatesTo('runs_table')
+#     selected = DelegatesTo('runs_table')
+#     rearranged = DelegatesTo('runs_table')
+#     pasted = DelegatesTo('runs_table')
 
     cleaned_automated_runs = Property(depends_on='automated_runs[]')
 

@@ -81,7 +81,9 @@ class ExtractionLinePlugin(BaseTaskPlugin):
     def _tasks_default(self):
         ts = [TaskFactory(id='pychron.extraction_line',
                           name='Extraction Line',
-                         factory=self._task_factory)]
+                         factory=self._task_factory,
+                         accelerator='Ctrl+E'
+                         )]
         return ts
 
     def _task_factory(self):

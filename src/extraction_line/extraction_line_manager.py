@@ -240,13 +240,13 @@ class ExtractionLineManager(Manager):
 
     def reload_scene_graph(self):
         self.info('reloading canvas scene')
-        iddict = dict()
+#         iddict = dict()
         # remember the explanation settings
-        exp = self.explanation
-        if exp:
-            for ev in exp.explanable_items:
-                i = ev.identify
-                iddict[ev.name] = i
+#         exp = self.explanation
+#         if exp:
+#             for ev in exp.explanable_items:
+#                 i = ev.identify
+#                 iddict[ev.name] = i
 
         if self.canvas is not None:
             if self.canvas.style == '2D':
@@ -265,13 +265,13 @@ class ExtractionLineManager(Manager):
                     vc = self.canvas.get_object(k)
                     if vc:
                         vc.soft_lock = v.software_lock
-                        v.canvas_valve = vc
-#                        vc.state = v.state
+#                         v.canvas_valve = vc
+                        vc.state = v.state
 
-                        try:
-                            vc.identify = iddict[vc.name]
-                        except:
-                            pass
+#                         try:
+#                             vc.identify = iddict[vc.name]
+#                         except:
+#                             pass
 
             self.canvas.refresh()
 #            canvas = self.canvas.canvas2D
