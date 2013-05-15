@@ -15,11 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Color
-from traitsui.api import View, Item
+from traits.api import Color, Str, Event
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
-from PySide.QtGui import QLabel, QTextEdit, QTextCursor, QPalette
+from PySide.QtGui import QTextEdit, QTextCursor, QPalette
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -29,6 +28,7 @@ class Display(QTextEdit):
 class _DisplayEditor(Editor):
     _pv=None
     _pc=None
+    clear=Event
     def init(self, parent):
         '''
 
@@ -40,45 +40,30 @@ class _DisplayEditor(Editor):
                 p.setColor(QPalette.Base, self.factory.bg_color)
                 self.control.setPalette(p)
             self.control.setReadOnly(True)
-#            self.control = self._create_control(parent)
-#            self.value.on_trait_change(self.update_object, 'state')
-
-#    def update_object(self, obj, name, new):
-#        '''
-#
-#        '''
-#        print obj, name, new
-#        if name == 'state':
-#            if self.control is not None:
-#                self.control.set_state(new)
-
+            
+        self.object.on_trait_change(self._on_clear, self.factory.clear)
+        
+    def _on_clear(self):
+        if self.control:
+            self.control.clear()
+            
     def update_editor(self, *args, **kw):
         '''
         '''
         ctrl = self.control
         if self.value:
-            if len(self.value)==1:
-                v=self.value[0]
-                if v=='%%clear%%':
-                    ctrl.clear()
-            else:
-                v,c, force=self.value
-                if force or v!=self._pv or c!=self._pc:
-                    ctrl.setTextColor(c)
-                    ctrl.insertPlainText('{}\n'.format(v))
-                    self._pc=c
-                    self._pv=v
-#         ctrl.clear()
-#         
-#         for v, c in self.value:
-
+            v,c, force=self.value
+            if force or v!=self._pv or c!=self._pc:
+                ctrl.setTextColor(c)
+                ctrl.insertPlainText('{}\n'.format(v))
+                self._pc=c
+                self._pv=v
 
         self.control.moveCursor(QTextCursor.End)
         self.control.ensureCursorVisible()
-#        if self.control:
-#            pass
 
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
     bg_color = Color
+    clear=Str
 #============= EOF =============================================

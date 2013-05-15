@@ -111,6 +111,9 @@ def convert_identifier(identifier):
         identifier=='bg, a, ...'
         return  1
     '''
+    if '-' in identifier:
+        identifier=identifier.split('-')[0]
+    
     if identifier in ANALYSIS_MAPPING:
         sname = ANALYSIS_MAPPING[identifier]
         identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)

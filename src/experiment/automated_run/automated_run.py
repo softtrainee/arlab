@@ -339,7 +339,6 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
 
-        self.debug('basssssss')
         ion = self.ion_optics_manager
         invoke_in_main_thread(self.plot_panel.show)
 #        self.plot_panel.show()
@@ -582,7 +581,11 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def use_arar_age(self):
-        return self.analysis_type == 'unknown' or self.labnumber in ('c',)
+        ln=self.labnumber
+        if '-' in ln:
+            ln=ln.split('-')[0]
+        
+        return self.analysis_type == 'unknown' or ln in ('c',)
 
     def start(self):
         def _start():
@@ -748,9 +751,9 @@ anaylsis_type={}
         if plot_panel is None:
             title='Plot Panel {}'.format(self.runid)
             if self.sample:
-                title='{} {}'
+                title='{} {}'.format(title, self.sample)
             if self.irradiation:
-                title='{} {}'.forma(title)
+                title='{} {}'.format(title, self.irradiation)
             
             plot_panel = PlotPanel(
                              window_y=0.05,  # + 0.01 * self.index,
