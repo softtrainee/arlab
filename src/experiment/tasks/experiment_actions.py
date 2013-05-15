@@ -94,7 +94,7 @@ class SaveExperimentQueueAction(ExperimentAction):
     name = 'Save'
     manager = Any
     enabled = False
-
+    accelerator='Ctrl+s'
     def __init__(self, manager, *args, **kw):
         super(SaveExperimentQueueAction, self).__init__(*args, **kw)
 
@@ -115,6 +115,7 @@ class SaveExperimentQueueAction(ExperimentAction):
 class SaveAsExperimentQueueAction(ExperimentAction):
     name = 'Save As...'
     enabled = False
+    accelerator='Ctrl+Shift+s'
     def __init__(self, manager, *args, **kw):
         super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
         application = manager.application

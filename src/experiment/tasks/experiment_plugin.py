@@ -208,7 +208,7 @@ class ExperimentPlugin(BaseTaskPlugin):
         return [
                 TaskFactory(id=self.id,
                             factory=self._task_factory,
-                            name='Experiment'
+                            name='Experiment',
                             ),
                 TaskFactory(id='pychron.labnumber_entry',
                             factory=self._labnumber_task_factory,

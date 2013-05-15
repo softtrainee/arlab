@@ -66,4 +66,7 @@ DECAY_KEYS = [('a37decayfactor', '37_Decay'),
 
 MEASUREMENT_COLOR = '#FF7EDF'  # magenta
 EXTRACTION_COLOR = '#FFFF66'
+SUCCESS_COLOR='#66FF33'  # light green
+SKIP_COLOR='#33CCFF'
+NOT_EXECUTABLE_COLOR='red'
 #============= EOF =============================================

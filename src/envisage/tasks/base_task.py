@@ -188,7 +188,11 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
             else:
                 checked = False
 
-            action = myTaskWindowLaunchAction(task_id=factory.id, checked=checked)
+            action = myTaskWindowLaunchAction(task_id=factory.id, 
+                                              checked=checked)
+            
+            if hasattr(factory,'accelerator'):
+                action.accelerator=factory.accelerator
 
             items.append(ActionItem(action=action))
         return items

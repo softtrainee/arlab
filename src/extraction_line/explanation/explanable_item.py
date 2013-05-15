@@ -14,15 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Str, Bool, Any, Property
+from traits.api import HasTraits, Str, Bool, Any, Property, String
 
 #=============standard library imports ========================
 
@@ -31,7 +24,7 @@ class ExplanableItem(HasTraits):
     '''
     '''
     name = Str
-    state = Property(depends_on='state')
+    state = Property(String, depends_on='_state')
     _state = Bool(False)
     description = Str
 #    identify = Bool(False)

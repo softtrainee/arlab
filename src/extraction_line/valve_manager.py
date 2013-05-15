@@ -607,10 +607,10 @@ class ValveManager(Manager):
                 act = getattr(v, action)
 
                 result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
-                if isinstance(result, bool):  # else its an error message
-                    if result:
-                        ve = self.get_evalve_by_name(name)
-                        ve.state = True if action == 'open' else False
+#                 if isinstance(result, bool):  # else its an error message
+#                     if result:
+#                         ve = self.get_evalve_by_name(name)
+#                         ve.state = True if action == 'open' else False
 
     #                update the section state
     #                for s in self.sections:

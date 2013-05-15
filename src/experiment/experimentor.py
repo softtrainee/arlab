@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance, List, Property, \
-    on_trait_change, Bool
+    on_trait_change, Bool, Any
 from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
@@ -59,6 +59,8 @@ class Experimentor(Experimentable):
     _last_ver_time = None
     _ver_timeout = 10
 
+    selected=Any
+    
     def test_runs(self):
         for ei in self.experiment_queues:
             ei.test_runs()
@@ -358,19 +360,24 @@ class Experimentor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
+    
     @on_trait_change('executor:execute_button')
     def _execute_fired(self):
-        self.debug('stop file listener')
-        self.stop_file_listener()
-
-        self.debug('setup executor')
-        self.executor.trait_set(experiment_queues=self.experiment_queues,
-                                experiment_queue=self.experiment_queues[0],
-                                _experiment_hash=self._experiment_hash,
-                                _text=self._text,
-                                stats=self.stats
-                                )
-        self.executor.execute()
+        if self.executor.isAlive():
+            self.debug('cancel execution')
+            self.executor.cancel()
+        else:            
+            self.debug('stop file listener')
+            self.stop_file_listener()
+            
+            self.debug('setup executor')
+            self.executor.trait_set(experiment_queues=self.experiment_queues,
+                                    experiment_queue=self.experiment_queues[0],
+                                    _experiment_hash=self._experiment_hash,
+                                    _text=self._text,
+                                    stats=self.stats
+                                    )
+            self.executor.execute()
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):
@@ -378,7 +385,7 @@ class Experimentor(Experimentable):
         self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 
-    @on_trait_change('experiment_queue:selected')
+    @on_trait_change('selected')
     def _update_selected(self, new):
         self.experiment_factory.set_selected_runs(new)
 

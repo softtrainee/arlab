@@ -175,7 +175,17 @@ class ExperimentExecutor(Experimentable):
             name = os.path.basename(name)
 
         self._execute_procedure(name)
-
+        
+    def cancel(self):
+        if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
+                                     title='Confirm Cancel'
+                                     ):
+            arun = self.experiment_queue.current_run
+            if arun:
+                arun.cancel()
+            self._alive = False
+            self.stats.stop_timer()
+            
     def execute(self):
         self.debug('starting execution')
                     # check for blank before starting the thread
@@ -238,36 +248,36 @@ class ExperimentExecutor(Experimentable):
 # private
 #===============================================================================
     def _execute(self):
-        if self.isAlive():
-            if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
-                                     title='Confirm Cancel'
-                                     ):
-                arun = self.experiment_queue.current_run
-                if arun:
-                    arun.cancel()
-                self._alive = False
-        else:
+#         if self.isAlive():
+#             if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
+#                                      title='Confirm Cancel'
+#                                      ):
+#                 arun = self.experiment_queue.current_run
+#                 if arun:
+#                     arun.cancel()
+#                 self._alive = False
+#         else:
 #            if self._was_executed:
 #                self.load_experiment_queue(self.experiment_queue.path)
 
 #            self.stop_file_listener()
 
-            # test runs first
-            for exp in self.experiment_queues:
-                err = exp.test_runs()
-                if err:
-                    self.info('experiment canceled. {}'.format(err))
-                    self.warning('experiment canceled')
-                    return
+        # test runs first
+        for exp in self.experiment_queues:
+            err = exp.test_runs()
+            if err:
+                self.info('experiment canceled. {}'.format(err))
+                self.warning('experiment canceled')
+                return
 
 
-            self._execute_experiment_queues()
+        self._execute_experiment_queues()
 #                 t = Thread(target=self._execute_experiment_queues)
 #                 t.start()
 #                 self._execute_thread = t
 
-            self.err_message = False
-            self._was_executed = True
+        self.err_message = False
+        self._was_executed = True
 #             else:
 #                 self.info('experiment canceled because no blank was configured')
 #                 self._alive = False

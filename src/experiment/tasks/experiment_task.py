@@ -22,7 +22,7 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import AnalysesPane, \
-    ExperimentFactoryPane, StatsPane, ControlsPane, ConsolePane
+    ExperimentFactoryPane, StatsPane, ControlsPane, ConsolePane, ExplanationPane
 
 class ExperimentEditorTask(BaseManagerTask):
 
@@ -34,7 +34,7 @@ class ExperimentEditorTask(BaseManagerTask):
                           left=PaneItem('pychron.experiment.factory'),
                           right=Splitter(
                                          PaneItem('pychron.experiment.stats'),
-                                         PaneItem('pychron.experiment.console'),
+                                        PaneItem('pychron.experiment.explanation'),
                                          orientation='vertical'
                                          ),
                           bottom=PaneItem('pychron.experiment.console'),
@@ -49,7 +49,8 @@ class ExperimentEditorTask(BaseManagerTask):
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
                 StatsPane(model=self.manager),
                 ControlsPane(model=self.manager.executor),
-                ConsolePane(model=self.manager.executor)
+                ConsolePane(model=self.manager.executor),
+                ExplanationPane(),
                 ]
 
 #============= EOF =============================================

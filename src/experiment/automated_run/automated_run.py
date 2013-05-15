@@ -38,7 +38,8 @@ from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabas
 from src.helpers.datetime_tools import get_datetime
 # from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.utilities.identifier import convert_identifier, make_rid
+from src.experiment.utilities.identifier import convert_identifier, make_rid,\
+    make_runid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
@@ -194,7 +195,7 @@ class AutomatedRun(Loggable):
 
     skip = Bool
     fits = List
-    runid = Str
+    runid = Property
 
     info_color = None
 #===============================================================================
@@ -742,12 +743,20 @@ anaylsis_type={}
             self.truncate('Immediate')
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
+        
+        
         if plot_panel is None:
+            title='Plot Panel {}'.format(self.runid)
+            if self.sample:
+                title='{} {}'
+            if self.irradiation:
+                title='{} {}'.forma(title)
+            
             plot_panel = PlotPanel(
                              window_y=0.05,  # + 0.01 * self.index,
                              window_x=0.6,  # + 0.01 * self.index,
 
-                             window_title='Plot Panel {}, {} {}'.format(self.runid, self.sample, self.irradiation),
+                             window_title=title,
                              stack_order=stack_order,
                              arar_age=self.arar_age,
                              sample=self.sample,
@@ -1029,17 +1038,18 @@ anaylsis_type={}
         if self.plot_panel is None:
             return 'break'
 
+        n=i-1
         if check_conditions:
             termination_condition = self._check_conditions(self.termination_conditions, i)
             if termination_condition:
-                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, i, ncounts),
+                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, n, ncounts),
                           color='red'
                           )
                 return 'cancel'
 
             truncation_condition = self._check_conditions(self.truncation_conditions, i)
             if truncation_condition:
-                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, i, ncounts),
+                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, n, ncounts),
                           color='red'
                           )
                 self.truncated = True
@@ -1047,7 +1057,7 @@ anaylsis_type={}
 
             action_condition = self._check_conditions(self.action_conditions, i)
             if action_condition:
-                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, i, ncounts),
+                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, n, ncounts),
                           color='red'
                           )
                 action_condition.perform(self.measurement_script)
@@ -1419,21 +1429,15 @@ anaylsis_type={}
                     det = db.add_detector(detname)
 #                    db.flush()
 
-                t = time.time()
                 # add isotope
                 dbiso = db.add_isotope(analysis, iso, det, kind=kind)
-                self.debug('add isotope time {:0.3f}'.format(time.time() - t))
 
                 s = signals['{}{}'.format(iso, kind)]
 
                 # add signal data
-                t = time.time()
                 data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
-                self.debug('pack time {:0.3f}'.format(time.time() - t))
 
-                t = time.time()
                 db.add_signal(dbiso, data)
-                self.debug('add signal time {:0.3f}'.format(time.time() - t))
 
                 if s.fit:
                     # add fit
@@ -1445,11 +1449,8 @@ anaylsis_type={}
                                           dbhist,
                                           signal_=float(s.value), signal_err=float(s.error),
                                           )
-
-                t = time.time()
+                
                 db.flush()
-                self.debug('flush time= {:0.3f}'.format(iso, kind, time.time() - t))
-
                 self.debug('isotope {}{} save time= {:0.3f}'.format(iso, kind, time.time() - st))
 
         return self._time_save(func, 'isotope info')
@@ -1795,6 +1796,9 @@ anaylsis_type={}
     def _get_extraction_script(self):
         self._extraction_script = self._load_script('extraction')
         return self._extraction_script
+
+    def _get_runid(self):
+        return make_runid(self.labnumber, self.aliquot, self.step)
 
 
 

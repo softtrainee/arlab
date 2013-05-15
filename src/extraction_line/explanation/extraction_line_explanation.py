@@ -48,14 +48,14 @@ class ExtractionLineExplanation(HasTraits):
     selected = Any
     selection_ok = False
 
-    def on_selection(self, s):
-#        if self.selection_ok and
-        if s is not None:
-            for ei in self.explanable_items:
-                if ei != s:
-                    ei.identify = False
-
-            s.identify = not s.identify
+#     def on_selection(self, s):
+# #        if self.selection_ok and
+#         if s is not None:
+#             for ei in self.explanable_items:
+#                 if ei != s:
+#                     ei.identify = False
+# 
+#             s.identify = not s.identify
 
 #    def _show_hide_fired(self):
 #        '''
@@ -88,12 +88,12 @@ class ExtractionLineExplanation(HasTraits):
         ed = TableEditor(columns=[ObjectColumn(name='name',
                                                         editable=False),
            ObjectColumn(name='description', editable=False),
-           ObjectColumn(name='state_property', editable=False, label='State'),
+           ObjectColumn(name='state', editable=False, label='State'),
 #                                           CheckboxColumn(name='identify'),
-           ObjectColumn(name='lock_property', editable=False, label='Lock')
+           ObjectColumn(name='lock', editable=False, label='Lock')
            ],
            selected='selected',
-           on_select=self.on_selection,
+#            on_select=self.on_selection,
                             editable=False,
                             )
         v = View(
