@@ -194,7 +194,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
             self.labnumber = self._increment(self.labnumber)
 
-
         return arvs, freq
 
     def set_mass_spectrometer(self, new):

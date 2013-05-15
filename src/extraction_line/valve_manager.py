@@ -729,9 +729,10 @@ class ValveManager(Manager):
         ev = ExplanableValve(name=name,
                     address=v.address,
                     description=v.description,
-                    canvas=self.extraction_line_manager.canvas,)
+#                    canvas=self.extraction_line_manager.canvas,
+                    )
 #        ev.state = s if s is not None else False
-
+        v.evalve = ev
         self.explanable_items.append(ev)
 
 

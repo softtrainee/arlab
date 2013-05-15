@@ -50,10 +50,12 @@ class HardwareValve(Loggable):
     actuator_name = Property(depends_on='actuator')
 #    actuator_name = DelegatesTo('actuator', prefix='name')
 
-    canvas_valve = Any
-    position = Property
+#    canvas_valve = Any
+#    position = Property
 #    shaft_low = Property
 #    shaft_high = Property
+
+    evalve = Any
 
     query_state = Bool(True)
     description = Str
@@ -129,14 +131,23 @@ class HardwareValve(Loggable):
 
         return success, state_change
 
-    def _software_locked(self):
-        self.info('{}({}) software locked'.format(self.name, self.description))
 
     def lock(self):
         self.software_lock = True
 
     def unlock(self):
         self.software_lock = False
+
+    def _state_changed(self):
+        if self.evalve:
+            self.evalve.state = self.state
+
+    def _software_lock_changed(self):
+        if self.evalve:
+            self.evalve.soft_lock = self.software_lock
+
+    def _software_locked(self):
+        self.info('{}({}) software locked'.format(self.name, self.description))
 
     def _open_(self, mode='normal'):
         '''
@@ -191,9 +202,9 @@ class HardwareValve(Loggable):
 #        if self.canvas_valve:
 #            return self.canvas_valve.high_side.orientation
 
-    def _get_position(self):
-        if self.canvas_valve:
-            return ','.join(map(str, self.canvas_valve.translate))
+#    def _get_position(self):
+#        if self.canvas_valve:
+#            return ','.join(map(str, self.canvas_valve.translate))
 
     def _get_display_state(self):
         return 'Open' if self.state else 'Close'

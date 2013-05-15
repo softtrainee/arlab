@@ -34,12 +34,12 @@ class ExplanableItem(HasTraits):
     state = Property(depends_on='state')
     _state = Bool(False)
     description = Str
-    identify = Bool(False)
+#    identify = Bool(False)
 
     lock = Property(depends_on='soft_lock')
     soft_lock = Bool(False)
 
-    canvas = Any
+#    canvas = Any
 
     def _get_lock(self):
         return 'Yes' if self.soft_lock else 'No'
@@ -50,11 +50,11 @@ class ExplanableItem(HasTraits):
     def _set_state(self, v):
         self._state = v
 
-    def _identify_changed(self):
-        '''
-        '''
-        if self.canvas is not None:
-            self.canvas.toggle_item_identify(self.name)
+#    def _identify_changed(self):
+#        '''
+#        '''
+#        if self.canvas is not None:
+#            self.canvas.toggle_item_identify(self.name)
 
 
 class ExplanableTurbo(ExplanableItem):
