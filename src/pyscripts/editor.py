@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from traits.etsconfig.etsconfig import ETSConfig
-ETSConfig.toolkit = 'qt4'
+#from traits.etsconfig.etsconfig import ETSConfig
+#ETSConfig.toolkit = 'qt4'
 
 #============= enthought library imports =======================
 from traits.api import Str, Enum, Bool, Instance, String, Dict, Property, \
      Event, List, Int
 from traitsui.api import View, Item, HGroup, Group, spring, \
     VGroup, ListStrEditor, InstanceEditor, VSplit
+from pyface.file_dialog import FileDialog
 from traitsui.menu import Action
 #============= standard library imports ========================
 import os
@@ -31,6 +32,7 @@ from src.saveable import SaveableHandler
 # from src.pyscripts.code_editor import PyScriptCodeEditor
 from src.viewable import Viewable
 from src.ui.code_editor import PyScriptCodeEditor
+from pyface.constant import OK
 
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
                     ExtractionLine='src.pyscripts.extraction_line_pyscript',
@@ -89,10 +91,15 @@ class PyScriptEditor(Viewable):
             self.refresh_scripts_event = True
         return True
 
+    def save_file_dialog(self,**kw):
+        dlg=FileDialog(action='save as', **kw)
+        if dlg.open()==OK:
+            return dlg.path
+        
     def save_as(self):
         if not self._check_save():
             return
-
+        
         p = self.save_file_dialog(default_directory=self.default_directory)
 #        p = '/Users/ross/Desktop/foo.txt'
         if p is not None:
