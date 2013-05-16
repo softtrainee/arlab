@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Property, Str, Enum, Int, Float, Bool
 from traitsui.api import View, Item, HGroup, Label, Group, \
-    ListEditor, InstanceEditor, EnumEditor, Spring, spring, VGroup
+    ListEditor, InstanceEditor, EnumEditor, Spring, spring, VGroup, UItem
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -31,7 +31,7 @@ class PlotterOption(HasTraits):
     plot_names = Property
 
     scale = Enum('linear', 'log')
-    height = Int(100)
+    height = Int(100, enter_set=True, auto_set=False)
     x_error = Bool(False)
     y_error = Bool(False)
     def _get_plot_names(self):
@@ -44,16 +44,18 @@ class PlotterOption(HasTraits):
     def traits_view(self):
         v = View(
                  HGroup(
-                        Item('name',
-                             show_label=False,
+                        UItem('name',
+
                              editor=EnumEditor(name='plot_names')),
 
-                        Item('scale', show_label=False),
-                        Item('height', show_label=False),
+                        UItem('scale'),
+                        UItem('height',
+                              width= -50,
+                             ),
+#                        spring,
+                        UItem('x_error'),
+                        UItem('y_error'),
                         spring,
-                        Item('x_error', show_label=False),
-                        spring,
-                        Item('y_error', show_label=False)
                         ),
                 )
 
@@ -229,8 +231,9 @@ class PlotterOptions(Viewable):
                             Spring(width=132, springy=False),
                             Label('Scale'),
                             spring, Label('Height'),
-                            spring,
-                                    Label('X Err.'), Label('Y Err.'))
+
+                            Label('X Err.'), Label('Y Err.'),
+                            spring,)
         default_grp = VGroup(
                              HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
                                     Item('title', springy=True, enabled_when='not auto_generate_title',
@@ -240,13 +243,16 @@ class PlotterOptions(Viewable):
                                                             'data_file':'1:Data File',
                                                             'manual_entry':'2:Manual Entry'}),
                                   defined_when='data_type_editable'),
-                             self._get_x_axis_group(),
 
-                             VGroup(
-                                    self._create_axis_group('y', 'title'),
-                                    self._create_axis_group('y', 'tick'),
-                                    show_border=True,
-                                    label='Y'),
+                             Group(
+                                    self._get_x_axis_group(),
+                                    VGroup(
+                                           self._create_axis_group('y', 'title'),
+                                           self._create_axis_group('y', 'tick'),
+                                           show_border=True,
+                                           label='Y'),
+                                   layout='tabbed'
+                                    ),
                              header_grp,
                              Item('aux_plots',
                                   style='custom',

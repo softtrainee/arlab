@@ -547,7 +547,8 @@ class Plotter(Viewable):
 
         x = floatfmt(x, 3)
         we = floatfmt(we, 4)
-        return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
+
+        return unicode('{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n))
     def _unzip_value_error(self, pairs):
 #        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
         return zip(*[(ri.nominal_value, ri.std_dev) for ri in pairs])

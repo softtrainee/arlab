@@ -29,7 +29,6 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction
-from traits.util.camel_case import camel_case_to_python
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

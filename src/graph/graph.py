@@ -133,6 +133,7 @@ class Graph(Viewable, ContextMenuMixin):
 
     close_func = Callable
 
+
     def __init__(self, *args, **kw):
         '''
         '''

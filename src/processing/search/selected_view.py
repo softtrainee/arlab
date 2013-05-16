@@ -40,7 +40,7 @@ class SelectedrecordsAdapter(TabularAdapter):
 #    text_color = Property
     font = 'monospace'
 
-    def get_text_color(self, obj, trait, row):
+    def get_text_color(self, obj, trait, row, column):
         if isinstance(self.item, Marker):
             color = 'white'
         else:
