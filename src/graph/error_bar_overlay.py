@@ -19,8 +19,10 @@
 #=============enthought library imports=======================
 from traits.api import Int, Enum
 from chaco.api import AbstractOverlay
+from enable.colors import color_table
 #============= standard library imports ========================
-import wx
+
+from traits.traits import Color
 
 #============= local library imports  ==========================
 
@@ -61,8 +63,9 @@ class ErrorBarOverlay(AbstractOverlay):
 
             color = component.color
             if isinstance(color, str):
-                color = wx.Color()
-                color.SetFromName(component.color)
+                color = color_table[color]
+#                color = wx.Color()
+#                color.SetFromName(component.color)
 #                r, g, b = color.Red() / 255., color.Green() / 255., color.Blue() / 255.
 #                print component.color, r, g, b
 #                rgb = map(lambda x: x / 255. , color.GetRGB())
@@ -77,9 +80,10 @@ class ErrorBarOverlay(AbstractOverlay):
                 gc.line_to(x2, y2)
             gc.draw_path()
 
-            rgb = color.red / 100., color.green / 100., color.blue / 100.
-            gc.set_stroke_color(rgb)
-            gc.set_fill_color(rgb)
+#            print color
+#            rgb = color.red / 100., color.green / 100., color.blue / 100.
+            gc.set_stroke_color(color)
+            gc.set_fill_color(color)
             for ((x1, y1), (x2, y2)) in nonsels:
                 gc.move_to(x1, y1)
                 gc.line_to(x2, y2)

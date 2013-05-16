@@ -25,6 +25,8 @@ from src.constants import PLUSMINUS
 #============= local library imports  ==========================
 
 class ContextMenuMixin(HasTraits):
+    use_context_menu = True
+
     def close_popup(self):
         pass
 

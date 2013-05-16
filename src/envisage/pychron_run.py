@@ -71,7 +71,7 @@ PACKAGE_DICT = dict(
 #                   TwitterPlugin='src.social.plugins.twitter_plugin',
 #                   EmailPlugin='src.social.plugins.email_plugin',
 
-#                   ProcessingPlugin='src.processing.plugins.processing_plugin',
+                   ProcessingPlugin='src.processing.tasks.processing_plugin',
 
 #                   MediaServerPlugin='src.media_server.plugins.media_server_plugin',
                  )

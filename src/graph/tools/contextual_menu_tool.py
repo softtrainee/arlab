@@ -63,8 +63,11 @@ class ContextualMenuTool(Interactor):
         '''
         '''
         def display_menu(parent, event):
+            if not parent.use_context_menu:
+                return
             control = event.window.control
-            _w, h = control.GetSize()
+            size = control.size()
+            h = size.height()
             x = event.x
             y = h - event.y
 #            y = event.y
