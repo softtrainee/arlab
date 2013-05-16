@@ -236,6 +236,8 @@ class ClientPane(TraitsTaskPane):
 class FusionsCO2Pane(BaseLaserPane):
     pass
 
+class FusionsCO2ClientPane(ClientPane):
+    pass
 
 class FusionsCO2StagePane(StageControlPane):
     id = 'pychron.fusions.co2.stage'
