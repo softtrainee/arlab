@@ -40,7 +40,9 @@ class ExperimentEditorTask(BaseManagerTask):
                           bottom=PaneItem('pychron.experiment.console'),
                           top=PaneItem('pychron.experiment.controls')
                           )
-
+    def prepare_destroy(self):
+        self.manager.stop_file_listener()
+        
     def create_central_pane(self):
         return AnalysesPane(model=self.manager)
 
