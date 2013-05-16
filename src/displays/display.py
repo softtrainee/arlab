@@ -47,6 +47,7 @@ class DisplayController(ApplicationController):
     default_color = Color('black')
     default_size = Int
     bg_color = Color
+    font_name=Str
     
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
