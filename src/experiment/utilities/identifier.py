@@ -108,15 +108,28 @@ def convert_shortname(ln):
 
 def convert_identifier(identifier):
     '''
-        identifier=='bg, a, ...'
-        return  1
+        old:
+            identifier=='bg, a, ...'
+            return  1
+        
+        identifier== bu-FD-J, 51234, 13212-01
+        return bu-FD-J, 51234, 13212
+        
     '''
     if '-' in identifier:
-        identifier=identifier.split('-')[0]
+        ln=identifier.split('-')[0]
+        try:
+            ln=int(ln)
+            identifier=str(ln)
+        except ValueError:
+            return identifier
+        
+#        identifier=identifier.split('-')[0]
+        
     
-    if identifier in ANALYSIS_MAPPING:
-        sname = ANALYSIS_MAPPING[identifier]
-        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
+#    if identifier in ANALYSIS_MAPPING:
+#        sname = ANALYSIS_MAPPING[identifier]
+#        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
 
     return identifier
 
