@@ -779,11 +779,13 @@ post_equilibration_script:name
                     for pi in self.selected_level.positions]
 
         project = self.project
-        if project:
+        if project and project!=NULL_STR:
             project = self.db.get_project(project)
-            lns = [str(ln.identifier)
+            if project is not None:
+                lns = [str(ln.identifier)
                     for s in project.samples
                         for ln in s.labnumbers]
+                
         return [NULL_STR] + sorted(lns)
 
     def _get_position(self):

@@ -108,10 +108,10 @@ class PyScriptTask(EditorTask):
             self._open_editor(path='')
             return True
 
-    def open(self):
-        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
-        self._open_file(path)
-        return True
+#    def open(self):
+#        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
+#        self._open_file(path)
+#        return True
 
     def _open_file(self, path):
         self.info('opening pyscript: {}'.format(path))
