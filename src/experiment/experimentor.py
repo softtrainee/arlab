@@ -413,6 +413,15 @@ class Experimentor(Experimentable):
                       'delay_before_analyses', 'delay_between_analyses'
                       ):
                 setattr(qf, a, getattr(eq, a))
+                
+    @on_trait_change('experiment_factory:run_factory:clear_selection')
+    def _on_clear_selection(self):
+        self.selected=[]
+    def _selected_changed(self):
+        if self.selected:
+            self.experiment_factory.run_factory.special_labnumber='---'
+            self.experiment_factory.run_factory._labnumber='---'
+            self.experiment_factory.run_factory.labnumber=''
 #===============================================================================
 # property get/set
 #===============================================================================

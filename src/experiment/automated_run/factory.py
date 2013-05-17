@@ -131,6 +131,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     suppress_update = False
 
+    clear_selection=Event
+    
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -332,27 +334,12 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def _new_run(self, excludes=None, **kw):
 
-#         ln, special = self._make_short_labnumber()
-
-        arv = self._spec_klass(**kw)
+        #need to set the labnumber now because analysis_type depends on it
+        arv = self._spec_klass(labnumber=self.labnumber, **kw)
 
         if excludes is None:
             excludes = []
 
-#        excludes.extend(['extract_value', 'extract_units', 'pattern'] if special else [])
-
-#        ln = self.labnumber
-#        if '-' in ln:
-#            ln = ln.split('-')[0]
-
-#        if ln in ('ba', 'bg', 'bc', 'a', 'c'):
-#            excludes.extend(('position', 'extract_value', 'extract_units', 'pattern'))
-#        if arv.analysis_type != 'unknown':
-#            if arv.analysis_type != 'degas':
-#                excludes.extend(('extract_value', 'extract_units', 'pattern'))
-#        else:
-#            if arv.extract_group:
-#                excludes.extend(('extract_value', 'cleanup', 'duration', 'pattern'))
         if arv.analysis_type not in ('unknown', 'blank_unknown', 'degas'):
             excludes.extend(('position', 'extract_value', 'extract_units',
                              'cleanup', 'duration',
@@ -373,7 +360,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             if runs is an unknown but is part of an extract group dont copy the evalue
         '''
 
-        for attr in ('labnumber',
+        for attr in (
                      'position',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'pattern',
@@ -397,6 +384,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 continue
 
             s = getattr(self, name)
+            print s, s.cb, s.name
             if s.cb:
                 setattr(arv, name, s.name)
 
@@ -449,9 +437,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             for attr in  ('extract_value', 'extract_units', 'duration', 'cleanup', 'pattern'):
                 setattr(self, 'cb_{}'.format(attr), v)
 
-        for si in SCRIPT_NAMES:
-            sc = getattr(self, si)
-            sc.cb = False
+#         for si in SCRIPT_NAMES:
+#             sc = getattr(self, si)
+#             sc.cb = False
 
 #        self.measurement_script.cb = False
 #===============================================================================
@@ -638,6 +626,7 @@ post_equilibration_script:name
 
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
+            self.clear_selection=True
         else:
             self._frequency_enabled = False
 
