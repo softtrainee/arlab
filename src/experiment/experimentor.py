@@ -339,7 +339,7 @@ class Experimentor(Experimentable):
                 c = 0
                 fixed_dict[arunid] = arun.aliquot
 
-#             print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
+            #print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 
