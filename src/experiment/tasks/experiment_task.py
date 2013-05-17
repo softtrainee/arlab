@@ -23,6 +23,7 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import AnalysesPane, \
     ExperimentFactoryPane, StatsPane, ControlsPane, ConsolePane, ExplanationPane
+from pyface.tasks.task_window_layout import TaskWindowLayout
 
 class ExperimentEditorTask(BaseManagerTask):
 
@@ -42,7 +43,7 @@ class ExperimentEditorTask(BaseManagerTask):
                           )
     def prepare_destroy(self):
         self.manager.stop_file_listener()
-        
+
     def create_central_pane(self):
         return AnalysesPane(model=self.manager)
 
@@ -55,4 +56,27 @@ class ExperimentEditorTask(BaseManagerTask):
                 ExplanationPane(),
                 ]
 
+#===============================================================================
+# generic actions
+#===============================================================================
+    def open(self):
+        path = self.open_file_dialog()
+        if path:
+            manager = self.manager
+            if manager.verify_database_connection(inform=True):
+#        if manager.verify_credentials():
+                if manager.load():
+                    if manager.load_experiment_queue(saveable=True):
+                        self._open_editor()
+
+    def _open_editor(self):
+        application = self.window.application
+#        application = event.task.window.application
+        for wi in application.windows:
+            if wi.active_task.id == self.task_id:
+                wi.activate()
+                break
+        else:
+            win = application.create_window(TaskWindowLayout(self.task_id))
+            win.open()
 #============= EOF =============================================

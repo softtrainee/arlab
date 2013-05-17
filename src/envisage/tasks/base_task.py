@@ -29,6 +29,10 @@ from pyface.tasks.task_window_layout import TaskWindowLayout
 from pyface.workbench.action.view_menu_manager import ViewMenuManager
 from pyface.tasks.action.task_action import TaskAction
 from pyface.action.group import Separator
+from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction
+#    GenericOpenAction, GenericNewAction
+from pyface.file_dialog import FileDialog
+from pyface.constant import OK
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -188,11 +192,11 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
             else:
                 checked = False
 
-            action = myTaskWindowLaunchAction(task_id=factory.id, 
+            action = myTaskWindowLaunchAction(task_id=factory.id,
                                               checked=checked)
-            
-            if hasattr(factory,'accelerator'):
-                action.accelerator=factory.accelerator
+
+            if hasattr(factory, 'accelerator'):
+                action.accelerator = factory.accelerator
 
             items.append(ActionItem(action=action))
         return items
@@ -214,7 +218,15 @@ class BaseTask(Task):
         return edit_menu
 
     def _file_menu(self):
-        file_menu = SMenu(id='File', name='&File')
+        file_menu = SMenu(
+                          SMenu(id='Open', name='Open'),
+                          SMenu(id='New', name='New'),
+#                          GenericOpenAction(),
+#                          GenericNewAction(),
+                          GenericSaveAsAction(),
+                          GenericSaveAction(),
+
+                          id='File', name='&File')
         return file_menu
 
     def _tools_menu(self):
@@ -230,6 +242,16 @@ class BaseTask(Task):
         return window_menu
 
 class BaseManagerTask(BaseTask):
+    def open_file_dialog(self, **kw):
+        dialog = FileDialog(parent=self.window.control, **kw)
+        if dialog.open() == OK:
+            return dialog.path
+
+    def save_file_dialog(self):
+        dialog = FileDialog(parent=self.window.control, action='save as')
+        if dialog.open() == OK:
+            return dialog.path
+
     def _menu_bar_factory(self, menus=None):
         if menus is None:
             menus = tuple()

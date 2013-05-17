@@ -74,6 +74,7 @@ PACKAGE_DICT = dict(
                    ProcessingPlugin='src.processing.tasks.processing_plugin',
 
                    MediaServerPlugin='src.media_server.tasks.media_server_plugin',
+                   PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin'
                  )
 
 def get_module_name(klass):

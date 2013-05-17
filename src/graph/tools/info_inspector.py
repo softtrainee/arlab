@@ -73,6 +73,7 @@ class InfoOverlay(AbstractOverlay):
 #            if self.visible:
             lines = self.tool.assemble_lines()
             if lines:
+                lines = [li for li in lines if li and li.strip()]
                 self._draw_info(gc, lines)
         self.visible = False
 
@@ -81,7 +82,6 @@ class InfoOverlay(AbstractOverlay):
 
         gc.set_font(Font('Arial'))
         gc.set_fill_color((0.8, 0.8, 0.8))
-
         lws, lhs = zip(*[gc.get_full_text_extent(mi)[:2] for mi in lines])
 
         lw = max(lws)
@@ -93,17 +93,17 @@ class InfoOverlay(AbstractOverlay):
         x += xoffset
         y -= yoffset
 
+        # if the box doesnt fit in window
+        # move left
         x2 = self.component.x2
         if x + lw > x2:
             x = x2 - lw - 3
 
-        gc.rect(x, y - lh, lw + 4, lh)
+        gc.rect(x, y - lh + 2, lw + 4, lh)
         gc.draw_path()
         gc.set_fill_color((0, 0, 0))
         h = lhs[0]
 
-        # if the box doesnt fit in window
-        # move left
 
         for i, mi in enumerate(lines):
             gc.set_text_position(x + 2,
