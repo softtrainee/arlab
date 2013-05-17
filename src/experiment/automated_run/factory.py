@@ -373,7 +373,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
             setattr(arv, attr, getattr(self, attr))
             setattr(arv, '_prev_{}'.format(attr), getattr(self, attr))
-
+        
         if self.user_defined_aliquot:
             arv.user_defined_aliquot = True
             arv.aliquot = int(self.aliquot)

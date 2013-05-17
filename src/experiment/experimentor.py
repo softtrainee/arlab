@@ -81,7 +81,20 @@ class Experimentor(Experimentable):
 #            return
 
         return True
+    
+    def new_experiment_queue(self):
+        self.experiment_queues = []
 
+        exp = self._experiment_queue_factory()
+#        arun = exp.automated_run_factory()
+#        exp.automated_run = arun
+#        exp.automated_runs.append(arun)
+        self.experiment_queue = exp
+#         self.experiment_queues.append(exp)
+    
+#         self.experiment_queue = None
+#         self.experiment_queues = []
+        
     def load_experiment_queue(self, path=None, edit=True, saveable=False):
 
 #        self.bind_preferences()
@@ -164,6 +177,7 @@ class Experimentor(Experimentable):
             self.debug('updating stats')
             self.stats.calculate()
 
+        print len(self.experiment_queues)
         ans = self._get_all_automated_runs()
         # update the aliquots
 
@@ -228,7 +242,7 @@ class Experimentor(Experimentable):
 #        db = self.db
         idcnt_dict = dict()
         stdict = dict()
-        extract_group = 1
+        extract_group = -1
         aoffs = dict()
         for arun in ans:
             arunid = arun.labnumber
@@ -273,7 +287,6 @@ class Experimentor(Experimentable):
                 idcnt_dict[arunid] = c
                 stdict[arunid] = st
                 extract_group = arun.extract_group
-
 
             if arunid in aoffs:
                 aoff = aoffs[arunid]

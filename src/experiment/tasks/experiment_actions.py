@@ -70,6 +70,7 @@ class NewExperimentQueueAction(QueueAction):
         if manager.verify_database_connection(inform=True):
 #        if manager.verify_credentials():
             if manager.load():
+                manager.new_experiment_queue()
                 self._open_editor(event)
 
 class OpenExperimentQueueAction(QueueAction):
