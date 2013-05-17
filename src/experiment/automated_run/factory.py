@@ -172,8 +172,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
         freq = self.frequency if special else None
 
-        print self.template, 'semad'
-        if self.template and self.template != NULL_STR and not freq:
+        if self.template and self.template != NULL_STR and not freq and not special :
             arvs = self._render_template()
         else:
             arvs = self._new_runs()
@@ -333,7 +332,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def _new_run(self, excludes=None, **kw):
 
-        ln, special = self._make_short_labnumber()
+#         ln, special = self._make_short_labnumber()
 
         arv = self._spec_klass(**kw)
 
@@ -358,7 +357,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes.extend(('position', 'extract_value', 'extract_units',
                              'cleanup', 'duration',
                              'pattern'))
-
+        elif arv.analysis_type=='blank_unknown':
+            excludes.extend(('position', 'extract_value', 'extract_units','pattern'))
+            
         self._set_run_values(arv, excludes=excludes)
         return arv
 
@@ -725,13 +726,13 @@ post_equilibration_script:name
     def _template_closed(self):
         self.template = os.path.splitext(self._template.name)[0]
         self.update_templates_needed = True
-
+        del self._template
+        
     def _edit_template_fired(self):
         temp = self._new_template()
         temp.on_trait_change(self._template_closed, 'close_event')
         self.open_view(temp)
         self._template = temp
-
 
 #===============================================================================
 # property get/set

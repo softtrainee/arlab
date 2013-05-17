@@ -128,7 +128,6 @@ class StatsGroup(ExperimentStats):
                 for ei in self.experiment_queues
                     for ai in ei.cleaned_automated_runs]
         ni = len(runs)
-        print ni
         self.nruns = ni
         tt = sum([ei.stats.calculate_duration(ei.cleaned_automated_runs)
                  for ei in self.experiment_queues])

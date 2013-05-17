@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance, List, Property, \
-    on_trait_change, Bool, Any,Event
+    on_trait_change, Bool, Any,Event, Button
 from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
@@ -61,7 +61,9 @@ class Experimentor(Experimentable):
 
     selected=Any
     pasted=Event
+    refresh=Button
     
+           
     def test_runs(self):
         for ei in self.experiment_queues:
             ei.test_runs()
@@ -136,7 +138,8 @@ class Experimentor(Experimentable):
         self.filelistener = fl
 
     def stop_file_listener(self):
-        self.filelistener.stop()
+        if self.filelistener:
+            self.filelistener.stop()
 
     def save_as_experiment_queues(self):
         # test sets before saving
@@ -363,7 +366,9 @@ class Experimentor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
-    
+    def _refresh_fired(self):
+        self._update(all_info=True, stats=True)
+
     @on_trait_change('executor:execute_button')
     def _execute_fired(self):
         if self.executor.isAlive():
@@ -454,9 +459,9 @@ class Experimentor(Experimentable):
                               )
 
         from src.globals import globalv
-        if globalv.experiment_debug:
-            e.queue_factory.mass_spectrometer = 'Jan'
-            e.queue_factory.extract_device = 'Fusions Diode'
+#         if globalv.experiment_debug:
+#             e.queue_factory.mass_spectrometer = 'Jan'
+#             e.queue_factory.extract_device = 'Fusions Diode'
 
 #            e.queue_factory.delay_between_analyses = 100
 #            e.queue_factory.delay_before_analyses = 10312

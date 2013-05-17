@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, Property, \
-    on_trait_change, String, Int, Any
+    on_trait_change, String, Int, Any, DelegatesTo
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -31,6 +31,9 @@ class ExperimentFactory(Loggable):
     db = Any
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
+
+    templates=DelegatesTo('run_factory')
+    template=DelegatesTo('run_factory')
 
     add_button = Button('add')
     clear_button = Button('clear')
@@ -83,6 +86,7 @@ class ExperimentFactory(Loggable):
 
     @on_trait_change('run_factory:[labnumber]')
     def _update_labnumber(self, name, new):
+        print name, new, id(self.run_factory)
         if name == 'labnumber':
             self._labnumber = new
 
@@ -101,6 +105,7 @@ class ExperimentFactory(Loggable):
     def _set_extract_device(self, ed):
         self._extract_device = ed
         self.run_factory = self._run_factory_factory()
+        self.run_factory.update_templates_needed=True
         self.queue.set_extract_device(ed)
 #===============================================================================
 # property get/set
