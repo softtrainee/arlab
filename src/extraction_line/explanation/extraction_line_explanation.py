@@ -17,8 +17,9 @@
 #=============enthought library imports=======================
 from traits.api import HasTraits, Any, Event, List, Bool, Property
 from traitsui.api import View, Item, TableEditor, \
-    Handler
+    Handler, TabularEditor
 from traitsui.table_column import ObjectColumn
+from traitsui.tabular_adapter import TabularAdapter
 # from traitsui.extras.checkbox_column import CheckboxColumn
 
 #=============standard library imports ========================
@@ -33,6 +34,18 @@ class ELEHandler(Handler):
         if not info.initialized:
             info.object.selection_ok = True
 
+class ExplanationAdapter(TabularAdapter):
+    columns=[('Name','name'),('Description','description'),
+             ('State','state'),('Lock','lock')
+             ]
+    def get_bg_color(self, obj, trait, row, column):
+        item=self.item
+        color='white'
+#         color='#0000FF'
+        if item.soft_lock:
+            color='#CCE5FF'
+
+        return color
 
 class ExtractionLineExplanation(HasTraits):
     '''
@@ -85,17 +98,17 @@ class ExtractionLineExplanation(HasTraits):
     def traits_view(self):
         '''
         '''
-        ed = TableEditor(columns=[ObjectColumn(name='name',
-                                                        editable=False),
-           ObjectColumn(name='description', editable=False),
-           ObjectColumn(name='state', editable=False, label='State'),
-#                                           CheckboxColumn(name='identify'),
-           ObjectColumn(name='lock', editable=False, label='Lock')
-           ],
-           selected='selected',
-#            on_select=self.on_selection,
-                            editable=False,
-                            )
+#         ed = TableEditor(columns=[ObjectColumn(name='name',
+#                                                         editable=False),
+#            ObjectColumn(name='description', editable=False),
+#            ObjectColumn(name='state', editable=False, label='State'),
+# #                                           CheckboxColumn(name='identify'),
+#            ObjectColumn(name='lock', editable=False, label='Lock')
+#            ],
+#            selected='selected',
+# #            on_select=self.on_selection,
+#                             editable=False,
+#                             )
         v = View(
 #               VGroup(
 #                      HGroup(
@@ -104,7 +117,10 @@ class ExtractionLineExplanation(HasTraits):
 #                           springy=False)),
 
                       Item('explanable_items',
-                           editor=ed,
+                           editor=TabularEditor(
+                                                adapter=ExplanationAdapter(),
+                                                editable=False,
+                                                selected='selected'),
                            style='custom',
                            show_label=False,
 #                           height=300,
