@@ -69,7 +69,7 @@ class GenericNewAction(DefaultAction):
 #                    if manager.load_experiment_queue(saveable=True):
 #                        self._open_editor(event, 'pychron.experiment')
 
-class GenericSaveAction(Action):
+class GenericSaveAction(DefaultAction):
     name = 'Save'
     accelerator = 'Ctrl+S'
     def perform(self, event):
@@ -81,7 +81,7 @@ class GenericSaveAction(Action):
             manager.save_experiment_queues()
 
 
-class GenericSaveAsAction(Action):
+class GenericSaveAsAction(DefaultAction):
     name = 'Save As...'
     accelerator = 'Ctrl+Shift+S'
     def perform(self, event):
