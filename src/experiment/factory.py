@@ -86,10 +86,9 @@ class ExperimentFactory(Loggable):
 
     @on_trait_change('run_factory:[labnumber]')
     def _update_labnumber(self, name, new):
-        print name, new, id(self.run_factory)
         if name == 'labnumber':
             self._labnumber = new
-
+            
 #    @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
 #    def _update_queue_values(self, name, new):
 #        self.queue_factory.trait_set({name:new})

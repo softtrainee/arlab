@@ -123,6 +123,10 @@ def convert_identifier(identifier):
 def get_analysis_type(idn):
 
     idn = idn.lower()
+    
+#     if '-' in idn:
+#         idn=idn.split('-')[0]
+#     
     # check for Bg before B
     if idn.startswith('bg'):
         return 'background'
