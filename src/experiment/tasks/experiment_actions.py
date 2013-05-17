@@ -60,7 +60,7 @@ class NewExperimentQueueAction(QueueAction):
     '''
     '''
     description = 'Create a new experiment queue'
-    name = 'New...'
+    name = 'Experiment'
     accelerator = 'Ctrl+N'
 
     def perform(self, event):
@@ -76,7 +76,7 @@ class OpenExperimentQueueAction(QueueAction):
     '''
     '''
     description = 'Open experiment set'
-    name = 'Open...'
+    name = 'Experiment...'
     accelerator = 'Shift+Ctrl+O'
 
     def perform(self, event):
@@ -91,10 +91,10 @@ class OpenExperimentQueueAction(QueueAction):
 
 
 class SaveExperimentQueueAction(ExperimentAction):
-    name = 'Save'
+    name = 'Save Experiment'
     manager = Any
     enabled = False
-    accelerator='Ctrl+s'
+    accelerator = 'Ctrl+s'
     def __init__(self, manager, *args, **kw):
         super(SaveExperimentQueueAction, self).__init__(*args, **kw)
 
@@ -113,9 +113,9 @@ class SaveExperimentQueueAction(ExperimentAction):
         self.enabled = v
 
 class SaveAsExperimentQueueAction(ExperimentAction):
-    name = 'Save As...'
+    name = 'Save As Experiment...'
     enabled = False
-    accelerator='Ctrl+Shift+s'
+    accelerator = 'Ctrl+Shift+s'
     def __init__(self, manager, *args, **kw):
         super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
         application = manager.application
@@ -236,25 +236,25 @@ class SignalCalculatorAction(ExperimentAction):
 #        obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
 #        open_manager(event.window.application, obj)
 
-class OpenImportManagerAction(ExperimentAction):
-    accelerator = 'Ctrl+i'
-    def perform(self, event):
-        obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
-        open_manager(event.window.application, obj)
-
-class OpenExportManagerAction(ExperimentAction):
-    accelerator = 'Ctrl+Shift+e'
-    def perform(self, event):
-        obj = self._get_service(event, 'src.experiment.export_manager.ExportManager')
-        open_manager(event.window.application, obj)
-
-class OpenImageBrowserAction(ExperimentAction):
-    def perform(self, event):
-        browser = self._get_service(event, 'src.media_server.browser.MediaBrowser')
-        client = self._get_service(event, 'src.media_server.client.MediaClient')
-        browser.client = client
-        if browser.load_remote_directory('images'):
-            open_manager(event.window.application, browser)
+# class OpenImportManagerAction(ExperimentAction):
+#    accelerator = 'Ctrl+i'
+#    def perform(self, event):
+#        obj = self._get_service(event, 'src.experiment.import_manager.ImportManager')
+#        open_manager(event.window.application, obj)
+#
+# class OpenExportManagerAction(ExperimentAction):
+#    accelerator = 'Ctrl+Shift+e'
+#    def perform(self, event):
+#        obj = self._get_service(event, 'src.experiment.export_manager.ExportManager')
+#        open_manager(event.window.application, obj)
+#
+# class OpenImageBrowserAction(ExperimentAction):
+#    def perform(self, event):
+#        browser = self._get_service(event, 'src.media_server.browser.MediaBrowser')
+#        client = self._get_service(event, 'src.media_server.client.MediaClient')
+#        browser.client = client
+#        if browser.load_remote_directory('images'):
+#            open_manager(event.window.application, browser)
 
 
 

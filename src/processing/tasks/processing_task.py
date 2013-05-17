@@ -17,8 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Instance, on_trait_change
 from traitsui.api import View, Item, ListEditor
-from pyface.tasks.api import IEditor, IEditorAreaPane
-from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
+# from pyface.tasks.api import IEditor, IEditorAreaPane
+# from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
 from src.processing.tasks.processing_panes import ProcessorPane, OptionsPane
 from src.processing.processor import Processor
 from pyface.tasks.action.schema import SToolBar
@@ -30,17 +30,19 @@ from src.graph.graph import Graph
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
-from src.loggable import Loggable
+# from src.loggable import Loggable
 from src.processing.plotter_options_manager import PlotterOptionsManager
+from src.envisage.tasks.editor_task import EditorTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ProcessingTask(BaseManagerTask, Loggable):
-    active_editor = Property(Instance(IEditor),
-                             depends_on='editor_area.active_editor'
-                             )
-#    active_editor = Instance(IEditor)
-    editor_area = Instance(IEditorAreaPane)
+# class ProcessingTask(BaseManagerTask, Loggable):
+class ProcessingTask(EditorTask):
+#    active_editor = Property(Instance(IEditor),
+#                             depends_on='editor_area.active_editor'
+#                             )
+# #    active_editor = Instance(IEditor)
+#    editor_area = Instance(IEditorAreaPane)
     active_plotter_options = Instance(PlotterOptionsManager, ())
 #    processor = Instance(Processor)
 #    active_processor = Property(Instance(Processor),
@@ -76,9 +78,9 @@ class ProcessingTask(BaseManagerTask, Loggable):
     def _default_layout_default(self):
         return TaskLayout(left=PaneItem('pychron.processing.options'),
                                 )
-    def create_central_pane(self):
-        self.editor_area = ProcessorPane()
-        return self.editor_area
+#    def create_central_pane(self):
+#        self.editor_area = ProcessorPane()
+#        return self.editor_area
 
     def create_dock_panes(self):
         return [
@@ -128,12 +130,12 @@ class ProcessingTask(BaseManagerTask, Loggable):
 
         self.active_plotter_options = editor.options_manager
 
-    def open(self):
-        ''' Shows a dialog to open a file.
-        '''
-        dialog = FileDialog(parent=self.window.control, wildcard='*.py')
-        if dialog.open() == OK:
-            self._open_file(dialog.path)
+#    def open(self):
+#        ''' Shows a dialog to open a file.
+#        '''
+#        dialog = FileDialog(parent=self.window.control)
+#        if dialog.open() == OK:
+#            self._open_file(dialog.path)
 
 #    @on_trait_change('editor_area:active_editor')
 #    def _update_active_editor(self):
@@ -160,14 +162,7 @@ class ProcessingTask(BaseManagerTask, Loggable):
     def _update_plotter_options(self):
         if self.active_editor:
             self.active_plotter_options = self.active_editor.options_manager
-#===============================================================================
-# property get/set
-#===============================================================================
-    def _get_active_editor(self):
-        if self.editor_area is not None:
-            return self.editor_area.active_editor
 
-        return None
 
 #    def _processor_default(self):
 #        return Processor(application=self.application)

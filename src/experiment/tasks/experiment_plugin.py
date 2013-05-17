@@ -32,7 +32,7 @@ from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
     ExperimentPreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, LabnumberEntryAction, SaveExperimentQueueAction, \
-    SaveAsExperimentQueueAction
+    SaveAsExperimentQueueAction, SignalCalculatorAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.experiment.experimentor import Experimentor
@@ -59,23 +59,27 @@ class ExperimentPlugin(BaseTaskPlugin):
                               actions=[
                                        SchemaAddition(id='open_experiment',
                                                         factory=OpenExperimentQueueAction,
-                                                        path='MenuBar/File'),
+                                                        path='MenuBar/File/Open'),
 
                                        SchemaAddition(id='new_experiment',
                                                       factory=NewExperimentQueueAction,
-                                                      path='MenuBar/File'),
+                                                      path='MenuBar/File/New'),
 
                                        SchemaAddition(id='save_experiment',
                                                       factory=save_factory,
-                                                      path='MenuBar/File'),
+                                                      path='MenuBar/File/Save'),
 
                                        SchemaAddition(id='save_as_experiment',
                                                       factory=save_as_factory,
-                                                      path='MenuBar/File'),
+                                                      path='MenuBar/File/Save'),
 
                                        SchemaAddition(id='labnumber_entry',
                                                       factory=LabnumberEntryAction,
                                                       path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='signal_calculator',
+                                                      factory=SignalCalculatorAction,
+                                                      path='MenuBar/Tools'
                                                       )
 
                                        ]
