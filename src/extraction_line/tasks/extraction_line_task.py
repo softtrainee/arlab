@@ -30,7 +30,9 @@ class ExtractionLineTask(BaseHardwareTask):
     name = 'Extraction Line'
 
     def _default_layout_default(self):
-        return TaskLayout(top=PaneItem('extraction_line.gauges')
+        return TaskLayout(
+                          top=PaneItem('pychorn.extraction_line.gauges'),
+                          left=PaneItem('pychron.extraction_line.explanation')
                           )
 
 #    def _menu_bar_default(self):

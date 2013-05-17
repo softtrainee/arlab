@@ -31,7 +31,7 @@ class CanvasPane(TraitsTaskPane):
 
 class GaugePane(TraitsDockPane):
     name = 'Gauges'
-    id = 'extraction_line.gauges'
+    id = 'pychron.extraction_line.gauges'
     def traits_view(self):
         v = View(UItem('gauge_manager',
                               style='custom',
@@ -44,7 +44,7 @@ class GaugePane(TraitsDockPane):
 
 class ExplanationPane(TraitsDockPane):
     name = 'Explanation'
-    id = 'extraction_line.gauges'
+    id = 'pychron.extraction_line.gauges'
     def traits_view(self):
         v = View(UItem('explanation',
                        style='custom'
