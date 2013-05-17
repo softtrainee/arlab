@@ -15,34 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import HasTraits, Any
+from traitsui.api import View, Item, UItem
+from src.envisage.tasks.base_task import BaseManagerTask
+from src.media_server.tasks.media_server_panes import ViewPane, TreePane
+from pyface.tasks.task_layout import TaskLayout, PaneItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.isotope_analysis.summary import Summary
 
-class ErrorComponentSummary(Summary):
-    def _build_summary(self, *args, **kw):
-        record = self.record
+class MediaServerTask(BaseManagerTask):
+    browser = Any
+    def _default_layout_default(self):
+        return TaskLayout(left=PaneItem('pychron.media_server.images'))
 
-        keys = record.isotope_keys[:]
-        keys += ('j', 'ic_factor')
-        vs = []
-        mx = -1e20
-        for key in keys:
-            v = self.record.get_error_component(key)
-            vs.append(v)
-            if v > mx:
-                max_key = key
-                mx = v
-        for key, v in zip(keys, vs):
-            if key == max_key:
-                self._print_value(key, v, int(v / 100.*50), color='red')
-            else:
-                self._print_value(key, v, int(v / 100.*50))
-
-    def _print_value(self, key, value, magnitude, **kw):
-        fmt = '{:<15s}= {:<10s}|{}'.format(key, self.floatfmt(value, n=3), '*' * magnitude)
-
-#        disp = self.display
-#        disp.add_text(fmt, **kw)
+    def create_central_pane(self):
+        return ViewPane(model=self.browser)
+    def create_dock_panes(self):
+        return [
+#                TreePane(
+#                         model=self.browser
+#                         )
+                ]
 
 #============= EOF =============================================

@@ -129,8 +129,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     extractable = Property(depends_on='labnumber')
     cbs_enabled = Property(depends_on='_selected_runs')
 
-    suppress_update=False
-    
+    suppress_update = False
+
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -152,7 +152,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             run = runs[0]
             self._clone_run(run)
         self._selected_runs = runs
-        self.suppress_update=False
+        self.suppress_update = False
 
     def _make_short_labnumber(self, labnumber=None):
         if labnumber is None:
@@ -172,6 +172,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
         freq = self.frequency if special else None
 
+        print self.template, 'semad'
         if self.template and self.template != NULL_STR and not freq:
             arvs = self._render_template()
         else:
@@ -230,12 +231,12 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         template = self._new_template()
 
         for st in template.steps:
-            if st.is_ok:
+            if st.value or st.duration or st.cleanup:
                 arv = self._new_run(extract_group=self._extract_group_cnt,
                                     step=st.step_id,
                                     position=self.position
                                     )
-                arv.trait_set(**st.make_dict())
+                arv.trait_set(**st.make_dict(self.duration, self.cleanup))
                 arvs.append(arv)
 
         self._extract_group_cnt += 1
@@ -516,7 +517,7 @@ weight, comment''')
             cbname = 'cb_{}'.format(name)
             if hasattr(self, cbname):
                 cb = getattr(self, cbname)
-                
+
             if cb:
                 for si in self._selected_runs:
 #                    setattr(si, '_prev_{}'.format(name), getattr(si, name))

@@ -44,24 +44,34 @@ class TablePane(TraitsDockPane):
     pass
 class SelectionPane(TraitsDockPane):
     pass
+
+def make_pom_name(name):
+    return 'object.active_plotter_options.{}'.format(name)
+
+def PomUItem(name, *args, **kw):
+    return UItem(make_pom_name(name), *args, **kw)
+
 class OptionsPane(TraitsDockPane):
     name = 'Plot Options'
     id = 'pychron.processing.options'
     def traits_view(self):
         v = View(
                  HGroup(
-                    Item('plotter_options', show_label=False,
-                         editor=EnumEditor(name='plotter_options_list'),
+                    PomUItem('plotter_options',
+                         editor=EnumEditor(name=make_pom_name('plotter_options_list')),
                          tooltip='List of available plot options'
                          ),
-                    Item('add_options', tooltip='Add new plot options',
-                         show_label=False),
-                    Item('delete_options',
+                    PomUItem('add_options', tooltip='Add new plot options',
+
+                         ),
+                    PomUItem('delete_options',
                          tooltip='Delete current plot options',
                          enabled_when='object.plotter_options.name!="Default"',
-                         show_label=False),
+#                         show_label=False
+                         ),
                         ),
-                   Item('plotter_options', show_label=False,
+                   PomUItem('plotter_options',
+
                         style='custom'),
                  )
         return v

@@ -31,6 +31,7 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.loggable import Loggable
+from src.processing.plotter_options_manager import PlotterOptionsManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -38,8 +39,15 @@ class ProcessingTask(BaseManagerTask, Loggable):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
                              )
+#    active_editor = Instance(IEditor)
     editor_area = Instance(IEditorAreaPane)
-    processor = Instance(Processor)
+    active_plotter_options = Instance(PlotterOptionsManager, ())
+#    processor = Instance(Processor)
+#    active_processor = Property(Instance(Processor),
+#                             depends_on='_active_processor'
+# #                             'editor_area.active_editor'
+#                             )
+#    _active_processor = Instance(Processor)
 
     tool_bars = [ SToolBar(TaskAction(method='new',
                                       tooltip='New file',
@@ -74,7 +82,8 @@ class ProcessingTask(BaseManagerTask, Loggable):
 
     def create_dock_panes(self):
         return [
-                OptionsPane(model=self.processor.options_manager),
+                OptionsPane(model=self)
+#                OptionsPane(model=self.active_editor)
                 ]
 
     #===========================================================================
@@ -101,17 +110,23 @@ class ProcessingTask(BaseManagerTask, Loggable):
         ''' Opens a new empty window
         '''
 
-        ideogram_container = self.processor.new_ideogram()
-        print ideogram_container
         n = len(self.editor_area.editors)
+        processor = Processor(application=self.application)
         editor = ProcessingEditor(
+                                  processor=processor,
                                   name='Figure {:03n}'.format(n + 1),
-                                  component=ideogram_container)
-#        editor = PythonEditor()
+                                  )
+
+
+        po = editor.options_manager.plotter_options
+        ideogram_container = processor.new_ideogram(plotter_options=po)
+        editor.component = ideogram_container
+
         self.editor_area.add_editor(editor)
-        self.processor.active_editor = editor
+#        self.processor.active_editor = editor
         self.editor_area.activate_editor(editor)
-#        self.activated()
+
+        self.active_plotter_options = editor.options_manager
 
     def open(self):
         ''' Shows a dialog to open a file.
@@ -120,14 +135,55 @@ class ProcessingTask(BaseManagerTask, Loggable):
         if dialog.open() == OK:
             self._open_file(dialog.path)
 
+#    @on_trait_change('editor_area:active_editor')
+#    def _update_active_editor(self):
+#        self.processor.active_editor = self.active_editor
+    @on_trait_change('''active_plotter_options:plotter_options:[+, aux_plots:+]
+''')
+    def _options_update(self, name, new):
+#        print name, 'new', new
+        if name == 'initialized':
+            return
+
+        if self.active_editor:
+            po = self.active_plotter_options.plotter_options
+            pro = self.active_editor.processor
+            cont = pro.new_ideogram(plotter_options=po, ans=pro.analyses)
+            self.active_editor.component = cont
+#        if self.analyses:
+
+#            comp = self.new_ideogram(ans=self.analyses)
+#            self.component = comp
+#            if comp:
+#                self.active_editor.component = comp
     @on_trait_change('editor_area:active_editor')
-    def _update_active_editor(self):
-        self.processor.active_editor = self.active_editor
+    def _update_plotter_options(self):
+        if self.active_editor:
+            self.active_plotter_options = self.active_editor.options_manager
 #===============================================================================
 # property get/set
 #===============================================================================
     def _get_active_editor(self):
         if self.editor_area is not None:
             return self.editor_area.active_editor
+
         return None
+
+#    def _processor_default(self):
+#        return Processor(application=self.application)
+
+#    def _get_active_processor(self):
+# #        if self.editor_area is not None:
+# #            print 'get active process 2', self.editor_area.active_editor
+# #            if self.editor_area.active_editor:
+# #                return self.editor_area.active_editor.processor
+# #        active_editor = self.active_editor
+# #        print 'get active process', self.editor_area, self.active_editor
+#        if self._active_processor:
+#            return self._active_processor
+# #        if active_editor:
+# #            return active_editor.processor
+#        else:
+#            return Processor(application=self.application)
+
 #============= EOF =============================================

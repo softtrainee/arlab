@@ -19,32 +19,18 @@ from traits.api import HasTraits
 from traitsui.api import View, Item
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
-from src.processing.processor import Processor
-from src.processing.tasks.processing_task import ProcessingTask
+from src.media_server.tasks.media_server_task import MediaServerTask
+from src.media_server.browser import MediaBrowser
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ProcessingPlugin(BaseTaskPlugin):
-#    def _service_offers_default(self):
-#        process_so = self.service_offer_factory(
-#                                              protocol=Processor,
-#                                              factory=self._processor_factory
-#                                              )
-#        return [process_so]
-
+class MediaServerPlugin(BaseTaskPlugin):
     def _tasks_default(self):
-        return [
-                TaskFactory(id='pychron.processing',
+        return [TaskFactory(id='pychron.media_server',
                             factory=self._task_factory,
-                            name='Processing',
-                            accelerator='Ctrl+P'
-                            ),
+                            name='Media Server'),
                 ]
 
-#    def _processor_factory(self):
-#        return Processor()
-
     def _task_factory(self):
-#        processor = self.application.get_service(Processor)
-        return ProcessingTask(application=self.application)
+        return MediaServerTask(browser=MediaBrowser())
 #============= EOF =============================================

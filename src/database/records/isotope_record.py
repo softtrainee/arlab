@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Property, List, Any, cached_property, \
     Event, Float, Dict
-from traitsui.api import View, Item, HGroup, ListStrEditor
+from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSplit
 
 #============= standard library imports ========================
 from uncertainties import ufloat
@@ -47,6 +47,7 @@ from src.database.isotope_analysis.notes_summary import NotesSummary
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import Isotope, Blank, Background, Baseline
 from src.database.isotope_analysis.error_component_summary import ErrorComponentSummary
+from pyface.timer.do_later import do_later
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 
 class EditableGraph(HasTraits):
@@ -60,13 +61,17 @@ class EditableGraph(HasTraits):
             pass
 
     def traits_view(self):
-        v = View(Item('graph', show_label=False, style='custom',
-                      height=0.75
-                      ),
-
-                 Item('fit_selector', show_label=False, style='custom',
-                      height=0.25
-                      ))
+        v = View(
+                 VSplit(
+                        UItem('graph',
+                              style='custom',
+                             height=0.75
+                             ),
+                         UItem('fit_selector',
+                               style='custom',
+                              height=0.25)
+                    )
+                 )
 
         return v
 
@@ -134,9 +139,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     notes_summary = Property
     error_summary = Property
 
-    categories = List(['summary', 'irradiation',
-                       'error',
-                       'supplemental', 'measurement', 'extraction', 'experiment',
+    categories = List(['summary',
+#                       'irradiation',
+#                       'error',
+#                       'supplemental',
+                       'measurement', 'extraction', 'experiment',
                        'notes',
                        'signal', 'baseline'
                        ])
@@ -265,17 +272,17 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 # viewable
 #===============================================================================
     def opened(self, ui):
-#        def d():
+        def d():
 # #            self.selected = None
-#            self.selected = 'summary'
-
-        self.selected = 'summary'
+            self.selected = 'summary'
+        do_later(d)
+#        self.selected = 'summary'
 #        self.selected = 'notes'
 #        self.selected = 'error'
         super(IsotopeRecord, self).opened(ui)
 
-    def closed(self, isok):
-        self.selected = None
+#    def closed(self, isok):
+#        self.selected = None
 
 
 #===============================================================================
@@ -1043,7 +1050,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 # views
 #===============================================================================
     def traits_view(self):
-        grp = HGroup(
+        grp = HSplit(
                         Item('categories', editor=ListStrEditor(
                                                                 editable=False,
                                                                 operations=[],

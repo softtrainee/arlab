@@ -15,13 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traits.etsconfig.etsconfig import ETSConfig
+from traits.api import HasTraits, Any, on_trait_change
+# from traits.etsconfig.etsconfig import ETSConfig
+from traits.api import Instance
 from traitsui.api import View, Item
 from enable.window import Window
 # from enable.component_editor import _ComponentEditor
 from pyface.tasks.editor import Editor
 from src.graph.graph import Graph
+from src.processing.plotter_options_manager import IdeogramOptionsManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # if ETSConfig.toolkit == 'wx':
@@ -33,6 +35,9 @@ from src.graph.graph import Graph
 
 class ProcessingEditor(Editor):
     component = Any
+    processor = Any
+    options_manager = Instance(IdeogramOptionsManager, ())
+
     _window = Any
     name = 'Untitled'
 #    editor_area = Any
@@ -51,10 +56,21 @@ class ProcessingEditor(Editor):
                                 component=self.component
                               )
         self.control = self._window.control
+    def rebuild(self):
+        self.processor.new_ideogram()
 
     def _component_changed(self):
         if self._window:
             self._window.component = self.component
+
+#    @on_trait_change('processor:component')
+#    def _component_update(self):
+#        print 'procss upda'
+#        if self._window:
+#            self._window.component = self.processor.component
+
+
+
 
 #        k = self.klass(widget)
 #        print k.control

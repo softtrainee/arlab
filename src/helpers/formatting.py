@@ -15,11 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+
 #============= standard library imports ========================
 import math
 #============= local library imports  ==========================
+def calc_percent_error(v, e):
+        try:
+
+            sigpee = '{:0.2f}'.format(abs(e / v * 100))
+        except ZeroDivisionError:
+            sigpee = 'NaN'
+        return sigpee
+
+def errorfmt(v, e):
+        pe = calc_percent_error(v, e)
+        return '{} ({}%)'.format(floatfmt(e), pe)
 
 def floatfmt(f, n=4, s=2, max_width=None):
     if abs(f) < 1e-20:
