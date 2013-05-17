@@ -34,7 +34,7 @@ class AutomatedRunsTable(HasTraits):
     extract_device = Str
     klass = AutomatedRunSpec
     adapter_klass = AutomatedRunSpecAdapter
-
+    
         
     def set_runs(self, runs):
         if runs:

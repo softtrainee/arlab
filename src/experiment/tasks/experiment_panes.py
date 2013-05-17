@@ -64,7 +64,10 @@ def RTItem(name, **kw):
 class AnalysesPane(TraitsTaskPane):
     def traits_view(self):
 
-        v = View(RTItem('automated_runs',
+        v = View(
+                 VGroup(
+                        HGroup(spring, Item('refresh', show_label=False)),
+                        RTItem('automated_runs',
                                show_label=False,
                                editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
                                             operations=['delete',
@@ -73,7 +76,7 @@ class AnalysesPane(TraitsTaskPane):
                                                         ],
                                             editable=True,
                                             selected='selected',
-#                                             rearranged='rearranged',
+                                            rearranged='rearranged',
                                             pasted='pasted',
 #                                             copy_cache='copy_cache',
 #                                             update='update_needed',
@@ -83,6 +86,7 @@ class AnalysesPane(TraitsTaskPane):
                                             scroll_to_bottom=False
                                             )
                       )
+                    )
                  )
         return v
 
@@ -220,9 +224,13 @@ class ExperimentFactoryPane(TraitsDockPane):
 #                                     Label('Step Heat Template'),
                                     ),
                              HGroup(
-                                 RFItem('template',
+                                 Item('template',
                                        label='Step Heat Template',
-                                       editor=EnumEditor(name=make_rf_name('templates'))),
+#                                         editor=EnumEditor(name=make_rf_name('templates'))
+                                        editor=EnumEditor(name='templates'
+#                                                           make_rf_name('templates')
+                                                          )
+                                       ),
                                  RFItem('edit_template',
                                         show_label=False, 
                                       editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
