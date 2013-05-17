@@ -29,9 +29,10 @@ from src.ui.progress_dialog import myProgressDialog
 
 class IsotopeDatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
-    def __init__(self, *args, **kw):
+    def __init__(self, bind=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
-        self.bind_preferences()
+        if bind:
+            self.bind_preferences()
 
     def load(self):
         return self.populate_default_tables()
@@ -59,23 +60,25 @@ class IsotopeDatabaseManager(Manager):
             self.db = self._db_factory()
 
         prefid = 'pychron.experiment'
+        try:
+            bind_preference(self, 'username', '{}.username'.format(prefid))
+    #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
 
-        bind_preference(self, 'username', '{}.username'.format(prefid))
-#        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+    #        if self.repo_kind == 'FTP':
+    #            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+    #            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+    #            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+    #            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
-#        if self.repo_kind == 'FTP':
-#            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-#            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-#            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-#            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
+            bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
+            if self.db.kind == 'mysql':
+                bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
+                bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
+                bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
 
-        bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
-        if self.db.kind == 'mysql':
-            bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
-            bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
-            bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
-
-        bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
+            bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
+        except AttributeError:
+            pass
 
         if not self.db.connect():
             self.warning_dialog('Not Connected to Database {}'.format(self.db.url))

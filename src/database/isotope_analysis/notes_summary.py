@@ -32,15 +32,16 @@ class NotesTabularAdapter(TabularAdapter):
     user_width = Int(50)
     create_date_width = Int(120)
 
-    def get_font(self, obj, trait, row):
-        import wx
-        s = 9
-        f = wx.FONTFAMILY_DEFAULT
-        st = wx.FONTSTYLE_NORMAL
-#        w = wx.FONTWEIGHT_BOLD
-        w = wx.FONTWEIGHT_NORMAL
-        name = 'Bitstream Vera Sans Mono'
-        return wx.Font(s, f, st, w, False, name)
+#    def get_font(self, obj, trait, row):
+#        import wx
+#        s = 9
+#        f = wx.FONTFAMILY_DEFAULT
+#        st = wx.FONTSTYLE_NORMAL
+# #        w = wx.FONTWEIGHT_BOLD
+#        w = wx.FONTWEIGHT_NORMAL
+#        name = 'Bitstream Vera Sans Mono'
+#        return  fonttools()
+#        return wx.Font(s, f, st, w, False, name)
 
     def _get_user_text(self):
         u = self.item.user

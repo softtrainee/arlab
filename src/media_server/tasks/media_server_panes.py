@@ -15,34 +15,28 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import HasTraits, File, List, Str, Event
+from traitsui.api import View, Item, UItem, FileEditor
+from pyface.tasks.traits_task_pane import TraitsTaskPane
+from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
-from src.database.isotope_analysis.summary import Summary
 
-class ErrorComponentSummary(Summary):
-    def _build_summary(self, *args, **kw):
-        record = self.record
+class ViewPane(TraitsTaskPane):
+    def traits_view(self):
+        v = View(UItem('viewer', style='custom'))
+        return v
 
-        keys = record.isotope_keys[:]
-        keys += ('j', 'ic_factor')
-        vs = []
-        mx = -1e20
-        for key in keys:
-            v = self.record.get_error_component(key)
-            vs.append(v)
-            if v > mx:
-                max_key = key
-                mx = v
-        for key, v in zip(keys, vs):
-            if key == max_key:
-                self._print_value(key, v, int(v / 100.*50), color='red')
-            else:
-                self._print_value(key, v, int(v / 100.*50))
+class TreePane(TraitsDockPane):
+    name = 'Images'
+    id = 'pychron.media_server.images'
+#    activated = Event
 
-    def _print_value(self, key, value, magnitude, **kw):
-        fmt = '{:<15s}= {:<10s}|{}'.format(key, self.floatfmt(value, n=3), '*' * magnitude)
-
-#        disp = self.display
-#        disp.add_text(fmt, **kw)
-
+    # The list of wildcard filters for filenames.
+#    filters = List(['*.png'])
+#    selected_file = File(os.path.expanduser('~'))
+#    def traits_view(self):
+#        v = View(UItem('finder', style='custom'))
+#        return v
 #============= EOF =============================================

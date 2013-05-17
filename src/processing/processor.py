@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, on_trait_change, Any
+from traits.api import HasTraits, List, Instance, on_trait_change, Any, DelegatesTo
 from traitsui.api import View, Item
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.graph.graph import Graph
@@ -27,18 +27,21 @@ from src.processing.search.selector_manager import SelectorManager
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
     count = 0
-    options_manager = Instance(IdeogramOptionsManager, ())
     selector_manager = Instance(SelectorManager)
     active_editor = Any
     analyses = List
-    @on_trait_change('''options_manager:plotter_options:[+, aux_plots:+]
-''')
-    def _options_update(self, name, new):
-        if self.active_editor:
-            comp = self.new_ideogram(ans=self.analyses)
-            if comp:
+    component = Any
+    _plotter_options = Any
 
-                self.active_editor.component = comp
+#    @on_trait_change('''options_manager:plotter_options:[+, aux_plots:+]
+# ''')
+#    def _options_update(self, name, new):
+#        print name, new, len(self.analyses), self
+#        if self.analyses:
+#            comp = self.new_ideogram(ans=self.analyses)
+# #            self.component = comp
+#            if comp:
+#                self.active_editor.component = comp
 
     def _gather_data(self):
         d = self.selector_manager
@@ -61,7 +64,7 @@ class Processor(IsotopeDatabaseManager):
                                     if not isinstance(ri, Marker)]
                 return ans
 
-    def new_ideogram(self, ans=None):
+    def new_ideogram(self, plotter_options=None, ans=None):
         '''
             return a plotcontainer
         '''
@@ -84,7 +87,7 @@ class Processor(IsotopeDatabaseManager):
                      mean_calculation_kind=mean_calculation_kind
                      )
 
-        plotter_options = self.options_manager.plotter_options
+#        plotter_options = self.options_manager.plotter_options
 #        ps = self._build_aux_plots(plotter_options.get_aux_plots())
         options = dict(
 #                       aux_plots=ps,
@@ -102,9 +105,14 @@ class Processor(IsotopeDatabaseManager):
                        display_mean_text=display_mean_text,
                        display_mean_indicator=display_mean_indicator,
                        )
+
         if ans is None:
             ans = self._gather_data()
 
+        if plotter_options is None:
+            plotter_options = self._plotter_options
+
+        self._plotter_options = plotter_options
         if ans:
             self.analyses = ans
             gideo = p.build(ans, options=options,

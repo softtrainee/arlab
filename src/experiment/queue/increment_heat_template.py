@@ -45,21 +45,30 @@ class IncrementalHeatStep(HasTraits):
     cleanup = Float
     value = Float
     units = Enum('watts', 'temp', 'percent')
-    is_ok = Property
+#    is_ok = Property
 
 
     def make_row(self):
         return self.value, self.units, self.duration, self.cleanup
 
-    def make_dict(self):
+    def make_dict(self, gdur, gcleanup):
+        dur = self.duration
+        if not dur:
+            dur = gdur
+
+        cleanup = self.cleanup
+        if not cleanup:
+            cleanup = gcleanup
+
         return dict(extract_value=self.value, extract_units=self.units,
-                    duration=self.duration, cleanup=self.cleanup)
+                    duration=dur,
+                    cleanup=cleanup)
 
     def to_string(self):
         return ','.join(map(str, self.make_row()))
 
-    def _get_is_ok(self):
-        return self.duration and self.cleanup and self.value
+#    def _get_is_ok(self):
+#        return self.value and (self.duration or self.cleanup)
 
 
 class IncrementalHeatTemplate(Viewable):
