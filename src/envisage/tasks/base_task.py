@@ -251,8 +251,12 @@ class BaseManagerTask(BaseTask):
         if dialog.open() == OK:
             return dialog.path
 
-    def save_file_dialog(self):
-        dialog = FileDialog(parent=self.window.control, action='save as')
+    def save_file_dialog(self, **kw):
+        if 'default_directory' not in kw:
+            kw['default_directory'] = self.default_directory
+        dialog = FileDialog(parent=self.window.control, action='save as',
+                            **kw
+                            )
         if dialog.open() == OK:
             return dialog.path
 

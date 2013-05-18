@@ -78,8 +78,24 @@ class ExperimentEditorTask(EditorTask):
                                                   )
                         self._open_editor(editor)
                         return True
+    def merge(self):
+#        eqs = [ei.queue for ei in self.editor_area.editors]
+
+        eqs = [self.active_editor.queue]
+        self.active_editor.merge_id = 1
+        for i, ei in enumerate(self.editor_area.editors):
+            if not ei == self.active_editor:
+                eqs.append(ei.queue)
+                ei.merge_id = i + 2
+
+        path = self.save_file_dialog()
+        if path:
+            self.active_editor.save(path, eqs)
+            for ei in self.editor_area.editors:
+                ei.path = path
 
     def new(self):
+        self.manager.new_experiment_queue()
         editor = ExperimentEditor(queue=self.manager.experiment_queue,
                                    )
         self._open_editor(editor)
@@ -103,6 +119,8 @@ class ExperimentEditorTask(EditorTask):
         self.active_editor.save(path)
 #        eq = self.active_editor.queue
 #        self.manager.save_experiment_queues(path, [eq])
-
+    def _active_editor_changed(self):
+        if self.active_editor:
+            self.manager.experiment_queue = self.active_editor.queue
 
 #============= EOF =============================================

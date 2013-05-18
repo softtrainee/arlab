@@ -149,7 +149,12 @@ class SaveAsExperimentQueueAction(ExperimentAction):
         manager = self._get_experimentor(event)
         manager.save_as_experiment_queues()
 
-
+class MergeQueuesAction(ExperimentAction):
+    name = 'Merge'
+    def perform(self, event):
+        if event.task.id == self.task_id:
+            event.task.merge()
+#            manager = self._get_experimentor(event)
 #===============================================================================
 # database actions
 #===============================================================================
