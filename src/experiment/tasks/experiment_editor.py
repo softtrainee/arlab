@@ -80,9 +80,12 @@ class ExperimentEditor(Editor, Loggable):
 #===========================================================================
 #
 #===========================================================================
-    def new_queue(self, txt):
+    def new_queue(self, txt=None):
         queue = self.queue_factory()
-        if queue.load(txt):
+        if txt:
+            if queue.load(txt):
+                self.queue = queue
+        else:
             self.queue = queue
 
     def queue_factory(self):

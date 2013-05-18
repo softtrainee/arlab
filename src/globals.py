@@ -67,6 +67,8 @@ class Globals(object):
     load_valve_states = True
     load_soft_locks = True
 
+    debug = False
+
     def build(self, ip):
 
         for attr, func in [('use_ipc', str_to_bool),

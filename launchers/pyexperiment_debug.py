@@ -31,7 +31,8 @@ from helpers import build_version
     
     use debug keyword instead 
 '''
-build_version(version_id, debug=True)
+DEBUG = True
+build_version(version_id, debug=DEBUG)
 
 def main():
     '''
@@ -66,7 +67,7 @@ def main():
 #===============================================================================
     from src.globals import globalv
     globalv._test = False
-
+    globalv.debug = DEBUG
 
     launch(app)
     os._exit(0)

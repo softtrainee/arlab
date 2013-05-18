@@ -134,6 +134,7 @@ class ExperimentEditorTask(EditorTask):
 
     def _save_file(self, path):
         self.active_editor.save(path)
+        self.manager.test_queues()
         self.manager.path = path
 
     def _active_editor_changed(self):
