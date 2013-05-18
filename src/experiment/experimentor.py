@@ -60,7 +60,12 @@ class Experimentor(Experimentable):
     selected = Any
     pasted = Event
     refresh = Button
+
+    #===========================================================================
+    # task events
+    #===========================================================================
     execute_event = Event
+    activate_editor_event = Event
 
     def test_queues(self, qs):
         for qi in qs:
@@ -409,6 +414,10 @@ class Experimentor(Experimentable):
     def _refresh_fired(self):
         self._update(all_info=True, stats=True)
 
+    @on_trait_change('executor:experiment_queue')
+    def _activate_editor(self, eq):
+        self.activate_editor_event = id(eq)
+
     @on_trait_change('executor:execute_button')
     def _execute(self):
 #        '''
@@ -416,8 +425,8 @@ class Experimentor(Experimentable):
 #            the queues are then passed back to _execute_queues()
 #        '''
         self.execute_event = True
-#        queues = self.experiment_queues
 
+#        queues = self.experiment_queues
 #        text = self.text
 #        text_hash = self.text_hash
 #        self.execute_queues(queues, text, text_hash)
@@ -439,10 +448,9 @@ class Experimentor(Experimentable):
 #    def _update_value(self, name, value):
 #        setattr(self.experiment_factory, name, value)
 
-    def _experiment_queue_changed(self):
-        eq = self.experiment_queue
+    def _experiment_queue_changed(self, eq):
         if eq:
-            self.experiment_factory.queue = self.experiment_queue
+            self.experiment_factory.queue = eq
             qf = self.experiment_factory.queue_factory
             for a in ('username', 'mass_spectrometer', 'extract_device', 'username',
                       'delay_before_analyses', 'delay_between_analyses'

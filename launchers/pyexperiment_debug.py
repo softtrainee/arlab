@@ -24,11 +24,14 @@ import os
 version_id = '_experiment'
 from helpers import build_version
 '''
+    obsolete:
     set_path=True inserts the pychron source directory into the PYTHONPATH
     necessary if you are launching from commandline or eclipse(?). 
-    Use false (default) if your are launching from a standalone bundle. 
+    Use false (default) if your are launching from a standalone bundle.
+    
+    use debug keyword instead 
 '''
-build_version(version_id, set_path=True)
+build_version(version_id, debug=True)
 
 def main():
     '''

@@ -32,7 +32,6 @@ class Experimentable(IsotopeDatabaseManager):
     path = Unicode
     update_needed = Event
     add_queues_flag = Event
-    add_queues_count = Int
 
     def _get_all_automated_runs(self):
         return [ai for ei in self.experiment_queues
@@ -48,8 +47,7 @@ class Experimentable(IsotopeDatabaseManager):
         if nl < ol:
             self.experiment_queues = self.experiment_queues[:nl]
         elif nl > ol:
-            self.add_queues_flag = True
-            self.add_queues_count = nl - ol
+            self.add_queues_flag = nl - ol
 
         for ei, ti in zip(self.experiment_queues, ts):
 #                ei._cached_runs = None

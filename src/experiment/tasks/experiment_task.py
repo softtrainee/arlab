@@ -145,10 +145,19 @@ class ExperimentEditorTask(EditorTask):
         self.manager.experiment_queues = [ei.queue for ei in new]
 
     @on_trait_change('manager:add_queues_flag')
-    def _add_queues(self):
+    def _add_queues(self, new):
         self.debug('add_queues_flag trigger n={}'.format(self.manager.add_queues_count))
-        for _i in range(self.manager.add_queues_count):
+        for _i in range(new):
             self.new()
+
+    @on_trait_change('manager:activate_editor_event')
+    def _set_active_editor(self, new):
+        self.debug('activating editor {}'.format(new))
+        for ei in self.editor_area.editors:
+            if id(ei.queue) == new:
+                self.debug('editor {} activated'.format(new))
+                self.editor_area.activate_editor(ei)
+                break
 
     @on_trait_change('manager:execute_event')
     def _execute(self):
@@ -157,12 +166,13 @@ class ExperimentEditorTask(EditorTask):
 #        '''
         p = self.active_editor.path
         group = self.active_editor.group
+        min_idx = self.active_editor.merge_id
 #        print p
         text = open(p, 'r').read()
         hash_val = hashlib.sha1(text).hexdigest()
         qs = [ei.queue
                 for ei in self.editor_area.editors
-                    if ei.group == group]
+                    if ei.group == group and ei.merge_id >= min_idx]
 
         self.manager.execute_queues(qs, text, hash_val)
 #============= EOF =============================================

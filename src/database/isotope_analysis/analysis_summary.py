@@ -31,7 +31,7 @@ class SignalAdapter(TabularAdapter):
                ('Isotope', 'isotope'),
                ('Detector', 'detector'),
                ('Signal (fA)', 'signal_value'),
-               ('{} 1s'.format(PLUSMINUS), 'signal_error'),
+               (u'{} 1s'.format(PLUSMINUS), 'signal_error'),
                ('Error Comp. %', 'error_component')
                ]
 
@@ -56,7 +56,7 @@ class RatiosAdapter(TabularAdapter):
     columns = [
                ('Ratio', 'name'),
                ('Value', 'value'),
-               ('{}1s'.format(PLUSMINUS), 'error'),
+               (u'{}1s'.format(PLUSMINUS), 'error'),
 #               ('*40Ar %', 'rad40_error'),
 
                ]
@@ -86,17 +86,17 @@ class RawAdapter(TabularAdapter):
                ('Isotope', 'isotope'),
                ('Detector', 'detector'),
                ('Raw (fA)', 'raw_value'),
-               ('{}1s'.format(PLUSMINUS), 'raw_error'),
-               ('{}%'.format(PLUSMINUS), 'raw_error_percent'),
+               (u'{}1s'.format(PLUSMINUS), 'raw_error'),
+               (u'{}%'.format(PLUSMINUS), 'raw_error_percent'),
                ('Fit', 'fit'),
 
                ('Baseline (fA)', 'baseline_value'),
-               ('{} 1s'.format(PLUSMINUS), 'baseline_error'),
-               ('{}%'.format(PLUSMINUS), 'baseline_error_percent'),
+               (u'{} 1s'.format(PLUSMINUS), 'baseline_error'),
+               (u'{}%'.format(PLUSMINUS), 'baseline_error_percent'),
 
                ('Blank (fA)', 'blank_value'),
-               ('{} 1s'.format(PLUSMINUS), 'blank_error'),
-               ('{}%'.format(PLUSMINUS), 'blank_error_percent'),
+               (u'{} 1s'.format(PLUSMINUS), 'blank_error'),
+               (u'{}%'.format(PLUSMINUS), 'blank_error_percent'),
 
                ]
 
