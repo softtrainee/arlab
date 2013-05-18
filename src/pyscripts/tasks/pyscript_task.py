@@ -137,7 +137,7 @@ class PyScriptTask(EditorTask):
         self.editor_area.add_editor(editor)
         self.editor_area.activate_editor(editor)
 
-    def _save_as_file(self, path):
+    def _save_file(self, path):
         pass
 
 

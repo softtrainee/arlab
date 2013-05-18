@@ -24,14 +24,12 @@ from pyface.tasks.api import IEditor, IEditorAreaPane
 from src.loggable import Loggable
 from src.envisage.tasks.base_task import BaseManagerTask
 from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
-from pyface.file_dialog import FileDialog
-from pyface.constant import OK
+
 
 class EditorTask(BaseManagerTask, Loggable):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
                              )
-#    active_editor = Instance(IEditor)
     editor_area = Instance(IEditorAreaPane)
     default_directory = Unicode
     def open(self):
@@ -43,24 +41,25 @@ class EditorTask(BaseManagerTask, Loggable):
             return True
 
     def save(self):
-        pass
+        if self.active_editor:
+            if self.active_editor.path:
+                self._save_file(self.active_editor.path)
 
     def new(self):
         pass
 
     def save_as(self):
-        path = self.open_file_dialog()
+        path = self.save_file_dialog()
         if path:
-            self._save_as_file(path)
+            self._save_file(path)
+            self.active_editor.path = path
 
-#    def open_file_dialog(self):
-#        dialog = FileDialog(parent=self.window.control)
-#        if dialog.open() == OK:
-#            self._open_file(dialog.path)
-    def _save_as_file(self, path):
+    def _save_file(self, path):
         pass
+
     def _open_file(self, path):
         pass
+
     def create_central_pane(self):
         self.editor_area = SplitEditorAreaPane()
         return self.editor_area

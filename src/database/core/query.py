@@ -328,7 +328,7 @@ class Query(HasTraits):
                        width=10),
                 Item('comparator', editor=EnumEditor(name='comparisons')),
                 Item('criterion'),
-                Item('criterion', width= -20, editor=CheckListEditor(name='criteria')),
+                Item('criterion', width= -30, editor=CheckListEditor(name='criteria')),
                 Item('add'),
                 Spring(springy=False,
                        width=50, visible_when='not removable'),

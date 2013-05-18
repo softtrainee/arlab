@@ -18,7 +18,7 @@
 from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event, \
     on_trait_change, Str, Instance
 from traitsui.api import View, Item, \
-    HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup
+    HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup, VSplit
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -276,7 +276,13 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             si.window_x = self.wx
             si.window_y = self.wy
             def do(si, sid):
-                self.debug('{}'.format(si))
+#                app = self.db.application
+#                from pyface.tasks.task_window_layout import TaskWindowLayout
+#                win = app.create_window(TaskWindowLayout('pychron.recall'))
+#                win.active_task.record = si
+#                print win.active_task.record
+#                win.open()
+#                self.debug('{}'.format(si))
                 info = si.edit_traits()
                 self._open_window(sid, info)
 
@@ -414,13 +420,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                )
 
         button_grp = self._get_button_grp()
-        qgrp = Item('queries', show_label=False,
-                    style='custom',
-                    height=0.25,
-                    editor=ListEditor(mutable=False,
-                                      style='custom',
-                                      editor=InstanceEditor()),
-                     defined_when='style in ["normal","panel"]')
         v = View(
 #                 HGroup(Item('multi_select_graph',
 #                             defined_when='multi_graphable'
@@ -428,15 +427,22 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                             spring, Item('limit')),
                 VGroup(
                        CustomLabel('dbstring', color='red'),
-                       Item('records',
-                          style='custom',
-                          editor=editor,
-                          show_label=False,
-                          height=0.75,
-                          width=600,
-                          ),
-
-                          qgrp,
+                       VSplit(
+                              Item('records',
+                                   style='custom',
+                                   editor=editor,
+                                   show_label=False,
+                                   height=0.75,
+                                   width=600,
+                                   ),
+                              Item('queries', show_label=False,
+                                   style='custom',
+                                   height=0.25,
+                                   editor=ListEditor(mutable=False,
+                                                  style='custom',
+                                                  editor=InstanceEditor()),
+                                 defined_when='style in ["normal","panel"]')
+                              ),
                           button_grp,
                     ),
                  resizable=True,

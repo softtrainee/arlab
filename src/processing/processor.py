@@ -23,11 +23,13 @@ from src.processing.plotter_options_manager import IdeogramOptionsManager
 from src.database.records.isotope_record import IsotopeRecord
 from src.processing.analysis import Analysis, Marker
 from src.processing.search.selector_manager import SelectorManager
+from src.processing.search.search_manager import SearchManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
     count = 0
     selector_manager = Instance(SelectorManager)
+    search_manager = Instance(SearchManager)
     active_editor = Any
     analyses = List
     component = Any
@@ -42,6 +44,12 @@ class Processor(IsotopeDatabaseManager):
 # #            self.component = comp
 #            if comp:
 #                self.active_editor.component = comp
+    def find(self):
+        if self.db.connect():
+            ps = self.search_manager
+            ps.selected = None
+            ps.selector.load_last(n=20)
+            self.open_view(ps)
 
     def _gather_data(self):
         d = self.selector_manager
@@ -57,7 +65,6 @@ class Processor(IsotopeDatabaseManager):
                     a = Analysis(isotope_record=rec)
                     a.load_isotopes()
                     return a
-
 
         #        self.db.selector.load_last(n=10)
                 ans = [factory(ri) for ri in d.selected_records
@@ -128,6 +135,13 @@ class Processor(IsotopeDatabaseManager):
     def _selector_manager_default(self):
         db = self.db
         d = SelectorManager(db=db)
+        return d
+
+    def _search_manager_default(self):
+        db = self.db
+        d = SearchManager(db=db)
+        if not db.connected:
+            db.connect()
         return d
 
 #============= EOF =============================================

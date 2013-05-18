@@ -103,6 +103,7 @@ class RawAdapter(TabularAdapter):
 
     isotope_width = Int(50)
     detector_width = Int(60)
+    fit_width = Int(40)
 
     raw_value_width = Int(VALUE_WIDTH)
     raw_error_width = Int(ERROR_WIDTH)
@@ -249,8 +250,11 @@ class AnalysisSummary(Summary):
     signals = Property(List, depends_on='record')
     ratios = Property(List, depends_on='record')
     def _make_ratio(self, name, n, d, scalar=1):
-        rr = (n / d) * scalar
-        v, e = rr.nominal_value, rr.std_dev
+        try:
+            rr = (n / d) * scalar
+            v, e = rr.nominal_value, rr.std_dev
+        except ZeroDivisionError:
+            v, e = 0, 0
         r = Ratio(
                   name=name,
                   value=v,

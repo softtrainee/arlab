@@ -21,12 +21,15 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseManagerTask
-from src.experiment.tasks.experiment_panes import AnalysesPane, \
-    ExperimentFactoryPane, StatsPane, ControlsPane, ConsolePane, ExplanationPane
+from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
+     ControlsPane, ConsolePane, ExplanationPane
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from src.envisage.tasks.editor_task import EditorTask
+from src.experiment.tasks.experiment_editor import ExperimentEditor
+from src.paths import paths
 
-class ExperimentEditorTask(BaseManagerTask):
-
+class ExperimentEditorTask(EditorTask):
+    default_directory = paths.experiment_dir
     def _menu_bar_factory(self, menus=None):
         return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
 
@@ -44,8 +47,8 @@ class ExperimentEditorTask(BaseManagerTask):
     def prepare_destroy(self):
         self.manager.stop_file_listener()
 
-    def create_central_pane(self):
-        return AnalysesPane(model=self.manager)
+#    def create_central_pane(self):
+#        return AnalysesPane(model=self.manager)
 
     def create_dock_panes(self):
         return [
@@ -60,23 +63,46 @@ class ExperimentEditorTask(BaseManagerTask):
 # generic actions
 #===============================================================================
     def open(self):
-        path = self.open_file_dialog()
+        import os
+        path = os.path.join(paths.experiment_dir, 'aaa.txt')
+#        path = self.open_file_dialog()
         if path:
             manager = self.manager
             if manager.verify_database_connection(inform=True):
 #        if manager.verify_credentials():
                 if manager.load():
-                    if manager.load_experiment_queue(saveable=True):
-                        self._open_editor()
+                    if manager.load_experiment_queue(path=path, saveable=True):
+                        editor = ExperimentEditor(
+                                                  queue=manager.experiment_queue,
+                                                  path=path
+                                                  )
+                        self._open_editor(editor)
+                        return True
 
-    def _open_editor(self):
-        application = self.window.application
-#        application = event.task.window.application
-        for wi in application.windows:
-            if wi.active_task.id == self.task_id:
-                wi.activate()
-                break
-        else:
-            win = application.create_window(TaskWindowLayout(self.task_id))
-            win.open()
+    def new(self):
+        editor = ExperimentEditor(queue=self.manager.experiment_queue,
+                                   )
+        self._open_editor(editor)
+
+    def _open_editor(self, editor):
+#        application = self.window.application
+# #        application = event.task.window.application
+#        for wi in application.windows:
+#            print wi.active_task.id, self.id
+#            if wi.active_task.id == self.id:
+#                wi.activate()
+#                break
+#        else:
+#            win = application.create_window(TaskWindowLayout(self.id))
+#            win.open()
+
+        self.editor_area.add_editor(editor)
+        self.editor_area.activate_editor(editor)
+
+    def _save_file(self, path):
+        self.active_editor.save(path)
+#        eq = self.active_editor.queue
+#        self.manager.save_experiment_queues(path, [eq])
+
+
 #============= EOF =============================================

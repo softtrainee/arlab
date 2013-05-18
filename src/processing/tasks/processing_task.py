@@ -21,7 +21,7 @@ from traitsui.api import View, Item, ListEditor
 # from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
 from src.processing.tasks.processing_panes import ProcessorPane, OptionsPane
 from src.processing.processor import Processor
-from pyface.tasks.action.schema import SToolBar
+from pyface.tasks.action.schema import SToolBar, SMenu, SMenuBar
 from pyface.tasks.action.task_action import TaskAction
 from pyface.image_resource import ImageResource
 from src.paths import paths
@@ -51,7 +51,23 @@ class ProcessingTask(EditorTask):
 #                             )
 #    _active_processor = Instance(Processor)
 
-    tool_bars = [ SToolBar(TaskAction(method='new',
+#    menu_bar = SMenuBar(
+#                        SMenu(
+#                              TaskAction(name='Find', method='find',
+#                                         accelerator='Ctrl+f'),
+# #                              TaskAction(name='Open...', method='open',
+# #                                         accelerator='Ctrl+O'),
+# #                              TaskAction(name='Save', method='save',
+# #                                         accelerator='Ctrl+S'),
+# #                              id='File', name='&File'
+#                              name='Processing'
+#                              ),
+# #                        SMenu(DockPaneToggleGroup(),
+# #                              id='View', name='&View')
+#                        )
+
+
+    tool_bars = [ SToolBar(TaskAction(method='new_ideogram',
                                       tooltip='New file',
                                       image=ImageResource(
                                                           'document_new',
@@ -108,10 +124,7 @@ class ProcessingTask(EditorTask):
                     gc.save()
                     self.info('saving figure to {}'.format(p))
 
-    def new(self):
-        ''' Opens a new empty window
-        '''
-
+    def new_ideogram(self):
         n = len(self.editor_area.editors)
         processor = Processor(application=self.application)
         editor = ProcessingEditor(

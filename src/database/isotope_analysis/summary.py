@@ -36,7 +36,7 @@ class TextCell(HasTraits):
     color = 'black'
     bold = False
     def __init__(self, text, *args, **kw):
-        self.text = text
+        self.text = str(text)
         super(TextCell, self).__init__(**kw)
 #        for k in kw:
 #            setattr(self, k, kw[k])
@@ -66,6 +66,7 @@ class SummaryAdapter(HasTraits):
 
     def make_tables(self, value):
         return self._make_tables(value)
+
     def _make_tables(self, value):
         raise NotImplementedError
 #      def _item_generator(self, value):
