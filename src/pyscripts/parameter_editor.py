@@ -15,20 +15,48 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, List, String, Float, Bool, on_trait_change
+from traits.api import HasTraits, Int, List, String, Float, Bool, on_trait_change, Str
 from traitsui.api import View, Item, VGroup, Group, HGroup, Label, Spring, \
-    UItem, ListEditor, InstanceEditor, spring
+    UItem, ListEditor, InstanceEditor, spring, EnumEditor
 #============= standard library imports ========================
 import re
 from src.helpers.filetools import str_to_bool
 from src.pyscripts.hop import Hop
 from src.loggable import Loggable
-from src.constants import NULL_STR
+from src.constants import NULL_STR, FIT_TYPES
+import os
+from src.paths import paths
+from ConfigParser import ConfigParser
 #============= local library imports  ==========================
+class Detector(HasTraits):
+    fit = Str
+    use = Bool
+    label = Str
+    ref = Bool
+    isotope = Str
+    isotopes = [NULL_STR, 'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+    def traits_view(self):
+        v = View(HGroup(
+                        UItem('use'),
+                        UItem('label',
+                              width= -30,
+                              style='readonly'),
+                        UItem('isotope',
+                             editor=EnumEditor(name='isotopes'),
+                             enabled_when='use'),
+                        UItem('fit',
+                            enabled_when='use',
+                            editor=EnumEditor(values=[NULL_STR] + FIT_TYPES))
+                        )
+                 )
+        return v
+
+    def _use_changed(self):
+        if self.use and not self.fit:
+            self.fit = 'linear'
 
 class ParameterEditor(Loggable):
     body = String
-
 
 
 STR_FMT = "{}= '{}'"
@@ -147,7 +175,12 @@ class MeasurementParameterEditor(ParameterEditor):
             if len(v) == 1:
                 v = v * len(self.active_detectors)
 
-            for vi, di in zip(v, self.active_detectors):
+            for vi, di in zip(v, [di for di in self.active_detectors if di.use]):
+
+                if vi.endswith('SD'):
+                    vi = FIT_TYPES[3]
+                elif vi.endswith('SEM'):
+                    vi = FIT_TYPES[4]
                 di.fit = vi
 
         attrs = (
@@ -259,6 +292,7 @@ class MeasurementParameterEditor(ParameterEditor):
 # modification
 #===============================================================================
     def _modify_body(self, name, new):
+
         if not self.editor or self.suppress_update:
             return
 
@@ -268,12 +302,21 @@ class MeasurementParameterEditor(ParameterEditor):
         modified = False
 
         body = self.editor.getText()
-        for li in body.split('\n'):
+        for i, li in enumerate(body.split('\n')):
+
+            if li.startswith('def main('):
+                main_idx = i
+
             if regex.match(li.strip()):
                 ostr.append(nv)
                 modified = True
             else:
                 ostr.append(li)
+
+#        print name, new, modified
+
+        if not modified:
+            ostr.insert(main_idx, nv)
 
         body = '\n'.join(ostr)
         self.editor.setText(body)
@@ -336,34 +379,60 @@ use_peak_hop, ncycles, baseline_ncycles
                 self._modify_body('multicollect_isotope', obj.isotope)
             return
 
-        s = ''
-        if name == 'use':
-            if not new and obj.isotope != NULL_STR:
-                fd = next((a for a in self.active_detectors if a.use))
-                fd.isotope = obj.isotope
+#        s = ''
+#        if name == 'use':
+#            if not new and obj.isotope != NULL_STR:
+#                fd = next((a for a in self.active_detectors if a.use), None)
+#                fd.isotope = obj.isotope
+#
+#            attr = 'label'
+#            param = 'active_detectors'
+#        else:
+#            attr = 'fit'
+#            param = 'fits'
+#
+#        new = []
+#        for di in dets:
+#            if di.use:
+#                new.append((
+#                            getattr(di, 'label'),
+#                            getattr(di, 'fit')
+#                            ))
 
-            attr = 'label'
-            param = 'active_detectors'
-        else:
-            attr = 'fit'
-            param = 'fits'
+        ad, fs = zip(*[(di.label, di.fit)
+                       for di in dets if di.use])
+        fs = list(fs)
+        for i, fi in enumerate(fs):
+            if fi.endswith('SEM'):
+                fs[i] = 'average_SEM'
+            elif fi.endswith('SD'):
+                fs[i] = 'average_SD'
 
-        new = []
-        for di in dets:
-            if di.use:
-                new.append(getattr(di, attr))
+        for new, name in ((ad, 'active_detectors'),
+                          (fs, 'fits')):
+            if len(new) == 1:
+                s = "'{}',".format(new[0])
+            else:
+                s = ','.join(map("'{}'".format, new))
 
-        if len(new) == 1:
-            s = "'{}',".format(new[0])
-        else:
-#            nn = []
-#            for di, _label in self.detectors:
-#                if di in new:
-#                    nn.append(di)
-            s = ','.join(map("'{}'".format, new))
+                self._modify_body(name, '({})'.format(s))
 
+#===============================================================================
+# defaults
+#===============================================================================
+    def _active_detectors_default(self):
+        detectors = []
+        path = os.path.join(paths.spectrometer_dir, 'detectors.cfg')
+        if os.path.isfile(path):
+            cfg = ConfigParser()
+            cfg.read(path)
+            for di in cfg.sections():
+                det = Detector(label=di)
+                detectors.append(det)
 
-        self._modify_body(param, '({})'.format(s))
+#        [Detector(label=di) for di in ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']]
+        return detectors
+
 #===============================================================================
 #
 #===============================================================================

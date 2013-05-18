@@ -51,6 +51,15 @@ class LabnumberEntryTask(BaseManagerTask):
                 ImporterPane(model=self.importer)
                 ]
 
+    #===========================================================================
+    # GenericActon Handlers
+    #===========================================================================
+    def save_as(self):
+        self.save()
+
+    def save(self):
+        self.manager.save()
+
 
 
 #============= EOF =============================================

@@ -26,7 +26,7 @@ class OpenPyScriptAction(Action):
     '''
     description = 'Open pyscript'
     name = 'Script'
-#    accelerator = 'Shift+Ctrl+O'
+    accelerator = 'Ctrl+O'
 
     def perform(self, event):
         if event.task.id == 'pychron.pyscript':

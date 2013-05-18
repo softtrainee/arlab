@@ -25,6 +25,7 @@ from src.loggable import Loggable
 from pyface.file_dialog import FileDialog
 from src.paths import paths
 from pyface.constant import OK
+from src.experiment.queue.experiment_queue import ExperimentQueue
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -36,6 +37,7 @@ class ExperimentEditor(Editor, Loggable):
     name = Property(Unicode, depends_on='path')
     tooltip = Property(Unicode, depends_on='path')
     merge_id = Int
+    group = Int
 
     def create(self, parent):
         self.control = self._create_control(parent)
@@ -77,6 +79,17 @@ class ExperimentEditor(Editor, Loggable):
 #===========================================================================
 #
 #===========================================================================
+    def new_queue(self, txt):
+        queue = self.queue_factory()
+        if queue.load(txt):
+            self.queue = queue
+
+    def queue_factory(self):
+        return ExperimentQueue()
+
+#                             db=self.db,
+#                             application=self.application,
+#                             **kw)
 
     def save(self, path, queues=None):
         if queues is None:
@@ -110,6 +123,24 @@ class ExperimentEditor(Editor, Loggable):
                     fp.write('*' * 80)
 
         return p
+
+
+#===============================================================================
+# handlers
+#===============================================================================
+#    def _path_changed(self):
+#        '''
+#            parse the file at path
+#        '''
+#        if os.path.isfile(self.path):
+#            with open(self.path) as fp:
+#                txt = fp.read()
+#                queues = self._parse_text(txt)
+#                for qi in queues:
+#                    qu=self.new_queue()
+#                    exp.load(text):
+
+
 #===============================================================================
 # property get/set
 #===============================================================================

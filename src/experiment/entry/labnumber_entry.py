@@ -71,7 +71,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
     _update_sample_table = Event
 
-    save_button = Button('Save')
+#    save_button = Button('Save')
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
     edit_level_button = Button('Edit')
@@ -84,6 +84,9 @@ class LabnumberEntry(IsotopeDatabaseManager):
     def __init__(self, *args, **kw):
         super(LabnumberEntry, self).__init__(*args, **kw)
         self.populate_default_tables()
+
+    def save(self):
+        self._save_to_db()
 
     def populate_default_tables(self):
         db = self.db
@@ -304,8 +307,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
             else:
                 self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
-    def _save_button_fired(self):
-        self._save_to_db()
+#    def _save_button_fired(self):
+#        self._save_to_db()
 
     def _freeze_button_fired(self):
         for si in self.selected:

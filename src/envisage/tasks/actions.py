@@ -39,19 +39,19 @@ class DefaultAction(Action):
             win = application.create_window(TaskWindowLayout(task_id))
             win.open()
 
-class GenericNewAction(DefaultAction):
-    name = 'New'
-    accelerator = 'Ctrl+N'
-    def perform(self, event):
-        task = event.task
-        if hasattr(task, 'new'):
-            task.new()
-        else:
-            manager = self._get_experimentor(event)
-            if manager.verify_database_connection(inform=True):
-    #        if manager.verify_credentials():
-                if manager.load():
-                    self._open_editor(event, 'pychron.experiment')
+# class GenericNewAction(DefaultAction):
+#    name = 'New'
+#    accelerator = 'Ctrl+N'
+#    def perform(self, event):
+#        task = event.task
+#        if hasattr(task, 'new'):
+#            task.new()
+#        else:
+#            manager = self._get_experimentor(event)
+#            if manager.verify_database_connection(inform=True):
+#    #        if manager.verify_credentials():
+#                if manager.load():
+#                    self._open_editor(event, 'pychron.experiment')
 
 # class GenericOpenAction(DefaultAction):
 #    name = 'Open...'

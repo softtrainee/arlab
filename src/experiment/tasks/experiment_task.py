@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, on_trait_change
 from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
 #============= standard library imports ========================
@@ -27,9 +27,11 @@ from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.paths import paths
+import hashlib
 
 class ExperimentEditorTask(EditorTask):
     default_directory = paths.experiment_dir
+    group_count = 0
     def _menu_bar_factory(self, menus=None):
         return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
 
@@ -69,24 +71,51 @@ class ExperimentEditorTask(EditorTask):
         if path:
             manager = self.manager
             if manager.verify_database_connection(inform=True):
-#        if manager.verify_credentials():
                 if manager.load():
-                    if manager.load_experiment_queue(path=path, saveable=True):
-                        editor = ExperimentEditor(
-                                                  queue=manager.experiment_queue,
-                                                  path=path
-                                                  )
-                        self._open_editor(editor)
-                        return True
-    def merge(self):
-#        eqs = [ei.queue for ei in self.editor_area.editors]
+                    with open(path, 'r') as fp:
+                        txt = fp.read()
 
+                        qtexts = self._split_text(txt)
+                        for qi in qtexts:
+                            editor = ExperimentEditor(path=path)
+                            editor.new_queue(qi)
+                            self._open_editor(editor)
+
+                    qs = [ei.queue
+                        for ei in self.editor_area.editors]
+
+                    manager.test_queues(qs)
+                    manager.update_info()
+                    manager.path = path
+                    manager.start_file_listener(path)
+
+            return True
+
+    def _split_text(self, txt):
+        ts = []
+        tis = []
+        a = ''
+        for l in txt.split('\n'):
+            a += l
+            if l.startswith('*' * 80):
+                ts.append(''.join(tis))
+                tis = []
+                continue
+
+            tis.append(l)
+        ts.append('\n'.join(tis))
+        return ts
+
+    def merge(self):
         eqs = [self.active_editor.queue]
         self.active_editor.merge_id = 1
+        self.active_editor.group = self.group_count
+        self.group_count += 1
         for i, ei in enumerate(self.editor_area.editors):
             if not ei == self.active_editor:
                 eqs.append(ei.queue)
                 ei.merge_id = i + 2
+                ei.group = self.group_count
 
         path = self.save_file_dialog()
         if path:
@@ -95,32 +124,45 @@ class ExperimentEditorTask(EditorTask):
                 ei.path = path
 
     def new(self):
-        self.manager.new_experiment_queue()
-        editor = ExperimentEditor(queue=self.manager.experiment_queue,
-                                   )
+        editor = ExperimentEditor()
+        editor.new_queue()
         self._open_editor(editor)
 
     def _open_editor(self, editor):
-#        application = self.window.application
-# #        application = event.task.window.application
-#        for wi in application.windows:
-#            print wi.active_task.id, self.id
-#            if wi.active_task.id == self.id:
-#                wi.activate()
-#                break
-#        else:
-#            win = application.create_window(TaskWindowLayout(self.id))
-#            win.open()
-
         self.editor_area.add_editor(editor)
         self.editor_area.activate_editor(editor)
 
     def _save_file(self, path):
         self.active_editor.save(path)
-#        eq = self.active_editor.queue
-#        self.manager.save_experiment_queues(path, [eq])
+        self.manager.path = path
+
     def _active_editor_changed(self):
         if self.active_editor:
             self.manager.experiment_queue = self.active_editor.queue
 
+    @on_trait_change('editor_area:editors[]')
+    def _update_editors(self, new):
+        self.manager.experiment_queues = [ei.queue for ei in new]
+
+    @on_trait_change('manager:add_queues_flag')
+    def _add_queues(self):
+        self.debug('add_queues_flag trigger n={}'.format(self.manager.add_queues_count))
+        for _i in range(self.manager.add_queues_count):
+            self.new()
+
+    @on_trait_change('manager:execute_event')
+    def _execute(self):
+#        '''
+#            queues need to be saved before execute
+#        '''
+        p = self.active_editor.path
+        group = self.active_editor.group
+#        print p
+        text = open(p, 'r').read()
+        hash_val = hashlib.sha1(text).hexdigest()
+        qs = [ei.queue
+                for ei in self.editor_area.editors
+                    if ei.group == group]
+
+        self.manager.execute_queues(qs, text, hash_val)
 #============= EOF =============================================
