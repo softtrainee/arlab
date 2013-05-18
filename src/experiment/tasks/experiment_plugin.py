@@ -32,7 +32,7 @@ from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
     ExperimentPreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, LabnumberEntryAction, SaveExperimentQueueAction, \
-    SaveAsExperimentQueueAction, SignalCalculatorAction
+    SaveAsExperimentQueueAction, SignalCalculatorAction, MergeQueuesAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.experiment.experimentor import Experimentor
@@ -75,6 +75,10 @@ class ExperimentPlugin(BaseTaskPlugin):
 
                                        SchemaAddition(id='labnumber_entry',
                                                       factory=LabnumberEntryAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='merge_queues',
+                                                      factory=MergeQueuesAction,
                                                       path='MenuBar/Edit'
                                                       ),
                                        SchemaAddition(id='signal_calculator',

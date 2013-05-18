@@ -15,13 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property
+from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int
 from traitsui.api import View, Item, UI, UItem
 from pyface.tasks.api import Editor
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 import os
 from src.loggable import Loggable
+from pyface.file_dialog import FileDialog
+from src.paths import paths
+from pyface.constant import OK
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -32,6 +35,7 @@ class ExperimentEditor(Editor, Loggable):
     dirty = Bool(False)
     name = Property(Unicode, depends_on='path')
     tooltip = Property(Unicode, depends_on='path')
+    merge_id = Int
 
     def create(self, parent):
         self.control = self._create_control(parent)
@@ -73,10 +77,13 @@ class ExperimentEditor(Editor, Loggable):
 #===========================================================================
 #
 #===========================================================================
-    def save(self, path):
-        eqs = [self.queue]
-        if self._validate_experiment_queues(eqs):
-            self._dump_experiment_queues(path, eqs)
+
+    def save(self, path, queues=None):
+        if queues is None:
+            queues = [self.queue]
+        if self._validate_experiment_queues(queues):
+            self._dump_experiment_queues(path, queues)
+        self.path = path
 
     def _validate_experiment_queues(self, eqs):
         for exp in eqs:
@@ -113,6 +120,8 @@ class ExperimentEditor(Editor, Loggable):
         if self.path:
             name = os.path.basename(self.path)
             name, _ = os.path.splitext(name)
+            if self.merge_id:
+                name = '{}-{:02n}'.format(name, self.merge_id)
         else:
             name = 'Untitled'
         return name

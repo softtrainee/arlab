@@ -131,8 +131,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     suppress_update = False
 
-    clear_selection=Event
-    
+    clear_selection = Event
+
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -334,7 +334,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def _new_run(self, excludes=None, **kw):
 
-        #need to set the labnumber now because analysis_type depends on it
+        # need to set the labnumber now because analysis_type depends on it
         arv = self._spec_klass(labnumber=self.labnumber, **kw)
 
         if excludes is None:
@@ -344,9 +344,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes.extend(('position', 'extract_value', 'extract_units',
                              'cleanup', 'duration',
                              'pattern'))
-        elif arv.analysis_type=='blank_unknown':
-            excludes.extend(('position', 'extract_value', 'extract_units','pattern'))
-            
+        elif arv.analysis_type == 'blank_unknown':
+            excludes.extend(('position', 'extract_value', 'extract_units', 'pattern'))
+
         self._set_run_values(arv, excludes=excludes)
         return arv
 
@@ -373,7 +373,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
             setattr(arv, attr, getattr(self, attr))
             setattr(arv, '_prev_{}'.format(attr), getattr(self, attr))
-        
+
         if self.user_defined_aliquot:
             arv.user_defined_aliquot = True
             arv.aliquot = int(self.aliquot)
@@ -384,7 +384,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 continue
 
             s = getattr(self, name)
-            print s, s.cb, s.name
             if s.cb:
                 setattr(arv, name, s.name)
 
@@ -626,7 +625,7 @@ post_equilibration_script:name
 
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
-            self.clear_selection=True
+            self.clear_selection = True
         else:
             self._frequency_enabled = False
 
@@ -716,7 +715,7 @@ post_equilibration_script:name
         self.template = os.path.splitext(self._template.name)[0]
         self.update_templates_needed = True
         del self._template
-        
+
     def _edit_template_fired(self):
         temp = self._new_template()
         temp.on_trait_change(self._template_closed, 'close_event')
@@ -779,13 +778,13 @@ post_equilibration_script:name
                     for pi in self.selected_level.positions]
 
         project = self.project
-        if project and project!=NULL_STR:
+        if project and project != NULL_STR:
             project = self.db.get_project(project)
             if project is not None:
                 lns = [str(ln.identifier)
                     for s in project.samples
                         for ln in s.labnumbers]
-                
+
         return [NULL_STR] + sorted(lns)
 
     def _get_position(self):
