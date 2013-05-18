@@ -340,12 +340,14 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if excludes is None:
             excludes = []
 
-        if arv.analysis_type not in ('unknown', 'blank_unknown', 'degas'):
-            excludes.extend(('position', 'extract_value', 'extract_units',
-                             'cleanup', 'duration',
-                             'pattern'))
-        elif arv.analysis_type == 'blank_unknown':
+        if arv.analysis_type in ('blank_unknown', 'pause'):
             excludes.extend(('position', 'extract_value', 'extract_units', 'pattern'))
+            if arv.analysis_type == 'pause':
+                excludes.extend(('cleanup',))
+        elif arv.analysis_type not in ('unknown', 'degas'):
+            excludes.extend(('position', 'extract_value', 'extract_units', 'pattern',
+                             'cleanup', 'duration',
+                             ))
 
         self._set_run_values(arv, excludes=excludes)
         return arv
@@ -701,13 +703,19 @@ post_equilibration_script:name
                 _load_scripts(old, new)
 
             elif special:
-                if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
-                    db.add_labnumber(labnumber)
-                    db.commit()
-                    self.aliquot = 1
-                    _load_scripts(old, new)
+                if not (labnumber[:2] in ('pa', 'dg')):
+                    '''
+                        don't add pause or degas to database
+                    '''
+                    if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
+                        db.add_labnumber(labnumber)
+                        db.commit()
+                        self.aliquot = 1
+                        _load_scripts(old, new)
+                    else:
+                        self.labnumber = ''
                 else:
-                    self.labnumber = ''
+                    _load_scripts(old, new)
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 

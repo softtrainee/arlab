@@ -55,8 +55,10 @@ class PychronApplication(BaseTasksApplication):
     def _get_resource_root(self):
 
         path = __file__
-        while os.path.basename(path) != 'Resources':
-            path = os.path.dirname(path)
+        from src.globals import globalv
+        if not globalv.debug:
+            while os.path.basename(path) != 'Resources':
+                path = os.path.dirname(path)
         return path
 
     def _about_dialog_default(self):

@@ -29,6 +29,8 @@ def build_version(ver, debug=False):
 
     if not debug:
         add_eggs(root)
+    else:
+        build_sys_path(ver, root)
 
     # can now use src.
 
@@ -40,13 +42,12 @@ def build_version(ver, debug=False):
     # build globals
     build_globals()
 
-# def build_sys_path(ver, root):
-#
-#    merc = os.path.join(os.path.expanduser('~'),
-#                        'Programming',
-#                        'mercurial')
-#    src = os.path.join(merc, 'pychron{}'.format(ver))
-#    sys.path.insert(0, src)
+def build_sys_path(ver, root):
+    merc = os.path.join(os.path.expanduser('~'),
+                       'Programming',
+                       'mercurial')
+    src = os.path.join(merc, 'pychron{}'.format(ver))
+    sys.path.insert(0, src)
 
 def add_eggs(root):
     egg_path = os.path.join(root, 'pychron.pth')

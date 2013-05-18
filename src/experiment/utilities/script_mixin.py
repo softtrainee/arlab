@@ -128,10 +128,10 @@ class ScriptMixin(HasTraits):
                     sc = e
                 elif sk == 'post_equilibration':
                     sc = 'pump_{}'.format(e)
-            elif key =='dg':
+            elif key == 'dg':
                 e = self.extract_device.split(' ')[1].lower()
-                sc='{}_{}'.format(e,sc)
-                
+                sc = '{}_{}'.format(e, sc)
+
             script = getattr(self, '{}_script'.format(sk))
             if not sc in script.names:
                 sc = NULL_STR

@@ -29,7 +29,8 @@ from helpers import build_version
     necessary if you are launching from commandline or eclipse(?). 
     Use false (default) if your are launching from a standalone bundle. 
 '''
-build_version(version_id, debug=True)
+DEBUG = True
+build_version(version_id, debug=DEBUG)
 
 def main():
     '''
@@ -62,7 +63,7 @@ def main():
 #===============================================================================
     from src.globals import globalv
     globalv._test = False
-
+    globalv.debug = DEBUG
 
     launch(app)
     os._exit(0)

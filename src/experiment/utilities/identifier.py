@@ -20,7 +20,8 @@
 from src.constants import NULL_STR
 
 ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
-                      bg='Background', u='Unknown', c='Cocktail', a='Air'
+                      bg='Background', u='Unknown', c='Cocktail', a='Air',
+                      pa='Pause'
                       )
 
 # "labnumbers" where extract group is disabled
@@ -28,11 +29,14 @@ NON_EXTRACTABLE = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                       bg='Background', c='Cocktail', a='Air'
                       )
 
-SPECIAL_NAMES = [NULL_STR, 'Air', 'Cocktail', 'Blank Unknown', 'Blank Air', 'Blank Cocktail', 'Background']
+SPECIAL_NAMES = [NULL_STR, 'Air', 'Cocktail', 'Blank Unknown',
+                 'Blank Air', 'Blank Cocktail', 'Background', 'Pause']
+
 SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
                        blank_air='ba',
                        blank_cocktail='bc',
                        blank_unknown='bu',
+                       pause='pa'
                        )
 #        sn = ['Blank_air', 'Blank_cocktail', 'Blank_unknown',
 #              'Background', 'Air', 'Cocktail']
@@ -117,16 +121,16 @@ def convert_identifier(identifier):
         
     '''
     if '-' in identifier:
-        ln=identifier.split('-')[0]
+        ln = identifier.split('-')[0]
         try:
-            ln=int(ln)
-            identifier=str(ln)
+            ln = int(ln)
+            identifier = str(ln)
         except ValueError:
             return identifier
-        
+
 #        identifier=identifier.split('-')[0]
-        
-    
+
+
 #    if identifier in ANALYSIS_MAPPING:
 #        sname = ANALYSIS_MAPPING[identifier]
 #        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
@@ -136,10 +140,10 @@ def convert_identifier(identifier):
 def get_analysis_type(idn):
 
     idn = idn.lower()
-    
+
 #     if '-' in idn:
 #         idn=idn.split('-')[0]
-#     
+#
     # check for Bg before B
     if idn.startswith('bg'):
         return 'background'
@@ -155,6 +159,8 @@ def get_analysis_type(idn):
         return 'cocktail'
     elif idn.startswith('dg'):
         return 'degas'
+    elif idn.startswith('pa'):
+        return 'pause'
     else:
         return 'unknown'
 

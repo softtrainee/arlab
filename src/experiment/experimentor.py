@@ -67,7 +67,10 @@ class Experimentor(Experimentable):
     execute_event = Event
     activate_editor_event = Event
 
-    def test_queues(self, qs):
+    def test_queues(self, qs=None):
+        if qs is None:
+            qs = self.experiment_queues
+
         for qi in qs:
             qi.test_runs()
         self.executor.executable = all([ei.executable for ei in qs])
