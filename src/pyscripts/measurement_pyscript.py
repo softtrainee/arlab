@@ -434,7 +434,7 @@ class MeasurementPyScript(ValvePyScript):
             det = self._detectors
             for k, v in new.iteritems():
                 det[k].signal = v
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
 
 # if __name__ == '__main__':

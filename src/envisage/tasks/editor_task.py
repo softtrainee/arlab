@@ -31,19 +31,28 @@ class EditorTask(BaseManagerTask, Loggable):
                              depends_on='editor_area.active_editor'
                              )
     editor_area = Instance(IEditorAreaPane)
-    default_directory = Unicode
+
     def open(self):
         ''' Shows a dialog to open a file.
         '''
-        path = self.open_file_dialog(default_directory=self.default_directory)
+        path = self.open_file_dialog()
         if path:
             self._open_file(path)
             return True
 
     def save(self):
+        '''
+            if the active_editor doesnt have a path e.g not yet saved 
+            do a save as
+        '''
         if self.active_editor:
             if self.active_editor.path:
-                self._save_file(self.active_editor.path)
+                path = self.active_editor.path
+            else:
+                path = self.save_file_dialog()
+
+            if path:
+                self._save_file(path)
 
     def new(self):
         pass

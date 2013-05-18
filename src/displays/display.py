@@ -20,6 +20,7 @@ from traitsui.api import View, Item, UItem
 from src.lasers.scanner import ApplicationController
 from src.ui.display_editor import DisplayEditor
 from src.deprecate import deprecated
+from src.ui.gui import invoke_in_main_thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.viewable import Viewable
@@ -27,15 +28,15 @@ from src.deprecate import deprecated
 class DisplayModel(HasTraits):
 #     messages = List
 #     max_messages = Int(300)
-    message=Tuple
-    clear_event=Event
-    def add_text(self, txt, color, force=False,**kw):
+    message = Tuple
+    clear_event = Event
+    def add_text(self, txt, color, force=False, **kw):
         '''
             if txt,color same as previous txt,color than message only added if force=True
         '''
 #         ms = self.messages[-self.max_messages:]
 #         ms.append((txt, color))
-        self.message = (txt,color, force)
+        self.message = (txt, color, force)
 
 class DisplayController(ApplicationController):
     x = Int
@@ -47,14 +48,14 @@ class DisplayController(ApplicationController):
     default_color = Color('black')
     default_size = Int
     bg_color = Color
-    font_name=Str
-    
+    font_name = Str
+
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
                                                 *args, **kw)
-    
+
     def clear(self, **kw):
-        self.model.clear_event=True
+        self.model.clear_event = True
 #         self.model.message=('%%clear%%',)
 #         self.model.messages = []
 
@@ -85,6 +86,9 @@ class DisplayController(ApplicationController):
         if self.info:
             if self.info.ui:
                 self.info.ui.dispose()
+
+    def show(self):
+        invoke_in_main_thread(self.edit_traits)
 
 class ErrorDisplay(DisplayController):
     pass

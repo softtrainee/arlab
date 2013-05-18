@@ -15,21 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event
+from traits.api import HasTraits, List, Any, Event, Unicode, Int
 from traitsui.api import View, Item
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 import hashlib
+import os
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class Experimentable(IsotopeDatabaseManager):
     experiment_queues = List
     experiment_queue = Any
-    _text = None
-    _experiment_hash = None
-    
-    update_needed=Event
-    
+
+    text = None
+    text_hash = None
+    path = Unicode
+    update_needed = Event
+    add_queues_flag = Event
+    add_queues_count = Int
+
     def _get_all_automated_runs(self):
         return [ai for ei in self.experiment_queues
                     for ai in ei.automated_runs
@@ -37,28 +41,36 @@ class Experimentable(IsotopeDatabaseManager):
 
     def _reload_from_disk(self):
 #        if not self._alive:
-        ts = self._parse_experiment_file(self.experiment_queue.path)
+        ts = self._parse_experiment_file(self.path)
+
+        nl = len(ts)
+        ol = len(self.experiment_queues)
+        if nl < ol:
+            self.experiment_queues = self.experiment_queues[:nl]
+        elif nl > ol:
+            self.add_queues_flag = True
+            self.add_queues_count = nl - ol
+
         for ei, ti in zip(self.experiment_queues, ts):
 #                ei._cached_runs = None
             ei.load(ti)
-
-        #both executor and experimentor are subclasses of experimentable
+        # both executor and experimentor are subclasses of experimentable
         # executor is also and attributre of experimentor
         # experimentor reimplements _update, but executor does not
         # so executor triggers and update with update_needed
-        
-        self.update_needed=True
+
+        self.update_needed = True
         self._update(all_info=True)
-        
+
     def _update(self, *args, **kw):
         pass
-    
+
     def _check_for_file_mods(self):
-        path = self.experiment_queue.path
+        path = self.path
         if path:
             with open(path, 'r') as f:
                 diskhash = hashlib.sha1(f.read()).hexdigest()
-            return self._experiment_hash != diskhash
+            return self.text_hash != diskhash
 
     def _parse_experiment_file(self, path):
         with open(path, 'r') as f:
@@ -74,7 +86,15 @@ class Experimentable(IsotopeDatabaseManager):
 
                 tis.append(l)
             ts.append(''.join(tis))
-            self._experiment_hash = hashlib.sha1(a).hexdigest()
-            self._text = a
+            self.text_hash = hashlib.sha1(a).hexdigest()
+            self.text = a
             return ts
+
+    def _path_changed(self):
+        if os.path.isfile(self.path):
+            with open(self.path, 'r') as fp:
+                a = fp.read()
+                self.text_hash = hashlib.sha1(a).hexdigest()
+                self.text = a
+
 #============= EOF =============================================

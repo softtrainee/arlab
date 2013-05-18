@@ -21,11 +21,10 @@ from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
 #============= standard library imports ========================
-from functools import partial
 #============= local library imports  ==========================
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
-from src.experiment.set_selector import SetSelector
+
 from src.experiment.factory import ExperimentFactory
 from src.constants import ALPHAS
 from src.experiment.stats import StatsGroup
@@ -33,8 +32,8 @@ from src.experiment.executor import ExperimentExecutor
 from src.paths import paths
 from src.experiment.utilities.file_listener import FileListener
 from src.experiment.experimentable import Experimentable
-from src.experiment.utilities.identifier import convert_labnumber, \
-    convert_identifier
+from src.experiment.utilities.identifier import convert_identifier
+from src.deprecate import deprecated
 
 
 class Experimentor(Experimentable):
@@ -42,7 +41,6 @@ class Experimentor(Experimentable):
     experiment_queue = Instance(ExperimentQueue)
     executor = Instance(ExperimentExecutor)
 
-    set_selector = Instance(SetSelector)
     stats = Instance(StatsGroup, ())
 
     title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
@@ -62,11 +60,16 @@ class Experimentor(Experimentable):
     selected = Any
     pasted = Event
     refresh = Button
+    execute_event = Event
 
+    def test_queues(self, qs):
+        for qi in qs:
+            qi.test_runs()
+        self.executor.executable = all([ei.executable for ei in qs])
 
-    def test_runs(self):
-        for ei in self.experiment_queues:
-            ei.test_runs()
+#    def test_runs(self):
+#        for ei in self.experiment_queues:
+#            ei.test_runs()
 
     def test_connections(self):
         if not self.db:
@@ -83,7 +86,7 @@ class Experimentor(Experimentable):
         return True
 
     def new_experiment_queue(self):
-        self.experiment_queues = []
+#        self.experiment_queues = []
 
         exp = self._experiment_queue_factory()
 #        arun = exp.automated_run_factory()
@@ -94,10 +97,10 @@ class Experimentor(Experimentable):
 
 #         self.experiment_queue = None
 #         self.experiment_queues = []
-
+    @deprecated
     def load_experiment_queue(self, path=None, edit=True, saveable=False):
 
-#        self.bind_preferences()
+ #        self.bind_preferences()
         # make sure we have a database connection
         if not self.test_connections():
             return
@@ -106,12 +109,13 @@ class Experimentor(Experimentable):
             dlg = FileDialog(default_directory=paths.experiment_dir)
             if dlg.open():
                 path = dlg.path
-#            path = self.open_file_dialog(default_directory=paths.experiment_dir)
+ #            path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
         if path:
 
-            self.experiment_queue = None
-            self.experiment_queues = []
+ #            self.experiment_queue = None
+ #            self.experiment_queues = []
+
             # parse the file into individual experiment sets
             ts = self._parse_experiment_file(path)
             ws = []
@@ -121,10 +125,10 @@ class Experimentor(Experimentable):
                 exp._warned_labnumbers = ws
                 if exp.load(text):
                     self.experiment_queues.append(exp)
-#
-#                    if edit:
-#                        exp.automated_run = exp.automated_runs[-1].clone_traits()
-#                        exp.set_script_names()
+ #
+ #                    if edit:
+ #                        exp.automated_run = exp.automated_runs[-1].clone_traits()
+ #                        exp.set_script_names()
                 ws = exp._warned_labnumbers
 
             self._update(all_info=True, stats=False)
@@ -132,10 +136,6 @@ class Experimentor(Experimentable):
                 self.test_runs()
                 self.experiment_queue = self.experiment_queues[0]
                 self.start_file_listener(self.experiment_queue.path)
-#                def func():
-#                self.set_selector.selected_index = -2
-#                self.set_selector.selected_index = 0
-
 
                 self._load_experiment_queue_hook()
                 self.save_enabled = True
@@ -176,7 +176,8 @@ class Experimentor(Experimentable):
 #        if self._validate_experiment_queues(queues):
 #            self._dump_experiment_queues(path, queues)
 # #            self.save_enabled = False
-
+    def update_info(self):
+        self._update(all_info=True, stats=True)
 #===============================================================================
 # info update
 #===============================================================================
@@ -187,10 +188,9 @@ class Experimentor(Experimentable):
             self.debug('updating stats')
             self.stats.calculate()
 
-        print len(self.experiment_queues)
+#        print len(self.experiment_queues)
         ans = self._get_all_automated_runs()
         # update the aliquots
-
 
         self._modify_aliquots(ans)
 
@@ -353,13 +353,13 @@ class Experimentor(Experimentable):
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 
-    def _load_experiment_queue_hook(self):
-
-        for ei in self.experiment_queues:
-            self.debug('ei executable={}'.format(ei.executable))
-        self.executor.executable = all([ei.executable
-                                        for ei in self.experiment_queues])
-        self.debug('setting executor executable={}'.format(self.executor.executable))
+#    def _load_experiment_queue_hook(self):
+#
+#        for ei in self.experiment_queues:
+#            self.debug('ei executable={}'.format(ei.executable))
+#        self.executor.executable = all([ei.executable
+#                                        for ei in self.experiment_queues])
+#        self.debug('setting executor executable={}'.format(self.executor.executable))
 
 #    def _validate_experiment_queues(self, eq):
 #        for exp in eq:
@@ -386,14 +386,7 @@ class Experimentor(Experimentable):
 #                    fp.write('*' * 80)
 #
 #        return p
-#===============================================================================
-# handlers
-#===============================================================================
-    def _refresh_fired(self):
-        self._update(all_info=True, stats=True)
-
-    @on_trait_change('executor:execute_button')
-    def _execute_fired(self):
+    def execute_queues(self, queues, text, text_hash):
         if self.executor.isAlive():
             self.debug('cancel execution')
             self.executor.cancel()
@@ -402,13 +395,32 @@ class Experimentor(Experimentable):
             self.stop_file_listener()
 
             self.debug('setup executor')
-            self.executor.trait_set(experiment_queues=self.experiment_queues,
-                                    experiment_queue=self.experiment_queues[0],
-                                    _experiment_hash=self._experiment_hash,
-                                    _text=self._text,
+            self.executor.trait_set(experiment_queues=queues,
+                                    experiment_queue=queues[0],
+                                    text=text,
+                                    text_hash=text_hash,
                                     stats=self.stats
                                     )
             self.executor.execute()
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _refresh_fired(self):
+        self._update(all_info=True, stats=True)
+
+    @on_trait_change('executor:execute_button')
+    def _execute(self):
+#        '''
+#            trigger the experiment task to assemble current queues.
+#            the queues are then passed back to _execute_queues()
+#        '''
+        self.execute_event = True
+#        queues = self.experiment_queues
+
+#        text = self.text
+#        text_hash = self.text_hash
+#        self.execute_queues(queues, text, text_hash)
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):
@@ -458,24 +470,20 @@ class Experimentor(Experimentable):
 #===============================================================================
 # defaults
 #===============================================================================
-    def _experiment_queue_factory(self, add=True, **kw):
-        exp = ExperimentQueue(
-                             db=self.db,
-                             application=self.application,
-                             **kw)
-        exp.on_trait_change(self._update, 'update_needed')
-        if add:
-            self.experiment_queues.append(exp)
-#        exp.on_trait_change(self._update_dirty, 'dirty')
-        return exp
+#    def _experiment_queue_factory(self, add=True, **kw):
+#        exp = ExperimentQueue(
+#                             db=self.db,
+#                             application=self.application,
+#                             **kw)
+#        exp.on_trait_change(self._update, 'update_needed')
+#        if add:
+#            self.experiment_queues.append(exp)
+# #        exp.on_trait_change(self._update_dirty, 'dirty')
+#        return exp
 
-    def _experiment_queue_default(self):
-        return self._experiment_queue_factory()
-#    def _set_selector_default(self):
-#        s = SetSelector(experiment_manager=self,
-#                        addable=True
-#                        )
-#        return s
+#    def _experiment_queue_default(self):
+#        return self._experiment_queue_factory()
+
     def _executor_default(self):
         e = ExperimentExecutor(db=self.db,
                                application=self.application

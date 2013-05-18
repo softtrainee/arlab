@@ -46,7 +46,7 @@ from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 # from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.factory import AutomatedRunFactory
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
@@ -141,7 +141,7 @@ class ExperimentExecutor(Experimentable):
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
 
     def experiment_blob(self):
-        return '{}\n{}'.format(self.experiment_queue.path, self._text)
+        return '{}\n{}'.format(self.experiment_queue.path, self.text)
 
 #    def closed(self, ok):
 #        self.selected = None
@@ -175,7 +175,7 @@ class ExperimentExecutor(Experimentable):
             name = os.path.basename(name)
 
         self._execute_procedure(name)
-        
+
     def cancel(self):
         if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
                                      title='Confirm Cancel'
@@ -185,7 +185,7 @@ class ExperimentExecutor(Experimentable):
                 arun.cancel()
             self._alive = False
             self.stats.stop_timer()
-            
+
     def execute(self):
         self.debug('starting execution')
                     # check for blank before starting the thread
@@ -223,7 +223,7 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     return
             return True
-        
+
 #===============================================================================
 # stats
 #===============================================================================
@@ -639,7 +639,7 @@ class ExperimentExecutor(Experimentable):
                         return self._get_blank(an.analysis_type)
                     else:
                         return
-                    
+
         return True
 
     def _do_automated_run(self, arun):

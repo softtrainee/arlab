@@ -243,6 +243,7 @@ class BaseTask(Task):
 
 class BaseManagerTask(BaseTask):
     default_directory = Unicode
+    manager = Any
     def open_file_dialog(self, **kw):
         if 'default_directory' not in kw:
             kw['default_directory'] = self.default_directory

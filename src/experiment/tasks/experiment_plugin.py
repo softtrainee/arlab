@@ -20,7 +20,7 @@ from traitsui.api import View, Item
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 # from src.experiment.manager import ExperimentManager
 # from src.experiment.editor import ExperimentEditor
-from src.pyscripts.manager import PyScriptManager
+# from src.pyscripts.manager import PyScriptManager
 from src.experiment.signal_calculator import SignalCalculator
 # from envisage.import_manager import ImportManager
 from src.experiment.image_browser import ImageBrowser
@@ -113,10 +113,10 @@ class ExperimentPlugin(BaseTaskPlugin):
                           factory=self._labnumber_entry_factory
                           )
 
-        so_pyscript_manager = self.service_offer_factory(
-                          protocol=PyScriptManager,
-                          factory=PyScriptManager
-                          )
+#        so_pyscript_manager = self.service_offer_factory(
+#                          protocol=PyScriptManager,
+#                          factory=PyScriptManager
+#                          )
 
         so_signal_calculator = self.service_offer_factory(
                           protocol=SignalCalculator,
@@ -142,7 +142,8 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so_exp_editor]
-        return [so_exp, so_pyscript_manager,
+        return [so_exp,
+#                so_pyscript_manager,
                 so_signal_calculator, so_import_manager,
                 so_image_browser, so_export_manager,
                 so_lab_entry
@@ -194,8 +195,8 @@ class ExperimentPlugin(BaseTaskPlugin):
 #    def _editor_factory(self, *args, **kw):
 #        return ExperimentEditor(application=self.application)
     def _labnumber_entry_factory(self):
-        exp = self.application.get_service(Experimentor)
-        ln = LabnumberEntry(db=exp.db)
+#        exp = self.application.get_service(Experimentor)
+        ln = LabnumberEntry()
         return ln
 
     def _signal_calculator_factory(self, *args, **kw):
