@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Instance, List, Property, \
-    on_trait_change, Bool, Any,Event, Button
+    on_trait_change, Bool, Any, Event, Button
 from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
@@ -33,7 +33,7 @@ from src.experiment.executor import ExperimentExecutor
 from src.paths import paths
 from src.experiment.utilities.file_listener import FileListener
 from src.experiment.experimentable import Experimentable
-from src.experiment.utilities.identifier import convert_labnumber,\
+from src.experiment.utilities.identifier import convert_labnumber, \
     convert_identifier
 
 
@@ -59,11 +59,11 @@ class Experimentor(Experimentable):
     _last_ver_time = None
     _ver_timeout = 10
 
-    selected=Any
-    pasted=Event
-    refresh=Button
-    
-           
+    selected = Any
+    pasted = Event
+    refresh = Button
+
+
     def test_runs(self):
         for ei in self.experiment_queues:
             ei.test_runs()
@@ -81,7 +81,7 @@ class Experimentor(Experimentable):
 #            return
 
         return True
-    
+
     def new_experiment_queue(self):
         self.experiment_queues = []
 
@@ -91,10 +91,10 @@ class Experimentor(Experimentable):
 #        exp.automated_runs.append(arun)
         self.experiment_queue = exp
 #         self.experiment_queues.append(exp)
-    
+
 #         self.experiment_queue = None
 #         self.experiment_queues = []
-        
+
     def load_experiment_queue(self, path=None, edit=True, saveable=False):
 
 #        self.bind_preferences()
@@ -154,18 +154,28 @@ class Experimentor(Experimentable):
         if self.filelistener:
             self.filelistener.stop()
 
-    def save_as_experiment_queues(self):
-        # test sets before saving
-        if self._validate_experiment_queues():
-            p = self.save_file_dialog(default_directory=paths.experiment_dir)
-            if p:
-                p = self._dump_experiment_queues(p)
-                self.save_enabled = True
-
-    def save_experiment_queues(self):
-        if self._validate_experiment_queues():
-            self._dump_experiment_queues(self.experiment_queue.path)
-            self.save_enabled = False
+#    def save_as_experiment_queues(self, path=None, queues=None):
+#        if queues is None:
+#            queues = self.experiment_queues
+#        if path is None:
+#            path = self.experiment_queue.path
+#
+#        # test sets before saving
+#        if self._validate_experiment_queues(queues):
+#            p = self.save_file_dialog(default_directory=paths.experiment_dir)
+#            if p:
+#                p = self._dump_experiment_queues(p, queues)
+# #                self.save_enabled = True
+#
+#    def save_experiment_queues(self, path=None, queues=None):
+#        if queues is None:
+#            queues = self.experiment_queues
+#        if path is None:
+#            path = self.experiment_queue.path
+#
+#        if self._validate_experiment_queues(queues):
+#            self._dump_experiment_queues(path, queues)
+# #            self.save_enabled = False
 
 #===============================================================================
 # info update
@@ -207,11 +217,11 @@ class Experimentor(Experimentable):
         dbln = None
         if hasattr(self, ca):
             dbln = getattr(self, ca)
-        
+
         if not dbln:
             db = self.db
-            ln=arun.labnumber
-            ln=convert_identifier(ln)
+            ln = arun.labnumber
+            ln = convert_identifier(ln)
             dbln = db.get_labnumber(ln)
             setattr(self, ca, dbln)
 
@@ -339,7 +349,7 @@ class Experimentor(Experimentable):
                 c = 0
                 fixed_dict[arunid] = arun.aliquot
 
-            #print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
+            # print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 
@@ -351,31 +361,31 @@ class Experimentor(Experimentable):
                                         for ei in self.experiment_queues])
         self.debug('setting executor executable={}'.format(self.executor.executable))
 
-    def _validate_experiment_queues(self):
-        for exp in self.experiment_queues:
-            if exp.test_runs():
-                return
-
-        return True
-
-    def _dump_experiment_queues(self, p):
-
-        if not p:
-            return
-        if not p.endswith('.txt'):
-            p += '.txt'
-
-        self.info('saving experiment to {}'.format(p))
-        with open(p, 'wb') as fp:
-            n = len(self.experiment_queues)
-            for i, exp in enumerate(self.experiment_queues):
-                exp.path = p
-                exp.dump(fp)
-                if i < (n - 1):
-                    fp.write('\n')
-                    fp.write('*' * 80)
-
-        return p
+#    def _validate_experiment_queues(self, eq):
+#        for exp in eq:
+#            if exp.test_runs():
+#                return
+#
+#        return True
+#
+#    def _dump_experiment_queues(self, p, queues):
+#
+#        if not p:
+#            return
+#        if not p.endswith('.txt'):
+#            p += '.txt'
+#
+#        self.info('saving experiment to {}'.format(p))
+#        with open(p, 'wb') as fp:
+#            n = len(queues)
+#            for i, exp in enumerate(queues):
+#                exp.path = p
+#                exp.dump(fp)
+#                if i < (n - 1):
+#                    fp.write('\n')
+#                    fp.write('*' * 80)
+#
+#        return p
 #===============================================================================
 # handlers
 #===============================================================================
@@ -387,10 +397,10 @@ class Experimentor(Experimentable):
         if self.executor.isAlive():
             self.debug('cancel execution')
             self.executor.cancel()
-        else:            
+        else:
             self.debug('stop file listener')
             self.stop_file_listener()
-            
+
             self.debug('setup executor')
             self.executor.trait_set(experiment_queues=self.experiment_queues,
                                     experiment_queue=self.experiment_queues[0],
@@ -408,9 +418,9 @@ class Experimentor(Experimentable):
 
     @on_trait_change('selected')
     def _update_selected(self, new):
-        self.experiment_factory.run_factory.suppress_update=True
+        self.experiment_factory.run_factory.suppress_update = True
         self.experiment_factory.set_selected_runs(new)
-        
+
     def _pasted_changed(self):
         self._update()
 #    @on_trait_change('can_edit_script, max_allowable_runs')
@@ -426,15 +436,18 @@ class Experimentor(Experimentable):
                       'delay_before_analyses', 'delay_between_analyses'
                       ):
                 setattr(qf, a, getattr(eq, a))
-                
+
     @on_trait_change('experiment_factory:run_factory:clear_selection')
     def _on_clear_selection(self):
-        self.selected=[]
-    def _selected_changed(self):
-        if self.selected:
-            self.experiment_factory.run_factory.special_labnumber='---'
-            self.experiment_factory.run_factory._labnumber='---'
-            self.experiment_factory.run_factory.labnumber=''
+        self.selected = []
+
+    @on_trait_change('experiment_queue:selected')
+    def _selected_changed(self, new):
+        if new:
+            self.selected = new
+            self.experiment_factory.run_factory.special_labnumber = '---'
+            self.experiment_factory.run_factory._labnumber = '---'
+            self.experiment_factory.run_factory.labnumber = ''
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -467,8 +480,8 @@ class Experimentor(Experimentable):
         e = ExperimentExecutor(db=self.db,
                                application=self.application
                                )
-        
-        pfunc=lambda *args, **kw: self._update(all_info=True)
+
+        pfunc = lambda *args, **kw: self._update(all_info=True)
         e.on_trait_change(pfunc, 'update_needed')
         return e
 

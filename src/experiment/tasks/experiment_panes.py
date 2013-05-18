@@ -23,7 +23,7 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
-from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR,\
+from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -31,7 +31,7 @@ from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR,\
 
 def CBItem(name, maker=None, **kw):
     if maker is None:
-        maker=make_rf_name
+        maker = make_rf_name
 
     return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
                                           visible_when=maker('cbs_enabled')
@@ -61,34 +61,34 @@ def make_rt_name(name):
 def RTItem(name, **kw):
     return Item(make_rt_name(name), **kw)
 
-class AnalysesPane(TraitsTaskPane):
-    def traits_view(self):
-
-        v = View(
-                 VGroup(
-                        HGroup(spring, Item('refresh', show_label=False)),
-                        RTItem('automated_runs',
-                               show_label=False,
-                               editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-                                            operations=['delete',
-                                                        'move',
-#                                                        'edit'
-                                                        ],
-                                            editable=True,
-                                            selected='selected',
-                                            rearranged='rearranged',
-                                            pasted='pasted',
-#                                             copy_cache='copy_cache',
-#                                             update='update_needed',
-                                            drag_move=True,
-                                            auto_update=True,
-                                            multi_select=True,
-                                            scroll_to_bottom=False
-                                            )
-                      )
-                    )
-                 )
-        return v
+# class AnalysesPane(TraitsTaskPane):
+#    def traits_view(self):
+#
+#        v = View(
+#                 VGroup(
+#                        HGroup(spring, Item('refresh', show_label=False)),
+#                        RTItem('automated_runs',
+#                               show_label=False,
+#                               editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+#                                            operations=['delete',
+#                                                        'move',
+# #                                                        'edit'
+#                                                        ],
+#                                            editable=True,
+#                                            selected='selected',
+#                                            rearranged='rearranged',
+#                                            pasted='pasted',
+# #                                             copy_cache='copy_cache',
+# #                                             update='update_needed',
+#                                            drag_move=True,
+#                                            auto_update=True,
+#                                            multi_select=True,
+#                                            scroll_to_bottom=False
+#                                            )
+#                      )
+#                    )
+#                 )
+#        return v
 
 class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
@@ -173,7 +173,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                    RF_CBItem('comment',
                         tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
                         ),
-                        
+
                        show_border=True,
                        label='Info'
                        )
@@ -232,7 +232,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                                           )
                                        ),
                                  RFItem('edit_template',
-                                        show_label=False, 
+                                        show_label=False,
                                       editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
                                       )
                                     ),
@@ -292,41 +292,41 @@ class ConsolePane(TraitsDockPane):
     def traits_view(self):
         v = View(UItem('info_display', style='custom'))
         return v
-    
+
 class ExplanationPane(TraitsDockPane):
-    id='pychron.experiment.explanation'
-    name='Explanation'
-    measurement=Color(MEASUREMENT_COLOR)
-    extraction=Color(EXTRACTION_COLOR)
-    success=Color(SUCCESS_COLOR)
-    skip=Color(SKIP_COLOR)
-    not_executable=Color(NOT_EXECUTABLE_COLOR)
-    
+    id = 'pychron.experiment.explanation'
+    name = 'Explanation'
+    measurement = Color(MEASUREMENT_COLOR)
+    extraction = Color(EXTRACTION_COLOR)
+    success = Color(SUCCESS_COLOR)
+    skip = Color(SKIP_COLOR)
+    not_executable = Color(NOT_EXECUTABLE_COLOR)
+
     def traits_view(self):
-        v=View(
+        v = View(
                VGroup(
-                   HGroup(Label('Extraction'), spring, 
-                          UItem('extraction',                            
+                   HGroup(Label('Extraction'), spring,
+                          UItem('extraction',
                                 style='readonly')
                           ),
-                   HGroup(Label('Measurement'), spring, 
-                          UItem('measurement',                            
+                   HGroup(Label('Measurement'), spring,
+                          UItem('measurement',
                                 style='readonly')
                           ),
-                   HGroup(Label('Skip'), spring, 
-                          UItem('skip',                            
+                   HGroup(Label('Skip'), spring,
+                          UItem('skip',
                                 style='readonly')
                           ),
-                   HGroup(Label('Success'), spring, 
-                          UItem('success',                            
+                   HGroup(Label('Success'), spring,
+                          UItem('success',
                                 style='readonly')
                           ),
-                   HGroup(Label('Not Executable'), spring, 
-                          UItem('not_executable',                            
+                   HGroup(Label('Not Executable'), spring,
+                          UItem('not_executable',
                                 style='readonly')
                           ),
                       )
-               
+
                )
         return v
 #============= EOF =============================================

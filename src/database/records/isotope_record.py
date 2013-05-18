@@ -114,7 +114,7 @@ class IsotopeRecordView(HasTraits):
 
 class IsotopeRecord(DatabaseRecord, ArArAge):
     title_str = 'Analysis'
-    window_height = 800
+    window_height = 500
     window_width = 875
     color = 'black'
 
@@ -320,8 +320,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             return True
 
     def load(self):
-        self.load_isotopes()
-
+#        self.load_isotopes()
+#        print self.isotope_keys, self.isotopes
+#        print self.dbrecord
         self._make_signal_graph()
         self._make_baseline_graph()
 
@@ -865,6 +866,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_isotope_keys(self):
+        self.load_isotopes()
         keys = self.isotopes.keys()
         isos = sorted(keys, key=lambda x: re.sub('\D', '', x), reverse=True)
         return isos
@@ -1057,7 +1059,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                                                                 selected='selected'
                                                                 ),
                              show_label=False,
-                             width=0.05
+                             width=100
                              ),
                         Item('display_item', show_label=False, style='custom'),
                         )

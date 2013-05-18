@@ -76,9 +76,9 @@ class GenericSaveAction(DefaultAction):
         task = event.task
         if hasattr(task, 'save'):
             task.save()
-        else:
-            manager = self._get_experimentor(event)
-            manager.save_experiment_queues()
+#        else:
+#            manager = self._get_experimentor(event)
+#            manager.save_experiment_queues()
 
 
 class GenericSaveAsAction(DefaultAction):
@@ -88,8 +88,8 @@ class GenericSaveAsAction(DefaultAction):
         task = event.task
         if hasattr(task, 'save_as'):
             task.save_as()
-        else:
-            manager = self._get_experimentor(event)
-            manager.save_as_experiment_queues()
+#        else:
+#            manager = self._get_experimentor(event)
+#            manager.save_as_experiment_queues()
 
 #============= EOF =============================================

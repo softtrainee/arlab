@@ -21,17 +21,40 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.processing.processor import Processor
 from src.processing.tasks.processing_task import ProcessingTask
+from envisage.ui.tasks.task_extension import TaskExtension
+from pyface.tasks.action.schema_addition import SchemaAddition
+from src.processing.tasks.processing_actions import FindAction, IdeogramAction
+from src.processing.tasks.recall_task import RecallTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class ProcessingPlugin(BaseTaskPlugin):
-#    def _service_offers_default(self):
-#        process_so = self.service_offer_factory(
-#                                              protocol=Processor,
-#                                              factory=self._processor_factory
-#                                              )
-#        return [process_so]
+    def _service_offers_default(self):
+        process_so = self.service_offer_factory(
+                                              protocol=Processor,
+#                                              factory=Processor
+                                              factory=self._processor_factory
+                                              )
+        return [process_so]
 
+    def _my_task_extensions_default(self):
+        return [
+                TaskExtension(
+                              actions=[
+                                       SchemaAddition(
+                                                      id='find_action',
+                                                      factory=FindAction,
+                                                      path='MenuBar/File'
+                                                      ),
+                                       SchemaAddition(
+                                                      id='new_ideogram_action',
+                                                      factory=IdeogramAction,
+                                                      path='MenuBar/File/New'
+                                                      )
+                                       ]
+                              )
+
+                ]
     def _tasks_default(self):
         return [
                 TaskFactory(id='pychron.processing',
@@ -39,10 +62,18 @@ class ProcessingPlugin(BaseTaskPlugin):
                             name='Processing',
                             accelerator='Ctrl+P'
                             ),
+#                TaskFactory(id='pychron.recall',
+#                            factory=self._recall_task_factory,
+#                            name='Analysis',
+# #                            accelerator='Ctrl+P'
+#                            ),
                 ]
 
-#    def _processor_factory(self):
-#        return Processor()
+    def _processor_factory(self):
+        return Processor(application=self.application)
+
+    def _recall_task_factory(self):
+        return RecallTask()
 
     def _task_factory(self):
 #        processor = self.application.get_service(Processor)

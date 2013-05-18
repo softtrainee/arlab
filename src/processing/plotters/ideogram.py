@@ -374,7 +374,7 @@ class Ideogram(Plotter):
         d = lambda *args: self._update_bounds(g, s, group_id)
         p.index_mapper.on_trait_change(d, 'updated')
 
-        print group_id, we
+#        print group_id, we
         # we already scaled by nsigma
         self._add_error_bars(s, [we], 'x', 1)
 

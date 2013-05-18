@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits,Any
+from traits.api import HasTraits, Any
 from traitsui.api import View, Item, TableEditor
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
@@ -25,11 +25,13 @@ from src.experiment.utilities.identifier import make_runid
 
 class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
-    current_run=Any
+    current_run = Any
+    selected = Any
+
     def test_runs(self):
 #         self.executable=True
         runs = self.cleaned_automated_runs
- 
+
         tested = []
         ar = runs[0].make_run()
         self.executable = False
@@ -76,11 +78,11 @@ class ExperimentQueue(BaseExperimentQueue):
 #                        print 'setting ', crun.aliquot
 
                 newruns = runs[startid:]
-                
-                run=newruns[0]
-                runid=run.runid
+
+                run = newruns[0]
+                runid = run.runid
 #                 runid=make_runid(run.labnumber, run.aliquot, run.step)
-                
+
                 self.info('starting at analysis {} (startid={} of {})'.format(runid, startid + 1, n))
                 n = len(newruns)
                 rgen = (r for r in newruns)

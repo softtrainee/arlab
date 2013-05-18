@@ -116,6 +116,7 @@ class SearchManager(Viewable, ColumnSorterMixin):
                                 ),
                            )
         return cntrl_grp
+
     def traits_view(self):
         cntrl_grp = self._get_control_group()
         v = View(

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, on_trait_change, Event, List
+from traits.api import Any, on_trait_change, Event, List, Unicode
 # from traitsui.api import View, Item
 from pyface.tasks.task import Task
 from pyface.tasks.action.schema import SMenu, SMenuBar
@@ -242,8 +242,12 @@ class BaseTask(Task):
         return window_menu
 
 class BaseManagerTask(BaseTask):
+    default_directory = Unicode
     def open_file_dialog(self, **kw):
-        dialog = FileDialog(parent=self.window.control, **kw)
+        if 'default_directory' not in kw:
+            kw['default_directory'] = self.default_directory
+        dialog = FileDialog(parent=self.window.control,
+                            **kw)
         if dialog.open() == OK:
             return dialog.path
 

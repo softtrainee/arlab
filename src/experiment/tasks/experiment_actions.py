@@ -66,12 +66,21 @@ class NewExperimentQueueAction(QueueAction):
     def perform(self, event):
         '''
         '''
-        manager = self._get_experimentor(event)
-        if manager.verify_database_connection(inform=True):
-#        if manager.verify_credentials():
-            if manager.load():
-                manager.new_experiment_queue()
-                self._open_editor(event)
+
+        if event.task.id == 'pychron.experiment':
+            event.task.new()
+        else:
+            application = event.task.window.application
+            win = application.create_window(TaskWindowLayout('pychron.experiment'))
+            task = win.active_task
+            task.new()
+            win.open()
+#            manager = self._get_experimentor(event)
+#            if manager.verify_database_connection(inform=True):
+#    #        if manager.verify_credentials():
+#                if manager.load():
+#                    manager.new_experiment_queue()
+#                    self._open_editor(event)
 
 class OpenExperimentQueueAction(QueueAction):
     '''
@@ -83,12 +92,22 @@ class OpenExperimentQueueAction(QueueAction):
     def perform(self, event):
         '''
         '''
-        manager = self._get_experimentor(event)
-        if manager.verify_database_connection(inform=True):
-#        if manager.verify_credentials():
-            if manager.load():
-                if manager.load_experiment_queue(saveable=True):
-                    self._open_editor(event)
+        if event.task.id == 'pychron.experiment':
+            task = event.task
+            task.open()
+        else:
+            application = event.task.window.application
+            win = application.create_window(TaskWindowLayout('pychron.experiment'))
+            task = win.active_task
+            if task.open():
+                win.open()
+
+#        manager = self._get_experimentor(event)
+#        if manager.verify_database_connection(inform=True):
+# #        if manager.verify_credentials():
+#            if manager.load():
+#                if manager.load_experiment_queue(saveable=True):
+#                    self._open_editor(event)
 
 
 class SaveExperimentQueueAction(ExperimentAction):
