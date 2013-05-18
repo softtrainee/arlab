@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = "qt4"
+
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -28,7 +29,7 @@ from helpers import build_version
     necessary if you are launching from commandline or eclipse(?). 
     Use false (default) if your are launching from a standalone bundle. 
 '''
-build_version(version_id, set_path=True)
+build_version(version_id, debug=True)
 
 def main():
     '''

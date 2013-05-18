@@ -18,6 +18,7 @@
 #============= enthought library imports =======================
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = "qt4"
+
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -29,13 +30,13 @@ from helpers import build_version
     necessary if you are launching from commandline or eclipse(?). 
     Use false (default) if your are launching from a standalone bundle. 
 '''
-build_version(version_id, set_path=False)
+build_version(version_id)
 
 def main():
     '''
         entry point
     '''
-    from src.envisage.pychron_run2 import launch
+    from src.envisage.pychron_run import launch
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
 

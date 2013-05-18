@@ -52,7 +52,7 @@ class BaseExperimentQueue(Loggable):
 
     stats = Instance(ExperimentStats, ())
 
-    _suppress_aliquot_update = False
+#    _suppress_aliquot_update = False
     update_needed = Event
 
     name = Property(depends_on='path')
@@ -77,7 +77,7 @@ class BaseExperimentQueue(Loggable):
             freq: optional inter
         '''
         aruns = self.automated_runs
-        self._suppress_aliquot_update = True
+#        self._suppress_aliquot_update = True
         if freq:
             cnt = 0
             n = len(aruns)
@@ -101,7 +101,7 @@ class BaseExperimentQueue(Loggable):
             self.update_needed = True
         else:
             aruns.extend(runviews)
-            self._suppress_aliquot_update = False
+#            self._suppress_aliquot_update = False
 
         self.update_needed = True
 
@@ -116,9 +116,9 @@ class BaseExperimentQueue(Loggable):
 
         self.runs_table = klass()
 
-        self._suppress_aliquot_update = True
+#        self._suppress_aliquot_update = True
         self.runs_table.set_runs(runs)
-        self._suppress_aliquot_update = False
+#        self._suppress_aliquot_update = False
 #        self.update_needed=True
 
 #===============================================================================
@@ -132,9 +132,9 @@ class BaseExperimentQueue(Loggable):
 
         aruns = self._load_runs(txt)
         if aruns:
-            self._suppress_aliquot_update = True
+#            self._suppress_aliquot_update = True
             self.automated_runs = aruns
-            self._suppress_aliquot_update = False
+#            self._suppress_aliquot_update = False
 
 #            lm = self.sample_map
 #            if lm:
@@ -356,18 +356,18 @@ tray: {}
 #    def _rearranged_fired(self):
 #        self.update_needed = True
 
-    def _pasted_changed(self):
-        sel = self.runs_table.selected
-
-        idx = self.automated_runs.index(sel[0])
-#        self._suppress_aliquot_update = True
-        for si in self.runs_table.copy_cache[::-1]:
-            ci = si.clone_traits()
-            self.automated_runs.insert(idx, ci)
-#        self._suppress_aliquot_update = False
-
-        self.debug('%%%%%%%%%%%%%%%%%%% Paste Update Needed')
-        self.update_needed = True
+#    def _pasted_changed(self):
+#        sel = self.runs_table.selected
+#
+#        idx = self.automated_runs.index(sel[0])
+# #        self._suppress_aliquot_update = True
+#        for si in self.runs_table.copy_cache[::-1]:
+#            ci = si.clone_traits()
+#            self.automated_runs.insert(idx, ci)
+# #        self._suppress_aliquot_update = False
+#
+#        self.debug('%%%%%%%%%%%%%%%%%%% Paste Update Needed')
+#        self.update_needed = True
 
 #    @on_trait_change('automated_runs[]')
 #    def _update_runs(self):

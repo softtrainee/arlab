@@ -52,6 +52,7 @@ def make():
             template.icon_name = 'py{}_icon.icns'.format(name)
             template.bundle_name = 'py{}'.format(name)
             template.version = args.version[0]
+            template.name = name
 
         if template is not None:
             template.build()
@@ -77,6 +78,8 @@ class Template(object):
         ins.root = root
         ins.dest = dest
         ins.name = self.bundle_name
+        ins.apppath = os.path.join(root, 'launchers',
+                              '{}.app'.format(self.bundle_name))
         ins.version = self.version
 
         op = os.path.join(root, 'launchers',
@@ -87,6 +90,7 @@ class Template(object):
         ins.build_app(op)
         ins.make_egg()
         ins.make_argv()
+
 
         #=======================================================================
         # copy
@@ -105,12 +109,20 @@ class Template(object):
             shutil.copyfile(icon_file,
                             os.path.join(dest, 'Resources', icon_name)
                             )
+
+        for ni, nd in (('splash', 'splashes'), ('about', 'abouts'),
+                           ):
+                sname = '{}_{}.png'.format(ni, self.name)
+                ins.copy_resource(os.path.join(root, 'resources', nd, sname))
         # copy helper mod
         helper = os.path.join(self.root,
                               'launchers', 'helpers.py')
         ins.copy_resource(helper)
 
-
+        #=======================================================================
+        # rename
+        #=======================================================================
+        ins.rename_app()
 
 class PychronTemplate(Template):
     pass
@@ -163,12 +175,12 @@ execfile(os.path.join(os.path.split(__file__)[0], "{}.py"))
         with open(p, 'w') as fp:
             fp.write(argv)
 
-
     def set_plist(self, dest, bundle_name, icon_name):
         info_plist = os.path.join(dest, 'Info.plist')
         tree = plistlib.readPlist(info_plist)
 
         tree['CFBundleIconFile'] = icon_name
+        tree['CFBundleDisplayName'] = bundle_name
         tree['CFBundleName'] = bundle_name
         plistlib.writePlist(tree, info_plist)
 
@@ -190,6 +202,26 @@ execfile(os.path.join(os.path.split(__file__)[0], "{}.py"))
                     rsrcname=rsrcfilename, others=extras, raw=raw,
                     progress=verbose, destroot=destroot)
 
+    def rename_app(self):
+        old = self.apppath
+        new = os.path.join(os.path.dirname(old),
+                           '{}_{}.app'.format(self.name, self.version))
+        i = 1
+#        print old, new
+        while 1:
+#        for i in range(3):
+            try:
+                os.rename(old, new)
+                break
+            except OSError, e:
+#                print e
+                name = new[:-4]
+                bk = '{}_{:03d}bk.app'.format(name, i)
+                print '{} already exists. backing it up as {}'.format(new, bk)
+                try:
+                    os.rename(new, bk)
+                except OSError:
+                    i += 1
 
 if __name__ == '__main__':
     make()

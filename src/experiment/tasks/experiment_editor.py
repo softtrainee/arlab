@@ -36,8 +36,9 @@ class ExperimentEditor(Editor, Loggable):
     dirty = Bool(False)
     name = Property(Unicode, depends_on='path')
     tooltip = Property(Unicode, depends_on='path')
-    merge_id = Int
-    group = Int
+
+    merge_id = Int(0)
+    group = Int(0)
 
     def create(self, parent):
         self.control = self._create_control(parent)

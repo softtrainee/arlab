@@ -20,11 +20,15 @@ import os
 import sys
 #============= local library imports  ==========================
 
-def build_version(ver, set_path=False):
+def build_version(ver, debug=False):
     root = os.path.dirname(__file__)
-    if set_path:
-#       insert pychron src dir into sys.path
-        build_sys_path(ver, root)
+#    if debug_path:
+# #       insert pychron src dir into sys.path
+#        build_sys_path(ver, root)
+#    else:
+
+    if not debug:
+        add_eggs(root)
 
     # can now use src.
 
@@ -36,14 +40,15 @@ def build_version(ver, set_path=False):
     # build globals
     build_globals()
 
-def build_sys_path(ver, root):
+# def build_sys_path(ver, root):
+#
+#    merc = os.path.join(os.path.expanduser('~'),
+#                        'Programming',
+#                        'mercurial')
+#    src = os.path.join(merc, 'pychron{}'.format(ver))
+#    sys.path.insert(0, src)
 
-    merc = os.path.join(os.path.expanduser('~'),
-                        'Programming',
-                        'mercurial')
-    src = os.path.join(merc, 'pychron{}'.format(ver))
-    sys.path.insert(0, src)
-
+def add_eggs(root):
     egg_path = os.path.join(root, 'pychron.pth')
     if os.path.isfile(egg_path):
         # use a pychron.pth to get additional egg paths

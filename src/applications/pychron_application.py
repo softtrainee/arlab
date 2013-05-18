@@ -52,29 +52,40 @@ class PychronApplication(BaseTasksApplication):
 # #                                       size=(1150, 650)),
 #                       ]
 
+    def _get_resource_root(self):
+
+        path = __file__
+        while os.path.basename(path) != 'Resources':
+            path = os.path.dirname(path)
+        return path
 
     def _about_dialog_default(self):
         '''
         '''
         from src.paths import paths
-        p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        path = self._get_resource_root()
         about_dialog = AboutDialog(
                                    image=ImageResource(name='about{}.png'.format(paths.version),
-                                              search_path=[p, paths.abouts]
+                                              search_path=[path, paths.abouts]
                                             ),
                                    )
         return about_dialog
 
     def _splash_screen_default(self):
         from src.paths import paths
-        p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        paths.app_resources = p
+        path = self._get_resource_root()
+#        p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        paths.app_resources = path
 
         sp = SplashScreen(
                           image=ImageResource(name='splash{}.png'.format(paths.version),
-                                              search_path=[paths.splashes]
+                                              search_path=[path, paths.splashes]
                                             ),
                           )
+#        import sys
+#        sys.stdout.write('{}\n'.format(paths.version))
+        self.debug(paths.version)
+        self.debug(sp.image.search_path)
         return sp
 
 #    def exit(self):
