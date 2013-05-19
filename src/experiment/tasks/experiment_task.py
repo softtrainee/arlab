@@ -65,9 +65,9 @@ class ExperimentEditorTask(EditorTask):
 # generic actions
 #===============================================================================
     def open(self):
-        import os
-        path = os.path.join(paths.experiment_dir, 'aaa.txt')
-#        path = self.open_file_dialog()
+#        import os
+#        path = os.path.join(paths.experiment_dir, 'aaa.txt')
+        path = self.open_file_dialog()
         if path:
             manager = self.manager
             if manager.verify_database_connection(inform=True):
