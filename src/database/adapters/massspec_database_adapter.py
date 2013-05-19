@@ -243,8 +243,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            label = rd.Label
 
         if isinstance(aliquot, int):
-            aliquot='{:02n}'.format(aliquot)
-            
+            aliquot = '{:02n}'.format(aliquot)
+
         # query the IrradiationPositionTable
         irradpos = self.get_irradiation_position(irradpos)
         params = dict(RID=rid,  # make_runid(rid, aliquot, step),

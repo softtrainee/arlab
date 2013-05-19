@@ -31,7 +31,7 @@ class BaseLaserPane(TraitsTaskPane):
     def traits_view(self):
 #         if self.model.mode!='client':
         v = View(UItem('stage_manager',
-                       #defined_when='mode!="client"',
+                       # defined_when='mode!="client"',
                        style='custom'),
                  HGroup(UItem('status_text', style='readonly'), spring),
 #                  statusbar='status_text'
@@ -222,7 +222,7 @@ class ClientPane(TraitsTaskPane):
                  HGroup(
                        UItem('enabled_led', editor=LEDEditor()),
                        UItem('enable', editor=ButtonEditor(label_value='enable_label'))
-                       ),                 
+                       ),
                  Item('position'),
                  Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
                  Item('y', editor=RangeEditor(low= -25.0, high=25.0)),

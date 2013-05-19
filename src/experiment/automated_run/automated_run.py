@@ -38,7 +38,7 @@ from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabas
 from src.helpers.datetime_tools import get_datetime
 # from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.utilities.identifier import convert_identifier, make_rid,\
+from src.experiment.utilities.identifier import convert_identifier, make_rid, \
     make_runid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
@@ -581,10 +581,10 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def use_arar_age(self):
-        ln=self.labnumber
+        ln = self.labnumber
         if '-' in ln:
-            ln=ln.split('-')[0]
-        
+            ln = ln.split('-')[0]
+
         return self.analysis_type == 'unknown' or ln in ('c',)
 
     def start(self):
@@ -746,15 +746,15 @@ anaylsis_type={}
             self.truncate('Immediate')
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
-        
-        
+
+
         if plot_panel is None:
-            title='Plot Panel {}'.format(self.runid)
+            title = 'Plot Panel {}'.format(self.runid)
             if self.sample:
-                title='{} {}'.format(title, self.sample)
+                title = '{} {}'.format(title, self.sample)
             if self.irradiation:
-                title='{} {}'.format(title, self.irradiation)
-            
+                title = '{} {}'.format(title, self.irradiation)
+
             plot_panel = PlotPanel(
                              window_y=0.05,  # + 0.01 * self.index,
                              window_x=0.6,  # + 0.01 * self.index,
@@ -1041,7 +1041,7 @@ anaylsis_type={}
         if self.plot_panel is None:
             return 'break'
 
-        n=i-1
+        n = i - 1
         if check_conditions:
             termination_condition = self._check_conditions(self.termination_conditions, i)
             if termination_condition:
@@ -1452,7 +1452,7 @@ anaylsis_type={}
                                           dbhist,
                                           signal_=float(s.value), signal_err=float(s.error),
                                           )
-                
+
                 db.flush()
                 self.debug('isotope {}{} save time= {:0.3f}'.format(iso, kind, time.time() - st))
 

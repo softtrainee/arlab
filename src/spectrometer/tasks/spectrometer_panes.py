@@ -29,15 +29,15 @@ class ScanPane(TraitsTaskPane):
         return v
 
 class ReadoutPane(TraitsDockPane):
-    id='pychron.spectrometer.readout'
-    name='Readout'
+    id = 'pychron.spectrometer.readout'
+    name = 'Readout'
     def traits_view(self):
-        v=View(Group(UItem('readout_view', style='custom'), show_border=True))
+        v = View(Group(UItem('readout_view', style='custom'), show_border=True))
         return v
-    
+
 class IntensitiesPane(TraitsDockPane):
-    id='pychron.spectrometer.intensities'
-    name='Intensities'
+    id = 'pychron.spectrometer.intensities'
+    name = 'Intensities'
     def traits_view(self):
         intensity_grp = VGroup(
                    HGroup(spring, Label('Intensity'),
@@ -50,17 +50,17 @@ class IntensitiesPane(TraitsDockPane):
                                          editor=InstanceEditor(view='intensity_view'))),
                    show_border=True
                    )
-        v=View(intensity_grp)
+        v = View(intensity_grp)
         return v
-    
+
 class ControlsPane(TraitsDockPane):
     id = 'pychron.spectrometer.controls'
-    name='Controls'
+    name = 'Controls'
     def traits_view(self):
         def hitem(n, l, **kw):
-            return HGroup(Label(l), spring, Item(n, show_label=False, **kw), 
+            return HGroup(Label(l), spring, Item(n, show_label=False, **kw),
                           Spring(springy=False, width=275))
-        
+
         magnet_grp = VGroup(
                             HGroup(
                                 UItem('detector',
@@ -83,10 +83,10 @@ class ControlsPane(TraitsDockPane):
                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
                               label='Detectors'
                               )
-        
-        rise_grp = UItem('rise_rate',style='custom')
+
+        rise_grp = UItem('rise_rate', style='custom')
         source_grp = UItem('source', style='custom')
-        
+
         graph_cntrl_grp = VGroup(
                                  hitem('graph_scan_width', 'Scan Width (mins)'),
                                  hitem('graph_scale', 'Scale'),

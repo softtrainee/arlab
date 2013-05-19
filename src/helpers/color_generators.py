@@ -43,7 +43,7 @@ colors8i = dict(
                 firebrick=(142, 35, 35),
                 greenyellow=(147, 219, 112),
                 white=(255, 255, 255),
-                darkgreen=(32,117,49)
+                darkgreen=(32, 117, 49)
 
               )
 

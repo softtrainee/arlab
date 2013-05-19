@@ -52,11 +52,11 @@ def get_manager(event, protocol):
 #
 class PeakCenterAction(Action):
     description = 'Calculate peak center'
-    name='Peak Center...'
+    name = 'Peak Center...'
 #     def __init__(self, *args, **kw):
 #         super(PeakCenterAction, self).__init__(*args, **kw)
 #         man = self.window.workbench.application.get_service(ION_OPTICS_PROTOCOL)
-        
+
 #         man.on_trait_change(self._update_enabled, 'alive')
 #         self.enabled = True
 

@@ -760,7 +760,7 @@ class StageManager(Manager):
 
             self.linear_move(xi, yi, velocity=vi,
                              block=block,
-                             mode='absolute', # use absolute mode because commands are queued
+                             mode='absolute',  # use absolute mode because commands are queued
                              set_stage=False)
             if block:
                 if end_callback:

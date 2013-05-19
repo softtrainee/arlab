@@ -26,9 +26,9 @@ class Display(QTextEdit):
     pass
 
 class _DisplayEditor(Editor):
-    _pv=None
-    _pc=None
-    clear=Event
+    _pv = None
+    _pc = None
+    clear = Event
     def init(self, parent):
         '''
 
@@ -40,24 +40,24 @@ class _DisplayEditor(Editor):
                 p.setColor(QPalette.Base, self.factory.bg_color)
                 self.control.setPalette(p)
             self.control.setReadOnly(True)
-            
+
         self.object.on_trait_change(self._on_clear, self.factory.clear)
-        
+
     def _on_clear(self):
         if self.control:
             self.control.clear()
-            
+
     def update_editor(self, *args, **kw):
         '''
         '''
         ctrl = self.control
         if self.value:
-            v,c, force=self.value
-            if force or v!=self._pv or c!=self._pc:
+            v, c, force = self.value
+            if force or v != self._pv or c != self._pc:
                 ctrl.setTextColor(c)
                 ctrl.insertPlainText('{}\n'.format(v))
-                self._pc=c
-                self._pv=v
+                self._pc = c
+                self._pv = v
 
         self.control.moveCursor(QTextCursor.End)
         self.control.ensureCursorVisible()
@@ -65,5 +65,5 @@ class _DisplayEditor(Editor):
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
     bg_color = Color
-    clear=Str
+    clear = Str
 #============= EOF =============================================

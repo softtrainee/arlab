@@ -53,6 +53,6 @@ class BaseTaskPlugin(Plugin):
 
     def check(self):
         return True
-    
-    
+
+
 #============= EOF =============================================
