@@ -16,29 +16,29 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Int, List, Array, Float
+from enable.base_tool import BaseTool
+from chaco.abstract_overlay import AbstractOverlay
+from enable.colors import color_table
+from chaco.data_label import DataLabel
+from chaco.base_xy_plot import BaseXYPlot
+from enable.tools.drag_tool import DragTool
+from chaco.plot_label import PlotLabel
 #============= standard library imports ========================
 from numpy import array, Inf, where, average, hstack
+from uncertainties import ufloat
 #============= local library imports  ==========================
 # from src.graph.stacked_graph import StackedGraph
 from src.processing.plotters.results_tabular_adapter import SpectrumResults, \
     SpectrumResultsAdapter
 from src.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_mswd, validate_mswd
-from enable.base_tool import BaseTool
-from chaco.abstract_overlay import AbstractOverlay
 # from enable.enable_traits import Pointer
-from enable.colors import color_table
 from src.processing.argon_calculations import age_equation, find_plateaus
 from src.processing.analysis import IntegratedAnalysis
-from uncertainties import ufloat
-from src.constants import PLUSMINUS
-from chaco.data_label import DataLabel
-from src.helpers.formatting import floatfmt
+# from src.constants import PLUSMINUS
+# from src.helpers.formatting import floatfmt
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
-from chaco.base_xy_plot import BaseXYPlot
-from enable.tools.drag_tool import DragTool
-from src.processing.plotters.point_move_tool import PointMoveTool
-from chaco.plot_label import PlotLabel
+# from src.processing.plotters.point_move_tool import PointMoveTool
 # from chaco.plot_label import PlotLabel
 # from enable.font_metrics_provider import font_metrics_provider
 # from chaco.data_label import DataLabel
@@ -299,7 +299,7 @@ class PlateauOverlay(BasePlateauOverlay):
                 gc.draw_path()
 
 class Spectrum(Plotter):
-    padding = List([60, 10, 5, 40])
+    padding = List([80, 10, 5, 40])
     def _get_adapter(self):
         return SpectrumResultsAdapter
 
@@ -395,6 +395,7 @@ class Spectrum(Plotter):
                             index_key='k39',
                             value_key='age'
                             ):
+
         if excludes is None:
             excludes = []
 

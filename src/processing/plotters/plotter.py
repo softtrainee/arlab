@@ -508,6 +508,9 @@ class Plotter(Viewable):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
+#        self.debug('update graph metadata')
+        return
+
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
 #        hover = scatter.value.metadata.get('hover')
         hover = scatter.index.metadata.get('hover')
@@ -547,8 +550,9 @@ class Plotter(Viewable):
 
         x = floatfmt(x, 3)
         we = floatfmt(we, 4)
+        pm = '+/-'
+        return u'{} {}{} {} {}'.format(x, pm, we, mswd, n)
 
-        return u'{} {}{} {} {}'.format(x, PLUSMINUS, we, mswd, n)
     def _unzip_value_error(self, pairs):
 #        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
         return zip(*[(ri.nominal_value, ri.std_dev) for ri in pairs])

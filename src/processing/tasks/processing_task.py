@@ -31,7 +31,8 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 # from src.loggable import Loggable
-from src.processing.plotter_options_manager import PlotterOptionsManager
+from src.processing.plotter_options_manager import PlotterOptionsManager, \
+    SpectrumOptionsManager, IdeogramOptionsManager
 from src.envisage.tasks.editor_task import EditorTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -124,22 +125,37 @@ class ProcessingTask(EditorTask):
                     gc.save()
                     self.info('saving figure to {}'.format(p))
 
-    def new_ideogram(self):
+    def new_spectrum(self):
         n = len(self.editor_area.editors)
         processor = Processor(application=self.application)
         editor = ProcessingEditor(
+                                  options_manager=SpectrumOptionsManager(),
                                   processor=processor,
                                   name='Figure {:03n}'.format(n + 1),
                                   )
 
+        processor.func_name = 'new_spectrum'
+        po = editor.options_manager.plotter_options
+        ideogram_container = processor.new_spectrum(plotter_options=po)
+        editor.component = ideogram_container
+        self._open_editor(editor)
+        self.active_plotter_options = editor.options_manager
 
+    def new_ideogram(self):
+        n = len(self.editor_area.editors)
+        processor = Processor(application=self.application)
+        editor = ProcessingEditor(
+                                  options_manager=IdeogramOptionsManager(),
+                                  processor=processor,
+                                  name='Figure {:03n}'.format(n + 1),
+                                  )
+
+        processor.func_name = 'new_ideogram'
         po = editor.options_manager.plotter_options
         ideogram_container = processor.new_ideogram(plotter_options=po)
         editor.component = ideogram_container
 
-        self.editor_area.add_editor(editor)
-#        self.processor.active_editor = editor
-        self.editor_area.activate_editor(editor)
+        self._open_editor(editor)
 
         self.active_plotter_options = editor.options_manager
 
@@ -163,7 +179,9 @@ class ProcessingTask(EditorTask):
         if self.active_editor:
             po = self.active_plotter_options.plotter_options
             pro = self.active_editor.processor
-            cont = pro.new_ideogram(plotter_options=po, ans=pro.analyses)
+            func = getattr(pro, pro.func_name)
+            cont = func(plotter_options=po, ans=pro.analyses)
+#            cont = pro.new_ideogram(plotter_options=po, ans=pro.analyses)
             self.active_editor.component = cont
 #        if self.analyses:
 

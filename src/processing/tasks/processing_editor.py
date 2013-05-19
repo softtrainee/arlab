@@ -23,7 +23,8 @@ from enable.window import Window
 # from enable.component_editor import _ComponentEditor
 from pyface.tasks.editor import Editor
 from src.graph.graph import Graph
-from src.processing.plotter_options_manager import IdeogramOptionsManager
+from src.processing.plotter_options_manager import IdeogramOptionsManager, \
+    PlotterOptionsManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # if ETSConfig.toolkit == 'wx':
@@ -36,7 +37,7 @@ from src.processing.plotter_options_manager import IdeogramOptionsManager
 class ProcessingEditor(Editor):
     component = Any
     processor = Any
-    options_manager = Instance(IdeogramOptionsManager, ())
+    options_manager = Instance(PlotterOptionsManager)
 
     _window = Any
     name = 'Untitled'

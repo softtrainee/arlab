@@ -38,6 +38,7 @@ class BaseMeasurement(HasTraits):
             xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
             self.xs = array(xs)
             self.ys = array(ys)
+
     def _unpack_blob(self, blob, endianness='>'):
         return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
@@ -57,7 +58,6 @@ class IsotopicMeasurement(BaseMeasurement):
     filter_outliers = Bool
     filter_outlier_iterations = Int
     filter_outlier_std_devs = Int
-
 
     regressor = Property(depends_on='xs,ys,fit')
 
@@ -175,11 +175,16 @@ class IsotopicMeasurement(BaseMeasurement):
         return a / self.uvalue
 
 class CorrectionIsotopicMeasurement(IsotopicMeasurement):
-    def __init__(self, *args, **kw):
+    pass
+    def __init__(self, dbrecord=None, *args, **kw):
+        if dbrecord:
+            self._value = dbrecord.user_value
+            self._error = dbrecord.user_error
+
         super(IsotopicMeasurement, self).__init__(*args, **kw)
-        if self.dbrecord:
-            self._value = self.dbrecord.user_value
-            self._error = self.dbrecord.user_error
+#        if self.dbrecord:
+#            self._value = self.dbrecord.user_value
+#            self._error = self.dbrecord.user_error
 
 class Background(CorrectionIsotopicMeasurement):
     pass
