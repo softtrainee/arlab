@@ -18,26 +18,27 @@
 from traits.api import Color
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
     ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label
-from pyface.tasks.traits_task_pane import TraitsTaskPane
+# from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
-from src.ui.tabular_editor import myTabularEditor
-from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
+# from src.ui.tabular_editor import myTabularEditor
+# from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR
+from src.ui.custom_label_editor import CustomLabel
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
-def CBItem(name, maker=None, **kw):
-    if maker is None:
-        maker = make_rf_name
-
-    return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
-                                          visible_when=maker('cbs_enabled')
-                                          ),
-
-                  )
+# def CBItem(name, maker=None, **kw):
+#    if maker is None:
+#        maker = make_rf_name
+#    return Item(maker(name), **kw)
+#    return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
+#                                          visible_when=maker('cbs_enabled')
+#                                          ),
+#
+#                  )
 
 def make_qf_name(name):
             return 'object.queue_factory.{}'.format(name)
@@ -51,8 +52,8 @@ def QFItem(name, **kw):
 def RFItem(name, **kw):
     return Item(make_rf_name(name), **kw)
 
-def RF_CBItem(name, **kw):
-    return CBItem(name, make_rf_name, **kw)
+# def RF_CBItem(name, **kw):
+#    return CBItem(name, make_rf_name, **kw)
 
 
 def make_rt_name(name):
@@ -108,7 +109,16 @@ class ExperimentFactoryPane(TraitsDockPane):
                             QFItem('delay_between_analyses')
                             ),
 
-                     HGroup(UItem('add_button', enabled_when='ok_add'), spring),
+                     HGroup(UItem('add_button', enabled_when='ok_add'),
+                            UItem('edit_mode_button',
+                                   enabled_when='edit_enabled',
+#                                   show_label=False
+                                   ),
+                            CustomLabel(make_rf_name('edit_mode_label'),
+                                        color='red',
+                                        width=40
+                                        ),
+                            spring),
 
     #                  UCustom('run_factory', enabled_when='ok_run'),
                     VFold(
@@ -166,11 +176,11 @@ class ExperimentFactoryPane(TraitsDockPane):
                           tooltip='Irradiation info retreived from Database',
                           style='readonly'
                           ),
-                   RF_CBItem('weight',
+                   RFItem('weight',
                         label='Weight (mg)',
                         tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
                         ),
-                   RF_CBItem('comment',
+                   RFItem('comment',
                         tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
                         ),
 
@@ -195,7 +205,7 @@ class ExperimentFactoryPane(TraitsDockPane):
  #                         Item('autocenter',
  #                              tooltip='Should the extract device try to autocenter on the sample'
  #                              ),
-                         HGroup(CBItem('position',
+                         HGroup(RFItem('position',
                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
                                      ),
                                 RFItem('endposition', label='End',
@@ -213,18 +223,18 @@ class ExperimentFactoryPane(TraitsDockPane):
 
         extract_grp = VGroup(
                              HGroup(sspring(width=33),
-                                    CBItem('extract_value', label='Extract',
+                                    RFItem('extract_value', label='Extract',
                                          tooltip='Set the extract value in extract units',
                                          enabled_when=make_rf_name('extractable')
                                          ),
-                                    CBItem('extract_units',
+                                    RFItem('extract_units',
                                             show_label=False,
                                             editor=EnumEditor(name=make_rf_name('extract_units_names'))),
                                     spring,
 #                                     Label('Step Heat Template'),
                                     ),
                              HGroup(
-                                 Item('template',
+                                 RFItem('template',
                                        label='Step Heat Template',
 #                                         editor=EnumEditor(name=make_rf_name('templates'))
                                         editor=EnumEditor(name='templates'
@@ -237,15 +247,15 @@ class ExperimentFactoryPane(TraitsDockPane):
                                       )
                                     ),
 
-                             CBItem('duration', label='Duration (s)',
+                             RFItem('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'
 
                                   ),
-                             CBItem('cleanup', label='Cleanup (s)',
+                             RFItem('cleanup', label='Cleanup (s)',
                                   tooltip='Set the number of seconds to getter the sample gas'
                                   ),
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
-                             CBItem('pattern', editor=EnumEditor(name=make_rf_name('patterns'))),
+                             RFItem('pattern', editor=EnumEditor(name=make_rf_name('patterns'))),
                              label='Extract',
                              show_border=True
                              )

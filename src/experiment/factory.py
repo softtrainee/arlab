@@ -35,8 +35,11 @@ class ExperimentFactory(Loggable):
     templates = DelegatesTo('run_factory')
     template = DelegatesTo('run_factory')
 
-    add_button = Button('add')
-    clear_button = Button('clear')
+    add_button = Button('Add')
+    clear_button = Button('Clear')
+    edit_mode_button = Button('Edit')
+    edit_enabled = DelegatesTo('run_factory')
+
     auto_increment = Bool(True)
 
     queue = Instance(ExperimentQueue, ())
@@ -65,6 +68,8 @@ class ExperimentFactory(Loggable):
         new_runs, freq = self.run_factory.new_runs(auto_increment=self.auto_increment)
         self.queue.add_runs(new_runs, freq)
 
+    def _edit_mode_button_fired(self):
+        self.run_factory.edit_mode = not self.run_factory.edit_mode
 #        tol = self.max_allowable_runs
 #        n = len(self.queue.automated_runs)
 #        if n >= tol:

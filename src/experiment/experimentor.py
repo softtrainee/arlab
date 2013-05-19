@@ -487,7 +487,6 @@ class Experimentor(Experimentable):
         rf.suppress_update = True
         ef.set_selected_runs(new)
 
-
 #===============================================================================
 # property get/set
 #===============================================================================
