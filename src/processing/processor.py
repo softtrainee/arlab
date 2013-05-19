@@ -24,6 +24,11 @@ from src.database.records.isotope_record import IsotopeRecord
 from src.processing.analysis import Analysis, Marker
 from src.processing.search.selector_manager import SelectorManager
 from src.processing.search.search_manager import SearchManager
+from src.ui.progress_dialog import myProgressDialog
+from src.ui.gui import invoke_in_main_thread
+import threading
+from pyface.progress_dialog import ProgressDialog
+import time
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
@@ -70,22 +75,50 @@ class Processor(IsotopeDatabaseManager):
                             graph_id=pi.graph_id,
                             group_id=pi.group_id)
         a = Analysis(isotope_record=rec)
-        a.load_isotopes()
+#        a.load_isotopes()
         return a
+
+#    def _load_analyses(self, records, evt):
+#
+#        n = len(records)
+#        dlg = myProgressDialog(max=n, size=(500, 10))
+#        dlg.open()
+
+
 
     def _gather_data(self):
         d = self.selector_manager
         if self.db.connect():
             info = d.edit_traits(kind='livemodal')
             if info.result:
+                ans = [self._record_factory(ri)
+                            for ri in d.selected_records
+                                if not isinstance(ri, Marker)]
 
-#                db = self.db
-
-
-        #        self.db.selector.load_last(n=10)
-                ans = [self._record_factory(ri) for ri in d.selected_records
-                                    if not isinstance(ri, Marker)]
+                self._load_analyses(ans)
                 return ans
+
+    def new_spectrum(self, plotter_options=None, ans=None):
+        from src.processing.plotters.spectrum import Spectrum
+
+        p = Spectrum()
+        if ans is None:
+            ans = self._gather_data()
+
+        if plotter_options is None:
+            plotter_options = self._plotter_options
+
+        options = {}
+
+        self._plotter_options = plotter_options
+        if ans:
+            self.analyses = ans
+            gideo = p.build(ans, options=options,
+                            plotter_options=plotter_options)
+            if gideo:
+                gideo, _plots = gideo
+
+            return gideo
 
     def new_ideogram(self, plotter_options=None, ans=None):
         '''
@@ -102,9 +135,10 @@ class Processor(IsotopeDatabaseManager):
 #        highlight_omitted = True
         display_mean_indicator = True
         display_mean_text = True
-        title = 'Foo {}'.format(self.count)
-        self.count += 1
-        p = Ideogram(db=self.db,
+        title = 'Foo'  # .format(self.count)
+#        self.count += 1
+        p = Ideogram(
+#                     db=self.db,
 #                     processing_manager=self,
                      probability_curve_kind=probability_curve_kind,
                      mean_calculation_kind=mean_calculation_kind

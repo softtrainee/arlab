@@ -49,6 +49,24 @@ class IdeogramAction(ProcessorAction):
             task = win.active_task
 
         task.new_ideogram()
+
+class SpectrumAction(ProcessorAction):
+    name = 'Spectrum'
+    accelerator = 'Ctrl+D'
+    def perform(self, event):
+
+        task = event.task
+        if not task.id == 'pychron.processing':
+            app = task.window.application
+            win = app.create_window(TaskWindowLayout(
+                                               'pychron.processing'
+                                               )
+                              )
+            win.open()
+            task = win.active_task
+
+        task.new_spectrum()
+
 #        processor = self._get_processor()
 #        processor.new_ideogram()
 

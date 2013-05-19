@@ -102,8 +102,7 @@ class IsotopeDatabaseManager(Manager):
             progress.increment()
 
     def _open_progress(self, n):
-        pd = myProgressDialog(max=n, size=(550, 15))
+        pd = myProgressDialog(max=n - 1, size=(550, 15))
         pd.open()
-        pd.center()
         return pd
 #============= EOF =============================================

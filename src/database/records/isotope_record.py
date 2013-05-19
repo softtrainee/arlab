@@ -327,7 +327,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     r = Sniff(**kw)
                     i.sniff = r
 
-
             blanks = self._get_blanks()
             if blanks:
                 for bi in blanks:

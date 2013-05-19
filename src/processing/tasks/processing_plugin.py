@@ -24,7 +24,7 @@ from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.processing.tasks.processing_actions import FindAction, IdeogramAction, \
-    RecallAction
+    RecallAction, SpectrumAction
 from src.processing.tasks.recall_task import RecallTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -50,6 +50,11 @@ class ProcessingPlugin(BaseTaskPlugin):
                                        SchemaAddition(
                                                       id='new_ideogram_action',
                                                       factory=IdeogramAction,
+                                                      path='MenuBar/File/New'
+                                                      ),
+                                       SchemaAddition(
+                                                      id='new_spectrum_action',
+                                                      factory=SpectrumAction,
                                                       path='MenuBar/File/New'
                                                       ),
                                        SchemaAddition(
