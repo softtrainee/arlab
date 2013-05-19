@@ -356,8 +356,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 continue
 
             s = getattr(self, name)
-            if s.cb:
-                setattr(arv, name, s.name)
+#            if s.cb:
+            setattr(arv, name, s.name)
 
     def _clone_run(self, run, excludes=None):
         if excludes is None:
@@ -398,15 +398,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
                 self.labnumber = self.labnumber.replace('##', str(mod))
 
-    def _set_cb_defaults(self, run):
-        if run.analysis_type == 'unknown':
-            if not run.extract_group:
-                v = True
-            else:
-                v = False
-
-            for attr in  ('extract_value', 'extract_units', 'duration', 'cleanup', 'pattern'):
-                setattr(self, 'cb_{}'.format(attr), v)
+#    def _set_cb_defaults(self, run):
+#        if run.analysis_type == 'unknown':
+#            if not run.extract_group:
+#                v = True
+#            else:
+#                v = False
+#
+#            for attr in  ('extract_value', 'extract_units', 'duration', 'cleanup', 'pattern'):
+#                setattr(self, 'cb_{}'.format(attr), v)
 
 #         for si in SCRIPT_NAMES:
 #             sc = getattr(self, si)
@@ -416,53 +416,53 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('_selected_runs')
-    def _selected_runs_handler(self):
-        if self._selected_runs:
-            for si in SCRIPT_NAMES:
-                sc = getattr(self, si)
-                sc.cb_edit = True
-            self._set_cb_defaults(self._selected_runs[0])
-#            self._suppress_cb_change = False
-        else:
-            td = self.traits()
-            for tr in td:
-                if tr.startswith('cb_'):
-                    td[tr] = False
-
-            for si in SCRIPT_NAMES:
-                sc = getattr(self, si)
-                sc.cb_edit = False
+#    @on_trait_change('_selected_runs')
+#    def _selected_runs_handler(self):
+#        if self._selected_runs:
+#            for si in SCRIPT_NAMES:
+#                sc = getattr(self, si)
+#                sc.cb_edit = True
+#            self._set_cb_defaults(self._selected_runs[0])
+# #            self._suppress_cb_change = False
+#        else:
+#            td = self.traits()
+#            for tr in td:
+#                if tr.startswith('cb_'):
+#                    td[tr] = False
+#
+#            for si in SCRIPT_NAMES:
+#                sc = getattr(self, si)
+#                sc.cb_edit = False
 
 #            self.cb_position = False
 
-    @on_trait_change('cb_+')
-    def _edit_cb_handler(self, name, new):
-        if name == 'cbs_enabled':
-            return
-
-        def setvalue(obj, attr, v):
-#            try:
-            pattr = '_prev_{}'.format(nname)
-            setattr(obj, pattr, getattr(obj, attr))
-            setattr(obj, attr, v)
-#            except Exception:
-#                setattr(obj, attr, 0)
-
-        if self._selected_runs:
-            nname = name[3:]
-            if new:
-                v = getattr(self, nname)
-                for si in self._selected_runs:
-                    setvalue(si, nname, v)
-            else:
-                pname = '_prev_{}'.format(nname)
-                for si in self._selected_runs:
-                    if hasattr(si, pname):
-                        v = getattr(si, pname)
-                        setvalue(si, nname, v)
-#                    else:
-#                        v = ''
+#    @on_trait_change('cb_+')
+#    def _edit_cb_handler(self, name, new):
+#        if name == 'cbs_enabled':
+#            return
+#
+#        def setvalue(obj, attr, v):
+# #            try:
+#            pattr = '_prev_{}'.format(nname)
+#            setattr(obj, pattr, getattr(obj, attr))
+#            setattr(obj, attr, v)
+# #            except Exception:
+# #                setattr(obj, attr, 0)
+#
+#        if self._selected_runs:
+#            nname = name[3:]
+#            if new:
+#                v = getattr(self, nname)
+#                for si in self._selected_runs:
+#                    setvalue(si, nname, v)
+#            else:
+#                pname = '_prev_{}'.format(nname)
+#                for si in self._selected_runs:
+#                    if hasattr(si, pname):
+#                        v = getattr(si, pname)
+#                        setvalue(si, nname, v)
+# #                    else:
+# #                        v = ''
 
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
@@ -470,13 +470,14 @@ pattern,
 position,
 weight, comment''')
     def _edit_handler(self, name, new):
+        print name, new, self.edit_mode
         if self.edit_mode and \
             self._selected_runs and \
             not self.suppress_update:
             cb = True
-            cbname = 'cb_{}'.format(name)
-            if hasattr(self, cbname):
-                cb = getattr(self, cbname)
+#            cbname = 'cb_{}'.format(name)
+#            if hasattr(self, cbname):
+#                cb = getattr(self, cbname)
 
             if cb:
                 for si in self._selected_runs:
@@ -484,66 +485,67 @@ weight, comment''')
                     setattr(si, name, new)
 
 
-    @on_trait_change('''measurement_script:cb, 
-extraction_script:cb, 
-post_measurement_script:cb,
-post_equilibration_script:cb
-    ''')
-    def _edit_script_cb_handler(self, obj, name, new):
-        if not self.edit_mode:
-            return
-
-        name = '{}_script'.format(obj.label)
-        if new:
-            if obj.label == 'Extraction':
-                self._load_extraction_info(obj)
-
-            new_name = getattr(self, name).name
-
-            for si in self._selected_runs:
-                pname = '_prev_{}_script.{}'.format(obj.label, id(si))
-                pscript_name = getattr(si, name)
-                setattr(self, pname, pscript_name)
-                setattr(si, name, new_name)
-
-        else:
-            for si in self._selected_runs:
-                pname = '_prev_{}_script.{}'.format(obj.label, id(si))
-                if hasattr(self, pname):
-                    prev_name = getattr(self, pname)
-                    setattr(si, name, prev_name)
-
-
-#            def func():
-
-#            if self._selected_runs:
-#                for si in self._selected_runs:
-#                    name = '{}_script'.format(obj.label)
-#                    setattr(self, '_prev_{}_script'.format(obj.label), getattr(si, name))
-#                    setattr(si, name, new)
-#        else:
-#            if self._selected_runs:
-#                for si in self._selected_runs:
-#                    name = '{}_script'.format(obj.label)
-#                    v = getattr(self, '_prev_{}_script'.format(obj.label))
-#                    setattr(si, name, v)
-
-        if self._selected_runs:
-            for si in self._selected_runs:
-                pass
-#                name = '{}_script'.format(obj.label)
-#                pname = '_prev_{}_script'.format(obj.label)
-#                if new:
-#                    setattr(self, pname, getattr(si, name))
-#                    script = getattr(self, name)
-#                    new = script.name
-#                else:
-#                    new = None
-#                    if hasattr(self, pname):
-#                        new = getattr(self, pname)
+#    @on_trait_change('''measurement_script:cb,
+# extraction_script:cb,
+# post_measurement_script:cb,
+# post_equilibration_script:cb
+#    ''')
+#    def _edit_script_cb_handler(self, obj, name, new):
+#        print name, new, self.edit_mode, 'script'
+#        if not self.edit_mode:
+#            return
 #
-#                if new:
-#                    setattr(si, name, new)
+#        name = '{}_script'.format(obj.label)
+#        if new:
+#            if obj.label == 'Extraction':
+#                self._load_extraction_info(obj)
+#
+#            new_name = getattr(self, name).name
+#
+#            for si in self._selected_runs:
+#                pname = '_prev_{}_script.{}'.format(obj.label, id(si))
+#                pscript_name = getattr(si, name)
+#                setattr(self, pname, pscript_name)
+#                setattr(si, name, new_name)
+#
+#        else:
+#            for si in self._selected_runs:
+#                pname = '_prev_{}_script.{}'.format(obj.label, id(si))
+#                if hasattr(self, pname):
+#                    prev_name = getattr(self, pname)
+#                    setattr(si, name, prev_name)
+#
+#
+# #            def func():
+#
+# #            if self._selected_runs:
+# #                for si in self._selected_runs:
+# #                    name = '{}_script'.format(obj.label)
+# #                    setattr(self, '_prev_{}_script'.format(obj.label), getattr(si, name))
+# #                    setattr(si, name, new)
+# #        else:
+# #            if self._selected_runs:
+# #                for si in self._selected_runs:
+# #                    name = '{}_script'.format(obj.label)
+# #                    v = getattr(self, '_prev_{}_script'.format(obj.label))
+# #                    setattr(si, name, v)
+#
+#        if self._selected_runs:
+#            for si in self._selected_runs:
+#                pass
+# #                name = '{}_script'.format(obj.label)
+# #                pname = '_prev_{}_script'.format(obj.label)
+# #                if new:
+# #                    setattr(self, pname, getattr(si, name))
+# #                    script = getattr(self, name)
+# #                    new = script.name
+# #                else:
+# #                    new = None
+# #                    if hasattr(self, pname):
+# #                        new = getattr(self, pname)
+# #
+# #                if new:
+# #                    setattr(si, name, new)
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -551,7 +553,7 @@ post_measurement_script:name,
 post_equilibration_script:name
     ''')
     def _edit_script_handler(self, obj, name, new):
-        if obj.cb and not self.suppress_update:
+        if self.edit_mode and obj.cb and not self.suppress_update:
             if obj.label == 'Extraction':
                 self._load_extraction_info(obj)
 
@@ -605,6 +607,7 @@ post_equilibration_script:name
             self._frequency_enabled = False
 
     def _aliquot_changed(self):
+
         if self.aliquot != self.o_aliquot and self.o_aliquot:
             self.user_defined_aliquot = True
         else:
@@ -652,7 +655,8 @@ post_equilibration_script:name
 
         self.irradiation = ''
         self.sample = ''
-
+        self.aliquot = 0
+        self.o_aliquot = 0
         if labnumber:
             # convert labnumber (a, bg, or 10034 etc)
 #            clabnumber = convert_identifier(labnumber)
