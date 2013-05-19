@@ -32,8 +32,8 @@ class ExperimentFactory(Loggable):
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
-    templates=DelegatesTo('run_factory')
-    template=DelegatesTo('run_factory')
+    templates = DelegatesTo('run_factory')
+    template = DelegatesTo('run_factory')
 
     add_button = Button('add')
     clear_button = Button('clear')
@@ -65,10 +65,10 @@ class ExperimentFactory(Loggable):
         new_runs, freq = self.run_factory.new_runs(auto_increment=self.auto_increment)
         self.queue.add_runs(new_runs, freq)
 
-        tol = self.max_allowable_runs
-        n = len(self.queue.automated_runs)
-        if n >= tol:
-            self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
+#        tol = self.max_allowable_runs
+#        n = len(self.queue.automated_runs)
+#        if n >= tol:
+#            self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
 
     @on_trait_change('queue_factory:[mass_spectrometer, extract_device, delay_+, tray, username]')
     def _update_queue(self, name, new):
@@ -88,7 +88,7 @@ class ExperimentFactory(Loggable):
     def _update_labnumber(self, name, new):
         if name == 'labnumber':
             self._labnumber = new
-            
+
 #    @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
 #    def _update_queue_values(self, name, new):
 #        self.queue_factory.trait_set({name:new})
@@ -104,7 +104,7 @@ class ExperimentFactory(Loggable):
     def _set_extract_device(self, ed):
         self._extract_device = ed
         self.run_factory = self._run_factory_factory()
-        self.run_factory.update_templates_needed=True
+        self.run_factory.update_templates_needed = True
         self.queue.set_extract_device(ed)
 #===============================================================================
 # property get/set
@@ -127,7 +127,7 @@ class ExperimentFactory(Loggable):
 #         grp = VGroup(
 #                      HGroup(UItem('add_button', enabled_when='ok_add'), spring),
 # #                     UCustom('queue_factory'),
-# 
+#
 #                      UCustom('run_factory', enabled_when='ok_run'),
 #                      HGroup(
 #                             UItem('add_button', enabled_when='ok_add'),

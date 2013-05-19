@@ -689,7 +689,8 @@ class Spectrum(Plotter):
 #    def _add_aux_plot(self, g, xs, ys, y_errs, plotid):
 #        pass
     def _filter_aux_plots(self, aux_plots):
-        return [ap for ap in aux_plots if ap.name != 'analysis_number']
+        return [ap for ap in aux_plots if ap.name not in ('analysis_number',
+                                                          'k39')]
 
     def _aux_plot_radiogenic_percent(self, g, analyses, plotid, group_id, **kw):
 

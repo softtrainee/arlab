@@ -32,6 +32,7 @@ import hashlib
 class ExperimentEditorTask(EditorTask):
     default_directory = paths.experiment_dir
     group_count = 0
+    name = 'Experiment'
     def _menu_bar_factory(self, menus=None):
         return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
 

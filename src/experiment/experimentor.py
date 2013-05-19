@@ -57,10 +57,10 @@ class Experimentor(Experimentable):
     _last_ver_time = None
     _ver_timeout = 10
 
-    selected = Any
-    pasted = Event
-    refresh = Button
-
+#    selected = Any
+#    pasted = Event
+#    refresh = Button
+#    dclicked = Any
     #===========================================================================
     # task events
     #===========================================================================
@@ -440,13 +440,16 @@ class Experimentor(Experimentable):
         self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 
-    @on_trait_change('selected')
-    def _update_selected(self, new):
-        self.experiment_factory.run_factory.suppress_update = True
-        self.experiment_factory.set_selected_runs(new)
+#    @on_trait_change('selected')
+#    def _update_selected(self, new):
+#        self.experiment_factory.run_factory.suppress_update = True
+#        self.experiment_factory.set_selected_runs(new)
 
-    def _pasted_changed(self):
-        self._update()
+#    def _pasted_changed(self):
+#        self._update()
+    @on_trait_change('experiment_queue:dclicked')
+    def _dclicked_changed(self, new):
+        self.experiment_factory.run_factory.edit_mode = True
 
     @on_trait_change('experiment_queue:refresh_button')
     def _refresh(self):
@@ -464,17 +467,27 @@ class Experimentor(Experimentable):
                       ):
                 setattr(qf, a, getattr(eq, a))
 
-    @on_trait_change('experiment_factory:run_factory:clear_selection')
-    def _on_clear_selection(self):
-        self.selected = []
+#    @on_trait_change('experiment_factory:run_factory:clear_selection')
+#    def _on_clear_selection(self):
+#        self.selected = []
 
     @on_trait_change('experiment_queue:selected')
     def _selected_changed(self, new):
+        ef = self.experiment_factory
+        rf = ef.run_factory
+        rf.edit_mode = False
         if new:
-            self.selected = new
-            self.experiment_factory.run_factory.special_labnumber = '---'
-            self.experiment_factory.run_factory._labnumber = '---'
-            self.experiment_factory.run_factory.labnumber = ''
+#            self.selected = new
+            rf.special_labnumber = '---'
+            rf._labnumber = '---'
+            rf.labnumber = ''
+            if len(new) > 1:
+                rf.edit_mode = True
+
+        rf.suppress_update = True
+        ef.set_selected_runs(new)
+
+
 #===============================================================================
 # property get/set
 #===============================================================================

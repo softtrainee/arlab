@@ -54,6 +54,7 @@ class ExperimentEditor(BaseTraitsEditor):
  #                                                        'edit'
                                                         ],
                                             editable=True,
+                                            dclicked='dclicked',
                                             selected='selected',
                                             rearranged='rearranged',
                                             pasted='pasted',

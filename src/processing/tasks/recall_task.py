@@ -22,6 +22,7 @@ from src.processing.tasks.recall_editor import RecallEditor
 #============= local library imports  ==========================
 
 class RecallTask(EditorTask):
+    name = 'Recall'
 #    record = Instance(IsotopeRecord)
 #    display_item = Property(Instance(Any), depends_on='record, record:selected')
 #    def create_central_pane(self):
@@ -31,16 +32,27 @@ class RecallTask(EditorTask):
 #    def _record_default(self):
 #        return IsotopeRecord()
 
+
     def recall(self):
         records = self.manager.recall()
+        def func(rec):
+            rec.initialize()
+            editor = RecallEditor(record=rec.isotope_record)
+            self.editor_area.add_editor(editor)
+
         if records:
-            for record in records:
-                irecord = record.isotope_record
-                irecord.initialize()
-                editor = RecallEditor(record=irecord)
-                #            self.record.dbrecord.selected = 'summary'
-#            record.selected = 'summary'
-                self.editor_area.add_editor(editor)
+            self.manager._load_analyses(records, func=func)
+#            self.manager._load_analyses()
+#            for record in records:
+#
+#                irecord = record.isotope_record
+#                self.manager._load_analyses()
+
+#                irecord.initialize()
+#                editor = RecallEditor(record=irecord)
+#                self.editor_area.add_editor(editor)
+
+
 #                self._open_editor(editor)
 #                time.sleep(0.1)
 #            print self.record.selected
