@@ -341,12 +341,12 @@ class PychronLaserManager(BaseLaserManager):
         else:
             if self.enable_laser():
                 self.enabled = True
-    
+
     def _position_changed(self):
         if self.position is not None:
             t = Thread(target=self._move_to_position, args=(self.position,))
             t.start()
-            self._position_thread=t
+            self._position_thread = t
 #     def traits_view(self):
 #         v = View(
 #                  Item('test_connection_button', show_label=False),

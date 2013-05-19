@@ -43,15 +43,15 @@ class ExperimentQueueFactory(Loggable):
     delay_before_analyses = Int(5)
     tray = Str
     trays = Property
-    
-    ok_make=Property(depends_on='mass_spectrometer, username')
+
+    ok_make = Property(depends_on='mass_spectrometer, username')
     def _get_ok_make(self):
-        ms=self.mass_spectrometer.strip()
-        un=self.username.strip()
-        ed=self.extract_device.strip()
-        
-        return ms and ms !=NULL_STR and \
-                ed and ed !=NULL_STR and  \
+        ms = self.mass_spectrometer.strip()
+        un = self.username.strip()
+        ed = self.extract_device.strip()
+
+        return ms and ms != NULL_STR and \
+                ed and ed != NULL_STR and  \
                     un
 #===============================================================================
 # views
@@ -69,7 +69,7 @@ class ExperimentQueueFactory(Loggable):
 # # #                            editor=EnumEditor(name='trays'),
 # # #                            tooltip='Select an sample tray for this set'
 # # #                            ),
-# 
+#
 #                        Item('delay_before_analyses',
 # #                            tooltip='Set the time in seconds to delay before starting this queue',
 # #                            label='Delay before Analyses (s)'
@@ -78,7 +78,7 @@ class ExperimentQueueFactory(Loggable):
 # #                            tooltip='Set the delay between analysis in seconds',
 # #                            label='Delay between Analyses (s)'
 #                             ),
-# 
+#
 #                        ),
 #                 )
 #         return v

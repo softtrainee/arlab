@@ -67,7 +67,7 @@ class _ImageEditor(Editor):
         invoke_in_main_thread(self.set_pixmap, image, qsize.width())
 #         self.control.setPixmap(convert_bitmap(image, qsize.width()))
 
-    def set_pixmap(self,image, w):
+    def set_pixmap(self, image, w):
         self.control.setPixmap(convert_bitmap(image, w))
 
 #    '''

@@ -162,18 +162,18 @@ class AutomatedRunSpec(Loggable):
 #            print 'param', k, v
             if hasattr(self, k):
                 setattr(self, k, v)
-                
+
     def _remove_mass_spectrometer_name(self, name):
         if self.mass_spectrometer:
             name = name.replace('{}_'.format(self.mass_spectrometer.lower()), '')
         return name
-    
+
     def _remove_file_extension(self, name, ext='.py'):
         if name.endswith(ext):
             name = name[:-3]
 
         return name
-    
+
     def to_string_attrs(self, attrs):
         def get_attr(attrname):
             if attrname == 'labnumber':
@@ -182,10 +182,10 @@ class AutomatedRunSpec(Loggable):
                 else:
                     v = self.labnumber
             elif attrname.endswith('script'):
-                #remove mass spectrometer name
-                v=getattr(self, attrname)
-                v=self._remove_mass_spectrometer_name(v)
-                v=self._remove_file_extension(v)
+                # remove mass spectrometer name
+                v = getattr(self, attrname)
+                v = self._remove_mass_spectrometer_name(v)
+                v = self._remove_file_extension(v)
             else:
                 try:
                     v = getattr(self, attrname)

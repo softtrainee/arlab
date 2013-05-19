@@ -188,7 +188,7 @@ class wxLED(wx.Control):
 
 
 
-        xpm = ['17 17 3 1', # width height ncolors chars_per_pixel
+        xpm = ['17 17 3 1',  # width height ncolors chars_per_pixel
                '0 c None',
                'X c %s' % color1.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
                '- c %s' % color2.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),

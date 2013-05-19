@@ -27,7 +27,7 @@ import time
 
 class ExperimentStats(Loggable):
     elapsed = Property(depends_on='_elapsed')
-    _elapsed=Float
+    _elapsed = Float
     nruns = Int
     nruns_finished = Int
     etf = String
@@ -70,7 +70,7 @@ class ExperimentStats(Loggable):
 
     def _get_elapsed(self):
         return str(datetime.timedelta(seconds=self._elapsed))
-    
+
     def _get_total_time(self):
         dur = datetime.timedelta(seconds=round(self._total_time))
         return str(dur)

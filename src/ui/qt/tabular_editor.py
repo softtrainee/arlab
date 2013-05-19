@@ -31,12 +31,12 @@ class _myTableView(_TableView):
 #        print event.nativeModifiers()
 
         if event.matches(QKeySequence.Copy):
-            self._copy_cache = [self._editor.value[ci.row()] for ci in 
+            self._copy_cache = [self._editor.value[ci.row()] for ci in
                                     self.selectionModel().selectedRows()]
-            
+
         elif event.matches(QKeySequence.Paste):
             if self._copy_cache:
-                si=self.selectedIndexes()[0]
+                si = self.selectedIndexes()[0]
                 for ci in self._copy_cache:
                     self._editor.model.insertRow(si.row(), obj=ci.clone_traits())
                 self._editor.pasted = True
@@ -74,22 +74,22 @@ class _TabularEditor(qtTabularEditor):
 
     def update_editor(self):
         super(_TabularEditor, self).update_editor()
-        
-        m=len(self.value)-1
+
+        m = len(self.value) - 1
         if self.factory.scroll_to_bottom:
             if not self.selected and not self.multi_selected:
-                self.scroll_to_row=m
+                self.scroll_to_row = m
 #                 control.EnsureVisible(control.GetItemCount() - 1)
             else:
                 if self.selected_row != -1:
-                    self.scroll_to_row =min(m,self.selected_row + 1)
-                    
+                    self.scroll_to_row = min(m, self.selected_row + 1)
+
 #                    control.EnsureVisible(self.selected_row + 1)
                 elif self.multi_selected_rows:
-                    self.scroll_to_row =min(m,self.multi_selected_rows[-1] + 1)
-                    
+                    self.scroll_to_row = min(m, self.multi_selected_rows[-1] + 1)
+
 #                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
-        
+
 #        else:
 #            if not self.selected and not self.multi_selected:
 #                control.EnsureVisible(0)

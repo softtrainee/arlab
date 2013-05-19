@@ -132,10 +132,10 @@ class Analysis(Loggable):
 #        a, e = self.age_value, self.age_error
         try:
             pe = abs(e / a * 100)
-            pe='{:0.2f}%'.format(pe)
+            pe = '{:0.2f}%'.format(pe)
         except ZeroDivisionError:
             pe = 'Inf'
-            
+
         return u'Age= {:0.3f} {}{:0.3f}()'.format(a, PLUSMINUS, e, pe)
 
 #    @property

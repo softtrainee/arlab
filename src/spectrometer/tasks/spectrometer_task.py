@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Any
 from traitsui.api import View, Item
 from src.envisage.tasks.base_task import BaseHardwareTask
-from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane,\
+from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
     ReadoutPane, IntensitiesPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
 from pyface.tasks.action.schema import SMenu
@@ -29,13 +29,13 @@ from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction
 
 class SpectrometerTask(BaseHardwareTask):
     scan_manager = Any
-    name='Scan'
+    name = 'Scan'
     def prepare_destroy(self):
         self.scan_manager.stop_scan()
-        
+
     def activated(self):
         self.scan_manager.setup_scan()
-        
+
     def _menu_bar_factory(self, menus=None):
         measure_menu = SMenu(
                              PeakCenterAction(),
@@ -43,8 +43,8 @@ class SpectrometerTask(BaseHardwareTask):
                              before='help.menu'
                              )
         return super(BaseHardwareTask, self)._menu_bar_factory(menus=[measure_menu])
-    
-    
+
+
     def _default_layout_default(self):
         return TaskLayout(
                           left=Splitter(
@@ -53,7 +53,7 @@ class SpectrometerTask(BaseHardwareTask):
                                                PaneItem('pychron.spectrometer.readout')),
                                         orientation='vertical'
                                         )
-                                        
+
 #                          right=Splitter(
 #                                         PaneItem('pychron.experiment.stats'),
 #                                         PaneItem('pychron.experiment.console'),
@@ -62,8 +62,8 @@ class SpectrometerTask(BaseHardwareTask):
 #                          bottom=PaneItem('pychron.experiment.console'),
 #                          top=PaneItem('pychron.experiment.controls')
                           )
-    
-        
+
+
     def create_central_pane(self):
         g = ScanPane(
                      model=self.scan_manager,

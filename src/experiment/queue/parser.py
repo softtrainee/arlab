@@ -73,7 +73,7 @@ class RunParser(Loggable):
         if ALIQUOT_REGEX.match(ln):
             ln, a = ln.split('-')
             params['aliquot'] = int(a)
-            params['user_defined_aliquot']=True
+            params['user_defined_aliquot'] = True
 
         params['labnumber'] = ln
 
@@ -128,7 +128,7 @@ class RunParser(Loggable):
 #                     'overlap',
                      'cleanup',
 #                     'aliquot',
-                     
+
                      # ver 1.0
                      'extract_group',
                      # ver 2.0

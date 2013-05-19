@@ -48,20 +48,20 @@ class FusionsTask(BaseLaserTask):
                                               )
                                        )
                           )
-        
+
 class FusionsCO2Task(FusionsTask):
     id = 'pychron.fusions.co2'
     name = 'Fusions CO2'
     def create_central_pane(self):
-        if self.manager.mode=='client':
+        if self.manager.mode == 'client':
             return FusionsCO2ClientPane(model=self.manager)
         else:
             return FusionsCO2Pane(model=self.manager)
-        
+
         return FusionsCO2Pane(model=self.manager)
 
     def create_dock_panes(self):
-        if self.manager.mode=='client':
+        if self.manager.mode == 'client':
             return []
         else:
             return [
@@ -76,13 +76,13 @@ class FusionsDiodeTask(FusionsTask):
     name = 'Fusions Diode'
 
     def create_central_pane(self):
-        if self.manager.mode=='client':
+        if self.manager.mode == 'client':
             return FusionsDiodeClientPane(model=self.manager)
         else:
             return FusionsDiodePane(model=self.manager)
 
     def create_dock_panes(self):
-        if self.manager.mode=='client':
+        if self.manager.mode == 'client':
             return []
         else:
             return [

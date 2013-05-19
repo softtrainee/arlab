@@ -43,7 +43,7 @@ def gui_decorator(func):
 
     return decorator
 
-#class DisplayHandler(Handler):
+# class DisplayHandler(Handler):
 class DisplayHandler(ViewableHandler):
     def closed(self, info, is_ok):
         obj = info.object
@@ -58,15 +58,15 @@ class DisplayHandler(ViewableHandler):
 #        info.object.ui = info.ui
         if not info.object._opened and not info.object.was_closed:
             info.object.load_text_buffer()
-            
+
         info.object._opened = True
-        
-#    @on_trait_change('object:disposed')  
+
+#    @on_trait_change('object:disposed')
 #    def _update_disposed(self):
 #        ui=self.ui
 #        print ui, 'ffffff'
-##    def object__disposed_fired(self, info):
-##        print self, info.ui, 'sadsdffsd'
+# #    def object__disposed_fired(self, info):
+# #        print self, info.ui, 'sadsdffsd'
 #        if ui:
 #           ui.dispose()
 # class RichTextDisplay(HasTraits):

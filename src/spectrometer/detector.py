@@ -168,7 +168,7 @@ class Detector(SpectrometerDevice):
                         )
                  )
         return v
-    
+
     def traits_view(self):
         v = View(VGroup(
                         HGroup(

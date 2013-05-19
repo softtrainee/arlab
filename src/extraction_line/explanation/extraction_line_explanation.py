@@ -35,15 +35,15 @@ class ELEHandler(Handler):
             info.object.selection_ok = True
 
 class ExplanationAdapter(TabularAdapter):
-    columns=[('Name','name'),('Description','description'),
-             ('State','state'),('Lock','lock')
+    columns = [('Name', 'name'), ('Description', 'description'),
+             ('State', 'state'), ('Lock', 'lock')
              ]
     def get_bg_color(self, obj, trait, row, column):
-        item=self.item
-        color='white'
+        item = self.item
+        color = 'white'
 #         color='#0000FF'
         if item.soft_lock:
-            color='#CCE5FF'
+            color = '#CCE5FF'
 
         return color
 
@@ -67,7 +67,7 @@ class ExtractionLineExplanation(HasTraits):
 #             for ei in self.explanable_items:
 #                 if ei != s:
 #                     ei.identify = False
-# 
+#
 #             s.identify = not s.identify
 
 #    def _show_hide_fired(self):
