@@ -50,6 +50,11 @@ class ProcessingPlugin(BaseTaskPlugin):
                                                       id='new_ideogram_action',
                                                       factory=IdeogramAction,
                                                       path='MenuBar/File/New'
+                                                      ),
+                                       SchemaAddition(
+                                                      id='recall_action',
+                                                      factory=IdeogramAction,
+                                                      path='MenuBar/File'
                                                       )
                                        ]
                               )
