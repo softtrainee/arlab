@@ -59,7 +59,7 @@ class UVAutomatedRunSpec(AutomatedRunSpec):
     def _get_run_attrs(self):
         attrs = super(UVAutomatedRunSpec, self)._get_run_attrs()
         nattrs = ('reprate', 'mask', 'attenuator', 'image')
-        return attrs.extend(nattrs)
+        return list(attrs).extend(nattrs)
 
 #===============================================================================
 # handlers
