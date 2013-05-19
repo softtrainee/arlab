@@ -84,10 +84,8 @@ class PychronApplication(BaseTasksApplication):
                                               search_path=[path, paths.splashes]
                                             ),
                           )
-#        import sys
-#        sys.stdout.write('{}\n'.format(paths.version))
-        self.debug(paths.version)
-        self.debug(sp.image.search_path)
+#        self.debug(paths.version)
+#        self.debug(sp.image.search_path)
         return sp
 
 #    def exit(self):

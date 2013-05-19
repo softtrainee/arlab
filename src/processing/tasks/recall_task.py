@@ -15,19 +15,39 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task import BaseManagerTask
-from src.processing.tasks.recall_panes import DisplayPane
-from src.database.records.isotope_record import IsotopeRecord
+
+from src.envisage.tasks.editor_task import EditorTask
+from src.processing.tasks.recall_editor import RecallEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class RecallTask(BaseManagerTask):
-    record = Instance(IsotopeRecord)
-    def create_central_pane(self):
-        return DisplayPane(model=self.record)
-    def _record_default(self):
-        return IsotopeRecord()
+class RecallTask(EditorTask):
+#    record = Instance(IsotopeRecord)
+#    display_item = Property(Instance(Any), depends_on='record, record:selected')
+#    def create_central_pane(self):
+#        pass
+#        return DisplayPane(model=self)
 
+#    def _record_default(self):
+#        return IsotopeRecord()
+
+    def recall(self):
+        records = self.manager.recall()
+        if records:
+            for record in records:
+                irecord = record.isotope_record
+                irecord.initialize()
+                editor = RecallEditor(record=irecord)
+                #            self.record.dbrecord.selected = 'summary'
+#            record.selected = 'summary'
+                self.editor_area.add_editor(editor)
+#                self._open_editor(editor)
+#                time.sleep(0.1)
+#            print self.record.selected
+#            print self.record.display_item
+#            for ri in records:
+
+
+#    def _get_display_item(self):
+#        return self.record.display_item
 #============= EOF =============================================

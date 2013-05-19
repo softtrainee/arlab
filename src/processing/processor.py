@@ -44,6 +44,20 @@ class Processor(IsotopeDatabaseManager):
 # #            self.component = comp
 #            if comp:
 #                self.active_editor.component = comp
+    def recall(self):
+        if self.db.connect():
+            ps = self.search_manager
+            ps.selected = None
+            ps.selector.load_last(n=20)
+
+            return [self._record_factory(si) for si in ps.selector.records[-1:]]
+#            info = ps.edit_traits(view='modal_view')
+#            print info.result
+#            if info.result:
+#                print ps.selector.selected
+#                return [self._record_factory(si) for si in ps.selector.selected]
+#                return ps.selected
+
     def find(self):
         if self.db.connect():
             ps = self.search_manager
@@ -51,23 +65,25 @@ class Processor(IsotopeDatabaseManager):
             ps.selector.load_last(n=20)
             self.open_view(ps)
 
+    def _record_factory(self, pi):
+        rec = IsotopeRecord(_dbrecord=self.db.get_analysis_uuid(pi.uuid),
+                            graph_id=pi.graph_id,
+                            group_id=pi.group_id)
+        a = Analysis(isotope_record=rec)
+        a.load_isotopes()
+        return a
+
     def _gather_data(self):
         d = self.selector_manager
         if self.db.connect():
             info = d.edit_traits(kind='livemodal')
             if info.result:
 
-                db = self.db
-                def factory(pi):
-                    rec = IsotopeRecord(_dbrecord=db.get_analysis_uuid(pi.uuid),
-                                        graph_id=pi.graph_id,
-                                        group_id=pi.group_id)
-                    a = Analysis(isotope_record=rec)
-                    a.load_isotopes()
-                    return a
+#                db = self.db
+
 
         #        self.db.selector.load_last(n=10)
-                ans = [factory(ri) for ri in d.selected_records
+                ans = [self._record_factory(ri) for ri in d.selected_records
                                     if not isinstance(ri, Marker)]
                 return ans
 

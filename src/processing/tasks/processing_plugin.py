@@ -23,7 +23,8 @@ from src.processing.processor import Processor
 from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
-from src.processing.tasks.processing_actions import FindAction, IdeogramAction
+from src.processing.tasks.processing_actions import FindAction, IdeogramAction, \
+    RecallAction
 from src.processing.tasks.recall_task import RecallTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -53,7 +54,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                                                       ),
                                        SchemaAddition(
                                                       id='recall_action',
-                                                      factory=IdeogramAction,
+                                                      factory=RecallAction,
                                                       path='MenuBar/File'
                                                       )
                                        ]
@@ -67,18 +68,18 @@ class ProcessingPlugin(BaseTaskPlugin):
                             name='Processing',
                             accelerator='Ctrl+P'
                             ),
-#                TaskFactory(id='pychron.recall',
-#                            factory=self._recall_task_factory,
-#                            name='Analysis',
-# #                            accelerator='Ctrl+P'
-#                            ),
+                TaskFactory(id='pychron.recall',
+                            factory=self._recall_task_factory,
+                            name='Recall',
+ #                            accelerator='Ctrl+P'
+                            ),
                 ]
 
     def _processor_factory(self):
         return Processor(application=self.application)
 
     def _recall_task_factory(self):
-        return RecallTask()
+        return RecallTask(manager=self._processor_factory())
 
     def _task_factory(self):
 #        processor = self.application.get_service(Processor)

@@ -57,27 +57,55 @@ class _TextTableEditor(Editor):
         '''
         adapter = self.factory.adapter
         tables = adapter.make_tables(self.value)
-        for ti in tables:
-            self._add_table(ti)
+        for ti, border in tables:
+            self._add_table(ti, border)
 #        self.control.moveCursor(QTextCursor.Start)
 #        self.control.ensureCursorVisible()
-    def _add_table(self, tab):
+    def _add_table(self, tab, border):
         cursor = QTextCursor(self.control.textCursor())
 
         fmt = QTextTableFormat()
-#        br = QBrush()
-#        br.setColor(QColor('red'))
+#        if self.factory.header_color:
+#            br = fmt.borderBrush()
+#
+# #            br = QBrush()
+# #            br.setColor(QColor(self.factory.header_color))
+#            br.setColor(QColor('green'))
+#            fmt.setBorderBrush(br)
+#        fmt.setBorder(3)
+#            fmt.setBorderBrush(br)
+
 #        fmt.setBackground(br)
         fmt.setCellSpacing(0)
         fmt.setCellPadding(3)
-        fmt.setBorderStyle(QTextFrameFormat.BorderStyle_None)
+        if border:
+            fmt.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
+        else:
+            fmt.setBorderStyle(QTextFrameFormat.BorderStyle_None)
 
         cursor.insertTable(tab.rows(), tab.cols(), fmt)
         table = cursor.currentTable()
+        ec = self.factory.even_color
+        oc = self.factory.odd_color
+
         for ri, row in enumerate(tab.items):
             for ci, cell in enumerate(row.cells):
                 tcell = table.cellAt(ri, ci)
                 fmt = QTextTableCellFormat()
+
+                if row.color:
+                    c = row.color
+                elif ri == 0:
+                    c = self.factory.header_color
+                else:
+                    if (ri - 1) % 2 == 0:
+                        c = ec
+                    else:
+                        c = oc
+
+                if c:
+                    fmt.setBackground(QColor(c))
+
                 if cell.bold:
                     fmt.setFontWeight(QFont.Bold)
                 else:
@@ -88,7 +116,7 @@ class _TextTableEditor(Editor):
                 cur = tcell.firstCursorPosition()
                 cur.insertText(cell.text)
 
-        self.control.setHtml(self.control.toHtml())
+#        self.control.setHtml(self.control.toHtml())
 
 #
 #        cols = self.factory.adapter.columns
@@ -133,6 +161,9 @@ class _TextTableEditor(Editor):
 class TextTableEditor(BasicEditorFactory):
     klass = _TextTableEditor
     bg_color = Color
+    odd_color = Str
+    even_color = Str
+    header_color = Str
     clear = Str
     adapter = Any
 #============= EOF =============================================

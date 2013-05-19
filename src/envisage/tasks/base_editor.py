@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,41 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Bool, Instance
+from traitsui.api import View, Item, UI
+from pyface.tasks.editor import Editor
+from src.loggable import Loggable
 #============= standard library imports ========================
-import math
-from functools import partial
 #============= local library imports  ==========================
-def calc_percent_error(v, e):
-        try:
 
-            sigpee = '{:0.2f}'.format(abs(e / v * 100))
-        except ZeroDivisionError:
-            sigpee = 'NaN'
-        return sigpee
+class BaseTraitsEditor(Editor, Loggable):
+    dirty = Bool(False)
+    ui = Instance(UI)
 
-def errorfmt(v, e):
-        pe = calc_percent_error(v, e)
-        return '{} ({}%)'.format(floatfmt(e), pe)
+    def create(self, parent):
+        self.control = self._create_control(parent)
 
-def floatfmt(f, n=4, s=2, max_width=None):
-    if abs(f) < 1e-20:
-        v = '0.0'
-    else:
+    def destroy(self):
+        self.ui.dispose()
+        self.control = self.ui = None
 
-        if abs(f) < math.pow(10, -(n - 1)) or abs(f) > math.pow(10, s + 1):
-            fmt = '{{:0.{}E}}'.format(s)
-        else:
-            fmt = '{{:0.{}f}}'.format(n)
-
-        v = fmt.format(f)
-        if max_width:
-            if len(v) > max_width:
-                v = v[:max_width]
-
-    return v
-
-def pfloatfmt(**kw):
-    return partial(floatfmt, **kw)
+    def _create_control(self, parent):
+        raise NotImplementedError
 
 #============= EOF =============================================

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Property, Any, Instance, \
     Bool, Int, Array, cached_property
-from traitsui.api import View, Item, TableEditor
+
 #============= standard library imports ========================
 from uncertainties import ufloat
 from numpy import array, delete
@@ -25,13 +25,27 @@ from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 import struct
 #============= local library imports  ==========================
-class IsotopicMeasurement(HasTraits):
-    dbrecord = Any
-    dbresult = Any
+class BaseMeasurement(HasTraits):
+    xs = Array
+    ys = Array
 
     name = Str
     mass = Float
     detector = Str
+    def __init__(self, dbrecord=None, *args, **kw):
+        super(BaseMeasurement, self).__init__(*args, **kw)
+        if dbrecord:
+            xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
+            self.xs = array(xs)
+            self.ys = array(ys)
+    def _unpack_blob(self, blob, endianness='>'):
+        return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+
+
+class IsotopicMeasurement(BaseMeasurement):
+    dbrecord = Any
+    dbresult = Any
+
 
     uvalue = Property(depends='value, error, _value, _error')
     value = Property(depends_on='_value,fit')
@@ -44,8 +58,7 @@ class IsotopicMeasurement(HasTraits):
     filter_outlier_iterations = Int
     filter_outlier_std_devs = Int
 
-    xs = Array
-    ys = Array
+
     regressor = Property(depends_on='xs,ys,fit')
 
     def __init__(self, *args, **kw):
@@ -54,11 +67,6 @@ class IsotopicMeasurement(HasTraits):
         if self.dbresult:
             self._value = self.dbresult.signal_
             self._error = self.dbresult.signal_err
-
-        if self.dbrecord:
-            xs, ys = self._unpack_blob(self.dbrecord.signals[-1].data)
-            self.xs = array(xs)
-            self.ys = array(ys)
 
     def set_fit(self, fit):
         if fit is not None:
@@ -87,8 +95,6 @@ class IsotopicMeasurement(HasTraits):
         reg = MeanRegressor(xs=self.xs, ys=self.ys)
         return reg
 
-    def _unpack_blob(self, blob, endianness='>'):
-        return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
     def _set_error(self, v):
         self._error = v
@@ -184,12 +190,17 @@ class Blank(CorrectionIsotopicMeasurement):
 class Baseline(IsotopicMeasurement):
     _kind = 'baseline'
 
+class Sniff(BaseMeasurement):
+    pass
+
 class Isotope(IsotopicMeasurement):
     _kind = 'signal'
 
     baseline = Instance(Baseline, ())
     blank = Instance(Blank, ())
     background = Instance(Background, ())
+    sniff = Instance(Sniff)
+
     def baseline_corrected_value(self):
         return self.uvalue - self.baseline.uvalue
 

@@ -49,6 +49,8 @@ from src.viewable import Viewable
 import tempfile
 import os
 from src.paths import paths
+from src.graph.tools.point_inspector import PointInspector, \
+    PointInspectorOverlay
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
@@ -148,7 +150,15 @@ class Graph(Viewable, ContextMenuMixin):
 
         pc.tools.append(menu)
 
-
+    def add_point_inspector(self, scatter, convert_index=None):
+        point_inspector = PointInspector(scatter,
+                                        convert_index=convert_index)
+        pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                       tool=point_inspector
+                                                       )
+    #
+        scatter.overlays.append(pinspector_overlay)
+        scatter.tools.append(point_inspector)
 
     def closed(self, *args):
         if self.close_func:

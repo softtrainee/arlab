@@ -128,10 +128,6 @@ class ExperimentEditorTask(EditorTask):
         editor.new_queue()
         self._open_editor(editor)
 
-    def _open_editor(self, editor):
-        self.editor_area.add_editor(editor)
-        self.editor_area.activate_editor(editor)
-
     def _save_file(self, path):
         self.active_editor.save(path)
         self.manager.test_queues()

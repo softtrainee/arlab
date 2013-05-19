@@ -15,185 +15,86 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Str, Float, Int
-from traitsui.api import View, Item, UItem, TabularEditor, VSplit, VGroup, HGroup
-from src.database.isotope_analysis.summary import Summary, SummaryAdapter, \
-    TextTable, TextRow, TextCell, BoldCell
-from traitsui.tabular_adapter import TabularAdapter
-from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error
-from src.constants import PLUSMINUS, PLUSMINUS_ERR
+from traits.api import HasTraits, Property, List, Str, Float, Any
+from traitsui.api import View, Item, UItem, VSplit, VGroup, HGroup, HSplit
+
+# from src.processing.tasks.text_table import TextTable, TextRow, TextCell, BoldCell, TextTableAdapter
+# from traitsui.tabular_adapter import TabularAdapter
+from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
+    pfloatfmt
+from src.constants import PLUSMINUS
 from src.ui.qt.text_table_editor import TextTableEditor
 from kiva.fonttools import Font
+from src.database.records.ui.text_table import BoldCell, TextCell, TextRow, \
+    TextTable, TextTableAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class SignalAdapter(TabularAdapter):
+class BaseSignalAdapter(TextTableAdapter):
+    def _make_tables(self, value):
+        return [self._make_signal_table(value)]
+
+    def _make_signal_table(self, sg):
+        rs = [self._make_header_row()]
+        rs.extend(
+                   [TextRow(*[self._cell_factory(ri, args)
+                              for args in self.columns])
+                                for ri in sg]
+                   )
+        tt = TextTable(
+                       *rs
+                       )
+        return tt, True
+
+class RawAdapter(BaseSignalAdapter):
     columns = [
-               ('Isotope', 'isotope'),
-               ('Detector', 'detector'),
-               ('Signal (fA)', 'signal_value'),
-               (u'{} 1s'.format(PLUSMINUS), 'signal_error'),
-               ('Error Comp. %', 'error_component')
-               ]
-
-    isotope_width = Int(50)
-    detector_width = Int(70)
-    error_component_width = Int(100)
-    signal_value_width = Int(100)
-    signal_error_width = Int(80)
-
-    signal_value_text = Property
-    signal_error_text = Property
-    error_component_text = Property
-
-    def _get_error_component_text(self, *args, **kw):
-        return floatfmt(self.item.error_component, n=2)
-    def _get_signal_value_text(self, *args, **kw):
-        return floatfmt(self.item.signal_value)
-    def _get_signal_error_text(self, *args, **kw):
-        return floatfmt(self.item.signal_error)
-
-class RatiosAdapter(TabularAdapter):
-    columns = [
-               ('Ratio', 'name'),
-               ('Value', 'value'),
-               (u'{}1s'.format(PLUSMINUS), 'error'),
-#               ('*40Ar %', 'rad40_error'),
-
-               ]
-
-    name_width = Int(100)
-    value_width = Int(80)
-    error_width = Int(80)
-    value_text = Property
-    error_text = Property
-
-#    rad40_error_text = Property
-
-    def _get_value_text(self):
-        return floatfmt(self.item.value)
-
-    def _get_error_text(self):
-        return floatfmt(self.item.error)
-#    def _get_rad40_error_text(self):
-#        return floatfmt(self.item.rad40_error)
-
-
-ERROR_PERCENT_WIDTH = 50
-VALUE_WIDTH = 60
-ERROR_WIDTH = 60
-class RawAdapter(TabularAdapter):
-    columns = [
-               ('Isotope', 'isotope'),
-               ('Detector', 'detector'),
+               ('Isotope', 'isotope', str),
+               ('Detector', 'detector', str),
                ('Raw (fA)', 'raw_value'),
                (u'{}1s'.format(PLUSMINUS), 'raw_error'),
-               (u'{}%'.format(PLUSMINUS), 'raw_error_percent'),
-               ('Fit', 'fit'),
+               (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str),
+               ('Fit', 'fit', str),
 
                ('Baseline (fA)', 'baseline_value'),
                (u'{} 1s'.format(PLUSMINUS), 'baseline_error'),
-               (u'{}%'.format(PLUSMINUS), 'baseline_error_percent'),
+               (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str),
 
                ('Blank (fA)', 'blank_value'),
                (u'{} 1s'.format(PLUSMINUS), 'blank_error'),
-               (u'{}%'.format(PLUSMINUS), 'blank_error_percent'),
-
+               (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str),
+             ]
+class SignalAdapter(BaseSignalAdapter):
+    columns = [
+               ('Isotope', 'isotope', str),
+               ('Detector', 'detector', str),
+               ('Signal (fA)', 'signal_value'),
+               (u'{} 1s'.format(PLUSMINUS), 'signal_error'),
+               ('Error Comp. %', 'error_component', pfloatfmt(n=1))
+               ]
+class RatiosAdapter(TextTableAdapter):
+    columns = [
+               ('Ratio', 'name', str),
+               ('Value', 'value'),
+               (u'{}1s'.format(PLUSMINUS), 'error'),
                ]
 
+    def _make_tables(self, value):
+        rs = [self._make_header_row(),
+              ]
+        for vi in value:
+            ri = TextRow(
+                         self._cell_factory(vi, (None, 'name', str)),
+                         self._cell_factory(vi, (None, 'value')),
+                         self._cell_factory(vi, (None, 'error')),
+                         )
+            rs.append(ri)
+        tt = TextTable(*rs)
+        return [(tt, True)]
 
-    isotope_width = Int(50)
-    detector_width = Int(60)
-    fit_width = Int(40)
-
-    raw_value_width = Int(VALUE_WIDTH)
-    raw_error_width = Int(ERROR_WIDTH)
-    raw_error_percent_width = Int(ERROR_PERCENT_WIDTH)
-
-    blank_value_width = Int(VALUE_WIDTH)
-    blank_error_width = Int(ERROR_WIDTH)
-    blank_error_percent_width = Int(ERROR_PERCENT_WIDTH)
-
-    baseline_value_width = Int(VALUE_WIDTH + 20)
-    baseline_error_width = Int(ERROR_WIDTH)
-    baseline_error_percent_width = Int(ERROR_PERCENT_WIDTH)
-
-    raw_value_text = Property
-    raw_error_text = Property
-    raw_error_percent_text = Property
-
-    baseline_value_text = Property
-    baseline_error_text = Property
-    baseline_error_percent_text = Property
-
-    blank_value_text = Property
-    blank_error_text = Property
-    blank_error_percent_text = Property
-
-    def get_font(self, *args, **kw):
-        from PySide.QtGui import QFont
-        font = QFont()
-        font.setPointSize(10)
-        return font
-#        return Font(f, size=10)
-
-    def _get_raw_value_text(self, *args, **kw):
-        return floatfmt(self.item.raw_value)
-
-    def _get_raw_error_text(self, *args, **kw):
-        return floatfmt(self.item.raw_error)
-
-    def _get_raw_error_percent_text(self, *args, **kw):
-        v = self.item.raw_value
-        e = self.item.raw_error
-        return calc_percent_error(v, e)
-
-    def _get_baseline_value_text(self, *args, **kw):
-        return floatfmt(self.item.baseline_value)
-
-    def _get_baseline_error_text(self, *args, **kw):
-        return floatfmt(self.item.baseline_error)
-
-    def _get_baseline_error_percent_text(self, *args, **kw):
-        v = self.item.baseline_value
-        e = self.item.baseline_error
-        return calc_percent_error(v, e)
-
-    def _get_blank_value_text(self, *args, **kw):
-        return floatfmt(self.item.blank_value)
-
-    def _get_blank_error_text(self, *args, **kw):
-        return floatfmt(self.item.blank_error)
-
-    def _get_blank_error_percent_text(self, *args, **kw):
-        v = self.item.blank_value
-        e = self.item.blank_error
-        return calc_percent_error(v, e)
-
-class Signal(HasTraits):
-    isotope = Str
-    detector = Str
-    fit = Str
-    raw_value = Float
-    raw_error = Float
-    baseline_value = Float
-    baseline_error = Float
-    blank_value = Float
-    blank_error = Float
-    signal_value = Float
-    signal_error = Float
-    error_component = Float
-
-class Ratio(HasTraits):
-    value = Float
-    error = Float
-    name = Str
-#    rad40_error = Float
-
-class AnalysisSummaryAdapter(SummaryAdapter):
+class AnalysisSummaryAdapter(TextTableAdapter):
 #    columns = 10
     def _make_tables(self, record):
         info_table = self._make_info_table(record)
-        return [info_table]
+        return [(info_table, False)]
 
     def _make_info_table(self, record):
 
@@ -203,7 +104,7 @@ class AnalysisSummaryAdapter(SummaryAdapter):
                                   record.irradiation_level.name)
 
         j, je = record.j.nominal_value, record.j.std_dev
-        flux = '{} {}{}'.format(floatfmt(j), PLUSMINUS, errorfmt(j, je))
+        flux = u'{} {}{}'.format(floatfmt(j), PLUSMINUS, errorfmt(j, je))
         sens = ''
         tt = TextTable(
                        TextRow(
@@ -245,10 +146,53 @@ class AnalysisSummaryAdapter(SummaryAdapter):
                        )
         return tt
 
+# ERROR_PERCENT_WIDTH = 50
+# ALUE_WIDTH = 60
+# ERROR_WIDTH = 60
 
-class AnalysisSummary(Summary):
+class Signal(HasTraits):
+    isotope = Str
+    detector = Str
+    fit = Str
+    raw_value = Float
+    raw_error = Float
+    baseline_value = Float
+    baseline_error = Float
+    blank_value = Float
+    blank_error = Float
+    signal_value = Float
+    signal_error = Float
+    error_component = Float
+
+    raw_error_percent = Property
+    baseline_error_percent = Property
+    blank_error_percent = Property
+
+    def _get_raw_error_percent(self):
+        v = self.raw_value
+        e = self.raw_error
+        return calc_percent_error(v, e)
+    def _get_baseline_error_percent(self):
+        v = self.baseline_value
+        e = self.baseline_error
+        return calc_percent_error(v, e)
+    def _get_blank_error_percent(self):
+        v = self.blank_value
+        e = self.blank_error
+        return calc_percent_error(v, e)
+
+class Ratio(HasTraits):
+    value = Float
+    error = Float
+    name = Str
+
+class AnalysisSummary(HasTraits):
+    record = Any
     signals = Property(List, depends_on='record')
     ratios = Property(List, depends_on='record')
+    def refresh(self):
+        pass
+
     def _make_ratio(self, name, n, d, scalar=1):
         try:
             rr = (n / d) * scalar
@@ -319,64 +263,41 @@ class AnalysisSummary(Summary):
                             )
         return isotopes
 
-    def _calculate_error_components(self):
-        record = self.record
-
-#        keys = record.isotope_keys[:]
-#        keys += ('j', 'ic_factor')
-#        vs = []
-#        mx = -1e20
-#        for key in keys:
-#            v = self.record.get_error_component(key)
-#            vs.append(v)
-#            if v > mx:
-#                max_key = key
-#                mx = v
-#        components = dict()
-#        for key, v in zip(keys, vs):
-#            components[key] = v / 100.
-#            if key == max_key:
-#                self._print_value(key, v, int(v / 100.*50), color='red')
-#            else:
-#                self._print_value(key, v, int(v / 100.*50))
-
     def traits_view(self):
         v = View(
                  VSplit(
-#                        UItem('record',
-#                              editor=TextTableEditor(adapter=AnalysisSummaryAdapter()),
-#                              height=0.5
-#                              ),
                         UItem('record',
                               editor=TextTableEditor(adapter=AnalysisSummaryAdapter(),
                                                      bg_color='light yellow'
                                                      ),
-                              height=0.2
+                              height=0.25
                               ),
-                        UItem('signals', editor=TabularEditor(adapter=RawAdapter(),
-                                                       stretch_last_section=False,
-                                                       auto_update=False,
-                                                       editable=False
-                                                       ),
-                              height=0.5
+                        UItem('signals',
+                               editor=TextTableEditor(adapter=RawAdapter(),
+                                                     bg_color='light yellow',
+                                                     odd_color='#9EE8FF',
+                                                     header_color='lightgray'
+                                                     ),
+                              height=0.25
                               ),
-                       HGroup(
-                              UItem('signals', editor=TabularEditor(adapter=SignalAdapter(),
-                                                       stretch_last_section=False,
-                                                       auto_update=False,
-                                                       editable=False
+                       HSplit(
+                              UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
+                                                                      bg_color='light yellow',
+                                                                      odd_color='#9EE8FF',
+                                                                      header_color='lightgray'
                                                        ),
-                                    height=0.8
-                                    ),
 
-                              UItem('ratios', editor=TabularEditor(adapter=RatiosAdapter(),
-                                                       stretch_last_section=False,
-                                                       auto_update=False,
-                                                       editable=False
+                                    height=0.5,
+                                    width=0.75
+                                    ),
+                              UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
+                                                                      bg_color='light yellow',
+                                                                      odd_color='#9EE8FF',
+                                                                      header_color='lightgray'
                                                        ),
-                                    height=0.8
+                                    height=0.5,
+                                    width=0.25
                                     ),
-
                               ),
                         )
                  )
