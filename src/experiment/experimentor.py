@@ -447,6 +447,10 @@ class Experimentor(Experimentable):
 
     def _pasted_changed(self):
         self._update()
+
+    @on_trait_change('experiment_queue:refresh_button')
+    def _refresh(self):
+        self.update_info()
 #    @on_trait_change('can_edit_script, max_allowable_runs')
 #    def _update_value(self, name, value):
 #        setattr(self.experiment_factory, name, value)

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
+from traits.api import HasTraits, Any, Button
 from traitsui.api import View, Item, TableEditor
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
@@ -27,6 +27,7 @@ class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
     current_run = Any
     selected = Any
+    refresh_button = Button('Refresh')
 
     def test_runs(self):
 #         self.executable=True

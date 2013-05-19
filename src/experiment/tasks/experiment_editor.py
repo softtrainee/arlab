@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int
-from traitsui.api import View, Item, UI, UItem
+from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup
 from pyface.tasks.api import Editor
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
@@ -49,6 +49,8 @@ class ExperimentEditor(Editor, Loggable):
 
     def _create_control(self, parent):
         v = View(
+                 VGroup(
+                 HGroup(spring, Item('refresh_button', show_label=False)),
                  UItem('automated_runs',
                                show_label=False,
                                editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
@@ -66,7 +68,8 @@ class ExperimentEditor(Editor, Loggable):
                                             auto_update=True,
                                             multi_select=True,
                                             scroll_to_bottom=False)
-                       ),
+                       )
+                        ),
                  resizable=True
                  )
 
