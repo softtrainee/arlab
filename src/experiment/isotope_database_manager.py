@@ -16,15 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
-# from src.loggable import Loggable
-# from src.progress_dialog import myProgressDialog
 
 
 class IsotopeDatabaseManager(Manager):
@@ -91,14 +88,17 @@ class IsotopeDatabaseManager(Manager):
         db = IsotopeAdapter(application=self.application)
         return db
 
-    def _load_analyses(self, ans):
+    def _load_analyses(self, ans, func=None):
         progress = self._open_progress(len(ans))
         for ai in ans:
             msg = 'loading {}'.format(ai.record_id)
             progress.change_message(msg)
-            ai.load_isotopes()
-#            ai.initialize()
-            ai.age
+
+            if func:
+                func(ai)
+            else:
+                ai.load_isotopes()
+
             progress.increment()
 
     def _open_progress(self, n):

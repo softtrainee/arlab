@@ -39,6 +39,7 @@ from src.envisage.tasks.editor_task import EditorTask
 
 # class ProcessingTask(BaseManagerTask, Loggable):
 class ProcessingTask(EditorTask):
+    name = 'Processing'
 #    active_editor = Property(Instance(IEditor),
 #                             depends_on='editor_area.active_editor'
 #                             )

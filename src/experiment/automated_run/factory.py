@@ -130,8 +130,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     cbs_enabled = Property(depends_on='_selected_runs')
 
     suppress_update = False
+#    clear_selection = Event
 
-    clear_selection = Event
+    edit_mode = False
 
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
@@ -248,7 +249,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         e = 0
         _ln, special = self._make_short_labnumber()
         if special:
-#            arvs = [self._new_run(position=self.position)]
             arvs = [self._new_run()]
         else:
             if self.position:
@@ -274,36 +274,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                     arvs = [self._new_run()]
             else:
                 arvs = [self._new_run()]
-
-#        if self.position and not special:
-#            s = int(self.position)
-#            e = int(self.endposition)
-#            if e:
-#                if e < s:
-#                    self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-#                    return
-#                arvs = []
-#                for i in range(e - s + 1):
-# #                    ar.position = str(s + i)
-#                    position = str(s + i)
-#                    arvs.append(self._new_run(position=position))
-#                    '''
-#                        clear user_defined_aliquot flag
-#                        if adding multiple runs this allows
-#                        the subsequent runs to have there aliquots defined by db
-#                    '''
-#                    self.user_defined_aliquot = False
-#
-#            else:
-#                arvs = [self._new_run(position=str(s), special=special)]
-#                 self.position = self._increment(self.position)
-#        elif self.position and self.labnumber == 'dg':
-#            arvs = [self._new_run(special=False, position=self.position)]
-#
-# #             self.position = self._increment(self.position)
-#        else:
-#            arvs = [self._new_run(special=special)]
-
         return arvs
 
     def _increment(self, m, increment=1):
@@ -494,15 +464,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #                    else:
 #                        v = ''
 
-
-
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
 pattern,
 position,
 weight, comment''')
     def _edit_handler(self, name, new):
-        if self._selected_runs and not self.suppress_update:
+        if self.edit_mode and \
+            self._selected_runs and \
+            not self.suppress_update:
             cb = True
             cbname = 'cb_{}'.format(name)
             if hasattr(self, cbname):
@@ -520,6 +490,9 @@ post_measurement_script:cb,
 post_equilibration_script:cb
     ''')
     def _edit_script_cb_handler(self, obj, name, new):
+        if not self.edit_mode:
+            return
+
         name = '{}_script'.format(obj.label)
         if new:
             if obj.label == 'Extraction':

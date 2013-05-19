@@ -28,6 +28,7 @@ class ExperimentQueue(BaseExperimentQueue):
     current_run = Any
     selected = Any
     refresh_button = Button('Refresh')
+    dclicked = Any
 
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):

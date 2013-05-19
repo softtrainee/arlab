@@ -70,13 +70,12 @@ class ProcessingPlugin(BaseTaskPlugin):
         return [
                 TaskFactory(id='pychron.processing',
                             factory=self._task_factory,
-                            name='Processing',
-                            accelerator='Ctrl+P'
+                            accelerator='Ctrl+P',
+                            name='Processing'
                             ),
                 TaskFactory(id='pychron.recall',
                             factory=self._recall_task_factory,
-                            name='Recall',
- #                            accelerator='Ctrl+P'
+                            name='Recall'
                             ),
                 ]
 

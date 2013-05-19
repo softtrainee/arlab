@@ -90,7 +90,6 @@ class BaseExperimentQueue(Loggable):
                 if ai.analysis_type == 'unknown':
                     cnt += 1
 
-
 #            inserts = [(i, ) for i, ai in enumerate(aruns)
 #                       if ai.analysis_type == 'unknown' and ]
 #            print inserts
@@ -100,11 +99,15 @@ class BaseExperimentQueue(Loggable):
 
             self.update_needed = True
         else:
-            aruns.extend(runviews)
+            if self.selected:
+                idx = aruns.index(self.selected[-1])
+                for ri in reversed(runviews):
+                    aruns.insert(idx, ri)
+            else:
+                aruns.extend(runviews)
 #            self._suppress_aliquot_update = False
 
         self.update_needed = True
-
 
     def set_extract_device(self, ed):
         self.extract_device = ed
