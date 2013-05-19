@@ -52,15 +52,29 @@ class IdeogramAction(ProcessorAction):
 #        processor = self._get_processor()
 #        processor.new_ideogram()
 
+class NewRecallAction(ProcessorAction):
+    name = 'Recall'
+    accelerator = 'Ctrl+Shift+R'
+    def perform(self, event):
+        app = event.task.window.application
+        win = app.create_window(TaskWindowLayout(
+                                           'pychron.recall'
+                                           )
+                          )
+        win.open()
+        task = win.active_task
+        task.recall()
+
 class RecallAction(ProcessorAction):
     name = 'Recall'
+    accelerator = 'Ctrl+R'
     def perform(self, event):
 
         task = event.task
-        if not task.id == 'pychron.processing':
+        if not task.id == 'pychron.recall':
             app = task.window.application
             win = app.create_window(TaskWindowLayout(
-                                               'pychron.processing'
+                                               'pychron.recall'
                                                )
                               )
             win.open()

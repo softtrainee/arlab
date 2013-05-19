@@ -117,6 +117,12 @@ class SearchManager(Viewable, ColumnSorterMixin):
                            )
         return cntrl_grp
 
+    def modal_view(self):
+        v = self.traits_view()
+        v.buttons = ['OK', 'Cancel']
+        v.kind = 'livemodal'
+        return v
+
     def traits_view(self):
         cntrl_grp = self._get_control_group()
         v = View(

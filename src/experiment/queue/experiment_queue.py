@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button
+from traits.api import HasTraits, Any, Button, on_trait_change
 from traitsui.api import View, Item, TableEditor
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
@@ -28,6 +28,12 @@ class ExperimentQueue(BaseExperimentQueue):
     current_run = Any
     selected = Any
     refresh_button = Button('Refresh')
+
+    @on_trait_change('automated_runs[]')
+    def _refresh_info(self, new):
+        self.debug('automated runs len changed {}'.format(new))
+        if self.automated_runs:
+            self.refresh_button = True
 
     def test_runs(self):
 #         self.executable=True

@@ -21,8 +21,7 @@ from src.constants import FIT_TYPES, PLUSMINUS
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-class AnalysisParameters(HasTraits):
+class BaseParameters(HasTraits):
     fit = Str  # Enum('linear', 'parabolic', 'cubic')
     filterstr = Str(enter_set=True, auto_set=False)
     name = Str
@@ -80,4 +79,33 @@ class AnalysisParameters(HasTraits):
                         )
                  )
         return v
+class BaselineParameters(BaseParameters):
+    pass
+class AnalysisParameters(BaseParameters):
+    show_sniff = Bool(True)
+    def traits_view(self):
+        v = View(HGroup(Label(self.name),
+                        Spring(width=50 - 10 * len(self.name), springy=False),
+                        Item('show', show_label=False),
+                        Item('fit', editor=EnumEditor(values=FIT_TYPES),
+                             show_label=False,
+                             enabled_when='show'
+                             ),
+                        Item('show_sniff', show_label=False, enabled_when='show'),
+                        Item('filterstr[]', enabled_when='show'),
+                        Item('filter_outliers',
+                             enabled_when='show',
+                             show_label=False),
+                        Spring(width=20, springy=False),
+                        Item('intercept',
+                              style='readonly',
+                              show_label=False,
+                              ),
+                        Item('error',
+                              show_label=False,
+                              style='readonly')
+                        )
+                 )
+        return v
+
 #============= EOF =============================================

@@ -329,7 +329,10 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_cak(self):
-        return 1 / self.kca
+        try:
+            return 1 / self.kca
+        except ZeroDivisionError:
+            return 0
 
     @cached_property
     def _get_kcl(self):

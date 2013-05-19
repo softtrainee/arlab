@@ -408,7 +408,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def _view_factory(self):
         editor = myTabularEditor(adapter=self.tabular_adapter(),
-                               dclicked='object.dclicked',
+#                               dclicked='object.dclicked',
                                selected='object.selected',
                                selected_row='object.selected_row',
                                update='update',

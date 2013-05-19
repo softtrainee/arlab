@@ -26,28 +26,23 @@ from pyface.file_dialog import FileDialog
 from src.paths import paths
 from pyface.constant import OK
 from src.experiment.queue.experiment_queue import ExperimentQueue
+from src.envisage.tasks.base_editor import  BaseTraitsEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ExperimentEditor(Editor, Loggable):
+class ExperimentEditor(BaseTraitsEditor):
     queue = Any
-    ui = Instance(UI)
     path = Unicode
-    dirty = Bool(False)
+
     name = Property(Unicode, depends_on='path')
     tooltip = Property(Unicode, depends_on='path')
 
     merge_id = Int(0)
     group = Int(0)
 
-    def create(self, parent):
-        self.control = self._create_control(parent)
-
-    def destroy(self):
-        self.ui.dispose()
-        self.control = self.ui = None
-
-    def _create_control(self, parent):
+#    def create(self, parent):
+#        self.control = self._create_control(parent)
+    def traits_view(self):
         v = View(
                  VGroup(
                  HGroup(spring, Item('refresh_button', show_label=False)),
@@ -72,14 +67,18 @@ class ExperimentEditor(Editor, Loggable):
                         ),
                  resizable=True
                  )
+        return v
 
-
-        self.ui = self.queue.edit_traits(kind='subpanel',
-                                         view=v
-
-                                         )
+    def _create_control(self, parent):
+        self.ui = self.edit_traits(kind='subpanel', parent=parent)
         return self.ui.control
 
+    def trait_context(self):
+        """ Use the model object for the Traits UI context, if appropriate.
+        """
+        if self.queue:
+            return { 'object': self.queue}
+        return super(ExperimentQueue, self).trait_context()
 #===========================================================================
 #
 #===========================================================================

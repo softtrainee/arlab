@@ -19,13 +19,14 @@ from traits.api import HasTraits, List, Any, on_trait_change
 from traitsui.api import View, Item, ListEditor, InstanceEditor, Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from analysis_parameters import AnalysisParameters
 from src.constants import PLUSMINUS
+from src.database.records.ui.analysis_parameters import BaseParameters, \
+    BaselineParameters, AnalysisParameters
 
 class FitSelector(HasTraits):
     analysis = Any
     graph = Any
-    fits = List(AnalysisParameters)
+    fits = List(BaseParameters)
     _suppress_update = False
     _plot_cache = None
     kind = 'signal'
@@ -42,6 +43,9 @@ class FitSelector(HasTraits):
 
         if self.kind == 'baseline':
             iso = iso.baseline
+            klass = BaselineParameters
+        else:
+            klass = AnalysisParameters
 
         fit = iso.fit
         if 'average' in fit:
@@ -53,7 +57,7 @@ class FitSelector(HasTraits):
         inte = iso.value
         er = iso.error
 
-        obj = AnalysisParameters(name=name,
+        obj = klass(name=name,
                                  fit=fit,
                                  filter_outliers=bool(fo),
                                  _intercept=inte,
@@ -61,7 +65,7 @@ class FitSelector(HasTraits):
                                  )
         return obj
 
-    @on_trait_change('fits:show')
+    @on_trait_change('fits:[show,show_sniff]')
     def refresh(self):
         if self.graph is None:
             getattr(self.analysis, '_make_{}_graph'.format(self.kind))()
@@ -81,6 +85,14 @@ class FitSelector(HasTraits):
                 p.visible = False
             else:
                 p.visible = True
+                if hasattr(a, 'show_sniff'):
+                    if 'sniff' in p.plots:
+                        sp = p.plots['sniff'][0]
+                        sp.visible = a.show_sniff
+#                    if a.show_sniff:
+
+
+
 
 #                if not len(p.plots['data0'][0].index.get_data()):
 #                    self.analysis.set_isotope_graph_data(a.name, self.kind)
