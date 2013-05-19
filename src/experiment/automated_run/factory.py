@@ -88,15 +88,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     #===========================================================================
     # checkboxes
     #===========================================================================
-    cb_pattern = Bool
-    cb_cleanup = Bool
-    cb_duration = Bool
-    cb_position = Bool
-    cb_extract_value = Bool
-    cb_extract_units = Bool
-
-    cb_comment = Bool
-    cb_weight = Bool
+#    cb_pattern = Bool
+#    cb_cleanup = Bool
+#    cb_duration = Bool
+#    cb_position = Bool
+#    cb_extract_value = Bool
+#    cb_extract_units = Bool
+#
+#    cb_comment = Bool
+#    cb_weight = Bool
 
     #===========================================================================
     # templates
@@ -127,12 +127,21 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
 #    frequencyable = Property(depends_on='labnumber')
     extractable = Property(depends_on='labnumber')
-    cbs_enabled = Property(depends_on='_selected_runs')
+#    cbs_enabled = Property(depends_on='_selected_runs')
 
     suppress_update = False
 #    clear_selection = Event
 
-    edit_mode = False
+    edit_mode = Bool(False)
+    edit_mode_label = Property(depends_on='edit_mode')
+#    edit_mode_button = Button('Edit')
+    edit_enabled = Bool(False)
+
+#    def _edit_mode_changed(self):
+#        if self.edit_mode:
+#            self.edit_enabled = False
+#        else:
+#            self.edit_enabled = True
 
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
@@ -154,8 +163,18 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         if runs:
             run = runs[0]
             self._clone_run(run)
+
         self._selected_runs = runs
         self.suppress_update = False
+        if not runs:
+            self.edit_mode = False
+            self.edit_enabled = False
+        elif len(runs) == 1:
+            self.edit_enabled = True
+        else:
+            self.edit_enabled = False
+            self.edit_mode = True
+
 
     def _make_short_labnumber(self, labnumber=None):
         if labnumber is None:
@@ -470,7 +489,6 @@ pattern,
 position,
 weight, comment''')
     def _edit_handler(self, name, new):
-        print name, new, self.edit_mode
         if self.edit_mode and \
             self._selected_runs and \
             not self.suppress_update:
@@ -672,8 +690,8 @@ post_equilibration_script:name
                     a = ln.analyses[-1].aliquot + 1
                     self.o_aliquot = a
                 except IndexError, e:
-                    self.debug('Lanbumer changed IndexError:{}'.format(e))
                     a = 1
+
                 self.aliquot = a
 
                 self.irradiation = self._make_irrad_level(ln)
@@ -707,11 +725,13 @@ post_equilibration_script:name
         self.open_view(temp)
         self._template = temp
 
+    def _edit_mode_button_fired(self):
+        self.edit_mode = not self.edit_mode
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_cbs_enabled(self):
-        return self._selected_runs
+    def _get_edit_mode_label(self):
+        return 'Editing' if self.edit_mode else ''
 
     def _get_extractable(self):
         ln = self.labnumber

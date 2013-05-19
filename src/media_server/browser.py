@@ -24,19 +24,19 @@ from enable.component_editor import ComponentEditor
 from enable.base_tool import BaseTool
 #============= standard library imports ========================
 import os
-import Image
-from numpy import array
+# import Image
+# from numpy import array
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.helpers.parsers.xml_parser import XMLParser
-from src.ui.custom_label_editor import CustomLabel
+# from src.helpers.parsers.xml_parser import XMLParser
+# #from src.ui.custom_label_editor import CustomLabelEditor
 # from src.graph.tools.xy_inspector import XYInspectorOverlay, XYInspector
 # from src.graph.image_underlay import ImageUnderlay
-from src.geometry.reference_point import ReferencePoint
+# from src.geometry.reference_point import ReferencePoint
 from chaco.abstract_overlay import AbstractOverlay
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
-from src.regex import make_image_regex
+# from src.regex import make_image_regex
 from src.media_server.image_viewer import ImageViewer
 from src.media_server.finder import Finder
 
