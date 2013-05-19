@@ -115,7 +115,7 @@ class Finder(HasTraits):
                                         nodes=nodes,
                                         editable=False)),
                  resizable=True,
-                 width=500,
+                 width=300,
                  height=500
                  )
         return v

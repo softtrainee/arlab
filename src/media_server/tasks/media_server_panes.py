@@ -36,7 +36,7 @@ class TreePane(TraitsDockPane):
     # The list of wildcard filters for filenames.
 #    filters = List(['*.png'])
 #    selected_file = File(os.path.expanduser('~'))
-#    def traits_view(self):
-#        v = View(UItem('finder', style='custom'))
-#        return v
+    def traits_view(self):
+        v = View(UItem('finder', style='custom'))
+        return v
 #============= EOF =============================================

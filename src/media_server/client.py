@@ -45,7 +45,10 @@ class MediaClient(Loggable):
 #===============================================================================
     def _parse_propfind(self, resp):
         parser = XMLParser()
-        tree = parser.load(resp)
+
+        parser.load(resp)
+        tree = parser.get_tree()
+
         name = '{{DAV:}}{}'.format
         def get_response_name(elem):
             href = elem.find(name('href'))
