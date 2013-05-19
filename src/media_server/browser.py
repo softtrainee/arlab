@@ -74,8 +74,6 @@ class ReferencePointsOverlay(AbstractOverlay):
                         gc.arc(x, y, 3, 0, 360)
                         gc.draw_path()
 
-
-
 # class Hierarchy(HasTraits):
 #    files = List
 #    directories = List
@@ -92,7 +90,6 @@ class ReferencePointsOverlay(AbstractOverlay):
 #                                           )))
 #        return v
 
-
 class Viewer(ImageViewer):
 #    container = Instance(HPlotContainer, ())
     name = String
@@ -103,6 +100,103 @@ class Viewer(ImageViewer):
 #    _defining_points = False
     reference_pt1 = None
 
+    def traits_view(self):
+        v = View(VGroup(
+#                        HGroup(
+#                               Item('open_button', show_label=False),
+#                               Item('define_points',
+#                                    enabled_when='plot',
+#                                    editor=ButtonEditor(label_value='define_points_label'),
+#                                    show_label=False),
+#                               spring, CustomLabel('name', color='maroon', size=16,
+#                                                   height= -25,
+#                                                   width=100,
+#                                                   ), spring),
+                        Item('container', show_label=False, editor=ComponentEditor()),
+                        )
+                 )
+        return v
+
+class MediaBrowser(Loggable):
+    client = Any
+    finder = Instance(Finder)
+    viewer = Instance(Viewer, ())
+    root = 'images'
+    def get_selected_image_name(self):
+        sel = self.finder.selected
+        if sel is not None:
+            return '/{}/{}'.format(self.root, sel)
+
+    def load_remote_directory(self, name, ext=None):
+        self.root = name
+        client = self.client
+        try:
+            resp = client.propfind(name)
+        except Exception, e:
+            self.warning_dialog('Could not connect to Media server at {}:{}'.format(self.client.host, self.client.port))
+            return
+
+        self.finder.load(resp)
+
+        return True
+
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('viewer:open_button')
+    def _open_fired(self):
+        dlg = FileDialog(action='open')
+        if dlg.open() == OK:
+            with open(dlg.path, 'rb') as fp:
+                self.viewer.set_image(fp)
+                self.hierarchy.files.append(os.path.basename(dlg.path))
+
+            self.client.cache(dlg.path)
+
+#    @on_trait_change('hierarchy:selected')
+    @on_trait_change('finder:selected')
+    def _update_selection(self, name):
+#        root = '{}/{}'.format(self.root, name)
+#        buf = self.client.retrieve(root.format(name))
+        buf = self.client.retrieve(name)
+        if buf:
+            buf.seek(0)
+            self.viewer.set_image(buf)
+
+    def _finder_default(self):
+        f = Finder(filesystem=self.client)
+        return f
+
+if __name__ == '__main__':
+
+    from src.media_server.client import MediaClient
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('media')
+    mc = MediaClient(host='localhost',
+                     use_cache=True,
+                     cache_dir='/Users/ross/Sandbox/cache',
+                     port=8008)
+    mb = MediaBrowser(client=mc)
+    mb.load_remote_directory('images')
+    mb.configure_traits()
+#============= EOF =============================================
+#    def modal_view(self):
+#        return self._view_factory(buttons=['OK', 'Cancel'])
+#
+#    def traits_view(self):
+#        return self._view_factory()
+#
+#    def _view_factory(self, **kw):
+#        v = View(HSplit(
+#                        Item('finder', width=0.25, style='custom', show_label=False),
+#                        Item('viewer', width=0.75, style='custom', show_label=False)
+#                        ),
+#                    width=800,
+#                    height=650,
+#                    resizable=True,
+#                    title='Image Browser', **kw
+#                 )
+#        return v
 #    def set_image(self, buf):
 #        '''
 #            buf is a file-like object
@@ -211,126 +305,6 @@ class Viewer(ImageViewer):
 #                plot.overlays.pop(-1)
 #
 #            self._defining_points = not self._defining_points
-
-
-    def traits_view(self):
-        v = View(VGroup(
-                        HGroup(
-                               Item('open_button', show_label=False),
-#                               Item('define_points',
-#                                    enabled_when='plot',
-#                                    editor=ButtonEditor(label_value='define_points_label'),
-#                                    show_label=False),
-                               spring, CustomLabel('name', color='maroon', size=16,
-                                                   height= -25,
-                                                   width=100,
-                                                   ), spring),
-                        Item('container', show_label=False, editor=ComponentEditor()),
-                 ))
-        return v
-
-class MediaBrowser(Loggable):
-    client = Any
-    finder = Instance(Finder)
-#    hierarchy = Instance(Hierarchy, ())
-    viewer = Instance(Viewer, ())
-    root = 'images'
-    def get_selected_image_name(self):
-        sel = self.finder.selected
-#        sel = self.hierarchy.selected
-        if sel is not None:
-            return '/{}/{}'.format(self.root, sel)
-
-    def load_remote_directory(self, name, ext=None):
-        self.root = name
-        client = self.client
-        try:
-            resp = client.propfind(name)
-        except Exception, e:
-            self.warning_dialog('Could not connect to Media server at {}:{}'.format(self.client.host, self.client.port))
-            return
-
-#        print resp.read()
-
-#        parser = XMLParser()
-#        tree = parser.load(resp)
-#        name = '{{DAV:}}{}'.format
-#        def get_file_name(elem):
-#            href = elem.find(name('href'))
-#            path = href.text.strip()
-#            return os.path.basename(path)
-#
-#
-# #        tree.findall()
-#
-#        im_regex = make_image_regex(ext)
-#        files = [get_file_name(ri) for ri in tree.findall(name('response'))]
-#        files = filter(lambda x: im_regex.match(x), files)
-#        self.hierarchy.files = files
-
-        self.finder.load(resp)
-
-        return True
-
-#===============================================================================
-# handlers
-#===============================================================================
-
-    @on_trait_change('viewer:open_button')
-    def _open_fired(self):
-        dlg = FileDialog(action='open')
-        if dlg.open() == OK:
-            with open(dlg.path, 'rb') as fp:
-                self.viewer.set_image(fp)
-                self.hierarchy.files.append(os.path.basename(dlg.path))
-
-            self.client.cache(dlg.path)
-
-#    @on_trait_change('hierarchy:selected')
-    @on_trait_change('finder:selected')
-    def _update_selection(self, name):
-#        root = '{}/{}'.format(self.root, name)
-#        buf = self.client.retrieve(root.format(name))
-        buf = self.client.retrieve(name)
-        if buf:
-            buf.seek(0)
-            self.viewer.set_image(buf)
-
-    def modal_view(self):
-        return self._view_factory(buttons=['OK', 'Cancel'])
-
-    def traits_view(self):
-        return self._view_factory()
-
-    def _view_factory(self, **kw):
-        v = View(HSplit(
-                        Item('finder', width=0.25, style='custom', show_label=False),
-                        Item('viewer', width=0.75, style='custom', show_label=False)
-                        ),
-                    width=800,
-                    height=650,
-                    resizable=True,
-                    title='Image Browser', **kw
-                 )
-        return v
-
-    def _finder_default(self):
-        f = Finder(filesystem=self.client)
-        return f
-
-if __name__ == '__main__':
-
-    from src.media_server.client import MediaClient
-    from src.helpers.logger_setup import logging_setup
-    logging_setup('media')
-    mc = MediaClient(host='localhost',
-                     use_cache=True,
-                     cache_dir='/Users/ross/Sandbox/cache',
-                     port=8008)
-    mb = MediaBrowser(client=mc)
-    mb.load_remote_directory('images')
-    mb.configure_traits()
-#============= EOF =============================================
 
 # class ScaleTool(BaseTool):
 #

@@ -32,9 +32,9 @@ class MediaServerTask(BaseManagerTask):
         return ViewPane(model=self.browser)
     def create_dock_panes(self):
         return [
-#                TreePane(
-#                         model=self.browser
-#                         )
+                TreePane(
+                         model=self.browser
+                         )
                 ]
 
 #============= EOF =============================================

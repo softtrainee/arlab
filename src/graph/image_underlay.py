@@ -42,8 +42,16 @@ class ImageUnderlay(AbstractOverlay):
         with gc:
             if self._cached_img is not None:
                 _x, _y, w, h = view_bounds
-                sw = (component.width) / float(w)
-                sh = (component.height) / float(h)
+                padding = self.padding
+                xoff = padding[0] + padding[1]
+                yoff = padding[2] + padding[3]
+                ch, cw, _ = self._cached_img.shape
+#                sw = (component.width) / float(w)
+#                sh = (component.height) / float(h)
+#                print sw, sh
+#                sw, sh = 0.5, 0.5
+                sw, sh = float(w - xoff) / float(cw), float(h - yoff) / float(ch)
+#                print sw, sh
                 gc.scale_ctm(sw, sh)
                 gc.draw_image(self._cached_img)
 

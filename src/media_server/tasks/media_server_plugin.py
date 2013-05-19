@@ -21,10 +21,20 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.media_server.tasks.media_server_task import MediaServerTask
 from src.media_server.browser import MediaBrowser
+from src.media_server.client import MediaClient
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class MediaServerPlugin(BaseTaskPlugin):
+    def _service_offers_default(self):
+        so = self.service_offer_factory(protocol=MediaClient,
+                                        factory=MediaClient
+                                        )
+        so1 = self.service_offer_factory(protocol=MediaBrowser,
+                                        factory=MediaBrowser
+                                        )
+        return [so, so1]
+
     def _tasks_default(self):
         return [TaskFactory(id='pychron.media_server',
                             factory=self._task_factory,
@@ -32,5 +42,13 @@ class MediaServerPlugin(BaseTaskPlugin):
                 ]
 
     def _task_factory(self):
-        return MediaServerTask(browser=MediaBrowser())
+        client = MediaClient(
+                             host='localhost',
+                             use_cache=True,
+                             cache_dir='/Users/ross/Sandbox/cache',
+                             port=8008
+                             )
+        browser = MediaBrowser(client=client)
+        browser.load_remote_directory('images')
+        return MediaServerTask(browser=browser)
 #============= EOF =============================================

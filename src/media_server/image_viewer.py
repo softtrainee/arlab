@@ -40,12 +40,15 @@ class ImageViewer(HasTraits):
         self.container = HPlotContainer()
         pd = ArrayPlotData(x=[0, 640],
                            y=[0, 480])
-        plot = Plot(data=pd, padding=[30, 5, 5, 30],
+        padding = [30, 5, 5, 30]
+        plot = Plot(data=pd, padding=padding,
 #                    default_origin=''
                     )
         self.plot = plot.plot(('x', 'y'),)[0]
         self.plot.index.sort_order = 'ascending'
-        imo = ImageUnderlay(self.plot, path=buf)
+        imo = ImageUnderlay(self.plot,
+                            padding=padding,
+                            path=buf)
         self.plot.overlays.append(imo)
 
         self._add_tools(self.plot)
