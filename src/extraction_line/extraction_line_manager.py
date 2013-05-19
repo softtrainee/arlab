@@ -26,7 +26,7 @@ from src.extraction_line.explanation.extraction_line_explanation import Extracti
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 from src.paths import paths
 from src.managers.manager import Manager
-from src.pyscripts.manager import PyScriptManager
+#from src.pyscripts.manager import PyScriptManager
 from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
@@ -63,7 +63,7 @@ class ExtractionLineManager(Manager):
 
     runscript = None
 
-    pyscript_editor = Instance(PyScriptManager)
+#    pyscript_editor = Instance(PyScriptManager)
     monitor = Instance(SystemMonitor)
 
     learner = None
@@ -547,8 +547,8 @@ class ExtractionLineManager(Manager):
 #=================== defaults ===========================
 #    def _view_controller_default(self):
 #        return self._view_controller_factory()
-    def _pyscript_editor_default(self):
-        return PyScriptManager(parent=self)
+#    def _pyscript_editor_default(self):
+#        return PyScriptManager(parent=self)
 
     def _valve_manager_default(self):
         from src.extraction_line.valve_manager import ValveManager
