@@ -136,11 +136,21 @@ class ExperimentEditorTask(EditorTask):
         self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
         self.manager.test_queues()
         self.manager.path = path
-
+        if self.manager.executor.isAlive():
+            if self.manager.executor.changed_flag:
+                self.manager.executor.end_at_run_completion = False
+        self.manager.executor.changed_flag = False
 
     def _active_editor_changed(self):
         if self.active_editor:
             self.manager.experiment_queue = self.active_editor.queue
+
+    @on_trait_change('active_editor:queue[]')
+    def _update_runs(self):
+        if self.manager.executor.isAlive():
+            self.manager.executor.end_at_run_completion = True
+            self.manager.executor.changed_flag = True
+#        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
 
     @on_trait_change('editor_area:editors[]')
     def _update_editors(self, new):
