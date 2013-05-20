@@ -28,6 +28,7 @@ from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.paths import paths
 import hashlib
+import os
 
 class ExperimentEditorTask(EditorTask):
     default_directory = paths.experiment_dir
@@ -162,15 +163,17 @@ class ExperimentEditorTask(EditorTask):
 #        '''
 #            queues need to be saved before execute
 #        '''
-        p = self.active_editor.path
-        group = self.active_editor.group
-        min_idx = self.active_editor.merge_id
-#        print p
-        text = open(p, 'r').read()
-        hash_val = hashlib.sha1(text).hexdigest()
-        qs = [ei.queue
-                for ei in self.editor_area.editors
-                    if ei.group == group and ei.merge_id >= min_idx]
-
-        self.manager.execute_queues(qs, text, hash_val)
+        if not self.active_editor is None:
+            p = self.active_editor.path
+            if os.path.isfile(p):
+                group = self.active_editor.group
+                min_idx = self.active_editor.merge_id
+        #        print p
+                text = open(p, 'r').read()
+                hash_val = hashlib.sha1(text).hexdigest()
+                qs = [ei.queue
+                        for ei in self.editor_area.editors
+                            if ei.group == group and ei.merge_id >= min_idx]
+        
+                self.manager.execute_queues(qs, text, hash_val)
 #============= EOF =============================================
