@@ -70,6 +70,7 @@ class ExperimentExecutor(Experimentable):
     delay_between_runs_readback = Float
     delaying_between_runs = Bool(False)
     resume_runs = Bool(False)
+    changed_flag = Bool(False)
 
     show_sample_map = Button
     execute_button = Event
