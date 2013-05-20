@@ -132,8 +132,11 @@ class ExperimentEditorTask(EditorTask):
 
     def _save_file(self, path):
         self.active_editor.save(path)
+
+        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
         self.manager.test_queues()
         self.manager.path = path
+
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -174,6 +177,6 @@ class ExperimentEditorTask(EditorTask):
                 qs = [ei.queue
                         for ei in self.editor_area.editors
                             if ei.group == group and ei.merge_id >= min_idx]
-        
+
                 self.manager.execute_queues(qs, text, hash_val)
 #============= EOF =============================================

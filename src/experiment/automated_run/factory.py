@@ -18,8 +18,8 @@
 from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
      Float, Instance, Int, List, cached_property, on_trait_change, Bool, Button, \
      Event
-from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring, \
-    UItem, ButtonEditor, Label
+# from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring, \
+#    UItem, ButtonEditor, Label
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -473,11 +473,18 @@ post_equilibration_script:name
             self._frequency_enabled = False
 
     def _aliquot_changed(self):
-
         if self.aliquot != self.o_aliquot and self.o_aliquot:
             self.user_defined_aliquot = True
+
         else:
             self.user_defined_aliquot = False
+
+        if self.edit_mode:
+            if self._selected_runs:
+                for i, si in enumerate(self._selected_runs):
+                    si.aliquot = int(self.aliquot) + i
+                    si.user_defined_aliquot = self.user_defined_aliquot
+
 
     def _labnumber_changed(self, old, new):
         def _load_scripts(_old, _new):
