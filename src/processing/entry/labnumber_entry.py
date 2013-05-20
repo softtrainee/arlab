@@ -25,10 +25,10 @@ from pyface.image_resource import ImageResource
 import os
 #============= local library imports  ==========================
 from src.paths import paths
-from src.experiment.entry.irradiation import Irradiation
-from src.experiment.entry.level import Level
-from src.experiment.entry.flux_monitor import FluxMonitor
-from src.experiment.entry.db_entry import DBEntry
+from src.processing.entry.irradiation import Irradiation
+from src.processing.entry.level import Level
+from src.processing.entry.flux_monitor import FluxMonitor
+from src.processing.entry.db_entry import DBEntry
 from src.irradiation.irradiated_position import IrradiatedPosition, \
     IrradiatedPositionAdapter
 from src.constants import NULL_STR, ALPHAS

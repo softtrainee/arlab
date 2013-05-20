@@ -37,7 +37,7 @@ class _myTableView(_TableView):
         elif event.matches(QKeySequence.Paste):
             if self._copy_cache:
                 si = self.selectedIndexes()[0]
-                for ci in self._copy_cache:
+                for ci in reversed(self._copy_cache):
                     self._editor.model.insertRow(si.row(), obj=ci.clone_traits())
                 self._editor.pasted = True
         else:

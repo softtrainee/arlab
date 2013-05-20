@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
 # limitations under the License.
 #===============================================================================
 
-
-from setuptools import setup, find_packages
-
-setup(name='pychron',
-
-      # script_name='my_setup.py',
-      # script_args=('bdist_egg',),
-      version='2.0.0',
-      packages=find_packages(exclude=('launchers', 'tests'))
-      )
+#============= enthought library imports =======================
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from src.loggable import Loggable
+#============= standard library imports ========================
+#============= local library imports  ==========================
+class Extractor(Loggable):
+    def import_irradiation(self):
+        pass
+#============= EOF =============================================

@@ -26,10 +26,14 @@ from src.ui.progress_dialog import myProgressDialog
 
 class IsotopeDatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
-    def __init__(self, bind=True, *args, **kw):
+    def __init__(self, bind=True, connect=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
         if bind:
             self.bind_preferences()
+
+        if connect and not self.db.connect():
+            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+            self.db = None
 
     def load(self):
         return self.populate_default_tables()
@@ -52,7 +56,7 @@ class IsotopeDatabaseManager(Manager):
         elif inform:
             self.warning_dialog('Not Database available')
 
-    def bind_preferences(self):
+    def bind_preferences(self, connect=False):
         if self.db is None:
             self.db = self._db_factory()
 
@@ -77,9 +81,8 @@ class IsotopeDatabaseManager(Manager):
         except AttributeError:
             pass
 
-        if not self.db.connect():
-            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
-            self.db = None
+
+
 
     def _db_default(self):
         return self._db_factory()
@@ -100,6 +103,8 @@ class IsotopeDatabaseManager(Manager):
                 ai.load_isotopes()
 
             progress.increment()
+    def open_progess(self, n=2):
+        return self._open_progress(n)
 
     def _open_progress(self, n):
         pd = myProgressDialog(max=n - 1, size=(550, 15))

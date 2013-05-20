@@ -50,18 +50,19 @@ class Processor(IsotopeDatabaseManager):
 #            if comp:
 #                self.active_editor.component = comp
     def recall(self):
-        if self.db.connect():
-            ps = self.search_manager
-            ps.selected = None
-            ps.selector.load_last(n=20)
+        if self.db:
+            if self.db.connect():
+                ps = self.search_manager
+                ps.selected = None
+                ps.selector.load_last(n=20)
 
-#            return [self._record_factory(si) for si in ps.selector.records[-1:]]
-            info = ps.edit_traits(view='modal_view')
-#            print info.result
-            if info.result:
-                ans = [self._record_factory(si) for si in ps.selector.selected]
-#                self._load_analyses(ans)
-                return ans
+    #            return [self._record_factory(si) for si in ps.selector.records[-1:]]
+                info = ps.edit_traits(view='modal_view')
+    #            print info.result
+                if info.result:
+                    ans = [self._record_factory(si) for si in ps.selector.selected]
+    #                self._load_analyses(ans)
+                    return ans
 
     def find(self):
         if self.db.connect():
@@ -88,15 +89,16 @@ class Processor(IsotopeDatabaseManager):
 
     def _gather_data(self):
         d = self.selector_manager
-        if self.db.connect():
-            info = d.edit_traits(kind='livemodal')
-            if info.result:
-                ans = [self._record_factory(ri)
-                            for ri in d.selected_records
-                                if not isinstance(ri, Marker)]
+        if self.db:
+            if self.db.connect():
+                info = d.edit_traits(kind='livemodal')
+                if info.result:
+                    ans = [self._record_factory(ri)
+                                for ri in d.selected_records
+                                    if not isinstance(ri, Marker)]
 
-                self._load_analyses(ans)
-                return ans
+                    self._load_analyses(ans)
+                    return ans
 
     def new_spectrum(self, plotter_options=None, ans=None):
         from src.processing.plotters.spectrum import Spectrum

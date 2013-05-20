@@ -23,8 +23,8 @@ import os
 from datetime import datetime
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.experiment.entry.chronology_input import ChronologyInput
-from src.experiment.entry.production_ratio_input import ProductionRatioInput
+from src.processing.entry.chronology_input import ChronologyInput
+from src.processing.entry.production_ratio_input import ProductionRatioInput
 from src.paths import paths
 from src.saveable import Saveable
 from src.constants import NULL_STR

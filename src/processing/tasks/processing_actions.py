@@ -103,6 +103,34 @@ class RecallAction(ProcessorAction):
 #        processor.new_ideogram()
 
 
+class LabnumberEntryAction(Action):
+    name = 'Labnumber Entry'
+    accelerator = 'Ctrl+Shift+l'
 
+    task_id = 'pychron.labnumber_entry'
+
+    def perform(self, event):
+        task = event.task
+        if not task.id == 'pychron.entry':
+            app = task.window.application
+            win = app.create_window(TaskWindowLayout(
+                                               'pychron.entry'
+                                               )
+                              )
+            win.open()
+        else:
+            task.window.activate()
+
+
+
+#        app = event.task.window.application
+
+#        manager = app.get_service('src.processing.entry.labnumber_entry.LabnumberEntry')
+    #        manager = self._get_labnumber_entry(event)
+#        if manager.verify_database_connection(inform=True):
+
+    #            lne = manager._labnumber_entry_factory()
+#            self._open_editor(event)
+    #            open_manager(event.window.application, lne)
 
 #============= EOF =============================================

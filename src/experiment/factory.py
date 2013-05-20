@@ -40,7 +40,7 @@ class ExperimentFactory(Loggable):
     edit_mode_button = Button('Edit')
     edit_enabled = DelegatesTo('run_factory')
 
-    auto_increment = Bool(True)
+    auto_increment = Bool(False)
 
     queue = Instance(ExperimentQueue, ())
 
@@ -85,9 +85,10 @@ class ExperimentFactory(Loggable):
             self._set_extract_device(new)
         elif name == 'username':
             self._username = new
-            self.queue.username = new
+#            self.queue.username = new
 
-        self.queue.trait_set(**{name:new})
+        if self.queue:
+            self.queue.trait_set(**{name:new})
 
     @on_trait_change('run_factory:[labnumber]')
     def _update_labnumber(self, name, new):
@@ -110,7 +111,8 @@ class ExperimentFactory(Loggable):
         self._extract_device = ed
         self.run_factory = self._run_factory_factory()
         self.run_factory.update_templates_needed = True
-        self.queue.set_extract_device(ed)
+        if self.queue:
+            self.queue.set_extract_device(ed)
 #===============================================================================
 # property get/set
 #===============================================================================

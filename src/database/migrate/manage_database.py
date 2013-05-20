@@ -4,7 +4,7 @@ from migrate.exceptions import DatabaseAlreadyControlledError, KnownError
 import os
 
 
-def manage_database(url, repo):
+def manage_database(url, repo, logger=None, progress=Non):
 
 # 	url = url.format(root)
 # 	url = 'sqlite:///{}'.format(name)
@@ -24,10 +24,19 @@ def manage_database(url, repo):
 #
 # 	print version(repo)
 	n = version(repo)
+	if progress:
+		progress.max = n
+
 	for i in range(n + 1):
 		try:
 			upgrade(url, repo, version=i)
-			print 'upgrading {} to {}'.format(repo, i)
+			msg = 'upgrading {} to {}'.format(repo, i)
+			if progress:
+				progress.change_message(msg)
+				progress.increment()
+
+			if logger:
+				logger.info(msg)
 		except KnownError:
 			pass
 

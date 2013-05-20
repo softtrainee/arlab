@@ -24,8 +24,9 @@ from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.processing.tasks.processing_actions import FindAction, IdeogramAction, \
-    RecallAction, SpectrumAction
+    RecallAction, SpectrumAction, LabnumberEntryAction
 from src.processing.tasks.recall_task import RecallTask
+from src.processing.tasks.labnumber_entry_task import LabnumberEntryTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -36,6 +37,7 @@ class ProcessingPlugin(BaseTaskPlugin):
 #                                              factory=Processor
                                               factory=self._processor_factory
                                               )
+
         return [process_so]
 
     def _my_task_extensions_default(self):
@@ -61,11 +63,16 @@ class ProcessingPlugin(BaseTaskPlugin):
                                                       id='recall_action',
                                                       factory=RecallAction,
                                                       path='MenuBar/File'
-                                                      )
+                                                      ),
+                                       SchemaAddition(id='labnumber_entry',
+                                                      factory=LabnumberEntryAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
                                        ]
                               )
 
                 ]
+
     def _tasks_default(self):
         return [
                 TaskFactory(id='pychron.processing',
@@ -77,7 +84,15 @@ class ProcessingPlugin(BaseTaskPlugin):
                             factory=self._recall_task_factory,
                             name='Recall'
                             ),
+                TaskFactory(id='pychron.entry',
+                            factory=self._labnumber_task_factory,
+                            name='Labnumber',
+                            accelerator='Ctrl+Shift+L'
+                            )
                 ]
+
+    def _labnumber_task_factory(self):
+        return LabnumberEntryTask()
 
     def _processor_factory(self):
         return Processor(application=self.application)
