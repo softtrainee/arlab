@@ -4,7 +4,7 @@ from migrate.exceptions import DatabaseAlreadyControlledError, KnownError
 import os
 
 
-def manage_database(url, repo, logger=None, progress=Non):
+def manage_database(url, repo, logger=None, progress=None):
 
 # 	url = url.format(root)
 # 	url = 'sqlite:///{}'.format(name)

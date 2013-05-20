@@ -92,17 +92,23 @@ class IsotopeDatabaseManager(Manager):
         return db
 
     def _load_analyses(self, ans, func=None):
-        progress = self._open_progress(len(ans))
-        for ai in ans:
-            msg = 'loading {}'.format(ai.record_id)
-            progress.change_message(msg)
-
-            if func:
+        
+        if func is None:
+            func=lambda x: x.load_isotopes()
+        
+        if len(ans)==1:
+            func(ans[0])
+            
+        else:
+            progress = self._open_progress(len(ans))
+            for ai in ans:
+                msg = 'loading {}'.format(ai.record_id)
+                progress.change_message(msg)
+    
                 func(ai)
-            else:
-                ai.load_isotopes()
-
-            progress.increment()
+                
+                progress.increment()
+                
     def open_progess(self, n=2):
         return self._open_progress(n)
 
