@@ -317,9 +317,9 @@ class Experimentor(Experimentable):
         self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 
-    @on_trait_change('experiment_queues')
-    def _update_queues(self, new):
-        self.executor.set_experiment_queues(new)
+#    @on_trait_change('experiment_queues')
+#    def _update_queues(self, new):
+#        self.executor.set_experiment_queues(new)
 
 
     @on_trait_change('experiment_queue:dclicked')
