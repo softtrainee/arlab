@@ -252,10 +252,17 @@ class ExtractionLineCanvas2D(SceneCanvas):
         state = item.state
         if isinstance(item, RoughValve) and not state:
             event.handled = True
-            result = confirmation(None, 'Are you sure you want to open {}'.format(item.name))
-            if result == 5104:
-                return
-
+            
+            from src.ui.dialogs import myConfirmationDialog
+            from pyface.api import NO
+            dlg = myConfirmationDialog(
+                                message='Are you sure you want to open {}'.format(item.name),
+                                title='Verfiy Valve Action',
+                                style='modal')
+            retval = dlg.open()
+            if retval==NO:
+                return 
+            
         state = not state
 
         ok = False

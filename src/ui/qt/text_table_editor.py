@@ -21,7 +21,7 @@ from traitsui.qt4.editor import Editor
 #============= standard library imports ========================
 from PySide.QtGui import QTextEdit, QPalette, QTextCursor, QTextTableFormat, QTextFrameFormat, \
     QTextTableCellFormat, QBrush, QColor, QFont
-from traitsui.qt4.basic_editor_factory import BasicEditorFactory
+from traitsui.basic_editor_factory import BasicEditorFactory
 #============= local library imports  ==========================
 
 

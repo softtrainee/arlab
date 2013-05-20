@@ -31,7 +31,7 @@ class BaseParameters(HasTraits):
     _error = Float
 #    analysis = Any
 #    fittypes = List(FIT_TYPES)
-    show = Bool(False)
+    show = Bool(True)
     filter_outliers = Bool(True)
 
     def _get_intercept(self):
