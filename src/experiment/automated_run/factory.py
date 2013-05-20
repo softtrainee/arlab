@@ -455,7 +455,7 @@ post_equilibration_script:name
 
                 ms = db.get_mass_spectrometer(self.mass_spectrometer)
                 ed = db.get_extraction_device(self.extract_device)
-                if ln in ('a', 'ba'):
+                if ln in ('a', 'ba', 'c', 'bc'):
                     ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
                 else:
                     msname = ms.name[0].capitalize()
