@@ -211,6 +211,7 @@ class MagnetScan(SpectrometerTask):
             if di == -1:
                 sm, em = em, sm
             values = self._calc_step_values(sm, em, stm)
+            
             if not self._scan_dac(values, self.reference_detector):
                 return
 

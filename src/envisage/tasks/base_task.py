@@ -262,8 +262,8 @@ class BaseManagerTask(BaseTask):
             return dialog.path
 
     def _menu_bar_factory(self, menus=None):
-        if menus is None:
-            menus = tuple()
+        if not menus:
+            menus = []
 
         mb = SMenuBar(
                       self._file_menu(),
@@ -290,7 +290,17 @@ class BaseManagerTask(BaseTask):
 class BaseHardwareTask(BaseManagerTask):
     def _menu_bar_factory(self, menus=None):
         extraction_menu = SMenu(id='Extraction', name='&Extraction')
-        return super(BaseHardwareTask, self)._menu_bar_factory(menus=[extraction_menu])
+        measure_menu = SMenu(
+# #                              PeakCenterAction(),
+                            id='Measure', name='Measure',
+                            before='help.menu'
+                            )
+        ms=[extraction_menu, measure_menu]
+        if not menus:
+            menus=ms
+        else:
+            menus.extend(ms)
+        return super(BaseHardwareTask, self)._menu_bar_factory(menus=menus)
 # class BaseManagerTask(BaseTask):
 #    manager = Any
 

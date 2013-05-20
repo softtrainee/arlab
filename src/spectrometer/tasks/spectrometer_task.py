@@ -36,13 +36,18 @@ class SpectrometerTask(BaseHardwareTask):
     def activated(self):
         self.scan_manager.setup_scan()
 
-    def _menu_bar_factory(self, menus=None):
-        measure_menu = SMenu(
-                             PeakCenterAction(),
-                             id='Measure', name='&Measure',
-                             before='help.menu'
-                             )
-        return super(BaseHardwareTask, self)._menu_bar_factory(menus=[measure_menu])
+#     def _menu_bar_factory(self, menus=None):
+#         measure_menu = SMenu(
+# #                              PeakCenterAction(),
+#                             id='Measure', name='&Measure',
+#                             before='help.menu'
+#                             )
+#         if not menus:
+#             menus=[measure_menu]
+#         else:
+#             menus.append(measure_menu)
+#         print menus, 'spec'
+#         return super(BaseHardwareTask, self)._menu_bar_factory(menus=menus)
 
 
     def _default_layout_default(self):
