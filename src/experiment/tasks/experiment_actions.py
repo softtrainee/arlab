@@ -20,6 +20,7 @@
 from traits.api import Any
 from pyface.action.api import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from src.ui.progress_dialog import myProgressDialog
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -158,21 +159,21 @@ class MergeQueuesAction(ExperimentAction):
 #===============================================================================
 # database actions
 #===============================================================================
-class LabnumberEntryAction(ExperimentAction):
-    name = 'Labnumber Entry'
-    accelerator = 'Ctrl+Shift+l'
-
-    task_id = 'pychron.labnumber_entry'
-
-    def perform(self, event):
-        app = event.task.window.application
-
-        manager = app.get_service('src.experiment.entry.labnumber_entry.LabnumberEntry')
-#        manager = self._get_labnumber_entry(event)
-        if manager.verify_database_connection(inform=True):
-#            lne = manager._labnumber_entry_factory()
-            self._open_editor(event)
-#            open_manager(event.window.application, lne)
+# class LabnumberEntryAction(ExperimentAction):
+#    name = 'Labnumber Entry'
+#    accelerator = 'Ctrl+Shift+l'
+#
+#    task_id = 'pychron.labnumber_entry'
+#
+#    def perform(self, event):
+#        app = event.task.window.application
+#
+#        manager = app.get_service('src.experiment.entry.labnumber_entry.LabnumberEntry')
+# #        manager = self._get_labnumber_entry(event)
+#        if manager.verify_database_connection(inform=True):
+# #            lne = manager._labnumber_entry_factory()
+#            self._open_editor(event)
+# #            open_manager(event.window.application, lne)
 
 #===============================================================================
 # Utilities
@@ -183,6 +184,26 @@ class SignalCalculatorAction(ExperimentAction):
         obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
         app = event.task.window.application
         app.open_view(obj)
+
+class UpdateDatabaseAction(ExperimentAction):
+    name = 'Update Database'
+    def perform(self, event):
+        app = event.task.window.application
+        man = app.get_service('src.experiment.isotope_database_manager:IsotopeDatabaseManager')
+
+        url = man.db.url
+        repo = 'isotopedb'
+        from src.database.migrate.manage_database import manage_database
+#        progress = myProgressDialog()
+#        progress.open()
+        progress = man.open_progress()
+        manage_database(url, repo,
+                        logger=man.logger,
+                        progress=progress
+                        )
+
+
+
 
 #===============================================================================
 # deprecated

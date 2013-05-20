@@ -273,7 +273,7 @@ class BaseManagerTask(BaseTask):
                       self._window_menu(),
                       SMenu(
                             id='help.menu',
-                           name='&Help'),
+                           name='Help'),
 #                       SMenu(
 #                             ViewMenuManager(),
 #                             id='Window', name='&Window'),

@@ -15,17 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
+from traits.api import HasTraits, Instance
 from src.envisage.tasks.base_task import  BaseManagerTask
-from src.experiment.tasks.labnumber_entry_panes import LabnumbersPane, \
-    IrradiationPane, ImporterPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.importer.import_manager import ImportManager
+from src.processing.entry.labnumber_entry import LabnumberEntry
+from src.processing.tasks.labnumber_entry_panes import LabnumbersPane, \
+    IrradiationPane, ImporterPane
 
 class LabnumberEntryTask(BaseManagerTask):
     name = 'Labnumber'
+    importer = Instance(ImportManager)
+
+    def _manager_default(self):
+        return LabnumberEntry()
+
+    def _importer_default(self):
+        return ImportManager()
+
     def _default_layout_default(self):
         return TaskLayout(
 #                          left=PaneItem('pychron.experiment.factory'),

@@ -31,15 +31,17 @@ from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
     ExperimentPreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
-    OpenExperimentQueueAction, LabnumberEntryAction, SaveExperimentQueueAction, \
-    SaveAsExperimentQueueAction, SignalCalculatorAction, MergeQueuesAction
+    OpenExperimentQueueAction, SaveExperimentQueueAction, \
+    SaveAsExperimentQueueAction, SignalCalculatorAction, MergeQueuesAction, \
+    UpdateDatabaseAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.experiment.experimentor import Experimentor
-from src.experiment.entry.labnumber_entry import LabnumberEntry
-from src.experiment.tasks.labnumber_entry_task import LabnumberEntryTask
-from src.experiment.import_manager import ImportManager
+# from src.experiment.entry.labnumber_entry import LabnumberEntry
+# from src.experiment.tasks.labnumber_entry_task import LabnumberEntryTask
+# from src.experiment.import_manager import ImportManager
 from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -73,16 +75,20 @@ class ExperimentPlugin(BaseTaskPlugin):
                                                       factory=save_as_factory,
                                                       path='MenuBar/File/Save'),
 
-                                       SchemaAddition(id='labnumber_entry',
-                                                      factory=LabnumberEntryAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
+#                                       SchemaAddition(id='labnumber_entry',
+#                                                      factory=LabnumberEntryAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
                                        SchemaAddition(id='merge_queues',
                                                       factory=MergeQueuesAction,
                                                       path='MenuBar/Edit'
                                                       ),
                                        SchemaAddition(id='signal_calculator',
                                                       factory=SignalCalculatorAction,
+                                                      path='MenuBar/Tools'
+                                                      ),
+                                       SchemaAddition(id='make_database',
+                                                      factory=UpdateDatabaseAction,
                                                       path='MenuBar/Tools'
                                                       )
 
@@ -108,10 +114,14 @@ class ExperimentPlugin(BaseTaskPlugin):
                           protocol=Experimentor,
                           factory=self._experimentor_factory
                           )
-        so_lab_entry = self.service_offer_factory(
-                          protocol=LabnumberEntry,
-                          factory=self._labnumber_entry_factory
+        so_isodb = self.service_offer_factory(
+                          protocol=IsotopeDatabaseManager,
+                          factory=self._iso_db_factory
                           )
+#        so_lab_entry = self.service_offer_factory(
+#                          protocol=LabnumberEntry,
+#                          factory=self._labnumber_entry_factory
+#                          )
 
 #        so_pyscript_manager = self.service_offer_factory(
 #                          protocol=PyScriptManager,
@@ -122,10 +132,10 @@ class ExperimentPlugin(BaseTaskPlugin):
                           protocol=SignalCalculator,
                           factory=self._signal_calculator_factory
                           )
-        so_import_manager = self.service_offer_factory(
-                          protocol=ImportManager,
-                          factory=self._import_manager_factory
-                          )
+#        so_import_manager = self.service_offer_factory(
+#                          protocol=ImportManager,
+#                          factory=self._import_manager_factory
+#                          )
         so_image_browser = self.service_offer_factory(
                           protocol=ImageBrowser,
                           factory=self._image_browser_factory
@@ -144,9 +154,11 @@ class ExperimentPlugin(BaseTaskPlugin):
 #        return [so, so1, so_exp_editor]
         return [so_exp,
 #                so_pyscript_manager,
-                so_signal_calculator, so_import_manager,
+                so_signal_calculator,
+#                so_import_manager,
                 so_image_browser, so_export_manager,
-                so_lab_entry
+                so_isodb
+#                so_lab_entry
                 ]
 
 
@@ -175,6 +187,9 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                                 ion_optics_manager=self.application.get_service(p3),
 #                                 mode=mode
 #                                 )
+    def _iso_db_factory(self):
+        iso = IsotopeDatabaseManager(connect=False)
+        return iso
 
     def _experimentor_factory(self, *args, **kw):
 
@@ -194,16 +209,16 @@ class ExperimentPlugin(BaseTaskPlugin):
         return exp
 #    def _editor_factory(self, *args, **kw):
 #        return ExperimentEditor(application=self.application)
-    def _labnumber_entry_factory(self):
-#        exp = self.application.get_service(Experimentor)
-        ln = LabnumberEntry()
-        return ln
+#    def _labnumber_entry_factory(self):
+# #        exp = self.application.get_service(Experimentor)
+#        ln = LabnumberEntry()
+#        return ln
+#    def _import_manager_factory(self):
+#        return ImportManager(application=self.application)
 
     def _signal_calculator_factory(self, *args, **kw):
         return SignalCalculator()
 
-    def _import_manager_factory(self):
-        return ImportManager(application=self.application)
 
     def _export_manager_factory(self):
         exp = ExportManager(application=self.application)
@@ -219,16 +234,16 @@ class ExperimentPlugin(BaseTaskPlugin):
                             factory=self._task_factory,
                             name='Experiment',
                             ),
-                TaskFactory(id='pychron.labnumber_entry',
-                            factory=self._labnumber_task_factory,
-                            name='Labnumber'
-                            )
+#                TaskFactory(id='pychron.labnumber_entry',
+#                            factory=self._labnumber_task_factory,
+#                            name='Labnumber'
+#                            )
                 ]
 
-    def _labnumber_task_factory(self):
-        return LabnumberEntryTask(manager=self.application.get_service(LabnumberEntry),
-                                  importer=self.application.get_service(ImportManager)
-                                  )
+#    def _labnumber_task_factory(self):
+#        return LabnumberEntryTask(manager=self.application.get_service(LabnumberEntry),
+#                                  importer=self.application.get_service(ImportManager)
+#                                  )
 
     def _task_factory(self):
         return ExperimentEditorTask(manager=self._get_manager())
