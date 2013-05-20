@@ -148,6 +148,7 @@ class IonOpticsManager(Manager):
                              self.directions,
                              save, confirm_save, warn))
             t.start()
+            self._thread=t
             return t
         else:
             self._peak_center(detector, isotope, center_dac,
