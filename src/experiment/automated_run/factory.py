@@ -310,9 +310,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes = []
 
         if arv.analysis_type in ('blank_unknown', 'pause'):
-            excludes.extend(('position', 'extract_value', 'extract_units', 'pattern'))
+            excludes.extend(('extract_value', 'extract_units', 'pattern'))
             if arv.analysis_type == 'pause':
-                excludes.extend(('cleanup',))
+                excludes.extend(('cleanup', 'position'))
         elif arv.analysis_type not in ('unknown', 'degas'):
             excludes.extend(('position', 'extract_value', 'extract_units', 'pattern',
                              'cleanup', 'duration',

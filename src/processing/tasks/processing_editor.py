@@ -57,8 +57,8 @@ class ProcessingEditor(Editor):
                                 component=self.component
                               )
         self.control = self._window.control
-    def rebuild(self):
-        self.processor.new_ideogram()
+#    def rebuild(self):
+#        self.processor.new_ideogram()
 
     def _component_changed(self):
         if self._window:

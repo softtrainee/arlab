@@ -40,10 +40,10 @@ class BaseSignalAdapter(TextTableAdapter):
                               for args in self.columns])
                                 for ri in sg]
                    )
-        tt = TextTable(
+        tt = TextTable(border=True,
                        *rs
                        )
-        return tt, True
+        return tt
 
 class RawAdapter(BaseSignalAdapter):
     columns = [
@@ -87,14 +87,36 @@ class RatiosAdapter(TextTableAdapter):
                          self._cell_factory(vi, (None, 'error')),
                          )
             rs.append(ri)
-        tt = TextTable(*rs)
-        return [(tt, True)]
+        tt = TextTable(border=True, *rs)
+        return [tt]
+
+class AgeAdapter(TextTableAdapter):
+    def _make_tables(self, record):
+        tt = TextTable(
+                       TextRow(
+                               BoldCell('Age:'),
+                               TextCell(floatfmt(record.age.nominal_value)),
+                               TextCell(u'{}{} {}'.format(PLUSMINUS,
+                                                     floatfmt(record.age.std_dev),
+                                                     record.age_units
+                                                     ))
+
+                               ),
+                       TextRow(
+                               TextCell(''),
+                               TextCell(''),
+                               TextCell(u'{}{}'.format(PLUSMINUS,
+                                                     floatfmt(record.age_error_wo_j)))
+
+                               ),
+                       border=True
+                       )
+        return [tt]
 
 class AnalysisSummaryAdapter(TextTableAdapter):
-#    columns = 10
     def _make_tables(self, record):
         info_table = self._make_info_table(record)
-        return [(info_table, False)]
+        return [info_table]
 
     def _make_info_table(self, record):
 
@@ -142,7 +164,8 @@ class AnalysisSummaryAdapter(TextTableAdapter):
                                TextCell(record.extract_duration),
                                BoldCell('Cleanup (s):'),
                                TextCell(record.cleanup_duration),
-                               )
+                               ),
+                       border=False
                        )
         return tt
 
@@ -264,40 +287,48 @@ class AnalysisSummary(HasTraits):
         return isotopes
 
     def traits_view(self):
-        v = View(
-                 VSplit(
-                        UItem('record',
+        top = UItem('record',
                               editor=TextTableEditor(adapter=AnalysisSummaryAdapter(),
                                                      bg_color='light yellow'
                                                      ),
                               height=0.25
-                              ),
-                        UItem('signals',
-                               editor=TextTableEditor(adapter=RawAdapter(),
-                                                     bg_color='light yellow',
-                                                     odd_color='#9EE8FF',
-                                                     header_color='lightgray'
-                                                     ),
-                              height=0.25
-                              ),
-                       HSplit(
-                              UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
-                                                                      bg_color='light yellow',
-                                                                      odd_color='#9EE8FF',
-                                                                      header_color='lightgray'
-                                                       ),
+                              )
+        left = VGroup(
+                    UItem('record',
+                          editor=TextTableEditor(adapter=AgeAdapter(),
+                                                 bg_color='light yellow'
+                                                 ),
+                          height=0.12
+                          ),
+                    UItem('signals',
+                           editor=TextTableEditor(adapter=RawAdapter(),
+                                                 bg_color='light yellow',
+                                                 odd_color='#9EE8FF',
+                                                 header_color='lightgray'
+                                                 ),
+                          height=0.25
+                          ),
+                      UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
+                                                              bg_color='light yellow',
+                                                              odd_color='#9EE8FF',
+                                                              header_color='lightgray'
+                                               ),
 
-                                    height=0.5,
-                                    width=0.75
-                                    ),
-                              UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
+                            height=0.25,
+                            width=0.75
+                            ))
+        right = UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
                                                                       bg_color='light yellow',
                                                                       odd_color='#9EE8FF',
                                                                       header_color='lightgray'
                                                        ),
-                                    height=0.5,
+                                    height=0.25,
                                     width=0.25
-                                    ),
+                                    )
+
+        v = View(
+                 VSplit(top,
+                        HSplit(left, right
                               ),
                         )
                  )

@@ -57,11 +57,11 @@ class _TextTableEditor(Editor):
         '''
         adapter = self.factory.adapter
         tables = adapter.make_tables(self.value)
-        for ti, border in tables:
-            self._add_table(ti, border)
+        for ti in tables:
+            self._add_table(ti)
 #        self.control.moveCursor(QTextCursor.Start)
 #        self.control.ensureCursorVisible()
-    def _add_table(self, tab, border):
+    def _add_table(self, tab):
         cursor = QTextCursor(self.control.textCursor())
 
         fmt = QTextTableFormat()
@@ -78,6 +78,8 @@ class _TextTableEditor(Editor):
 #        fmt.setBackground(br)
         fmt.setCellSpacing(0)
         fmt.setCellPadding(3)
+
+        border = tab.border
         if border:
             fmt.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
         else:
