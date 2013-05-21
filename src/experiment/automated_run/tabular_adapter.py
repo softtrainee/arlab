@@ -55,7 +55,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     extract_value_width = Int(85)
     extract_units_width = Int(50)
     extract_device_width = Int(125)
-    labnumber_width = Int(70)
+    labnumber_width = Int(90)
     extraction_script_width = Int(125)
     measurement_script_width = Int(125)
     post_measurement_script_width = Int(125)

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Event, List, on_trait_change, Callable
+from traits.api import HasTraits, Any, Instance, Event, List, on_trait_change, Callable, Bool
 from src.helpers.formatting import floatfmt
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -60,6 +60,7 @@ class HeaderRow(TextRow):
 
 class TextTable(HasTraits):
     items = List
+    border = Bool
     def __init__(self, *args, **kw):
         self.items = list(args)
         super(TextTable, self).__init__(**kw)

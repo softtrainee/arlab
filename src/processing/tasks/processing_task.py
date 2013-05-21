@@ -19,7 +19,8 @@ from traits.api import HasTraits, Property, Instance, on_trait_change
 from traitsui.api import View, Item, ListEditor
 # from pyface.tasks.api import IEditor, IEditorAreaPane
 # from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
-from src.processing.tasks.processing_panes import ProcessorPane, OptionsPane
+from src.processing.tasks.processing_panes import OptionsPane, \
+    EditorPane
 from src.processing.processor import Processor
 from pyface.tasks.action.schema import SToolBar, SMenu, SMenuBar
 from pyface.tasks.action.task_action import TaskAction
@@ -94,16 +95,21 @@ class ProcessingTask(EditorTask):
                            image_size=(32, 32)), ]
 
     def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('pychron.processing.options'),
-                                )
+        return TaskLayout(left=Tabbed(
+                                      PaneItem('pychron.processing.options'),
+                                      PaneItem('pychron.processing.editor'),
+
+                                    )
+                          )
 #    def create_central_pane(self):
 #        self.editor_area = ProcessorPane()
 #        return self.editor_area
 
     def create_dock_panes(self):
+        self.editor_pane = EditorPane()
         return [
-                OptionsPane(model=self)
-#                OptionsPane(model=self.active_editor)
+                OptionsPane(model=self),
+                self.editor_pane
                 ]
 
     #===========================================================================
@@ -184,17 +190,18 @@ class ProcessingTask(EditorTask):
             cont = func(plotter_options=po, ans=pro.analyses)
 #            cont = pro.new_ideogram(plotter_options=po, ans=pro.analyses)
             self.active_editor.component = cont
+
 #        if self.analyses:
 
 #            comp = self.new_ideogram(ans=self.analyses)
 #            self.component = comp
 #            if comp:
 #                self.active_editor.component = comp
-    @on_trait_change('editor_area:active_editor')
-    def _update_plotter_options(self):
+    @on_trait_change('editor_area:active_editor.component')
+    def _update_active_editor(self):
         if self.active_editor:
             self.active_plotter_options = self.active_editor.options_manager
-
+            self.editor_pane.component = self.active_editor.component
 
 #    def _processor_default(self):
 #        return Processor(application=self.application)

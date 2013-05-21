@@ -1554,9 +1554,13 @@ anaylsis_type={}
                          )
 
         exp.load_record(self)
-        self.massspec_importer.add_analysis(exp)
-        self.info('analysis added to mass spec database')
-
+        try:
+            self.massspec_importer.add_analysis(exp)
+            self.info('analysis added to mass spec database')
+        except Exception, e:
+            self.message('Could not save to Mass Spec database.\n {}'.format(e))
+            self.cancel()
+            self.experiment_manager.cancel()
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
         return txt

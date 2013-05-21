@@ -15,35 +15,105 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Float, Any, Instance, on_trait_change, Event, Color, List
 from traitsui.api import View, HGroup, Item, UItem, \
-    InstanceEditor, EnumEditor
+    InstanceEditor, EnumEditor, Group
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
+from chaco.plot import Plot
+from src.processing.tasks.plot_editor import PlotEditor
+from enable.base_tool import BaseTool
+from chaco.plot_containers import VPlotContainer
+from chaco.abstract_overlay import AbstractOverlay
+from enable.colors import ColorTrait
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class ProcessorPane(SplitEditorAreaPane):
-    pass
-#    def traits_view(self):
-#        v = View(
-#                 UItem('graphs',
-#                       style='custom',
-#                      editor=ListEditor(
-#                                        use_notebook=True,
-#                                        show_notebook_menu=True
-# #                                        editor=InstanceEditor(),
-# #                                        dock_style='vertical'
-#                                        )
-#                      )
-#
-#                 )
-#        return v
-class TablePane(TraitsDockPane):
-    pass
-class SelectionPane(TraitsDockPane):
-    pass
+
+class SelectorTool(BaseTool):
+    editor = Any
+    editor_event = Event
+    def normal_left_dclick(self, event):
+        self.event_state = 'select'
+        self.editor_event = self.editor
+        self.component.invalidate_and_redraw()
+
+    def select_left_dclick(self, event):
+        self.event_state = 'normal'
+        self.editor_event = None
+        self.component.invalidate_and_redraw()
+
+class SelectorOverlay(AbstractOverlay):
+    tool = Any
+    color = ColorTrait('green')
+    def overlay(self, other_component, gc, view_bounds=None, mode="normal"):
+        if self.tool.event_state == 'select':
+            with gc:
+                w, h = self.component.bounds
+                x, y = self.component.x, self.component.y
+
+                gc.set_stroke_color(self.color_)
+                gc.set_line_width(4)
+                gc.rect(x, y, w, h)
+                gc.stroke_path()
+
+def flatten_container(container):
+    '''
+        input a nested container and 
+        return a list of Plots
+    '''
+    return list(flatten(container))
+
+def flatten(nested):
+    try:
+        if isinstance(nested, Plot):
+            yield nested
+        for sublist in nested.components:
+            for element in flatten(sublist):
+                yield element
+    except AttributeError:
+        pass
+    except TypeError:
+        yield nested
+
+class EditorPane(TraitsDockPane):
+    component = Any
+    name = 'Editor'
+    id = 'pychron.processing.editor'
+    current_editor = Instance(PlotEditor)
+    selectors = List
+
+    def _component_changed(self):
+        if self.component:
+            self.selectors = []
+            self.current_editor = None
+            for plot in flatten_container(self.component):
+                editor = PlotEditor(plot=plot)
+                st = SelectorTool(self.component, editor=editor)
+                st.on_trait_change(self.set_editor, 'editor_event')
+
+                so = SelectorOverlay(tool=st, component=plot)
+
+                plot.tools.append(st)
+                plot.overlays.append(so)
+                self.selectors.append(so)
+
+    def set_editor(self, new):
+        self.current_editor = new
+        for overlay in self.selectors:
+            if overlay.tool.editor != new:
+                overlay.tool.event_state = 'normal'
+
+        self.component.invalidate_and_redraw()
+
+    def traits_view(self):
+        v = View(
+                 UItem('current_editor',
+                       style='custom')
+                 )
+        return v
+
 
 def make_pom_name(name):
     return 'object.active_plotter_options.{}'.format(name)
