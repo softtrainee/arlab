@@ -36,7 +36,7 @@ class MassSpecExtractor(Extractor):
         return DBConnectionSpec(database='massspecdata',
                                 username='massspec',
                                 password='DBArgon',
-                                host='129.138.12.157'
+                                host='129.138.12.160'
                                 )
     def _connect_button_fired(self):
         self.connect()
