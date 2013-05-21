@@ -61,6 +61,7 @@ class ImporterPane(TraitsDockPane):
     id = 'pychron.labnumber.importer'
     def traits_view(self):
         v = View(
+                 HGroup(spring, Item('import_button', show_label=False)),
                  VGroup(
                      HGroup(spring, Item('data_source')),
                      VFold(

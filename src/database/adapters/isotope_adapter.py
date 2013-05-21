@@ -124,6 +124,11 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return item
 
+    def add_import(self, **kw):
+        dbimport = gen_ImportTable(**kw)
+        self._add_item(dbimport)
+        return dbimport
+
     def add_snapshot(self, path, **kw):
         dbsnap = med_SnapshotTable(path, **kw)
         self._add_item(dbsnap)

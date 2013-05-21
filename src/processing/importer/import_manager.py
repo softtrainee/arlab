@@ -27,9 +27,13 @@ from src.database.database_connection_spec import DBConnectionSpec
 from src.processing.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.constants import NULL_STR
+from collections import namedtuple
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+
+records = namedtuple('Record', 'name')
 
 class ImportManager(IsotopeDatabaseManager):
     data_source = Enum('MassSpec', 'File')
@@ -50,17 +54,21 @@ class ImportManager(IsotopeDatabaseManager):
         self.names = func(filter_str=self.filter_str)
 
     def _import_button_fired(self):
-        if self.selected:
-            if self.db.connect():
-                # clear imported
-                self.imported_names = []
+        self.import_kind = 'irradiation'
+        if self.import_kind != NULL_STR:
+            self.selected = [records('NM-254')]
 
-                # get import func from importer
-                func = getattr(self.importer, 'import_{}'.format(self.import_kind))
-                for si in self.selected:
-                    r = func(self.db, si.name, self.include_analyses)
-                    if r:
-                        self.imported_names.append(r)
+            if self.selected:
+                if self.db.connect():
+                    # clear imported
+                    self.imported_names = []
+
+                    # get import func from importer
+                    func = getattr(self.importer, 'import_{}'.format(self.import_kind))
+                    for si in self.selected:
+                        r = func(self.db, si.name, self.include_analyses)
+                        if r:
+                            self.imported_names.append(r)
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':

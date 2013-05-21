@@ -115,7 +115,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #    frequencyable = Property(depends_on='labnumber')
     extractable = Property(depends_on='labnumber')
 #    cbs_enabled = Property(depends_on='_selected_runs')
-
+    update_info_needed = Event
     suppress_update = False
 #    clear_selection = Event
 
@@ -405,7 +405,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 extract_units,
 pattern,
 position,
-weight, comment''')
+weight, comment, skip''')
     def _edit_handler(self, name, new):
         if self.edit_mode and \
             self._selected_runs and \
@@ -427,6 +427,8 @@ post_equilibration_script:name
                 for si in self._selected_runs:
                     name = '{}_script'.format(obj.label)
                     setattr(si, name, new)
+    def _skip_changed(self):
+        self.update_info_needed = True
 
     def __labnumber_changed(self):
         if self._labnumber != NULL_STR:
@@ -468,7 +470,7 @@ post_equilibration_script:name
 
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
-            self.clear_selection = True
+#            self.clear_selection = TÖrue
         else:
             self._frequency_enabled = False
 

@@ -118,7 +118,9 @@ class ExperimentFactoryPane(TraitsDockPane):
                                         color='red',
                                         width=40
                                         ),
-                            spring),
+                            spring,
+                            RFItem('skip')
+                            ),
 
     #                  UCustom('run_factory', enabled_when='ok_run'),
                     VFold(
