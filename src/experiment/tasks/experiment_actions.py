@@ -189,13 +189,12 @@ class UpdateDatabaseAction(ExperimentAction):
     name = 'Update Database'
     def perform(self, event):
         app = event.task.window.application
-        man = app.get_service('src.experiment.isotope_database_manager:IsotopeDatabaseManager')
+        man = app.get_service('src.experiment.isotope_database_manager.IsotopeDatabaseManager')
 
         url = man.db.url
+
         repo = 'isotopedb'
         from src.database.migrate.manage_database import manage_database
-#        progress = myProgressDialog()
-#        progress.open()
         progress = man.open_progress()
         manage_database(url, repo,
                         logger=man.logger,

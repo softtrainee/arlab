@@ -222,7 +222,6 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         a = AnalysisPositionTable(Hole=pi, PositionOrder=po)
         analysis.positions.append(a)
 
-
 #    @add
     def add_analysis(self, rid, aliquot, step, irradpos, runtype,
 #                     refdetlabel,

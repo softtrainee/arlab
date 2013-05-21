@@ -31,7 +31,7 @@ class FindAction(ProcessorAction):
     name = 'Find...'
     accelerator = 'Ctrl+f'
     def perform(self, event):
-        processor = self._get_processor()
+        processor = self._get_processor(event)
         processor.find()
 
 class IdeogramAction(ProcessorAction):

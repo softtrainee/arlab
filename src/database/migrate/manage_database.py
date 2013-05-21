@@ -22,25 +22,25 @@ def manage_database(url, repo, logger=None, progress=None):
 	except DatabaseAlreadyControlledError:
 		pass
 #
-# 	print version(repo)
 	n = version(repo)
 	if progress:
-		progress.max = n
+		progress.max = int(n)
+		print progress.max
 
 	for i in range(n + 1):
 		try:
-			upgrade(url, repo, version=i)
 			msg = 'upgrading {} to {}'.format(repo, i)
+			upgrade(url, repo, version=i)
+
+		except KnownError:
+			msg = 'skipping version {}'.format(i)
+
+		finally:
 			if progress:
 				progress.change_message(msg)
 				progress.increment()
-
 			if logger:
 				logger.info(msg)
-		except KnownError:
-			pass
-
-
 # if __name__ == '__main__':
 #
 # 	root = '/usr/local/pychron'

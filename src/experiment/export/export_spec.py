@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, CStr, Str, CInt, Int, Dict, Tuple, List, Float, \
-    TraitError
+    TraitError, Property, Any
 from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
 from src.experiment.utilities.identifier import make_runid, make_rid
@@ -61,7 +61,9 @@ class ExportSpec(Loggable):
     spectrometer = Str
     extract_device = Str
     tray = Str
-    position = Str
+    position = Property(depends_on='_position')
+    _position = Any
+
     power_requested = Float(0)
     power_achieved = Float(0)
     duration = Float(0)
@@ -113,4 +115,12 @@ class ExportSpec(Loggable):
     def record_id(self):
         return make_rid(self.labnumber, self.aliquot, self.step)
 
+
+    def _set_position(self, pos):
+        if ',' in pos:
+            self._position = list(map(int, pos.split(',')))
+        else:
+            self._position = pos
+    def _get_position(self):
+        return self._position
 #============= EOF =============================================
