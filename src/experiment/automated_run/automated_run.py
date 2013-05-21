@@ -462,30 +462,30 @@ class AutomatedRun(Loggable):
 #===============================================================================
 #
 #===============================================================================
-    def test(self):
-        def _test(script):
-            if script:
-                try:
-                    script.test()
-                except Exception, e:
-                    return
-            return True
-
-        for si in SCRIPT_KEYS:
-            setattr(self, '{}_script_dirty'.format(si), True)
-
-        ok = True
-        if not _test(self.measurement_script):
-            ok = False
-        elif not _test(self.extraction_script):
-            ok = False
-        elif not _test(self.post_measurement_script):
-            ok = False
-            return
-        elif not _test(self.post_equilibration_script):
-            ok = False
-
-        return ok
+#    def test(self):
+#        def _test(script):
+#            if script:
+#                try:
+#                    script.test()
+#                except Exception, e:
+#                    return
+#            return True
+#
+#        for si in SCRIPT_KEYS:
+#            setattr(self, '{}_script_dirty'.format(si), True)
+#
+#        ok = True
+#        if not _test(self.measurement_script):
+#            ok = False
+#        elif not _test(self.extraction_script):
+#            ok = False
+#        elif not _test(self.post_measurement_script):
+#            ok = False
+#            return
+#        elif not _test(self.post_equilibration_script):
+#            ok = False
+#
+#        return ok
 
     def assemble_report(self):
         signal_string = ''
@@ -542,10 +542,12 @@ anaylsis_type={}
     def finish(self):
 #        del self.info_display
         if self.plot_panel:
-
             self.plot_panel.automated_run = None
+            self.plot_panel.on_trait_change(self._plot_panel_closed,
+                                            'close_event', remove=True)
             self.plot_panel.close_ui()
-            del self.plot_panel
+
+#            del self.plot_panel
 
 #        if self.peak_plot_panel:
 #            self.peak_plot_panel.close_ui()
@@ -555,7 +557,7 @@ anaylsis_type={}
 
         if self.peak_center:
             self.peak_center.graph.close_ui()
-            del self.peak_center
+#            del self.peak_center
 
         if self.coincidence_scan:
             self.coincidence_scan.graph.close_ui()
@@ -650,7 +652,7 @@ anaylsis_type={}
         while self._alive:
             if time.time() - starttime > self.overlap:
                 break
-            time.sleep(0.5)
+            time.sleep(1.0)
 
 #===============================================================================
 # doers
@@ -747,7 +749,6 @@ anaylsis_type={}
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
-
         if plot_panel is None:
             title = 'Plot Panel {}'.format(self.runid)
             if self.sample:
@@ -769,7 +770,6 @@ anaylsis_type={}
 
             plot_panel.reset()
             plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
-
             self.experiment_manager.open_view(plot_panel)
 
         return plot_panel

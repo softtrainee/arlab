@@ -40,7 +40,7 @@ from src.experiment.stats import StatsGroup
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
-    meas_MeasurementTable
+    meas_MeasurementTable, gen_MassSpectrometerTable
 from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
@@ -508,11 +508,10 @@ class ExperimentExecutor(Experimentable):
 #                man.broadcast(msg)
 
     def _launch_run(self, run, cnt):
-#        repo = self.repository
-#        dm = self.data_manager
-#        runner = self.pyscript_runner
+        # clear the info display
+        self.info_display.clear()
+
         run = self._setup_automated_run(cnt, run)
-#        self._setup_automated_run(cnt, run, repo, dm, runner)
         run.pre_extraction_save()
         self.info('========== {} =========='.format(run.runid))
 
@@ -591,7 +590,7 @@ class ExperimentExecutor(Experimentable):
             arun.monitor = mon
         return arun
 
-    def _get_blank(self, kind):
+    def _get_blank(self, kind, ms):
         db = self.db
         sel = db.selector_factory(style='single')
         sess = db.get_session()
@@ -599,6 +598,7 @@ class ExperimentExecutor(Experimentable):
         q = q.join(meas_MeasurementTable)
         q = q.join(gen_AnalysisTypeTable)
         q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
+        q = q.filter(gen_MassSpectrometerTable.name == ms)
         dbs = q.all()
 
         sel.load_records(dbs, load=False)
@@ -632,7 +632,7 @@ class ExperimentExecutor(Experimentable):
             ind, an = fa
             if ind == 0:
                 if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                    return self._get_blank(an.analysis_type)
+                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
                 else:
                     return
             else:
@@ -640,7 +640,7 @@ class ExperimentExecutor(Experimentable):
 #                print pa, pa.analysis_type, btypes
                 if not pa.analysis_type in btypes or pa.skip:
                     if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                        return self._get_blank(an.analysis_type)
+                        return self._get_blank(an.analysis_type, exp.mass_spectrometer)
                     else:
                         return
 
@@ -714,30 +714,30 @@ class ExperimentExecutor(Experimentable):
         super(ExperimentExecutor, self)._reload_from_disk()
         self._update_stats()
 
-    def _recall_run(self):
-        selected = self.selected
-        if selected and self.recall_enabled:
-            selected = selected[-1]
-            db = self.db
-            # recall the analysis and display
-            db.selector.open_record(selected.uuid)
-
-    def _edit_run(self):
-        selected = self.selected
-        self.save_enabled = False
-        if self.edit_enabled and selected:
-            base_run = selected[0]
-            ae = AutomatedRunFactory()
-            ae.load_from_run(base_run)
-
-#            ae = AutomatedRunEditor(run=selected[-1])
-            info = ae.edit_traits(kind='livemodal', view='edit_view')
-            if info.result:
-                ae.commit_changes(selected)
-                self._update()
-                self.stats.calculate()
-                self.new_run_gen_needed = True
-                self.save_enabled = True
+#    def _recall_run(self):
+#        selected = self.selected
+#        if selected and self.recall_enabled:
+#            selected = selected[-1]
+#            db = self.db
+#            # recall the analysis and display
+#            db.selector.open_record(selected.uuid)
+#
+#    def _edit_run(self):
+#        selected = self.selected
+#        self.save_enabled = False
+#        if self.edit_enabled and selected:
+#            base_run = selected[0]
+#            ae = AutomatedRunFactory()
+#            ae.load_from_run(base_run)
+#
+# #            ae = AutomatedRunEditor(run=selected[-1])
+#            info = ae.edit_traits(kind='livemodal', view='edit_view')
+#            if info.result:
+#                ae.commit_changes(selected)
+#                self._update()
+#                self.stats.calculate()
+#                self.new_run_gen_needed = True
+#                self.save_enabled = True
 
 #    def _load_experiment_queue_hook(self):
 #        self.executable = all([ei.executable for ei in self.experiment_queues])

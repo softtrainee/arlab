@@ -66,6 +66,7 @@ class Experimentor(Experimentable):
     #===========================================================================
     execute_event = Event
     activate_editor_event = Event
+    clear_display_event = Event
 
     def test_queues(self, qs=None):
         if qs is None:
@@ -92,8 +93,6 @@ class Experimentor(Experimentable):
 #            return
 
         return True
-
-
 
     def start_file_listener(self, path):
         fl = FileListener(
@@ -321,12 +320,12 @@ class Experimentor(Experimentable):
 #    def _update_queues(self, new):
 #        self.executor.set_experiment_queues(new)
 
-
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):
         self.experiment_factory.run_factory.edit_mode = True
 
-    @on_trait_change('experiment_queue:refresh_button')
+    @on_trait_change('''experiment_queue:refresh_button,
+experiment_factory:run_factory:update_info_needed''')
     def _refresh(self):
         self.update_info()
 
@@ -370,8 +369,8 @@ class Experimentor(Experimentable):
                                application=self.application
                                )
 
-        pfunc = lambda *args, **kw: self._update(all_info=True)
-        e.on_trait_change(pfunc, 'update_needed')
+#        pfunc = lambda *args, **kw: self._update(all_info=True)
+#        e.on_trait_change(pfunc, 'update_needed')
         return e
 
     def _experiment_factory_default(self):

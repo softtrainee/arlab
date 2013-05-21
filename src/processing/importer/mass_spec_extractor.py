@@ -19,6 +19,7 @@ from traits.api import HasTraits, Str, Bool, Instance, Button
 from src.processing.importer.extractor import Extractor
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from src.database.database_connection_spec import DBConnectionSpec
+import struct
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ImportName(HasTraits):
@@ -51,6 +52,10 @@ class MassSpecExtractor(Extractor):
     def import_irradiation(self, dest, name, include_analyses=False):
         self.connect()
 
+        self.dbimport = dest.add_import(
+                                        source=self.db.name,
+                                        source_host=self.db.host,
+                                        )
         # is irrad already in dest
         dbirrad = dest.get_irradiation(name)
         skipped = True
@@ -77,8 +82,10 @@ class MassSpecExtractor(Extractor):
         '''
         levels = self.db.get_levels_by_irradname(name)
         for mli in levels:
+
             # is level already in dest
-            if dest.get_irradiation_level(name, mli.Level) is None:
+            dbl = dest.get_irradiation_level(name, mli.Level)
+            if dbl is None:
                 dest.add_irradiation_level(mli.Level, dbirrad, mli.SampleHolder)
 
             # add all irradiation positions for this level
@@ -98,13 +105,83 @@ class MassSpecExtractor(Extractor):
 #                    dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
                 sample = self._add_sample_project(dest, ip)
                 ln.sample = sample
+
+                if include_analyses:
+                    for ai in ip.analyses:
+                        self._add_analysis(dest, ln, ai)
+
                 dest.flush()
+
+    def _add_analysis(self, dest, dest_labnumber, dbanalysis):
+        #=======================================================================
+        # add analysis
+        #=======================================================================
+        aliquot = dbanalysis.Aliquot
+        step = dbanalysis.Increment
+        changeable = dbanalysis.changeable
+
+        dest_an = dest.add_analysis(dest_labnumber,
+                                 aliquot=int(aliquot),
+                                 comment=changeable.Comment,
+                                 step=step
+                                 )
+
+        #=======================================================================
+        # add isotopes
+        #=======================================================================
+        kind = 'signal'
+        fit_hist = None
+        for iso in dbanalysis.isotopes:
+            pkt = iso.peak_time_series
+            blob = pkt.PeakTimeBlob
+            endianness = '>'
+            sx, sy = zip(*[struct.unpack('{}ff'.format(endianness),
+                                       blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+
+            blob = pkt.PeakNeverBslnCorBlob
+            noncor_y = zip(*[struct.unpack('{}f'.format(endianness),
+                                       blob[i:i + 4]) for i in xrange(0, len(blob), 4)])
+
+            detname = iso.detector.Label
+            det = dest.get_detector(detname)
+            if det is None:
+                det = dest.add_detector(detname)
+#                    db.flush()
+
+            '''
+                mass spec saves peak time with baseline correction.
+                pychron wants uncorrected
+            '''
+            baseline = iso.baseline.PeakTimeBlob
+
+            data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
+            # add baseline
+            for data, k in (
+                              (baseline, 'baseline'),
+                              (data, 'signal')
+                              ):
+                dbiso = dest.add_isotope(dest_an, iso, det, kind=k)
+                dest.add_signal(dbiso, data)
+
+            # add to fit history
+            #### How to extract fits from Mass Spec???? #####
+            fit = None
+            if fit:
+                if fit_hist is None:
+                    fit_hist = dest.add_fit_history(dest_an)
+                dest.add_fit(fit_hist, dbiso, fit=fit)
+
+
+        self.dbimport.analyses.append(dest_an)
 
     def _add_sample_project(self, dest, dbpos):
 
         sample = dbpos.sample
         project = sample.project
         material = dbpos.Material
+
+        dest.add_material(material)
+        dest.add_project(project.Project)
 
         return dest.add_sample(
                         sample.Sample,
