@@ -470,7 +470,7 @@ post_equilibration_script:name
 
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
-#            self.clear_selection = TÖrue
+#            self.clear_selection = True
         else:
             self._frequency_enabled = False
 

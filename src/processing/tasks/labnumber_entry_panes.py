@@ -61,33 +61,35 @@ class ImporterPane(TraitsDockPane):
     id = 'pychron.labnumber.importer'
     def traits_view(self):
         v = View(
-                 HGroup(spring, Item('import_button', show_label=False)),
                  VGroup(
-                     HGroup(spring, Item('data_source')),
-                     VFold(
-                         VGroup(
-                                Item('object.importer.dbconn_spec', style='custom', show_label=False),
-                                HGroup(spring, Item('object.importer.connect_button', show_label=False)),
-                                label='Source'
-                                ),
-                         VGroup(
-
-                                Item('import_kind', show_label=False),
-                                Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
-                                                                editable=False,
-                                                                selected='selected',
-                                                                multi_select=True
-                                                                )),
-                                CustomLabel('custom_label1',
-                                         color='blue',
-                                         size=10),
-                                Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
-                                                                editable=False,
-                                                                )),
-                                HGroup(spring, Item('import_button', show_label=False)),
-                                label='Results'
-                             )
+                     HGroup(spring, Item('import_button', show_label=False)),
+                     VGroup(
+                         HGroup(spring, Item('data_source')),
+                         VFold(
+                             VGroup(
+                                    Item('object.importer.dbconn_spec', style='custom', show_label=False),
+                                    HGroup(spring, Item('object.importer.connect_button', show_label=False)),
+                                    label='Source'
+                                    ),
+                             VGroup(
+    
+                                    Item('import_kind', show_label=False),
+                                    Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
+                                                                    editable=False,
+                                                                    selected='selected',
+                                                                    multi_select=True
+                                                                    )),
+                                    CustomLabel('custom_label1',
+                                             color='blue',
+                                             size=10),
+                                    Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
+                                                                    editable=False,
+                                                                    )),
+                                    HGroup(spring, Item('import_button', show_label=False)),
+                                    label='Results'
+                                 )
                            )
+                        )
                     )
                  )
         return v

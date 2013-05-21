@@ -50,6 +50,7 @@ from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
+from src.ui.gui import invoke_in_main_thread
 # from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
@@ -509,7 +510,8 @@ class ExperimentExecutor(Experimentable):
 
     def _launch_run(self, run, cnt):
         # clear the info display
-        self.info_display.clear()
+        invoke_in_main_thread(self.info_display.clear)
+#        self.info_display.clear()
 
         run = self._setup_automated_run(cnt, run)
         run.pre_extraction_save()
