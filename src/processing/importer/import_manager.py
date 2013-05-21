@@ -26,11 +26,12 @@ from src.loggable import Loggable
 from src.database.database_connection_spec import DBConnectionSpec
 from src.processing.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
-class ImportManager(DatabaseManager):
+class ImportManager(IsotopeDatabaseManager):
     data_source = Enum('MassSpec', 'File')
     importer = Instance(Extractor)
     import_kind = Enum('---', 'irradiation')
@@ -41,6 +42,8 @@ class ImportManager(DatabaseManager):
     imported_names = List
     custom_label1 = Str('Imported')
     filter_str = Str(enter_set=True, auto_set=False)
+
+    include_analyses = Bool(True)
 
     def _filter_str_changed(self):
         func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
@@ -55,7 +58,7 @@ class ImportManager(DatabaseManager):
                 # get import func from importer
                 func = getattr(self.importer, 'import_{}'.format(self.import_kind))
                 for si in self.selected:
-                    r = func(self.db, si.name)
+                    r = func(self.db, si.name, self.include_analyses)
                     if r:
                         self.imported_names.append(r)
 

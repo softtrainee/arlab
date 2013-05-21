@@ -35,7 +35,7 @@ class MassSpecExtractor(Extractor):
         return DBConnectionSpec(database='massspecdata',
                                 username='massspec',
                                 password='DBArgon',
-                                host='129.138.12.160'
+                                host='129.138.12.157'
                                 )
     def _connect_button_fired(self):
         self.connect()
@@ -48,7 +48,7 @@ class MassSpecExtractor(Extractor):
         self.db.kind = 'mysql'
         self.db.connect()
 
-    def import_irradiation(self, dest, name):
+    def import_irradiation(self, dest, name, include_analyses=False):
         self.connect()
 
         # is irrad already in dest
@@ -65,12 +65,16 @@ class MassSpecExtractor(Extractor):
 
         dest.flush()
         # add all the levels and positions for this irradiation
-        self._add_levels(dest, dbirrad, name)
+        self._add_levels(dest, dbirrad, name, include_analyses)
 
         dest.commit()
         return ImportName(name=name, skipped=skipped)
 
-    def _add_levels(self, dest, dbirrad, name):
+    def _add_levels(self, dest, dbirrad, name, include_analyses):
+        '''
+            add all levels and positions for dbirrad
+            if include_analyses is True add all analyses
+        '''
         levels = self.db.get_levels_by_irradname(name)
         for mli in levels:
             # is level already in dest

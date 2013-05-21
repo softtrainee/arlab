@@ -55,138 +55,7 @@ class MassSpecDatabaseImporter(Loggable):
     def connect(self):
         return self.db.connect()
 
-    def _test_fired(self):
-        import numpy as np
-        self.db.connect()
-        xbase = np.linspace(430, 580, 150)
-#        ybase = np.zeros(150)
-#        cddybase = np.zeros(150)
-        ybase = np.random.random(150)
-        cddybase = np.random.random(150) * 0.001
 
-        base = [zip(xbase, ybase),
-                zip(xbase, ybase),
-                zip(xbase, ybase),
-                zip(xbase, ybase),
-                zip(xbase, cddybase),
-                ]
-
-        xsig = np.linspace(20, 420, 410)
-#        y40 = np.ones(410) * 680
-#        y39 = np.ones(410) * 107
-#        y38 = np.zeros(410) * 1.36
-#        y37 = np.zeros(410) * 0.5
-#        y36 = np.ones(410) * 0.001
-
-        y40 = 680 - 0.1 * xsig
-        y39 = 107 - 0.1 * xsig
-        y38 = np.zeros(410) * 1.36
-        y37 = np.zeros(410) * 0.5
-        y36 = 1 + 0.1 * xsig
-
-        sig = [zip(xsig, y40),
-               zip(xsig, y39),
-               zip(xsig, y38),
-               zip(xsig, y37),
-               zip(xsig, y36),
-
-               ]
-
-        regbs = MeanRegressor(xs=xbase, ys=ybase)
-        cddregbs = MeanRegressor(xs=xbase, ys=cddybase)
-        reg = PolynomialRegressor(xs=xsig, ys=y40, fit='linear')
-
-        reg1 = PolynomialRegressor(xs=xsig, ys=y39, fit='linear')
-        reg2 = PolynomialRegressor(xs=xsig, ys=y38, fit='linear')
-        reg3 = PolynomialRegressor(xs=xsig, ys=y37, fit='linear')
-        reg4 = PolynomialRegressor(xs=xsig, ys=y36, fit='linear')
-
-        keys = [
-                ('H1', 'Ar40'),
-                ('AX', 'Ar39'),
-                ('L1', 'Ar38'),
-                ('L2', 'Ar37'),
-                ('CDD', 'Ar36'),
-                ]
-
-        regresults = (dict(
-                          Ar40=ufloat(reg.predict(0), reg.predict_error(0)),
-                          Ar39=ufloat(reg1.predict(0), reg1.predict_error(0)),
-                          Ar38=ufloat(reg2.predict(0), reg2.predict_error(0)),
-                          Ar37=ufloat(reg3.predict(0), reg3.predict_error(0)),
-                          Ar36=ufloat(reg4.predict(0), reg4.predict_error(0)),
-
-                          ),
-                      dict(
-                          Ar40=ufloat(regbs.predict(0), regbs.predict_error(0)),
-                          Ar39=ufloat(regbs.predict(0), regbs.predict_error(0)),
-                          Ar38=ufloat(regbs.predict(0), regbs.predict_error(0)),
-                          Ar37=ufloat(regbs.predict(0), regbs.predict_error(0)),
-                          Ar36=ufloat(cddregbs.predict(0), cddregbs.predict_error(0))
-                          ))
-        blanks = [ufloat(0, 0.1),
-                  ufloat(0.1, 0.001),
-                  ufloat(0.01, 0.001),
-                  ufloat(0.01, 0.001),
-                  ufloat(0.00001, 0.0001),
-                  ]
-        fits = (
-              dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
-                       ['Linear', 'Linear', 'Linear', 'Linear', 'Linear'])),
-              dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
-                       ['Average Y', 'Average Y', 'Average Y', 'Average Y', 'Average Y'])))
-        mass_spectrometer = 'obama'
-        extract_device = 'Laser Furnace'
-        extract_value = 10
-        position = 1
-        duration = 10
-        first_stage_delay = 0
-        second_stage_delay = 30
-        tray = '100-hole'
-        runscript_name = 'Foo'
-        runscript_text = 'this is a test script'
-
-        self.add_analysis('4318', '500', '', '4318',
-                          base, sig, blanks,
-                          keys,
-                          regresults,
-                          fits,
-
-                          mass_spectrometer,
-                          extract_device,
-                          tray,
-                          position,
-                          extract_value,  # power requested
-                          extract_value,  # power achieved
-
-                          duration,  # total extraction
-                          duration,  # time at extract_value
-
-                          first_stage_delay,
-                          second_stage_delay,
-
-                          runscript_name,
-                          runscript_text,
-                          )
-
-    def traits_view(self):
-        v = View(Item('test', show_label=False))
-        return v
-
-    def _db_default(self):
-        db = MassSpecDatabaseAdapter(kind='mysql',
-                                     host='localhost',
-                                     username='root',
-                                     password='Argon',
-                                     name='massspecdata_import'
-#                                     host='129.138.12.131',
-#                                     username='massspec',
-#                                     password='DBArgon',
-#                                     name='massspecdata_isotopedb'
-                                     )
-#        db.connect()
-
-        return db
 
     def add_sample_loading(self, ms, tray):
         if self.sample_loading_id is None:
@@ -436,6 +305,143 @@ class MassSpecDatabaseImporter(Loggable):
         bs_seg_errs = [baseline_err]
         b = encode_infoblob(rpts, pos_segments, bs_segments, bs_seg_params, bs_seg_errs)
         return b
+
+
+    #===========================================================================
+    # debugging
+    #===========================================================================
+    def _test_fired(self):
+        import numpy as np
+        self.db.connect()
+        xbase = np.linspace(430, 580, 150)
+#        ybase = np.zeros(150)
+#        cddybase = np.zeros(150)
+        ybase = np.random.random(150)
+        cddybase = np.random.random(150) * 0.001
+
+        base = [zip(xbase, ybase),
+                zip(xbase, ybase),
+                zip(xbase, ybase),
+                zip(xbase, ybase),
+                zip(xbase, cddybase),
+                ]
+
+        xsig = np.linspace(20, 420, 410)
+#        y40 = np.ones(410) * 680
+#        y39 = np.ones(410) * 107
+#        y38 = np.zeros(410) * 1.36
+#        y37 = np.zeros(410) * 0.5
+#        y36 = np.ones(410) * 0.001
+
+        y40 = 680 - 0.1 * xsig
+        y39 = 107 - 0.1 * xsig
+        y38 = np.zeros(410) * 1.36
+        y37 = np.zeros(410) * 0.5
+        y36 = 1 + 0.1 * xsig
+
+        sig = [zip(xsig, y40),
+               zip(xsig, y39),
+               zip(xsig, y38),
+               zip(xsig, y37),
+               zip(xsig, y36),
+
+               ]
+
+        regbs = MeanRegressor(xs=xbase, ys=ybase)
+        cddregbs = MeanRegressor(xs=xbase, ys=cddybase)
+        reg = PolynomialRegressor(xs=xsig, ys=y40, fit='linear')
+
+        reg1 = PolynomialRegressor(xs=xsig, ys=y39, fit='linear')
+        reg2 = PolynomialRegressor(xs=xsig, ys=y38, fit='linear')
+        reg3 = PolynomialRegressor(xs=xsig, ys=y37, fit='linear')
+        reg4 = PolynomialRegressor(xs=xsig, ys=y36, fit='linear')
+
+        keys = [
+                ('H1', 'Ar40'),
+                ('AX', 'Ar39'),
+                ('L1', 'Ar38'),
+                ('L2', 'Ar37'),
+                ('CDD', 'Ar36'),
+                ]
+
+        regresults = (dict(
+                          Ar40=ufloat(reg.predict(0), reg.predict_error(0)),
+                          Ar39=ufloat(reg1.predict(0), reg1.predict_error(0)),
+                          Ar38=ufloat(reg2.predict(0), reg2.predict_error(0)),
+                          Ar37=ufloat(reg3.predict(0), reg3.predict_error(0)),
+                          Ar36=ufloat(reg4.predict(0), reg4.predict_error(0)),
+
+                          ),
+                      dict(
+                          Ar40=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar39=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar38=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar37=ufloat(regbs.predict(0), regbs.predict_error(0)),
+                          Ar36=ufloat(cddregbs.predict(0), cddregbs.predict_error(0))
+                          ))
+        blanks = [ufloat(0, 0.1),
+                  ufloat(0.1, 0.001),
+                  ufloat(0.01, 0.001),
+                  ufloat(0.01, 0.001),
+                  ufloat(0.00001, 0.0001),
+                  ]
+        fits = (
+              dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
+                       ['Linear', 'Linear', 'Linear', 'Linear', 'Linear'])),
+              dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
+                       ['Average Y', 'Average Y', 'Average Y', 'Average Y', 'Average Y'])))
+        mass_spectrometer = 'obama'
+        extract_device = 'Laser Furnace'
+        extract_value = 10
+        position = 1
+        duration = 10
+        first_stage_delay = 0
+        second_stage_delay = 30
+        tray = '100-hole'
+        runscript_name = 'Foo'
+        runscript_text = 'this is a test script'
+
+        self.add_analysis('4318', '500', '', '4318',
+                          base, sig, blanks,
+                          keys,
+                          regresults,
+                          fits,
+
+                          mass_spectrometer,
+                          extract_device,
+                          tray,
+                          position,
+                          extract_value,  # power requested
+                          extract_value,  # power achieved
+
+                          duration,  # total extraction
+                          duration,  # time at extract_value
+
+                          first_stage_delay,
+                          second_stage_delay,
+
+                          runscript_name,
+                          runscript_text,
+                          )
+
+    def traits_view(self):
+        v = View(Item('test', show_label=False))
+        return v
+
+    def _db_default(self):
+        db = MassSpecDatabaseAdapter(kind='mysql',
+                                     host='localhost',
+                                     username='root',
+                                     password='Argon',
+                                     name='massspecdata_import'
+#                                     host='129.138.12.131',
+#                                     username='massspec',
+#                                     password='DBArgon',
+#                                     name='massspecdata_isotopedb'
+                                     )
+#        db.connect()
+
+        return db
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

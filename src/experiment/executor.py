@@ -467,9 +467,9 @@ class ExperimentExecutor(Experimentable):
                             self._prev_blanks = pb
 
                 self._report_execution_state(run)
-                if run.quit:
-                    self._alive = False
-                    break
+#                if run.quit:
+#                    self._alive = False
+#                    break
 
             if self.end_at_run_completion:
                 break

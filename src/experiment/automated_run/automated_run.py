@@ -1561,6 +1561,7 @@ anaylsis_type={}
             self.message('Could not save to Mass Spec database.\n {}'.format(e))
             self.cancel()
             self.experiment_manager.cancel()
+
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
         return txt
