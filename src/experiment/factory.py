@@ -40,7 +40,8 @@ class ExperimentFactory(Loggable):
     edit_mode_button = Button('Edit')
     edit_enabled = DelegatesTo('run_factory')
 
-    auto_increment = Bool(False)
+    auto_increment_id = Bool(False)
+    auto_increment_position = Bool(False)
 
     queue = Instance(ExperimentQueue, ())
 
@@ -51,6 +52,8 @@ class ExperimentFactory(Loggable):
     _mass_spectrometer = String
     _extract_device = String
     _labnumber = String
+
+    help_label = String('Select Irradiation/Level or Project')
 
     #===========================================================================
     # permisions
@@ -65,7 +68,9 @@ class ExperimentFactory(Loggable):
         self.queue.clear_frequency_runs()
 
     def _add_button_fired(self):
-        new_runs, freq = self.run_factory.new_runs(auto_increment=self.auto_increment)
+        new_runs, freq = self.run_factory.new_runs(
+                                                   auto_increment_position=self.auto_increment_position,
+                                                   auto_increment_id=self.auto_increment_id)
         self.queue.add_runs(new_runs, freq)
 
     def _edit_mode_button_fired(self):

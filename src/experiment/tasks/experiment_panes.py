@@ -70,6 +70,9 @@ class ExperimentFactoryPane(TraitsDockPane):
                             ),
 
                      HGroup(UItem('add_button', enabled_when='ok_add'),
+                            UItem('clear_button',
+                                     tooltip='Clear all runs added using "frequency"'
+                                     ),
                             UItem('edit_mode_button',
                                    enabled_when='edit_enabled',
 #                                   show_label=False
@@ -95,10 +98,15 @@ class ExperimentFactoryPane(TraitsDockPane):
 
                      HGroup(
                             UItem('add_button', enabled_when='ok_add'),
-                            Item('auto_increment'),
                             UItem('clear_button',
                                      tooltip='Clear all runs added using "frequency"'
-                                     )
+                                     ),
+                            Label('Auto Increment'),
+                            Item('auto_increment_id', label='L#'),
+                            Item('auto_increment_position', label='Position'),
+#                            HGroup(
+#                                   label='Auto Increment'
+#                                   ),
                             )
                         )
                  )
@@ -106,15 +114,20 @@ class ExperimentFactoryPane(TraitsDockPane):
 
     def _get_info_group(self):
         grp = Group(
-                   RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
-                       ),
+
+                   HGroup(spring, CustomLabel('help_label', size=14), spring),
                    HGroup(
                           RFItem('selected_irradiation',
                                label='Irradiation',
                                editor=EnumEditor(name=make_rf_name('irradiations'))),
                           RFItem('selected_level',
-                               label='Level',
-                               editor=EnumEditor(name=make_rf_name('levels'))),
+                                 show_label=False,
+#                                 label='Level',
+                                 editor=EnumEditor(name=make_rf_name('levels'))),
+
+                          RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
+                                 ),
+
                           ),
 
                    HGroup(RFItem('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
@@ -129,18 +142,25 @@ class ExperimentFactoryPane(TraitsDockPane):
                               width=100,
                               ),
                          ),
-                   RFItem('aliquot'),
-                   RFItem('sample',
-                        tooltip='Sample info retreived from Database',
-                        style='readonly'
-                        ),
-                   RFItem('irradiation',
-                          tooltip='Irradiation info retreived from Database',
-                          style='readonly'
+                   HGroup(
+                           RFItem('aliquot',
+                                  width=50
+                                  ),
+                           RFItem('irradiation',
+                                      tooltip='Irradiation info retreived from Database',
+                                      style='readonly',
+                                      width=70,
+                                      ),
+                           RFItem('sample',
+                                    tooltip='Sample info retreived from Database',
+                                    style='readonly',
+                                    width=100,
+                                    ),
+                          spring
                           ),
                    RFItem('weight',
                         label='Weight (mg)',
-                        tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
+                        tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis',
                         ),
                    RFItem('comment',
                         tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
