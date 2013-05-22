@@ -44,6 +44,9 @@ class SignalAdapter(SimpleTextTableAdapter):
     columns = [
                ('Isotope', 'isotope', str),
                ('Detector', 'detector', str),
+               ('Intercept', 'intercept_value'),
+               (u'{}1s'.format(PLUSMINUS), 'intercept_error'),
+               (u'{}%'.format(PLUSMINUS), 'intercept_error_percent', str),
                ('Raw (fA)', 'raw_value'),
                (u'{}1s'.format(PLUSMINUS), 'raw_error'),
                (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str),
@@ -228,34 +231,48 @@ class PlotPanel(Viewable):
         sig = self.signals
         base = self.baselines
         blank = self.blanks
+        cfb = self.correct_for_baseline
+        cfbl = self.correct_for_blank
         def factory(det, fi):
             iso = det.isotope
             if iso in sig:
                 v = sig[iso]
-                v, e = v.nominal_value, v.std_dev
             else:
-                v, e = 0, 0
+                v = ufloat(0, 0)
+#                v, e = 0, 0
+
             if iso in base:
                 bv = base[iso]
-                bv, be = bv.nominal_value, bv.std_dev
+#                bv = bv.nominal_value, bv.std_dev
             else:
-                bv, be = 0, 0
+                bv = ufloat(0, 0)
+#                bv, be = 0, 0
 
             if iso in blank:
                 blv = blank[iso]
-                blv, ble = blv.nominal_value, blv.std_dev
+#                blv, ble = blv.nominal_value, blv.std_dev
             else:
-                blv, ble = 0, 0
+                blv = ufloat(0, 0)
+
+#                blv, ble = 0, 0
+            iv = v
+            if cfb:
+                iv = iv - bv
+
+            if cfbl:
+                iv = iv - blv
 
             return DisplaySignal(isotope=iso,
                                  detector=det.name,
                                  fit=fi[0].upper(),
-                                 raw_value=v,
-                                 raw_error=e,
-                                 baseline_value=bv,
-                                 baseline_error=be,
-                                 blank_value=blv,
-                                 blank_error=ble,
+                                 intercept_value=iv.nominal_value,
+                                 intercept_error=iv.std_dev,
+                                 raw_value=v.nominal_value,
+                                 raw_error=v.std_dev,
+                                 baseline_value=bv.nominal_value,
+                                 baseline_error=bv.std_dev,
+                                 blank_value=blv.nominal_value,
+                                 blank_error=blv.std_dev,
                                  )
 
         return [factory(det, fi) for det, fi in zip(self.detectors, self.fits)]
@@ -333,7 +350,7 @@ class PlotPanel(Viewable):
                         display_grp
 
                         ),
-                 width=650,
+                 width=725,
                  height=0.90,
                  x=self.window_x,
                  y=self.window_y,

@@ -26,6 +26,8 @@ class DisplaySignal(HasTraits):
     fit = Str
     raw_value = Float
     raw_error = Float
+    intercept_value = Float
+    intercept_error = Float
     baseline_value = Float
     baseline_error = Float
     blank_value = Float
@@ -35,6 +37,7 @@ class DisplaySignal(HasTraits):
     error_component = Float
 
     raw_error_percent = Property
+    intercept_error_percent = Property
     baseline_error_percent = Property
     blank_error_percent = Property
 
@@ -50,6 +53,12 @@ class DisplaySignal(HasTraits):
         v = self.blank_value
         e = self.blank_error
         return calc_percent_error(v, e)
+
+    def _get_intercept_error_percent(self):
+        v = self.intercept_value
+        e = self.intercept_error
+        return calc_percent_error(v, e)
+
 
 class DisplayValue(HasTraits):
     value = Either(Str, Float)
