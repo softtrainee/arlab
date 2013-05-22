@@ -49,7 +49,7 @@ class MassSpecExtractor(Extractor):
         self.db.kind = 'mysql'
         self.db.connect()
 
-    def import_irradiation(self, dest, name, include_analyses=False):
+    def import_irradiation(self, dest, name, include_analyses=False, include_list=None):
         self.connect()
 
         self.dbimport = dest.add_import(
@@ -70,18 +70,26 @@ class MassSpecExtractor(Extractor):
 
         dest.flush()
         # add all the levels and positions for this irradiation
-        self._add_levels(dest, dbirrad, name, include_analyses)
+        self._add_levels(dest, dbirrad, name,
+                         include_analyses,
+                         include_list
+                         )
 
         dest.commit()
         return ImportName(name=name, skipped=skipped)
 
-    def _add_levels(self, dest, dbirrad, name, include_analyses):
+    def _add_levels(self, dest, dbirrad, name, include_analyses, include_list=None):
         '''
             add all levels and positions for dbirrad
             if include_analyses is True add all analyses
         '''
         levels = self.db.get_levels_by_irradname(name)
+        if include_list is None:
+            include_list = [li.Level for li in levels]
+
         for mli in levels:
+            if mli.Level not in include_list:
+                continue
 
             # is level already in dest
             dbl = dest.get_irradiation_level(name, mli.Level)
@@ -129,23 +137,26 @@ class MassSpecExtractor(Extractor):
         #=======================================================================
         # add isotopes
         #=======================================================================
-        kind = 'signal'
         fit_hist = None
         for iso in dbanalysis.isotopes:
             pkt = iso.peak_time_series
             blob = pkt.PeakTimeBlob
             endianness = '>'
-            sx, sy = zip(*[struct.unpack('{}ff'.format(endianness),
+            sx, _sy = zip(*[struct.unpack('{}ff'.format(endianness),
                                        blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
             blob = pkt.PeakNeverBslnCorBlob
-            noncor_y = zip(*[struct.unpack('{}f'.format(endianness),
-                                       blob[i:i + 4]) for i in xrange(0, len(blob), 4)])
+            try:
+                noncor_y = [struct.unpack('{}f'.format(endianness),
+                                       blob[i:i + 4])[0] for i in xrange(0, len(blob), 4)]
+            except Exception:
+                continue
 
-            detname = iso.detector.Label
+            detname = iso.detector.detector_type.Label
             det = dest.get_detector(detname)
             if det is None:
                 det = dest.add_detector(detname)
+                dest.flush()
 #                    db.flush()
 
             '''
@@ -153,14 +164,16 @@ class MassSpecExtractor(Extractor):
                 pychron wants uncorrected
             '''
             baseline = iso.baseline.PeakTimeBlob
-
+#            print sx
+#            print noncor_y
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
             # add baseline
             for data, k in (
                               (baseline, 'baseline'),
                               (data, 'signal')
                               ):
-                dbiso = dest.add_isotope(dest_an, iso, det, kind=k)
+
+                dbiso = dest.add_isotope(dest_an, iso.Label, det, kind=k)
                 dest.add_signal(dbiso, data)
 
             # add to fit history
@@ -171,7 +184,6 @@ class MassSpecExtractor(Extractor):
                     fit_hist = dest.add_fit_history(dest_an)
                 dest.add_fit(fit_hist, dbiso, fit=fit)
 
-
         self.dbimport.analyses.append(dest_an)
 
     def _add_sample_project(self, dest, dbpos):
@@ -181,12 +193,12 @@ class MassSpecExtractor(Extractor):
         material = dbpos.Material
 
         dest.add_material(material)
-        dest.add_project(project.Project)
+        project = dest.add_project(project.Project)
 
         return dest.add_sample(
                         sample.Sample,
                         material=material,
-                        project=project.Project)
+                        project=project)
 
     def _add_chronology(self, dest, name):
         chrons = self.db.get_chronology_by_irradname(name)

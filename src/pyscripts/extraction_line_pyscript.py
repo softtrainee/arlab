@@ -301,6 +301,10 @@ class ExtractionLinePyScript(ValvePyScript):
         if units == '':
             units = self.extract_units
 
+        ed = self.extract_device
+        ed = ed.replace('_', ' ')
+        self.manager.set_extract_state('{} on'.format(ed))
+
         self.info('extract sample to {} ({})'.format(power, units))
         self._manager_action([('extract', (power,), {'units':units})],
                              protocol=ILaserManager,
@@ -421,12 +425,17 @@ class ExtractionLinePyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def enable(self):
+        ed = self.extract_device
+        ed = ed.replace('_', ' ')
+        self.manager.set_extract_state('{} Enabled'.format(ed))
+
         return self._manager_action([('enable_device', (), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)
     @verbose_skip
     @command_register
     def disable(self):
+        self.manager.set_extract_state(False)
         return self._manager_action([('disable_device', (), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)

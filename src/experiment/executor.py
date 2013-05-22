@@ -16,11 +16,11 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, Any, on_trait_change, String, List
+    Instance, Str, Any, on_trait_change, String, List, Unicode
 from traitsui.api import View, Item, HGroup, Group, spring
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
-# from threading import Thread
+from threading import Event as Flag
 import time
 import os
 #============= local library imports  ==========================
@@ -51,6 +51,8 @@ from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
 from src.ui.gui import invoke_in_main_thread
+from pyface.image_resource import ImageResource
+from src.pyscripts.wait_dialog import WaitDialog
 # from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
@@ -64,6 +66,8 @@ class ExperimentExecutor(Experimentable):
     info_display = Instance(DisplayController)
     pyscript_runner = Instance(PyScriptRunner)
     data_manager = Instance(H5DataManager, ())
+
+    wait_dialog = Instance(WaitDialog, ())
 
 #    current_run = Instance(AutomatedRun)
 
@@ -87,15 +91,19 @@ class ExperimentExecutor(Experimentable):
 
 #    right_clicked = Any
 #    selected_row = Any
-    selected = Any
-    dclicked = Event
-    right_clicked = Event
-    recall_run = Button
-    edit_run = Button
-    save_button = Button('Save')
-    save_as_button = Button('Save As')
-    edit_enabled = Property(depends_on='selected')
-    recall_enabled = Property(depends_on='selected')
+#    selected = Any
+#    dclicked = Event
+#    right_clicked = Event
+#    recall_run = Button
+#    edit_run = Button
+#    save_button = Button('Save')
+#    save_as_button = Button('Save As')
+#    edit_enabled = Property(depends_on='selected')
+#    recall_enabled = Property(depends_on='selected')
+    extraction_state_label = String
+    extraction_state = None
+#    extraction_state_image = Instance(ImageResource)
+
 
     _alive = Bool(False)
     _last_ran = None
@@ -118,6 +126,8 @@ class ExperimentExecutor(Experimentable):
     statusbar = String
 
     executable = Bool
+
+    _state_thread = None
 
     def isAlive(self):
         return self._alive
@@ -187,6 +197,58 @@ class ExperimentExecutor(Experimentable):
                 arun.cancel()
             self._alive = False
             self.stats.stop_timer()
+
+    def set_extract_state(self, state):
+
+        def loop(end_flag, label):
+            '''
+                freq== percent label is shown e.g 0.75 means display label 75% of the iterations
+                iperiod== iterations per second (inverse period == rate)
+                
+            '''
+            freq = 0.75
+
+            iperiod = 20
+            period = 1 / float(iperiod)
+
+            threshold = freq ** 2 * iperiod  # mod * freq
+
+            i = 0
+            while not end_flag.is_set():
+#                print i, i % 100
+                if i % iperiod < threshold:
+                    self.extraction_state_label = label
+                else:
+                    self.extraction_state_label = ''
+
+                time.sleep(period)
+                i += 1
+                if i > 1000:
+                    i = 0
+
+        if state:
+            if self._state_thread:
+                self._end_flag.set()
+
+            time.sleep(0.1)
+            self._end_flag = Flag()
+            t = Thread(target=loop,
+                       args=(self._end_flag,
+                             '*** {} ***'.format(state.upper()),
+                             )
+                       )
+            t.start()
+            self._state_thread = t
+        else:
+            self._end_flag.set()
+            self.extraction_state_label = ''
+
+#        if state:
+# #            self.end_flag
+#            t = Thread(target=loop)
+#            t.start()
+#            self._state_thread = t
+
 
     def execute(self):
         self.debug('starting execution')
@@ -509,8 +571,9 @@ class ExperimentExecutor(Experimentable):
 #                man.broadcast(msg)
 
     def _launch_run(self, run, cnt):
-        # clear the info display
-        invoke_in_main_thread(self.info_display.clear)
+        if cnt > 0:
+            # clear the info display
+            invoke_in_main_thread(self.info_display.clear)
 #        self.info_display.clear()
 
         run = self._setup_automated_run(cnt, run)
@@ -944,6 +1007,9 @@ class ExperimentExecutor(Experimentable):
             isok = mon.load()
 
         return mon, isok
+
+
+
     def _pyscript_runner_default(self):
         if self.mode == 'client':
 #            em = self.extraction_line_manager

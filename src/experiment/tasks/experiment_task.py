@@ -17,12 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, on_trait_change
 from traitsui.api import View, Item
-from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
-     ControlsPane, ConsolePane, ExplanationPane
+     ControlsPane, ConsolePane, ExplanationPane, WaitPane
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
@@ -39,13 +39,16 @@ class ExperimentEditorTask(EditorTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          left=PaneItem('pychron.experiment.factory'),
+                          left=Tabbed(
+                                      PaneItem('pychron.experiment.factory'),
+                                      PaneItem('pychron.experiment.console')
+                                      ),
                           right=Splitter(
                                          PaneItem('pychron.experiment.stats'),
-                                        PaneItem('pychron.experiment.explanation'),
+                                         PaneItem('pychron.experiment.explanation'),
+                                         PaneItem('pychron.experiment.wait'),
                                          orientation='vertical'
                                          ),
-                          bottom=PaneItem('pychron.experiment.console'),
                           top=PaneItem('pychron.experiment.controls')
                           )
     def prepare_destroy(self):
@@ -60,6 +63,7 @@ class ExperimentEditorTask(EditorTask):
                 StatsPane(model=self.manager),
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor),
+                WaitPane(model=self.manager.executor),
                 ExplanationPane(),
                 ]
 

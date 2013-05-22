@@ -15,15 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Enum, Instance, Str, Password, Button, List, Any, Bool, Property
+from traits.api import HasTraits, Enum, Instance, Str, Password, \
+     Button, List, Any, Bool, Property, Event
 # from traitsui.api import View, Item, VGroup, HGroup, spring, Group, TabularEditor
 # from traitsui.tabular_adapter import TabularAdapter
 # from apptools.preferences.preference_binding import bind_preference
-from src.processing.database_manager import DatabaseManager
-from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+# from src.processing.database_manager import DatabaseManager
+# from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 # from src.ui.custom_label_editor import CustomLabel
-from src.loggable import Loggable
-from src.database.database_connection_spec import DBConnectionSpec
+# from src.loggable import Loggable
+# from src.database.database_connection_spec import DBConnectionSpec
 from src.processing.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
@@ -47,7 +48,9 @@ class ImportManager(IsotopeDatabaseManager):
     custom_label1 = Str('Imported')
     filter_str = Str(enter_set=True, auto_set=False)
 
-    include_analyses = Bool(False)
+    include_analyses = Bool(True)
+
+    update_irradiations_needed = Event
 
     def _filter_str_changed(self):
         func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
@@ -56,7 +59,7 @@ class ImportManager(IsotopeDatabaseManager):
     def _import_button_fired(self):
 #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
-#            self.selected = [records('NM-254')]
+            self.selected = [records('NM-216')]
 
             if self.selected:
                 if self.db.connect():
@@ -66,9 +69,15 @@ class ImportManager(IsotopeDatabaseManager):
                     # get import func from importer
                     func = getattr(self.importer, 'import_{}'.format(self.import_kind))
                     for si in self.selected:
-                        r = func(self.db, si.name, self.include_analyses)
+                        r = func(self.db, si.name,
+                                 self.include_analyses,
+                                 include_list=['C', ]
+                                 )
                         if r:
                             self.imported_names.append(r)
+
+                    if self.imported_names:
+                        self.update_irradiations_needed = True
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':

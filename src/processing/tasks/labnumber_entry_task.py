@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
+from traits.api import HasTraits, Instance, on_trait_change
 from src.envisage.tasks.base_task import  BaseManagerTask
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter
 #============= standard library imports ========================
@@ -60,6 +60,10 @@ class LabnumberEntryTask(BaseManagerTask):
                 ImporterPane(model=self.importer)
                 ]
 
+
+    @on_trait_change('importer:update_irradiations_needed')
+    def _update_irradiations(self):
+        self.manager.updated = True
     #===========================================================================
     # GenericActon Handlers
     #===========================================================================

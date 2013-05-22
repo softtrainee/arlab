@@ -15,40 +15,42 @@
 #===============================================================================
 
 
-from traits.etsconfig.etsconfig import ETSConfig
-from src.helpers.timer import Timer
-ETSConfig.toolkit = 'qt4'
-from src.ui.gui import invoke_in_main_thread
+# from traits.etsconfig.etsconfig import ETSConfig
+# ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
-from traits.api import Float, Property, Bool, Str
-from traitsui.api import View, Item, RangeEditor, spring, HGroup
+from traits.api import Float, Property, Bool, Str, Button
+from traitsui.api import View, Item, RangeEditor, spring, HGroup, VGroup, UItem
 # from pyface.timer.timer import Timer
-from traitsui.menu import Action
-from src.viewable import ViewableHandler, Viewable
+# from traitsui.menu import Action
 from threading import Event
-import time
-from src.helpers import logger_setup
-from src.helpers.logger_setup import logging_setup
+# import time
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-class WDHandler(ViewableHandler):
-#    def init(self, info):
-#        info.object.ui = info.ui
-#
-#    def closed(self, info, is_ok):
-#        info.object.closed(is_ok)
-#        return True
-#    def close(self, info, isok):
-#        print 'close', isok
-#
-#        return True
+# from src.viewable import ViewableHandler, Viewable
+# from src.helpers import logger_setup
+# from src.helpers.logger_setup import logging_setup
+from src.helpers.timer import Timer
+from src.ui.gui import invoke_in_main_thread
+from src.loggable import Loggable
 
-    def _continue(self, info):
-        info.object._continue()
+# class WDHandler(ViewableHandler):
+# #    def init(self, info):
+# #        info.object.ui = info.ui
+# #
+# #    def closed(self, info, is_ok):
+# #        info.object.closed(is_ok)
+# #        return True
+# #    def close(self, info, isok):
+# #        print 'close', isok
+# #
+# #        return True
+#
+#    def _continue(self, info):
+#        info.object._continue()
 
-class WaitDialog(Viewable):
+class WaitDialog(Loggable):
 #    condition = None
     end_evt = None
     wtime = Float
@@ -67,7 +69,10 @@ class WaitDialog(Viewable):
     _canceled = False
 
     window_width = Float(0.45)
-    dispose_at_end = True
+    dispose_at_end = False
+
+    cancel_button = Button('Cancel')
+    continue_button = Button('Continue')
 
     def __init__(self, *args, **kw):
         super(WaitDialog, self).__init__(*args, **kw)
@@ -93,6 +98,12 @@ class WaitDialog(Viewable):
 
     def stop(self):
         self._end()
+
+    def _continue_button_fired(self):
+        self._continue()
+
+    def _cancel_button_fired(self):
+        self._cancel()
 
     def _high_changed(self, v):
         self.wtime = v
@@ -122,11 +133,13 @@ class WaitDialog(Viewable):
             self.debug('disposing {}'.format(self))
             self.disposed = True
 
-    def close(self, isok):
-        super(WaitDialog, self).close(isok)
-        self._canceled = not isok
+#    def close(self, isok):
+#        super(WaitDialog, self).close(isok)
+#        self._canceled = not isok
+#        self._end(dispose=False)
+    def _cancel(self):
+        self._canceled = True
         self._end(dispose=False)
-
 
     def _continue(self):
         self._canceled = False
@@ -135,30 +148,43 @@ class WaitDialog(Viewable):
 #        self.close(True)
 
     def traits_view(self):
-
-        kw = dict(buttons=['Cancel',
-                           Action(name='Continue',
-                                  action='_continue')
-                           ],
-                  handler=WDHandler,
-                  width=self.window_width
-                  )
-        if self.title is not None:
-            kw['title'] = self.title
-
-        return View(
-
-                    Item('message', width=1.0, show_label=False, style='readonly'),
-                    HGroup(Item('high', label='Set Max. Seconds'), spring),
-                    Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
+        v = View(VGroup(
+                        Item('message', width=1.0, show_label=False, style='readonly'),
+                        HGroup(Item('high', label='Set Max. Seconds'), spring),
+                        Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
                                                            low_name='low_name',
                                                            high_name='wtime',
                                                            )),
-                    **kw
-#                    title = self.title,
-#                    buttons = ['Cancel'],
-#                    handler = WDHandler
-                    )
+                        HGroup(
+                               UItem('continue_button'),
+                               spring,
+                               UItem('cancel_button'),
+                               )
+                        ),
+               )
+        return v
+#        kw = dict(buttons=['Cancel',
+#                           Action(name='Continue',
+#                                  action='_continue')
+#                           ],
+#                  handler=WDHandler,
+#                  width=self.window_width
+#                  )
+#        if self.title is not None:
+#            kw['title'] = self.title
+#
+#        return View(
+#                    Item('message', width=1.0, show_label=False, style='readonly'),
+#                    HGroup(Item('high', label='Set Max. Seconds'), spring),
+#                    Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
+#                                                           low_name='low_name',
+#                                                           high_name='wtime',
+#                                                           )),
+#                    **kw
+# #                    title = self.title,
+# #                    buttons = ['Cancel'],
+# #                    handler = WDHandler
+#                    )
 
 from traits.api import HasTraits, Button
 class Demo(HasTraits):
