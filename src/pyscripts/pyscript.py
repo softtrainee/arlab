@@ -621,15 +621,17 @@ class PyScript(Loggable):
                 message = ''
 
             evt = Event()
-            self._wait_dialog = wd = WaitDialog(wtime=timeout,
-                                end_evt=evt,
-                                parent=self,
-                                title='{} - Wait'.format(self.logger_name),
-                                message='Waiting for {:0.1f}  {}'.format(timeout, message)
-                                )
-
+            wd = WaitDialog()
+            wd.trait_set(wtime=timeout,
+                         parent=self,
+                         message='Waiting for {:0.1f}  {}'.format(timeout, message),
+                         )
+            self._wait_dialog = wd
             self.manager.wait_dialog = wd
             st = time.time()
+
+            wd.reset()
+            wd.start(evt)
 #            wd.edit_traits(kind='livemoadl')
 #            invoke_in_main_thread(wd.edit_traits)
             evt.wait(timeout=timeout + 0.25)

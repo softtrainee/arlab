@@ -70,101 +70,56 @@ class _TextTableEditor(Editor):
     def _add_table(self, tab):
         cursor = QTextCursor(self.control.textCursor())
 
-        fmt = QTextTableFormat()
-#        if self.factory.header_color:
-#            br = fmt.borderBrush()
-#
-# #            br = QBrush()
-# #            br.setColor(QColor(self.factory.header_color))
-#            br.setColor(QColor('green'))
-#            fmt.setBorderBrush(br)
-#        fmt.setBorder(3)
-#            fmt.setBorderBrush(br)
-
-#        fmt.setBackground(br)
-        fmt.setCellSpacing(0)
-        fmt.setCellPadding(3)
+        tab_fmt = QTextTableFormat()
+        tab_fmt.setCellSpacing(0)
+        tab_fmt.setCellPadding(3)
 
         border = tab.border
         if border:
-            fmt.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
+            tab_fmt.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
         else:
-            fmt.setBorderStyle(QTextFrameFormat.BorderStyle_None)
+            tab_fmt.setBorderStyle(QTextFrameFormat.BorderStyle_None)
 
-        cursor.insertTable(tab.rows(), tab.cols(), fmt)
+        cursor.insertTable(tab.rows(), tab.cols(), tab_fmt)
         table = cursor.currentTable()
-        ec = self.factory.even_color
-        oc = self.factory.odd_color
 
+        bc = QColor(self.factory.bg_color) if self.factory.bg_color else None
+        ec, oc, hc = bc, bc, bc
+        if self.factory.even_color:
+            ec = QColor(self.factory.even_color) if self.factory.even_color else None
+        if self.factory.odd_color:
+            oc = QColor(self.factory.odd_color) if self.factory.odd_color else None
+        if self.factory.header_color:
+            hc = QColor(self.factory.header_color) if self.factory.header_color else None
+
+        cell_fmt = QTextTableCellFormat()
+        cell_fmt.setFontPointSize(10)
         for ri, row in enumerate(tab.items):
+            c = bc
+            if row.color:
+                c = QColor(row.color)
+            elif ri == 0:
+                c = hc
+            else:
+                if (ri - 1) % 2 == 0:
+                    c = ec
+                else:
+                    c = oc
+            if c:
+                cell_fmt.setBackground(c)
+
             for ci, cell in enumerate(row.cells):
-                tcell = table.cellAt(ri, ci)
-                fmt = QTextTableCellFormat()
-
-                if row.color:
-                    c = row.color
-                elif ri == 0:
-                    c = self.factory.header_color
-                else:
-                    if (ri - 1) % 2 == 0:
-                        c = ec
-                    else:
-                        c = oc
-
-                if c:
-                    fmt.setBackground(QColor(c))
-
+                if cell.bg_color:
+                    cell_fmt.setBackground(QColor(cell.bg_color))
                 if cell.bold:
-                    fmt.setFontWeight(QFont.Bold)
+                    cell_fmt.setFontWeight(QFont.Bold)
                 else:
-                    fmt.setFontWeight(QFont.Normal)
+                    cell_fmt.setFontWeight(QFont.Normal)
 
-                fmt.setFontPointSize(10)
-                tcell.setFormat(fmt)
-                cur = tcell.firstCursorPosition()
-                cur.insertText(cell.text)
+                tcell = table.cellAt(ri, ci)
+                tcell.setFormat(cell_fmt)
+                tcell.firstCursorPosition().insertText(cell.text)
 
-#        self.control.setHtml(self.control.toHtml())
-
-#
-#        cols = self.factory.adapter.columns
-#        if not isinstance(cols, int):
-#            cols = len(cols)
-#
-#        cursor.insertTable(10, cols)
-#
-#        tab = cursor.currentTable()
-#        fmt.setBorderStyle(QTextFrameFormat.BorderStyle_None)
-# #        fmt.setHeight(1.25)
-#
-# #        print tab
-#        for ri, item in enumerate(item_gen):
-#            for ci, it in enumerate(item.items):
-#                cell = tab.cellAt(ri, ci)
-#                cur = cell.firstCursorPosition()
-#                cur.insertText(it.text)
-#
-#
-# #            pass
-# #            print cursor
-# #            cursor.MoveOperation(QTextCursor.NextRow)
-# #            tab.insertRow()
-
-
-
-
-#            ctrl.insertPlainText('{}\n'.format(item.text))
-
-
-#        if self.value:
-#            v, c, force = self.value
-#            if force or v != self._pv or c != self._pc:
-#                ctrl.setTextColor(c)
-#                self._pc = c
-#                self._pv = v
-
-#        self.control.moveCursor(QTextCursor.End)
-#        self.control.ensureCursorVisible()
 
 class TextTableEditor(BasicEditorFactory):
     klass = _TextTableEditor

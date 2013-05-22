@@ -165,7 +165,10 @@ def get_analysis_type(idn):
         return 'unknown'
 
 def make_runid(ln, a, s):
-    return '{}-{:02n}{}'.format(ln, a, s)
+    if not isinstance(a, str):
+        a = '{:02n}'.format(a)
+
+    return '{}-{}{}'.format(ln, a, s)
 
 def make_identifier(ln, ed, ms):
     try:
@@ -207,19 +210,25 @@ def make_special_identifier(ln, ed, ms, aliquot=None):
 
     d = '{}-{}-{}'.format(ln, ed, ms)
     if aliquot:
-        d = '{}-{:02n}'.format(d, aliquot)
+        if not isinstance(aliquot, str):
+            aliquot = '{:02n}'.format(aliquot)
+
+        d = '{}-{}'.format(d, aliquot)
     return d
 
 def make_rid(ln, a, step=''):
     '''
-        if ln can be converted to integer return ln
-        else return special_identifier
+        if ln can be converted to integer return runid
+        else return ln-a
     '''
     try:
         _ = int(ln)
         return make_runid(ln, a, step)
     except ValueError:
-        return '{}-{:02n}'.format(ln, a)
+        if not isinstance(a, str):
+            a = '{:02n}'.format(a)
+        return '{}-{}'.format(ln, a)
+
 #        return make_special_identifier(ln, ed, ms, aliquot=a)
 
 #============= EOF =============================================

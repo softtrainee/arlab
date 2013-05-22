@@ -31,6 +31,7 @@ from src.constants import PLUSMINUS
 class TextCell(HasTraits):
     text = ''
     color = 'black'
+    bg_color = None
     bold = False
     format = Callable
     def __init__(self, text, *args, **kw):
