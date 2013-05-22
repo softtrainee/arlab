@@ -128,7 +128,7 @@ class ExperimentExecutor(Experimentable):
     executable = Bool
 
     _state_thread = None
-
+    _end_flag=None
     def isAlive(self):
         return self._alive
 
@@ -241,7 +241,8 @@ class ExperimentExecutor(Experimentable):
             t.start()
             self._state_thread = t
         else:
-            self._end_flag.set()
+            if self._end_flag:
+                self._end_flag.set()
             self.extraction_state_label = ''
 
 #        if state:
