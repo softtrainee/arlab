@@ -206,17 +206,18 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return sm
 
     def add_analysis_positions(self, analysis, positions):
-        if not isinstance(positions, list):
-            positions = [positions]
-
-        analysis = self.get_analysis(analysis)
-        if analysis:
-            for i, pi in enumerate(positions):
-                try:
-                    pi = int(pi)
-                    self._add_analysis_position(analysis, pi, i + 1)
-                except (ValueError, TypeError):
-                    pass
+        if positions:
+            if not isinstance(positions, list):
+                positions = [positions]
+    
+            analysis = self.get_analysis(analysis)
+            if analysis:
+                for i, pi in enumerate(positions):
+                    try:
+                        pi = int(pi)
+                        self._add_analysis_position(analysis, pi, i + 1)
+                    except (ValueError, TypeError):
+                        pass
 
     def _add_analysis_position(self, analysis, pi, po):
         a = AnalysisPositionTable(Hole=pi, PositionOrder=po)
@@ -314,6 +315,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if iso is not None:
 #            iso.peak_time_series= pk
             iso.peak_time_series.append(pk)
+
         return pk
 
     def add_detector(self, det_type, **kw):

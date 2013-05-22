@@ -305,8 +305,8 @@ class IsotopeTable(Base):
     HallProbeAtStartOfRun = Column(Float, nullable=True)
     HallProbeAtEndOfRun = Column(Float, nullable=True)
 
-    peak_time_series = relation('PeakTimeTable', uselist=False)
-#    peak_time_series = relation('PeakTimeTable')
+#    peak_time_series = relation('PeakTimeTable', uselist=False)
+    peak_time_series = relation('PeakTimeTable')
 
     results = relationship('IsotopeResultsTable', backref='isotope',
 #                          uselist=False

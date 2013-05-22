@@ -1542,18 +1542,16 @@ anaylsis_type={}
                          )
 
         exp.load_record(self)
+
+#        self.massspec_importer.add_analysis(exp)
+#        self.info('analysis added to mass spec database')
         try:
-#            ms_analysis = None
-#            ms_analysis = self.massspec_importer.add_analysis(exp)
             self.massspec_importer.add_analysis(exp)
             self.info('analysis added to mass spec database')
-        except Exception, e:
-#            if ms_analysis is not None:
-#                ms_analysis.Aliquot = aliquot = '{}*'.format(self.aliquot)
-#                ms_analysis.RID = make_rid(self.labnumber, aliquot, self.step)
-#                self.massspec_importer.db.commit()
-
-            self.message('Could not save to Mass Spec database.\n {}'.format(e))
+        except Exception:
+            import traceback
+            tb = traceback.format_exc()
+            self.message('Could not save to Mass Spec database.\n {}'.format(tb))
             self.cancel()
             self.experiment_manager.cancel()
 

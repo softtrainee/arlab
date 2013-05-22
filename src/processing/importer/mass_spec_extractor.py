@@ -139,7 +139,7 @@ class MassSpecExtractor(Extractor):
         #=======================================================================
         fit_hist = None
         for iso in dbanalysis.isotopes:
-            pkt = iso.peak_time_series
+            pkt = iso.peak_time_series[-1]
             blob = pkt.PeakTimeBlob
             endianness = '>'
             sx, _sy = zip(*[struct.unpack('{}ff'.format(endianness),
