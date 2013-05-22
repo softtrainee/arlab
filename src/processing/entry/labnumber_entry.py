@@ -41,13 +41,14 @@ class LabnumberEntry(IsotopeDatabaseManager):
     level = Str
     irradiation_tray = Str
 
-    irradiations = Property(depends_on='saved')
-    levels = Property(depends_on='irradiation,saved')
+    irradiations = Property(depends_on='saved, updated')
+    levels = Property(depends_on='irradiation,saved, updated')
     trays = Property
     edit_irradiation_button = Button('Edit')
     edit_level_enabled = Property(depends_on='level')
     edit_irradiation_enabled = Property(depends_on='irradiation')
     saved = Event
+    updated = Event
 #    irradiation_trays = Property
     tray_name = Str
     irradiation_tray_image = Property(Image, depends_on='level, irradiation, saved')

@@ -512,8 +512,8 @@ class PyScript(Loggable):
             return
 
         self.info('SLEEP {}'.format(duration))
-        if globalv.experiment_debug:
-            duration = min(duration, 5)
+#        if globalv.experiment_debug:
+#            duration = min(duration, 5)
         self._sleep(duration, message=message)
 
     @skip
@@ -628,9 +628,10 @@ class PyScript(Loggable):
                                 message='Waiting for {:0.1f}  {}'.format(timeout, message)
                                 )
 
+            self.manager.wait_dialog = wd
             st = time.time()
 #            wd.edit_traits(kind='livemoadl')
-            invoke_in_main_thread(wd.edit_traits)
+#            invoke_in_main_thread(wd.edit_traits)
             evt.wait(timeout=timeout + 0.25)
 #            wd.stop()
 

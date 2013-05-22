@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Color
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label
+    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, ImageEditor
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
@@ -26,20 +26,13 @@ from src.experiment.utilities.identifier import SPECIAL_NAMES
 from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR
 from src.ui.custom_label_editor import CustomLabel
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-
-# def CBItem(name, maker=None, **kw):
-#    if maker is None:
-#        maker = make_rf_name
-#    return Item(maker(name), **kw)
-#    return HGroup(Item(maker(name), height=10, **kw), UItem(maker('cb_{}'.format(name)),
-#                                          visible_when=maker('cbs_enabled')
-#                                          ),
-#
-#                  )
-
+#===============================================================================
+# editing
+#===============================================================================
 def make_qf_name(name):
             return 'object.queue_factory.{}'.format(name)
 
@@ -52,44 +45,11 @@ def QFItem(name, **kw):
 def RFItem(name, **kw):
     return Item(make_rf_name(name), **kw)
 
-# def RF_CBItem(name, **kw):
-#    return CBItem(name, make_rf_name, **kw)
-
-
 def make_rt_name(name):
     return 'object.experiment_queue.runs_table.{}'.format(name)
 
 def RTItem(name, **kw):
     return Item(make_rt_name(name), **kw)
-
-# class AnalysesPane(TraitsTaskPane):
-#    def traits_view(self):
-#
-#        v = View(
-#                 VGroup(
-#                        HGroup(spring, Item('refresh', show_label=False)),
-#                        RTItem('automated_runs',
-#                               show_label=False,
-#                               editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-#                                            operations=['delete',
-#                                                        'move',
-# #                                                        'edit'
-#                                                        ],
-#                                            editable=True,
-#                                            selected='selected',
-#                                            rearranged='rearranged',
-#                                            pasted='pasted',
-# #                                             copy_cache='copy_cache',
-# #                                             update='update_needed',
-#                                            drag_move=True,
-#                                            auto_update=True,
-#                                            multi_select=True,
-#                                            scroll_to_bottom=False
-#                                            )
-#                      )
-#                    )
-#                 )
-#        return v
 
 class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
@@ -263,6 +223,18 @@ class ExperimentFactoryPane(TraitsDockPane):
                              )
         return extract_grp
 
+#===============================================================================
+# execution
+#===============================================================================
+class WaitPane(TraitsDockPane):
+    id = 'pychron.experiment.wait'
+    name = 'Wait'
+    def traits_view(self):
+        v = View(
+                 UItem('wait_dialog', style='custom')
+                 )
+        return v
+
 class StatsPane(TraitsDockPane):
     id = 'pychron.experiment.stats'
     name = 'Stats'
@@ -283,12 +255,15 @@ class ControlsPane(TraitsDockPane):
                               label='Delay Countdown',
                               style='readonly', format_str='%i',
                               width= -50),
+
+                        CustomLabel('extraction_state_label'),
                         spring,
-                        Item('show_sample_map', show_label=False,
-                             enabled_when='experiment_queue.sample_map'
-                             ),
-                        spring,
+#                        Item('show_sample_map', show_label=False,
+#                             enabled_when='experiment_queue.sample_map'
+#                             ),
+#                        spring,
                         Item('end_at_run_completion'),
+                        Spring(width= -20, springy=False),
                         UItem('truncate_button', enabled_when='measuring'),
                         UItem('truncate_style', enabled_when='measuring'),
                         UItem('execute_button',
