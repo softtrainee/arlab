@@ -29,6 +29,7 @@ class _TextTableEditor(Editor):
     _pv = None
     _pc = None
     clear = Event
+    refresh = Event
     def init(self, parent):
         '''
 
@@ -44,8 +45,11 @@ class _TextTableEditor(Editor):
 
         self.object.on_trait_change(self._on_clear, self.factory.clear)
 
+        self.sync_value(self.factory.refresh, 'refresh', mode='from')
 #        parent.addStretch(1)
 #        parent.addWidget(self.control)
+    def _refresh_fired(self):
+        self.update_editor()
 
     def _on_clear(self):
         pass
@@ -55,10 +59,12 @@ class _TextTableEditor(Editor):
     def update_editor(self, *args, **kw):
         '''
         '''
+        self.control.clear()
         adapter = self.factory.adapter
         tables = adapter.make_tables(self.value)
         for ti in tables:
             self._add_table(ti)
+
 #        self.control.moveCursor(QTextCursor.Start)
 #        self.control.ensureCursorVisible()
     def _add_table(self, tab):
@@ -168,4 +174,5 @@ class TextTableEditor(BasicEditorFactory):
     header_color = Str
     clear = Str
     adapter = Any
+    refresh = Str
 #============= EOF =============================================
