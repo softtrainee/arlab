@@ -59,14 +59,13 @@ class _TextTableEditor(Editor):
     def update_editor(self, *args, **kw):
         '''
         '''
+
         self.control.clear()
         adapter = self.factory.adapter
         tables = adapter.make_tables(self.value)
         for ti in tables:
             self._add_table(ti)
 
-#        self.control.moveCursor(QTextCursor.Start)
-#        self.control.ensureCursorVisible()
     def _add_table(self, tab):
         cursor = QTextCursor(self.control.textCursor())
 
@@ -86,11 +85,11 @@ class _TextTableEditor(Editor):
         bc = QColor(self.factory.bg_color) if self.factory.bg_color else None
         ec, oc, hc = bc, bc, bc
         if self.factory.even_color:
-            ec = QColor(self.factory.even_color) if self.factory.even_color else None
+            ec = QColor(self.factory.even_color)
         if self.factory.odd_color:
-            oc = QColor(self.factory.odd_color) if self.factory.odd_color else None
+            oc = QColor(self.factory.odd_color)
         if self.factory.header_color:
-            hc = QColor(self.factory.header_color) if self.factory.header_color else None
+            hc = QColor(self.factory.header_color)
 
         cell_fmt = QTextTableCellFormat()
         cell_fmt.setFontPointSize(10)
