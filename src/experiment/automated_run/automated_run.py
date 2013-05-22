@@ -37,7 +37,7 @@ from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 # from src.repo.repository import Repository
-# from src.experiment.plot_panel import PlotPanel
+#from src.experiment.plot_panel import PlotPanel
 from src.experiment.plot_panel_new import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, make_rid, \
     make_runid

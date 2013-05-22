@@ -126,8 +126,9 @@ class PyScriptTask(EditorTask):
     def _open_editor(self, path):
         if path:
             kind = self._extract_kind(path)
-            self.kind = kind
-
+            if kind is not None:
+                self.kind = kind
+            
         editor = PyScriptEditor(path=path,
                                 )
 

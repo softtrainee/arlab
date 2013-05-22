@@ -29,8 +29,8 @@ from src.processing.arar_age import ArArAge
 # from src.helpers.formatting import floatfmt
 from src.displays.display import DisplayController
 from src.ui.text_table import TextTableAdapter, SimpleTextTableAdapter, \
-    RatiosAdapter, ValueErrorAdapter
-from src.ui.qt.text_table_editor import TextTableEditor
+    RatiosAdapter, ValueErrorAdapter, MultiTextTableAdapter
+from src.ui.qt.text_table_editor import TextTableEditor, FastTextTableEditor
 # from src.database.records.ui.analysis_summary import SignalAdapter
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
 
@@ -38,26 +38,34 @@ from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayVa
 #============= local library imports  ==========================
 
 HEIGHT = 250
+ERROR_WIDTH=10
+VALUE_WIDTH=12
 
-
-class SignalAdapter(SimpleTextTableAdapter):
+#class SignalAdapter(SimpleTextTableAdapter):
+class SignalAdapter(MultiTextTableAdapter):
     columns = [
-               ('Isotope', 'isotope', str),
-               ('Detector', 'detector', str),
-               ('Intercept', 'intercept_value'),
-               (u'{}1s'.format(PLUSMINUS), 'intercept_error'),
-               (u'{}%'.format(PLUSMINUS), 'intercept_error_percent', str),
-               ('Raw (fA)', 'raw_value'),
-               (u'{}1s'.format(PLUSMINUS), 'raw_error'),
-               (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str),
-               ('Fit', 'fit', str),
-               ('Baseline (fA)', 'baseline_value'),
-               (u'{} 1s'.format(PLUSMINUS), 'baseline_error'),
-               (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str),
-
-               ('Blank (fA)', 'blank_value'),
-               (u'{} 1s'.format(PLUSMINUS), 'blank_error'),
-               (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str),
+               [
+                   ('Iso.', 'isotope', str, 6),
+                   ('Det.', 'detector', str, 5),
+                   ('Fit', 'fit', str, 4),
+                   ('Intercept', 'intercept_value', None, VALUE_WIDTH),
+                   (u'{}1s'.format(PLUSMINUS), 'intercept_error',None,ERROR_WIDTH),
+                   (u'{}%'.format(PLUSMINUS), 'intercept_error_percent', str, ERROR_WIDTH-1),
+                   ('Raw(fA)', 'raw_value', None, VALUE_WIDTH),
+                   (u'{}1s'.format(PLUSMINUS), 'raw_error',None,ERROR_WIDTH),
+                   (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str, ERROR_WIDTH-1),
+                ],
+               [
+                   ('Iso.', 'isotope', str, 6),
+                   ('Det.', 'detector', str, 5),
+                   ('Fit', 'baseline_fit', str, 4),
+                   ('Baseline', 'baseline_value',None, VALUE_WIDTH),
+                   (u'{}1s'.format(PLUSMINUS), 'baseline_error',None,ERROR_WIDTH),
+                   (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str, ERROR_WIDTH-1),
+                   ('Blank', 'blank_value',None, VALUE_WIDTH),
+                   (u'{}1s'.format(PLUSMINUS), 'blank_error',None,ERROR_WIDTH),
+                   (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str, ERROR_WIDTH-1),
+                ]
              ]
 
 
@@ -117,7 +125,10 @@ class PlotPanel(Viewable):
         g.suppress_regression = True
 #        # construct plot panels graph
         for det in dets:
-            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
+            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope),
+                       padding_left=60,
+                       padding_right=10
+                       )
 
         g.set_x_limits(min=0, max=400)
 #
@@ -307,9 +318,10 @@ class PlotPanel(Viewable):
                                   Item('correct_for_blank'),
                                   spring),
                             UItem('display_signals',
-                                  editor=TextTableEditor(adapter=SignalAdapter(),
+                                  editor=FastTextTableEditor(adapter=SignalAdapter(),
                                                          bg_color='lightyellow',
-                                                         header_color='lightgray'
+                                                         header_color='lightgray',
+                                                         font_size=12
                                                          ),
                                          width=0.8
                                          ),
@@ -317,7 +329,7 @@ class PlotPanel(Viewable):
                             )
 
         ratios_grp = Group(UItem('display_ratios',
-                                         editor=TextTableEditor(adapter=RatiosAdapter(),
+                                         editor=FastTextTableEditor(adapter=RatiosAdapter(),
                                                          bg_color='lightyellow',
                                                          header_color='lightgray'
                                                          ),
@@ -326,7 +338,7 @@ class PlotPanel(Viewable):
                            )
         summary_grp = Group(
                            UItem('display_summary',
-                                 editor=TextTableEditor(adapter=ValueErrorAdapter(),
+                                 editor=FastTextTableEditor(adapter=ValueErrorAdapter(),
                                                         bg_color='lightyellow',
                                                         header_color='lightgray'
                                                         )
@@ -350,8 +362,8 @@ class PlotPanel(Viewable):
                         display_grp
 
                         ),
-                 width=725,
-                 height=0.90,
+                 width=750,
+                 height=0.9,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,

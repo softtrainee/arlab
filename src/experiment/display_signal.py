@@ -24,6 +24,8 @@ class DisplaySignal(HasTraits):
     isotope = Str
     detector = Str
     fit = Str
+    baseline_fit='SEM'
+    
     raw_value = Float
     raw_error = Float
     intercept_value = Float
