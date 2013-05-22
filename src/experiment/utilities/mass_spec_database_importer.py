@@ -29,6 +29,7 @@ from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
 from src.experiment.utilities.info_blob import encode_infoblob
 import time
+from src.experiment.utilities.identifier import make_rid
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 
@@ -54,8 +55,6 @@ class MassSpecDatabaseImporter(Loggable):
 
     def connect(self):
         return self.db.connect()
-
-
 
     def add_sample_loading(self, ms, tray):
         if self.sample_loading_id is None:
@@ -96,13 +95,6 @@ class MassSpecDatabaseImporter(Loggable):
         self._current_spec = None
 
     def add_analysis(self, spec, commit=True):
-        gst = time.time()
-
-        db = self.db
-
-        spectrometer = spec.spectrometer
-        tray = spec.tray
-
         irradpos = spec.irradpos
         rid = spec.rid
         trid = rid.lower()
@@ -115,24 +107,39 @@ class MassSpecDatabaseImporter(Loggable):
             irradpos = -2
         elif trid.startswith('c'):
             runtype = 'Unknown'
-            if spectrometer.lower() in ('obama', 'pychron obama'):
+            if spec.spectrometer.lower() in ('obama', 'pychron obama'):
                 rid = '4358'
                 irradpos = '4358'
             else:
                 rid = '4359'
                 irradpos = '4359'
 
-            paliquot = db.get_lastest_analysis_aliquot(rid)
+            paliquot = self.db.get_lastest_analysis_aliquot(rid)
             if paliquot is None:
                 paliquot = 0
 
             aliquot = paliquot + 1
             rid = '{}-{:02n}'.format(rid, aliquot)
             spec.aliquot = '{:02n}'.format(aliquot)
-
-
         else:
             runtype = 'Unknown'
+
+        analysis = None
+        try:
+            analysis = self._add_analysis(spec, irradpos, rid, runtype, commit)
+        except Exception:
+            if commit:
+                analysis.Aliquot = aliquot = '{}*'.format(analysis.Aliquot)
+                analysis.RID = make_rid(irradpos, aliquot, spec.step)
+                self.db.commit()
+
+    def _add_analysis(self, spec, irradpos, rid, runtype, commit=True):
+        gst = time.time()
+
+        db = self.db
+
+        spectrometer = spec.spectrometer
+        tray = spec.tray
 
         pipetted_isotopes = self._make_pipetted_isotopes(runtype)
 
@@ -152,7 +159,6 @@ class MassSpecDatabaseImporter(Loggable):
             else:
                 self.warning('no irradiation position found for {}. not importing analysis {}'.format(irradpos, spec.record_id))
                 return
-
         # add runscript
         rs = db.add_runscript(spec.runscript_name, spec.runscript_text)
         db.flush()
@@ -279,6 +285,7 @@ class MassSpecDatabaseImporter(Loggable):
 
         t = time.time() - gst
         self.debug('{} added analysis time {}s'.format(spec.record_id, t))
+        return analysis
 
     def _make_pipetted_isotopes(self, runtype):
         blob = ''

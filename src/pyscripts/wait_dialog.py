@@ -60,7 +60,7 @@ class WaitDialog(Loggable):
 
     current_time = Property(depends_on='_current_time')
     _current_time = Float
-    auto_start = Bool(True)
+    auto_start = Bool(False)
     timer = None
     title = 'Wait'
     message = Str
@@ -75,11 +75,14 @@ class WaitDialog(Loggable):
     continue_button = Button('Continue')
 
     def __init__(self, *args, **kw):
+        self.reset()
         super(WaitDialog, self).__init__(*args, **kw)
-        self._current_time = self.wtime
-        self.high = self.wtime
         if self.auto_start:
             self.start(evt=self.end_evt)
+
+    def reset(self):
+        self.current_time = self.wtime
+        self.high = self.wtime
 
     def was_canceled(self):
         return self._canceled
@@ -91,6 +94,8 @@ class WaitDialog(Loggable):
         if evt:
             evt.clear()
             self.end_evt = evt
+
+        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%sleep timer started')
 
         self.timer = Timer(1000, self._update_time,
                            delay=1000)
@@ -116,6 +121,7 @@ class WaitDialog(Loggable):
         self._current_time = v
 
     def _current_time_changed(self):
+#        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% {}'.format(self._current_time))
         if self._current_time <= 0:
             self._end()
             self._canceled = False
@@ -124,6 +130,7 @@ class WaitDialog(Loggable):
         self._current_time -= 1
 
     def _end(self, dispose=True):
+        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%sleep timer stopped')
         if self.timer is not None:
             self.timer.Stop()
         if self.end_evt is not None:

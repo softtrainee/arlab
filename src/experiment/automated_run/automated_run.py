@@ -37,7 +37,8 @@ from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 # from src.repo.repository import Repository
-from src.experiment.plot_panel import PlotPanel
+# from src.experiment.plot_panel import PlotPanel
+from src.experiment.plot_panel_new import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, make_rid, \
     make_runid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
@@ -161,7 +162,6 @@ class AutomatedRun(Loggable):
     extraction_script_dirty = Event
     extraction_script = Property(depends_on='extraction_script_dirty')
     _extraction_script = Any
-
 
     _active_detectors = List
     _loaded = False
@@ -1525,17 +1525,7 @@ anaylsis_type={}
 
         baseline_fits = ['Average Y', ] * len(self._active_detectors)
 
-#        intercepts = [sig_ints, base_ints]
-#        signal_fits = dict(zip([ni.isotope for ni in self._active_detectors], self.fits))
-#        baseline_fits = dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])
-
-#        intercepts = [sig_ints, base_ints]
-#        fits = [dict(zip([ni.isotope for ni in self._active_detectors], self.fits)),
-#                dict([(ni.isotope, 'Average Y') for ni in self._active_detectors])]
         rs_name, rs_text = self._assemble_script_blob()
-
-#        ms = db.get_mass_spectrometer(self.mass_spectrometer)
-#        ed = db.get_extraction_device(self.extract_device)
 
         exp = ExportSpec(rid=make_rid(self.labnumber, self.aliquot, self.step),
                          runscript_name=rs_name,
@@ -1544,8 +1534,6 @@ anaylsis_type={}
                          baseline_fits=baseline_fits,
                          signal_intercepts=sig_ints,
                          baseline_intercepts=base_ints,
-#                         intercepts=intercepts,
-#                         fits=fits,
                          spectrometer='Pychron {}'.format(self.mass_spectrometer.capitalize()),
                          baselines=baselines,
                          signals=signals,
@@ -1555,9 +1543,16 @@ anaylsis_type={}
 
         exp.load_record(self)
         try:
+#            ms_analysis = None
+#            ms_analysis = self.massspec_importer.add_analysis(exp)
             self.massspec_importer.add_analysis(exp)
             self.info('analysis added to mass spec database')
         except Exception, e:
+#            if ms_analysis is not None:
+#                ms_analysis.Aliquot = aliquot = '{}*'.format(self.aliquot)
+#                ms_analysis.RID = make_rid(self.labnumber, aliquot, self.step)
+#                self.massspec_importer.db.commit()
+
             self.message('Could not save to Mass Spec database.\n {}'.format(e))
             self.cancel()
             self.experiment_manager.cancel()

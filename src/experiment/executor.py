@@ -197,6 +197,7 @@ class ExperimentExecutor(Experimentable):
                 arun.cancel()
             self._alive = False
             self.stats.stop_timer()
+            self.set_extract_state(False)
 
     def set_extract_state(self, state):
 
