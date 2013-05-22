@@ -105,6 +105,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     sample = Str
     irradiation = Str
 
+
     #===========================================================================
     # private
     #===========================================================================
@@ -165,7 +166,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         special = labnumber in ANALYSIS_MAPPING
         return labnumber, special
 
-    def new_runs(self, auto_increment=False):
+    def new_runs(self, auto_increment_position, auto_increment_id=False):
         '''
             returns a list of runs even if its only one run 
                     also returns self.frequency if using special labnumber else None
@@ -179,7 +180,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         else:
             arvs = self._new_runs()
 
-        if auto_increment:
+        if auto_increment_id:
+            self.labnumber = self._increment(self.labnumber)
+
+        if auto_increment_position:
             if self.position:
                 increment = 1
                 if ',' in self.position:
@@ -197,7 +201,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                 if self.endposition:
                     self.endposition = 2 * e + 1 - s
 
-            self.labnumber = self._increment(self.labnumber)
 
         return arvs, freq
 
