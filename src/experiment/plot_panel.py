@@ -16,26 +16,51 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str, CInt
-from traitsui.api import View, Item, Group, HGroup, spring, VSplit
+    Str, CInt, HasTraits, Event
+from traitsui.api import View, Item, Group, HGroup, spring, VSplit, UItem, HSplit
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
 
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
-from src.helpers.traitsui_shortcuts import instance_item
+# from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
-from src.helpers.formatting import floatfmt
+# from src.helpers.formatting import floatfmt
 from src.displays.display import DisplayController
+from src.ui.text_table import TextTableAdapter, SimpleTextTableAdapter, \
+    RatiosAdapter, ValueErrorAdapter
+from src.ui.qt.text_table_editor import TextTableEditor
+# from src.database.records.ui.analysis_summary import SignalAdapter
+from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 HEIGHT = 250
 
+
+class SignalAdapter(SimpleTextTableAdapter):
+    columns = [
+               ('Isotope', 'isotope', str),
+               ('Detector', 'detector', str),
+               ('Raw (fA)', 'raw_value'),
+               (u'{}1s'.format(PLUSMINUS), 'raw_error'),
+               (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str),
+               ('Fit', 'fit', str),
+               ('Baseline (fA)', 'baseline_value'),
+               (u'{} 1s'.format(PLUSMINUS), 'baseline_error'),
+               (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str),
+
+               ('Blank (fA)', 'blank_value'),
+               (u'{} 1s'.format(PLUSMINUS), 'blank_error'),
+               (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str),
+             ]
+
+
 class PlotPanelHandler(ViewableHandler):
     pass
+
 class PlotPanel(Viewable):
 #    automated_run = Any
     arar_age = Instance(ArArAge)
@@ -61,6 +86,11 @@ class PlotPanel(Viewable):
     signal_display = Instance(DisplayController)
     summary_display = Instance(DisplayController)
     fit_display = Instance(DisplayController)
+
+    display_signals = List
+    display_ratios = List
+    display_summary = List
+#    refresh = Event
 
     signals = Dict
     baselines = Dict
@@ -92,11 +122,6 @@ class PlotPanel(Viewable):
         self.detectors = dets
 
     def clear_displays(self):
-        self.ratio_display.clear()
-        self.signal_display.clear()
-        self.summary_display.clear()
-        self.fit_display.clear()
-
         self._print_results()
 
     @on_trait_change('graph:regression_results')
@@ -112,19 +137,10 @@ class PlotPanel(Viewable):
                         self.baselines[iso] = u
                         if arar_age:
                             arar_age.set_baseline(iso, (vv, ee))
-#                            base = arar_age.isotopes[iso].baseline
-#                            base.value = vv
-#                            base.error = ee
-
-#                            arar_age.signals['{}bs'.format(iso)] = u
                     else:
                         self.signals[iso] = u
                         if arar_age:
                             arar_age.set_isotope(iso, (vv, ee))
-#                            sig = arar_age.isotopes[iso]
-#                            sig.value = vv
-#                            sig.error = ee
-#                            arar_age.signals[iso] = u
 
                 except TypeError, e:
                     print e
@@ -139,225 +155,106 @@ class PlotPanel(Viewable):
 
     @on_trait_change('correct_for_baseline, correct_for_blank')
     def _print_results(self):
+        self.display_signals = self._make_display_signals()
+        self.display_ratios = self._make_display_ratios()
+        self.display_summary = self._make_display_summary()
 
-        def wrapper(display, *args):
-            display.clear()
-            for ai in args:
-                ai(display)
+    def _make_display_summary(self):
+        def factory(n, v):
+            if isinstance(v, tuple):
+                sv, se = v
+            else:
+                sv = v.nominal_value
+                se = v.std_dev
 
-        wrapper(self.signal_display,
-                self._print_signals,
-                self._print_baselines
-                )
-        wrapper(self.ratio_display,
-                self._print_ratios,
-                self._print_blanks
-                )
-        wrapper(self.summary_display,
-                self._print_summary
-                )
-        wrapper(self.fit_display,
-                self._print_fits
-                )
-
-
-    def add_text(self, disp, *args, **kw):
-        kw['gui'] = False
-        disp.add_text(*args, **kw)
-
-    def _floatfmt(self, f, n=5):
-        return floatfmt(f, n)
-
-
-    def _print_parameter(self, display, name, uvalue, sig_figs=(3, 4), **kw):
-        name = '{:<15s}'.format(name)
-
-        if not uvalue:
-            v, e = 0, 0
-        else:
-            v, e = uvalue.nominal_value, uvalue.std_dev
-
-        v = self._floatfmt(v, sig_figs[0])
-        e = self._floatfmt(e, sig_figs[1])
-
-        msg = u'{}= {} {}{}{}'.format(name, v, PLUSMINUS, e, self._get_pee(uvalue))
-        self.add_text(display, msg, **kw)
-
-    def _print_summary(self, display):
-        self.add_text(display, '{:<15s}= {}'.format('Sample', self.sample))
-        self.add_text(display, '{:<15s}= {}'.format('Irradiation', self.irradiation))
+            return DisplayValue(name=n, value=sv, error=se)
 
         arar_age = self.arar_age
+        summary = []
         if arar_age:
             # call age first
             # loads all the other attrs
             age = arar_age.age
+            summary = [
+                       factory(name, v) for name, v in
+                       [
+                        ('Age', age),
+                        ('', ('', arar_age.age_error_wo_j)),
+                        ('J', arar_age.j),
+                        ('K/Ca', arar_age.kca),
+                        ('K/Cl', arar_age.kcl),
+                        ('*40Ar %', arar_age.rad40),
+                        ('IC', arar_age.ic_factor)
+                        ]
+                     ]
 
-            j = arar_age.j
-            rad40 = arar_age.rad40_percent
-            kca = arar_age.kca
-            kcl = arar_age.kcl
-            ic = arar_age.ic_factor
+        return summary
 
-            self._print_parameter(display, 'Age', age)
-
-            err = arar_age.age_error_wo_j
-            pee = self._get_pee(age, error=err)
-            self.add_text(display, '{:<15s}=       {:0.4f}{}'.format('Error w/o J', err, pee))
-
-            self._print_parameter(display, 'J', j, sig_figs=(5, 6))
-            self._print_parameter(display, 'ICFactor', ic)
-            self._print_parameter(display, '% rad40', rad40)
-            self._print_parameter(display, 'K/Ca', kca)
-            self._print_parameter(display, 'K/Cl', kcl)
-
-    def _print_fits(self, display):
-        fits = self.fits
-        detectors = self.detectors
-        for fit, det in zip(fits, detectors):
-            self.add_text(display, '{} {}= {}'.format(det.name,
-                                                      det.isotope, fit))
-
-#        for det, (iso, fit) in self.fits:
-#            self.add_text(display, '{} {}= {}'.format(det, iso, fit))
-
-    def _print_ratios(self, display):
-        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
-
-#        display = self.ratio_display
+    def _make_display_ratios(self):
         cfb = self.correct_for_baseline
+        cfbl = self.correct_for_blank
+        base = self.baselines
+        blank = self.blanks
 
-        def func(ra):
-            u, l = ra.split(':')
+        def factory(n, d, scalar=1):
+            r = DisplayRatio(name='{}/{}'.format(n, d))
             try:
-                ru = self.signals[u]
-                rl = self.signals[l]
+                sn = self.signals[n]
+                sd = self.signals[d]
             except KeyError:
-                return ''
+                return r
 
-            if cfb:
-                bu = ufloat(0, 0)
-                bl = ufloat(0, 0)
-                try:
-                    bu = self.baselines[u]
-                    bl = self.baselines[l]
-                except KeyError:
-                    pass
-                try:
-                    rr = (ru - bu) / (rl - bl)
-                except ZeroDivisionError:
-                    rr = ufloat(0, 0)
+            for ci, dd in ((cfb, base), (cfbl, blank)):
+                if ci:
+                    try:
+                        sn -= dd[n]
+                        sd -= dd[d]
+                    except KeyError:
+                        pass
+            try:
+                rr = (sn / sd) * scalar
+                v, e = rr.nominal_value, rr.std_dev
+            except ZeroDivisionError:
+                v, e = 0, 0
+            r.value = v
+            r.error = e
+
+            return r
+
+        ratios = [('Ar40', 'Ar39'), ('Ar40', 'Ar36')]
+        return [factory(*args) for args in ratios]
+
+    def _make_display_signals(self):
+        sig = self.signals
+        base = self.baselines
+        blank = self.blanks
+        def factory(det, fi):
+            iso = det.isotope
+            v = sig[iso]
+            if iso in base:
+                bv = base[iso]
+                bv, be = bv.nominal_value, bv.std_dev
             else:
-                try:
-                    rr = ru / rl
-                except ZeroDivisionError:
-                    rr = ufloat(0, 0)
+                bv, be = 0, 0
 
-            res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
-                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev)), n=6) + \
-                    self._get_pee(rr)
-            return res
+            if iso in blank:
+                blv = blank[iso]
+                blv, ble = blv.nominal_value, blv.std_dev
+            else:
+                blv, ble = 0, 0
 
-        ts = [func(ra) for ra in self.ratios]
-        self.add_text(display, '\n'.join(ts))
-        self.add_text(display, ' ' * 80, underline=True)
+            return DisplaySignal(isotope=iso,
+                                 detector=det.name,
+                                 fit=fi[0].upper(),
+                                 raw_value=v.nominal_value,
+                                 raw_error=v.std_dev,
+                                 baseline_value=bv,
+                                 baseline_error=be,
+                                 blank_value=blv,
+                                 blank_error=ble,
+                                 )
 
-    def _print_signals(self, display):
-        def get_value(iso):
-            try:
-                us = self.signals[iso]
-            except KeyError:
-                us = ufloat(0, 0)
-
-            ubs = ufloat(0, 0)
-            ubl = ufloat(0, 0)
-            if self.correct_for_baseline:
-                try:
-                    ubs = self.baselines[iso]
-                except KeyError:
-                    pass
-            if self.correct_for_blank:
-                try:
-                    ubl = self.blanks[iso]
-                except KeyError:
-                    pass
-
-            return us - ubs - ubl
-
-        self._print_('', get_value, display)
-        self.add_text(display, ' ' * 80, underline=True)
-
-
-    def _print_baselines(self, display):
-        def get_value(iso):
-            try:
-                ub = self.baselines[iso]
-            except KeyError:
-                ub = ufloat(0, 0)
-            return ub
-
-        self._print_('bs', get_value, display)
-
-    def _print_blanks(self, display):
-        def get_value(iso):
-            try:
-                ub = self.blanks[iso]
-            except KeyError:
-                ub = ufloat(0, 0)
-            return ub
-
-        self._print_('bl', get_value, display)
-
-    def _print_(self, name, get_value, display):
-#        display = self.signal_display
-        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
-
-        def func(iso):
-            uv = get_value(iso)
-            vv = uv.nominal_value
-            ee = uv.std_dev
-
-            v = pad('{:0.5f}'.format(vv))
-            e = pad('{:0.6f}'.format(ee), n=6)
-            pe = self._get_pee(uv)
-#             v = v + u' {}'.format(PLUSMINUS) + e + self._get_pee(uv)
-
-            return '{}{}={} {}{} {}'.format(iso, name, v, PLUSMINUS, e, pe)
-
-#             return '{}{}={:>10s}'.format(iso, name, v)
-
-        ts = [func(iso) for iso in self.isotopes]
-        self.add_text(display, '\n'.join(ts))
-
-    def _get_pee(self, uv, error=None):
-        if uv is not None:
-            vv = uv.nominal_value
-            ee = uv.std_dev
-        else:
-            vv, ee = 0, 0
-
-        if error is not None:
-            ee = error
-
-        try:
-            pee = abs(ee / vv * 100)
-        except ZeroDivisionError:
-            pee = 0
-
-        return '({:0.2f}%)'.format(pee)
-
-#    def _get_fit(self, reg):
-#        try:
-#            deg = reg.degree
-#            if deg in [1, 2, 3]:
-#                return ['L', 'P', 'C'][deg - 1]
-#        except AttributeError:
-#            return reg.error_calc
-
-#    def closed(self, isok):
-#        self.close_event = True
-#        self.automated_run.truncate('Immediate')
-#        return isok
+        return [factory(det, fi) for det, fi in zip(self.detectors, self.fits)]
 
     def _get_ncounts(self):
         return self._ncounts
@@ -382,29 +279,50 @@ class PlotPanel(Viewable):
         graph_grp = Item('graph', show_label=False,
                        height=0.72,
                        style='custom')
-        display_grp = Group(Group(
-                                HGroup(
-                                      Item('correct_for_baseline'),
-                                      Item('correct_for_blank'),
-                                      spring),
-                               HGroup(
-                                   Item('signal_display', width=0.5, show_label=False, style='custom'),
-                                   Item('ratio_display', width=0.5, show_label=False, style='custom'),
-                               ),
-                               label='Results'
-                               ),
-                         Group(
-                               instance_item('fit_display'),
-                               label='Fit'),
-                         Group(
-                               instance_item('summary_display'),
-                               label='Summary'),
-                         Group(
-                               Item('ncounts'),
-                               label='Controls',
-                               ),
-                           layout='tabbed'
+
+        results_grp = Group(
+                            HGroup(
+                                  Item('correct_for_baseline'),
+                                  Item('correct_for_blank'),
+                                  spring),
+                            UItem('display_signals',
+                                  editor=TextTableEditor(adapter=SignalAdapter(),
+                                                         bg_color='lightyellow',
+                                                         header_color='lightgray'
+                                                         ),
+                                         width=0.8
+                                         ),
+                                label='Results'
+                            )
+
+        ratios_grp = Group(UItem('display_ratios',
+                                         editor=TextTableEditor(adapter=RatiosAdapter(),
+                                                         bg_color='lightyellow',
+                                                         header_color='lightgray'
+                                                         ),
+                                        ),
+                           label='Ratios'
                            )
+        summary_grp = Group(
+                           UItem('display_summary',
+                                 editor=TextTableEditor(adapter=ValueErrorAdapter(),
+                                                        bg_color='lightyellow',
+                                                        header_color='lightgray'
+                                                        )
+                                 ),
+                            label='Summary'
+                          )
+
+        display_grp = Group(
+                            results_grp,
+                            ratios_grp,
+                            summary_grp,
+                            Group(
+                                   Item('ncounts'),
+                                   label='Controls',
+                                   ),
+                               layout='tabbed'
+                               )
         v = View(
                  VSplit(
                         graph_grp,
@@ -422,26 +340,221 @@ class PlotPanel(Viewable):
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]
+#============= EOF =============================================
 
-    def _display_factory(self):
-        return  DisplayController(height=HEIGHT,
-                               default_color='black',
-                               default_size=12,
-#                               scroll_to_bottom=False,
-                               bg_color='#FFFFCC'
-                               )
+#    def _display_factory(self):
+#        return  DisplayController(height=HEIGHT,
+#                               default_color='black',
+#                               default_size=12,
+# #                               scroll_to_bottom=False,
+#                               bg_color='#FFFFCC'
+#                               )
 #===============================================================================
 # defaults
 #===============================================================================
-    def _fit_display_default(self):
-        return self._display_factory()
+#    def _fit_display_default(self):
+#        return self._display_factory()
 
-    def _summary_display_default(self):
-        return self._display_factory()
+#    def _summary_display_default(self):
+#        return self._display_factory()
 
-    def _signal_display_default(self):
-        return self._display_factory()
+#    def _signal_display_default(self):
+#        return self._display_factory()
 
-    def _ratio_display_default(self):
-        return self._display_factory()
-#============= EOF =============================================
+#    def _ratio_display_default(self):
+#        return self._display_factory()
+
+#    def _get_fit(self, reg):
+#        try:
+#            deg = reg.degree
+#            if deg in [1, 2, 3]:
+#                return ['L', 'P', 'C'][deg - 1]
+#        except AttributeError:
+#            return reg.error_calc
+
+#    def closed(self, isok):
+#        self.close_event = True
+#        self.automated_run.truncate('Immediate')
+#        return isok
+# def _print_signals(self, display):
+#        def get_value(iso):
+#            try:
+#                us = self.signals[iso]
+#            except KeyError:
+#                us = ufloat(0, 0)
+#
+#            ubs = ufloat(0, 0)
+#            ubl = ufloat(0, 0)
+#            if self.correct_for_baseline:
+#                try:
+#                    ubs = self.baselines[iso]
+#                except KeyError:
+#                    pass
+#            if self.correct_for_blank:
+#                try:
+#                    ubl = self.blanks[iso]
+#                except KeyError:
+#                    pass
+#
+#            return us - ubs - ubl
+#
+#        self._print_('', get_value, display)
+#        self.add_text(display, ' ' * 80, underline=True)
+#
+#
+#    def _print_baselines(self, display):
+#        def get_value(iso):
+#            try:
+#                ub = self.baselines[iso]
+#            except KeyError:
+#                ub = ufloat(0, 0)
+#            return ub
+#
+#        self._print_('bs', get_value, display)
+#
+#    def _print_blanks(self, display):
+#        def get_value(iso):
+#            try:
+#                ub = self.blanks[iso]
+#            except KeyError:
+#                ub = ufloat(0, 0)
+#            return ub
+#
+#        self._print_('bl', get_value, display)
+#
+#    def _print_(self, name, get_value, display):
+# #        display = self.signal_display
+#        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
+#
+#        def func(iso):
+#            uv = get_value(iso)
+#            vv = uv.nominal_value
+#            ee = uv.std_dev
+#
+#            v = pad('{:0.5f}'.format(vv))
+#            e = pad('{:0.6f}'.format(ee), n=6)
+#            pe = self._get_pee(uv)
+# #             v = v + u' {}'.format(PLUSMINUS) + e + self._get_pee(uv)
+#
+#            return '{}{}={} {}{} {}'.format(iso, name, v, PLUSMINUS, e, pe)
+#
+# #             return '{}{}={:>10s}'.format(iso, name, v)
+#
+#        ts = [func(iso) for iso in self.isotopes]
+#        self.add_text(display, '\n'.join(ts))
+#
+#    def _get_pee(self, uv, error=None):
+#        if uv is not None:
+#            vv = uv.nominal_value
+#            ee = uv.std_dev
+#        else:
+#            vv, ee = 0, 0
+#
+#        if error is not None:
+#            ee = error
+#
+#        try:
+#            pee = abs(ee / vv * 100)
+#        except ZeroDivisionError:
+#            pee = 0
+#
+#        return '({:0.2f}%)'.format(pee)
+# def add_text(self, disp, *args, **kw):
+#        kw['gui'] = False
+#        disp.add_text(*args, **kw)
+#
+#    def _floatfmt(self, f, n=5):
+#        return floatfmt(f, n)
+#
+#    def _print_parameter(self, display, name, uvalue, sig_figs=(3, 4), **kw):
+#        name = '{:<15s}'.format(name)
+#
+#        if not uvalue:
+#            v, e = 0, 0
+#        else:
+#            v, e = uvalue.nominal_value, uvalue.std_dev
+#
+#        v = self._floatfmt(v, sig_figs[0])
+#        e = self._floatfmt(e, sig_figs[1])
+#
+#        msg = u'{}= {} {}{}{}'.format(name, v, PLUSMINUS, e, self._get_pee(uvalue))
+#        self.add_text(display, msg, **kw)
+#
+#    def _print_summary(self, display):
+#        self.add_text(display, '{:<15s}= {}'.format('Sample', self.sample))
+#        self.add_text(display, '{:<15s}= {}'.format('Irradiation', self.irradiation))
+#
+#        arar_age = self.arar_age
+#        if arar_age:
+#            # call age first
+#            # loads all the other attrs
+#            age = arar_age.age
+#
+#            j = arar_age.j
+#            rad40 = arar_age.rad40_percent
+#            kca = arar_age.kca
+#            kcl = arar_age.kcl
+#            ic = arar_age.ic_factor
+#
+#            self._print_parameter(display, 'Age', age)
+#
+#            err = arar_age.age_error_wo_j
+#            pee = self._get_pee(age, error=err)
+#            self.add_text(display, '{:<15s}=       {:0.4f}{}'.format('Error w/o J', err, pee))
+#
+#            self._print_parameter(display, 'J', j, sig_figs=(5, 6))
+#            self._print_parameter(display, 'ICFactor', ic)
+#            self._print_parameter(display, '% rad40', rad40)
+#            self._print_parameter(display, 'K/Ca', kca)
+#            self._print_parameter(display, 'K/Cl', kcl)
+#
+#    def _print_fits(self, display):
+#        fits = self.fits
+#        detectors = self.detectors
+#        for fit, det in zip(fits, detectors):
+#            self.add_text(display, '{} {}= {}'.format(det.name,
+#                                                      det.isotope, fit))
+#
+# #        for det, (iso, fit) in self.fits:
+# #            self.add_text(display, '{} {}= {}'.format(det, iso, fit))
+#
+#    def _print_ratios(self, display):
+#        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
+#
+# #        display = self.ratio_display
+#        cfb = self.correct_for_baseline
+#
+#        def func(ra):
+#            u, l = ra.split(':')
+#            try:
+#                ru = self.signals[u]
+#                rl = self.signals[l]
+#            except KeyError:
+#                return ''
+#
+#            if cfb:
+#                bu = ufloat(0, 0)
+#                bl = ufloat(0, 0)
+#                try:
+#                    bu = self.baselines[u]
+#                    bl = self.baselines[l]
+#                except KeyError:
+#                    pass
+#                try:
+#                    rr = (ru - bu) / (rl - bl)
+#                except ZeroDivisionError:
+#                    rr = ufloat(0, 0)
+#            else:
+#                try:
+#                    rr = ru / rl
+#                except ZeroDivisionError:
+#                    rr = ufloat(0, 0)
+#
+#            res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
+#                  PLUSMINUS + pad(format('{:0.4f}'.format(rr.std_dev)), n=6) + \
+#                    self._get_pee(rr)
+#            return res
+#
+#        ts = [func(ra) for ra in self.ratios]
+#        self.add_text(display, '\n'.join(ts))
+#        self.add_text(display, ' ' * 80, underline=True)

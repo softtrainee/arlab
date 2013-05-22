@@ -25,27 +25,14 @@ from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
 from src.constants import PLUSMINUS
 from src.ui.qt.text_table_editor import TextTableEditor
 from kiva.fonttools import Font
-from src.database.records.ui.text_table import BoldCell, TextCell, TextRow, \
-    TextTable, TextTableAdapter
+from src.ui.text_table import BoldCell, TextCell, TextRow, \
+    TextTable, TextTableAdapter, SimpleTextTableAdapter, RatiosAdapter
+from src.experiment.display_signal import DisplaySignal, DisplayRatio
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class BaseSignalAdapter(TextTableAdapter):
-    def _make_tables(self, value):
-        return [self._make_signal_table(value)]
 
-    def _make_signal_table(self, sg):
-        rs = [self._make_header_row()]
-        rs.extend(
-                   [TextRow(*[self._cell_factory(ri, args)
-                              for args in self.columns])
-                                for ri in sg]
-                   )
-        tt = TextTable(border=True,
-                       *rs
-                       )
-        return tt
 
-class RawAdapter(BaseSignalAdapter):
+class RawAdapter(SimpleTextTableAdapter):
     columns = [
                ('Isotope', 'isotope', str),
                ('Detector', 'detector', str),
@@ -62,7 +49,7 @@ class RawAdapter(BaseSignalAdapter):
                (u'{} 1s'.format(PLUSMINUS), 'blank_error'),
                (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str),
              ]
-class SignalAdapter(BaseSignalAdapter):
+class SignalAdapter(SimpleTextTableAdapter):
     columns = [
                ('Isotope', 'isotope', str),
                ('Detector', 'detector', str),
@@ -70,25 +57,7 @@ class SignalAdapter(BaseSignalAdapter):
                (u'{} 1s'.format(PLUSMINUS), 'signal_error'),
                ('Error Comp. %', 'error_component', pfloatfmt(n=1))
                ]
-class RatiosAdapter(TextTableAdapter):
-    columns = [
-               ('Ratio', 'name', str),
-               ('Value', 'value'),
-               (u'{}1s'.format(PLUSMINUS), 'error'),
-               ]
 
-    def _make_tables(self, value):
-        rs = [self._make_header_row(),
-              ]
-        for vi in value:
-            ri = TextRow(
-                         self._cell_factory(vi, (None, 'name', str)),
-                         self._cell_factory(vi, (None, 'value')),
-                         self._cell_factory(vi, (None, 'error')),
-                         )
-            rs.append(ri)
-        tt = TextTable(border=True, *rs)
-        return [tt]
 
 class AgeAdapter(TextTableAdapter):
     def _make_tables(self, record):
@@ -173,41 +142,9 @@ class AnalysisSummaryAdapter(TextTableAdapter):
 # ALUE_WIDTH = 60
 # ERROR_WIDTH = 60
 
-class Signal(HasTraits):
-    isotope = Str
-    detector = Str
-    fit = Str
-    raw_value = Float
-    raw_error = Float
-    baseline_value = Float
-    baseline_error = Float
-    blank_value = Float
-    blank_error = Float
-    signal_value = Float
-    signal_error = Float
-    error_component = Float
 
-    raw_error_percent = Property
-    baseline_error_percent = Property
-    blank_error_percent = Property
 
-    def _get_raw_error_percent(self):
-        v = self.raw_value
-        e = self.raw_error
-        return calc_percent_error(v, e)
-    def _get_baseline_error_percent(self):
-        v = self.baseline_value
-        e = self.baseline_error
-        return calc_percent_error(v, e)
-    def _get_blank_error_percent(self):
-        v = self.blank_value
-        e = self.blank_error
-        return calc_percent_error(v, e)
 
-class Ratio(HasTraits):
-    value = Float
-    error = Float
-    name = Str
 
 class AnalysisSummary(HasTraits):
     record = Any
@@ -222,7 +159,7 @@ class AnalysisSummary(HasTraits):
             v, e = rr.nominal_value, rr.std_dev
         except ZeroDivisionError:
             v, e = 0, 0
-        r = Ratio(
+        r = DisplayRatio(
                   name=name,
                   value=v,
                   error=e
@@ -270,7 +207,7 @@ class AnalysisSummary(HasTraits):
             blv, ble = iso.blank.value, iso.blank.error
             s = iso.get_corrected_value()
 
-            isotopes.append(Signal(isotope=name,
+            isotopes.append(DisplaySignal(isotope=name,
                                    detector=det,
                                    raw_value=rv,
                                    raw_error=re,

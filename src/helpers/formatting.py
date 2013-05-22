@@ -33,6 +33,11 @@ def errorfmt(v, e):
         return '{} ({}%)'.format(floatfmt(e), pe)
 
 def floatfmt(f, n=4, s=2, max_width=None):
+    if isinstance(f, str):
+        return f
+    if f is None:
+        return ''
+
     if abs(f) < 1e-20:
         v = '0.0'
     else:
