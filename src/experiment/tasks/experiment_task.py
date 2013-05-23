@@ -90,7 +90,7 @@ class ExperimentEditorTask(EditorTask):
                             self._open_editor(editor)
 
                     qs = [ei.queue
-                        for ei in self.editor_area.editors]
+                          for ei in self.editor_area.editors]
 
                     manager.test_queues(qs)
                     manager.update_info()
