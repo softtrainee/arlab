@@ -59,7 +59,7 @@ class BaseExperimentQueue(Loggable):
     path = Str
 
     executable = Bool
-
+    _no_update = False
     def _get_name(self):
         return self.path
 
@@ -128,15 +128,17 @@ class BaseExperimentQueue(Loggable):
 # persistence
 #===============================================================================
     def load(self, txt):
-        if self.automated_runs is not None:
-            self._cached_runs = self.automated_runs
+        if self.cleaned_automated_runs is not None:
+            self._cached_runs = self.cleaned_automated_runs
 
         self.stats.delay_between_analyses = self.delay_between_analyses
 
         aruns = self._load_runs(txt)
         if aruns:
 #            self._suppress_aliquot_update = True
+            self._no_update = True
             self.automated_runs = aruns
+            self._no_update = False
 #            self._suppress_aliquot_update = False
 
 #            lm = self.sample_map

@@ -870,14 +870,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         if self._dbrecord:
             if self._dbrecord.labnumber:
                 ln = self._dbrecord.labnumber.identifier
-                ln = convert_labnumber(ln)
+#                ln = convert_labnumber(ln)
                 return ln
 
     @cached_property
     def _get_shortname(self):
         if self._dbrecord:
             ln = self._dbrecord.labnumber.identifier
-            ln = convert_shortname(ln)
+#            ln = convert_shortname(ln)
 
             ln = make_runid(ln, self.aliquot, self.step)
 #            ln = '{}-{}{}'.format(ln, self.aliquot, self.step)

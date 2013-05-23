@@ -51,8 +51,10 @@ class ExperimentEditorTask(EditorTask):
                                          ),
                           top=PaneItem('pychron.experiment.controls')
                           )
+
     def prepare_destroy(self):
-        self.manager.stop_file_listener()
+        pass
+#        self.manager.stop_file_listener()
 
 #    def create_central_pane(self):
 #        return AnalysesPane(model=self.manager)
@@ -93,7 +95,7 @@ class ExperimentEditorTask(EditorTask):
                     manager.test_queues(qs)
                     manager.update_info()
                     manager.path = path
-                    manager.start_file_listener(path)
+#                    manager.start_file_listener(path)
 
             return True
 
@@ -140,6 +142,7 @@ class ExperimentEditorTask(EditorTask):
         self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
         self.manager.test_queues()
         self.manager.path = path
+        self.manager.update_info()
         if self.manager.executor.isAlive():
             if self.manager.executor.changed_flag:
                 self.manager.executor.end_at_run_completion = False
@@ -149,16 +152,21 @@ class ExperimentEditorTask(EditorTask):
         if self.active_editor:
             self.manager.experiment_queue = self.active_editor.queue
 
-    @on_trait_change('active_editor:queue[]')
-    def _update_runs(self):
-        if self.manager.executor.isAlive():
-            self.manager.executor.end_at_run_completion = True
-            self.manager.executor.changed_flag = True
+#    @on_trait_change('active_editor:queue[]')
+#    def _update_runs(self, new):
+#        self.debug('runs changed {}'.format(len(new)))
+#        executor = self.manager.executor
+#        if executor.isAlive():
+#            executor.end_at_run_completion = True
+#            executor.changed_flag = True
+#        else:
+#            self.manager.executor.executable = False
 #        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
 
     @on_trait_change('editor_area:editors[]')
     def _update_editors(self, new):
         self.manager.experiment_queues = [ei.queue for ei in new]
+#        self.manager.executor.executable = False
 
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):

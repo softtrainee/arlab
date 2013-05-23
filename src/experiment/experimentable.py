@@ -58,7 +58,7 @@ class Experimentable(IsotopeDatabaseManager):
         # so executor triggers and update with update_needed
 
         self.update_needed = True
-        self._update(all_info=True)
+#        self._update(all_info=True)
 
     def _update(self, *args, **kw):
         pass

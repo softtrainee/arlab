@@ -512,8 +512,10 @@ class PyScript(Loggable):
             return
 
         self.info('SLEEP {}'.format(duration))
-        if globalv.experiment_debug:
-            duration = min(duration, 5)
+#        if globalv.experiment_debug:
+#            duration = min(duration, 5)
+#            self.debug('using debug sleep {}'.format(duration))
+
         self._sleep(duration, message=message)
 
     @skip

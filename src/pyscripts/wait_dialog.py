@@ -54,7 +54,7 @@ class WaitDialog(Loggable):
 #    condition = None
     end_evt = None
     wtime = Float
-    low_name = Float(2)
+    low_name = Float(1)
 
     high = Float(enter_set=True, auto_set=False)
 

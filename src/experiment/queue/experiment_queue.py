@@ -32,9 +32,10 @@ class ExperimentQueue(BaseExperimentQueue):
 
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):
-        self.debug('automated runs len changed {}'.format(new))
-        if self.automated_runs:
-            self.refresh_button = True
+        if not self._no_update:
+            self.debug('automated runs len changed {}'.format(len(new)))
+            if self.automated_runs:
+                self.refresh_button = True
 
     def test_runs(self):
 #         self.executable=True
@@ -69,28 +70,31 @@ class ExperimentQueue(BaseExperimentQueue):
             if self._cached_runs:
                 startid = self._cached_runs.index(last_ran) + 1
                 # for graphic clarity load the finished runs back in
-                cached = self._cached_runs[:startid]
+#                cnts = {}
+                for ci, ai in zip(self._cached_runs[:startid], runs[:startid]):
+                    ai.trait_set(state=ci.state, aliqupt=ci.aliquot,
+                                 step=ci.step,
+                                 skip=ci.skip)
 
-                cnts = {}
-                for ai in self.automated_runs:
-                    if ai.skip:
-                        continue
-                    crun = next((r for r in cached if r.labnumber == ai.labnumber and ai.aliquot == 0), None)
-                    if crun is not None:
-                        ai.state = crun.state
-                        cnt = 0
-                        if ai.labnumber in cnts:
-                            cnt = cnts[ai.labnumber] + 1
-
-                        ai.aliquot = crun.aliquot + cnt
-                        cnts[ai.labnumber] = cnt
+#                for ai in self.automated_runs:
+#                    if ai.skip:
+#                        continue
+#                    crun = next((r for r in cached if r.labnumber == ai.labnumber), None)
+#                    if crun is not None:
+#                        ai.state = crun.state
+#                        cnt = 0
+#                        if ai.labnumber in cnts:
+#                            cnt = cnts[ai.labnumber] + 1
+#
+#                        ai.aliquot = crun.aliquot + cnt
+#                        cnts[ai.labnumber] = cnt
 #                        print 'setting ', crun.aliquot
 
                 newruns = runs[startid:]
 
                 run = newruns[0]
-                runid = run.runid
-#                 runid=make_runid(run.labnumber, run.aliquot, run.step)
+#                runid = run.runid
+                runid = make_runid(run.labnumber, run.aliquot, run.step)
 
                 self.info('starting at analysis {} (startid={} of {})'.format(runid, startid + 1, n))
                 n = len(newruns)

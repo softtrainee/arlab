@@ -18,6 +18,7 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.constants import NULL_STR
+from src.deprecate import deprecated
 
 ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                       bg='Background', u='Unknown', c='Cocktail', a='Air',
@@ -30,19 +31,20 @@ NON_EXTRACTABLE = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                       )
 
 SPECIAL_NAMES = [NULL_STR, 'Air', 'Cocktail', 'Blank Unknown',
-                 'Blank Air', 'Blank Cocktail', 'Background', 'Pause']
+                 'Blank Air', 'Blank Cocktail', 'Background', 'Pause', 'Degas']
 
 SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
                        blank_air='ba',
                        blank_cocktail='bc',
                        blank_unknown='bu',
-                       pause='pa'
+                       pause='pa',
+                       degas='dg'
                        )
 #        sn = ['Blank_air', 'Blank_cocktail', 'Blank_unknown',
 #              'Background', 'Air', 'Cocktail']
-SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
-               4:'Background', 5:'Air', 6:'Cocktail'
-               }
+# SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
+#               4:'Background', 5:'Air', 6:'Cocktail'
+#               }
 
 from ConfigParser import ConfigParser
 import os
@@ -57,7 +59,8 @@ if os.path.isfile(p):
         ANALYSIS_MAPPING[option] = name
         SPECIAL_NAMES.append(name)
         SPECIAL_MAPPING[name] = option
-        SPECIAL_IDS[int(labnumber)] = name
+
+#        SPECIAL_IDS[int(labnumber)] = name
 
 def convert_special_name(name, output='shortname'):
     '''
@@ -83,32 +86,6 @@ def convert_special_name(name, output='shortname'):
     else:
         return name
 
-def convert_labnumber(ln):
-    '''
-        ln is a str  but only special labnumbers cannot be converted to int
-        convert number to name
-        
-    '''
-    try:
-        ln = int(ln)
-
-        if ln in SPECIAL_IDS:
-            ln = SPECIAL_IDS[ln]
-    except ValueError:
-        pass
-
-
-    return ln
-
-def convert_shortname(ln):
-    '''
-        convert number to shortname (a for air, bg for background...)
-    '''
-    name = convert_labnumber(ln)
-    if name is not None:
-        ln = next((k for k, v in ANALYSIS_MAPPING.iteritems()
-                   if v == name), ln)
-    return ln
 
 def convert_identifier(identifier):
     '''
@@ -230,5 +207,39 @@ def make_rid(ln, a, step=''):
         return '{}-{}'.format(ln, a)
 
 #        return make_special_identifier(ln, ed, ms, aliquot=a)
+#===============================================================================
+# deprecated
+#===============================================================================
+SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
+               4:'Background', 5:'Air', 6:'Cocktail'
+               }
+@deprecated
+def convert_labnumber(ln):
+    '''
+        ln is a str  but only special labnumbers cannot be converted to int
+        convert number to name
+        
+    '''
+    try:
+        ln = int(ln)
+
+        if ln in SPECIAL_IDS:
+            ln = SPECIAL_IDS[ln]
+    except ValueError:
+        pass
+
+
+    return ln
+
+@deprecated
+def convert_shortname(ln):
+    '''
+        convert number to shortname (a for air, bg for background...)
+    '''
+    name = convert_labnumber(ln)
+    if name is not None:
+        ln = next((k for k, v in ANALYSIS_MAPPING.iteritems()
+                   if v == name), ln)
+    return ln
 
 #============= EOF =============================================
