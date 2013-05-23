@@ -187,6 +187,10 @@ class Experimentor(Experimentable):
             if arun.skip:
                 continue
 
+            # dont set degas or pause aliquot
+            if arunid in ('dg', 'pa'):
+                continue
+
             if arun.extract_group:
                 if not arun.extract_group == extract_group:
                     if arunid in aoffs:
@@ -243,13 +247,19 @@ class Experimentor(Experimentable):
         stdict = dict()
         fixed_dict = dict()
         for arun in ans:
+            arunid = arun.labnumber
+
             if arun.skip:
                 arun.aliquot = 0
                 continue
 
-            arunid = arun.labnumber
+            # dont set degas or pause aliquot
+            if arunid in ('dg', 'pa'):
+                continue
+
             c = 1
             st = 0
+
             if arunid in fixed_dict:
                 st = fixed_dict[arunid]
 
@@ -330,6 +340,9 @@ class Experimentor(Experimentable):
 #    @on_trait_change('experiment_queues')
 #    def _update_queues(self, new):
 #        self.executor.set_experiment_queues(new)
+    @on_trait_change('experiment_factory:run_factory:changed')
+    def _queue_dirty(self):
+        self.experiment_queue.changed = True
 
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):
