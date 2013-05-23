@@ -19,6 +19,7 @@ from traits.api import HasTraits
 from traitsui.api import View, Item
 from pyface.action.action import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ProcessorAction(Action):
@@ -26,6 +27,9 @@ class ProcessorAction(Action):
         app = event.task.window.application
         processor = app.get_service('src.processing.processor.Processor')
         return processor
+
+
+
 
 class FindAction(ProcessorAction):
     name = 'Find...'

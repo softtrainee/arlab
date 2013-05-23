@@ -70,16 +70,13 @@ class ExperimentEditor(BaseTraitsEditor):
                  )
         return v
 
-    def _create_control(self, parent):
-        self.ui = self.edit_traits(kind='subpanel', parent=parent)
-        return self.ui.control
 
     def trait_context(self):
         """ Use the model object for the Traits UI context, if appropriate.
         """
         if self.queue:
             return { 'object': self.queue}
-        return super(ExperimentQueue, self).trait_context()
+        return super(ExperimentEditor, self).trait_context()
 
 #    @on_trait_change('queue:automated_runs[], queue:changed')
     def _queue_changed(self):

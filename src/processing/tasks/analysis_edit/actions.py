@@ -15,26 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Instance
-from traitsui.api import View, Item, UI
-# from pyface.tasks.editor import Editor
-from src.loggable import Loggable
-from pyface.tasks.traits_editor import TraitsEditor
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from pyface.tasks.action.task_action import TaskAction
+from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTraitsEditor(TraitsEditor, Loggable):
-    dirty = Bool(False)
-#    ui = Instance(UI)
-#
-#    def create(self, parent):
-#        self.control = self._create_control(parent)
-#
-#    def destroy(self):
-#        self.ui.dispose()
-#        self.control = self.ui = None
-#
-#    def _create_control(self, parent):
-#        self.ui = self.edit_traits(kind='subpanel', parent=parent)
-#        return self.ui.control
+class BlankEditAction(TaskAction):
+    name = 'Blanks...'
+    accelerator = 'Ctrl+B'
+    def perform(self, event):
+        _id = 'pychron.analysis_edit'
+        task = self.task
+        if not task.id == _id:
+            # search other windows
+            app = task.window.application
+            for win in app.windows:
+                if win.active_task.id == _id:
+                    win.activate()
+                    break
+            else:
+                win = app.create_window(TaskWindowLayout(_id))
+            win.open()
+            task = win.active_task
+
+        task.new_blank()
 #============= EOF =============================================
