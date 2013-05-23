@@ -124,16 +124,16 @@ class Experimentor(Experimentable):
         ans = self._get_all_automated_runs()
         # update the aliquots
 
-        self._modify_aliquots(ans)
+        self._modify_aliquots(ans, exclude=('dg', 'pa'))
 
         # update the steps
-        self._modify_steps(ans)
+        self._modify_steps(ans, exclude=('dg', 'pa'))
 
         # update run info
         if not all_info:
             ans = ans[-1:]
 
-        self._update_info(ans)
+        self._update_info(ans, exclude=('dg', 'pa'))
         self.debug('info updated')
 
     def _get_labnumber(self, arun):
@@ -155,12 +155,14 @@ class Experimentor(Experimentable):
 
         return dbln
 
-    def _update_info(self, ans):
+    def _update_info(self, ans, exclude=None):
+        if exclude is None:
+            exclude = tuple()
         self.debug('update run info')
 
         for ai in ans:
 #            self.debug('ln {}'.format(ai.labnumber))
-            if ai.labnumber and not ai.labnumber in ('dg',):
+            if ai.labnumber and not ai.labnumber in exclude:
                 dbln = self._get_labnumber(ai)
                 if dbln:
                     sample = dbln.sample
@@ -175,7 +177,9 @@ class Experimentor(Experimentable):
                         ai.irradiation = '{}{}'.format(irrad.name, level.name)
 #                        self.debug('irrad {}'.format(ai.irradiation))
 
-    def _modify_steps(self, ans):
+    def _modify_steps(self, ans, exclude=None):
+        if exclude is None:
+            exclude = tuple()
         self.debug('modifying steps')
 
         idcnt_dict = dict()
@@ -188,7 +192,7 @@ class Experimentor(Experimentable):
                 continue
 
             # dont set degas or pause aliquot
-            if arunid in ('dg', 'pa'):
+            if arunid in exclude:
                 continue
 
             if arun.extract_group:
@@ -237,7 +241,9 @@ class Experimentor(Experimentable):
 #             print arun.labnumber, aoff
             arun.aliquot += aoff
 
-    def _modify_aliquots(self, ans):
+    def _modify_aliquots(self, ans, exclude=None):
+        if exclude is None:
+            exclude = tuple()
         self.debug('modifying aliquots')
 #        print ans
         offset = 0
@@ -254,7 +260,7 @@ class Experimentor(Experimentable):
                 continue
 
             # dont set degas or pause aliquot
-            if arunid in ('dg', 'pa'):
+            if arunid in exclude:
                 continue
 
             c = 1
