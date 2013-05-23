@@ -118,7 +118,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         return self._get_number('extract_value')
 
     def _get_duration_text(self, trait, item):
-        return self._get_number('duration')
+        return '{:n}'.format(self._get_number('duration'))
 
     def _get_cleanup_text(self, trait, item):
         return self._get_number('cleanup')
@@ -133,7 +133,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         v = getattr(self.item, attr)
         if isinstance(v, str):
             try:
-                v = float(v)
+                v = int(v)
             except ValueError:
                 v = ''
         if v:

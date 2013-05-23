@@ -627,7 +627,6 @@ class ExperimentExecutor(Experimentable):
         if i > 1:
             self._check_run_aliquot(arv)
 
-        print 'asdfasdsdfa', arv.duration
         arun = arv.make_run()
 
         exp = self.experiment_queue

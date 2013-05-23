@@ -198,6 +198,7 @@ class AutomatedRun(Loggable):
     runid = Property
 
     info_color = None
+    _equilibration_done = False
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -528,6 +529,32 @@ anaylsis_type={}
     def get_position_list(self):
         return self._make_iterable(self.position)
 
+#===============================================================================
+# run termination
+#===============================================================================
+    def cancel_run(self):
+        '''
+            terminate the measurement script immediately
+            
+            do post termination
+                post_eq and post_meas
+            don't save run
+            
+        '''
+        self._save_enabled = False
+        self.do_post_termination()
+
+    def truncate_run(self):
+        '''
+            truncate the measurement script
+        '''
+        if self.measuring:
+            self.measurement_script.truncate()
+
+#===============================================================================
+#
+#===============================================================================
+
     def truncate(self, style):
         self.info('truncating current run with style= {}'.format(style))
         self.state = 'truncate'
@@ -674,6 +701,7 @@ anaylsis_type={}
             self.info_color = None
             return True
         else:
+            self.do_post_equilibration()
             self.do_post_measurement()
             self.finish()
 
@@ -694,6 +722,8 @@ anaylsis_type={}
 
         self._pre_measurement_save()
         self.measuring = True
+        self._save_enabled = True
+
         if self.measurement_script.execute():
             if self._alive:
                 self._post_measurement_save()
@@ -703,6 +733,7 @@ anaylsis_type={}
             self.info_color = None
             return True
         else:
+            self.do_post_equilibration()
             self.do_post_measurement()
             self.finish()
 
@@ -730,6 +761,11 @@ anaylsis_type={}
             return False
 
     def do_post_equilibration(self):
+        if self._equilibration_done:
+            return
+
+        self._equilibration_done = True
+
         if not self._alive:
             return
         if self.post_equilibration_script is None:
@@ -742,6 +778,11 @@ anaylsis_type={}
             self.info('======== Post Equilibration Finished ========')
         else:
             self.info('======== Post Equilibration Finished unsuccessfully ========')
+
+    def do_post_termination(self):
+        self.info('========= Post Termination ========')
+        self.do_post_equilibration()
+        self.do_post_measurement()
 
     def _plot_panel_closed(self):
         if self.measuring:
@@ -1121,6 +1162,10 @@ anaylsis_type={}
     def _post_measurement_save(self):
         self.info('post measurement save')
 
+        if not self._save_enabled:
+            self.info('Database saving disabled')
+            return
+
         cp = self.data_manager.get_current_path()
         # close h5 file
         self.data_manager.close_file()
@@ -1151,7 +1196,8 @@ anaylsis_type={}
 
             lab = db.get_labnumber(ln)
             experiment = db.get_experiment(self.experiment_name)
-
+            if experiment is None:
+                experiment = db.add_experiment(self.experiment_name)
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
 
@@ -1168,6 +1214,7 @@ anaylsis_type={}
                                 step=self.step,
                                 comment=self.comment
                                 )
+
             # added analysis to experiment
             experiment.analyses.append(a)
 
