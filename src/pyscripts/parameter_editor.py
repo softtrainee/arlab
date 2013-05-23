@@ -59,6 +59,10 @@ class ParameterEditor(Loggable):
     body = String
     def parse(self, txt):
         pass
+    
+    def traits_view(self):
+        v=View()
+        return v
 
 
 STR_FMT = "{}= '{}'"

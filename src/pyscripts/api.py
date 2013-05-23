@@ -17,5 +17,5 @@
 
 
 from .bakeout_pyscript import BakeoutPyScript
-from .extraction_line_pyscript import ExtractionLinePyScript
+from .extraction_line_pyscript import ExtractionPyScript
 from .measurement_pyscript import MeasurementPyScript

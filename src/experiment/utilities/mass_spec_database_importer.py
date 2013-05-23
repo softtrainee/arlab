@@ -52,7 +52,7 @@ class MassSpecDatabaseImporter(Loggable):
     data_reduction_session_id = None
     login_session_id = None
     _current_spec = None
-
+    _analysis=None
     def connect(self):
         return self.db.connect()
 
@@ -124,14 +124,18 @@ class MassSpecDatabaseImporter(Loggable):
         else:
             runtype = 'Unknown'
 
-        analysis = None
+        self._analysis=None
         try:
-            analysis = self._add_analysis(spec, irradpos, rid, runtype, commit)
+            self._add_analysis(spec, irradpos, rid, runtype, commit)
         except Exception:
+            import traceback
+            tb = traceback.format_exc()
+            self.message('Could not save to Mass Spec database.\n {}'.format(tb))
             if commit:
-                analysis.Aliquot = aliquot = '{}*'.format(analysis.Aliquot)
-                analysis.RID = make_rid(irradpos, aliquot, spec.step)
-                self.db.commit()
+                if self._analysis:
+                    self._analysis.Aliquot = aliquot = '{}*'.format(self._analysis.Aliquot)
+                    self._analysis.RID = make_rid(irradpos, aliquot, spec.step)
+                    self.db.commit()
 
     def _add_analysis(self, spec, irradpos, rid, runtype, commit=True):
         gst = time.time()
@@ -169,7 +173,7 @@ class MassSpecDatabaseImporter(Loggable):
         refdbdet = db.add_detector('H1', Label='H1')
         db.flush()
 
-        analysis = db.add_analysis(rid, spec.aliquot, spec.step,
+        self._analysis=analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
 #                                   'H1',

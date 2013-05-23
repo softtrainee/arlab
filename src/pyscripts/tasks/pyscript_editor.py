@@ -25,7 +25,7 @@ from src.pyscripts.parameter_editor import MeasurementParameterEditor, \
 #============= standard library imports ========================
 #============= local library imports  ==========================
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
-                    ExtractionLine='src.pyscripts.extraction_line_pyscript',
+                    Extraction='src.pyscripts.extraction_line_pyscript',
                     Measurement='src.pyscripts.measurement_pyscript'
                     )
 
@@ -90,21 +90,7 @@ class PyScriptEditor(Editor):
     def create(self, parent):
         self.control = self._create_control(parent)
 
-    def load(self, path=None):
-        if path is None:
-            path = self.path
-
-        # We will have no path for a new script.
-        if len(path) > 0:
-            f = open(self.path, 'r')
-            text = f.read()
-            f.close()
-        else:
-            text = ''
-
-        self.control.code.setPlainText(text)
-        self.dirty = False
-
+        
     def _create_control(self, parent):
         from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
         self.control = control = AdvancedCodeWidget(parent)
@@ -151,11 +137,36 @@ class PyScriptEditor(Editor):
     def _get_name(self):
         return os.path.basename(self.path) or 'Untitled'
 
+#===============================================================================
+# persistence
+#===============================================================================
+    def load(self, path=None):
+        if path is None:
+            path = self.path
 
+        # We will have no path for a new script.
+        if len(path) > 0:
+            f = open(self.path, 'r')
+            text = f.read()
+            f.close()
+        else:
+            text = ''
+
+        self.control.code.setPlainText(text)
+        self.dirty = False
+        
+    def dump(self, path):
+        with open(path, 'w') as fp:
+            txt=self.getText()
+            if txt:
+                fp.write(txt)
+                
+       
 class MeasurementEditor(PyScriptEditor):
     kind = 'Measurement'
-    editor = Instance(ParameterEditor, ())
-class ExtractionLineEditor(PyScriptEditor):
-    kind = 'ExtractionLine'
     editor = Instance(MeasurementParameterEditor, ())
+
+class ExtractionEditor(PyScriptEditor):
+    kind = 'Extraction'
+    editor = Instance(ParameterEditor, ())
 #============= EOF =============================================

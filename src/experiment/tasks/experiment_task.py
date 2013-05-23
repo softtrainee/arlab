@@ -188,11 +188,19 @@ class ExperimentEditorTask(EditorTask):
 #        '''
 #            queues need to be saved before execute
 #        '''
-        if not self.active_editor is None:
-            p = self.active_editor.path
+#        if not self.active_editor is None:
+        
+        editor=self.active_editor
+        if editor is None:
+            if self.editor_area.editors:
+                editor=self.editor_area.editors[0]
+        
+        if editor:    
+        
+            p = editor.path
             if os.path.isfile(p):
-                group = self.active_editor.group
-                min_idx = self.active_editor.merge_id
+                group = editor.group
+                min_idx = editor.merge_id
         #        print p
                 text = open(p, 'r').read()
                 hash_val = hashlib.sha1(text).hexdigest()

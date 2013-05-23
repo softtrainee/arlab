@@ -171,9 +171,10 @@ class Loggable(HasTraits):
             self._log_('info', msg)
 
     def close_displays(self):
-        from src.displays.gdisplays import gLoggerDisplay, gWarningDisplay
+        from src.displays.gdisplays import gLoggerDisplay, gWarningDisplay, gMessageDisplay
         gLoggerDisplay.close_ui()
         gWarningDisplay.close_ui()
+        gMessageDisplay.close_ui()
 
     def debug(self, msg, decorate=True):
         '''

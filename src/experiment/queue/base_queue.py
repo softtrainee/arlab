@@ -33,6 +33,18 @@ from src.experiment.queue.parser import RunParser, UVRunParser
 from src.experiment.automated_run.uv.table import UVAutomatedRunsTable
 import datetime
 
+class no_update(object):
+    model=None
+    def __init__(self,model):
+        self.model = model
+    def __enter__(self):
+        if self.model:
+            self.model._no_update=True
+            
+    def __exit__(self,_type, value, _traceback):
+        if self.model:
+            self.model._no_update=False
+    
 
 class BaseExperimentQueue(Loggable):
     runs_table = Instance(AutomatedRunsTable, ())
@@ -60,7 +72,8 @@ class BaseExperimentQueue(Loggable):
 
     executable = Bool
     _no_update = False
-
+    initialized=False
+    
     def _get_name(self):
         return self.path
 
@@ -121,7 +134,10 @@ class BaseExperimentQueue(Loggable):
         self.runs_table = klass()
 
 #        self._suppress_aliquot_update = True
-        self.runs_table.set_runs(runs)
+#        self._no_update=True
+        with no_update(self):
+            self.runs_table.set_runs(runs)
+#        self._no_update=False
 #        self._suppress_aliquot_update = False
 #        self.update_needed=True
 
@@ -137,9 +153,11 @@ class BaseExperimentQueue(Loggable):
         aruns = self._load_runs(txt)
         if aruns:
 #            self._suppress_aliquot_update = True
-            self._no_update = True
-            self.automated_runs = aruns
-            self._no_update = False
+#            self._no_update = True
+            with no_update(self):
+                self.automated_runs = aruns
+#            self._no_update = False
+            self.initialized=True
 #            self._suppress_aliquot_update = False
 
 #            lm = self.sample_map

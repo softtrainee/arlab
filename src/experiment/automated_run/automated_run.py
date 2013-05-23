@@ -33,7 +33,7 @@ from src.globals import globalv
 
 from src.loggable import Loggable
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
-from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
+from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 # from src.repo.repository import Repository
@@ -1723,7 +1723,7 @@ anaylsis_type={}
     def _extraction_script_factory(self, root, file_name):
         file_name = self._make_script_name(file_name)
         if os.path.isfile(os.path.join(root, file_name)):
-            klass = ExtractionLinePyScript
+            klass = ExtractionPyScript
             obj = klass(
                     root=root,
                     name=file_name,

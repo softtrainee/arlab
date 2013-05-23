@@ -29,20 +29,20 @@ ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
 
 '''
-    make a registry to hold all the commands exposed by ExtractionLinePyScript
+    make a registry to hold all the commands exposed by ExtractionPyScript
     used when building the context
     see PyScript.get_context and get_command_register
     
 '''
 command_register = makeRegistry()
 
-class ExtractionLinePyScript(ValvePyScript):
+class ExtractionPyScript(ValvePyScript):
     _resource_flag = None
     info_color = EXTRACTION_COLOR
     snapshot_paths = List
 
     def get_command_register(self):
-        cm = super(ExtractionLinePyScript, self).get_command_register()
+        cm = super(ExtractionPyScript, self).get_command_register()
         return command_register.commands.items() + cm
 
     def _post_execute_hook(self):
@@ -477,7 +477,7 @@ class ExtractionLinePyScript(ValvePyScript):
 #                                                      description=description
 #                                                      ))], protocol=ELPROTOCOL)
 #    def get_context(self):
-#        d = super(ExtractionLinePyScript, self).get_context()
+#        d = super(ExtractionPyScript, self).get_context()
 
 #        #=======================================================================
 #        #Parameters
@@ -493,7 +493,7 @@ class ExtractionLinePyScript(ValvePyScript):
 #    def gosub(self, *args, **kw):
 #        kw['analysis_type'] = self.analysis_type
 #        kw['_context'] = self._context
-#        super(ExtractionLinePyScript, self).gosub(*args, **kw)
+#        super(ExtractionPyScript, self).gosub(*args, **kw)
 
 #    @verbose_skip
 #    def is_open(self, name=None, description=''):

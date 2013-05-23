@@ -17,25 +17,20 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, List, Instance, Property, Any, Enum
 from traitsui.api import View, Item, EnumEditor, UItem, Label
-from src.envisage.tasks.base_task import BaseManagerTask
-from src.envisage.tasks.editor_task import EditorTask
-from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
-from src.pyscripts.tasks.pyscript_editor import PyScriptEditor, \
-    ExtractionLineEditor, MeasurementEditor
-from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
-    ExamplePane, EditorPane
-import os
-from src.paths import paths
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed
-from src.pyscripts.parameter_editor import ParameterEditor
-from traitsui.menu import ModalButtons
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_task import BaseManagerTask
+from src.envisage.tasks.editor_task import EditorTask
+from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEditor
+from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
+    ExamplePane, EditorPane
+from src.paths import paths
 
 class PyScriptTask(EditorTask):
 
     kind = String
-    kinds = List(['ExtractionLine', 'Measurement'])
+    kinds = List(['Extraction', 'Measurement'])
     selected_command = String
 #    commands = Instance(Commands, ())
     selected = Any
@@ -71,12 +66,13 @@ class PyScriptTask(EditorTask):
 
     def _active_editor_changed(self):
         if self.active_editor:
+            self.commands_pane.name=self.active_editor.kind
             self.commands_pane.commands = self.active_editor.commands.script_commands
             self.editor_pane.editor = self.active_editor.editor
 
-    def save(self):
-        pass
-
+    def _save_file(self, path):
+        self.active_editor.dump(path)
+            
     def new(self):
 
         # todo ask for script type
@@ -92,9 +88,9 @@ class PyScriptTask(EditorTask):
 #        self._open_file(path)
 #        return True
 
-    def _open_file(self, path):
+    def _open_file(self, path, **kw):
         self.info('opening pyscript: {}'.format(path))
-        self._open_editor(path)
+        self._open_editor(path, **kw)
 
     def _extract_kind(self, path):
         with open(path, 'r') as fp:
@@ -102,28 +98,30 @@ class PyScriptTask(EditorTask):
                 if line.startswith('#!'):
                     return line.strip()[2:]
 
-    def _open_editor(self, path):
+    def _open_editor(self, path, kind=None):
         if path:
             kind = self._extract_kind(path)
-            if kind is not None:
-                self.kind = kind
+#            if kind is not None:
+#                self.kind = kind
 
-        if self.kind == 'Measurement':
+#        if self.kind == 'Measurement':
+        if kind == 'Measurement':
             klass = MeasurementEditor
         else:
-            klass = ExtractionLineEditor
+            klass = ExtractionEditor
+        
         editor = klass(path=path,
 #                                kind=self.kind
                                 )
 
 #        self.editor.editor = editor
 #        editor.editor = self.editor
-
+        
         self.editor_area.add_editor(editor)
         self.editor_area.activate_editor(editor)
 
-    def _save_file(self, path):
-        pass
+#    def _save_file(self, path):
+#        pass
 
 
 #    def _kind_changed(self):

@@ -32,13 +32,13 @@ class EditorTask(BaseManagerTask, Loggable):
                              )
     editor_area = Instance(IEditorAreaPane)
 
-    def open(self, path=None):
+    def open(self, path=None, **kw):
         ''' Shows a dialog to open a file.
         '''
         if path is None:
             path = self.open_file_dialog()
         if path:
-            self._open_file(path)
+            self._open_file(path, **kw)
             return True
 
     def save(self):
@@ -54,6 +54,7 @@ class EditorTask(BaseManagerTask, Loggable):
 
             if path:
                 self._save_file(path)
+                self.active_editor.dirty=False
 
     def new(self):
         pass
@@ -63,18 +64,19 @@ class EditorTask(BaseManagerTask, Loggable):
         if path:
             self._save_file(path)
             self.active_editor.path = path
+            self.active_editor.dirty=False
 
     def _save_file(self, path):
         pass
 
-    def _open_file(self, path):
+    def _open_file(self, path, **kw):
         pass
 
     def create_central_pane(self):
         self.editor_area = SplitEditorAreaPane()
         return self.editor_area
 
-    def _open_editor(self, editor):
+    def _open_editor(self, editor, **kw):
         self.editor_area.add_editor(editor)
         self.editor_area.activate_editor(editor)
 

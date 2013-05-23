@@ -138,20 +138,21 @@ class Experimentor(Experimentable):
 
     def _get_labnumber(self, arun):
         '''
+            dont use cache
             cache labnumbers for quick retrieval
         '''
-        ca = '_cached_{}'.format(arun.labnumber)
-#         print ca, hasattr(self,ca)
-        dbln = None
-        if hasattr(self, ca):
-            dbln = getattr(self, ca)
+#        ca = '_cached_{}'.format(arun.labnumber)
+##         print ca, hasattr(self,ca)
+#        dbln = None
+#        if hasattr(self, ca):
+#            dbln = getattr(self, ca)
 
-        if not dbln:
-            db = self.db
-            ln = arun.labnumber
-            ln = convert_identifier(ln)
-            dbln = db.get_labnumber(ln)
-            setattr(self, ca, dbln)
+#        if not dbln:
+        db = self.db
+        ln = arun.labnumber
+        ln = convert_identifier(ln)
+        dbln = db.get_labnumber(ln)
+#            setattr(self, ca, dbln)
 
         return dbln
 
@@ -252,6 +253,7 @@ class Experimentor(Experimentable):
         idcnt_dict = dict()
         stdict = dict()
         fixed_dict = dict()
+        
         for arun in ans:
             arunid = arun.labnumber
 
@@ -336,6 +338,7 @@ class Experimentor(Experimentable):
             trigger the experiment task to assemble current queues.
             the queues are then passed back to execute_queues()
         '''
+        self.debug('%%%%%%%%%%%%%%%%%% Execute fired')
         self.execute_event = True
 
     @on_trait_change('experiment_queues[]')
