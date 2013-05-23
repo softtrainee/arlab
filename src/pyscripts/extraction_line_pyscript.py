@@ -361,16 +361,17 @@ class ExtractionLinePyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def acquire(self, name=None):
+    def acquire(self, name=None, clear=False):
         if self.runner is None:
             return
 
         self.info('acquire {}'.format(name))
         r = self.runner.get_resource(name)
 
-        s = r.isSet()
-        if s:
-            self.info('waiting for access')
+        if not clear:
+            s = r.isSet()
+            if s:
+                self.info('waiting for access')
 
         while s:
             if self._cancel:
@@ -409,16 +410,22 @@ class ExtractionLinePyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def release(self, name=None):
-
         self.info('release {}'.format(name))
+
         r = self.runner.get_resource(name)
-        r.clear()
+        if r is not None:
+            r.clear()
+        else:
+            self.info('Could not release {}'.format(name))
 
     @verbose_skip
     @command_register
     def set_resource(self, name=None, value=1):
         r = self.runner.get_resource(name)
-        r.set(value)
+        if r is not None:
+            r.set(value)
+        else:
+            self.info('Could not set {}'.format(name))
 
     @verbose_skip
     @command_register

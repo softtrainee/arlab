@@ -33,6 +33,7 @@ class ExperimentQueue(BaseExperimentQueue):
     def copy_function(self, obj):
         ci = obj.clone_traits()
         ci.state = 'not run'
+        ci.aliquot = 0
         return ci
 
     @on_trait_change('automated_runs[]')

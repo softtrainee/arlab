@@ -38,13 +38,17 @@ class _myTableView(_TableView):
 
         elif event.matches(QKeySequence.Paste):
             if self._copy_cache:
-                si = self.selectedIndexes()[0]
+                si = self.selectedIndexes()
                 copy_func = self.copy_func
                 if copy_func is None:
                     copy_func = lambda x: x.clone_traits()
+                if len(si):
+                    idx = si.row()
+                else:
+                    idx = -1
 
                 for ci in reversed(self._copy_cache):
-                    self._editor.model.insertRow(si.row(), obj=copy_func(ci))
+                    self._editor.model.insertRow(idx, obj=copy_func(ci))
                 self._editor.pasted = True
         else:
             super(_myTableView, self).keyPressEvent(event)
