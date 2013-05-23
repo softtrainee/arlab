@@ -56,10 +56,11 @@ class BaseExperimentQueue(Loggable):
     update_needed = Event
     changed = Event
     name = Property(depends_on='path')
-    path = Str
+    path = String
 
     executable = Bool
     _no_update = False
+
     def _get_name(self):
         return self.path
 
