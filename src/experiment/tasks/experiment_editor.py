@@ -58,6 +58,7 @@ class ExperimentEditor(BaseTraitsEditor):
                                             selected='selected',
                                             rearranged='rearranged',
                                             pasted='pasted',
+                                            copy_function='copy_function',
  #                                             copy_cache='copy_cache',
  #                                             update='update_needed',
                                             drag_move=True,

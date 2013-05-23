@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Color, Button, Any, Instance
 from traitsui.api import View, Item, TableEditor, UItem, Label
@@ -29,15 +30,20 @@ from PySide.QtCore import Qt
 
 class _CustomLabelEditor(Editor):
 #    txtctrl = Any
-
+    color = Any
     def init(self, parent):
         self.control = self._create_control(parent)
+#        self.item.on_trait_change(self._set_color, 'color')
+        self.sync_value(self.factory.color, 'color', mode='from')
+
+    def _color_changed(self):
+        if self.color and self.control:
+            css = '''QLabel {{ color:{}; font-size:{}px;}}
+    '''.format(self.color.name(), self.item.size)
+            self.control.setStyleSheet(css)
 
     def update_editor(self):
         if self.control:
-
-
-
             self.control.setText(self.value)
 #            self.control.SetLabel(self.value)
 
@@ -121,33 +127,47 @@ class _CustomLabelEditor(Editor):
 
 class CustomLabelEditor(BasicEditorFactory):
     klass = _CustomLabelEditor
-
+    color = Str
 
 class CustomLabel(UItem):
     editor = Instance(CustomLabelEditor, ())
     size = Int(12)
+
     color = Color('green')
+    color_name = Str
+
     top_padding = Int(5)
     bottom_padding = Int(5)
     left_padding = Int(5)
     right_padding = Int(5)
+
+    def _color_name_changed(self):
+        self.editor.color = self.color_name
 #===============================================================================
 # demo
 #===============================================================================
 class Demo(HasTraits):
     a = Str('asdfsdf')
     foo = Button
+    color = Color('blue')
+    cnt = 0
     def _foo_fired(self):
         self.a = 'fffff {}'.format(random.random())
-
+        if self.cnt % 2 == 0:
+            self.color = 'red'
+        else:
+            self.color = 'blue'
+        self.cnt += 1
     def traits_view(self):
+
         v = View(
-#                 'foo',
+                 'foo',
                  CustomLabel('a',
-                             color='blue',
+#                             color='blue',
                              size=15,
                              top_padding=10,
                              left_padding=10,
+                             color_name='color'
                              ),
                   width=100,
                  height=100)

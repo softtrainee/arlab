@@ -301,7 +301,7 @@ class ExtractionLinePyScript(ValvePyScript):
 
         ed = self.extract_device
         ed = ed.replace('_', ' ')
-        self.manager.set_extract_state('{} on'.format(ed))
+        self.manager.set_extract_state('{} on'.format(ed), color='red')
 
         self.info('extract sample to {} ({})'.format(power, units))
         self._manager_action([('extract', (power,), {'units':units})],

@@ -247,6 +247,7 @@ class BaseManagerTask(BaseTask):
     def open_file_dialog(self, **kw):
         if 'default_directory' not in kw:
             kw['default_directory'] = self.default_directory
+
         dialog = FileDialog(parent=self.window.control,
                             **kw)
         if dialog.open() == OK:
@@ -295,9 +296,9 @@ class BaseHardwareTask(BaseManagerTask):
                             id='Measure', name='Measure',
                             before='help.menu'
                             )
-        ms=[extraction_menu, measure_menu]
+        ms = [extraction_menu, measure_menu]
         if not menus:
-            menus=ms
+            menus = ms
         else:
             menus.extend(ms)
         return super(BaseHardwareTask, self)._menu_bar_factory(menus=menus)

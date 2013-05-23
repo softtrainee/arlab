@@ -133,7 +133,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         v = getattr(self.item, attr)
         if isinstance(v, str):
             try:
-                v = int(v)
+                v = float(v)
             except ValueError:
                 v = ''
         if v:

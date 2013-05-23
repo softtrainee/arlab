@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from PySide.QtGui import QKeySequence
-from traits.api import Bool, on_trait_change, Any, Str, Event, List
+from traits.api import Bool, on_trait_change, Any, Str, Event, List, Callable
 from traitsui.editors.tabular_editor import TabularEditor
 from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
     _TableView
@@ -26,9 +26,11 @@ from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
 
 class _myTableView(_TableView):
     _copy_cache = None
+    copy_func = None
     def keyPressEvent(self, event):
 #        print event.key(), event.text()
 #        print event.nativeModifiers()
+
 
         if event.matches(QKeySequence.Copy):
             self._copy_cache = [self._editor.value[ci.row()] for ci in
@@ -37,8 +39,12 @@ class _myTableView(_TableView):
         elif event.matches(QKeySequence.Paste):
             if self._copy_cache:
                 si = self.selectedIndexes()[0]
+                copy_func = self.copy_func
+                if copy_func is None:
+                    copy_func = lambda x: x.clone_traits()
+
                 for ci in reversed(self._copy_cache):
-                    self._editor.model.insertRow(si.row(), obj=ci.clone_traits())
+                    self._editor.model.insertRow(si.row(), obj=copy_func(ci))
                 self._editor.pasted = True
         else:
             super(_myTableView, self).keyPressEvent(event)
@@ -71,6 +77,15 @@ class _TabularEditor(qtTabularEditor):
         self.sync_value(self.factory.rearranged, 'rearranged', 'to')
         self.sync_value(self.factory.pasted, 'pasted', 'to')
         self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
+
+        if hasattr(self.object, self.factory.copy_function):
+            self.control.copy_func = getattr(self.object, self.factory.copy_function)
+#        print self.factory.copy_function
+#        self.sync_value(self.factory.copy_function, 'copy_function', 'from')
+#        self.control.copy_func = self.factory.copy_function
+    def _copy_function_changed(self):
+        if self.control:
+            self.control.copy_func = self.copy_function
 
     def update_editor(self):
         super(_TabularEditor, self).update_editor()
@@ -134,6 +149,7 @@ class myTabularEditor(TabularEditor):
     rearranged = Str
     pasted = Str
     copy_cache = Str
+    copy_function = Str
     def _get_klass(self):
         return _TabularEditor
 #============= EOF =============================================
