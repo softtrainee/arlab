@@ -161,11 +161,12 @@ class ExperimentFactory(Loggable):
             klass = AutomatedRunFactory
 
         rf = klass(db=self.db,
+                   application=self.application,
                    extract_device=self._extract_device,
                    mass_spectrometer=self._mass_spectrometer,
-                   application=self.application,
                    can_edit=self.can_edit_scripts
                    )
+
         return rf
 
     def _can_edit_scripts_changed(self):

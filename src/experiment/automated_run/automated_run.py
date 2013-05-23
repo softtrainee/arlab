@@ -1601,7 +1601,7 @@ anaylsis_type={}
         return script
 
     def _bootstrap_script(self, fname, name):
-        self.info('============================= loading script "{}"'.format(fname))
+        self.info('loading script "{}"'.format(fname))
         func = getattr(self, '{}_script_factory'.format(name))
         s = func()
         valid = True

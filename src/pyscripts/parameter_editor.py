@@ -57,6 +57,8 @@ class Detector(HasTraits):
 
 class ParameterEditor(Loggable):
     body = String
+    def parse(self, txt):
+        pass
 
 
 STR_FMT = "{}= '{}'"

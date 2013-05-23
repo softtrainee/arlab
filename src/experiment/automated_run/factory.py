@@ -350,6 +350,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             setattr(arv, '_prev_{}'.format(attr), getattr(self, attr))
 
         if self.user_defined_aliquot:
+            print 'setting aliquit'
             arv.user_defined_aliquot = True
             arv.aliquot = int(self.aliquot)
 
@@ -485,13 +486,12 @@ post_equilibration_script:name
             self._frequency_enabled = False
 
     def _aliquot_changed(self):
-        if self.aliquot != self.o_aliquot and self.o_aliquot:
-            self.user_defined_aliquot = True
-
-        else:
-            self.user_defined_aliquot = False
-
         if self.edit_mode:
+            if self.aliquot != self.o_aliquot and self.o_aliquot:
+                self.user_defined_aliquot = True
+            else:
+                self.user_defined_aliquot = False
+
             if self._selected_runs:
                 for i, si in enumerate(self._selected_runs):
                     si.aliquot = int(self.aliquot) + i

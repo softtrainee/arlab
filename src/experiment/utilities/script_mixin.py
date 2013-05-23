@@ -27,7 +27,7 @@ from src.experiment.script.script import Script
 import yaml
 
 class ScriptMixin(HasTraits):
-    application = Any
+#    application = Any
     mass_spectrometer = String
     extract_device = Str
 
@@ -36,6 +36,12 @@ class ScriptMixin(HasTraits):
     post_measurement_script = Instance(Script)
     post_equilibration_script = Instance(Script)
     can_edit = Bool(False)
+
+    def _application_changed(self):
+        self.extraction_script.application = self.application
+        self.measurement_script.application = self.application
+        self.post_measurement_script.application = self.application
+        self.post_equilibration_script.application = self.application
 
 
     @on_trait_change('mass_spectrometer, can_edit')

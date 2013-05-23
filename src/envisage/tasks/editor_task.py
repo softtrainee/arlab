@@ -32,10 +32,11 @@ class EditorTask(BaseManagerTask, Loggable):
                              )
     editor_area = Instance(IEditorAreaPane)
 
-    def open(self):
+    def open(self, path=None):
         ''' Shows a dialog to open a file.
         '''
-        path = self.open_file_dialog()
+        if path is None:
+            path = self.open_file_dialog()
         if path:
             self._open_file(path)
             return True

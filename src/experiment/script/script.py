@@ -62,14 +62,29 @@ class Script(Loggable):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
                                                                                   self.name))
         if self.kind == 'ExtractionLine':
-            from src.pyscripts.editor import PyScriptEditor
-            editor = PyScriptEditor(application=self.application)
-        else:
-            from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
-            editor = MeasurementPyScriptEditor(application=self.application)
+            app = self.application
+            for win in app.windows:
+                if win.active_task.id == 'pychron.pyscript':
+                    win.activate()
+                    task = win.active_task
+                    break
+            else:
+                from pyface.tasks.task_window_layout import TaskWindowLayout
+                win = app.create_window(TaskWindowLayout('pychron.pyscript'))
+                task = win.active_task
+                win.open()
 
-        editor.open_script(p)
-        editor.open_view(editor)
+            task.open(path=p)
+ #            from src.pyscripts.editor import PyScriptEditor
+ #            from src.pyscripts.tasks.pyscript_editor import PyScriptEditor
+ #            editor = PyScriptEditor(application=self.application)
+        else:
+            pass
+ #            from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
+ #            editor = MeasurementPyScriptEditor(application=self.application)
+
+ #        editor.open_script(p)
+ #        editor.open_view(editor)
 
     def traits_view(self):
         return View(HGroup(
