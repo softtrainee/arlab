@@ -15,35 +15,37 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Color, Str, Event
+from traits.api import Color, Str, Event, Int
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
-from PySide.QtGui import QTextEdit, QTextCursor, QPalette
+from PySide.QtGui import QTextEdit, QPlainTextEdit, QTextCursor, QPalette, QColor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class Display(QTextEdit):
-    pass
 
 class _DisplayEditor(Editor):
     _pv = None
     _pc = None
     clear = Event
+    control_klass = QPlainTextEdit
     def init(self, parent):
         '''
 
         '''
         if self.control is None:
-            self.control = Display()
+            self.control = self.control_klass()
             if self.factory.bg_color:
                 p = QPalette()
                 p.setColor(QPalette.Base, self.factory.bg_color)
                 self.control.setPalette(p)
             self.control.setReadOnly(True)
 
-        self.object.on_trait_change(self._on_clear, self.factory.clear)
+        if self.factory.max_blocks:
+            self.control.setMaximumBlockCount(self.factory.max_blocks)
 
-    def _on_clear(self):
+        self.sync_value(self.factory.clear, 'clear', mode='from')
+
+    def _clear_fired(self):
         if self.control:
             self.control.clear()
 
@@ -51,19 +53,28 @@ class _DisplayEditor(Editor):
         '''
         '''
         ctrl = self.control
+        fmt = ctrl.currentCharFormat()
         if self.value:
             v, c, force = self.value
             if force or v != self._pv or c != self._pc:
-                ctrl.setTextColor(c)
-                ctrl.insertPlainText('{}\n'.format(v))
+#                ctrl.setTextColor(c)
+                if c != self._pc:
+                    fmt.setForeground(QColor(c))
+                    ctrl.setCurrentCharFormat(fmt)
+                ctrl.appendPlainText(v)
                 self._pc = c
                 self._pv = v
 
         self.control.moveCursor(QTextCursor.End)
         self.control.ensureCursorVisible()
 
+
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
     bg_color = Color
     clear = Str
+    max_blocks = Int(0)
+
+class LoggerEditor(DisplayEditor):
+    pass
 #============= EOF =============================================

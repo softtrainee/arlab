@@ -39,9 +39,10 @@ records = namedtuple('Record', 'name')
 class ImportManager(IsotopeDatabaseManager):
     data_source = Enum('MassSpec', 'File')
     importer = Instance(Extractor)
-    import_kind = Enum('---', 'irradiation')
+    import_kind = Enum('---', 'irradiation', 'rid_list')
 
     import_button = Button('Import')
+    open_button = Button('Open')
     names = List
     selected = Any
     imported_names = List
@@ -56,10 +57,23 @@ class ImportManager(IsotopeDatabaseManager):
         func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
         self.names = func(filter_str=self.filter_str)
 
+    def _open_button_fired(self):
+        p = self.open_file_dialog()
+        if p:
+            with open(p, 'r') as fp:
+                rids = [records(ri.strip()) for ri in fp.read().split('\n')]
+                self.names = rids
+
     def _import_button_fired(self):
 #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
-            self.selected = [records('NM-216')]
+            if self.import_kind == 'rid_list':
+                '''
+                    load the import list
+                '''
+                self.selected = self.names
+            else:
+                self.selected = [records('NM-216')]
 
             if self.selected:
                 if self.db.connect():
@@ -86,8 +100,11 @@ class ImportManager(IsotopeDatabaseManager):
             self.importer = None
 
     def _import_kind_changed(self):
-        func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
-        self.names = func()
+        try:
+            func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
+            self.names = func()
+        except AttributeError:
+            pass
 
     def _importer_default(self):
         return MassSpecExtractor()

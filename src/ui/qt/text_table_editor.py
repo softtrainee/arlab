@@ -32,7 +32,7 @@ class _TextTableEditor(Editor):
     _pc = None
     clear = Event
     refresh = Event
-    control_klass=QTextEdit
+    control_klass = QTextEdit
     def init(self, parent):
         '''
 
@@ -46,7 +46,7 @@ class _TextTableEditor(Editor):
                 self.control.setPalette(p)
             self.control.setReadOnly(True)
 
-        self.object.on_trait_change(self._on_clear, self.factory.clear)
+#        self.object.on_trait_change(self._on_clear, self.factory.clear)
 
         self.sync_value(self.factory.refresh, 'refresh', mode='from')
 #        parent.addStretch(1)
@@ -54,23 +54,23 @@ class _TextTableEditor(Editor):
     def _refresh_fired(self):
         self.update_editor()
 
-    def _on_clear(self):
-        pass
-#        if self.control:
-#            self.control.clear()
-
     def update_editor(self, *args, **kw):
         '''
         '''
         self.control.clear()
         adapter = self.factory.adapter
-        tables=adapter.make_tables(self.value)
-        for ti in tables:
-            self._add_table(ti)
-            
+        tables = adapter.make_tables(self.value)
+        cursor = QTextCursor(self.control.textCursor())
+        n = len(tables)
+        for i, ti in enumerate(tables):
+            self._add_table(ti, cursor)
+            if i < n - 1:
+                self._add_table_hook(cursor)
+
 #            timethis(self._add_table, args=(ti,), msg='add_table')
-#            timethis(self._add_table, args=(ti,), msg='add_table')
-    
+    def _add_table_hook(self, cursor):
+        pass
+
     def _add_table(self, tab):
         cursor = QTextCursor(self.control.textCursor())
 
@@ -83,7 +83,7 @@ class _TextTableEditor(Editor):
             tab_fmt.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
         else:
             tab_fmt.setBorderStyle(QTextFrameFormat.BorderStyle_None)
-        
+
         cursor.insertTable(tab.rows(), tab.cols(), tab_fmt)
         table = cursor.currentTable()
 
@@ -98,7 +98,7 @@ class _TextTableEditor(Editor):
 
         cell_fmt = QTextTableCellFormat()
         cell_fmt.setFontPointSize(10)
-        
+
         for ri, row in enumerate(tab.items):
             c = bc
             if row.color:
@@ -122,87 +122,59 @@ class _TextTableEditor(Editor):
                     cell_fmt.setFontWeight(QFont.Normal)
 
                 tcell = table.cellAt(ri, ci)
-                cur=tcell.firstCursorPosition()
-                
+                cur = tcell.firstCursorPosition()
                 cur.insertText(cell.text, cell_fmt)
-                    
-        
-        
+
+
 class _FastTextTableEditor(_TextTableEditor):
-    control_klass=QPlainTextEdit
-    def _add_table(self,tab):
-#        cell_fmt = QTextTableCellFormat()
-#        cell_fmt.setFontPointSize(10)
-        fmt=QTextCharFormat()
-        fmt.setFont(QFont('consolas'))
+    '''
+        Uses a QPlainTextEdit instead of QTextEdit.
+        
+        doesn't use QTextTable. 
+        uses static column widths defined by the adapter 
+    '''
+
+    control_klass = QPlainTextEdit
+    def _add_table_hook(self, cursor):
+        cursor.insertText('\n')
+
+    def _add_table(self, tab, cursor):
+        fmt = QTextCharFormat()
+        fmt.setFont(QFont(self.factory.font_name))
         fmt.setFontPointSize(self.factory.font_size)
-        cursor = QTextCursor(self.control.textCursor())
+
         bc = QColor(self.factory.bg_color) if self.factory.bg_color else None
-        ec,oc,hc=bc,bc,bc
+        ec, oc, hc = bc, bc, bc
         if self.factory.even_color:
             ec = QColor(self.factory.even_color)
         if self.factory.odd_color:
             oc = QColor(self.factory.odd_color)
         if self.factory.header_color:
             hc = QColor(self.factory.header_color)
-            
-        for i,row in enumerate(tab.items):
-            cell=row.cells[0]
+
+        for i, row in enumerate(tab.items):
+            cell = row.cells[0]
             if cell.bold:
                 fmt.setFontWeight(QFont.Bold)
             else:
                 fmt.setFontWeight(QFont.Normal)
-            
-            if i==0 and hc:
-                c=hc
-            elif (i-1)%2==0:
-                c=ec
+
+            if i == 0 and hc:
+                c = hc
+            elif (i - 1) % 2 == 0:
+                c = ec
             else:
-                c=oc
+                c = oc
+
             if c:
                 fmt.setBackground(c)
-            
-            txt=''.join(['{{:<{}s}}'.format(cell.width).format(cell.text)
-                          for cell in row.cells
-                          ]) 
-#            for i,cell in enumerate(row.cells):
-#                txt='
-#                if i==n-1:
-#                    txt=txt+'\n'
-            
-            cursor.insertText(txt+'\n', fmt)
-        cursor.insertText('\n')
-#        for ri, row in enumerate(tab.items):
-#            c = bc
-#            if row.color:
-#                c = QColor(row.color)
-#            elif ri == 0:
-#                c = hc
-#            else:
-#                if (ri - 1) % 2 == 0:
-#                    c = ec
-#                else:
-#                    c = oc
-#            if c:
-#                cell_fmt.setBackground(c)
-#            rt=
-            
-#            for ci, cell in enumerate(row.cells):
-#                if cell.bg_color:
-#                    cell_fmt.setBackground(QColor(cell.bg_color))
-#                if cell.bold:
-#                    cell_fmt.setFontWeight(QFont.Bold)
-#                else:
-#                    cell_fmt.setFontWeight(QFont.Normal)
 
-#            tcell = table.cellAt(ri, ci)
-#            cur=tcell.firstCursorPosition()
-#            cur.insertText(cell.text, cell_fmt)
-#        txt='\n'.join([[''.join(['{{:<{}s}}'.format(ci.width).format(ci.text) for ci in row.cells])]
-#                        for row in tab.items]
-#                      )
-#        cursor.insertText(txt, fmt)
-            
+            txt = ''.join(['{{:<{}s}}'.format(cell.width).format(cell.text)
+                          for cell in row.cells
+                          ])
+            cursor.insertText(txt + '\n', fmt)
+
+
 class TextTableEditor(BasicEditorFactory):
     klass = _TextTableEditor
     bg_color = Color
@@ -212,8 +184,9 @@ class TextTableEditor(BasicEditorFactory):
     clear = Str
     adapter = Any
     refresh = Str
-    font_size=Int(12)
-    
+    font_size = Int(12)
+    font_name = 'consolas'
+
 class FastTextTableEditor(TextTableEditor):
-    klass = _FastTextTableEditor#_TextTableEditor
+    klass = _FastTextTableEditor  # _TextTableEditor
 #============= EOF =============================================

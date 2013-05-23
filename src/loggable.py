@@ -127,7 +127,7 @@ class Loggable(HasTraits):
         return self.confirmation_dialog('Save to Database')
 
     def message(self, msg):
-        from src.helpers.gdisplays import gMessageDisplay
+        from src.displays.gdisplays import gMessageDisplay
         gMessageDisplay.show()
         gMessageDisplay.add_text(msg)
 
@@ -138,7 +138,7 @@ class Loggable(HasTraits):
 
         if self.logger is not None:
             if self.use_warning_display:
-                from src.helpers.gdisplays import gWarningDisplay
+                from src.displays.gdisplays import gWarningDisplay
                 if globalv.show_warnings:
                     if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
                         invoke_in_main_thread(gWarningDisplay.edit_traits)
@@ -155,7 +155,7 @@ class Loggable(HasTraits):
         '''
         if self.logger is not None:
             if self.use_logger_display:
-                from src.helpers.gdisplays import gLoggerDisplay
+                from src.displays.gdisplays import gLoggerDisplay
                 if globalv.show_infos:
                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
                         invoke_in_main_thread(gLoggerDisplay.edit_traits)
@@ -171,7 +171,7 @@ class Loggable(HasTraits):
             self._log_('info', msg)
 
     def close_displays(self):
-        from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
+        from src.displays.gdisplays import gLoggerDisplay, gWarningDisplay
         gLoggerDisplay.close_ui()
         gWarningDisplay.close_ui()
 

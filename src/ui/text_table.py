@@ -34,7 +34,7 @@ class TextCell(HasTraits):
     bg_color = None
     bold = False
     format = Callable
-    width=Int
+    width = Int
     def __init__(self, text, *args, **kw):
         super(TextCell, self).__init__(**kw)
 
@@ -80,7 +80,7 @@ class TextTableAdapter(HasTraits):
     _cached_table = None
     def _make_header_row(self, columns=None):
         if columns is None:
-            columns=self.columns
+            columns = self.columns
         return HeaderRow(*[self._header_cell_factory(args)
                             for args in columns])
 
@@ -108,18 +108,18 @@ class TextTableAdapter(HasTraits):
 
     def _cell_factory(self, obj, args):
         fmt = floatfmt
-        width=10
+        width = 10
         if len(args) == 3:
             _, li, fmt = args
-        elif len(args)==4:
+        elif len(args) == 4:
             _, li, fmt, width = args
         else:
             _, li = args
 
         if fmt is None:
-            fmt=floatfmt
+            fmt = floatfmt
 
-        return TextCell(getattr(obj, li), 
+        return TextCell(getattr(obj, li),
                         width=width,
                         format=fmt)
 
@@ -129,8 +129,8 @@ class TextTableAdapter(HasTraits):
 #        else:
 #            ci, _ = args
 
-        if len(args)==4:
-            ci,_,_,width=args
+        if len(args) == 4:
+            ci, _, _, width = args
             return TextCell(ci, width=width)
         else:
             return TextCell(args[0])
@@ -142,8 +142,8 @@ class SimpleTextTableAdapter(TextTableAdapter):
 
     def _make_signal_table(self, sg, columns=None):
         if columns is None:
-            columns=self.columns
-            
+            columns = self.columns
+
         rs = [self._make_header_row(columns=columns)]
         rs.extend(
                    [TextRow(*[self._cell_factory(ri, args)
@@ -180,29 +180,33 @@ class MultiTextTableAdapter(SimpleTextTableAdapter):
 
 class ValueErrorAdapter(TextTableAdapter):
     columns = [
-               ('', 'name', str),
-               ('Value', 'value'),
-               (u'{}1s'.format(PLUSMINUS), 'error'),
+               ('', 'name', str, 20),
+               ('Value', 'value', None, 20),
+               (u'{}1s'.format(PLUSMINUS), 'error', None, 20),
                ]
 
     def _make_tables(self, value):
         rs = [self._make_header_row(),
               ]
-        for vi in value:
-            ri = TextRow(
-                         self._cell_factory(vi, (None, 'name', str, 10)),
-                         self._cell_factory(vi, (None, 'value', None, 12)),
-                         self._cell_factory(vi, (None, 'error', None, 12)),
-                         )
-            rs.append(ri)
+#        for vi in value:
+# #            ri = TextRow(
+# #                         self._cell_factory(vi, (None, 'name', str, 10)),
+# #                         self._cell_factory(vi, (None, 'value', None, 12)),
+# #                         self._cell_factory(vi, (None, 'error', None, 12)),
+# #                         )
+#            ri =
+#            rs.append(ri)
+        rs.extend([TextRow(*[self._cell_factory(vi, args) for args in self.columns])
+                   for vi in value])
+
         tt = TextTable(border=True, *rs)
         return [tt]
 
 class RatiosAdapter(ValueErrorAdapter):
     columns = [
-               ('Ratio', 'name', str, 10),
-               ('Value', 'value', None, 12),
-               (u'{}1s'.format(PLUSMINUS), 'error',None, 12),
+               ('Ratio', 'name', str, 20),
+               ('Value', 'value', None, 20),
+               (u'{}1s'.format(PLUSMINUS), 'error', None, 20),
                ]
 
 

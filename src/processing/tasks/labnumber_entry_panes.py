@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property
 from traitsui.api import View, Item, TabularEditor, VGroup, spring, HGroup, \
-    EnumEditor, ImageEditor, VFold
+    EnumEditor, ImageEditor, VFold, UItem
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from src.irradiation.irradiated_position import IrradiatedPositionAdapter
 from pyface.tasks.traits_dock_pane import TraitsDockPane
@@ -72,20 +72,24 @@ class ImporterPane(TraitsDockPane):
                                     label='Source'
                                     ),
                              VGroup(
-    
-                                    Item('import_kind', show_label=False),
-                                    Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
+
+                                    HGroup(Item('import_kind', show_label=False),
+                                           UItem('open_button', visible_when='import_kind=="rid_list"')
+                                           ),
+                                    HGroup(
+                                           Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
                                                                     editable=False,
                                                                     selected='selected',
                                                                     multi_select=True
                                                                     )),
-                                    CustomLabel('custom_label1',
-                                             color='blue',
-                                             size=10),
-                                    Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
+#                                    CustomLabel('custom_label1',
+#                                             color='blue',
+#                                             size=10),
+                                            Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
                                                                     editable=False,
-                                                                    )),
-                                    HGroup(spring, Item('import_button', show_label=False)),
+                                                                    ))
+                                           ),
+#                                    HGroup(spring, Item('import_button', show_label=False)),
                                     label='Results'
                                  )
                            )
