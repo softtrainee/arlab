@@ -128,7 +128,7 @@ class ExperimentExecutor(Experimentable):
     executable = Bool
 
     _state_thread = None
-    _end_flag=None
+    _end_flag = None
     def isAlive(self):
         return self._alive
 
@@ -439,8 +439,8 @@ class ExperimentExecutor(Experimentable):
             if self.resume_runs:
                 break
 
-            time.sleep(0.5)
-            self.delay_between_runs_readback -= 0.5
+            time.sleep(0.1)
+            self.delay_between_runs_readback -= 0.1
         self.delaying_between_runs = False
 
     def _execute_procedure(self, name):
@@ -491,6 +491,7 @@ class ExperimentExecutor(Experimentable):
                 self.info('the experiment set was modified')
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
                 force_delay = True
+
 
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
@@ -620,7 +621,7 @@ class ExperimentExecutor(Experimentable):
         if i > 1:
             self._check_run_aliquot(arv)
 
-
+        print 'asdfasdsdfa', arv.duration
         arun = arv.make_run()
 
         exp = self.experiment_queue
@@ -763,6 +764,7 @@ class ExperimentExecutor(Experimentable):
     def _end_runs(self):
         self._last_ran = None
         self.stats.stop_timer()
+        self.extraction_state = False
 
     def _get_all_automated_runs(self):
         ans = super(ExperimentExecutor, self)._get_all_automated_runs()
@@ -777,9 +779,9 @@ class ExperimentExecutor(Experimentable):
 
         return ans[startid:]
 
-    def _reload_from_disk(self):
-        super(ExperimentExecutor, self)._reload_from_disk()
-        self._update_stats()
+#    def _reload_from_disk(self):
+#        super(ExperimentExecutor, self)._reload_from_disk()
+#        self._update_stats()
 
 #    def _recall_run(self):
 #        selected = self.selected

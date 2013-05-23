@@ -454,19 +454,22 @@ post_equilibration_script:name
         if self.special_labnumber != NULL_STR:
             ln = convert_special_name(self.special_labnumber)
             if ln:
-                db = self.db
-                if not db:
-                    return
-
-                ms = db.get_mass_spectrometer(self.mass_spectrometer)
-                ed = db.get_extraction_device(self.extract_device)
-                if ln in ('a', 'ba', 'c', 'bc'):
-                    ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
+                if ln in ('dg', 'pa'):
+                    pass
                 else:
-                    msname = ms.name[0].capitalize()
-                    edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
-#                     ln = make_special_identifier(ln, ed.id, ms.id)
-                    ln = make_special_identifier(ln, edname, msname)
+                    db = self.db
+                    if not db:
+                        return
+
+                    ms = db.get_mass_spectrometer(self.mass_spectrometer)
+                    ed = db.get_extraction_device(self.extract_device)
+                    if ln in ('a', 'ba', 'c', 'bc'):
+                        ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
+                    else:
+                        msname = ms.name[0].capitalize()
+                        edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
+    #                     ln = make_special_identifier(ln, ed.id, ms.id)
+                        ln = make_special_identifier(ln, edname, msname)
 
                 self.labnumber = ln
                 self._load_extraction_info()

@@ -94,6 +94,7 @@ class Experimentor(Experimentable):
 
         return True
 
+    @deprecated
     def start_file_listener(self, path):
         fl = FileListener(
                           path,
@@ -102,6 +103,7 @@ class Experimentor(Experimentable):
                           )
         self.filelistener = fl
 
+    @deprecated
     def stop_file_listener(self):
         if self.filelistener:
             self.filelistener.stop()
@@ -157,21 +159,21 @@ class Experimentor(Experimentable):
         self.debug('update run info')
 
         for ai in ans:
-            self.debug('ln {}'.format(ai.labnumber))
+#            self.debug('ln {}'.format(ai.labnumber))
             if ai.labnumber and not ai.labnumber in ('dg',):
                 dbln = self._get_labnumber(ai)
                 if dbln:
                     sample = dbln.sample
                     if sample:
                         ai.sample = sample.name
-                        self.debug('sample {}'.format(ai.sample))
+#                        self.debug('sample {}'.format(ai.sample))
 
                     ipos = dbln.irradiation_position
                     if not ipos is None:
                         level = ipos.level
                         irrad = level.irradiation
                         ai.irradiation = '{}{}'.format(irrad.name, level.name)
-                        self.debug('irrad {}'.format(ai.irradiation))
+#                        self.debug('irrad {}'.format(ai.irradiation))
 
     def _modify_steps(self, ans):
         self.debug('modifying steps')
@@ -281,13 +283,14 @@ class Experimentor(Experimentable):
             self.debug('cancel execution')
             self.executor.cancel()
         else:
-            self.debug('stop file listener')
-            self.stop_file_listener()
+#            self.debug('stop file listener')
+#            self.stop_file_listener()
 
             self.debug('setup executor')
             self.executor.trait_set(experiment_queues=queues,
                                     experiment_queue=queues[0],
                                     text=text,
+                                    path=self.path,
                                     text_hash=text_hash,
                                     stats=self.stats
                                     )
@@ -297,8 +300,14 @@ class Experimentor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
-    def _refresh_fired(self):
-        self._update(all_info=True, stats=True)
+#    def _refresh_fired(self):
+#        self._update(all_info=True, stats=True)
+#        executor = self.executor
+#        executor.executable = False
+#        print executor.executable
+#        if executor.isAlive():
+#            executor.end_at_run_completion = True
+#            executor.changed_flag = True
 
     @on_trait_change('executor:experiment_queue')
     def _activate_editor(self, eq):
@@ -327,9 +336,15 @@ class Experimentor(Experimentable):
         self.experiment_factory.run_factory.edit_mode = True
 
     @on_trait_change('''experiment_queue:refresh_button,
-experiment_factory:run_factory:update_info_needed''')
-    def _refresh(self):
+experiment_factory:run_factory:update_info_needed, executor:update_needed''')
+    def _refresh(self, name, new):
         self.update_info()
+        executor = self.executor
+        if name != 'update_needed':
+            executor.executable = False
+            if executor.isAlive():
+                executor.end_at_run_completion = True
+                executor.changed_flag = True
 
     def _experiment_queue_changed(self, eq):
         if eq:
