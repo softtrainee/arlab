@@ -33,16 +33,17 @@ ds = get_display_size()
 gWarningDisplay = DisplayController(
                                   title='Warnings',
                                   width=450,
-                                  default_color='red'
+                                  default_color='red',
+                                   max_blocks=300
                                   )
 gLoggerDisplay = DisplayController(
-
                                    title='Logger',
                                    width=450,
                                    x=ds.width - 500,
                                    y=20,
                                    default_color='black',
-                                   bg_color='light grey'
+                                   bg_color='light grey',
+                                   max_blocks=300
                                  )
 
 gMessageDisplay = DisplayController(
@@ -53,7 +54,8 @@ gMessageDisplay = DisplayController(
                                  y=100,
                                  default_size=14,
                                  default_color='darkgreen',
-                                 bg_color='light grey'
+                                 bg_color='light grey',
+                                 max_blocks=300
                                  )
 
 gTraceDisplay = ErrorDisplay(

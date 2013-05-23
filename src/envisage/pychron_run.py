@@ -31,7 +31,7 @@ from envisage.api import Plugin
 
 
 # from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
+from src.displays.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
     gMessageDisplay
 from src.globals import globalv
 # import logging

@@ -93,9 +93,6 @@ class ExperimentFactoryPane(TraitsDockPane):
                      self._get_script_group(),
                      enabled_when=make_qf_name('ok_make')
                      ),
-#                      Group(
-#                           layout='tabbed'),
-
                      HGroup(
                             UItem('add_button', enabled_when='ok_add'),
                             UItem('clear_button',
@@ -104,9 +101,6 @@ class ExperimentFactoryPane(TraitsDockPane):
                             Label('Auto Increment'),
                             Item('auto_increment_id', label='L#'),
                             Item('auto_increment_position', label='Position'),
-#                            HGroup(
-#                                   label='Auto Increment'
-#                                   ),
                             )
                         )
                  )
@@ -114,7 +108,6 @@ class ExperimentFactoryPane(TraitsDockPane):
 
     def _get_info_group(self):
         grp = Group(
-
                    HGroup(spring, CustomLabel('help_label', size=14), spring),
                    HGroup(
                           RFItem('selected_irradiation',
@@ -271,6 +264,7 @@ class ControlsPane(TraitsDockPane):
         v = View(
                  HGroup(
                         UItem('resume_button', enabled_when='delaying_between_runs'),
+                        Spring(springy=False, width= -10),
                         Item('delay_between_runs_readback',
                               label='Delay Countdown',
                               style='readonly', format_str='%i',
