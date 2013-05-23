@@ -48,11 +48,11 @@ class ExperimentQueueFactory(Loggable):
     def _get_ok_make(self):
         ms = self.mass_spectrometer.strip()
         un = self.username.strip()
-        ed = self.extract_device.strip()
+#        ed = self.extract_device.strip()
 
-        return ms and ms != NULL_STR and \
-                ed and ed != NULL_STR and  \
-                    un
+        return ms and ms != NULL_STR and un
+#                ed and ed != NULL_STR and  \
+#                    un
 #===============================================================================
 # views
 #===============================================================================

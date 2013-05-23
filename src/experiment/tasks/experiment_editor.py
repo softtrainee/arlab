@@ -81,14 +81,19 @@ class ExperimentEditor(BaseTraitsEditor):
 
 #    @on_trait_change('queue:automated_runs[], queue:changed')
     def _queue_changed(self):
-        f = lambda: self.trait_set(dirty=True)
+#        f = lambda: self.trait_set(dirty=True)
+        f = self._set_queue_dirty
         self.queue.on_trait_change(f, 'automated_runs[]')
         self.queue.on_trait_change(f, 'changed')
         self.queue.path = self.path
 
     def _path_changed(self):
         self.queue.path = self.path
-#        self.dirty = True
+        
+    def _set_queue_dirty(self):
+        if not self.queue._no_update and self.queue.initialized:
+            self.dirty=True
+
 #===========================================================================
 #
 #===========================================================================
@@ -112,7 +117,6 @@ class ExperimentEditor(BaseTraitsEditor):
             queues = [self.queue]
         if self._validate_experiment_queues(queues):
             self._dump_experiment_queues(path, queues)
-
         self.path = path
         self.dirty = False
 

@@ -37,7 +37,7 @@ from src.paths import paths
 from src.helpers.parsers.initialization_parser import InitializationParser
 # from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
-from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
+from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable, gen_MassSpectrometerTable
@@ -259,7 +259,7 @@ class ExperimentExecutor(Experimentable):
 
 
     def execute(self):
-        self.debug('starting execution')
+        self.debug('%%%%%%%%%%%%%%%%%%% Starting Execution')
                     # check for blank before starting the thread
 
         if self._pre_execute_check():
@@ -455,7 +455,7 @@ class ExperimentExecutor(Experimentable):
         root = paths.procedures_dir
         self.info('executing procedure {}'.format(os.path.join(root, name)))
 
-        els = ExtractionLinePyScript(root=root,
+        els = ExtractionPyScript(root=root,
                                      name=name,
                                      runner=self.pyscript_runner
                                      )

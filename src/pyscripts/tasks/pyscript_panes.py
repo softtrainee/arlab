@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance
+from traits.api import HasTraits, List, Instance, Str
 from traitsui.api import View, Item, ListStrEditor, UItem
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
@@ -67,6 +67,7 @@ class CommandsPane(TraitsDockPane):
     name = 'Commands'
     id = 'pychron.pyscript.commands'
     commands = List
+    name=Str
     def _get_commands_group(self):
         return Item('commands',
                           style='custom',
@@ -80,6 +81,7 @@ class CommandsPane(TraitsDockPane):
                         ),
 
     def traits_view(self):
-        v = View(self._get_commands_group())
+        v = View(
+                 self._get_commands_group())
         return v
 #============= EOF =============================================

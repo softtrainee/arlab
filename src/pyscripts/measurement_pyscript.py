@@ -80,7 +80,7 @@ class MeasurementPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def extraction_gosub(self, *args, **kw):
-        kw['klass'] = 'ExtractionLinePyScript'
+        kw['klass'] = 'ExtractionPyScript'
         super(MeasurementPyScript, self).gosub(*args, **kw)
 
     @count_verbose_skip
