@@ -117,6 +117,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     extractable = Property(depends_on='labnumber')
 #    cbs_enabled = Property(depends_on='_selected_runs')
     update_info_needed = Event
+    changed = Event
     suppress_update = False
 #    clear_selection = Event
 
@@ -415,6 +416,7 @@ weight, comment, skip''')
                 not self.suppress_update:
             for si in self._selected_runs:
                 setattr(si, name, new)
+            self.changed = True
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -430,6 +432,8 @@ post_equilibration_script:name
                 for si in self._selected_runs:
                     name = '{}_script'.format(obj.label)
                     setattr(si, name, new)
+            self.changed = True
+
     def _skip_changed(self):
         self.update_info_needed = True
 

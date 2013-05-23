@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int
+from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int, on_trait_change
 from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup
 from pyface.tasks.api import Editor
 from src.ui.tabular_editor import myTabularEditor
@@ -31,7 +31,7 @@ from src.envisage.tasks.base_editor import  BaseTraitsEditor
 #============= local library imports  ==========================
 
 class ExperimentEditor(BaseTraitsEditor):
-    queue = Any
+    queue = Instance(ExperimentQueue, ())  # Any
     path = Unicode
 
     name = Property(Unicode, depends_on='path')
@@ -80,6 +80,13 @@ class ExperimentEditor(BaseTraitsEditor):
         if self.queue:
             return { 'object': self.queue}
         return super(ExperimentQueue, self).trait_context()
+
+#    @on_trait_change('queue:automated_runs[], queue:changed')
+    def _queue_changed(self):
+        f = lambda: self.trait_set(dirty=True)
+        self.queue.on_trait_change(f, 'automated_runs[]')
+        self.queue.on_trait_change(f, 'changed')
+#        self.dirty = True
 #===========================================================================
 #
 #===========================================================================
@@ -104,6 +111,7 @@ class ExperimentEditor(BaseTraitsEditor):
         if self._validate_experiment_queues(queues):
             self._dump_experiment_queues(path, queues)
         self.path = path
+        self.dirty = False
 
     def _validate_experiment_queues(self, eqs):
         for exp in eqs:

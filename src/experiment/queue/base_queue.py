@@ -54,7 +54,7 @@ class BaseExperimentQueue(Loggable):
 
 #    _suppress_aliquot_update = False
     update_needed = Event
-
+    changed = Event
     name = Property(depends_on='path')
     path = Str
 

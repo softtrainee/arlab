@@ -102,15 +102,14 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 #                 ln = make_runid(it.labnumber,
 #                                     it.aliquot,
 #                                     it.step)
-
-
         return ln
-    def _get_aliquot_text(self, trait, item):
-        it = self.item
 
+    def _get_aliquot_text(self, trait, item):
+        al = ''
+        it = self.item
         if  it.step:
             al = '{:02n}{}'.format(it.aliquot, it.step)
-        else:
+        elif it.aliquot:
             al = '{:02n}'.format(it.aliquot)
 
         return al
