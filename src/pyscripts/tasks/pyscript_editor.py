@@ -15,12 +15,50 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Bool, Event, Unicode, Any, on_trait_change
+from traits.api import HasTraits, Property, Bool, Event, \
+    Unicode, Any, on_trait_change, List, String, Instance
 from traitsui.api import View, Item
 from pyface.tasks.api import Editor
 import os
+from src.pyscripts.parameter_editor import MeasurementParameterEditor, \
+    ParameterEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
+                    ExtractionLine='src.pyscripts.extraction_line_pyscript',
+                    Measurement='src.pyscripts.measurement_pyscript'
+                    )
+
+
+class Commands(HasTraits):
+    script_commands = List
+    def load_commands(self, kind):
+        ps = self._pyscript_factory(kind)
+        prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
+
+#        self.core_commands = prepcommands(ps.get_core_commands())
+#        self.script_commands = prepcommands(ps.get_script_commands())
+        self.script_commands = prepcommands(ps.get_commands())
+        self.script_commands.sort()
+
+    def _pyscript_factory(self, kind, **kw):
+
+        klassname = '{}PyScript'.format(kind)
+        m = __import__(SCRIPT_PKGS[kind], fromlist=[klassname])
+        klass = getattr(m, klassname)
+#        if self.save_path:
+#            r, n = os.path.split(self.save_path)
+#            kw['root'] = r
+#            kw['name'] = n
+#        else:
+#            kw['root'] = os.path.join(paths.scripts_dir, 'pyscripts')
+
+        return klass(
+#                     manager=self.parent,
+#                     parent=self,
+                     **kw)
+
+
 
 class PyScriptEditor(Editor):
     dirty = Bool(False)
@@ -32,6 +70,14 @@ class PyScriptEditor(Editor):
     tooltip = Property(Unicode, depends_on='path')
     editor = Any
     suppress_change = False
+    kind = String
+    commands = Property(depends_on='kind')
+
+    def _get_commands(self):
+        if self.kind:
+            cmd = Commands()
+            cmd.load_commands(self.kind)
+            return cmd
 
     def setText(self, txt):
         if self.control:
@@ -104,4 +150,12 @@ class PyScriptEditor(Editor):
 
     def _get_name(self):
         return os.path.basename(self.path) or 'Untitled'
+
+
+class MeasurementEditor(PyScriptEditor):
+    kind = 'Measurement'
+    editor = Instance(ParameterEditor, ())
+class ExtractionLineEditor(PyScriptEditor):
+    kind = 'ExtractionLine'
+    editor = Instance(MeasurementParameterEditor, ())
 #============= EOF =============================================

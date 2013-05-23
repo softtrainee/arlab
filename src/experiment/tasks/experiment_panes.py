@@ -270,7 +270,9 @@ class ControlsPane(TraitsDockPane):
                               style='readonly', format_str='%i',
                               width= -50),
 
-                        CustomLabel('extraction_state_label'),
+                        CustomLabel('extraction_state_label',
+                                    color_name='extraction_state_color'
+                                    ),
                         spring,
 #                        Item('show_sample_map', show_label=False,
 #                             enabled_when='experiment_queue.sample_map'

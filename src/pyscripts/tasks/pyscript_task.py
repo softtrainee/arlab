@@ -20,7 +20,8 @@ from traitsui.api import View, Item, EnumEditor, UItem, Label
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.envisage.tasks.editor_task import EditorTask
 from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
-from src.pyscripts.tasks.pyscript_editor import PyScriptEditor
+from src.pyscripts.tasks.pyscript_editor import PyScriptEditor, \
+    ExtractionLineEditor, MeasurementEditor
 from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
     ExamplePane, EditorPane
 import os
@@ -30,49 +31,18 @@ from src.pyscripts.parameter_editor import ParameterEditor
 from traitsui.menu import ModalButtons
 #============= standard library imports ========================
 #============= local library imports  ==========================
-SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
-                    ExtractionLine='src.pyscripts.extraction_line_pyscript',
-                    Measurement='src.pyscripts.measurement_pyscript'
-                    )
-
-class Commands(HasTraits):
-    script_commands = List
-    def load_commands(self, kind):
-        ps = self._pyscript_factory(kind)
-        prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
-
-#        self.core_commands = prepcommands(ps.get_core_commands())
-#        self.script_commands = prepcommands(ps.get_script_commands())
-        self.script_commands = prepcommands(ps.get_commands())
-        self.script_commands.sort()
-
-    def _pyscript_factory(self, kind, **kw):
-
-        klassname = '{}PyScript'.format(kind)
-        m = __import__(SCRIPT_PKGS[kind], fromlist=[klassname])
-        klass = getattr(m, klassname)
-#        if self.save_path:
-#            r, n = os.path.split(self.save_path)
-#            kw['root'] = r
-#            kw['name'] = n
-#        else:
-#            kw['root'] = os.path.join(paths.scripts_dir, 'pyscripts')
-
-        return klass(
-#                     manager=self.parent,
-#                     parent=self,
-                     **kw)
 
 class PyScriptTask(EditorTask):
+
     kind = String
     kinds = List(['ExtractionLine', 'Measurement'])
     selected_command = String
-    commands = Instance(Commands, ())
+#    commands = Instance(Commands, ())
     selected = Any
     description = Property(String, depends_on='selected')
     example = Property(String, depends_on='selected')
 
-    editor = Instance(ParameterEditor, ())
+#    editor = Instance(ParameterEditor, ())
     default_directory = paths.scripts_dir
 
     def _default_layout_default(self):
@@ -88,12 +58,21 @@ class PyScriptTask(EditorTask):
 
                           )
     def create_dock_panes(self):
+        self.commands_pane = CommandsPane()
+        self.editor_pane = EditorPane()
         return [
-                CommandsPane(model=self),
+                self.commands_pane,
+                self.editor_pane,
+#                CommandsPane(),
                 DescriptionPane(model=self),
                 ExamplePane(model=self),
-                EditorPane(model=self)
+#                EditorPane(model=self)
                 ]
+
+    def _active_editor_changed(self):
+        if self.active_editor:
+            self.commands_pane.commands = self.active_editor.commands.script_commands
+            self.editor_pane.editor = self.active_editor.editor
 
     def save(self):
         pass
@@ -128,12 +107,17 @@ class PyScriptTask(EditorTask):
             kind = self._extract_kind(path)
             if kind is not None:
                 self.kind = kind
-            
-        editor = PyScriptEditor(path=path,
+
+        if self.kind == 'Measurement':
+            klass = MeasurementEditor
+        else:
+            klass = ExtractionLineEditor
+        editor = klass(path=path,
+#                                kind=self.kind
                                 )
 
-        self.editor.editor = editor
-        editor.editor = self.editor
+#        self.editor.editor = editor
+#        editor.editor = self.editor
 
         self.editor_area.add_editor(editor)
         self.editor_area.activate_editor(editor)
@@ -142,24 +126,24 @@ class PyScriptTask(EditorTask):
         pass
 
 
-    def _kind_changed(self):
-        if self.kind:
-            self.commands.load_commands(self.kind)
-            pm = self.parameter_editor_factory(self.kind)
-            print pm
-            self.editor = pm
+#    def _kind_changed(self):
+#        if self.kind:
+#            self.commands.load_commands(self.kind)
+#            pm = self.parameter_editor_factory(self.kind)
+#            print pm
+#            self.editor = pm
 
-    def parameter_editor_factory(self, kind):
-        pkg = 'src.pyscripts.parameter_editor'
-        klass = '{}ParameterEditor'.format(kind)
-#        cmd_name = '{}_command_editor'.format(scmd)
-#        try:
-#            cmd = getattr(self, cmd_name)
-#        except AttributeError:
-
-        m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
-        return getattr(m, klass)()
-#        try:
+#    def parameter_editor_factory(self, kind):
+#        pkg = 'src.pyscripts.parameter_editor'
+#        klass = '{}ParameterEditor'.format(kind)
+# #        cmd_name = '{}_command_editor'.format(scmd)
+# #        try:
+# #            cmd = getattr(self, cmd_name)
+# #        except AttributeError:
+#
+#        m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
+#        return getattr(m, klass)()
+# #        try:
 #            cmd = getattr(m, klass)()
 #            setattr(self, cmd_name, cmd)
 #        except AttributeError, e :

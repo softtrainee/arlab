@@ -30,6 +30,11 @@ class ExperimentQueue(BaseExperimentQueue):
     refresh_button = Button('Refresh')
     dclicked = Any
 
+    def copy_function(self, obj):
+        ci = obj.clone_traits()
+        ci.state = 'not run'
+        return ci
+
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):
         if not self._no_update:

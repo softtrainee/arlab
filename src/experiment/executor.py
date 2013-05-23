@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, Any, on_trait_change, String, List, Unicode
-from traitsui.api import View, Item, HGroup, Group, spring
+    Instance, Str, Any, on_trait_change, String, List, Unicode, Color
+# from traitsui.api import View, Item, HGroup, Group, spring
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from threading import Event as Flag
@@ -81,7 +81,7 @@ class ExperimentExecutor(Experimentable):
     execute_button = Event
     resume_button = Button('Resume')
     execute_label = Property(depends_on='_alive')
-    truncate_button = Button('Truncate')
+    truncate_button = Button('Truncate Run')
     truncate_style = Enum('Immediate', 'Quick', 'Next Integration')
     '''
         immediate 0= is the standard truncation, measure_iteration stopped at current step and measurement_script truncated
@@ -101,6 +101,7 @@ class ExperimentExecutor(Experimentable):
 #    edit_enabled = Property(depends_on='selected')
 #    recall_enabled = Property(depends_on='selected')
     extraction_state_label = String
+    extraction_state_color = Color
     extraction_state = None
 #    extraction_state_image = Instance(ImageResource)
 
@@ -189,7 +190,10 @@ class ExperimentExecutor(Experimentable):
         self._execute_procedure(name)
 
     def cancel(self):
-        if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
+
+        name = os.path.basename(self.path)
+        name, _ = os.path.splitext(name)
+        if self.confirmation_dialog('Cancel {} in Progress'.format(name),
                                      title='Confirm Cancel'
                                      ):
             arun = self.experiment_queue.current_run
@@ -199,9 +203,9 @@ class ExperimentExecutor(Experimentable):
             self.stats.stop_timer()
             self.set_extract_state(False)
 
-    def set_extract_state(self, state):
+    def set_extract_state(self, state, color='green'):
 
-        def loop(end_flag, label):
+        def loop(end_flag, label, color):
             '''
                 freq== percent label is shown e.g 0.75 means display label 75% of the iterations
                 iperiod== iterations per second (inverse period == rate)
@@ -219,6 +223,7 @@ class ExperimentExecutor(Experimentable):
 #                print i, i % 100
                 if i % iperiod < threshold:
                     self.extraction_state_label = label
+                    self.extraction_state_color = color
                 else:
                     self.extraction_state_label = ''
 
@@ -236,6 +241,7 @@ class ExperimentExecutor(Experimentable):
             t = Thread(target=loop,
                        args=(self._end_flag,
                              '*** {} ***'.format(state.upper()),
+                             color,
                              )
                        )
             t.start()
@@ -943,7 +949,7 @@ class ExperimentExecutor(Experimentable):
 # property get/set
 #===============================================================================
     def _get_execute_label(self):
-        return 'Start' if not self._alive else 'Stop'
+        return 'Start Queue' if not self._alive else 'Stop Queue'
 
     def _get_edit_enabled(self):
         if self.selected:
