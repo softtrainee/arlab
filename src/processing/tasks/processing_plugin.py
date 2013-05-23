@@ -25,8 +25,8 @@ from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.processing.tasks.processing_actions import FindAction, IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction
-from src.processing.tasks.recall_task import RecallTask
-from src.processing.tasks.labnumber_entry_task import LabnumberEntryTask
+from src.processing.tasks.analysis_edit.actions import BlankEditAction
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -68,6 +68,10 @@ class ProcessingPlugin(BaseTaskPlugin):
                                                       factory=LabnumberEntryAction,
                                                       path='MenuBar/Edit'
                                                       ),
+                                       SchemaAddition(id='blank_edit',
+                                                      factory=BlankEditAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
                                        ]
                               )
 
@@ -88,16 +92,29 @@ class ProcessingPlugin(BaseTaskPlugin):
                             factory=self._labnumber_task_factory,
                             name='Labnumber',
                             accelerator='Ctrl+Shift+L'
-                            )
-                ]
+                            ),
+                TaskFactory(id='pychron.analysis_edit',
+                            factory=self._analysis_edit_task_factory,
+                            name='Analysis Edit',
+                            accelerator='Ctrl+Shift+E'
+                            ),
 
-    def _labnumber_task_factory(self):
-        return LabnumberEntryTask()
+                ]
 
     def _processor_factory(self):
         return Processor(application=self.application)
 
+    def _labnumber_task_factory(self):
+
+        from src.processing.tasks.labnumber_entry_task import LabnumberEntryTask
+        return LabnumberEntryTask()
+
+    def _analysis_edit_task_factory(self):
+        from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
+        return AnalysisEditTask()
+
     def _recall_task_factory(self):
+        from src.processing.tasks.recall_task import RecallTask
         return RecallTask(manager=self._processor_factory())
 
     def _task_factory(self):

@@ -15,26 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Instance
-from traitsui.api import View, Item, UI
-# from pyface.tasks.editor import Editor
-from src.loggable import Loggable
-from pyface.tasks.traits_editor import TraitsEditor
+from traits.api import HasTraits, Interface
+from traitsui.api import View, Item
+# from pyface.tasks.i_editor import IEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTraitsEditor(TraitsEditor, Loggable):
-    dirty = Bool(False)
-#    ui = Instance(UI)
-#
-#    def create(self, parent):
-#        self.control = self._create_control(parent)
-#
-#    def destroy(self):
-#        self.ui.dispose()
-#        self.control = self.ui = None
-#
-#    def _create_control(self, parent):
-#        self.ui = self.edit_traits(kind='subpanel', parent=parent)
-#        return self.ui.control
+class IAnalysisEditTool(Interface):
+    pass
 #============= EOF =============================================
