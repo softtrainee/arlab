@@ -917,7 +917,10 @@ class ExperimentExecutor(Experimentable):
         if self.isAlive():
             crun = self.experiment_queue.current_run
             if crun:
-                self.cancel(style='run')
+                t = Thread(target=self.cancel, kwargs={'style':'run'})
+                t.start()
+                self._cancel_thread = t
+#                self.cancel(style='run')
 
 
     def _truncate_button_fired(self):

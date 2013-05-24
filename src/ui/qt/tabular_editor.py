@@ -160,7 +160,7 @@ class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
     scroll_to_row_hint = 'visible'
 #    scroll_to_row_hint = 'bottom'
-    drag_move = Bool(False)
+#    drag_move = Bool(False)
     rearranged = Str
     pasted = Str
     copy_cache = Str
