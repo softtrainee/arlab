@@ -38,7 +38,10 @@ class PyScriptTask(EditorTask):
     example = Property(String, depends_on='selected')
 
 #    editor = Instance(ParameterEditor, ())
-    default_directory = paths.scripts_dir
+
+    wildcard = '*.py'
+    def _default_directory_default(self):
+        return paths.scripts_dir
 
     def _default_layout_default(self):
         return TaskLayout(
@@ -66,13 +69,13 @@ class PyScriptTask(EditorTask):
 
     def _active_editor_changed(self):
         if self.active_editor:
-            self.commands_pane.name=self.active_editor.kind
+            self.commands_pane.name = self.active_editor.kind
             self.commands_pane.commands = self.active_editor.commands.script_commands
             self.editor_pane.editor = self.active_editor.editor
 
     def _save_file(self, path):
         self.active_editor.dump(path)
-            
+
     def new(self):
 
         # todo ask for script type
@@ -109,14 +112,14 @@ class PyScriptTask(EditorTask):
             klass = MeasurementEditor
         else:
             klass = ExtractionEditor
-        
+
         editor = klass(path=path,
 #                                kind=self.kind
                                 )
 
 #        self.editor.editor = editor
 #        editor.editor = self.editor
-        
+
         self.editor_area.add_editor(editor)
         self.editor_area.activate_editor(editor)
 

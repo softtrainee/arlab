@@ -31,7 +31,7 @@ class AutomatedRunSpec(Loggable):
     '''
 #    state = Property(depends_on='_state')
     state = Enum('not run', 'extraction',
-                 'measurement', 'success', 'fail', 'truncated', 'canceled')
+                 'measurement', 'success', 'failed', 'truncated', 'canceled')
     skip = Bool(False)
 
     #===========================================================================
@@ -151,9 +151,9 @@ class AutomatedRunSpec(Loggable):
 #        arun
 
         # bind to the runs state
-        arun.on_trait_change(self._update_state, 'state')        
+        arun.on_trait_change(self._update_state, 'state')
         arun.on_trait_change(self._update_aliquot, 'aliquot')
-        
+
         return arun
 
     def load(self, script_info, params):
@@ -213,7 +213,7 @@ class AutomatedRunSpec(Loggable):
 #===============================================================================
     def _update_state(self, new):
         self.state = new
-        
+
     def _update_aliquot(self, new):
         self.aliquot = new
 

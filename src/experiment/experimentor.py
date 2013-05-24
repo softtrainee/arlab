@@ -378,7 +378,7 @@ experiment_factory:run_factory:update_info_needed, executor:update_needed''')
     def _refresh(self, name, new):
         self.update_info()
         executor = self.executor
-        if name != 'update_needed':
+        if name not in ('update_needed', 'refresh_button'):
             executor.executable = False
             if executor.isAlive():
                 executor.end_at_run_completion = True

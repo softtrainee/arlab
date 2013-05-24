@@ -32,11 +32,15 @@ import os
 from pyface.constant import CANCEL, YES, NO
 
 class ExperimentEditorTask(EditorTask):
-    default_directory = paths.experiment_dir
+    wildcard = '*.txt'
     group_count = 0
     name = 'Experiment'
+
     def _menu_bar_factory(self, menus=None):
         return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
+
+    def _default_directory_default(self):
+        return paths.experiment_dir
 
     def _default_layout_default(self):
         return TaskLayout(

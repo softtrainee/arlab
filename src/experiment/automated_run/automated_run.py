@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, Int,CStr, CInt, List, Property, \
+from traits.api import Any, Str, Int, CStr, CInt, List, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
      String, Either
 from pyface.timer.api import do_after
@@ -111,7 +111,7 @@ class AutomatedRun(Loggable):
     experiment_name = Str
     labnumber = Str
     step = Str
-    aliquot =CInt
+    aliquot = CInt
     user_defined_aliquot = False
     sample = Str
     irradiation = Str
@@ -205,6 +205,9 @@ class AutomatedRun(Loggable):
     _equilibration_done = False
 
 #    save_error_flag = False
+
+#    def _state_changed(self):
+#        print self.state
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -553,7 +556,7 @@ anaylsis_type={}
 
         self.do_post_termination()
         self.finish()
-        
+
         if state:
             self.state = state
 
@@ -618,6 +621,10 @@ anaylsis_type={}
 
         if self.monitor:
             self.monitor.stop()
+
+        print self.state
+        if self.state not in ('canceled', 'success', 'truncated'):
+            self.state = 'failed'
 
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -774,7 +781,7 @@ anaylsis_type={}
 
     def do_post_measurement(self):
         if not self.post_measurement_script:
-            return
+            return True
 
 #        if not self._alive and not self._truncate_signal:
 #            return
@@ -805,8 +812,6 @@ anaylsis_type={}
         if self.post_equilibration_script is None:
             return
 
-        print '######################## post eq', self.experiment_manager
-
         self.info('======== Post Equilibration Started ========')
         self.post_equilibration_script.manager = self.experiment_manager
         self.post_equilibration_script.syntax_checked = True
@@ -821,18 +826,18 @@ anaylsis_type={}
         self.do_post_equilibration()
         self.do_post_measurement()
         self._alive = False
-            
+
 #        term()
 #        from src.ui.thread import Thread as mThread
 #        self._term_thread=mThread(target=term)
 #        self._term_thread.start()
-        
+
     def _plot_panel_closed(self):
         if self.measuring:
             from src.ui.thread import Thread as mThread
-            self._term_thread=mThread(target=self.cancel_run)
+            self._term_thread = mThread(target=self.cancel_run)
             self._term_thread.start()
-            
+
 #            self.cancel_run()
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
@@ -1521,21 +1526,20 @@ anaylsis_type={}
             # add fit history
             dbhist = db.add_fit_history(analysis, user=self.username)
             for iso, detname, kind in self._save_isotopes:
-                st = time.time()
-
+#                st = time.time()
                 det = db.get_detector(detname)
                 if det is None:
                     det = db.add_detector(detname)
-#                    db.flush()
+                    db.flush()
 
                 # add isotope
                 dbiso = db.add_isotope(analysis, iso, det, kind=kind)
+
 
                 s = signals['{}{}'.format(iso, kind)]
 
                 # add signal data
                 data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
-
                 db.add_signal(dbiso, data)
 
                 if s.fit:
@@ -1549,8 +1553,8 @@ anaylsis_type={}
                                           signal_=float(s.value), signal_err=float(s.error),
                                           )
 
-                db.flush()
-                self.debug('isotope {}{} save time= {:0.3f}'.format(iso, kind, time.time() - st))
+#                db.flush()
+#                self.debug('isotope {}{} save time= {:0.3f}'.format(iso, kind, time.time() - st))
 
         return self._time_save(func, 'isotope info')
 
@@ -1622,8 +1626,8 @@ anaylsis_type={}
         baseline_fits = ['Average Y', ] * len(self._active_detectors)
 
         rs_name, rs_text = self._assemble_script_blob()
-
-        exp = ExportSpec(rid=make_rid(self.labnumber, self.aliquot, self.step),
+        rid = make_rid(self.labnumber, self.aliquot, self.step)
+        exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
                          runscript_text=rs_text,
                          signal_fits=self.fits,
@@ -1648,9 +1652,16 @@ anaylsis_type={}
         except Exception:
             import traceback
             tb = traceback.format_exc()
-            self.message('Could not save to Mass Spec database.\n {}'.format(tb))
+#            self.warning(tb)
+#            print tb
+            self.message('''Could not save to Mass Spec database.\n 
+#====Error================================
+{}
+#=========================================
+'''.format(tb))
 #            self.save_error_flag = True
-#            self.experiment_manager.cancel()
+            self.experiment_manager.cancel(cancel_run=True,
+                                           msg='Could not save {} to Mass Spec database'.format(rid))
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))

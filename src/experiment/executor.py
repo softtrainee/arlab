@@ -46,13 +46,13 @@ from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 # from src.experiment.automated_run.automated_run import AutomatedRun
-#from src.experiment.automated_run.factory import AutomatedRunFactory
+# from src.experiment.automated_run.factory import AutomatedRunFactory
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
-#from src.ui.gui import invoke_in_main_thread
-#from pyface.image_resource import ImageResource
+# from src.ui.gui import invoke_in_main_thread
+# from pyface.image_resource import ImageResource
 from src.pyscripts.wait_dialog import WaitDialog
 # from src.experiment.experimentable import Experimentable
 
@@ -202,7 +202,7 @@ class ExperimentExecutor(Experimentable):
 
         self._execute_procedure(name)
 
-    def cancel(self, style='queue', confirm=True):
+    def cancel(self, style='queue', cancel_run=False, msg=None, confirm=True):
         arun = self.experiment_queue.current_run
         if style == 'queue':
             name = os.path.basename(self.path)
@@ -213,27 +213,37 @@ class ExperimentExecutor(Experimentable):
         if name:
             ok_cancel = True
             if confirm:
-                ok_cancel = self.confirmation_dialog('Cancel {} in Progress'.format(name),
+                m = 'Cancel {} in Progress'.format(name)
+                if msg:
+                    m = '{}\n{}'.format(m, msg)
+
+                ok_cancel = self.confirmation_dialog(m,
                                          title='Confirm Cancel'
                                          )
 
+            print ok_cancel
             if ok_cancel:
                 if style == 'queue':
                     self._alive = False
                     self.stats.stop_timer()
                 self.set_extract_state(False)
-            
+
                 self._canceled = True
                 if arun:
+
                     if style == 'queue':
-                        state=None
+                        state = None
+                        if cancel_run:
+                            state = 'canceled'
                     else:
-                        state='canceled'
-                        
-                    arun.aliquot=0
+                        state = 'canceled'
+                        arun.aliquot = 0
+
                     arun.cancel_run(state=state)
-                    self.update_needed=True
-                    
+                    self.update_needed = True
+            else:
+                if arun:
+                    arun.state = 'failed'
 
     def set_extract_state(self, state, color='green'):
 
@@ -782,7 +792,7 @@ class ExperimentExecutor(Experimentable):
             if not step():
                 break
         else:
-            if arun.state != 'truncate':
+            if arun.state not in ('truncated', 'canceled', 'failed'):
                 arun.state = 'success'
 
         arun.finish()

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
+from traits.api import on_trait_change
 from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.recall_editor import RecallEditor
 #============= standard library imports ========================
@@ -32,16 +32,19 @@ class RecallTask(EditorTask):
 #    def _record_default(self):
 #        return IsotopeRecord()
 
-
     def recall(self):
         records = self.manager.recall()
         def func(rec):
             rec.initialize()
-            editor = RecallEditor(record=rec.isotope_record)
+            editor = RecallEditor(model=rec.isotope_record)
             self.editor_area.add_editor(editor)
 
         if records:
             self.manager._load_analyses(records, func=func)
+
+#            self.editor_area._activate_tab(-1)
+            ed = self.editor_area.editors[-1]
+            self.editor_area.activate_editor(ed)
 #            self.manager._load_analyses()
 #            for record in records:
 #
