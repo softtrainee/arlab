@@ -344,6 +344,7 @@ class Experimentor(Experimentable):
             self.executor.cancel()
         else:
             self.execute_event = True
+            self.update_info()
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):
@@ -413,8 +414,7 @@ experiment_factory:run_factory:update_info_needed, executor:update_needed''')
                                application=self.application
                                )
 
-#        pfunc = lambda *args, **kw: self._update(all_info=True)
-#        e.on_trait_change(pfunc, 'update_needed')
+        e.on_trait_change(self.update_info, 'update_needed')
         return e
 
     def _experiment_factory_default(self):

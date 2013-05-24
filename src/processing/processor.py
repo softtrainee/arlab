@@ -33,8 +33,8 @@ import time
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
     count = 0
-#    selector_manager = Instance(SelectorManager)
-#    search_manager = Instance(SearchManager)
+    selector_manager = Instance(SelectorManager)
+    search_manager = Instance(SearchManager)
     active_editor = Any
     analyses = List
     component = Any
