@@ -128,9 +128,12 @@ class Loggable(HasTraits):
 
     def message(self, msg):
         from src.displays.gdisplays import gMessageDisplay
-        gMessageDisplay.show()
-        gMessageDisplay.add_text(msg)
+        if not gMessageDisplay.opened and not gMessageDisplay.was_closed:
+            gMessageDisplay.opened = True
+            invoke_in_main_thread(gMessageDisplay.edit_traits)
 
+        gMessageDisplay.add_text(msg)
+#        self.info(msg)
 
     def warning(self, msg, decorate=True):
         '''
@@ -142,7 +145,7 @@ class Loggable(HasTraits):
                 if globalv.show_warnings:
                     if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
                         invoke_in_main_thread(gWarningDisplay.edit_traits)
-
+                        gWarningDisplay.opened = True
                 gWarningDisplay.add_text('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(), msg))
 
             if decorate:

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Color, Str, List, Tuple, Event
+from traits.api import HasTraits, Instance, Int, Color, Str, List, Tuple, Event, Bool
 from traitsui.api import View, Item, UItem
 from src.lasers.scanner import ApplicationController
 from src.ui.display_editor import DisplayEditor
@@ -23,14 +23,21 @@ from src.deprecate import deprecated
 from src.ui.gui import invoke_in_main_thread
 #============= standard library imports ========================
 from threading import Lock
+from Queue import Queue
 #============= local library imports  ==========================
 # from src.viewable import Viewable
 
 class DisplayModel(HasTraits):
 #     messages = List
 #     max_messages = Int(300)
-    message = Tuple
+#    message = Tuple
     clear_event = Event
+    refresh = Event
+#    message = Queue
+    def __init__(self, *args, **kw):
+        super(DisplayModel, self).__init__(*args, **kw)
+
+        self.qmessage = Queue()
 
     def add_text(self, txt, color, force=False, **kw):
         '''
@@ -38,7 +45,10 @@ class DisplayModel(HasTraits):
         '''
 #         ms = self.messages[-self.max_messages:]
 #         ms.append((txt, color))
-        self.message = (txt, color, force)
+#        self.message = (txt, color, force)
+        self.qmessage.put((txt, color, force))
+        invoke_in_main_thread(self.trait_set, refresh=True)
+#        self.refresh = True
 
 class DisplayController(ApplicationController):
     x = Int
@@ -55,10 +65,21 @@ class DisplayController(ApplicationController):
 
     editor_klass = DisplayEditor
     _lock = None
+    visible = Bool
+
+    opened = Bool(False)
+    was_closed = Bool(False)
+
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
                                                 *args, **kw)
         self._lock = Lock()
+
+    def init(self, info):
+        self.opened = True
+        super(DisplayController, self).init(info)
+#        print 'rrrrr', info
+#        info.object.ui = info.ui
 
     def clear(self, **kw):
 #        self.clear_event = True
@@ -84,8 +105,10 @@ class DisplayController(ApplicationController):
 
 
     def traits_view(self):
-        v = View(UItem('message', editor=self.editor_klass(bg_color=self.bg_color,
+        self.visible = True
+        v = View(UItem('qmessage', editor=self.editor_klass(bg_color=self.bg_color,
                                                            clear='clear_event',
+                                                           refresh='refresh',
                                                            max_blocks=self.max_blocks
                                                        )),
                  x=self.x, y=self.y, width=self.width,
@@ -98,8 +121,17 @@ class DisplayController(ApplicationController):
             if self.info.ui:
                 self.info.ui.dispose()
 
-    def show(self):
-        invoke_in_main_thread(self.edit_traits)
+    def closed(self, isok):
+        self.opened = False
+        self.was_closed = True
+
+
+#    def show(self):
+#        if not self.visible:
+#            invoke_in_main_thread(self.edit_traits)
+#        elif self.info:
+#            self.info.ui.control.raise_()
+
 
 class ErrorDisplay(DisplayController):
     pass

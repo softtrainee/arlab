@@ -23,19 +23,20 @@ from src.database.records.isotope_record import IsotopeRecord
 #============= local library imports  ==========================
 
 class RecallEditor(BaseTraitsEditor):
-    record = Instance(IsotopeRecord)
+    model = Instance(IsotopeRecord)
     name = Property(depends_on='record')
-    def trait_context(self):
-        """ Use the model object for the Traits UI context, if appropriate.
-        """
-        if self.record:
-            return { 'object': self.record}
-        return super(RecallEditor, self).trait_context()
+#    def trait_context(self):
+#        """ Use the model object for the Traits UI context, if appropriate.
+#        """
+#        if self.record:
+#            return { 'object': self.record}
+#
+#        return super(RecallEditor, self).trait_context()
 
     def traits_view(self):
         v = View(
-                 Group(
-#                 VFold(
+#                 Group(
+                 VFold(
                        UItem('analysis_summary',
                              editor=InstanceEditor(),
                              label='Summary',
@@ -55,7 +56,7 @@ class RecallEditor(BaseTraitsEditor):
                               defined_when='peak_center_graph',
                               label='Peak Center',
                               ),
-                       layout='tabbed'
+#                       layout='tabbed'
                        ),
                 resizable=True
                )
@@ -67,8 +68,9 @@ class RecallEditor(BaseTraitsEditor):
         return ui.control
 
     def _get_name(self):
-        if self.record:
-            return self.record.record_id
+        if self.model:
+            return self.model.record_id
         else:
             return 'Untitled'
+
 #============= EOF =============================================

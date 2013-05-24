@@ -19,6 +19,7 @@ from traits.api import Color, Str, Event, Int
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 from PySide.QtGui import QTextEdit, QPlainTextEdit, QTextCursor, QPalette, QColor
+from Queue import Empty
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -27,6 +28,7 @@ class _DisplayEditor(Editor):
     _pv = None
     _pc = None
     clear = Event
+    refresh = Event
     control_klass = QPlainTextEdit
     def init(self, parent):
         '''
@@ -44,6 +46,10 @@ class _DisplayEditor(Editor):
             self.control.setMaximumBlockCount(self.factory.max_blocks)
 
         self.sync_value(self.factory.clear, 'clear', mode='from')
+        self.sync_value(self.factory.refresh, 'refresh', mode='from')
+
+    def _refresh_fired(self):
+        self.update_editor()
 
     def _clear_fired(self):
         if self.control:
@@ -53,26 +59,32 @@ class _DisplayEditor(Editor):
         '''
         '''
         ctrl = self.control
-        fmt = ctrl.currentCharFormat()
         if self.value:
-            v, c, force = self.value
+            try:
+                v, c, force = self.value.get(timeout=0.0001)
+            except Empty:
+                return
+
 #            if force or v != self._pv or c != self._pc:
 #            ctrl.setTextColor(c)
-#                if c != self._pc:
+#            if c != self._pc:
+            fmt = ctrl.currentCharFormat()
             fmt.setForeground(QColor(c))
             ctrl.setCurrentCharFormat(fmt)
             ctrl.appendPlainText(v)
-#                self._pc = c
-#                self._pv = v
 
-        self.control.moveCursor(QTextCursor.End)
-        self.control.ensureCursorVisible()
+#            self._pc = c
+#            self._pv = v
+
+            ctrl.moveCursor(QTextCursor.End)
+            ctrl.ensureCursorVisible()
 
 
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
     bg_color = Color
     clear = Str
+    refresh = Str
     max_blocks = Int(0)
 
 class LoggerEditor(DisplayEditor):

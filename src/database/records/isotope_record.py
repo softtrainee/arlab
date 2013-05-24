@@ -85,6 +85,9 @@ class IsotopeRecordView(HasTraits):
 
     def create(self, dbrecord):
         try:
+            if not dbrecord.labnumber:
+                return
+
             self.labnumber = str(dbrecord.labnumber.identifier)
             self.aliquot = dbrecord.aliquot
             self.step = dbrecord.step
@@ -323,7 +326,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     fit = self._get_db_fit(name, 'baseline')
                     r.set_fit(fit)
                     i.baseline = r
-                elif iso.kind == 'sniff':
+
+                if iso.kind == 'sniff':
                     r = Sniff(**kw)
                     i.sniff = r
 
@@ -622,8 +626,13 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                                      dbiso.sniff.ys, plotid=i,
                                      label='sniff',
                                      fit=False,
-                                     type='scatter', marker='circle')
+                                     type='scatter',
+                                     marker='circle',
+                                     marker_size=1
+                                     )
                     graph.set_series_label('sniff', plotid=i)
+                else:
+                    print 'no sniff for', dbiso.name
 
                 # add the sniff
 

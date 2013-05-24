@@ -349,17 +349,17 @@ class IsotopeAdapter(DatabaseAdapter):
         self._add_item(level)
         return level
 
-    def add_import(self, **kw):
-        ih = gen_ImportTable(**kw)
-        self._add_item(ih)
-        return ih
+#    def add_import(self, **kw):
+#        ih = gen_ImportTable(**kw)
+#        self._add_item(ih)
+#        return ih
 
     def add_isotope(self, analysis, molweight, det, **kw):
         iso = meas_IsotopeTable(**kw)
         analysis = self.get_analysis(analysis)
         if analysis:
-            iso.analysis_id = analysis.id
-#            analysis.isotopes.append(iso)
+#            iso.analysis_id = analysis.id
+            analysis.isotopes.append(iso)
 
         det = self.get_detector(det)
         if det is not None:

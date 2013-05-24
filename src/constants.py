@@ -70,5 +70,6 @@ SUCCESS_COLOR = '#66FF33'  # light green
 SKIP_COLOR = '#33CCFF'
 CANCELED_COLOR = '#FF9999'
 TRUNCATED_COLOR = 'orange'
+FAILED_COLOR = 'red'
 NOT_EXECUTABLE_COLOR = 'red'
 #============= EOF =============================================
