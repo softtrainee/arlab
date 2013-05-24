@@ -139,8 +139,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        if self.activated:
 #            print self.activated.rid
 #
-    def _selected_changed(self):
-        print self.selected
+#    def _selected_changed(self):
+#        print self.selected
 
     def load_records(self, dbs, load=True, append=False):
         if not append:
@@ -148,7 +148,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         self._load_records(dbs)
 #        self._sort_columns(self.records)
-        if self.scroll_to_botton:
+        if self.scroll_to_bottom:
             self.scroll_to_row = len(self.records) - 1
 
     def query_factory(self, **kw):
