@@ -52,7 +52,7 @@ class MassSpecDatabaseImporter(Loggable):
     data_reduction_session_id = None
     login_session_id = None
     _current_spec = None
-    _analysis=None
+    _analysis = None
     def connect(self):
         return self.db.connect()
 
@@ -124,18 +124,21 @@ class MassSpecDatabaseImporter(Loggable):
         else:
             runtype = 'Unknown'
 
-        self._analysis=None
+        self._analysis = None
         try:
             self._add_analysis(spec, irradpos, rid, runtype, commit)
-        except Exception:
-            import traceback
-            tb = traceback.format_exc()
-            self.message('Could not save to Mass Spec database.\n {}'.format(tb))
+        except Exception, e:
+#            import traceback
+#            tb = traceback.format_exc()
+            self.message('Could not save to Mass Spec database.\n {}'.format(e))
             if commit:
-                if self._analysis:
-                    self._analysis.Aliquot = aliquot = '{}*'.format(self._analysis.Aliquot)
-                    self._analysis.RID = make_rid(irradpos, aliquot, spec.step)
-                    self.db.commit()
+                self.db.rollback()
+                pid = spec.rid
+                spec.aliquot = '*{:02n}'.format(spec.aliquot)
+                spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
+                self.message('Saving {} as {}'.format(pid, spec.rid))
+                self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
+
 
     def _add_analysis(self, spec, irradpos, rid, runtype, commit=True):
         gst = time.time()
@@ -173,7 +176,9 @@ class MassSpecDatabaseImporter(Loggable):
         refdbdet = db.add_detector('H1', Label='H1')
         db.flush()
 
-        self._analysis=analysis = db.add_analysis(rid, spec.aliquot, spec.step,
+        # remember new rid in case duplicate entry error and new to augment rid
+        spec.rid = rid
+        analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
 #                                   'H1',

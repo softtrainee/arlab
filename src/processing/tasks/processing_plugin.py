@@ -111,7 +111,7 @@ class ProcessingPlugin(BaseTaskPlugin):
 
     def _analysis_edit_task_factory(self):
         from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-        return AnalysisEditTask()
+        return AnalysisEditTask(manager=self._processor_factory())
 
     def _recall_task_factory(self):
         from src.processing.tasks.recall_task import RecallTask

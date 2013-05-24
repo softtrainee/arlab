@@ -280,6 +280,7 @@ class ControlsPane(TraitsDockPane):
 #                        spring,
                         Item('end_at_run_completion'),
                         Spring(width= -20, springy=False),
+                        UItem('cancel_run_button', enabled_when='can_cancel'),
                         UItem('truncate_button', enabled_when='measuring'),
                         UItem('truncate_style', enabled_when='measuring'),
                         UItem('execute_button',

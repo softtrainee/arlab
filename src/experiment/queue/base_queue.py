@@ -34,17 +34,17 @@ from src.experiment.automated_run.uv.table import UVAutomatedRunsTable
 import datetime
 
 class no_update(object):
-    model=None
-    def __init__(self,model):
+    model = None
+    def __init__(self, model):
         self.model = model
     def __enter__(self):
         if self.model:
-            self.model._no_update=True
-            
-    def __exit__(self,_type, value, _traceback):
+            self.model._no_update = True
+
+    def __exit__(self, _type, value, _traceback):
         if self.model:
-            self.model._no_update=False
-    
+            self.model._no_update = False
+
 
 class BaseExperimentQueue(Loggable):
     runs_table = Instance(AutomatedRunsTable, ())
@@ -72,10 +72,13 @@ class BaseExperimentQueue(Loggable):
 
     executable = Bool
     _no_update = False
-    initialized=False
-    
+    initialized = False
+
     def _get_name(self):
-        return self.path
+        if self.path:
+            return os.path.splitext(os.path.basename(self.path))[0]
+        else:
+            return ''
 
     def test(self):
         self.info('testing')
@@ -157,7 +160,7 @@ class BaseExperimentQueue(Loggable):
             with no_update(self):
                 self.automated_runs = aruns
 #            self._no_update = False
-            self.initialized=True
+            self.initialized = True
 #            self._suppress_aliquot_update = False
 
 #            lm = self.sample_map

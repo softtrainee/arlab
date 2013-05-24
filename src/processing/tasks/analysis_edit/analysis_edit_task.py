@@ -22,6 +22,7 @@ from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, \
     ReferencesPane, ControlsPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Tabbed, Splitter
+from src.processing.tasks.search_panes import QueryPane, ResultsPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -39,6 +40,12 @@ class AnalysisEditTask(EditorTask):
                                      PaneItem('pychron.analysis_edit.controls'),
                                      orientation='vertical'
                                      ),
+                          right=Splitter(
+                                         PaneItem('pychron.search.query'),
+                                         PaneItem('pychron.search.results'),
+                                         orientation='vertical'
+                                         )
+
 #                                     PaneItem('pychron.pyscript.editor')
 #                                     ),
 #                          top=PaneItem('pychron.pyscript.description'),
@@ -51,10 +58,15 @@ class AnalysisEditTask(EditorTask):
         self.unknowns_pane = UnknownsPane()
         self.references_pane = ReferencesPane()
         self.controls_pane = ControlsPane()
+
+        selector = self.manager.db.selector
         return [
                 self.unknowns_pane,
                 self.references_pane,
-                self.controls_pane
+                self.controls_pane,
+                QueryPane(model=selector),
+                ResultsPane(model=selector)
+
                 ]
 
     def new_blank(self):
@@ -66,8 +78,6 @@ class AnalysisEditTask(EditorTask):
     def _active_editor_changed(self):
         if self.active_editor:
             self.controls_pane.tool = self.active_editor.tool
-
-
 
     @on_trait_change('unknowns_pane:[+button]')
     def _update_unknowns(self, name, new):

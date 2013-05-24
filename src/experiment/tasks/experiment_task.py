@@ -29,6 +29,7 @@ from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.paths import paths
 import hashlib
 import os
+from pyface.constant import CANCEL, YES, NO
 
 class ExperimentEditorTask(EditorTask):
     default_directory = paths.experiment_dir
@@ -52,8 +53,8 @@ class ExperimentEditorTask(EditorTask):
                           top=PaneItem('pychron.experiment.controls')
                           )
 
-    def prepare_destroy(self):
-        pass
+#    def prepare_destroy(self):
+#        self.manager.executor.cancel(confirm=False)
 #        self.manager.stop_file_listener()
 
 #    def create_central_pane(self):
@@ -185,18 +186,13 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager:execute_event')
     def _execute(self):
-#        '''
-#            queues need to be saved before execute
-#        '''
-#        if not self.active_editor is None:
-        
-        editor=self.active_editor
+        editor = self.active_editor
         if editor is None:
             if self.editor_area.editors:
-                editor=self.editor_area.editors[0]
-        
-        if editor:    
-        
+                editor = self.editor_area.editors[0]
+
+        if editor:
+
             p = editor.path
             if os.path.isfile(p):
                 group = editor.group
@@ -209,4 +205,21 @@ class ExperimentEditorTask(EditorTask):
                             if ei.group == group and ei.merge_id >= min_idx]
 
                 self.manager.execute_queues(qs, text, hash_val)
+
+    @on_trait_change('window:closing')
+    def _prompt_on_close(self, event):
+        '''
+            Prompt the user to save when exiting.
+        '''
+        if self.manager.executor.isAlive():
+            name = self.manager.executor.experiment_queue.name
+            result = self._confirmation('{} is running. Are you sure you want to quit?'.format(name))
+
+            if result in (CANCEL, NO):
+                event.veto = True
+            else:
+                self.manager.executor.cancel(confirm=False)
+        else:
+            super(ExperimentEditorTask, self)._prompt_on_close(event)
+
 #============= EOF =============================================

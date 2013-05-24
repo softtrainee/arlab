@@ -142,7 +142,7 @@ class Experimentor(Experimentable):
             cache labnumbers for quick retrieval
         '''
 #        ca = '_cached_{}'.format(arun.labnumber)
-##         print ca, hasattr(self,ca)
+# #         print ca, hasattr(self,ca)
 #        dbln = None
 #        if hasattr(self, ca):
 #            dbln = getattr(self, ca)
@@ -253,7 +253,7 @@ class Experimentor(Experimentable):
         idcnt_dict = dict()
         stdict = dict()
         fixed_dict = dict()
-        
+
         for arun in ans:
             arunid = arun.labnumber
 
@@ -298,23 +298,23 @@ class Experimentor(Experimentable):
             stdict[arunid] = st
 
     def execute_queues(self, queues, text, text_hash):
-        if self.executor.isAlive():
-            self.debug('cancel execution')
-            self.executor.cancel()
-        else:
+#        if self.executor.isAlive():
+#            self.debug('cancel execution')
+#            self.executor.cancel()
+#        else:
 #            self.debug('stop file listener')
 #            self.stop_file_listener()
 
-            self.debug('setup executor')
-            self.executor.trait_set(experiment_queues=queues,
-                                    experiment_queue=queues[0],
-                                    text=text,
-                                    path=self.path,
-                                    text_hash=text_hash,
-                                    stats=self.stats
-                                    )
+        self.debug('setup executor')
+        self.executor.trait_set(experiment_queues=queues,
+                                experiment_queue=queues[0],
+                                text=text,
+                                path=self.path,
+                                text_hash=text_hash,
+                                stats=self.stats
+                                )
 
-            self.executor.execute()
+        self.executor.execute()
 
 #===============================================================================
 # handlers
@@ -339,7 +339,11 @@ class Experimentor(Experimentable):
             the queues are then passed back to execute_queues()
         '''
         self.debug('%%%%%%%%%%%%%%%%%% Execute fired')
-        self.execute_event = True
+        if self.executor.isAlive():
+            self.info('cancel execution')
+            self.executor.cancel()
+        else:
+            self.execute_event = True
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):

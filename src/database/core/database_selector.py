@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event, \
-    on_trait_change, Str, Instance
+    on_trait_change, Str, Instance, Property
 from traitsui.api import View, Item, \
     HGroup, spring, ListEditor, InstanceEditor, Handler, VGroup, VSplit
 
@@ -81,7 +81,7 @@ class SelectorHandler(Handler):
 
 class DatabaseSelector(Viewable, ColumnSorterMixin):
     records = List
-
+    num_records = Property(depends_on='records')
     search = Button
 #    open_button = Button
 #    open_button_label = 'Open'
@@ -94,6 +94,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     dclicked = Any
     selected = Any
     scroll_to_row = Int
+    scroll_to_bottom = True
+
 #    activated = Any
     update = Event
     selected_row = Any
@@ -119,6 +121,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     style = Enum('normal', 'panel', 'simple', 'single')
 
     verbose = False
+
 #    def onKeyDown(self, evt):
 #        import wx
 #        print evt
@@ -136,16 +139,17 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        if self.activated:
 #            print self.activated.rid
 #
-#    def _selected_changed(self):
-#        print self.selected
+    def _selected_changed(self):
+        print self.selected
+
     def load_records(self, dbs, load=True, append=False):
         if not append:
             self.records = []
 
         self._load_records(dbs)
 #        self._sort_columns(self.records)
-
-        self.scroll_to_row = len(self.records)
+        if self.scroll_to_botton:
+            self.scroll_to_row = len(self.records) - 1
 
     def query_factory(self, **kw):
         return self._query_factory(**kw)
@@ -338,6 +342,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _load_hook(self):
         pass
 
+    def _get_num_records(self):
+        return 'Number Results: {}'.format(len(self.records))
 #===============================================================================
 # handlers
 #===============================================================================
@@ -353,6 +359,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _search_fired(self):
         self.execute_query(load=False)
 
+#        if self.records:
+#            self.selected = self.records[-1:]
+#            self.scroll_to_row = len(self.records) - 1
+#            print self.records.index(self.selected[0])
+
     def _limit_changed(self):
         self.execute_query(load=False)
 
@@ -364,13 +375,13 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.dbstring = 'Database: {}'.format(self.db.name)
 
 
-    def _selected_changed(self):
-        if self.selected:
-            sel = self.selected
-            if self.style != 'single':
-                sel = sel[0]
-            self.selected_row = self.records.index(sel)
-            self.update = True
+#    def _selected_changed(self):
+#        if self.selected:
+#            sel = self.selected
+#            if self.style != 'single':
+#                sel = sel[0]
+#            self.selected_row = self.records.index(sel)
+#            self.update = True
 #===============================================================================
 # factories
 #===============================================================================
@@ -412,6 +423,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                selected='object.selected',
                                selected_row='object.selected_row',
                                update='update',
+                               scroll_to_row='scroll_to_row',
 #                               auto_update=True,
                                column_clicked='object.column_clicked',
                                editable=False,

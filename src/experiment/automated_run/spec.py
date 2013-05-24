@@ -31,7 +31,7 @@ class AutomatedRunSpec(Loggable):
     '''
 #    state = Property(depends_on='_state')
     state = Enum('not run', 'extraction',
-                 'measurement', 'success', 'fail', 'truncate')
+                 'measurement', 'success', 'fail', 'truncated', 'canceled')
     skip = Bool(False)
 
     #===========================================================================

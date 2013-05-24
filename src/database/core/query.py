@@ -322,11 +322,13 @@ class Query(HasTraits):
     def traits_view(self):
         qgrp = HGroup(
                 Item('parameter', editor=EnumEditor(name='parameters'),
-                     width= -200
+#                     width= -100
                      ),
-                Spring(springy=False,
-                       width=10),
-                Item('comparator', editor=EnumEditor(name='comparisons')),
+#                Spring(springy=False,
+#                       width= -5),
+                Item('comparator',
+                     editor=EnumEditor(name='comparisons'),
+                     ),
                 Item('criterion'),
                 Item('criterion', width= -30, editor=CheckListEditor(name='criteria')),
                 Item('add'),
