@@ -49,7 +49,7 @@ class _myTableView(_TableView):
 
                 for ci in reversed(self._copy_cache):
                     self._editor.model.insertRow(idx, obj=copy_func(ci))
-                self._editor.pasted = True
+#                self._editor.pasted = True
         else:
             super(_myTableView, self).keyPressEvent(event)
 

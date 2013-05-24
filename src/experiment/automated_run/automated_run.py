@@ -802,8 +802,11 @@ anaylsis_type={}
 
         if not self._alive:
             return
+
         if self.post_equilibration_script is None:
             return
+
+        print '######################## post eq', self.experiment_manager
 
         self.info('======== Post Equilibration Started ========')
         self.post_equilibration_script.manager = self.experiment_manager
