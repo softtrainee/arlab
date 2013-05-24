@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum
+from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, Either
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -148,11 +148,12 @@ class AutomatedRunSpec(Loggable):
         if new_uuid:
             self.uuid = str(uuid.uuid4())
             arun.uuid = self.uuid
-        arun
+#        arun
 
         # bind to the runs state
-        arun.on_trait_change(self._update_state, 'state')
+        arun.on_trait_change(self._update_state, 'state')        
         arun.on_trait_change(self._update_aliquot, 'aliquot')
+        
         return arun
 
     def load(self, script_info, params):
@@ -212,6 +213,7 @@ class AutomatedRunSpec(Loggable):
 #===============================================================================
     def _update_state(self, new):
         self.state = new
+        
     def _update_aliquot(self, new):
         self.aliquot = new
 

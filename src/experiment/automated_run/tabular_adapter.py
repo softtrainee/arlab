@@ -109,10 +109,17 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     def _get_aliquot_text(self, trait, item):
         al = ''
         it = self.item
-        if  it.step:
-            al = '{:02n}{}'.format(it.aliquot, it.step)
-        elif it.aliquot:
-            al = '{:02n}'.format(it.aliquot)
+        if it.aliquot !=0:
+            al=it.aliquot
+#            if isinstance(al, int):
+            al='{:02n}'.format(al)
+        if it.step:
+            al='{}{}'.format(al, it.step)
+            
+#        if  it.step:
+#            al = '{:02n}{}'.format(it.aliquot, it.step)
+#        elif it.aliquot:
+#            al = '{:02n}'.format(it.aliquot)
 
         return al
 

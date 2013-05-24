@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, Int, CInt, List, Property, \
+from traits.api import Any, Str, Int,CStr, CInt, List, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
-     String
+     String, Either
 from pyface.timer.api import do_after
 #============= standard library imports ========================
 import os
@@ -111,7 +111,7 @@ class AutomatedRun(Loggable):
     experiment_name = Str
     labnumber = Str
     step = Str
-    aliquot = CInt
+    aliquot =CInt
     user_defined_aliquot = False
     sample = Str
     irradiation = Str
@@ -508,7 +508,6 @@ class AutomatedRun(Loggable):
             age = self.arar_age.age
         age_string = 'age={}'.format(age)
 
-
         return '''runid={} timestamp={} {}
 anaylsis_type={}        
 #===============================================================================
@@ -545,6 +544,7 @@ anaylsis_type={}
             don't save run
             
         '''
+#        self.aliquot='##'
         self._save_enabled = False
         for s in ['extraction', 'measurement']:
             script = getattr(self, '{}_script'.format(s))
@@ -553,8 +553,7 @@ anaylsis_type={}
 
         self.do_post_termination()
         self.finish()
-
-        self._alive = False
+        
         if state:
             self.state = state
 
@@ -817,13 +816,24 @@ anaylsis_type={}
             self.info('======== Post Equilibration Finished unsuccessfully ========')
 
     def do_post_termination(self):
+#        def term():
         self.info('========= Post Termination ========')
         self.do_post_equilibration()
         self.do_post_measurement()
-
+        self._alive = False
+            
+#        term()
+#        from src.ui.thread import Thread as mThread
+#        self._term_thread=mThread(target=term)
+#        self._term_thread.start()
+        
     def _plot_panel_closed(self):
         if self.measuring:
-            self.cancel_run()
+            from src.ui.thread import Thread as mThread
+            self._term_thread=mThread(target=self.cancel_run)
+            self._term_thread.start()
+            
+#            self.cancel_run()
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 

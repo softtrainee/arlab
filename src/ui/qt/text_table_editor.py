@@ -71,8 +71,7 @@ class _TextTableEditor(Editor):
     def _add_table_hook(self, cursor):
         pass
 
-    def _add_table(self, tab):
-        cursor = QTextCursor(self.control.textCursor())
+    def _add_table(self, tab, cursor):
 
         tab_fmt = QTextTableFormat()
         tab_fmt.setCellSpacing(0)

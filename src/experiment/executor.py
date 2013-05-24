@@ -46,13 +46,13 @@ from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 # from src.experiment.automated_run.automated_run import AutomatedRun
-# from src.experiment.automated_run.factory import AutomatedRunFactory
+#from src.experiment.automated_run.factory import AutomatedRunFactory
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
-# from src.ui.gui import invoke_in_main_thread
-# from pyface.image_resource import ImageResource
+#from src.ui.gui import invoke_in_main_thread
+#from pyface.image_resource import ImageResource
 from src.pyscripts.wait_dialog import WaitDialog
 # from src.experiment.experimentable import Experimentable
 
@@ -222,20 +222,18 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     self.stats.stop_timer()
                 self.set_extract_state(False)
-
+            
                 self._canceled = True
                 if arun:
-                    arun.aliquot = '##'
                     if style == 'queue':
-                        state = None
+                        state=None
                     else:
-                        state = 'canceled'
-
-                    t = Thread(target=arun.cancel_run, kwargs={'state':state})
-                    t.start()
-                    self._cancel_thread = t
-                    self.update_needed = True
-
+                        state='canceled'
+                        
+                    arun.aliquot=0
+                    arun.cancel_run(state=state)
+                    self.update_needed=True
+                    
 
     def set_extract_state(self, state, color='green'):
 
@@ -916,10 +914,10 @@ class ExperimentExecutor(Experimentable):
         if self.isAlive():
             crun = self.experiment_queue.current_run
             if crun:
-#                t = Thread(target=self.cancel, kwargs={'style':'run'})
-#                t.start()
-#                self._cancel_thread = t
-                self.cancel(style='run')
+                t = Thread(target=self.cancel, kwargs={'style':'run'})
+                t.start()
+                self._cancel_thread = t
+#                self.cancel(style='run')
 
 
     def _truncate_button_fired(self):
