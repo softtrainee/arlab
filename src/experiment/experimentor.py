@@ -192,6 +192,11 @@ class Experimentor(Experimentable):
             if arun.skip:
                 continue
 
+            if arun.state == 'canceled':
+                continue
+#            if arun.aliquot == '##':
+#                continue
+
             # dont set degas or pause aliquot
             if arunid in exclude:
                 continue
@@ -259,6 +264,8 @@ class Experimentor(Experimentable):
 
             if arun.skip:
                 arun.aliquot = 0
+                continue
+            if arun.state == 'canceled':
                 continue
 
             # dont set degas or pause aliquot
