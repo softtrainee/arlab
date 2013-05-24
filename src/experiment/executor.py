@@ -140,8 +140,6 @@ class ExperimentExecutor(Experimentable):
     _state_thread = None
     _end_flag = None
     _canceled = False
-    _info_lock = None
-
 
     def isAlive(self):
         return self._alive
@@ -153,8 +151,7 @@ class ExperimentExecutor(Experimentable):
             if color is None:
                 color = 'green'
 
-            with self._info_lock:
-                self.info_display.add_text(msg, color=color)
+            self.info_display.add_text(msg, color=color)
 
         if log:
             super(ExperimentExecutor, self).info(msg, *args, **kw)
@@ -967,7 +964,6 @@ class ExperimentExecutor(Experimentable):
 #        return ExperimentSet(db=self.db)
 #
     def _info_display_default(self):
-        self._info_lock = Lock()
 
         return DisplayController(
                                  bg_color='black',
