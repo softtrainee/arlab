@@ -341,8 +341,9 @@ class Query(HasTraits):
         return v
 
 class IsotopeQuery(Query):
-    __params__ = ['Labnumber',
+    __params__ = [
                 'Irradiation',
+                'Labnumber',
                 'Run Date/Time',
                 'Irradiation Level',
                 'Irradiation Position',
