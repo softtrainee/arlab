@@ -56,14 +56,14 @@ class _DisplayEditor(Editor):
         fmt = ctrl.currentCharFormat()
         if self.value:
             v, c, force = self.value
-            if force or v != self._pv or c != self._pc:
-#                ctrl.setTextColor(c)
-                if c != self._pc:
-                    fmt.setForeground(QColor(c))
-                    ctrl.setCurrentCharFormat(fmt)
-                ctrl.appendPlainText(v)
-                self._pc = c
-                self._pv = v
+#            if force or v != self._pv or c != self._pc:
+#            ctrl.setTextColor(c)
+#                if c != self._pc:
+            fmt.setForeground(QColor(c))
+            ctrl.setCurrentCharFormat(fmt)
+            ctrl.appendPlainText(v)
+#                self._pc = c
+#                self._pv = v
 
         self.control.moveCursor(QTextCursor.End)
         self.control.ensureCursorVisible()

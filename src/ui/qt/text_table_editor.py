@@ -122,8 +122,9 @@ class _TextTableEditor(Editor):
                     cell_fmt.setFontWeight(QFont.Normal)
 
                 tcell = table.cellAt(ri, ci)
+                tcell.setFormat(cell_fmt)
                 cur = tcell.firstCursorPosition()
-                cur.insertText(cell.text, cell_fmt)
+                cur.insertText(cell.text)
 
 
 class _FastTextTableEditor(_TextTableEditor):

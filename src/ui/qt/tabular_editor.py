@@ -42,8 +42,9 @@ class _myTableView(_TableView):
                 copy_func = self.copy_func
                 if copy_func is None:
                     copy_func = lambda x: x.clone_traits()
+
                 if len(si):
-                    idx = si.row()
+                    idx = si[0].row()
                 else:
                     idx = -1
 
