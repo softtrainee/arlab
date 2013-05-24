@@ -54,9 +54,9 @@ class Processor(IsotopeDatabaseManager):
             if self.db.connect():
                 ps = self.search_manager
                 ps.selected = None
-                ps.selector.load_last(n=20)
+                ps.selector.load_last(n=100)
 
-                return [self._record_factory(si) for si in ps.selector.records[-1:]]
+#                return [self._record_factory(si) for si in ps.selector.records[-1:]]
                 info = ps.edit_traits(view='modal_view')
     #            print info.result
                 if info.result:
