@@ -22,6 +22,7 @@ from src.ui.display_editor import DisplayEditor
 from src.deprecate import deprecated
 from src.ui.gui import invoke_in_main_thread
 #============= standard library imports ========================
+from threading import Lock
 #============= local library imports  ==========================
 # from src.viewable import Viewable
 
@@ -53,10 +54,11 @@ class DisplayController(ApplicationController):
     max_blocks = Int(0)
 
     editor_klass = DisplayEditor
-
+    _lock = None
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
                                                 *args, **kw)
+        self._lock = Lock()
 
     def clear(self, **kw):
 #        self.clear_event = True
@@ -77,7 +79,8 @@ class DisplayController(ApplicationController):
         if 'color' not in kw or kw['color'] is None:
             kw['color'] = self.default_color
 
-        self.model.add_text(txt, **kw)
+        with self._lock:
+            self.model.add_text(txt, **kw)
 
 
     def traits_view(self):
