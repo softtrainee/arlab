@@ -24,7 +24,8 @@ from src.experiment.utilities.identifier import SPECIAL_NAMES
 # from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
-    NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR
+    NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR, CANCELED_COLOR, \
+    TRUNCATED_COLOR
 from src.ui.custom_label_editor import CustomLabel
 from src.paths import paths
 #============= standard library imports ========================
@@ -304,6 +305,8 @@ class ExplanationPane(TraitsDockPane):
     extraction = Color(EXTRACTION_COLOR)
     success = Color(SUCCESS_COLOR)
     skip = Color(SKIP_COLOR)
+    canceled = Color(CANCELED_COLOR)
+    truncated = Color(TRUNCATED_COLOR)
     not_executable = Color(NOT_EXECUTABLE_COLOR)
 
     def traits_view(self):
@@ -323,6 +326,14 @@ class ExplanationPane(TraitsDockPane):
                           ),
                    HGroup(Label('Success'), spring,
                           UItem('success',
+                                style='readonly')
+                          ),
+                   HGroup(Label('Truncated'), spring,
+                          UItem('truncated',
+                                style='readonly')
+                          ),
+                   HGroup(Label('Canceled'), spring,
+                          UItem('canceled',
                                 style='readonly')
                           ),
                    HGroup(Label('Not Executable'), spring,
