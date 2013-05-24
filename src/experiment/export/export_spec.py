@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, CStr, Str, CInt, Int, Dict, Tuple, List, Float, \
-    TraitError, Property, Any
+    TraitError, Property, Any, Either
 from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
 from src.experiment.utilities.identifier import make_runid, make_rid
@@ -25,7 +25,7 @@ from src.experiment.utilities.identifier import make_runid, make_rid
 
 class ExportSpec(Loggable):
     rid = CStr
-    aliquot = CInt
+    aliquot = Either(CInt, Str)
     step = Str
     irradpos = CStr
 

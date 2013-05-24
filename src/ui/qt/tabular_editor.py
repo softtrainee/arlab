@@ -55,75 +55,85 @@ class _myTableView(_TableView):
 
 class _TabularEditor(qtTabularEditor):
 #    drop_target = Any
-    rearranged = Event
-    pasted = Event
-
-    copy_cache = List
+#    rearranged = Event
+#    pasted = Event
+#
+#    copy_cache = List
 
     widget_factory = _myTableView
 
     def init(self, parent):
         super(_TabularEditor, self).init(parent)
 
-#        control = self.control
-#        control.connect()
-#        control.keyPressEvent.connect(self._on_key)
-#        control.connect(control, SIGNAL("keyPressEvent(event)"), self._on_key)
 
-#        control.itemClicked.connect(self._on_key)
-#        print control
-#        control.Bind(wx.EVT_KEY_DOWN, self._on_key)
-
-        # binding to the EVT_MOTION prevents the EVT_LIST_BEGIN_DRAG from firing
-        # remove binding added by wxTabularEditor
-#        control.Bind(wx.EVT_MOTION, None)
-
-        self.sync_value(self.factory.rearranged, 'rearranged', 'to')
-        self.sync_value(self.factory.pasted, 'pasted', 'to')
-        self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
+#        self.sync_value(self.factory.rearranged, 'rearranged', 'to')
+#        self.sync_value(self.factory.pasted, 'pasted', 'to')
+#        self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
 
         if hasattr(self.object, self.factory.copy_function):
             self.control.copy_func = getattr(self.object, self.factory.copy_function)
-#        print self.factory.copy_function
-#        self.sync_value(self.factory.copy_function, 'copy_function', 'from')
-#        self.control.copy_func = self.factory.copy_function
+
     def _copy_function_changed(self):
         if self.control:
             self.control.copy_func = self.copy_function
 
-    def update_editor(self):
-        super(_TabularEditor, self).update_editor()
+    def refresh_editor(self):
+        if self.control:
+            super(_TabularEditor, self).refresh_editor()
 
-        m = len(self.value) - 1
-        if self.factory.scroll_to_bottom:
-            if not self.selected and not self.multi_selected:
-                self.scroll_to_row = m
-#                 control.EnsureVisible(control.GetItemCount() - 1)
-            else:
-                if self.selected_row != -1:
-                    self.scroll_to_row = min(m, self.selected_row + 1)
+    def _scroll_to_row_changed(self, row):
+        """ Scroll to the given row.
+        """
+        scroll_hint = self.scroll_to_row_hint_map.get(self.factory.scroll_to_row_hint, self.control.PositionAtCenter)
 
-#                    control.EnsureVisible(self.selected_row + 1)
-                elif self.multi_selected_rows:
-                    self.scroll_to_row = min(m, self.multi_selected_rows[-1] + 1)
+        '''
+            for some reason only one call to scrollTo was not working consistently
+        '''
+        self.control.scrollTo(self.model.index(row, 0), scroll_hint)
+        self.control.scrollTo(self.model.index(row, 0), scroll_hint)
 
-#                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
+#            self.control.scrollTo(self.model.index(row, 0), scroll_hint)
+#        print self.control
+#        print len(self.value)
+#    def update_editor(self):
 
-#        else:
+#        m = len(self.value) - 1
+#        print self.factory.scroll_to_bottom, m
+#        if self.factory.scroll_to_bottom:
+#            self.scroll_to_row = m
 #            if not self.selected and not self.multi_selected:
-#                control.EnsureVisible(0)
+#                print m, 'a'
+# #                self.callx(self.trait_set, scroll_to_row=m - 1)
+#                self.scroll_to_row = m - 1
+# #                 control.EnsureVisible(control.GetItemCount() - 1)
+#            else:
+#                if self.selected_row != -1:
+#                    print min(m, self.selected_row + 1), 'b'
+#                    self.scroll_to_row = min(m, self.selected_row + 1)
+#
+# #                    control.EnsureVisible(self.selected_row + 1)
+#                elif self.multi_selected_rows:
+#                    print m, 'c'
+#                    self.scroll_to_row = min(m, self.multi_selected_rows[-1] + 1)
+
+ #                    control.EnsureVisible(self.multi_selected_rows[-1] + 1)
+
+ #        else:
+ #            if not self.selected and not self.multi_selected:
+ #                control.EnsureVisible(0)
+#        super(_TabularEditor, self).update_editor()
 
 #    def wx_dropped_on (self, x, y, data, drag_result):
 #        super(_TabularEditor, self).wx_dropped_on (x, y, data, drag_result)
 #        self.rearranged = True
 
-    def _move_up_current (self):
-        super(_TabularEditor, self)._move_up_current()
-        self.rearranged = True
-
-    def _move_down_current (self):
-        super(_TabularEditor, self)._move_down_current()
-        self.rearranged = True
+#    def _move_up_current (self):
+#        super(_TabularEditor, self)._move_up_current()
+#        self.rearranged = True
+#
+#    def _move_down_current (self):
+#        super(_TabularEditor, self)._move_down_current()
+#        self.rearranged = True
     #    def _on_motion(self, event):
 #        print event
 #        event.Skip()
@@ -149,6 +159,7 @@ class _TabularEditor(qtTabularEditor):
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
     scroll_to_row_hint = 'visible'
+#    scroll_to_row_hint = 'bottom'
     drag_move = Bool(False)
     rearranged = Str
     pasted = Str

@@ -80,13 +80,21 @@ class ExperimentExecutor(Experimentable):
     show_sample_map = Button
     execute_button = Event
     resume_button = Button('Resume')
+    cancel_run_button = Button('Cancel Run')
+
+    can_cancel = Property(depends_on='_alive, delaying_between_runs')
     execute_label = Property(depends_on='_alive')
+
     truncate_button = Button('Truncate Run')
-    truncate_style = Enum('Immediate', 'Quick', 'Next Integration')
+    truncate_style = Enum('Normal', 'Quick')
     '''
-        immediate 0= is the standard truncation, measure_iteration stopped at current step and measurement_script truncated
-        quick     1= the current measure_iteration is truncated and a quick baseline is collected, peak center?
-        next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
+        immediate 0= measure_iteration stopped at current step, script continues
+        quick     1= measure_iteration stopped at current step, script continues using 0.25*counts
+        
+        old-style
+            immediate 0= is the standard truncation, measure_iteration stopped at current step and measurement_script truncated
+            quick     1= the current measure_iteration is truncated and a quick baseline is collected, peak center?
+            next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
     '''
 
 #    right_clicked = Any
@@ -130,6 +138,8 @@ class ExperimentExecutor(Experimentable):
 
     _state_thread = None
     _end_flag = None
+    _canceled = False
+
     def isAlive(self):
         return self._alive
 
@@ -189,19 +199,33 @@ class ExperimentExecutor(Experimentable):
 
         self._execute_procedure(name)
 
-    def cancel(self):
+    def cancel(self, style='queue', confirm=True):
+        arun = self.experiment_queue.current_run
+        if style == 'queue':
+            name = os.path.basename(self.path)
+            name, _ = os.path.splitext(name)
+        else:
+            name = arun.runid
 
-        name = os.path.basename(self.path)
-        name, _ = os.path.splitext(name)
-        if self.confirmation_dialog('Cancel {} in Progress'.format(name),
-                                     title='Confirm Cancel'
-                                     ):
-            arun = self.experiment_queue.current_run
-            if arun:
-                arun.cancel()
-            self._alive = False
-            self.stats.stop_timer()
-            self.set_extract_state(False)
+        if name:
+            ok_cancel = True
+            if confirm:
+                ok_cancel = self.confirmation_dialog('Cancel {} in Progress'.format(name),
+                                         title='Confirm Cancel'
+                                         )
+
+            if ok_cancel:
+                self._canceled = True
+                if arun:
+                    if style == 'queue':
+                        arun.cancel_run(state=None)
+                    else:
+                        arun.cancel_run()
+
+                if style == 'queue':
+                    self._alive = False
+                    self.stats.stop_timer()
+                self.set_extract_state(False)
 
     def set_extract_state(self, state, color='green'):
 
@@ -263,10 +287,9 @@ class ExperimentExecutor(Experimentable):
                     # check for blank before starting the thread
 
         if self._pre_execute_check():
-            self.info_display.clear()
             self.stats.start_timer()
             self.stats.nruns_finished = 0
-
+            self._canceled = False
             t = Thread(target=self._execute)
             t.start()
             self.debug('execution started')
@@ -356,6 +379,7 @@ class ExperimentExecutor(Experimentable):
 #                 self._alive = False
 
     def _check_for_managers(self, exp):
+        return []
         nonfound = []
         if self.extraction_line_manager is None:
             if not globalv.experiment_debug:
@@ -477,9 +501,9 @@ class ExperimentExecutor(Experimentable):
         self.db.reset()
 
         # save experiment to database
-        self.info('saving experiment {} to database'.format(exp.name))
+        self.info('saving experiment "{}" to database'.format(exp.name))
 
-        self.db.add_experiment(exp.name)
+        self.db.add_experiment(exp.path)
         self.db.commit()
 
         rgen, nruns = exp.new_runs_generator(self._last_ran)
@@ -497,7 +521,6 @@ class ExperimentExecutor(Experimentable):
                 self.info('the experiment set was modified')
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
                 force_delay = True
-
 
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
@@ -552,14 +575,14 @@ class ExperimentExecutor(Experimentable):
                 experiment set will restart at last successful run
             '''
             self._last_ran = None
-            if run:
-                run.state = 'fail'
+#            if run:
+#                run.state = 'fail'
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
 
         self._end_runs()
         if run:
-            self.info('Set{}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
+            self.info('Queue {:02n}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
 
         return totalcnt
 
@@ -580,9 +603,9 @@ class ExperimentExecutor(Experimentable):
 #                man.broadcast(msg)
 
     def _launch_run(self, run, cnt):
-        if cnt > 0:
+#        if cnt > 0:
             # clear the info display
-            invoke_in_main_thread(self.info_display.clear)
+#            invoke_in_main_thread(self.info_display.clear)
 #        self.info_display.clear()
 
         run = self._setup_automated_run(cnt, run)
@@ -670,13 +693,14 @@ class ExperimentExecutor(Experimentable):
         q = sess.query(meas_AnalysisTable)
         q = q.join(meas_MeasurementTable)
         q = q.join(gen_AnalysisTypeTable)
+        q = q.join(gen_MassSpectrometerTable)
         q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
         q = q.filter(gen_MassSpectrometerTable.name == ms)
         dbs = q.all()
 
         sel.load_records(dbs, load=False)
 
-        sel.selected = sel.records[-1]
+#        sel.selected = sel.records[-1]
 
         info = sel.edit_traits(kind='livemodal')
         if info.result:
@@ -720,51 +744,111 @@ class ExperimentExecutor(Experimentable):
         return True
 
     def _do_automated_run(self, arun):
-        def isAlive():
-            if not self.isAlive():
-                self.err_message = 'User quit'
-                return False
-            else:
-                return True
+        def start_run():
+            if not arun.start():
+                self.err_message = 'Monitor failed to start'
+                self._alive = False
+                return
+            return True
 
-        if not arun.start():
-            self.err_message = 'Monitor failed to start'
-            return
-
-        if not isAlive():
-            return
-
-        if arun.extraction_script:
+        def extraction():
             if not arun.do_extraction():
-                self._alive = False
-
-        if not isAlive():
-            return
-
-        if arun.measurement_script:
-            self.measuring = True
-            if not arun.do_measurement():
-                self._alive = False
-            self.measuring = False
-
-        if not isAlive():
-            return
-
-        if arun.post_measurement_script:
-            if not arun.do_post_measurement():
-                if not arun.state == 'truncate':
+                if not self._canceled:
+                    self.err_message = 'Extraction Failed'
                     self._alive = False
+                return
+            return True
+
+        def measurement():
+            if not arun.do_measurement():
+                if not self._canceled:
+                    self.err_message = 'Measurement Failed'
+                    self._alive = False
+                return
+            return True
+
+        def post_measurement():
+            if not arun.do_post_measurement():
+                if not self._canceled:
+                    self.err_message = 'Post Measurement Failed'
+                    self._alive = False
+                return
+            return True
+
+        for step in (
+                     start_run,
+                     extraction,
+                     measurement,
+                     post_measurement
+                     ):
+            if not self.check_alive():
+                break
+            if not step():
+                break
+        else:
+            arun.state = 'success'
 
         arun.finish()
         self.increment_nruns_finished()
 
-        if arun.state == 'truncate':
-            fstate = 'truncated'
-        else:
-            arun.state = 'success'
-            fstate = 'finished'
+        self.info('Automated run {} {}'.format(arun.runid, arun.state))
 
-        self.info('Automated run {} {}'.format(arun.runid, fstate))
+    def check_alive(self):
+        if not self.isAlive():
+            self.err_message = 'User quit'
+            return False
+        else:
+            return True
+
+#    def _do_automated_run2(self, arun):
+#        def isAlive():
+#            if not self.isAlive():
+#                self.err_message = 'User quit'
+#                return False
+#            else:
+#                return True
+#
+#        if not arun.start():
+#            self.err_message = 'Monitor failed to start'
+#            return
+#
+#        if not isAlive():
+#            return
+#
+#        if arun.extraction_script:
+#            if not arun.do_extraction():
+#                return
+# #                self._alive = False
+#
+#        if not isAlive():
+#            return
+#
+#        if arun.measurement_script:
+#            self.measuring = True
+#            if not arun.do_measurement():
+#                return
+# #                self._alive = False
+#            self.measuring = False
+#
+#        if not isAlive():
+#            return
+#
+#        if arun.post_measurement_script:
+#            if not arun.do_post_measurement():
+#                self._alive = False
+# #                if not arun.state == 'truncate':
+# #                    self._alive = False
+#
+#        arun.finish()
+#        self.increment_nruns_finished()
+#
+#        if arun.state == 'truncated':
+#            fstate = 'truncated'
+#        else:
+#            arun.state = 'success'
+#            fstate = 'finished'
+#
+#        self.info('Automated run {} {}'.format(arun.runid, fstate))
 
     def _end_runs(self):
         self._last_ran = None
@@ -819,46 +903,25 @@ class ExperimentExecutor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
-    def _save_button_fired(self):
-        self.save()
-
-    def _save_as_button_fired(self):
-        self.save_as()
-
-#     def _experiment_queue_changed(self):
-#         if self.experiment_queue:
-#             nonfound = self._check_for_managers(self.experiment_queue)
-#             if nonfound:
-#                 self.warning_dialog('Could not find managers {}'.format(','.join(nonfound)))
-
-    def _resume_button_fired(self):
-        self.resume_runs = True
-
-    def _dclicked_changed(self):
-        self._recall_run()
-
-    def _recall_run_fired(self):
-        self._recall_run()
-
-    def _right_clicked_fired(self):
-        self._edit_run()
-
-    def _edit_run_fired(self):
-        self._edit_run()
-
     def _selected_changed(self):
         sel = self.selected
         if sel:
             if len(sel) == 1:
                 self.stats.calculate_at(sel[-1])
                 self.stats.calculate()
-#            self.experiment_queue.selected = sel#[self.selected]
 
-#    def _execute_button_fired(self):
-#        self._execute()
+    def _resume_button_fired(self):
+        self.resume_runs = True
+
+    def _cancel_run_button_fired(self):
+        if self.isAlive():
+            crun = self.experiment_queue.current_run
+            if crun:
+                self.cancel(style='run')
+
 
     def _truncate_button_fired(self):
-        self.experiment_queue.truncate_run(self.truncate_style)
+        self.experiment_queue.current_run.truncate_run(self.truncate_style)
 
     def _show_sample_map_fired(self):
 
@@ -870,95 +933,24 @@ class ExperimentExecutor(Experimentable):
         else:
             self.open_view(lm)
 
-#    def traits_view(self):
-#        editor = myTabularEditor(adapter=ExecuteAutomatedRunAdapter(),
-#                                 dclicked='dclicked',
-#                                 right_clicked='right_clicked',
-#                                 selected='selected',
-#                                 editable=False,
-#                                 auto_resize=True,
-#                                 multi_select=True,
-#                                 auto_update=True,
-#                                 scroll_to_bottom=False
-#                                 )
-#
-#        tb = HGroup(
-#                    Item('resume_button', enabled_when='object.delaying_between_runs', show_label=False),
-#                    Item('delay_between_runs_readback',
-#                         label='Delay Countdown',
-#                         style='readonly', format_str='%i',
-#                         width= -50),
-#
-#                    spring,
-#                    Item('show_sample_map', show_label=False,
-#                         enabled_when='object.experiment_queue.sample_map'
-#                         ),
-#                    spring,
-#                    Item('end_at_run_completion'),
-#                    Item('truncate_button', show_label=False,
-#                         enabled_when='object.measuring'),
-#                    Item('truncate_style', show_label=False,
-#                         enabled_when='object.measuring'),
-#                    self._button_factory('execute_button',
-#                                             label='execute_label',
-#                                             enabled='executable',
-#                                             ))
-#        sel_grp = Item('set_selector', show_label=False, style='custom')
-#        exc_grp = Group(tb,
-#                        HGroup(sel_grp,
-# #                               Item('object.experiment_queue.stats',
-#                               Item('stats',
-#                                   style='custom'),
-#                             spring,
-#                             Item('info_display',
-#                                  style='custom'),
-#                               show_labels=False,
-#                              ),
-#                       show_labels=False,
-#                       show_border=True,
-#                       label='Execute')
-#        v = View(
-# #                 sel_grp,
-#                 exc_grp,
-#                 HGroup(
-#                        Item('object.experiment_queue.mass_spectrometer', style='readonly'),
-#                        Item('object.experiment_queue.extract_device', style='readonly'),
-#                        Item('object.experiment_queue.tray', style='readonly')
-#                        ),
-#                 Item('object.experiment_queue.automated_runs',
-#                      style='custom',
-#                      show_label=False,
-#                      editor=editor
-#                      ),
-#                 HGroup(Item('recall_run', enabled_when='recall_enabled'),
-#                        Item('edit_run', enabled_when='edit_enabled'),
-#                        Item('save_button', enabled_when='save_enabled'),
-#                        Item('save_as_button'),
-#                        show_labels=False),
-#                 statusbar='statusbar',
-#                 width=1150,
-#                 height=800,
-#                 resizable=True,
-#                 title=self.title,
-#                 handler=self.handler_klass,
-#                 )
-#        return v
-
 #===============================================================================
 # property get/set
 #===============================================================================
     def _get_execute_label(self):
         return 'Start Queue' if not self._alive else 'Stop Queue'
 
-    def _get_edit_enabled(self):
-        if self.selected:
-            states = [ri.state == 'not run' for ri in self.selected]
-            return all(states)
+#    def _get_edit_enabled(self):
+#        if self.selected:
+#            states = [ri.state == 'not run' for ri in self.selected]
+#            return all(states)
+#
+#    def _get_recall_enabled(self):
+#        if self.selected:
+#            if len(self.selected) == 1:
+#                return self.selected[0].state == 'success'
 
-    def _get_recall_enabled(self):
-        if self.selected:
-            if len(self.selected) == 1:
-                return self.selected[0].state == 'success'
+    def _get_can_cancel(self):
+        return self.isAlive() and not self.delaying_between_runs
 #===============================================================================
 # defaults
 #===============================================================================
@@ -972,7 +964,8 @@ class ExperimentExecutor(Experimentable):
     def _info_display_default(self):
         return DisplayController(
                                  bg_color='black',
-                                 default_color='limegreen'
+                                 default_color='limegreen',
+                                 max_blocks=100
                                  )
 
 #    def _set_selector_default(self):

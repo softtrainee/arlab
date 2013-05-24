@@ -179,8 +179,12 @@ class AutomatedRun(Loggable):
     username = None
     _save_isotopes = List
     update = Event
+
     _truncate_signal = Bool
+
+#    condition_truncated = Bool
     truncated = Bool
+
     measuring = Bool(False)
     dirty = Bool(False)
 
@@ -199,6 +203,8 @@ class AutomatedRun(Loggable):
 
     info_color = None
     _equilibration_done = False
+
+#    save_error_flag = False
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -206,8 +212,6 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
         self._set_magnet_position(pos, detector, dac=dac)
-
-
 
     def py_activate_detectors(self, dets):
         if not self._alive:
@@ -532,7 +536,7 @@ anaylsis_type={}
 #===============================================================================
 # run termination
 #===============================================================================
-    def cancel_run(self):
+    def cancel_run(self, state='canceled'):
         '''
             terminate the measurement script immediately
             
@@ -542,29 +546,53 @@ anaylsis_type={}
             
         '''
         self._save_enabled = False
-        self.do_post_termination()
+        for s in ['extraction', 'measurement']:
+            script = getattr(self, '{}_script'.format(s))
+            if script is not None:
+                script.cancel()
 
-    def truncate_run(self):
+        self.do_post_termination()
+        self.finish()
+
+        self._alive = False
+        if state:
+            self.state = state
+
+    def truncate_run(self, style='normal'):
         '''
             truncate the measurement script
+            
+            style:
+                normal- truncate current measure iteration and continue
+                quick- truncate current measure iteration use truncated_counts for following 
+                        measure iterations
+            
         '''
         if self.measuring:
-            self.measurement_script.truncate()
+            style = style.lower()
+            if style == 'normal':
+                self._measurement_script.truncate('normal')
+            elif style == 'quick':
+                self._measurement_script.truncate('quick')
 
+            self._truncate_signal = True
+
+            self.truncated = True
+            self.state = 'truncated'
 #===============================================================================
 #
 #===============================================================================
 
-    def truncate(self, style):
-        self.info('truncating current run with style= {}'.format(style))
-        self.state = 'truncate'
-        self._truncate_signal = True
-
-        if style == 'Immediate':
-            self._alive = False
-            self._measurement_script.truncate()
-        elif style == 'Quick':
-            self._measurement_script.truncate('quick')
+#    def truncate(self, style):
+#        self.info('truncating current run with style= {}'.format(style))
+#        self.state = 'truncate'
+#        self._truncate_signal = True
+#
+#        if style == 'Immediate':
+#            self._alive = False
+#            self._measurement_script.truncate()
+#        elif style == 'Quick':
+#            self._measurement_script.truncate('quick')
 
     def finish(self):
 #        del self.info_display
@@ -634,6 +662,9 @@ anaylsis_type={}
 
             self.measuring = False
             self.update = True
+            self.truncated = False
+#            self.condition_truncated = False
+
             self.overlap_evt = TEvent()
             self.info('Start automated run {}'.format(self.runid))
             self._alive = True
@@ -657,13 +688,13 @@ anaylsis_type={}
             if self.monitor.check():
                 return _start()
 
-    def cancel(self):
-        self._alive = False
-        for s in ['extraction', 'measurement', 'post_equilibration', 'post_measurement']:
-            script = getattr(self, '{}_script'.format(s))
-            if script is not None:
-                script.cancel()
-        self.finish()
+#    def cancel(self):
+#        self._alive = False
+#        for s in ['extraction', 'measurement', 'post_equilibration', 'post_measurement']:
+#            script = getattr(self, '{}_script'.format(s))
+#            if script is not None:
+#                script.cancel()
+#        self.finish()
 
     def wait_for_overlap(self):
         '''
@@ -746,7 +777,10 @@ anaylsis_type={}
         if not self.post_measurement_script:
             return
 
-        if not self._alive and not self._truncate_signal:
+#        if not self._alive and not self._truncate_signal:
+#            return
+
+        if not self._alive:
             return
 
         self.info('======== Post Measurement Started ========')
@@ -786,7 +820,7 @@ anaylsis_type={}
 
     def _plot_panel_closed(self):
         if self.measuring:
-            self.truncate('Immediate')
+            self.cancel_run()
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
@@ -1005,7 +1039,7 @@ anaylsis_type={}
             self.warning('no spectrometer manager')
             return True
 
-        self.truncated = False
+#        self.condition_truncated = False
         graph = self.plot_panel.graph
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
@@ -1096,7 +1130,8 @@ anaylsis_type={}
                 self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, n, ncounts),
                           color='red'
                           )
-                self.truncated = True
+                self.state = 'truncated'
+#                self.condition_truncated = True
                 return 'break'
 
             action_condition = self._check_conditions(self.action_conditions, i)
@@ -1120,6 +1155,7 @@ anaylsis_type={}
         if self._truncate_signal:
             self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
             self._truncate_signal = False
+
             return 'break'
 
         if not self._alive:
@@ -1592,6 +1628,7 @@ anaylsis_type={}
 
 #        self.massspec_importer.add_analysis(exp)
 #        self.info('analysis added to mass spec database')
+#        self.save_error_flag = False
         try:
             self.massspec_importer.add_analysis(exp)
             self.info('analysis added to mass spec database')
@@ -1599,8 +1636,8 @@ anaylsis_type={}
             import traceback
             tb = traceback.format_exc()
             self.message('Could not save to Mass Spec database.\n {}'.format(tb))
-            self.cancel()
-            self.experiment_manager.cancel()
+#            self.save_error_flag = True
+#            self.experiment_manager.cancel()
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))

@@ -55,10 +55,11 @@ class Monitor(ConfigLoadable):
     def stop(self):
         '''
         '''
-        self._stop_signal.set()
-#        self.kill = True
-        self.info('Stop monitor')
-        self._monitoring = False
+        if self._stop_signal:
+            self._stop_signal.set()
+    #        self.kill = True
+            self.info('Stop monitor')
+            self._monitoring = False
 
     def warning(self, msg):
         '''

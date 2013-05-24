@@ -68,5 +68,7 @@ MEASUREMENT_COLOR = '#FF7EDF'  # magenta
 EXTRACTION_COLOR = '#FFFF66'
 SUCCESS_COLOR = '#66FF33'  # light green
 SKIP_COLOR = '#33CCFF'
+CANCELED_COLOR = '#FF9999'
+TRUNCATED_COLOR = 'orange'
 NOT_EXECUTABLE_COLOR = 'red'
 #============= EOF =============================================

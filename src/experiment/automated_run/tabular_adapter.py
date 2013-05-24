@@ -18,10 +18,8 @@
 from traits.api import Property, Int
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
-import os
-from src.paths import paths
 from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
-    SKIP_COLOR, NOT_EXECUTABLE_COLOR
+    SKIP_COLOR, NOT_EXECUTABLE_COLOR, CANCELED_COLOR, TRUNCATED_COLOR
 # from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
 # def get_name(func):
@@ -84,6 +82,10 @@ class AutomatedRunSpecAdapter(TabularAdapter):
             color = EXTRACTION_COLOR  # '#FFFF66'  # light yellow
         elif item.state == 'measurement':
             color = MEASUREMENT_COLOR  # '#FF7EDF'  # magenta
+        elif item.state == 'canceled':
+            color = CANCELED_COLOR  # '#FF7EDF'  # magenta
+        elif item.state == 'truncated':
+            color = TRUNCATED_COLOR  # '#FF7EDF'  # magenta
         else:
             if row % 2 == 0:
                 color = 'white'

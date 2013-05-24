@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Instance, Unicode
+from traits.api import HasTraits, Property, Instance, Unicode, on_trait_change
 from traitsui.api import View, Item
 from pyface.tasks.api import IEditor, IEditorAreaPane
 
@@ -24,6 +24,8 @@ from pyface.tasks.api import IEditor, IEditorAreaPane
 from src.loggable import Loggable
 from src.envisage.tasks.base_task import BaseManagerTask
 from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
+from pyface.confirmation_dialog import ConfirmationDialog
+from pyface.constant import CANCEL, YES
 
 
 class EditorTask(BaseManagerTask, Loggable):
@@ -54,7 +56,7 @@ class EditorTask(BaseManagerTask, Loggable):
 
             if path:
                 self._save_file(path)
-                self.active_editor.dirty=False
+                self.active_editor.dirty = False
 
     def new(self):
         pass
@@ -64,7 +66,7 @@ class EditorTask(BaseManagerTask, Loggable):
         if path:
             self._save_file(path)
             self.active_editor.path = path
-            self.active_editor.dirty=False
+            self.active_editor.dirty = False
 
     def _save_file(self, path):
         pass
@@ -88,4 +90,38 @@ class EditorTask(BaseManagerTask, Loggable):
             return self.editor_area.active_editor
 
         return None
+    def _confirmation(self, message=''):
+        dialog = ConfirmationDialog(parent=self.window.control,
+                                    message=message, cancel=True,
+                                    default=CANCEL, title='Save Changes?')
+        return dialog.open()
+
+    def _prompt_for_save(self):
+        """ Prompts the user to save if necessary. Returns whether the dialog
+was cancelled.
+"""
+        dirty_editors = dict([(editor.name, editor)
+                              for editor in self.editor_area.editors
+                              if editor.dirty])
+        if not dirty_editors.keys():
+            return True
+        message = 'You have unsaved files. Would you like to save them?'
+        result = self._confirmation(message)
+        if result == CANCEL:
+            return False
+        elif result == YES:
+            for _, editor in dirty_editors.items():
+                editor.save(editor.path)
+
+        return True
+
+
+    #### Trait change handlers ################################################
+
+    @on_trait_change('window:closing')
+    def _prompt_on_close(self, event):
+        """ Prompt the user to save when exiting.
+        """
+        close = self._prompt_for_save()
+        event.veto = not close
 #============= EOF =============================================

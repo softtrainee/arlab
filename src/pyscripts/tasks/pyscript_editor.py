@@ -83,6 +83,7 @@ class PyScriptEditor(Editor):
         if self.control:
             self.control.code.setPlainText(txt)
 
+
     def getText(self):
         if self.control:
             return self.control.code.document().toPlainText()
@@ -90,7 +91,7 @@ class PyScriptEditor(Editor):
     def create(self, parent):
         self.control = self._create_control(parent)
 
-        
+
     def _create_control(self, parent):
         from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
         self.control = control = AdvancedCodeWidget(parent)
@@ -117,6 +118,7 @@ class PyScriptEditor(Editor):
 #        if not self.suppress_change:
         self.editor.parse(self.getText())
         self.changed = True
+        self.dirty = True
 
 #    @on_trait_change('editor:body')
 #    def _on_body_change(self):
@@ -154,14 +156,17 @@ class PyScriptEditor(Editor):
 
         self.control.code.setPlainText(text)
         self.dirty = False
-        
+
     def dump(self, path):
         with open(path, 'w') as fp:
-            txt=self.getText()
+            txt = self.getText()
             if txt:
                 fp.write(txt)
-                
-       
+    save = dump
+#    def save(self, path):
+#        self.dump(path)
+
+
 class MeasurementEditor(PyScriptEditor):
     kind = 'Measurement'
     editor = Instance(MeasurementParameterEditor, ())

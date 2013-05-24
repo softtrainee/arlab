@@ -50,8 +50,8 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
     font = 'monospace'
 #    rid_width = Int(50)
     labnumber_width = Int(90)
-    aliquot_width = Int(90)
-    rundate_width = Int(120)
+    aliquot_width = Int(50)
+    rundate_width = Int(140)
 #    runtime_width = Int(90)
 #    aliquot_text = Property
 #    irradiation_text = Property

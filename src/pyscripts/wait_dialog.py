@@ -165,7 +165,7 @@ class WaitDialog(Loggable):
                         HGroup(
                                UItem('continue_button'),
                                spring,
-                               UItem('cancel_button'),
+#                               UItem('cancel_button'),
                                )
                         ),
                )
