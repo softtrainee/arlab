@@ -15,44 +15,45 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from apptools.preferences.preference_binding import bind_preference
+from pyface.image_resource import ImageResource
+from src.constants import NULL_STR
+from src.database.orms.isotope_orm import meas_AnalysisTable, \
+    gen_AnalysisTypeTable, meas_MeasurementTable, gen_MassSpectrometerTable
+from src.displays.display import DisplayController
+from src.experiment.automated_run.factory import AutomatedRunFactory
+from src.experiment.experimentable import Experimentable
+from src.experiment.stats import StatsGroup
+from src.experiment.utilities.mass_spec_database_importer import \
+    MassSpecDatabaseImporter
+from src.globals import globalv
+from src.helpers.parsers.initialization_parser import InitializationParser
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.managers.manager import Manager
+from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
+    RemoteAutomatedRunMonitor
+from src.paths import paths
+from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
+from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
+from src.pyscripts.wait_dialog import WaitDialog
+from src.ui.gui import invoke_in_main_thread
+from src.ui.thread import Thread
+from threading import Event as Flag
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
     Instance, Str, Any, on_trait_change, String, List, Unicode, Color
-# from traitsui.api import View, Item, HGroup, Group, spring
-from apptools.preferences.preference_binding import bind_preference
-#============= standard library imports ========================
-from threading import Event as Flag
-import time
 import os
+import time
+# from traitsui.api import View, Item, HGroup, Group, spring
+#============= standard library imports ========================
 #============= local library imports  ==========================
-from src.globals import globalv
 # from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
 # from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.manager import ExperimentManager
-from src.managers.manager import Manager
-from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 # from src.displays.rich_text_display import RichTextDisplay
-from src.paths import paths
-from src.helpers.parsers.initialization_parser import InitializationParser
 # from src.experiment.set_selector import SetSelector
-from src.experiment.stats import StatsGroup
-from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
-from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
-    meas_MeasurementTable, gen_MassSpectrometerTable
-from src.constants import NULL_STR
-from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
-    RemoteAutomatedRunMonitor
 # from src.experiment.automated_run.automated_run import AutomatedRun
-from src.experiment.automated_run.factory import AutomatedRunFactory
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.displays.display import DisplayController
-from src.experiment.experimentable import Experimentable
-from src.ui.thread import Thread
-from src.ui.gui import invoke_in_main_thread
-from pyface.image_resource import ImageResource
-from src.pyscripts.wait_dialog import WaitDialog
 # from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
@@ -87,6 +88,7 @@ class ExperimentExecutor(Experimentable):
 
     truncate_button = Button('Truncate Run')
     truncate_style = Enum('Normal', 'Quick')
+
     '''
         immediate 0= measure_iteration stopped at current step, script continues
         quick     1= measure_iteration stopped at current step, script continues using 0.25*counts
@@ -221,6 +223,10 @@ class ExperimentExecutor(Experimentable):
                         arun.cancel_run(state=None)
                     else:
                         arun.cancel_run()
+                    # set aruns aliquot to place holder
+                    # set the arv
+                    arun.aliquot = '##'
+                    self.update_needed = True
 
                 if style == 'queue':
                     self._alive = False
@@ -404,31 +410,13 @@ class ExperimentExecutor(Experimentable):
         return nonfound
 
     def _execute_experiment_queues(self):
-#        self.stats.calculate()
-
-#         if not self.massspec_importer.connect():
-#             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
-#                 self._alive = False
-#                 return
-#
-#         exp = self.experiment_queues[0]
-#         nonfound = self._check_for_managers(exp)
-#         if nonfound:
-#             self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
-#             self.info('experiment canceled because could not find managers {}'.format(nonfound))
-#             self._alive = False
-#             return
-#         else:
-#             mon, isok = self._monitor_factory()
-#
-#             if mon and not isok:
-#                 self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
-#                 self.info('experiment canceled because automated_run_monitor is not setup properly')
-#                 self._alive = False
-#                 return
-
         self.pyscript_runner.connect()
         self._alive = True
+
+        # clear run states
+        for exp in self.experiment_queues:
+            for ei in exp.automated_runs:
+                ei.state = 'not run'
 
         exp = self.experiment_queue
 
@@ -760,11 +748,15 @@ class ExperimentExecutor(Experimentable):
             return True
 
         def measurement():
+            self.measuring = True
             if not arun.do_measurement():
                 if not self._canceled:
                     self.err_message = 'Measurement Failed'
                     self._alive = False
+                self.measuring = False
                 return
+
+            self.measuring = False
             return True
 
         def post_measurement():
@@ -775,6 +767,7 @@ class ExperimentExecutor(Experimentable):
                 return
             return True
 
+        self.measuring = False
         for step in (
                      start_run,
                      extraction,
@@ -786,7 +779,8 @@ class ExperimentExecutor(Experimentable):
             if not step():
                 break
         else:
-            arun.state = 'success'
+            if arun.state != 'truncate':
+                arun.state = 'success'
 
         arun.finish()
         self.increment_nruns_finished()

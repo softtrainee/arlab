@@ -152,6 +152,7 @@ class AutomatedRunSpec(Loggable):
 
         # bind to the runs state
         arun.on_trait_change(self._update_state, 'state')
+        arun.on_trait_change(self._update_aliquot, 'aliquot')
         return arun
 
     def load(self, script_info, params):
@@ -211,6 +212,8 @@ class AutomatedRunSpec(Loggable):
 #===============================================================================
     def _update_state(self, new):
         self.state = new
+    def _update_aliquot(self, new):
+        self.aliquot = new
 
 #===============================================================================
 # property get/set
