@@ -21,6 +21,7 @@ from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from threading import Event as Flag
+from threading import Lock
 import time
 import os
 #============= local library imports  ==========================
@@ -45,13 +46,13 @@ from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 # from src.experiment.automated_run.automated_run import AutomatedRun
-#from src.experiment.automated_run.factory import AutomatedRunFactory
+# from src.experiment.automated_run.factory import AutomatedRunFactory
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
-#from src.ui.gui import invoke_in_main_thread
-#from pyface.image_resource import ImageResource
+# from src.ui.gui import invoke_in_main_thread
+# from pyface.image_resource import ImageResource
 from src.pyscripts.wait_dialog import WaitDialog
 # from src.experiment.experimentable import Experimentable
 
@@ -139,16 +140,21 @@ class ExperimentExecutor(Experimentable):
     _state_thread = None
     _end_flag = None
     _canceled = False
+    _info_lock = None
+
 
     def isAlive(self):
         return self._alive
 
     def info(self, msg, log=True, color=None, *args, **kw):
-        self.statusbar = msg
+
+#        self.statusbar = msg
         if self.info_display:
             if color is None:
                 color = 'green'
-            self.info_display.add_text(msg, color=color)
+
+            with self._info_lock:
+                self.info_display.add_text(msg, color=color)
 
         if log:
             super(ExperimentExecutor, self).info(msg, *args, **kw)
@@ -219,20 +225,20 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     self.stats.stop_timer()
                 self.set_extract_state(False)
-            
+
                 self._canceled = True
                 if arun:
-                    arun.aliquot='##'
+                    arun.aliquot = '##'
                     if style == 'queue':
-                        state=None
+                        state = None
                     else:
-                        state='canceled'
-                        
-                    t=Thread(target=arun.cancel_run, kwargs={'state':state})
+                        state = 'canceled'
+
+                    t = Thread(target=arun.cancel_run, kwargs={'state':state})
                     t.start()
-                    self._cancel_thread=t
-                    self.update_needed=True
-                    
+                    self._cancel_thread = t
+                    self.update_needed = True
+
 
     def set_extract_state(self, state, color='green'):
 
@@ -750,15 +756,15 @@ class ExperimentExecutor(Experimentable):
             return True
 
         def measurement():
-            self.measuring=True
+            self.measuring = True
             if not arun.do_measurement():
                 if not self._canceled:
                     self.err_message = 'Measurement Failed'
                     self._alive = False
-                self.measuring=False
+                self.measuring = False
                 return
-            
-            self.measuring=False
+
+            self.measuring = False
             return True
 
         def post_measurement():
@@ -961,6 +967,8 @@ class ExperimentExecutor(Experimentable):
 #        return ExperimentSet(db=self.db)
 #
     def _info_display_default(self):
+        self._info_lock = Lock()
+
         return DisplayController(
                                  bg_color='black',
                                  default_color='limegreen',
