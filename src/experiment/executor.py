@@ -82,8 +82,11 @@ class ExperimentExecutor(Experimentable):
     execute_button = Event
     resume_button = Button('Resume')
     cancel_run_button = Button('Cancel Run')
+    refresh_button = Event
+    non_clear_update_needed = Event
 
     can_cancel = Property(depends_on='_alive, delaying_between_runs')
+    refresh_label = Property(depends_on='_was_executed')
     execute_label = Property(depends_on='_alive')
 
     truncate_button = Button('Truncate Run')
@@ -119,7 +122,7 @@ class ExperimentExecutor(Experimentable):
     _last_ran = None
     _prev_baselines = Dict
     _prev_blanks = Dict
-    _was_executed = False
+    _was_executed = Bool(False)
     err_message = None
 
 #    repo_kind = Str
@@ -202,6 +205,9 @@ class ExperimentExecutor(Experimentable):
 
         self._execute_procedure(name)
 
+    def reset(self):
+        self._was_executed = False
+
     def cancel(self, style='queue', cancel_run=False, msg=None, confirm=True):
         arun = self.experiment_queue.current_run
         if style == 'queue':
@@ -221,7 +227,6 @@ class ExperimentExecutor(Experimentable):
                                          title='Confirm Cancel'
                                          )
 
-            print ok_cancel
             if ok_cancel:
                 if style == 'queue':
                     self._alive = False
@@ -240,7 +245,7 @@ class ExperimentExecutor(Experimentable):
                         arun.aliquot = 0
 
                     arun.cancel_run(state=state)
-                    self.update_needed = True
+                    self.non_clear_update_needed = True
             else:
                 if arun:
                     arun.state = 'failed'
@@ -308,10 +313,14 @@ class ExperimentExecutor(Experimentable):
             self.stats.start_timer()
             self.stats.nruns_finished = 0
             self._canceled = False
+
             t = Thread(target=self._execute)
             t.start()
+
             self.debug('execution started')
             self._execute_thread = t
+
+            self._was_executed = True
 
     def _pre_execute_check(self):
         exp = self.experiment_queues[0]
@@ -420,6 +429,10 @@ class ExperimentExecutor(Experimentable):
                 nonfound.append('spectrometer')
 
         return nonfound
+    def clear_run_states(self):
+        for exp in self.experiment_queues:
+            for ei in exp.automated_runs:
+                ei.state = 'not run'
 
     def _execute_experiment_queues(self):
 
@@ -427,9 +440,7 @@ class ExperimentExecutor(Experimentable):
         self._alive = True
 
         # clear run states
-        for exp in self.experiment_queues:
-            for ei in exp.automated_runs:
-                ei.state = 'not run'
+        self.clear_run_states()
 
         exp = self.experiment_queue
 
@@ -929,19 +940,21 @@ class ExperimentExecutor(Experimentable):
                 self._cancel_thread = t
 #                self.cancel(style='run')
 
+    def _refresh_button_fired(self):
+        self.update_needed = True
 
     def _truncate_button_fired(self):
         self.experiment_queue.current_run.truncate_run(self.truncate_style)
 
-    def _show_sample_map_fired(self):
-
-        lm = self.experiment_queue.sample_map
-        if lm is None:
-            self.warning_dialog('No Tray map is set. Add "tray: <name_of_tray>" to ExperimentSet file')
-        elif lm.ui:
-            lm.ui.control.Raise()
-        else:
-            self.open_view(lm)
+#    def _show_sample_map_fired(self):
+#
+#        lm = self.experiment_queue.sample_map
+#        if lm is None:
+#            self.warning_dialog('No Tray map is set. Add "tray: <name_of_tray>" to ExperimentSet file')
+#        elif lm.ui:
+#            lm.ui.control.Raise()
+#        else:
+#            self.open_view(lm)
 
 #===============================================================================
 # property get/set
@@ -949,6 +962,8 @@ class ExperimentExecutor(Experimentable):
     def _get_execute_label(self):
         return 'Start Queue' if not self._alive else 'Stop Queue'
 
+    def _get_refresh_label(self):
+        return 'Reset Queue' if self._was_executed else 'Refresh Queue'
 #    def _get_edit_enabled(self):
 #        if self.selected:
 #            states = [ri.state == 'not run' for ri in self.selected]

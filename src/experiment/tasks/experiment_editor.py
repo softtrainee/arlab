@@ -44,8 +44,8 @@ class ExperimentEditor(BaseTraitsEditor):
 #        self.control = self._create_control(parent)
     def traits_view(self):
         v = View(
-                 VGroup(
-                 HGroup(spring, Item('refresh_button', show_label=False)),
+#                 VGroup(
+#                 HGroup(spring, Item('refresh_button', show_label=False)),
                  UItem('automated_runs',
                                show_label=False,
                                editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
@@ -65,7 +65,7 @@ class ExperimentEditor(BaseTraitsEditor):
                                             auto_update=True,
                                             multi_select=True,
                                             scroll_to_bottom=False)
-                       )
+#                       )
                         ),
                  resizable=True
                  )

@@ -121,7 +121,7 @@ class DisplayController(ApplicationController):
             if self.info.ui:
                 self.info.ui.dispose()
 
-    def closed(self, isok):
+    def closed(self, info, result):
         self.opened = False
         self.was_closed = True
 

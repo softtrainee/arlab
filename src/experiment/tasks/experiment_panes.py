@@ -279,6 +279,11 @@ class ControlsPane(TraitsDockPane):
 #                             enabled_when='experiment_queue.sample_map'
 #                             ),
 #                        spring,
+                        UItem('refresh_button',
+                              enabled_when='not object._alive',
+                              editor=ButtonEditor(label_value='refresh_label')
+                              ),
+                        Spring(width= -20, springy=False),
                         Item('end_at_run_completion'),
                         Spring(width= -20, springy=False),
                         UItem('cancel_run_button', enabled_when='can_cancel'),
@@ -286,7 +291,7 @@ class ControlsPane(TraitsDockPane):
                         UItem('truncate_style', enabled_when='measuring'),
                         UItem('execute_button',
                               enabled_when='executable',
-                              editor=ButtonEditor(label_value='execute_label'))
+                              editor=ButtonEditor(label_value='execute_label')),
                         ),
                  )
         return v

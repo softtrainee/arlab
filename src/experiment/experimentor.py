@@ -373,16 +373,37 @@ class Experimentor(Experimentable):
     def _dclicked_changed(self, new):
         self.experiment_factory.run_factory.edit_mode = True
 
-    @on_trait_change('''experiment_queue:refresh_button,
-experiment_factory:run_factory:update_info_needed, executor:update_needed''')
-    def _refresh(self, name, new):
+    @on_trait_change('executor:update_needed')
+    def _refresh1(self):
+        self.update_info()
+        self.executor.clear_run_states()
+
+    @on_trait_change('executor:non_clear_update_needed')
+    def _refresh2(self):
+        self.update_info()
+
+    @on_trait_change('experiment_factory:run_factory:update_info_needed')
+    def _refresh3(self):
         self.update_info()
         executor = self.executor
-        if name not in ('update_needed', 'refresh_button'):
-            executor.executable = False
-            if executor.isAlive():
-                executor.end_at_run_completion = True
-                executor.changed_flag = True
+        executor.clear_run_states()
+        if executor.isAlive():
+            executor.end_at_run_completion = True
+            executor.changed_flag = True
+
+#    @on_trait_change('''refresh_button,
+# , executor:update_needed''')
+#    def _refresh(self, name, new):
+#        self.update_info()
+#
+#        self.executor.clear_run_states()
+#
+#        executor = self.executor
+#        if name not in ('update_needed', 'refresh_button'):
+#            executor.executable = False
+#            if executor.isAlive():
+#                executor.end_at_run_completion = True
+#                executor.changed_flag = True
 
     def _experiment_queue_changed(self, eq):
         if eq:

@@ -100,6 +100,8 @@ class ExperimentEditorTask(EditorTask):
                     manager.test_queues(qs)
                     manager.update_info()
                     manager.path = path
+                    manager.executor.reset()
+
 #                    manager.start_file_listener(path)
 
             return True
