@@ -23,7 +23,7 @@ from src.processing.processor import Processor
 from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
-from src.processing.tasks.processing_actions import FindAction, IdeogramAction, \
+from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction
 from src.processing.tasks.analysis_edit.actions import BlankEditAction
 
@@ -44,11 +44,6 @@ class ProcessingPlugin(BaseTaskPlugin):
         return [
                 TaskExtension(
                               actions=[
-                                       SchemaAddition(
-                                                      id='find_action',
-                                                      factory=FindAction,
-                                                      path='MenuBar/File'
-                                                      ),
                                        SchemaAddition(
                                                       id='new_ideogram_action',
                                                       factory=IdeogramAction,

@@ -19,25 +19,26 @@ from traits.api import HasTraits
 from traitsui.api import View, Item
 from pyface.action.action import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class DefaultAction(Action):
-    def _get_experimentor(self, event):
-        return self._get_service(event, 'src.experiment.experimentor.Experimentor')
-
-    def _get_service(self, event, name):
-        app = event.task.window.application
-        return app.get_service(name)
-
-    def _open_editor(self, event, task_id):
-        application = event.task.window.application
-        for wi in application.windows:
-            if wi.active_task.id == task_id:
-                wi.activate()
-                break
-        else:
-            win = application.create_window(TaskWindowLayout(task_id))
-            win.open()
+# class DefaultAction(Action):
+#    def _get_experimentor(self, event):
+#        return self._get_service(event, 'src.experiment.experimentor.Experimentor')
+#
+#    def _get_service(self, event, name):
+#        app = event.task.window.application
+#        return app.get_service(name)
+#
+#    def _open_editor(self, event, task_id):
+#        application = event.task.window.application
+#        for wi in application.windows:
+#            if wi.active_task.id == task_id:
+#                wi.activate()
+#                break
+#        else:
+#            win = application.create_window(TaskWindowLayout(task_id))
+#            win.open()
 
 # class GenericNewAction(DefaultAction):
 #    name = 'New'
@@ -69,11 +70,12 @@ class DefaultAction(Action):
 #                    if manager.load_experiment_queue(saveable=True):
 #                        self._open_editor(event, 'pychron.experiment')
 
-class GenericSaveAction(DefaultAction):
+class GenericSaveAction(TaskAction):
     name = 'Save'
     accelerator = 'Ctrl+S'
     def perform(self, event):
-        task = event.task
+        task = self.task
+#        task = event.task
         if hasattr(task, 'save'):
             task.save()
 #        else:
@@ -81,13 +83,24 @@ class GenericSaveAction(DefaultAction):
 #            manager.save_experiment_queues()
 
 
-class GenericSaveAsAction(DefaultAction):
+class GenericSaveAsAction(TaskAction):
     name = 'Save As...'
     accelerator = 'Ctrl+Shift+S'
     def perform(self, event):
-        task = event.task
+        task = self.task
         if hasattr(task, 'save_as'):
             task.save_as()
+
+class GenericFindAction(TaskAction):
+    accelerator = 'Ctrl+F'
+    name = 'Find...'
+    def perform(self, event):
+        task = self.task
+        if hasattr(task, 'find'):
+            task.find()
+
+# class GenericReplaceAction(TaskAction):
+#    pass
 #        else:
 #            manager = self._get_experimentor(event)
 #            manager.save_as_experiment_queues()

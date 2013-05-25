@@ -28,15 +28,12 @@ class ProcessorAction(Action):
         processor = app.get_service('src.processing.processor.Processor')
         return processor
 
-
-
-
-class FindAction(ProcessorAction):
-    name = 'Find...'
-    accelerator = 'Ctrl+f'
-    def perform(self, event):
-        processor = self._get_processor(event)
-        processor.find()
+# class FindAction(ProcessorAction):
+#    name = 'Find...'
+#    accelerator = 'Ctrl+f'
+#    def perform(self, event):
+#        processor = self._get_processor(event)
+#        processor.find()
 
 class IdeogramAction(ProcessorAction):
     name = 'Ideogram'

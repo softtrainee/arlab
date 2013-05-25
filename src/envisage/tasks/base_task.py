@@ -26,10 +26,9 @@ from pyface.action.api import ActionItem, Group
 # from pyface.tasks.action.task_action import TaskAction
 from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAction
 from pyface.tasks.task_window_layout import TaskWindowLayout
-from pyface.workbench.action.view_menu_manager import ViewMenuManager
 from pyface.tasks.action.task_action import TaskAction
-from pyface.action.group import Separator
-from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction
+from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
+    GenericFindAction
 #    GenericOpenAction, GenericNewAction
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
@@ -214,7 +213,10 @@ class BaseTask(Task):
         return view_menu
 
     def _edit_menu(self):
-        edit_menu = SMenu(id='Edit', name='&Edit')
+        edit_menu = SMenu(
+                          GenericFindAction(),
+                          id='Edit',
+                          name='Edit')
         return edit_menu
 
     def _file_menu(self):
@@ -226,18 +228,18 @@ class BaseTask(Task):
                           GenericSaveAsAction(),
                           GenericSaveAction(),
 
-                          id='File', name='&File')
+                          id='File', name='File')
         return file_menu
 
     def _tools_menu(self):
-        tools_menu = SMenu(id='Tools', name='&Tools')
+        tools_menu = SMenu(id='Tools', name='Tools')
         return tools_menu
 
     def _window_menu(self):
         window_menu = SMenu(
                           Group(MinimizeAction()),
                           WindowGroup(),
-                          name='&Window')
+                          name='Window')
 
         return window_menu
 

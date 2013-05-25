@@ -115,6 +115,9 @@ class ProcessingTask(EditorTask):
     #===========================================================================
     # actions
     #===========================================================================
+    def find(self):
+        self.manager.find()
+
     def print_pdf(self):
         if self.active_editor:
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
