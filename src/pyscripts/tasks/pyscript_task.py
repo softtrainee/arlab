@@ -150,6 +150,7 @@ class PyScriptTask(EditorTask):
 #        except AttributeError, e :
 
     def _selected_command_changed(self):
+        print self.selected_command
         if self.selected_command:
             scmd = self.selected_command
             cmd = None

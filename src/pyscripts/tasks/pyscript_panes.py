@@ -15,9 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Str
-from traitsui.api import View, Item, ListStrEditor, UItem
+from traits.api import HasTraits, List, Instance, Str, Property
+from traitsui.api import View, Item, ListStrEditor, UItem, TabularEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
+from traitsui.list_str_adapter import ListStrAdapter
+from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class DescriptionPane(TraitsDockPane):
@@ -63,20 +65,39 @@ class EditorPane(TraitsDockPane):
         v = View(UItem('editor', style='custom'))
         return v
 
+class myListStrAdapter(TabularAdapter):
+    columns = [('Name', 'name')]
+    name_text = Property
+    def _get_name_text(self):
+        return self.item
+
 class CommandsPane(TraitsDockPane):
     name = 'Commands'
     id = 'pychron.pyscript.commands'
-    commands = List
-    name=Str
+
+    commands = Property(depends_on='_commands')
+    _commands = List
+    name = Str
+
+    def _set_commands(self, cs):
+        self._commands = cs
+
+    def _get_commands(self):
+        return sorted(self._commands)
+
     def _get_commands_group(self):
         return Item('commands',
-                          style='custom',
-                          show_label=False,
-                          editor=ListStrEditor(operations=[],
-                                        editable=False,
+                      style='custom',
+                      show_label=False,
+                      editor=TabularEditor(operations=['move'],
+
+                                    adapter=myListStrAdapter(),
+#                                    editable=False,
+                                    editable=True,
+                                    dclicked='dclicked',
 #                                        right_clicked='',
-                                        selected='selected_command'
-                                        ),
+                                    selected='selected_command'
+                                    ),
                          width=200,
                         ),
 

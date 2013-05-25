@@ -61,7 +61,7 @@ class ExperimentEditor(BaseTraitsEditor):
                                             copy_function='copy_function',
  #                                             copy_cache='copy_cache',
  #                                             update='update_needed',
-                                            drag_move=True,
+#                                            drag_move=True,
                                             auto_update=True,
                                             multi_select=True,
                                             scroll_to_bottom=False)
@@ -89,10 +89,10 @@ class ExperimentEditor(BaseTraitsEditor):
 
     def _path_changed(self):
         self.queue.path = self.path
-        
+
     def _set_queue_dirty(self):
         if not self.queue._no_update and self.queue.initialized:
-            self.dirty=True
+            self.dirty = True
 
 #===========================================================================
 #
