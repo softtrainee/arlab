@@ -19,7 +19,7 @@ from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cach
 #=============standard library imports ========================
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError
 import os
 #=============local library imports  ==========================
 
@@ -303,9 +303,12 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             q = sess.query(table)
 
             if joins:
-                for ji in joins:
-                    if ji != table:
-                        q = q.join(ji)
+                try:
+                    for ji in joins:
+                        if ji != table:
+                            q = q.join(ji)
+                except InvalidRequestError:
+                    pass
 
             if filters is not None:
                 for fi in filters:

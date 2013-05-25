@@ -88,7 +88,7 @@ class OpenExperimentQueueAction(QueueAction):
     '''
     description = 'Open experiment set'
     name = 'Experiment...'
-    accelerator = 'Shift+Ctrl+O'
+    accelerator = 'Ctrl+O'
 
     def perform(self, event):
         '''
