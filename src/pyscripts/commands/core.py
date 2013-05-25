@@ -40,7 +40,8 @@ class Command(HasTraits):
                           self._get_command(),
                           self._to_string()
                           )
-        return self.indent(m)
+        return m
+#        return self.indent(m)
 
     def _get_command(self):
         return uncamelcase(self.__class__.__name__)

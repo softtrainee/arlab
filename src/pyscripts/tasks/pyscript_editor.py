@@ -22,13 +22,98 @@ from pyface.tasks.api import Editor
 import os
 from src.pyscripts.parameter_editor import MeasurementParameterEditor, \
     ParameterEditor
+from PySide.QtGui import QTextCursor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
                     Extraction='src.pyscripts.extraction_line_pyscript',
                     Measurement='src.pyscripts.measurement_pyscript'
                     )
+from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
+class CodeWidget(AdvancedCodeWidget):
+    commands = None
+    def __init__(self, parent, commands=None, *args, **kw):
+        self.commands = commands
 
+        super(CodeWidget, self).__init__(parent, *args, **kw)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+#        print 'asdfsadffasd'
+        e.accept()
+#        if e.mimeData().hasFormat('text/plain'):
+#            e.accept()
+#        else:
+#            e.ignore()
+
+    def dropEvent(self, e):
+
+        mime = e.mimeData()
+        fmts = mime.formats()
+#        print fmts
+        fmt = fmts[0]
+
+        idx = mime.data(fmt)
+
+
+        scmd = self.commands.script_commands[int(idx)]
+        cmd = self._command_object(scmd)
+        if cmd:
+            text = cmd.get_text()
+            if text:
+                cur = self.code.cursorForPosition(e.pos())
+
+                # get the indent level of the line
+                # if line starts with a special keyword add indent
+
+                block = cur.block()
+                line = block.text()
+                indent = self._get_indent_position(line)
+                line = line.strip()
+                token = line.split(' ')[0]
+                token = token.strip()
+
+                if token in ('if', 'for', 'while', 'with', 'def', 'class'):
+                    indent += 4
+
+                indent = ' ' * indent
+                cur.movePosition(QTextCursor.EndOfLine)
+                cur.insertText('\n{}{}'.format(indent, text))
+
+    def _get_indent_position(self, line):
+        trimmed = line.lstrip()
+        if len(trimmed) != 0:
+            return line.index(trimmed)
+        else:
+            # if line is all spaces, treat it as the indent position
+            return len(line)
+
+    def _command_object(self, scmd):
+
+        cmd = None
+        words = scmd.split('_')
+        klass = ''.join(map(str.capitalize, words))
+
+        pkg = 'src.pyscripts.commands.api'
+        cmd_name = '{}_command_editor'.format(scmd)
+        try:
+            cmd = getattr(self, cmd_name)
+        except AttributeError:
+
+            m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
+            try:
+                cmd = getattr(m, klass)()
+                setattr(self, cmd_name, cmd)
+            except AttributeError, e :
+                if scmd:
+                    print e
+
+        return cmd
+#        print mime.hasText()
+#        print mime.hasImage()
+#        print mime.hasHtml()
+
+#        self.setText(e.mimeData().text())
 
 class Commands(HasTraits):
     script_commands = List
@@ -93,8 +178,11 @@ class PyScriptEditor(Editor):
 
 
     def _create_control(self, parent):
-        from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
-        self.control = control = AdvancedCodeWidget(parent)
+
+        self.control = control = CodeWidget(parent,
+                                            commands=self.commands
+                                            )
+#        self.control = control = AdvancedCodeWidget(parent)
         self._show_line_numbers_changed()
 
         # Install event filter to trap key presses.
@@ -105,6 +193,7 @@ class PyScriptEditor(Editor):
         # Connect signals for text changes.
         control.code.modificationChanged.connect(self._on_dirty_changed)
         control.code.textChanged.connect(self._on_text_changed)
+
 
         # Load the editor's contents.
         self.load()
