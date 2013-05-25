@@ -407,7 +407,7 @@ tray: {}
 #===============================================================================
     def _get_cleaned_automated_runs(self):
         return [ci for ci in self.automated_runs
-                if not ci.skip]
+                    if not ci.skip and ci.state == 'not run']
 
 #===============================================================================
 # groups

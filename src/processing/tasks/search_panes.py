@@ -79,8 +79,11 @@ class ResultsPane(TraitsDockPane):
 #                                                    selected_row='selected_row',
                                                     update='update',
                                                     column_clicked='column_clicked',
-                                                    editable=False,
-                                                    multi_select=True
+#                                                    editable=False,
+                                                    multi_select=True,
+                                                    operations=['move'],
+                                                    editable=True,
+                                                    drag_external=True
                                                     ),
                              show_label=False,
 #                               height=0.75,

@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
     Bool, cached_property, Event
-from traitsui.api import View, Item, EnumEditor, HGroup, Spring, CheckListEditor
+from traitsui.api import View, Item, EnumEditor, HGroup, Spring, CheckListEditor, \
+    VGroup
 from src.helpers.datetime_tools import get_date
 from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import and_
@@ -136,75 +137,7 @@ class Query(HasTraits):
 #        c = '{}'.format(c)
         return query
 
-#        elif 'runtime' in param:
-#    def time_query(self):
-#        args = criteria.split(':')
-#        if len(args) in [1, 2] and comp == '=':
-#            base = ['00', ] * (3 - len(args))
-#            g = ':'.join(args + base)
-#            try:
-#                a = [int(ai) + (1 if len(args) - 1 == i else 0)
-#                    for i, ai in enumerate(args)]
-#            except ValueError:
-#                return None
 #
-#            f = ':'.join(['{:n}', ] * (len(args)) + base)
-#            l = f.format(*a)
-#            c = self._between(param , l, g)
-#            return c
-#        else:
-#            c = ':'.join(args + ['00', ] * (3 - len(args)))
-#    def get_filter_str(self,):
-#        return self._get_filter_str(self.parameter, self.comparator, self.criterion)
-#
-#    def _get_filter_str(self, param, comp, criteria):
-#        if self.date_str in param:
-#            c = criteria.replace('/', '-')
-#            if criteria == 'today':
-#                c = get_date()
-#            elif criteria == 'this month':
-#                d = datetime.today().date()
-#                today = get_date()
-#                if '=' in comp:
-#                    d = d - timedelta(days=d.day)
-#                    c = self._between(param, today, d)
-#                    return c
-#                else:
-#                    c = d - timedelta(days=d.day - 1)
-#            c = '{}'.format(c)
-#        elif 'runtime' in param:
-#            args = criteria.split(':')
-#            if len(args) in [1, 2] and comp == '=':
-#                base = ['00', ] * (3 - len(args))
-#                g = ':'.join(args + base)
-#                try:
-#                    a = [int(ai) + (1 if len(args) - 1 == i else 0)
-#                        for i, ai in enumerate(args)]
-#                except ValueError:
-#                    return None
-#
-#                f = ':'.join(['{:n}', ] * (len(args)) + base)
-#                l = f.format(*a)
-#                c = self._between(param , l, g)
-#                return c
-#            else:
-#                c = ':'.join(args + ['00', ] * (3 - len(args)))
-#        else:
-#            #convert forgein key param
-#            if not '.' in param:
-#                param = '{}.id'.format(param)
-#
-#            c = criteria
-#
-#        if comp == 'like':
-#            c += '%'
-#        elif comp == 'contains':
-#            comp = 'like'
-#            c = '%' + c + '%'
-#
-#        c = '"{}"'.format(c)
-#        return ' '.join((param, comp, c))
-
 #===============================================================================
 # private
 #===============================================================================
@@ -320,7 +253,7 @@ class Query(HasTraits):
 # views
 #===============================================================================
     def traits_view(self):
-        qgrp = HGroup(
+        top = HGroup(
                 Item('parameter', editor=EnumEditor(name='parameters'),
 #                     width= -100
                      ),
@@ -329,15 +262,22 @@ class Query(HasTraits):
                 Item('comparator',
                      editor=EnumEditor(name='comparisons'),
                      ),
-                Item('criterion'),
-                Item('criterion', width= -30, editor=CheckListEditor(name='criteria')),
                 Item('add'),
                 Spring(springy=False,
                        width=50, visible_when='not removable'),
                 Item('remove', visible_when='removable'),
                 show_labels=False
                 )
-        v = View(qgrp)
+
+        bottom = HGroup(
+                        Item('criterion'),
+                        Item('criterion', width= -30,
+                             show_label=False,
+                             editor=CheckListEditor(name='criteria')),
+
+                        )
+
+        v = View(VGroup(top, bottom))
         return v
 
 class IsotopeQuery(Query):
@@ -377,3 +317,71 @@ class BakeoutQuery(Query):
                   'Controller'
                   ]
 #============= EOF =============================================
+#        elif 'runtime' in param:
+#    def time_query(self):
+#        args = criteria.split(':')
+#        if len(args) in [1, 2] and comp == '=':
+#            base = ['00', ] * (3 - len(args))
+#            g = ':'.join(args + base)
+#            try:
+#                a = [int(ai) + (1 if len(args) - 1 == i else 0)
+#                    for i, ai in enumerate(args)]
+#            except ValueError:
+#                return None
+#
+#            f = ':'.join(['{:n}', ] * (len(args)) + base)
+#            l = f.format(*a)
+#            c = self._between(param , l, g)
+#            return c
+#        else:
+#            c = ':'.join(args + ['00', ] * (3 - len(args)))
+#    def get_filter_str(self,):
+#        return self._get_filter_str(self.parameter, self.comparator, self.criterion)
+#
+#    def _get_filter_str(self, param, comp, criteria):
+#        if self.date_str in param:
+#            c = criteria.replace('/', '-')
+#            if criteria == 'today':
+#                c = get_date()
+#            elif criteria == 'this month':
+#                d = datetime.today().date()
+#                today = get_date()
+#                if '=' in comp:
+#                    d = d - timedelta(days=d.day)
+#                    c = self._between(param, today, d)
+#                    return c
+#                else:
+#                    c = d - timedelta(days=d.day - 1)
+#            c = '{}'.format(c)
+#        elif 'runtime' in param:
+#            args = criteria.split(':')
+#            if len(args) in [1, 2] and comp == '=':
+#                base = ['00', ] * (3 - len(args))
+#                g = ':'.join(args + base)
+#                try:
+#                    a = [int(ai) + (1 if len(args) - 1 == i else 0)
+#                        for i, ai in enumerate(args)]
+#                except ValueError:
+#                    return None
+#
+#                f = ':'.join(['{:n}', ] * (len(args)) + base)
+#                l = f.format(*a)
+#                c = self._between(param , l, g)
+#                return c
+#            else:
+#                c = ':'.join(args + ['00', ] * (3 - len(args)))
+#        else:
+#            #convert forgein key param
+#            if not '.' in param:
+#                param = '{}.id'.format(param)
+#
+#            c = criteria
+#
+#        if comp == 'like':
+#            c += '%'
+#        elif comp == 'contains':
+#            comp = 'like'
+#            c = '%' + c + '%'
+#
+#        c = '"{}"'.format(c)
+#        return ' '.join((param, comp, c))

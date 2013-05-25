@@ -15,17 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from PySide.QtGui import QKeySequence
+from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView
+from PySide import QtCore
 from traits.api import Bool, on_trait_change, Any, Str, Event, List, Callable
 from traitsui.editors.tabular_editor import TabularEditor
 from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
     _TableView
+from traitsui.mimedata import PyMimeData
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class _myTableView(_TableView):
+    '''
+        for drag and drop reference see
+        https://github.com/enthought/traitsui/blob/master/traitsui/qt4/tree_editor.py
+        
+    '''
     _copy_cache = None
     copy_func = None
+    _dragging = None
+
+    def __init__(self, *args, **kw):
+        super(_myTableView, self).__init__(*args, **kw)
+        self.setDragDropMode(QAbstractItemView.DragDrop)
+
     def keyPressEvent(self, event):
 
         if event.matches(QKeySequence.Copy):
@@ -48,6 +61,92 @@ class _myTableView(_TableView):
                     self._editor.model.insertRow(idx, obj=copy_func(ci))
         else:
             super(_myTableView, self).keyPressEvent(event)
+
+    def startDrag(self, actions):
+        if self._editor.factory.drag_external:
+            idxs = self.selectedIndexes()
+            rows = sorted(list(set([idx.row() for idx in idxs])))
+            drag_object = [
+                           (ri, self._editor.value[ri])
+                            for ri in rows]
+
+            md = PyMimeData.coerce(drag_object)
+
+            self._dragging = self.currentIndex()
+            drag = QDrag(self)
+            drag.setMimeData(md)
+    #        drag.setPixmap(pm)
+    #        drag.setHotSpot(hspos)
+            drag.exec_(actions)
+        else:
+            super(_myTableView, self).startDrag(actions)
+
+
+    def dragEnterEvent(self, e):
+        if self.is_external():
+            # Assume the drag is invalid.
+            e.ignore()
+
+            # Check what is being dragged.
+            md = PyMimeData.coerce(e.mimeData())
+            if md is None:
+                return
+
+            # We might be able to handle it (but it depends on what the final
+            # target is).
+            e.acceptProposedAction()
+        else:
+            super(_myTableView, self).dragEnterEvent(e)
+
+    def dragMoveEvent(self, e):
+        if self.is_external():
+            e.acceptProposedAction()
+        else:
+            super(_myTableView, self).dragMoveEvent(e)
+
+    def dropEvent(self, e):
+        if self.is_external():
+            data = PyMimeData.coerce(e.mimeData()).instance()
+            copy_func = lambda x: x
+
+            row = self.rowAt(e.pos().y())
+            n = len(self._editor.value)
+            if row == -1:
+                row = n
+
+            model = self._editor.model
+            if self._dragging:
+                rows = [ri for ri, _ in data]
+                model.moveRows(rows, row)
+            else:
+#                self._editor._no_update = True
+#                parent = QtCore.QModelIndex()
+#                model.beginInsertRows(parent, row, row)
+#                editor = self._editor
+                self._editor.object._no_update = True
+                for i, (_, di) in enumerate(reversed(data[1:])):
+#                    print 'insert'
+#                    obj = copy_func1(di)
+#                    editor.callx(editor.adapter.insert, editor.object, editor.name, row + i, obj)
+                    model.insertRow(row=row, obj=copy_func(di))
+
+                self._editor.object._no_update = False
+                model.insertRow(row=row, obj=copy_func(data[0][1]))
+
+
+#                model.endInsertRows()
+#                self._editor._no_update = False
+
+            e.accept()
+            self._dragging = None
+
+        else:
+            super(_myTableView, self).dropEvent(e)
+
+
+    def is_external(self):
+#        print 'is_external', self._editor.factory.drag_external and not self._dragging
+        return self._editor.factory.drag_external  # and not self._dragging
 
 class _TabularEditor(qtTabularEditor):
 
@@ -92,6 +191,7 @@ class myTabularEditor(TabularEditor):
     pasted = Str
     copy_cache = Str
     copy_function = Str
+    drag_external = Bool(False)
     def _get_klass(self):
         return _TabularEditor
 #============= EOF =============================================

@@ -32,6 +32,9 @@ import time
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
+    pass
+
+class Processor2(IsotopeDatabaseManager):
     count = 0
     selector_manager = Instance(SelectorManager)
     search_manager = Instance(SearchManager)
@@ -70,22 +73,6 @@ class Processor(IsotopeDatabaseManager):
             ps.selected = None
             ps.selector.load_last(n=20)
             self.open_view(ps)
-
-    def _record_factory(self, pi):
-        rec = IsotopeRecord(_dbrecord=self.db.get_analysis_uuid(pi.uuid),
-                            graph_id=pi.graph_id,
-                            group_id=pi.group_id)
-        a = Analysis(isotope_record=rec)
-#        a.load_isotopes()
-        return a
-
-#    def _load_analyses(self, records, evt):
-#
-#        n = len(records)
-#        dlg = myProgressDialog(max=n, size=(500, 10))
-#        dlg.open()
-
-
 
     def _gather_data(self):
         d = self.selector_manager

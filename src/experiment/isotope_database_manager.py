@@ -22,6 +22,8 @@ from apptools.preferences.preference_binding import bind_preference
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
+from src.database.records.isotope_record import IsotopeRecord
+from src.processing.analysis import Analysis
 
 
 class IsotopeDatabaseManager(Manager):
@@ -81,8 +83,19 @@ class IsotopeDatabaseManager(Manager):
         except AttributeError:
             pass
 
+    def _record_factory(self, pi):
+        rec = IsotopeRecord(_dbrecord=self.db.get_analysis_uuid(pi.uuid),
+                            graph_id=pi.graph_id,
+                            group_id=pi.group_id)
+        a = Analysis(isotope_record=rec)
+#        a.load_isotopes()
+        return a
 
+    def make_analyses(self, ans):
+        return [self._record_factory(ai) for ai in ans]
 
+    def load_analyses(self, ans, **kw):
+        self._load_analyses(ans, **kw)
 
     def _db_default(self):
         return self._db_factory()

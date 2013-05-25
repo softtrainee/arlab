@@ -116,7 +116,7 @@ class AutomatedRun(Loggable):
     sample = Str
     irradiation = Str
 
-    state = String
+    state = String('not run')
     extract_group = CInt
     extract_value = Float
     extract_units = Str(NULL_STR)
@@ -206,8 +206,8 @@ class AutomatedRun(Loggable):
 
 #    save_error_flag = False
 
-#    def _state_changed(self):
-#        print self.state
+    def _state_changed(self, old, new):
+        self.debug('state changed from {} to {}'.format(old, new))
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -558,7 +558,8 @@ anaylsis_type={}
         self.finish()
 
         if state:
-            self.state = state
+            if self.state != 'not run':
+                self.state = state
 
     def truncate_run(self, style='normal'):
         '''
@@ -622,8 +623,7 @@ anaylsis_type={}
         if self.monitor:
             self.monitor.stop()
 
-        print self.state
-        if self.state not in ('canceled', 'success', 'truncated'):
+        if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
 
     def info(self, msg, color=None, *args, **kw):
@@ -725,6 +725,9 @@ anaylsis_type={}
         if not self._alive:
             return
 
+        if not self.extraction_script:
+            return
+
         self.info_color = EXTRACTION_COLOR
         self.info('======== Extraction Started ========')
         self.state = 'extraction'
@@ -749,6 +752,8 @@ anaylsis_type={}
     def do_measurement(self):
         if not self._alive:
             return
+        if not self.measurement_script:
+            return True
 
         self.measurement_script.manager = self.experiment_manager
         # use a measurement_script to explicitly define
@@ -821,24 +826,17 @@ anaylsis_type={}
             self.info('======== Post Equilibration Finished unsuccessfully ========')
 
     def do_post_termination(self):
-#        def term():
-        self.info('========= Post Termination ========')
+        self.info('========= Post Termination Started ========')
         self.do_post_equilibration()
         self.do_post_measurement()
         self._alive = False
-
-#        term()
-#        from src.ui.thread import Thread as mThread
-#        self._term_thread=mThread(target=term)
-#        self._term_thread.start()
+        self.info('========= Post Termination Finished ========')
 
     def _plot_panel_closed(self):
         if self.measuring:
             from src.ui.thread import Thread as mThread
             self._term_thread = mThread(target=self.cancel_run)
             self._term_thread.start()
-
-#            self.cancel_run()
 
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
@@ -852,13 +850,11 @@ anaylsis_type={}
             plot_panel = PlotPanel(
                              window_y=0.05,  # + 0.01 * self.index,
                              window_x=0.6,  # + 0.01 * self.index,
-
                              window_title=title,
                              stack_order=stack_order,
                              arar_age=self.arar_age,
                              sample=self.sample,
                              irradiation=self.irradiation
-    #                         signals=dict(),
                              )
 
             plot_panel.reset()
@@ -1198,8 +1194,6 @@ anaylsis_type={}
         dm = self.data_manager
         # make a new frame for saving data
 
-#        name = uuid.uuid4()
-#        self.uuid = str(name)
         name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
         frame = dm.new_frame(path=path)

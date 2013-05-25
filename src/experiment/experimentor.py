@@ -358,7 +358,6 @@ class Experimentor(Experimentable):
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):
-
         self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 

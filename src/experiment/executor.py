@@ -235,7 +235,6 @@ class ExperimentExecutor(Experimentable):
 
                 self._canceled = True
                 if arun:
-
                     if style == 'queue':
                         state = None
                         if cancel_run:
@@ -429,18 +428,20 @@ class ExperimentExecutor(Experimentable):
                 nonfound.append('spectrometer')
 
         return nonfound
+
     def clear_run_states(self):
         for exp in self.experiment_queues:
-            for ei in exp.automated_runs:
+            if exp.selected:
+                runs = exp.selected
+            else:
+                runs = exp.automated_runs
+            for ei in runs:
                 ei.state = 'not run'
 
     def _execute_experiment_queues(self):
 
         self.pyscript_runner.connect()
         self._alive = True
-
-        # clear run states
-        self.clear_run_states()
 
         exp = self.experiment_queue
 
@@ -735,7 +736,9 @@ class ExperimentExecutor(Experimentable):
         # get first air, unknown or cocktail
         aruns = self.experiment_queue.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
-                    if a.analysis_type in types and not a.skip), None)
+                            if a.analysis_type in types and \
+                                not a.skip and \
+                                    a.state == 'not run'), None)
 
         if fa:
             ind, an = fa
