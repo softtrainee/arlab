@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button, on_trait_change
+from traits.api import HasTraits, Any, Button, on_trait_change, Bool, \
+    Property, Event
 from traitsui.api import View, Item, TableEditor
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
@@ -27,8 +28,11 @@ class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
     current_run = Any
     selected = Any
-    refresh_button = Button('Refresh')
     dclicked = Any
+
+#    refresh_button = Event
+#    refresh_label = Property(depends_on='was_executed')
+#    was_executed = Bool(False)
 
     def copy_function(self, obj):
         ci = obj.clone_traits()
@@ -41,7 +45,8 @@ class ExperimentQueue(BaseExperimentQueue):
         if not self._no_update:
             self.debug('automated runs len changed {}'.format(len(new)))
             if self.automated_runs:
-                self.refresh_button = True
+                self.update_needed = True
+#                self.refresh_button = True
 
     def test_runs(self):
 #         self.executable=True
@@ -109,5 +114,6 @@ class ExperimentQueue(BaseExperimentQueue):
                 self.info('last ran analysis {} does not exist in modified experiment set. starting from the beginning')
 
         return rgen, n
+
 
 #============= EOF =============================================
