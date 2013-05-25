@@ -76,6 +76,14 @@ class PyScriptTask(EditorTask):
     def _save_file(self, path):
         self.active_editor.dump(path)
 
+    def find(self):
+        if self.active_editor:
+            self.active_editor.control.enable_find()
+
+    def replace(self):
+        if self.active_editor:
+            self.active_editor.control.enable_replace()
+
     def new(self):
 
         # todo ask for script type

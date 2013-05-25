@@ -24,13 +24,28 @@ from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.pyscripts.tasks.pyscript_actions import OpenPyScriptAction, \
     NewPyScriptAction
+from pyface.tasks.action.task_action import TaskAction
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class PyScriptPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):
-        return [TaskExtension(
+        def _replace_action():
+            return TaskAction(name='Replace',
+                              method='replace')
+
+        return [
+                TaskExtension(
+                              task_id='pychron.pyscript',
+                              actions=[SchemaAddition(id='replace',
+                                            path='MenuBar/Edit',
+                                            factory=_replace_action
+                                            )
+                                       ]
+                              ),
+
+                TaskExtension(
 #                              task_id='pychron.pyscript',
                               actions=[
                                        SchemaAddition(id='open_script',
@@ -40,7 +55,11 @@ class PyScriptPlugin(BaseTaskPlugin):
                                        SchemaAddition(id='new_script',
                                                     path='MenuBar/File/New',
                                                     factory=NewPyScriptAction
-                                                    )
+                                                    ),
+#                                       SchemaAddition(id='replace',
+#                                                    path='MenuBar/Edit',
+#                                                    factory=_replace_action
+#                                                    )
 
                                        ])
                 ]

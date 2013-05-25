@@ -57,4 +57,5 @@ class NewPyScriptAction(Action):
             if task.new():
                 win.open()
 
+
 #============= EOF =============================================

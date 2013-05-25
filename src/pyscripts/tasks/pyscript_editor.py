@@ -33,29 +33,20 @@ from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
 class CodeWidget(AdvancedCodeWidget):
     commands = None
     def __init__(self, parent, commands=None, *args, **kw):
-        self.commands = commands
 
         super(CodeWidget, self).__init__(parent, *args, **kw)
+        self.commands = commands
         self.setAcceptDrops(True)
 
     def dragEnterEvent(self, e):
-#        print 'asdfsadffasd'
-        e.accept()
-#        if e.mimeData().hasFormat('text/plain'):
-#            e.accept()
-#        else:
-#            e.ignore()
+        if e.mimeData().hasFormat('traits-ui-tabular-editor'):
+            e.accept()
+        else:
+            e.ignore()
 
     def dropEvent(self, e):
-
         mime = e.mimeData()
-        fmts = mime.formats()
-#        print fmts
-        fmt = fmts[0]
-
-        idx = mime.data(fmt)
-
-
+        idx = mime.data('traits-ui-tabular-editor')
         scmd = self.commands.script_commands[int(idx)]
         cmd = self._command_object(scmd)
         if cmd:
@@ -109,11 +100,7 @@ class CodeWidget(AdvancedCodeWidget):
                     print e
 
         return cmd
-#        print mime.hasText()
-#        print mime.hasImage()
-#        print mime.hasHtml()
 
-#        self.setText(e.mimeData().text())
 
 class Commands(HasTraits):
     script_commands = List
@@ -131,18 +118,7 @@ class Commands(HasTraits):
         klassname = '{}PyScript'.format(kind)
         m = __import__(SCRIPT_PKGS[kind], fromlist=[klassname])
         klass = getattr(m, klassname)
-#        if self.save_path:
-#            r, n = os.path.split(self.save_path)
-#            kw['root'] = r
-#            kw['name'] = n
-#        else:
-#            kw['root'] = os.path.join(paths.scripts_dir, 'pyscripts')
-
-        return klass(
-#                     manager=self.parent,
-#                     parent=self,
-                     **kw)
-
+        return klass(**kw)
 
 
 class PyScriptEditor(Editor):
