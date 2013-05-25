@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float
+from traits.api import HasTraits, Str, Float, File, Property, Interface, implements
 from traitsui.api import View, Item, FileEditor, VGroup, Group
 from traitsui.menu import OKCancelButtons
 #============= standard library imports ========================
@@ -32,9 +32,22 @@ def uncamelcase(name):
 readonly = lambda x, **kw: Item(x, style='readonly', show_label=False,
                                  **kw)
 
+
+# class ICommand(Interface):
+#    def to_string(self):
+#        pass
+#    def get_text(self):
+#        pass
+
 class Command(HasTraits):
     description = Str
     example = Str
+    name = Property
+#    implements(ICommand)
+
+    def _get_name(self):
+        return self._get_command()
+
     def to_string(self):
         m = '{}({})'.format(
                           self._get_command(),
@@ -73,11 +86,12 @@ class Command(HasTraits):
     def get_text(self):
         ok = True
         if hasattr(self, '_get_view'):
-            info = self.edit_traits(kind='livemodal')
-            ok = info.result
+#            pass
+            info = self.edit_traits(kind='modal')
+#            ok = info.result
 
-        if ok:
-            return self.to_string()
+#        if ok:
+        return self.to_string()
 
     def traits_view(self):
         v = View(self._get_view(),
@@ -90,7 +104,8 @@ class Command(HasTraits):
         v = View(self._get_help_view())
         return v
 
-#    def _get_view(self):
+    def _get_view(self):
+        return Item()
 #        raise NotImplementedError
 
     def _get_help_view(self):
@@ -143,7 +158,7 @@ class Sleep(Command):
 
 
 class Gosub(Command):
-    path = Str(paths.scripts_dir)
+    path = File
 
     description = 'Switch to another script'
     example = '''1. gosub("gosubname")
@@ -154,13 +169,19 @@ MeasurementPyScripts live in ../scripts/measurement
 
 '''
     def _get_view(self):
-        return Item('path',
+        return Item(
+                    'path',
                     style='custom',
-                    editor=FileEditor(filter=['*.py']),
-                    width=600,
+                    show_label=False,
+                    editor=FileEditor(
+                                      filter=['*.py'],
+                                      root_path=paths.scripts_dir,
+                                      ),
+#                    width=600,
                     )
 
     def _to_string(self):
+        print self.path
         if os.path.isfile(self.path):
             head, tail = os.path.split(self.path)
             words = [('name', tail),

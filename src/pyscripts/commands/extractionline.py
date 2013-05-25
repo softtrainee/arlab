@@ -22,6 +22,32 @@ from traitsui.api import Item
 from src.pyscripts.commands.core import Command
 from src.pyscripts.commands.valve import ValveCommand
 
+class Disable(Command):
+    pass
+
+class DrillPoint(Command):
+    pass
+
+class Enable(Command):
+    pass
+
+class MovingExtract(Command):
+    pass
+
+class Prepare(Command):
+    pass
+
+class SetMotor(Command):
+    pass
+
+class SetMotorLock(Command):
+    pass
+
+class Snapshot(Command):
+    pass
+
+class TracePath(Command):
+    pass
 
 class Open(ValveCommand):
     description = 'Open a valve'
@@ -86,23 +112,28 @@ class ValueCommand(Command):
 class Extract(ValueCommand):
     description = 'Set extraction device to specified value'
     example = ''
+
 class EndExtract(Command):
     description = ''
     example = ''
+
 class SetTray(Command):
     description = ''
     example = ''
+
 class SetResource(Command):
     description = ''
     example = ''
 
-
 class SetPositionCommand(ValueCommand):
     pass
+
 class SetX(SetPositionCommand):
     pass
+
 class SetY(SetPositionCommand):
     pass
+
 class SetZ(SetPositionCommand):
     pass
 

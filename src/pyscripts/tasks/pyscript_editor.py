@@ -16,19 +16,20 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Bool, Event, \
-    Unicode, Any, on_trait_change, List, String, Instance
-from traitsui.api import View, Item
+    Unicode, Any, List, String, cached_property
 from pyface.tasks.api import Editor
 import os
 from src.pyscripts.parameter_editor import MeasurementParameterEditor, \
     ParameterEditor
 from PySide.QtGui import QTextCursor
+from pyface.ui.qt4.python_editor import PythonEditorEventFilter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
                     Extraction='src.pyscripts.extraction_line_pyscript',
                     Measurement='src.pyscripts.measurement_pyscript'
                     )
+
 from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
 class CodeWidget(AdvancedCodeWidget):
     commands = None
@@ -47,10 +48,11 @@ class CodeWidget(AdvancedCodeWidget):
     def dropEvent(self, e):
         mime = e.mimeData()
         idx = mime.data('traits-ui-tabular-editor')
-        scmd = self.commands.script_commands[int(idx)]
-        cmd = self._command_object(scmd)
+
+#        cmd = ''
+        cmd = self.commands.command_objects[int(idx)]
         if cmd:
-            text = cmd.get_text()
+            text = cmd.to_string()
             if text:
                 cur = self.code.cursorForPosition(e.pos())
 
@@ -79,7 +81,21 @@ class CodeWidget(AdvancedCodeWidget):
             # if line is all spaces, treat it as the indent position
             return len(line)
 
-    def _command_object(self, scmd):
+class Commands(HasTraits):
+    script_commands = List
+    command_objects = List
+
+    def load_commands(self, kind):
+        ps = self._pyscript_factory(kind)
+        prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
+
+        self.script_commands = prepcommands(ps.get_commands())
+        self.script_commands.sort()
+        co = [self._command_factory(si)
+                    for si in self.script_commands]
+        self.command_objects = co
+
+    def _command_factory(self, scmd):
 
         cmd = None
         words = scmd.split('_')
@@ -100,18 +116,6 @@ class CodeWidget(AdvancedCodeWidget):
                     print e
 
         return cmd
-
-
-class Commands(HasTraits):
-    script_commands = List
-    def load_commands(self, kind):
-        ps = self._pyscript_factory(kind)
-        prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
-
-#        self.core_commands = prepcommands(ps.get_core_commands())
-#        self.script_commands = prepcommands(ps.get_script_commands())
-        self.script_commands = prepcommands(ps.get_commands())
-        self.script_commands.sort()
 
     def _pyscript_factory(self, kind, **kw):
 
@@ -134,6 +138,7 @@ class PyScriptEditor(Editor):
     kind = String
     commands = Property(depends_on='kind')
 
+    @cached_property
     def _get_commands(self):
         if self.kind:
             cmd = Commands()
@@ -144,14 +149,12 @@ class PyScriptEditor(Editor):
         if self.control:
             self.control.code.setPlainText(txt)
 
-
     def getText(self):
         if self.control:
             return self.control.code.document().toPlainText()
 
     def create(self, parent):
         self.control = self._create_control(parent)
-
 
     def _create_control(self, parent):
 
@@ -163,13 +166,13 @@ class PyScriptEditor(Editor):
 
         # Install event filter to trap key presses.
 #        event_filter = PythonEditorEventFilter(self, self.control)
+#        event_filter.control = self.control
 #        self.control.installEventFilter(event_filter)
 #        self.control.code.installEventFilter(event_filter)
 
         # Connect signals for text changes.
         control.code.modificationChanged.connect(self._on_dirty_changed)
         control.code.textChanged.connect(self._on_text_changed)
-
 
         # Load the editor's contents.
         self.load()
@@ -233,10 +236,15 @@ class PyScriptEditor(Editor):
 
 
 class MeasurementEditor(PyScriptEditor):
+#    editor = Instance(MeasurementParameterEditor, ())
     kind = 'Measurement'
-    editor = Instance(MeasurementParameterEditor, ())
+
+    def _editor_default(self):
+        return MeasurementParameterEditor(editor=self)
 
 class ExtractionEditor(PyScriptEditor):
+#    editor = Instance(ParameterEditor, ())
     kind = 'Extraction'
-    editor = Instance(ParameterEditor, ())
+    def _editor_default(self):
+        return ParameterEditor(editor=self)
 #============= EOF =============================================

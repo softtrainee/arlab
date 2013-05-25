@@ -59,9 +59,9 @@ class ParameterEditor(Loggable):
     body = String
     def parse(self, txt):
         pass
-    
+
     def traits_view(self):
-        v=View()
+        v = View()
         return v
 
 
@@ -278,18 +278,18 @@ class MeasurementParameterEditor(ParameterEditor):
                 self.debug(e)
 
     def _extract_parameter(self, line, attr, cast=None):
-
         regex = globals()['{}_REGEX'.format(attr.upper())]
-#        if attr == 'multicollect_counts':
-#            print regex.match(line), line
+
         if regex.match(line):
-            _, v = line.split('=')
+            try:
+                _, v = line.split('=')
+            except ValueError:
+                return
+
             v = v.strip()
             if cast:
                 v = cast(v)
 
-#            if attr == 'multicollect_counts':
-#                print 'vvvvv', v
             if v is not None:
                 setattr(self, attr, v)
                 self._update_value(attr, v)
