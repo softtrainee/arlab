@@ -94,11 +94,11 @@ class ClearActions(Command):
     description = 'Clear actions'
     example = ''' '''
 
-class ClearTruncation(Command):
+class ClearTruncations(Command):
     description = 'Clear truncations'
     example = ''' '''
 
-class ClearTermination(Command):
+class ClearTerminations(Command):
     description = 'Clear terminations'
     example = ''' '''
 #===============================================================================

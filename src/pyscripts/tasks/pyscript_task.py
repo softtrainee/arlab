@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, List, Instance, Property, Any, Enum
+from traits.api import HasTraits, String, List, Instance, Property, Any, Enum, \
+    on_trait_change
 from traitsui.api import View, Item, EnumEditor, UItem, Label
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed
 #============= standard library imports ========================
@@ -24,18 +25,19 @@ from src.envisage.tasks.base_task import BaseManagerTask
 from src.envisage.tasks.editor_task import EditorTask
 from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEditor
 from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
-    ExamplePane, EditorPane
+    ExamplePane, EditorPane, CommandEditorPane
 from src.paths import paths
 
 class PyScriptTask(EditorTask):
 
     kind = String
     kinds = List(['Extraction', 'Measurement'])
-    selected_command = String
+    commands_pane = Instance(CommandsPane)
+#    selected_command = String
 #    commands = Instance(Commands, ())
-    selected = Any
-    description = Property(String, depends_on='selected')
-    example = Property(String, depends_on='selected')
+#    selected = Any
+#    description = Property(String, depends_on='selected')
+#    example = Property(String, depends_on='selected')
 
 #    editor = Instance(ParameterEditor, ())
 
@@ -51,25 +53,32 @@ class PyScriptTask(EditorTask):
                                      PaneItem('pychron.pyscript.editor')
                                      ),
 #                          top=PaneItem('pychron.pyscript.description'),
-#                          bottom=PaneItem('pychron.pyscript.example'),
+                          bottom=PaneItem('pychron.pyscript.commands_editor'),
 
 
                           )
     def create_dock_panes(self):
         self.commands_pane = CommandsPane()
+        self.command_editor_pane = CommandEditorPane()
         self.editor_pane = EditorPane()
         return [
                 self.commands_pane,
+                self.command_editor_pane,
                 self.editor_pane,
-#                CommandsPane(),
-                DescriptionPane(model=self),
-                ExamplePane(model=self),
+#                DescriptionPane(model=self),
+#                ExamplePane(model=self),
 #                EditorPane(model=self)
                 ]
+
+    @on_trait_change('commands_pane:command_object')
+    def _update_selected(self, new):
+        self.command_editor_pane.command_object = new
 
     def _active_editor_changed(self):
         if self.active_editor:
             self.commands_pane.name = self.active_editor.kind
+
+            self.commands_pane.command_objects = self.active_editor.commands.command_objects
             self.commands_pane.commands = self.active_editor.commands.script_commands
             self.editor_pane.editor = self.active_editor.editor
 
@@ -89,15 +98,15 @@ class PyScriptTask(EditorTask):
         # todo ask for script type
 
         info = self.edit_traits(view='kind_select_view')
-        print info, info.result
         if info.result:
             self._open_editor(path='')
             return True
 
-#    def open(self):
-#        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
-#        self._open_file(path)
-#        return True
+    def open(self):
+        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
+        path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
+        self._open_file(path)
+        return True
 
     def _open_file(self, path, **kw):
         self.info('opening pyscript: {}'.format(path))
@@ -157,29 +166,29 @@ class PyScriptTask(EditorTask):
 #            setattr(self, cmd_name, cmd)
 #        except AttributeError, e :
 
-    def _selected_command_changed(self):
-        print self.selected_command
-        if self.selected_command:
-            scmd = self.selected_command
-            cmd = None
-            words = scmd.split('_')
-            klass = ''.join(map(str.capitalize, words))
-
-            pkg = 'src.pyscripts.commands.api'
-            cmd_name = '{}_command_editor'.format(scmd)
-            try:
-                cmd = getattr(self, cmd_name)
-            except AttributeError:
-
-                m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
-                try:
-                    cmd = getattr(m, klass)()
-                    setattr(self, cmd_name, cmd)
-                except AttributeError, e :
-                    if scmd:
-                        print e
-
-            self.selected = cmd
+#    def _selected_command_changed(self):
+#        print self.selected_command
+#        if self.selected_command:
+#            scmd = self.selected_command
+#            cmd = None
+#            words = scmd.split('_')
+#            klass = ''.join(map(str.capitalize, words))
+#
+#            pkg = 'src.pyscripts.commands.api'
+#            cmd_name = '{}_command_editor'.format(scmd)
+#            try:
+#                cmd = getattr(self, cmd_name)
+#            except AttributeError:
+#
+#                m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
+#                try:
+#                    cmd = getattr(m, klass)()
+#                    setattr(self, cmd_name, cmd)
+#                except AttributeError, e :
+#                    if scmd:
+#                        print e
+#
+#            self.selected = cmd
 
     def _get_description(self):
         if self.selected:
@@ -191,17 +200,17 @@ class PyScriptTask(EditorTask):
             return self.selected.example
         return ''
 
-    def kind_select_view(self):
-        v = View(
-                 Label('Select kind of new PyScript'),
-                 UItem('kind', editor=EnumEditor(name='kinds')),
-                 kind='livemodal',
-                 buttons=['OK', 'Cancel'],
-                 title=' ',
-
-               )
-
-        return v
+#    def kind_select_view(self):
+#        v = View(
+#                 Label('Select kind of new PyScript'),
+#                 UItem('kind', editor=EnumEditor(name='kinds')),
+#                 kind='livemodal',
+#                 buttons=['OK', 'Cancel'],
+#                 title=' ',
+#
+#               )
+#
+#        return v
 
 #            print self.selected_command
 #    def _menu_bar_factory(self, menus=None):

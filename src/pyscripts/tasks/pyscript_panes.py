@@ -15,11 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Str, Property
-from traitsui.api import View, Item, ListStrEditor, UItem, TabularEditor
+from traits.api import List, Instance, Str, Property, Any
+from traitsui.api import View, Item, UItem, InstanceEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from traitsui.list_str_adapter import ListStrAdapter
 from traitsui.tabular_adapter import TabularAdapter
+from src.ui.tabular_editor import myTabularEditor
+# from src.pyscripts.commands.core import ICommand
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class DescriptionPane(TraitsDockPane):
@@ -65,11 +66,22 @@ class EditorPane(TraitsDockPane):
         v = View(UItem('editor', style='custom'))
         return v
 
-class myListStrAdapter(TabularAdapter):
+class CommandsAdapter(TabularAdapter):
     columns = [('Name', 'name')]
     name_text = Property
-    def _get_name_text(self):
+#
+    def _get_name_text(self, *args, **kw):
         return self.item
+
+class CommandEditorPane(TraitsDockPane):
+    name = 'Commands Editor'
+    id = 'pychron.pyscript.commands_editor'
+    command_object = Any
+    def traits_view(self):
+        v = View(UItem('command_object',
+                       editor=InstanceEditor(),
+                       style='custom'))
+        return v
 
 class CommandsPane(TraitsDockPane):
     name = 'Commands'
@@ -79,30 +91,32 @@ class CommandsPane(TraitsDockPane):
     _commands = List
     name = Str
 
+    selected_command = Any
+    command_object = Any
+    command_objects = List
+
+    def _selected_command_changed(self):
+        if self.selected_command:
+            obj = next((ci for ci in self.command_objects if ci.name == self.selected_command), None)
+            self.command_object = obj
+
     def _set_commands(self, cs):
         self._commands = cs
 
     def _get_commands(self):
         return sorted(self._commands)
 
-    def _get_commands_group(self):
-        return Item('commands',
+    def traits_view(self):
+        v = View(Item('commands',
                       style='custom',
                       show_label=False,
-                      editor=TabularEditor(operations=['move'],
-
-                                    adapter=myListStrAdapter(),
-#                                    editable=False,
-                                    editable=True,
-                                    dclicked='dclicked',
-#                                        right_clicked='',
-                                    selected='selected_command'
-                                    ),
+                      editor=myTabularEditor(operations=['move'],
+                                             adapter=CommandsAdapter(),
+                                             editable=True,
+                                             selected='selected_command'
+                                             ),
                          width=200,
-                        ),
-
-    def traits_view(self):
-        v = View(
-                 self._get_commands_group())
+                        )
+                 )
         return v
 #============= EOF =============================================
