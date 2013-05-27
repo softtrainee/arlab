@@ -20,6 +20,12 @@ from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
+from src.processing.search.previous_selection import PreviousSelection
+import os
+from src.paths import paths
+import shelve
+import hashlib
+from src.processing.analysis import Marker
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -30,12 +36,73 @@ class TablePane(TraitsDockPane):
     _no_update = False
     selected = Any
     dclicked = Any
+
+    previous_selection = Any
+    previous_selections = List(PreviousSelection)
+#===============================================================================
+# previous selections
+#===============================================================================
+    def load_previous_selections(self):
+        d = self._open_shelve()
+        keys = sorted(d.keys(), reverse=True)
+        self.previous_selections = [d[ki] for ki in keys]
+
+    def dump_selection(self):
+        records = self.items
+        if not records:
+            return
+
+        def make_name(rec):
+            s = rec[0]
+            e = rec[-1]
+            return '{} - {}'.format(s.record_id, e.record_id)
+
+        def make_hash(rec):
+            md5 = hashlib.md5()
+            for r in rec:
+                md5.update('{}{}{}'.format(r.uuid, r.group_id, r.graph_id))
+            return md5.hexdigest()
+
+        d = self._open_shelve()
+
+        name = make_name(records)
+        ha = make_hash(records)
+        ha_exists = next((True for pi in d.itervalues() if pi.hash_str == ha), False)
+
+        if not ha_exists:
+            keys = sorted(d.keys())
+            next_key = '001'
+            if keys:
+                next_key = '{:03n}'.format(int(keys[-1]) + 1)
+
+            records = filter(lambda ri:not isinstance(ri, Marker), records)
+
+            name_exists = next((True for pi in d.itervalues() if pi.name == name), False)
+            if name_exists:
+                stored_name = sum([1 for pi in d.itervalues() if pi.name == name])
+                if stored_name:
+                    name = '{} ({})'.format(name, stored_name)
+
+            ps = PreviousSelection(records, hash_str=ha, name=name)
+
+            d[next_key] = ps
+
+        d.close()
+
+    def _open_shelve(self):
+        p = os.path.join(paths.hidden_dir, 'stored_selections')
+        d = shelve.open(p)
+        return d
+#===============================================================================
+#
+#===============================================================================
     def traits_view(self):
         v = View(VGroup(
 #                      HGroup(
 #                             UItem('append_button'),
 #                             UItem('replace_button'),
 #                             ),
+                      UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
                       UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
                                                             operations=['move', 'delete'],
                                                             editable=True,

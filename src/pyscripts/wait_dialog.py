@@ -95,8 +95,6 @@ class WaitDialog(Loggable):
             evt.clear()
             self.end_evt = evt
 
-        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%sleep timer started')
-
         self.timer = Timer(1000, self._update_time,
                            delay=1000)
         self._continued = False
@@ -121,7 +119,6 @@ class WaitDialog(Loggable):
         self._current_time = v
 
     def _current_time_changed(self):
-#        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% {}'.format(self._current_time))
         if self._current_time <= 0:
             self._end()
             self._canceled = False
@@ -130,7 +127,6 @@ class WaitDialog(Loggable):
         self._current_time -= 1
 
     def _end(self, dispose=True):
-        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%sleep timer stopped')
         if self.timer is not None:
             self.timer.Stop()
         if self.end_evt is not None:

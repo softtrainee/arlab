@@ -15,15 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, on_trait_change
+from traits.api import HasTraits, List, on_trait_change, Instance
 from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 #============= standard library imports ========================
 from numpy import Inf
+from src.processing.tasks.analysis_edit.fits import InterpolationFitSelector
 #============= local library imports  ==========================
 
+
 class InterpolationEditor(GraphEditor):
+    tool = Instance(InterpolationFitSelector, ())
     references = List
     _references = List
 

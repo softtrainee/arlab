@@ -417,6 +417,8 @@ class Graph(Viewable, ContextMenuMixin):
         except Exception, e:
             legend.labels.append(label)
 
+
+#        print legend.labels
 #        try:
         plots = self.plots[plotid].plots[series]
         self.plots[plotid].plots[label] = plots
@@ -1073,6 +1075,8 @@ class Graph(Viewable, ContextMenuMixin):
 
         p.legend.visible = vis
         p.legend.align = align
+
+
         return p
 
     def _export_raw_data(self, path, header, plotid):

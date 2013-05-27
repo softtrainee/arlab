@@ -50,7 +50,7 @@ class BlanksTask(InterpolationTask):
         self._open_editor(editor)
         self.blank_editor_count += 1
 
-        selector = self.manager.db.selector
-        self.unknowns_pane.items = selector.records[156:159]
-        self.references_pane.items = selector.records[150:155]
+#        selector = self.manager.db.selector
+#        self.unknowns_pane.items = selector.records[156:159]
+#        self.references_pane.items = selector.records[150:155]
 #============= EOF =============================================

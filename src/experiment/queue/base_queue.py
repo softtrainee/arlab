@@ -17,33 +17,20 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, DelegatesTo, Str, Int, \
     Property, Event, on_trait_change, Bool, String
-from traitsui.api import View, Item, VGroup, HGroup
-# from src.experiment.runs_table import RunsTable
 #============= standard library imports ========================
+import yaml
+import os
+import datetime
 #============= local library imports  ==========================
 from src.experiment.automated_run.table import AutomatedRunsTable
 from src.constants import NULL_STR
 from src.experiment.stats import ExperimentStats
-import yaml
-import os
 from src.paths import paths
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.loggable import Loggable
 from src.experiment.queue.parser import RunParser, UVRunParser
 from src.experiment.automated_run.uv.table import UVAutomatedRunsTable
-import datetime
-
-class no_update(object):
-    model = None
-    def __init__(self, model):
-        self.model = model
-    def __enter__(self):
-        if self.model:
-            self.model._no_update = True
-
-    def __exit__(self, _type, value, _traceback):
-        if self.model:
-            self.model._no_update = False
+from src.helpers.ctx_managers import no_update
 
 
 class BaseExperimentQueue(Loggable):
@@ -114,7 +101,7 @@ class BaseExperimentQueue(Loggable):
 #                run = runviews[0].clone_traits()
 #                aruns.insert(idx, run)
 
-            self.update_needed = True
+#            self.update_needed = True
         else:
             if self.selected:
                 idx = aruns.index(self.selected[-1])
@@ -148,8 +135,9 @@ class BaseExperimentQueue(Loggable):
 # persistence
 #===============================================================================
     def load(self, txt):
-        if self.cleaned_automated_runs is not None:
-            self._cached_runs = self.cleaned_automated_runs
+        if self.automated_runs:
+            self._cached_runs = [ci for ci in self.automated_runs
+                                if not ci.skip]
 
         self.stats.delay_between_analyses = self.delay_between_analyses
 

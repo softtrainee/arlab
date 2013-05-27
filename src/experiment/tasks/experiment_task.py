@@ -159,8 +159,9 @@ class ExperimentEditorTask(EditorTask):
         if self.active_editor:
             self.manager.experiment_queue = self.active_editor.queue
 
-#    @on_trait_change('active_editor:queue[]')
-#    def _update_runs(self, new):
+    @on_trait_change('active_editor:queue:update_needed')
+    def _update_runs(self, new):
+        self.manager.update_info()
 #        self.debug('runs changed {}'.format(len(new)))
 #        executor = self.manager.executor
 #        if executor.isAlive():

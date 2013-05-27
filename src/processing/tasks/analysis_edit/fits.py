@@ -19,15 +19,22 @@ from traits.api import HasTraits, Str, Bool, Property, on_trait_change, \
     List, Event
 from traitsui.api import View, Item, HGroup, VGroup, Spring, spring, \
     UItem, EnumEditor, ListEditor, InstanceEditor, Label
-from src.constants import FIT_TYPES
+from src.constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Fit(HasTraits):
     name = Str
     use = Bool
     show = Bool
-    fit = Str(FIT_TYPES[0])
+    fit_types = Property
+    fit = Str
     valid = Property(depends_on=('fit, use, show'))
+
+    def _fit_default(self):
+        return self.fit_types[0]
+
+    def _get_fit_types(self):
+        return FIT_TYPES
 
     def _get_valid(self):
         return self.use and self.show and self.fit
@@ -39,7 +46,7 @@ class Fit(HasTraits):
         v = View(HGroup(
                         UItem('name', style='readonly'),
                         UItem('show'),
-                        UItem('fit', editor=EnumEditor(values=FIT_TYPES),
+                        UItem('fit', editor=EnumEditor(name='fit_types'),
                              enabled_when='show'
                              ),
                         UItem('use'),
@@ -51,6 +58,8 @@ class FitSelector(HasTraits):
 
     fits = List(Fit)
     update_needed = Event
+    fit_klass = Fit
+
     def traits_view(self):
         header = HGroup(
                         Spring(springy=False, width=50),
@@ -78,8 +87,14 @@ class FitSelector(HasTraits):
 
     def load_fits(self, keys):
         self.fits = [
-                     Fit(name=ki) for ki in keys
+                     self.fit_klass(name=ki) for ki in keys
                     ]
 
+class InterpolationFit(Fit):
+    def _get_fit_types(self):
+        return FIT_TYPES_INTERPOLATE
+
+class InterpolationFitSelector(FitSelector):
+    fit_klass = InterpolationFit
 
 #============= EOF =============================================

@@ -61,6 +61,27 @@ class BlanksEditor(InterpolationEditor):
 
         self.processor.db.commit()
 
+    @on_trait_change('graph:regression_results')
+    def _update_regression(self, new):
+        gen = self._graph_generator()
+        for i, (fit, reg) in enumerate(zip(gen, new)):
+            iso = fit.name
+            plotobj = self.graph.plots[i]
+            scatter = plotobj.plots['Unknowns-predicted'][0]
+            xs = scatter.index.get_data()
+
+            p_uys, p_ues = self._set_interpolated_values(iso, reg, xs)
+            scatter.value.set_data(p_uys)
+            scatter.yerror.set_data(p_ues)
+
+    def _set_interpolated_values(self, iso, reg, xs):
+        p_uys = reg.predict(xs)
+        p_ues = reg.predict_error(xs)
+
+        for ui, v, e in zip(self._unknowns, p_uys, p_ues):
+            ui.set_blank(iso, v, e)
+        return p_uys, p_ues
+
     def _rebuild_graph(self):
         graph = self.graph
 
@@ -95,7 +116,7 @@ class BlanksEditor(InterpolationEditor):
         for fit in gen:
             iso = fit.name
             set_x_flag = True
-            fit = fit.fit
+            fit = fit.fit.lower()
             c_uys, c_ues = None, None
             if self._unknowns:
                 c_uys, c_ues = zip(*[get_isotope(ui, iso, 'blank')
@@ -111,59 +132,65 @@ class BlanksEditor(InterpolationEditor):
             p = graph.new_plot(
                                ytitle=iso,
                                xtitle='Time (hrs)',
-                               padding=[60, 10, 10, 60]
+                               padding=[60, 10, 10, 60],
+                               show_legend='ur'
                                )
             p.value_range.tight_bounds = False
 
             if c_ues and c_uys:
                 # plot unknowns
                 graph.new_series(c_uxs, c_uys,
-                                 yerror=ArrayDataSource(c_ues),
+                                 yerror=c_ues,
                                  fit=False,
                                  type='scatter',
                                  plotid=i
                                  )
+                graph.set_series_label('Unknowns-Current', plotid=i)
 
             if r_es and r_ys:
                 # plot references
                 if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
                     reg = InterpolationRegressor(xs=r_xs,
                                                  ys=r_ys,
+                                                 yserr=r_es,
                                                  kind=fit)
                     scatter, _p = graph.new_series(r_xs, r_ys,
-                                 yerror=ArrayDataSource(r_es),
+                                 yerror=r_es,
                                  type='scatter',
-                                 plotid=i
+                                 plotid=i,
+                                 fit=False
                                  )
 
                 else:
-                    _p, scatter, _l = graph.new_series(r_xs, r_ys,
+                    _p, scatter, l = graph.new_series(r_xs, r_ys,
                                        display_index=ArrayDataSource(data=display_xs),
                                        yerror=ArrayDataSource(data=r_es),
                                        fit=fit,
                                        plotid=i)
+                    reg = l.regressor
+#                    if fit.startswith('average'):
+#                        reg2 = MeanRegressor(xs=r_xs, ys=r_ys, yserr=r_es)
+#                    else:
+#                        reg2 = OLSRegressor(xs=r_xs, ys=r_ys, yserr=r_es, fit=fit)
 
-                    if fit.startswith('average'):
-                        reg = MeanRegressor(xs=r_xs, ys=r_ys, yserr=r_es)
-                    else:
-                        reg = OLSRegressor(xs=r_xs, ys=r_ys, yserr=r_es, fit=fit)
-
-                p_uys = reg.predict(c_uxs)
-                p_ues = reg.predict_error(c_uxs)
-
-                for ui, v, e in zip(self._unknowns, p_uys, p_ues):
-                    ui.set_blank(iso, v, e)
+#                p_uys = reg.predict(c_uxs)
+#                p_ues = reg.predict_error(c_uxs)
+#
+#                for ui, v, e in zip(self._unknowns, p_uys, p_ues):
+#                    ui.set_blank(iso, v, e)
 #                        ui.blank.value = v
 #                        ui.blank.error = e
-
+                p_uys, p_ues = self._set_interpolated_values(iso, reg, c_uxs)
                 # display the predicted values
                 ss, _ = graph.new_series(c_uxs,
                                          p_uys,
+                                         isotope=iso,
                                          yerror=ArrayDataSource(p_ues),
                                          fit=False,
                                          type='scatter',
                                          plotid=i,
                                          )
+                graph.set_series_label('Unknowns-predicted', plotid=i)
             i += 1
 
         if set_x_flag:

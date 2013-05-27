@@ -370,20 +370,6 @@ class ExperimentExecutor(Experimentable):
 # private
 #===============================================================================
     def _execute(self):
-#         if self.isAlive():
-#             if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
-#                                      title='Confirm Cancel'
-#                                      ):
-#                 arun = self.experiment_queue.current_run
-#                 if arun:
-#                     arun.cancel()
-#                 self._alive = False
-#         else:
-#            if self._was_executed:
-#                self.load_experiment_queue(self.experiment_queue.path)
-
-#            self.stop_file_listener()
-
         # test runs first
         for exp in self.experiment_queues:
             err = exp.test_runs()
@@ -392,11 +378,7 @@ class ExperimentExecutor(Experimentable):
                 self.warning('experiment canceled')
                 return
 
-
         self._execute_experiment_queues()
-#                 t = Thread(target=self._execute_experiment_queues)
-#                 t.start()
-#                 self._execute_thread = t
 
         self.err_message = False
         self._was_executed = True
@@ -405,7 +387,10 @@ class ExperimentExecutor(Experimentable):
 #                 self._alive = False
 
     def _check_for_managers(self, exp):
-        return []
+        if globalv.experiment_debug:
+            self.debug('not checking for managers')
+            return []
+
         nonfound = []
         if self.extraction_line_manager is None:
             if not globalv.experiment_debug:
@@ -453,7 +438,6 @@ class ExperimentExecutor(Experimentable):
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
 
-#        self.set_selector.selected_index = -2
         rc = 0
         ec = 0
         for i, exp in enumerate(self.experiment_queues):
@@ -531,7 +515,7 @@ class ExperimentExecutor(Experimentable):
             if self._check_for_file_mods():
                 self._reload_from_disk()
                 cnt = 0
-                self.info('the experiment set was modified')
+                self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
                 force_delay = True
 
@@ -541,6 +525,12 @@ class ExperimentExecutor(Experimentable):
                 # delay between runs
                 delay = exp.delay_between_analyses
                 self._delay(delay)
+
+            if self._check_for_file_mods():
+                self._reload_from_disk()
+                cnt = 0
+                self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
+                rgen, nruns = exp.new_runs_generator(self._last_ran)
 
             runargs = None
             try:
