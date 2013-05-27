@@ -22,7 +22,7 @@ from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter
 #============= local library imports  ==========================
 from src.processing.importer.import_manager import ImportManager
 from src.processing.entry.labnumber_entry import LabnumberEntry
-from src.processing.tasks.labnumber_entry_panes import LabnumbersPane, \
+from src.processing.tasks.entry.labnumber_entry_panes import LabnumbersPane, \
     IrradiationPane, ImporterPane
 
 class LabnumberEntryTask(BaseManagerTask):

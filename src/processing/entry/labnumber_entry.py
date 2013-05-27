@@ -37,18 +37,18 @@ from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 
 class LabnumberEntry(IsotopeDatabaseManager):
 
-    irradiation = Str
-    level = Str
+#    irradiation = Str
+#    level = Str
     irradiation_tray = Str
 
-    irradiations = Property(depends_on='saved, updated')
-    levels = Property(depends_on='irradiation,saved, updated')
+#    irradiations = Property(depends_on='saved, updated')
+#    levels = Property(depends_on='irradiation,saved, updated')
     trays = Property
     edit_irradiation_button = Button('Edit')
     edit_level_enabled = Property(depends_on='level')
     edit_irradiation_enabled = Property(depends_on='irradiation')
-    saved = Event
-    updated = Event
+#    saved = Event
+#    updated = Event
 #    irradiation_trays = Property
     tray_name = Str
     irradiation_tray_image = Property(Image, depends_on='level, irradiation, saved')
@@ -427,25 +427,25 @@ class LabnumberEntry(IsotopeDatabaseManager):
 #===============================================================================
 # property get/set
 #===============================================================================
-    @cached_property
-    def _get_irradiations(self):
-        self.irradiation = NULL_STR
-#        r = ['NM-Test', 'NM-100', 'NM-200']
-        r = [NULL_STR] + [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
-#        if r and not self.irradiation:
-#            self.irradiation = r[-1]
-        return r
-
-    @cached_property
-    def _get_levels(self):
-        self.level = NULL_STR
-        r = []
-        irrad = self.db.get_irradiation(self.irradiation)
-        if irrad:
-            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
-#            if r and not self.level:
-
-        return r
+#    @cached_property
+#    def _get_irradiations(self):
+#        self.irradiation = NULL_STR
+# #        r = ['NM-Test', 'NM-100', 'NM-200']
+#        r = [NULL_STR] + [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
+# #        if r and not self.irradiation:
+# #            self.irradiation = r[-1]
+#        return r
+#
+#    @cached_property
+#    def _get_levels(self):
+#        self.level = NULL_STR
+#        r = []
+#        irrad = self.db.get_irradiation(self.irradiation)
+#        if irrad:
+#            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
+# #            if r and not self.level:
+#
+#        return r
 
     def _get_irradiation_tray_image(self):
         p = self._get_map_path()

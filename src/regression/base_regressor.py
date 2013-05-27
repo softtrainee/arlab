@@ -116,6 +116,27 @@ class BaseRegressor(Loggable):
         s = self.calculate_standard_error_fit()
         return where(cd > (s * nsigma))[0]
 
+    def calculate_standard_error_fit(self):
+        res = self.calculate_residuals()
+
+        ss_res = (res ** 2).sum()
+#        s = std(devs)
+#        s = (dd.sum() / (devs.shape[0])) ** 0.5
+
+        '''
+            mass spec calculates error in fit as 
+            see LeastSquares.CalcResidualsAndFitError
+            
+            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
+  
+            NP = number of points
+            q= number of fit params... parabolic =3
+        '''
+        n = res.shape[0]
+        q = self._degree
+        s = (ss_res / (n - q)) ** 0.5
+        return s
+
     @cached_property
     def _get_coefficients(self):
         return self._calculate_coefficients()

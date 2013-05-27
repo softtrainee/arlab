@@ -15,12 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traitsui.wx.editor import Editor
-from traitsui.wx.basic_editor_factory import BasicEditorFactory
+# from traitsui.wx.editor import Editor
+# from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx
-import wx
+from matplotlib.backends.backend_qt4 import FigureCanvasQT as FigureCanvas
+# from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+# from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+# import wx
+from traitsui.basic_editor_factory import BasicEditorFactory
+from traitsui.editor import Editor
 #============= local library imports  ==========================
 
 '''
@@ -43,16 +46,16 @@ class _MPLFigureEditor(Editor):
     def _create_canvas(self, parent):
         """ Create the MPL canvas. """
         # The panel lets us add additional controls.
-        panel = wx.Panel(parent, -1, style=wx.CLIP_CHILDREN)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        panel.SetSizer(sizer)
+#        panel = wx.Panel(parent, -1, style=wx.CLIP_CHILDREN)
+#        sizer = wx.BoxSizer(wx.VERTICAL)
+#        panel.SetSizer(sizer)
         # matplotlib commands to create a canvas
-        mpl_control = FigureCanvas(panel, -1, self.value)
-        sizer.Add(mpl_control, 1, wx.LEFT | wx.TOP | wx.GROW)
-        toolbar = NavigationToolbar2Wx(mpl_control)
-        sizer.Add(toolbar, 0, wx.EXPAND)
-        self.value.canvas.SetMinSize((10, 10))
-        return panel
+        mpl_control = FigureCanvas(parent, -1, self.value)
+#        sizer.Add(mpl_control, 1, wx.LEFT | wx.TOP | wx.GROW)
+#        toolbar = NavigationToolbar2Wx(mpl_control)
+#        sizer.Add(toolbar, 0, wx.EXPAND)
+#        self.value.canvas.SetMinSize((10, 10))
+        return mpl_control
 
 class MPLFigureEditor(BasicEditorFactory):
 

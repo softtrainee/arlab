@@ -31,6 +31,7 @@ class PointInspector(InfoInspector):
 #        return md
     def get_selected_index(self):
         xxyy = self.component.hittest(self.current_position)
+
         if xxyy:
             x, _ = self.component.map_data((xxyy))
             d = self.component.index.get_data()

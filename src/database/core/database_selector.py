@@ -347,10 +347,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # handlers
 #===============================================================================
-    def _dclicked_changed(self):
-        self.debug('dclicked changed {}'.format(self.dclicked))
-        if self.dclicked:
-            self._open_selected()
+#    def _dclicked_changed(self):
+#        self.debug('dclicked changed {}'.format(self.dclicked))
+#        if self.dclicked:
+#            self._open_selected()
 
     def _open_button_fired(self):
         self.debug('open button fired')

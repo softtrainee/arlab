@@ -50,6 +50,7 @@ from src.processing.isotope import Isotope, Blank, Background, Baseline, Sniff
 from pyface.timer.do_later import do_later
 from src.database.records.ui.analysis_summary import AnalysisSummary
 from src.database.records.ui.fit_selector import FitSelector
+from src.helpers.isotope_utils import sort_isotopes
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 
 class EditableGraph(HasTraits):
@@ -200,34 +201,35 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return note
 
     def save(self):
-        fit_hist = None
-        db = self.selector.db
-#        sess = db.get_session()
-#        db.sess = db.new_session()
-
-#        sess.expunge_all()
-        # save the fits
-        for fi in self.signal_graph.fit_selector.fits:
-            # get database fit
-            dbfit = self._get_db_fit(fi.name)
-            if dbfit != fi.fit:
-                if fit_hist is None:
-#                    fit_hist = proc_FitHistoryTable(analysis=self.dbrecord,
-#                                                    user=db.save_username
-#                                                    )
-#                    self.dbrecord.fit_histories.append(fit_hist)
-#                    selhist = self.dbrecord.selected_histories
-#                    selhist.selected_fits = fit_hist
-                    print db.save_username, 'adsfasfd'
-                    fit_hist = db.add_fit_history(self.dbrecord, user=db.save_username)
-
-                dbiso = next((iso for iso in self.dbrecord.isotopes
-                              if iso.molecular_weight.name == fi.name), None)
-
-                db.add_fit(fit_hist, dbiso, fit=fi.fit)
-#                _f = proc_FitTable(history=fit_hist, fit=fi.fit)
-
-        db.commit()
+        pass
+#        fit_hist = None
+#        db = self.selector.db
+# #        sess = db.get_session()
+# #        db.sess = db.new_session()
+#
+# #        sess.expunge_all()
+#        # save the fits
+#        for fi in self.signal_graph.fit_selector.fits:
+#            # get database fit
+#            dbfit = self._get_db_fit(fi.name)
+#            if dbfit != fi.fit:
+#                if fit_hist is None:
+# #                    fit_hist = proc_FitHistoryTable(analysis=self.dbrecord,
+# #                                                    user=db.save_username
+# #                                                    )
+# #                    self.dbrecord.fit_histories.append(fit_hist)
+# #                    selhist = self.dbrecord.selected_histories
+# #                    selhist.selected_fits = fit_hist
+#                    print db.save_username, 'adsfasfd'
+#                    fit_hist = db.add_fit_history(self.dbrecord, user=db.save_username)
+#
+#                dbiso = next((iso for iso in self.dbrecord.isotopes
+#                              if iso.molecular_weight.name == fi.name), None)
+#
+#                db.add_fit(fit_hist, dbiso, fit=fi.fit)
+# #                _f = proc_FitTable(history=fit_hist, fit=fi.fit)
+#
+#        db.commit()
 
     def set_status(self, status):
         self.dbrecord.status = status
@@ -760,7 +762,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_ic_factor(self):
-        ic = (1.0, 0)
+        ic = ufloat(1.0, 0)
         name = 'detector_intercalibration'
         items = self._get_history_item(name)
 #        print items
@@ -780,7 +782,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
                 # get the intercalibration for this detector
                 item = next((item for item in items if item.detector == det), None)
-                ic = item.user_value, item.user_error
+                ic = ufloat(item.user_value, item.user_error)
 
 #                if not item.fit:
 #    #                s = Value(value=item.user_value, error=item.user_error)
@@ -910,8 +912,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_isotope_keys(self):
         self.load_isotopes()
         keys = self.isotopes.keys()
-        isos = sorted(keys, key=lambda x: re.sub('\D', '', x), reverse=True)
-        return isos
+        return sort_isotopes(keys)
+#        isos = sorted(keys, key=lambda x: re.sub('\D', '', x), reverse=True)
+#        return isos
 
 #===============================================================================
 # dbrecord values

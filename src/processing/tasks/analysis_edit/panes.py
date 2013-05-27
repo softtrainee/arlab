@@ -15,43 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, List, Instance, Property
-from traitsui.api import View, Item, UItem, HGroup, VGroup, spring
+from traits.api import HasTraits, Button, List, Instance, Property, Any
+from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
-from traitsui.tabular_adapter import TabularAdapter
 from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class UnknownsAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-#    record_id_drop = Property
-#    def get_drag(self, *args, **kw):
-#        print 'drag'
-#        return True
-#    def _get_record_id_drag(self):
-#        print 'asdfsd'
-#        return True
-
-class ReferencesAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-#    record_id_drop = Property
-#
-#    def get_drag(self, *args, **kw):
-#        print 'drag'
-#        return True
-#    def _get_record_id_drop(self):
-#        print 'asdfsd'
-#        return True
-
 class TablePane(TraitsDockPane):
-
     append_button = Button
     replace_button = Button
     items = List
     _no_update = False
-
+    selected = Any
+    dclicked = Any
     def traits_view(self):
         v = View(VGroup(
 #                      HGroup(
@@ -59,9 +37,12 @@ class TablePane(TraitsDockPane):
 #                             UItem('replace_button'),
 #                             ),
                       UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
-                                                            operations=['move'],
+                                                            operations=['move', 'delete'],
                                                             editable=True,
-                                                            drag_external=True
+                                                            drag_external=True,
+                                                            selected='selected',
+                                                            dclicked='dclicked'
+#                                                            auto_resize_rows=True
                                                             )
                             )
                       )
@@ -71,12 +52,10 @@ class TablePane(TraitsDockPane):
 class UnknownsPane(TablePane):
     id = 'pychron.analysis_edit.unknowns'
     name = 'Unknowns'
-    adapter_klass = UnknownsAdapter
 
 class ReferencesPane(TablePane):
     name = 'References'
     id = 'pychron.analysis_edit.references'
-    adapter_klass = ReferencesAdapter
 
 
 class ControlsPane(TraitsDockPane):
@@ -92,4 +71,7 @@ class ControlsPane(TraitsDockPane):
                         )
                  )
         return v
+
+
+
 #============= EOF =============================================

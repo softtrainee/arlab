@@ -20,12 +20,14 @@ from traitsui.api import View, Item
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.processing.processor import Processor
-from src.processing.tasks.processing_task import ProcessingTask
+# from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction
-from src.processing.tasks.analysis_edit.actions import BlankEditAction
+from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
+    FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
+    BatchEditAction
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -67,6 +69,26 @@ class ProcessingPlugin(BaseTaskPlugin):
                                                       factory=BlankEditAction,
                                                       path='MenuBar/Edit'
                                                       ),
+                                       SchemaAddition(id='flux_edit',
+                                                      factory=FluxAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='series',
+                                                      factory=SeriesAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='iso_evo',
+                                                      factory=IsotopeEvolutionAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='ic_factor',
+                                                      factory=ICFactorAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='batch_edit',
+                                                      factory=BatchEditAction,
+                                                      path='MenuBar/Edit'
+                                                      ),
                                        ]
                               )
 
@@ -74,45 +96,69 @@ class ProcessingPlugin(BaseTaskPlugin):
 
     def _tasks_default(self):
         return [
-                TaskFactory(id='pychron.processing',
-                            factory=self._task_factory,
-                            accelerator='Ctrl+P',
-                            name='Processing'
+#                TaskFactory(id='pychron.processing',
+#                            factory=self._task_factory,
+#                            accelerator='Ctrl+P',
+#                            name='Processing'
+#                            ),
+                TaskFactory(id='pychron.recall', factory=self._recall_task_factory, name='Recall'),
+                TaskFactory(id='pychron.entry', factory=self._labnumber_task_factory, name='Labnumber',
+                            accelerator='Ctrl+Shift+L'),
+                TaskFactory(id='pychron.analysis_edit.blanks', factory=self._blanks_edit_task_factory,
+                            name='Blanks',
                             ),
-                TaskFactory(id='pychron.recall',
-                            factory=self._recall_task_factory,
-                            name='Recall'
+                TaskFactory(id='pychron.analysis_edit.flux', factory=self._flux_task_factory, name='Flux',
+                            accelerator='Ctrl+Shift+f'
                             ),
-                TaskFactory(id='pychron.entry',
-                            factory=self._labnumber_task_factory,
-                            name='Labnumber',
-                            accelerator='Ctrl+Shift+L'
+                TaskFactory(id='pychron.analysis_edit.series', factory=self._series_task_factory,
+                            name='Series',
                             ),
-                TaskFactory(id='pychron.analysis_edit',
-                            factory=self._analysis_edit_task_factory,
-                            name='Analysis Edit',
-                            accelerator='Ctrl+Shift+E'
+                TaskFactory(id='pychron.analysis_edit.isotope_evolution', factory=self._iso_evo_task_factory,
+                            name='Series',
                             ),
-
+                TaskFactory(id='pychron.analysis_edit.ic_factor', factory=self._ic_factor_task_factory,
+                            name='IC Factor',
+                            ),
+                TaskFactory(id='pychron.analysis_edit.batch', factory=self._batch_edit_task_factory,
+                            name='Batch Edit',
+                            ),
                 ]
 
     def _processor_factory(self):
         return Processor(application=self.application)
 
     def _labnumber_task_factory(self):
-
-        from src.processing.tasks.labnumber_entry_task import LabnumberEntryTask
+        from src.processing.tasks.entry.labnumber_entry_task import LabnumberEntryTask
         return LabnumberEntryTask()
 
-    def _analysis_edit_task_factory(self):
-        from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-        return AnalysisEditTask(manager=self._processor_factory())
+    def _blanks_edit_task_factory(self):
+        from src.processing.tasks.blanks.blanks_task import BlanksTask
+        return BlanksTask(manager=self._processor_factory())
+
+    def _flux_task_factory(self):
+        from src.processing.tasks.flux.flux_task import FluxTask
+        return FluxTask(manager=self._processor_factory())
 
     def _recall_task_factory(self):
-        from src.processing.tasks.recall_task import RecallTask
+        from src.processing.tasks.recall.recall_task import RecallTask
         return RecallTask(manager=self._processor_factory())
 
-    def _task_factory(self):
-#        processor = self.application.get_service(Processor)
-        return ProcessingTask(application=self.application)
+    def _series_task_factory(self):
+        from src.processing.tasks.series.series_task import SeriesTask
+        return SeriesTask(manager=self._processor_factory())
+
+    def _iso_evo_task_factory(self):
+        from src.processing.tasks.isotope_evolution.isotope_evolution_task import IsotopeEvolutionTask
+        return IsotopeEvolutionTask(manager=self._processor_factory())
+
+    def _ic_factor_task_factory(self):
+        from src.processing.tasks.detector_calibration.intercalibration_factor_task import IntercalibrationFactorTask
+        return IntercalibrationFactorTask(manager=self._processor_factory())
+
+    def _batch_edit_task_factory(self):
+        from src.processing.tasks.batch_edit.batch_edit_task import BatchEditTask
+        return BatchEditTask(manager=self._processor_factory())
+#    def _task_factory(self):
+# #        processor = self.application.get_service(Processor)
+#        return ProcessingTask(manager=self._processor_factory())
 #============= EOF =============================================

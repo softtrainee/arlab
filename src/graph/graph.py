@@ -51,6 +51,7 @@ import os
 from src.paths import paths
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
+from chaco.array_data_source import ArrayDataSource
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
@@ -688,7 +689,8 @@ class Graph(Viewable, ContextMenuMixin):
         '''
         raise NotImplementedError
 
-    def new_series(self, x=None, y=None, yer=None,
+    def new_series(self, x=None, y=None,
+                   yer=None,
                    plotid=None,
 #                   aux_plot=False,
                    colors=None,
@@ -699,7 +701,7 @@ class Graph(Viewable, ContextMenuMixin):
         if plotid is None:
             plotid = len(self.plots) - 1
         kw['plotid'] = plotid
-        plotobj, names, rd = self._series_factory(x, y, yer=None, **kw)
+        plotobj, names, rd = self._series_factory(x, y, yer=yer, **kw)
         # print 'downsample', plotobj.use_downsample
 
 #        plotobj.use_downsample = True
@@ -1143,6 +1145,10 @@ class Graph(Viewable, ContextMenuMixin):
             x = np.array([])
         if y is None:
             y = np.array([])
+
+        if 'yerror' in kw:
+            if not isinstance(kw['yerror'], ArrayDataSource):
+                kw['yerror'] = ArrayDataSource(kw['yerror'])
 
         plot = self.plots[plotid]
         if add:
