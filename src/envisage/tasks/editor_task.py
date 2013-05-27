@@ -23,11 +23,11 @@ from pyface.tasks.api import IEditor, IEditorAreaPane
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.envisage.tasks.base_task import BaseManagerTask
-from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
+# from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
 from pyface.confirmation_dialog import ConfirmationDialog
 from pyface.constant import CANCEL, YES
 
-
+from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
 class EditorTask(BaseManagerTask, Loggable):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
@@ -74,8 +74,11 @@ class EditorTask(BaseManagerTask, Loggable):
     def _open_file(self, path, **kw):
         pass
 
+    def prepare_destroy(self):
+        pass
+
     def create_central_pane(self):
-        self.editor_area = SplitEditorAreaPane()
+        self.editor_area = AdvancedEditorAreaPane()
         return self.editor_area
 
     def _open_editor(self, editor, **kw):
@@ -97,9 +100,9 @@ class EditorTask(BaseManagerTask, Loggable):
         return dialog.open()
 
     def _prompt_for_save(self):
-        """ Prompts the user to save if necessary. Returns whether the dialog
-was cancelled.
-"""
+        if self.editor_area is None:
+            return
+
         dirty_editors = dict([(editor.name, editor)
                               for editor in self.editor_area.editors
                               if editor.dirty])

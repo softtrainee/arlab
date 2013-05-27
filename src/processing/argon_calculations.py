@@ -103,6 +103,7 @@ def calculate_decay_factor(dc, segments):
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
                        ic=(1.0, 0),
+                       discrimination=None,
                        abundance_sensitivity=0,
                        a37decayfactor=None,
                        a39decayfactor=None,
@@ -124,8 +125,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             production_ratios = k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638
         
         ic: CDD correction factor
-         
-         
+        disc: Multiplier 1amu discrimination
+        
         return:
             returns a results dictionary with computed values
             result keys
@@ -183,17 +184,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #===============================================================================
 #
 #===============================================================================
-
-    # subtract blanks and baselines (and backgrounds)
-    s40 -= (s40bl + s40bs + s40bk)
-    s39 -= (s39bl + s39bs + s39bk)
-    s38 -= (s38bl + s38bs + s38bk)
-    s37 -= (s37bl + s37bs + s37bk)
-    s36 -= (s36bl + s36bs + s36bk)
-
-    # apply intercalibration factor to corrected 36
-    s36 *= ic
-
     # correct for abundance sensitivity
     # assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundance_sensitivity * (s39 + s39)
@@ -202,6 +192,25 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     n37 = s37 - abundance_sensitivity * (s38 + s36)
     n36 = s36 - abundance_sensitivity * (s37 + s37)
     s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
+
+    # subtract blanks and baselines (and backgrounds)
+    s40 -= (s40bl + s40bs + s40bk)
+    s39 -= (s39bl + s39bs + s39bk)
+    s38 -= (s38bl + s38bs + s38bk)
+    s37 -= (s37bl + s37bs + s37bk)
+    s36 -= (s36bl + s36bs + s36bk)
+
+    if discrimination:
+        disc = to_ufloat(discrimination)
+        # correct for discrimination
+        s40 = s40 * disc ** 4
+        s39 = s39 * disc ** 3
+        s38 = s38 * disc ** 2
+        s37 = s37 * disc ** 1
+    else:
+        # todo need more flexible way of defining ic factor
+        # apply intercalibration factor to corrected 36
+        s36 *= ic
 
     if decay_time is None:
         decay_time = calculate_decay_time(arar_constants.lambda_Ar37.nominal_value,

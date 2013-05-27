@@ -340,7 +340,10 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_clk(self):
-        return 1 / self.kcl
+        try:
+            return 1 / self.kcl
+        except ZeroDivisionError:
+            return ufloat(0, 0)
 
     def _get_age_scalar(self):
 #        return 1e6
@@ -489,7 +492,7 @@ class ArArAge(HasTraits):
     def _get_rad40_percent(self):
         try:
             return self.rad40 / self.Ar40 * 100
-        except ZeroDivisionError:
+        except (ZeroDivisionError, TypeError):
             return ufloat(0, 1e-20)
 #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
@@ -574,15 +577,24 @@ class ArArAge(HasTraits):
 
     @cached_property
     def _get_Ar40_39(self):
-        return self.rad40 / self.k39
+        try:
+            return self.rad40 / self.k39
+        except ZeroDivisionError:
+            return ufloat(0, 0)
 
     @cached_property
     def _get_Ar37_39(self):
-        return self.Ar37 / self.Ar39
+        try:
+            return self.Ar37 / self.Ar39
+        except ZeroDivisionError:
+            return ufloat(0, 0)
 
     @cached_property
     def _get_Ar36_39(self):
-        return self.Ar36 / self.Ar39
+        try:
+            return self.Ar36 / self.Ar39
+        except ZeroDivisionError:
+            return ufloat(0, 0)
 
     def _get_sensitivity(self):
         return 1.0

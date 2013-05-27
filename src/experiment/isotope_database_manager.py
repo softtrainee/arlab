@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
+from traits.api import HasTraits, Instance, String, Property, Event, \
+    cached_property
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -24,10 +25,22 @@ from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
 from src.database.records.isotope_record import IsotopeRecord
 from src.processing.analysis import Analysis
+from src.constants import NULL_STR
 
 
 class IsotopeDatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
+
+    irradiation = String
+    level = String
+
+    irradiations = Property(depends_on='saved, updated')
+    levels = Property(depends_on='irradiation, saved, updated')
+
+    saved = Event
+    updated = Event
+
+
     def __init__(self, bind=True, connect=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
         if bind:
@@ -82,6 +95,17 @@ class IsotopeDatabaseManager(Manager):
             bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         except AttributeError:
             pass
+    def make_analyses(self, ans):
+        return [self._record_factory(ai) for ai in ans]
+
+    def load_analyses(self, ans, **kw):
+        self._load_analyses(ans, **kw)
+
+    def get_level(self, level, irradiation=None):
+        if irradiation is None:
+            irradiation = self.irradiation
+
+        return self.db.get_irradiation_level(irradiation, level)
 
     def _record_factory(self, pi):
         rec = IsotopeRecord(_dbrecord=self.db.get_analysis_uuid(pi.uuid),
@@ -90,12 +114,6 @@ class IsotopeDatabaseManager(Manager):
         a = Analysis(isotope_record=rec)
 #        a.load_isotopes()
         return a
-
-    def make_analyses(self, ans):
-        return [self._record_factory(ai) for ai in ans]
-
-    def load_analyses(self, ans, **kw):
-        self._load_analyses(ans, **kw)
 
     def _db_default(self):
         return self._db_factory()
@@ -129,4 +147,28 @@ class IsotopeDatabaseManager(Manager):
         pd = myProgressDialog(max=n - 1, size=(550, 15))
         pd.open()
         return pd
+
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    @cached_property
+    def _get_irradiations(self):
+        self.irradiation = NULL_STR
+#        r = ['NM-Test', 'NM-100', 'NM-200']
+        r = [NULL_STR] + [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
+#        if r and not self.irradiation:
+#            self.irradiation = r[-1]
+        return r
+
+    @cached_property
+    def _get_levels(self):
+        self.level = NULL_STR
+        r = []
+        irrad = self.db.get_irradiation(self.irradiation)
+        if irrad:
+            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
+#            if r and not self.level:
+
+        return r
 #============= EOF =============================================

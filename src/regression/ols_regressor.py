@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+from traits.etsconfig.etsconfig import ETSConfig
+from numpy.lib.twodim_base import diag
+ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import Int, Property
 #============= standard library imports ========================
 from numpy import polyval, asarray, column_stack, ones, \
-    matrix, sqrt, abs
+    matrix, sqrt, abs, hstack, vstack
 
 try:
     from statsmodels.api import OLS
@@ -140,8 +142,8 @@ class OLSRegressor(BaseRegressor):
         x = asarray(x)
         sef = self.calculate_standard_error_fit()
         def calc_error(xi, se):
-            Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
 
+            Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
             covarM = matrix(self.var_covar)
             varY_hat = (Xk.T * covarM * Xk)
             varY_hat = varY_hat[0, 0]
@@ -223,25 +225,25 @@ class OLSRegressor(BaseRegressor):
     def calculate_x(self, y):
         return 0
 
-    def calculate_standard_error_fit(self):
-        res = self.calculate_residuals()
-        ss_res = (res ** 2).sum()
-#        s = std(devs)
-#        s = (dd.sum() / (devs.shape[0])) ** 0.5
-
-        '''
-            mass spec calculates error in fit as 
-            see LeastSquares.CalcResidualsAndFitError
-            
-            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
-  
-            NP = number of points
-            q= number of fit params... parabolic =3
-        '''
-        n = res.shape[0]
-        q = self._degree
-        s = (ss_res / (n - 1 - q)) ** 0.5
-        return s
+#    def calculate_standard_error_fit(self):
+#        res = self.calculate_residuals()
+#        ss_res = (res ** 2).sum()
+# #        s = std(devs)
+# #        s = (dd.sum() / (devs.shape[0])) ** 0.5
+#
+#        '''
+#            mass spec calculates error in fit as
+#            see LeastSquares.CalcResidualsAndFitError
+#
+#            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
+#
+#            NP = number of points
+#            q= number of fit params... parabolic =3
+#        '''
+#        n = res.shape[0]
+#        q = self._degree
+#        s = (ss_res / (n - 1 - q)) ** 0.5
+#        return s
 
     def _calculate_coefficients(self):
         '''
@@ -354,44 +356,45 @@ class MultipleLinearRegressor(OLSRegressor):
         if c == 2:
             xs = column_stack((xs, ones(r)))
             return xs
-#        return add_constant(xs)
-#        c = vander(xs, self.degree + 1)
-#        if self.constant:
-#            c[:, self.degree] *= self.constant
-#        return c
-#    def value_at(self, pos):
-#        '''
-#            pos should be (x,y)
-#        '''
-#        return self._ols.predict(asarray(pos))
 
+    def predict_error_matrix(self, x, error_calc='sem'):
+        '''
+            predict the error in y using matrix math
+            draper and smith chapter 2.4 page 56
+        '''
+        '''
+            Xk'=(1, x, x**2...x)
+            
+        '''
+#        if isinstance(x, (float, int)):
+#            x = [x]
 
-#    def _get_X(self):
-#        '''
+        x = asarray(x)
+        sef = self.calculate_standard_error_fit()
+        def calc_error(xi, se):
+            xi = hstack((xi, (1,)))
+#            print xi, pow(xi, 3), 'ff'
+#            print self.degree
+#            print range(self.degree + 1)
+#            print [pow(xi, i) for i in range(self.degree + 1)]
+            Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
+
+#            print Xk
+            covarM = matrix(self.var_covar)
+            varY_hat = (Xk.T * covarM * Xk)
+#            print varY_hat
+            print '-----------r'
+            varY_hat = sum(diag(varY_hat))
+#            print varY_hat
 #
-#        '''
-#        xs = self.xs
-#        xs = asarray(xs)
-#        r, c = xs.shape
-#        if c == 2:
-#            xs = column_stack((xs, ones(r)))
-#            return xs
+            if error_calc == 'sem':
+                se = sef * sqrt(varY_hat)
+            else:
+                se = sqrt(sef ** 2 + sef ** 2 * varY_hat)
 
-#    def _calculate_coefficient_errors(self):
-#        result = self._result
-#        covar_diag = result.cov_params().diagonal()
-#        n = result.nobs
-#        q = result.df_model
-#        ssr = result.ssr
-#        sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
-#        errors = sigma_fit * covar_diag
-#        print errors, self._result.bse
-#        return errors
+            return se
 
-
-#        return dict(result=result,
-#                    coefficients=result.params,
-#                    coefficient_errs=errors)
+        return [calc_error(xi, sef) for xi in x]
 
 if __name__ == '__main__':
     import numpy as np
@@ -407,9 +410,11 @@ if __name__ == '__main__':
 #    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
 #    print m.calculate_y(0)
     xs = [(0, 0), (1, 0), (2, 0)]
-    ys = [0, 1, 2]
-    r = MultipleLinearRegressor(xs=xs, ys=ys)
+    ys = [0, 1, 2.01]
+    r = MultipleLinearRegressor(xs=xs, ys=ys, fit='linear')
     print r.predict([(0, 1)])
+    print r.predict_error([(0, 2)])
+    print r.predict_error([(0.1, 1)])
 #============= EOF =============================================
 # def predict_error_al(self, x, error_calc='sem'):
 #        result = self._result

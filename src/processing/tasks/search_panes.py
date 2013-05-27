@@ -48,20 +48,21 @@ class QueryPane(TraitsDockPane):
 class ResultsAdapter(TabularAdapter):
     columns = [
 #               ('ID', 'rid'),
-               ('Labnumber', 'labnumber'),
+               ('Lab. #', 'labnumber'),
                ('Aliquot', 'aliquot'),
                ('Analysis Time', 'timestamp'),
 #               ('Time', 'runtime'),
                ('Irradiation', 'irradiation_info'),
-               ('Mass Spec.', 'mass_spectrometer'),
+               ('Spec.', 'mass_spectrometer'),
                ('Type', 'analysis_type')
 #               ('Irradiation', 'irradiation_level')
                ]
-    font = 'monospace'
+    font = 'monospace 10'
 #    rid_width = Int(50)
-    labnumber_width = Int(90)
-    aliquot_width = Int(90)
-    rundate_width = Int(120)
+    labnumber_width = Int(50)
+    mass_spectrometer_width = Int(50)
+    aliquot_width = Int(50)
+    timestamp_width = Int(110)
 
 
 class ResultsPane(TraitsDockPane):
@@ -83,7 +84,8 @@ class ResultsPane(TraitsDockPane):
                                                     multi_select=True,
                                                     operations=['move'],
                                                     editable=True,
-                                                    drag_external=True
+                                                    drag_external=True,
+                                                    dclicked='dclicked'
                                                     ),
                              show_label=False,
 #                               height=0.75,

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView
+from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QFontMetrics, QFont
 from PySide import QtCore
 from traits.api import Bool, on_trait_change, Any, Str, Event, List, Callable
 from traitsui.editors.tabular_editor import TabularEditor
@@ -38,6 +38,17 @@ class _myTableView(_TableView):
     def __init__(self, *args, **kw):
         super(_myTableView, self).__init__(*args, **kw)
         self.setDragDropMode(QAbstractItemView.DragDrop)
+
+        editor = self._editor
+        # reimplement row height
+        vheader = self.verticalHeader()
+#        size = vheader.minimumSectionSize()
+#        print size
+        size = 10
+        font = editor.adapter.get_font(editor.object, editor.name, 0)
+        if font is not None:
+            size = max(size, QFontMetrics(QFont(font)).height())
+        vheader.setDefaultSectionSize(size)
 
     def keyPressEvent(self, event):
 

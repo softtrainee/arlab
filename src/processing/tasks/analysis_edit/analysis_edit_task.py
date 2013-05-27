@@ -16,75 +16,47 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, on_trait_change, List
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task import BaseManagerTask
 from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, \
     ReferencesPane, ControlsPane
-from pyface.tasks.task_layout import TaskLayout, PaneItem, Tabbed, Splitter
 from src.processing.tasks.search_panes import QueryPane, ResultsPane
+from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
+from pyface.tasks.task_window_layout import TaskWindowLayout
+from src.database.records.isotope_record import IsotopeRecordView
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class AnalysisEditTask(EditorTask):
     unknowns_pane = Instance(UnknownsPane)
-    references_pane = Instance(ReferencesPane)
-    blank_editor_count = 1
+    controls_pane = Instance(ControlsPane)
+    results_pane = Instance(ResultsPane)
 
-    def _default_layout_default(self):
-        return TaskLayout(
-                          id='pychron.analysis_edit',
-                          left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.references'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         PaneItem('pychron.search.results'),
-                                         orientation='vertical'
-                                         )
-
-#                                     PaneItem('pychron.pyscript.editor')
-#                                     ),
-#                          top=PaneItem('pychron.pyscript.description'),
-#                          bottom=PaneItem('pychron.pyscript.example'),
-
-
-                          )
+    unknowns_adapter = UnknownsAdapter
 
     def create_dock_panes(self):
-        self.unknowns_pane = UnknownsPane()
-        self.references_pane = ReferencesPane()
-        self.controls_pane = ControlsPane()
-
         selector = self.manager.db.selector
-
         selector.queries[0].criterion = 'NM-251'
         selector._search_fired()
 
+        self.unknowns_pane = UnknownsPane(adapter_klass=self.unknowns_adapter)
+        self.controls_pane = ControlsPane()
+        self.results_pane = ResultsPane(model=selector)
 
         return [
                 self.unknowns_pane,
-                self.references_pane,
                 self.controls_pane,
+                self.results_pane,
                 QueryPane(model=selector),
-                ResultsPane(model=selector)
-
                 ]
-
-    def new_blank(self):
-        from src.processing.tasks.analysis_edit.blanks_editor import BlanksEditor
-        editor = BlanksEditor(name='Blanks {:03n}'.format(self.blank_editor_count),
-                              processor=self.manager
-                              )
-        self._open_editor(editor)
-        self.blank_editor_count += 1
 
     def _active_editor_changed(self):
         if self.active_editor:
-            self.controls_pane.tool = self.active_editor.tool
+            if self.controls_pane:
+                tool = None
+                if hasattr(self.active_editor, 'tool'):
+                    tool = self.active_editor.tool
+                self.controls_pane.tool = tool
 
     @on_trait_change('unknowns_pane:items')
     def _update_unknowns_runs(self, obj, name, old, new):
@@ -92,39 +64,66 @@ class AnalysisEditTask(EditorTask):
             if self.active_editor:
                 self.active_editor.unknowns = self.unknowns_pane.items
 
-    @on_trait_change('references_pane:items')
-    def _update_references_runs(self, obj, name, old, new):
-        if not obj._no_update:
-            if self.active_editor:
-                self.active_editor.references = self.references_pane.items
+    @on_trait_change('''unknowns_pane:dclicked, 
+references_pane:dclicked,
+manager:db:selector:dclicked
+''')
+    def _selected_changed(self, new):
+        if new:
+            if isinstance(new.item, IsotopeRecordView):
+                self._open_recall_editor(new.item)
 
-    @on_trait_change('unknowns_pane:[+button]')
-    def _update_unknowns(self, name, new):
-        print name, new
-        '''
-            get selected analyses and append/replace to unknowns_pane.items
-        '''
-        sel = None
-        if sel:
-            if name == 'replace_button':
-                self.unknowns_pane.items = sel
-            else:
-                self.unknowns_pane.items.extend(sel)
+    def _open_recall_editor(self, recview):
+        app = self.window.application
+        _id = 'pychron.recall'
+        for win in app.windows:
+            if win.active_task.id == _id:
+                win.activate()
+                break
+        else:
+            win = app.create_window(TaskWindowLayout(_id))
+            win.open()
 
-    @on_trait_change('references_pane:[+button]')
-    def _update_items(self, name, new):
-        print name, new
-        sel = None
-        if sel:
-            if name == 'replace_button':
-                self.references_pane.items = sel
-            else:
-                self.references_pane.items.extend(sel)
+        task = win.active_task
+        task.recall([recview])
 
+#    @on_trait_change('unknowns_pane:[+button]')
+#    def _update_unknowns(self, name, new):
+#        print name, new
+#        '''
+#            get selected analyses and append/replace to unknowns_pane.items
+#        '''
+#        sel = None
+#        if sel:
+#            if name == 'replace_button':
+#                self.unknowns_pane.items = sel
+#            else:
+#                self.unknowns_pane.items.extend(sel)
+
+#    @on_trait_change('references_pane:[+button]')
+#    def _update_items(self, name, new):
+#        print name, new
+#        sel = None
+#        if sel:
+#            if name == 'replace_button':
+#                self.references_pane.items = sel
+#            else:
+#                self.references_pane.items.extend(sel)
+
+    @on_trait_change('controls_pane:save_button')
+    def _save_fired(self):
+        self._save_to_db()
+
+    def _save_to_db(self):
+        if self.active_editor:
+            if hasattr(self.active_editor, 'save'):
+                self.active_editor.save()
 
 
 #===============================================================================
 #
 #===============================================================================
+
+
 
 #============= EOF =============================================

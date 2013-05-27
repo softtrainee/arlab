@@ -19,7 +19,7 @@ from traits.api import Callable, List
 from src.regression.base_regressor import BaseRegressor
 #============= standard library imports ========================
 from scipy import optimize
-from numpy import asarray, sqrt, matrix, diagonal
+from numpy import asarray, sqrt, matrix, diagonal, array
 #============= local library imports  ==========================
 
 class LeastSquaresRegressor(BaseRegressor):
@@ -30,6 +30,7 @@ class LeastSquaresRegressor(BaseRegressor):
         self.calculate()
 #
     def _initial_guess_changed(self):
+        self._degree = len(self.initial_guess) - 1
         self.calculate()
 #
 #    def _errfunc_changed(self):
@@ -43,7 +44,10 @@ class LeastSquaresRegressor(BaseRegressor):
         if len(self.xs) != len(self.ys):
             return
 
-        if self.fitfunc and self.initial_guess is not None and len(self.initial_guess):
+        if self.fitfunc and \
+            self.initial_guess is not None and \
+                 len(self.initial_guess) and \
+                    len(self.xs) >= len(self.initial_guess):
             errfunc = lambda p, x, v: self.fitfunc(p, x) - v
             r = optimize.leastsq(errfunc,
                                  self.initial_guess,
@@ -80,27 +84,35 @@ class LeastSquaresRegressor(BaseRegressor):
 
         return fx
 
-    def predict_error(self, x, error_calc='sem'):
+    def predict_error(self, x, ys, error_calc='sem'):
+
+        '''
+            returns percent error
+        '''
         return_single = False
         if not hasattr(x, '__iter__'):
             x = [x]
             return_single = True
 
-        se = self.calculate_standard_error_fit()
+        sef = self.calculate_standard_error_fit()
+        r, _ = self._covariance.shape
         def calc_error(xi):
-            Xk = matrix([xi, xi]).T
+            Xk = matrix([xi, ] * r).T
 
             varY_hat = (Xk.T * self._covariance * Xk)
             if error_calc == 'sem':
-                se = se * sqrt(varY_hat)
+                se = sef * sqrt(varY_hat)
             else:
-                se = sqrt(se ** 2 + se ** 2 * varY_hat)
+                se = sqrt(sef ** 2 + sef ** 2 * varY_hat)
 
-            return se
+            return se[0, 0]
 
-        fx = [calc_error(xi) for xi in x]
+        fx = array([calc_error(xi) for xi in x])
+        fx = ys * fx / 100.
+
         if return_single:
             fx = fx[0]
+
         return fx
 
 #============= EOF =============================================
