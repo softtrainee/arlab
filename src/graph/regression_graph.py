@@ -140,28 +140,44 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self.regressors = []
 
     def refresh(self, **kw):
+        print 'update graph'
         self._update_graph()
 
-    def _update_graph(self, obj=None, name=None, old=None, new=None):
-        if self.suppress_regression:
-            print 'speunca'
-            return
+    def update_metadata(self, obj, name, old, new):
+        '''
+            fired when the index metadata changes e.i user selection
+        '''
+        sel = obj.metadata.get('selections', None)
+        if sel:
+            obj.was_selected = True
+            self._update_graph()
+        elif hasattr(obj, 'was_selected'):
+            if obj.was_selected:
+                self._update_graph()
+            obj.was_selected = False
 
-        self.regressors = []
-        for plot in self.plots:
-            ks = plot.plots.keys()
-            try:
-                scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
-            except:
-                return
+    def _update_graph(self, *args, **kw):
+#        if self.suppress_regression:
+#            print 'speunca'
+#            return
+#        self.regressors = []
+#        print 'update graph', len(self.regressors)
+#        print self.plots
+#        for plot in self.plots:
+#            ks = plot.plots.keys()
+#            try:
+#                scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
+#            except:
+#                return
 
-        regress = True
+#        regress = True
 #        for si in scatters:
 #            if self
 
-        if not regress:
-            return
+#        if not regress:
+#            return
 
+        self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
             try:
@@ -276,7 +292,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             line.regressor = r
 
         self.regressors.append(r)
-#        print fx, fy
         return fx, fy, ly, uy
 
     def _least_square_regress(self, x, y, ox, oy, fx, index,
@@ -559,7 +574,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _bind_index(self, scatter, **kw):
         index = scatter.index
-        index.on_trait_change(self._update_graph, 'metadata_changed')
+        index.on_trait_change(self.update_metadata, 'metadata_changed')
 
 #        if self.use_inspector_tool:
 #            u = lambda **kw:self._update_info(scatter, **kw)

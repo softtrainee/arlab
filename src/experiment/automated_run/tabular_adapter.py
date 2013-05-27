@@ -70,7 +70,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     labnumber_text = Property
     aliquot_text = Property
 
-
+    font = 'helvetica 12'
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
         if not item.executable:

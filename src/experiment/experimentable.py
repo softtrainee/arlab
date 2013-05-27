@@ -40,6 +40,8 @@ class Experimentable(IsotopeDatabaseManager):
 
     def _reload_from_disk(self):
 #        if not self._alive:
+
+
         ts = self._parse_experiment_file(self.path)
 
         nl = len(ts)

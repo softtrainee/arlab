@@ -15,13 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QFontMetrics, QFont
+from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QTableView
 from PySide import QtCore
 from traits.api import Bool, on_trait_change, Any, Str, Event, List, Callable
 from traitsui.editors.tabular_editor import TabularEditor
 from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
     _TableView
 from traitsui.mimedata import PyMimeData
+from src.helpers.ctx_managers import no_update
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -39,16 +40,72 @@ class _myTableView(_TableView):
         super(_myTableView, self).__init__(*args, **kw)
         self.setDragDropMode(QAbstractItemView.DragDrop)
 
-        editor = self._editor
-        # reimplement row height
-        vheader = self.verticalHeader()
+#        editor = self._editor
+
+#        # reimplement row height
+#        vheader = self.verticalHeader()
 #        size = vheader.minimumSectionSize()
-#        print size
-        size = 10
-        font = editor.adapter.get_font(editor.object, editor.name, 0)
-        if font is not None:
-            size = max(size, QFontMetrics(QFont(font)).height())
-        vheader.setDefaultSectionSize(size)
+#        font = editor.adapter.get_font(editor.object, editor.name, 0)
+#        if font is not None:
+#            size = max(size, QFontMetrics(QFont(font)).height())
+#        vheader.setDefaultSectionSize(size)
+    def super_keyPressEvent(self, event):
+        """ Reimplemented to support edit, insert, and delete by keyboard.
+        
+            reimplmented to support no_update context manager.
+        
+        """
+        editor = self._editor
+        factory = editor.factory
+
+        # Note that setting 'EditKeyPressed' as an edit trigger does not work on
+        # most platforms, which is why we do this here.
+        if (event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return) and
+            self.state() != QAbstractItemView.EditingState and
+            factory.editable and 'edit' in factory.operations):
+            if factory.multi_select:
+                rows = editor.multi_selected_rows
+                row = rows[0] if len(rows) == 1 else -1
+            else:
+                row = editor.selected_row
+
+            if row != -1:
+                event.accept()
+                self.edit(editor.model.index(row, 0))
+
+        elif (event.key() in (QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete) and
+              factory.editable and 'delete' in factory.operations):
+            event.accept()
+            '''
+                sets _no_update and update_needed on the editor.object e.g
+            
+                editor.object== ExperimentQueue
+                editor is editing ExperimentQueue.automated_runs
+            
+            '''
+            with no_update(editor.object):
+                if factory.multi_select:
+                    for row in reversed(sorted(editor.multi_selected_rows)):
+                        editor.model.removeRow(row)
+                elif editor.selected_row != -1:
+                    editor.model.removeRow(editor.selected_row)
+
+        elif (event.key() == QtCore.Qt.Key_Insert and
+              factory.editable and 'insert' in factory.operations):
+            event.accept()
+
+            if factory.multi_select:
+                rows = sorted(editor.multi_selected_rows)
+                row = rows[0] if len(rows) else -1
+            else:
+                row = editor.selected_row
+            if row == -1:
+                row = editor.adapter.len(editor.object, editor.name)
+            editor.model.insertRow(row)
+            self.setCurrentIndex(editor.model.index(row, 0))
+
+        else:
+            QTableView.keyPressEvent(self, event)
 
     def keyPressEvent(self, event):
 
@@ -64,14 +121,15 @@ class _myTableView(_TableView):
                     copy_func = lambda x: x.clone_traits()
 
                 if len(si):
-                    idx = si[0].row()
+                    idx = si[0].row() + 1
                 else:
                     idx = len(self._editor.value) + 1
 
                 for ci in reversed(self._copy_cache):
                     self._editor.model.insertRow(idx, obj=copy_func(ci))
         else:
-            super(_myTableView, self).keyPressEvent(event)
+            self.super_keyPressEvent(event)
+#            super(_myTableView, self).keyPressEvent(event)
 
     def startDrag(self, actions):
         if self._editor.factory.drag_external:

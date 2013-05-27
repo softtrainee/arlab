@@ -56,9 +56,9 @@ class IsotopeEvolutionEditor(GraphEditor):
             r = 2
 
         while n > r * c:
-#            if gpi.fixed == 'cols':
-#                r += 1
-#            else:
+ #            if gpi.fixed == 'cols':
+ #                r += 1
+ #            else:
             c += 1
 
         if n == 1:
@@ -79,7 +79,7 @@ class IsotopeEvolutionEditor(GraphEditor):
                     isok = fit.name
                     kw = dict(padding=[50, 1, 1, 1])
                     if set_ytitle:
-#                        kw = dict(padding=[50, 1, 1, 1])
+ #                        kw = dict(padding=[50, 1, 1, 1])
                         kw['ytitle'] = '{} (fA)'.format(isok)
 
                     if set_xtitle:
@@ -101,7 +101,7 @@ class IsotopeEvolutionEditor(GraphEditor):
                 g.set_x_limits(0, ma * 1.1)
                 g.refresh()
 
-#            self.graphs.append(g)
+ #            self.graphs.append(g)
             self.container.add(g.plotcontainer)
 
     def traits_view(self):
@@ -120,3 +120,18 @@ class IsotopeEvolutionEditor(GraphEditor):
 
                                  )
 #============= EOF =============================================
+# from pyface.ui.qt4.tasks.editor import Editor
+# from PySide.QtWebKit import QWebView, QWebSettings
+# from PySide.QtCore import QUrl
+# class myQWebView(QWebView):
+#    pass
+#
+# class IsotopeEvolutionEditor(Editor):
+#    def create(self, parent):
+#        self.control = QWebView(parent)
+# #        self.control.setUrl(QUrl('http://www.google.com'))
+# #        self.control.setUrl(QUrl('file:///Users/ross/Sandbox/publish.pdf'))
+#        self.control.settings().setAttribute(QWebSettings.PluginsEnabled, True)
+#        self.control.show()
+#        self.control.load(QUrl('file:///Users/ross/Sandbox/publish.pdf'))
+# #        self.control.load(QUrl('http://www.google.com'))
