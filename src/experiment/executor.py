@@ -208,6 +208,13 @@ class ExperimentExecutor(Experimentable):
     def reset(self):
         self._was_executed = False
 
+    def stop(self):
+        if self.delaying_between_runs:
+            self._alive = False
+            self.stats.stop_timer()
+        else:
+            self.cancel()
+
     def cancel(self, style='queue', cancel_run=False, msg=None, confirm=True):
         arun = self.experiment_queue.current_run
         if style == 'queue':

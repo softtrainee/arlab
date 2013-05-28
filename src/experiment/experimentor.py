@@ -169,14 +169,14 @@ class Experimentor(Experimentable):
                     sample = dbln.sample
                     if sample:
                         ai.sample = sample.name
-                        #self.debug('sample {}'.format(ai.sample))
-    
+                        # self.debug('sample {}'.format(ai.sample))
+
                     ipos = dbln.irradiation_position
                     if not ipos is None:
                         level = ipos.level
                         irrad = level.irradiation
                         ai.irradiation = '{}{}'.format(irrad.name, level.name)
-                        #self.debug('irrad {}'.format(ai.irradiation))
+                        # self.debug('irrad {}'.format(ai.irradiation))
 
     def _modify_steps(self, ans, exclude=None):
         if exclude is None:
@@ -192,7 +192,7 @@ class Experimentor(Experimentable):
             if arun.skip:
                 continue
 
-            if arun.state in ('canceled','failed'):
+            if arun.state in ('canceled', 'failed'):
                 continue
 #            if arun.state == 'canceled':
 #                continue
@@ -270,7 +270,7 @@ class Experimentor(Experimentable):
                 arun.aliquot = 0
                 continue
 
-            if arun.state in ('failed','canceled'):
+            if arun.state in ('failed', 'canceled'):
                 continue
 
             # dont set degas or pause aliquot
@@ -299,7 +299,7 @@ class Experimentor(Experimentable):
                     st = stdict[arunid] if arunid in stdict else 0
 
             if not arun.user_defined_aliquot:
-                if arun.state =='not run':
+                if arun.state == 'not run':
                     arun.aliquot = int(st + c - offset)
             else:
                 c = 0
@@ -353,8 +353,12 @@ class Experimentor(Experimentable):
         '''
         self.debug('%%%%%%%%%%%%%%%%%% Execute fired')
         if self.executor.isAlive():
-            self.info('cancel execution')
-            self.executor.cancel()
+            self.info('stop execution')
+            '''
+                if the executor is delaying then stop but dont cancel
+                otherwise cancel
+            '''
+            self.executor.stop()
         else:
             self.execute_event = True
             self.update_info()
@@ -370,6 +374,13 @@ class Experimentor(Experimentable):
     @on_trait_change('experiment_factory:run_factory:changed')
     def _queue_dirty(self):
         self.experiment_queue.changed = True
+
+        executor = self.executor
+        executor.executable = False
+        if executor.isAlive():
+            executor.prev_end_at_run_completion = executor.end_at_run_completion
+            executor.end_at_run_completion = True
+            executor.changed_flag = True
 
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):
