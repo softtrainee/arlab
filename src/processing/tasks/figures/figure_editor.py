@@ -15,19 +15,36 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
+from traits.api import HasTraits, Any, Instance, on_trait_change
 from traitsui.api import View, Item, UItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from enable.component_editor import ComponentEditor as EnableComponentEditor
 from src.envisage.tasks.base_editor import BaseTraitsEditor
+from src.processing.plotter_options_manager import IdeogramOptionsManager, \
+    SpectrumOptionsManager
 
 class FigureEditor(BaseTraitsEditor):
     component = Any
     tool = Any
+    plotter_options_manager = Any
+    processor = Any
+
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
+                       width=700,
                        editor=EnableComponentEditor()))
         return v
+
+
+class IdeogramEditor(FigureEditor):
+    plotter_options_manager = Instance(IdeogramOptionsManager, ())
+#    @on_trait_change('plotter_options_manager.plotter_options.[+, aux_plots:+]')
+#    def _update_options(self, name, new):
+#        po = self.plotter_options_manager.plotter_options
+#        self.processor.new_ideogram(plotter_options=po)
+
+class SpectrumEditor(FigureEditor):
+    plotter_options_manager = Instance(SpectrumOptionsManager, ())
 #============= EOF =============================================

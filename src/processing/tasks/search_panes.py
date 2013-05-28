@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int
 from traitsui.api import View, Item, InstanceEditor, ListEditor, \
-    VGroup, UItem, spring, HGroup
+    VGroup, UItem, spring, HGroup, VSplit
 
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
@@ -30,8 +30,29 @@ class QueryPane(TraitsDockPane):
     id = 'pychron.search.query'
     name = 'Query'
     def traits_view(self):
-        v = View(
-                 VGroup(
+        results_grp = VGroup(
+                        HGroup(CustomLabel('num_records'), spring, Item('limit')),
+                        Item('records',
+                             style='custom',
+                             editor=myTabularEditor(adapter=ResultsAdapter(),
+                                                    selected='selected',
+                                                    scroll_to_row='scroll_to_row',
+#                                                    selected_row='selected_row',
+                                                    update='update',
+                                                    column_clicked='column_clicked',
+#                                                    editable=False,
+                                                    multi_select=True,
+                                                    operations=['move'],
+                                                    editable=True,
+                                                    drag_external=True,
+                                                    dclicked='dclicked'
+                                                    ),
+                             show_label=False,
+#                               height=0.75,
+#                               width=600,
+                            )
+                        )
+        query_grp = VGroup(
                         CustomLabel('dbstring', color='red'),
                         Item('queries', show_label=False,
                                    style='custom',
@@ -40,7 +61,13 @@ class QueryPane(TraitsDockPane):
                                                   style='custom',
                                                   editor=InstanceEditor())
                              ),
-                        HGroup(spring, UItem('search'))
+                        HGroup(spring, UItem('search')))
+
+
+        v = View(
+                 VSplit(
+                        results_grp,
+                        query_grp
                         )
                  )
         return v
@@ -65,33 +92,12 @@ class ResultsAdapter(TabularAdapter):
     timestamp_width = Int(110)
 
 
-class ResultsPane(TraitsDockPane):
-    id = 'pychron.search.results'
-    name = 'Results'
-    def traits_view(self):
-        v = View(
-                 VGroup(
-                        HGroup(CustomLabel('num_records'), spring, Item('limit')),
-                        Item('records',
-                             style='custom',
-                             editor=myTabularEditor(adapter=ResultsAdapter(),
-                                                    selected='selected',
-                                                    scroll_to_row='scroll_to_row',
-#                                                    selected_row='selected_row',
-                                                    update='update',
-                                                    column_clicked='column_clicked',
-#                                                    editable=False,
-                                                    multi_select=True,
-                                                    operations=['move'],
-                                                    editable=True,
-                                                    drag_external=True,
-                                                    dclicked='dclicked'
-                                                    ),
-                             show_label=False,
-#                               height=0.75,
-#                               width=600,
-                            )
-                        ),
-                 )
-        return v
+# class ResultsPane(TraitsDockPane):
+#    id = 'pychron.search.results'
+#    name = 'Results'
+#    def traits_view(self):
+#        v = View(
+#
+#                 )
+#        return v
 #============= EOF =============================================

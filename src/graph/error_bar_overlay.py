@@ -23,7 +23,7 @@ from enable.colors import color_table
 #============= standard library imports ========================
 
 from traits.traits import Color
-
+from numpy import column_stack, transpose, invert, isnan, compress, arange, ma, delete
 #============= local library imports  ==========================
 
 
@@ -32,74 +32,59 @@ class ErrorBarOverlay(AbstractOverlay):
 
     draw_layer = 'underlay'
     nsigma = 1
+    _cache_valid = False
 
-    def overlay(self, comp, gc, view_bounds=None, mode='normal'):
-        '''
-            
-        '''
-        component = self.component
+    def overlay(self, component, gc, view_bounds, mode='normal'):
         with gc:
-            gc.clip_to_rect(comp.x, comp.y, comp.width, comp.height)
-            gc.set_line_width(2)
-
-            x = component.index.get_data()
-            y = component.value.get_data()
+            comp = self.component
+            x = comp.index.get_data()
+            y = comp.value.get_data()
 
             if self.orientation == 'x':
-                xer = component.xerror.get_data()
+                y = comp.value_mapper.map_screen(y)
+                err = comp.xerror.get_data()
 
-                xer_sigma = xer * self.nsigma
+                err = err * self.nsigma
+                xlow, xhigh = x - err, x + err
+                xlow = comp.index_mapper.map_screen(xlow)
+                xhigh = comp.index_mapper.map_screen(xhigh)
 
-                args1 = component.map_screen(zip(x - xer_sigma, y))
-                args2 = component.map_screen(zip(x + xer_sigma, y))
+                start, end = column_stack((xlow, y)), column_stack((xhigh, y))
             else:
-                yer = component.yerror.get_data()
+                x = comp.index_mapper.map_screen(x)
+                err = comp.yerror.get_data()
 
-                yer_sigma = yer * self.nsigma
-                args1 = component.map_screen(zip(x, y - yer_sigma))
-                args2 = component.map_screen(zip(x, y + yer_sigma))
+                err = err * self.nsigma
+                ylow, yhigh = y - err, y + err
+                ylow = comp.value_mapper.map_screen(ylow)
+                yhigh = comp.value_mapper.map_screen(yhigh)
+                idx = arange(len(x))
+                start, end = column_stack((x, ylow)), column_stack((x, yhigh))
 
-            sel = component.index.metadata['selections']
 
+#            sels = (a for i, a in enumerate(zip(args1, args2)) if i in sel)
+#            nonsels = (a for i, a in enumerate(zip(args1, args2)) if i not in sel)
+            sel = comp.index.metadata.get('selections', [])
+            if sel:
+                nonsel = arange(len(x))
+                nonsel = delete(nonsel, sel)
+                sel_start, sel_end = start[sel], end[sel]
+                start, end = start[nonsel], end[nonsel]
+                color = (1, 0, 0)
+                # draw selected
+                gc.set_stroke_color(color)
+                gc.set_fill_color(color)
+                gc.line_set(sel_start, sel_end)
+                gc.draw_path()
+
+
+            # draw normal
             color = component.color
             if isinstance(color, str):
                 color = color_table[color]
-#                color = wx.Color()
-#                color.SetFromName(component.color)
-#                r, g, b = color.Red() / 255., color.Green() / 255., color.Blue() / 255.
-#                print component.color, r, g, b
-#                rgb = map(lambda x: x / 255. , color.GetRGB())
-#                color.Set(r, g, b)
-            sels = (a for i, a in enumerate(zip(args1, args2)) if i in sel)
-            nonsels = (a for i, a in enumerate(zip(args1, args2)) if i not in sel)
-
-            gc.set_stroke_color((1, 0, 0.5))
-            gc.set_fill_color((1, 0, 0.5))
-            for ((x1, y1), (x2, y2)) in sels:
-                gc.move_to(x1, y1)
-                gc.line_to(x2, y2)
-            gc.draw_path()
-
-#            print color
-#            rgb = color.red / 100., color.green / 100., color.blue / 100.
             gc.set_stroke_color(color)
             gc.set_fill_color(color)
-            for ((x1, y1), (x2, y2)) in nonsels:
-                gc.move_to(x1, y1)
-                gc.line_to(x2, y2)
+            gc.line_set(start, end)
             gc.draw_path()
-
-
-#            for i, ((x1, y1), (x2, y2)) in enumerate(zip(args1, args2)):
-#                if i in sel:
-#                    gc.set_stroke_color((255, 0, 122))
-#                else:
-#                    print (color.red, color.green, color.blue)
-#                    gc.set_stroke_color((255, color.green, color.blue))
-# #                    gc.set_stroke_color((color.red / 255., color.green / 255., color.blue / 255.))
-# #                    gc.set_stroke_color((255, 0, 0))
-#                gc.move_to(x1, y1)
-#                gc.line_to(x2, y2)
-#                gc.stroke_path()
 
 #============= EOF =====================================

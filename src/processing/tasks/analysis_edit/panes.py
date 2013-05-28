@@ -50,7 +50,7 @@ class TablePane(TraitsDockPane):
                                                             selected='selected',
                                                             dclicked='dclicked'
 #                                                            auto_resize_rows=True
-                                                            )
+                                                            ),
                             )
                       )
                )

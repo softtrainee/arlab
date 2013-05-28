@@ -22,7 +22,7 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
-from src.processing.tasks.search_panes import ResultsPane, QueryPane
+from src.processing.tasks.search_panes import  QueryPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -42,7 +42,6 @@ class SeriesTask(AnalysisEditTask):
                           right=Splitter(
                                          PaneItem('pychron.analysis_edit.irradiation'),
                                          PaneItem('pychron.search.query'),
-                                         PaneItem('pychron.search.results'),
                                          orientation='vertical'
                                          )
 
@@ -61,8 +60,6 @@ class SeriesTask(AnalysisEditTask):
 
         self.unknowns_pane = UnknownsPane(adapter_klass=self.unknowns_adapter)
         self.controls_pane = ControlsPane()
-        self.results_pane = ResultsPane(model=selector)
-
 
         return [
                 self.unknowns_pane,

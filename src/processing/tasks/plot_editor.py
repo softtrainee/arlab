@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Float, Int, on_trait_change
+from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool
 from traitsui.api import View, Item, Group, VGroup
 from pyface.timer.do_later import do_later
 from traitsui.editors.range_editor import RangeEditor
@@ -35,6 +35,8 @@ class PlotEditor(HasTraits):
     xmax = EFloat
     ymin = EFloat
     ymax = EFloat
+    xauto = Bool
+    yauto = Bool
 
     plot = Any
     padding_left = EInt
@@ -64,32 +66,50 @@ class PlotEditor(HasTraits):
         v = p.index_range.high
         if self.xmin < v:
             p.index_range.low_setting = self.xmin
+            self.xauto = False
 
     def _xmax_changed(self):
         p = self.plot
         v = p.index_range.low
         if self.xmax > v:
             p.index_range.high_setting = self.xmax
+            self.xauto = False
 
     def _ymin_changed(self):
         p = self.plot
         v = p.value_range.high
         if self.ymin < v:
             p.value_range.low_setting = self.ymin
+            self.yauto = False
 
     def _ymax_changed(self):
         p = self.plot
         v = p.value_range.low
         if self.ymax > v:
             p.value_range.high_setting = self.ymax
+            self.yauto = False
+
+#    def _xauto_changed(self):
+#        if self.xauto:
+#            p = self.plot
+#            p.index_range.low_setting = 'auto'
+#            p.index_range.high_setting = 'auto'
+#            p.index_range.refresh()
+#            p.invalidate_and_redraw()
+#            print p.index_range.high, p.index_range.low
+
 
     def traits_view(self):
         v = View(
                  VGroup(
-                     Group(Item('xmin'),
+                     Group(
+#                           Item('xauto', label='Autoscale'),
+                           Item('xmin'),
                            Item('xmax'),
                            ),
-                     Group(Item('ymin'),
+                     Group(
+#                           Item('yauto', label='Autoscale'),
+                           Item('ymin'),
                            Item('ymax'),
                            ),
                      Group(

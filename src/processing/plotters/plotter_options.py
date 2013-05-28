@@ -45,9 +45,8 @@ class PlotterOption(HasTraits):
         v = View(
                  HGroup(
                         UItem('name',
-
-                             editor=EnumEditor(name='plot_names')),
-
+                              width= -70,
+                              editor=EnumEditor(name='plot_names')),
                         UItem('scale'),
                         UItem('height',
                               width= -50,
@@ -222,7 +221,7 @@ class PlotterOptions(Viewable):
         v = VGroup(
                     self._create_axis_group('x', 'title'),
                     self._create_axis_group('x', 'tick'),
-                    show_border=True,
+#                    show_border=True,
                     label='X')
         return v
 
@@ -249,7 +248,7 @@ class PlotterOptions(Viewable):
                                     VGroup(
                                            self._create_axis_group('y', 'title'),
                                            self._create_axis_group('y', 'tick'),
-                                           show_border=True,
+#                                           show_border=True,
                                            label='Y'),
                                    layout='tabbed'
                                     ),
@@ -305,8 +304,6 @@ class IdeogramOptions(AgeOptions):
     use_centered_range = Bool
     centered_range = Float(0.5)
 
-
-
     def _get_x_axis_group(self):
         vg = super(IdeogramOptions, self)._get_x_axis_group()
 
@@ -325,10 +322,14 @@ class IdeogramOptions(AgeOptions):
     def _get_groups(self):
         g = Group(
                   Item('probability_curve_kind',
+                       width= -150,
                        label='Probability Curve Method'),
                   Item('mean_calculation_kind',
+                       width= -150,
                        label='Mean Calculation Method'),
-                  Item('error_calc_method', label='Error Calculation Method'),
+                  Item('error_calc_method',
+                       width= -150,
+                       label='Error Calculation Method'),
                   Item('nsigma', label='Age Error NSigma'),
                   Item('include_j_error'),
                   Item('include_irradiation_error'),

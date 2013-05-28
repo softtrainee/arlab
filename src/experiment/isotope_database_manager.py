@@ -108,11 +108,14 @@ class IsotopeDatabaseManager(Manager):
         return self.db.get_irradiation_level(irradiation, level)
 
     def _record_factory(self, pi, **kw):
+        if isinstance(pi, Analysis):
+            return pi
 
         if isinstance(pi, IsotopeRecordView):
-            pi = self.db.get_analysis_uuid(pi.uuid)
+            rec = self.db.get_analysis_uuid(pi.uuid)
             kw.update(dict(graph_id=pi.graph_id,
                            group_id=pi.group_id))
+            pi = rec
 
         rec = IsotopeRecord(_dbrecord=pi, **kw)
         a = Analysis(isotope_record=rec)
