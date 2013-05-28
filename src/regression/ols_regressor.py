@@ -379,11 +379,8 @@ class MultipleLinearRegressor(OLSRegressor):
 #            print [pow(xi, i) for i in range(self.degree + 1)]
             Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
 
-#            print Xk
             covarM = matrix(self.var_covar)
             varY_hat = (Xk.T * covarM * Xk)
-#            print varY_hat
-            print '-----------r'
             varY_hat = sum(diag(varY_hat))
 #            print varY_hat
 #

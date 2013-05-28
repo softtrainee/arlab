@@ -80,12 +80,12 @@ class Analysis(Loggable):
         else:
             return 'Omitted'
 
-    def load_age(self):
-        if self.age is not None:
-            # self.info('{} age={}'.format(self.isotope_record.record_id, a))
-            return True
-        else:
-            self.warning('could not compute age for {}'.format(self.rid))
+#    def load_age(self):
+#        if self.age is not None:
+#            # self.info('{} age={}'.format(self.isotope_record.record_id, a))
+#            return True
+#        else:
+#            self.warning('could not compute age for {}'.format(self.rid))
 
 #    def get_corrected_intercept(self, key):
 #        '''
@@ -218,9 +218,6 @@ class NonDBAnalysis(HasTraits):
 
     def calculate_age(self, **kw):
         return self.age
-
-    def load_age(self):
-        return
 
     def _get_record_id(self):
         return '{}-{:02n}{}'.format(self.labnumber, self.aliquot, self.step)

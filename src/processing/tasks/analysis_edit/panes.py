@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, List, Instance, Property, Any
+from traits.api import HasTraits, Button, List, Instance, Property, Any, Event
 from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
@@ -34,11 +34,36 @@ class TablePane(TraitsDockPane):
     replace_button = Button
     items = List
     _no_update = False
+    update_needed = Event
     selected = Any
     dclicked = Any
+    def load(self):
+        pass
+    def dump(self):
+        pass
+    def traits_view(self):
+        v = View(VGroup(
+                      UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
+                                                            operations=['move', 'delete'],
+                                                            editable=True,
+                                                            drag_external=True,
+                                                            selected='selected',
+                                                            dclicked='dclicked'
+#                                                            auto_resize_rows=True
+                                                            )
+                            )
+                      )
+               )
+        return v
 
+
+class HistoryTablePane(TablePane):
     previous_selection = Any
     previous_selections = List(PreviousSelection)
+    def load(self):
+        self.load_previous_selections()
+    def dump(self):
+        self.dump_selection()
 #===============================================================================
 # previous selections
 #===============================================================================
@@ -93,15 +118,8 @@ class TablePane(TraitsDockPane):
         p = os.path.join(paths.hidden_dir, 'stored_selections')
         d = shelve.open(p)
         return d
-#===============================================================================
-#
-#===============================================================================
     def traits_view(self):
         v = View(VGroup(
-#                      HGroup(
-#                             UItem('append_button'),
-#                             UItem('replace_button'),
-#                             ),
                       UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
                       UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
                                                             operations=['move', 'delete'],
@@ -116,11 +134,12 @@ class TablePane(TraitsDockPane):
                )
         return v
 
-class UnknownsPane(TablePane):
+
+class UnknownsPane(HistoryTablePane):
     id = 'pychron.analysis_edit.unknowns'
     name = 'Unknowns'
 
-class ReferencesPane(TablePane):
+class ReferencesPane(HistoryTablePane):
     name = 'References'
     id = 'pychron.analysis_edit.references'
 

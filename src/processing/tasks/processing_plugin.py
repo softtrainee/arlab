@@ -46,21 +46,21 @@ class ProcessingPlugin(BaseTaskPlugin):
         return [
                 TaskExtension(
                               actions=[
-                                       SchemaAddition(
-                                                      id='new_ideogram_action',
-                                                      factory=IdeogramAction,
-                                                      path='MenuBar/File/New'
-                                                      ),
-                                       SchemaAddition(
-                                                      id='new_spectrum_action',
-                                                      factory=SpectrumAction,
-                                                      path='MenuBar/File/New'
-                                                      ),
-                                       SchemaAddition(
-                                                      id='recall_action',
-                                                      factory=RecallAction,
-                                                      path='MenuBar/File'
-                                                      ),
+#                                       SchemaAddition(
+#                                                      id='new_ideogram_action',
+#                                                      factory=IdeogramAction,
+#                                                      path='MenuBar/File/New'
+#                                                      ),
+#                                       SchemaAddition(
+#                                                      id='new_spectrum_action',
+#                                                      factory=SpectrumAction,
+#                                                      path='MenuBar/File/New'
+#                                                      ),
+#                                       SchemaAddition(
+#                                                      id='recall_action',
+#                                                      factory=RecallAction,
+#                                                      path='MenuBar/File'
+#                                                      ),
                                        SchemaAddition(id='labnumber_entry',
                                                       factory=LabnumberEntryAction,
                                                       path='MenuBar/Edit'
@@ -122,6 +122,9 @@ class ProcessingPlugin(BaseTaskPlugin):
                 TaskFactory(id='pychron.analysis_edit.batch', factory=self._batch_edit_task_factory,
                             name='Batch Edit',
                             ),
+                TaskFactory(id='pychron.processing.figures', factory=self._figure_task_factory,
+                            name='Figures',
+                            ),
                 ]
 
     def _processor_factory(self):
@@ -158,6 +161,11 @@ class ProcessingPlugin(BaseTaskPlugin):
     def _batch_edit_task_factory(self):
         from src.processing.tasks.batch_edit.batch_edit_task import BatchEditTask
         return BatchEditTask(manager=self._processor_factory())
+
+    def _figure_task_factory(self):
+        from src.processing.tasks.figures.figure_task import FigureTask
+        return FigureTask(manager=self._processor_factory())
+
 #    def _task_factory(self):
 # #        processor = self.application.get_service(Processor)
 #        return ProcessingTask(manager=self._processor_factory())

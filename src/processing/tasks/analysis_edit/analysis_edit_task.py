@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, on_trait_change, List
+from traits.api import HasTraits, Instance, on_trait_change, List, Any
 from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, \
     ReferencesPane, ControlsPane
@@ -28,13 +28,14 @@ from src.database.records.isotope_record import IsotopeRecordView
 #============= local library imports  ==========================
 
 class AnalysisEditTask(EditorTask):
-    unknowns_pane = Instance(UnknownsPane)
+    unknowns_pane = Any
     controls_pane = Instance(ControlsPane)
     results_pane = Instance(ResultsPane)
 
     unknowns_adapter = UnknownsAdapter
+    unknowns_pane_klass = UnknownsPane
     def prepare_destroy(self):
-        self.unknowns_pane.dump_selection()
+        self.unknowns_pane.dump()
 
     def create_dock_panes(self):
         selector = self.manager.db.selector
@@ -54,11 +55,16 @@ class AnalysisEditTask(EditorTask):
                 ]
 
     def _create_unknowns_pane(self):
-        self.unknowns_pane = up = UnknownsPane(adapter_klass=self.unknowns_adapter)
-        up.load_previous_selections()
-    def _open_recall_editor(self, recview):
+        self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
+        up.load()
+
+    def _open_ideogram_editor(self, ans, name):
+        _id = 'pychron.processing.figures'
+        task = self._open_external_task(_id)
+        task.new_ideogram(ans=ans, name=name)
+
+    def _open_external_task(self, _id):
         app = self.window.application
-        _id = 'pychron.recall'
         for win in app.windows:
             if win.active_task.id == _id:
                 win.activate()
@@ -67,8 +73,13 @@ class AnalysisEditTask(EditorTask):
             win = app.create_window(TaskWindowLayout(_id))
             win.open()
 
-        task = win.active_task
+        return win.active_task
+
+    def _open_recall_editor(self, recview):
+        _id = 'pychron.recall'
+        task = self._open_external_task(_id)
         task.recall([recview])
+
     def _save_to_db(self):
         if self.active_editor:
             if hasattr(self.active_editor, 'save'):
@@ -100,7 +111,7 @@ class AnalysisEditTask(EditorTask):
                     tool = self.active_editor.tool
                 self.controls_pane.tool = tool
 
-    @on_trait_change('unknowns_pane:items')
+    @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
             if self.active_editor:

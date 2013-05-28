@@ -14,6 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.processing.plotter_options_manager import IdeogramOptionsManager
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits, List, Instance, on_trait_change, Any, DelegatesTo
@@ -48,6 +49,57 @@ class Processor(IsotopeDatabaseManager):
 # #                    ans = [self._record_factory(si) for si in ps.selector.selected]
 #    #                self._load_analyses(ans)
 #                    return ps.selector.selected
+
+    def new_ideogram(self, plotter_options=None, ans=None):
+        '''
+            return a plotcontainer
+        '''
+        from src.processing.plotters.ideogram import Ideogram
+
+        probability_curve_kind = 'cumulative'
+        mean_calculation_kind = 'weighted_mean'
+        data_label_font = None
+        metadata_label_font = None
+ #        highlight_omitted = True
+        display_mean_indicator = True
+        display_mean_text = True
+
+        p = Ideogram(
+ #                     db=self.db,
+ #                     processing_manager=self,
+                     probability_curve_kind=probability_curve_kind,
+                     mean_calculation_kind=mean_calculation_kind
+                     )
+        options = dict(
+                       title='',
+                       data_label_font=data_label_font,
+                       metadata_label_font=metadata_label_font,
+                       display_mean_text=display_mean_text,
+                       display_mean_indicator=display_mean_indicator,
+                       )
+
+        if ans is None:
+            ans = self._gather_data()
+
+#        if plotter_options is None:
+#            plotter_options = self._plotter_options
+
+#        self._plotter_options = plotter_options
+        pom = IdeogramOptionsManager()
+        plotter_options = pom.plotter_options
+
+        if ans:
+            self.analyses = ans
+            gideo = p.build(ans, options=options,
+                            plotter_options=plotter_options)
+            if gideo:
+                gideo, _plots = gideo
+
+            return gideo
+
+
+
+
 
 #===============================================================================
 # corrections

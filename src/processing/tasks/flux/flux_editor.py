@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, on_trait_change
+from traits.api import HasTraits, Any, Instance, on_trait_change, Button, Float
 from traitsui.api import View, UItem
 # from src.envisage.tasks.base_editor import BaseTraitsEditor
 # from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
@@ -28,18 +28,24 @@ import struct
 from collections import namedtuple
 from src.processing.tasks.analysis_edit.interpolation_editor import InterpolationEditor
 from src.graph.error_bar_overlay import ErrorBarOverlay
-from src.regression.ols_regressor import MultipleLinearRegressor
+from src.processing.argon_calculations import calculate_flux
+
 #============= local library imports  ==========================
 class FluxTool(HasTraits):
+    calculate_button = Button('Calculate')
+    monitor_age = Float
     def traits_view(self):
-        v = View()
+        v = View(
+                 UItem('calculate_button')
+                 )
         return v
+
 
 Position = namedtuple('Positon', 'position x y')
 
 class FluxEditor(InterpolationEditor):
     level = Any
-    tool = Any
+    tool = Instance(FluxTool, ())
 
     def _rebuild_graph(self):
         g = self.graph
@@ -153,69 +159,5 @@ class FluxEditor(InterpolationEditor):
         g = Graph()
         return g
 
-from mayavi.core.ui.api import MayaviScene, MlabSceneModel, \
-        SceneEditor
-import numpy as np
-class FluxEditor3D(FluxEditor):
-    scene = Instance(MlabSceneModel, ())
-    def _rebuild_graph(self):
-        if not self._references:
-            return
-
-#        mx, my, mys, mye = zip(*[(pi.x, pi.y, pi.pred_j, pi.pred_j_err)
-#                                  for pi in monitors])
-#        x, y, ys, ye = zip(*[(pi.x, pi.y, pi.pred_j, pi.pred_j_err)
-#                             for pi in unknowns])
-
-        xy = self._get_xy(self._references)
-        ys, e = self._get_flux(self._references)
-        reg = MultipleLinearRegressor(xs=xy, ys=ys, yserr=e, fit='linear')
-
-#        mx, my = self._get_xy(self._references)
-
-        xy = np.array(xy)
-        r, _ = xy.shape
-        x, y = xy.T
-
-        w = max(x) - min(x)
-        xmin = ymin = -w - 1
-        xmax = ymax = w + 1
-#        c = len(x)
-#        r = len(y)
-        xx, yy = np.mgrid[xmin:xmax, ymin:ymax]
-
-#        xx = xx / float(n) * w - w / 2.
-#        yy = yy / float(n) * w - w / 2.
-
-        z = np.zeros((r, r))
-        zl = np.zeros((r, r))
-        zu = np.zeros((r, r))
-        for i in range(r):
-            for j in range(r):
-                pt = (xx[i, j],
-                      yy[i, j])
-                v = reg.predict([pt])[0]
-                e = reg.predict_error([pt])[0] * 10
-                zl[i, j] = v - e
-                zu[i, j] = v + e
-                z[i, j] = v
-
-        ws = 10000
-        self.scene.mlab.points3d(x, y, array(ys) * ws)
-        self.scene.mlab.surf(xx, yy, z, warp_scale=ws)
-        self.scene.mlab.surf(xx, yy, zu, warp_scale=ws)
-        self.scene.mlab.surf(xx, yy, zl, warp_scale=ws)
-        self.scene.mlab.axes(
-                             xlabel='X mm',
-                             ylabel='Y mm',
-                             ranges=[xmin, xmax, ymin, ymax, min(z), max(z)]
-                             )
-
-    def traits_view(self):
-        v = View(UItem('scene', style='custom',
-                       height=250, width=300,
-                       resizable=True,
-                       editor=SceneEditor(scene_class=MayaviScene)))
-        return v
 
 #============= EOF =============================================

@@ -62,7 +62,7 @@ class PlotterOption(HasTraits):
         return v
 
 
-FONTS = ['Helvetica', 'Courier', 'Modern']
+FONTS = ['courier', 'modern']
 SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 
 
