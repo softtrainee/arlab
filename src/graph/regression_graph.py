@@ -140,7 +140,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self.regressors = []
 
     def refresh(self, **kw):
-        print 'update graph'
         self._update_graph()
 
     def update_metadata(self, obj, name, old, new):

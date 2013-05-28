@@ -637,8 +637,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                                      marker_size=1
                                      )
                     graph.set_series_label('sniff', plotid=i)
-                else:
-                    print 'no sniff for', dbiso.name
+#                else:
+#                    print 'no sniff for', dbiso.name
 
                 # add the sniff
 

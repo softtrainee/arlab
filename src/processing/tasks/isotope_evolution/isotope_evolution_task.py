@@ -40,7 +40,6 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                                      ),
                           right=Splitter(
                                          PaneItem('pychron.search.query'),
-                                         PaneItem('pychron.search.results'),
                                          orientation='vertical'
                                          )
 

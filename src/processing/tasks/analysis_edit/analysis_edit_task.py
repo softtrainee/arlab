@@ -19,10 +19,12 @@ from traits.api import HasTraits, Instance, on_trait_change, List, Any
 from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, \
     ReferencesPane, ControlsPane
-from src.processing.tasks.search_panes import QueryPane, ResultsPane
+from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.database.records.isotope_record import IsotopeRecordView
+from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
+from src.processing.analysis import Analysis
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -30,8 +32,8 @@ from src.database.records.isotope_record import IsotopeRecordView
 class AnalysisEditTask(EditorTask):
     unknowns_pane = Any
     controls_pane = Instance(ControlsPane)
-    results_pane = Instance(ResultsPane)
-
+#    results_pane = Instance(ResultsPane)
+    plot_editor_pane = Instance(EditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
     def prepare_destroy(self):
@@ -45,13 +47,15 @@ class AnalysisEditTask(EditorTask):
         self._create_unknowns_pane()
 
         self.controls_pane = ControlsPane()
-        self.results_pane = ResultsPane(model=selector)
+        self.plot_editor_pane = EditorPane()
 
         return [
                 self.unknowns_pane,
                 self.controls_pane,
-                self.results_pane,
+                self.plot_editor_pane,
+#                self.results_pane,
                 QueryPane(model=selector),
+
                 ]
 
     def _create_unknowns_pane(self):
@@ -111,6 +115,11 @@ class AnalysisEditTask(EditorTask):
                     tool = self.active_editor.tool
                 self.controls_pane.tool = tool
 
+    @on_trait_change('active_editor:component_changed')
+    def _update_component(self):
+        if self.plot_editor_pane:
+            self.plot_editor_pane.component = self.active_editor.component
+
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
@@ -123,9 +132,8 @@ manager:db:selector:dclicked
 ''')
     def _selected_changed(self, new):
         if new:
-            if isinstance(new.item, IsotopeRecordView):
+            if isinstance(new.item, (IsotopeRecordView, Analysis)):
                 self._open_recall_editor(new.item)
-
 
     @on_trait_change('controls_pane:save_button')
     def _save_fired(self):

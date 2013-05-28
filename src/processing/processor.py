@@ -50,7 +50,7 @@ class Processor(IsotopeDatabaseManager):
 #    #                self._load_analyses(ans)
 #                    return ps.selector.selected
 
-    def new_ideogram(self, plotter_options=None, ans=None):
+    def new_ideogram(self, ans, plotter_options=None):
         '''
             return a plotcontainer
         '''
@@ -78,15 +78,9 @@ class Processor(IsotopeDatabaseManager):
                        display_mean_indicator=display_mean_indicator,
                        )
 
-        if ans is None:
-            ans = self._gather_data()
-
-#        if plotter_options is None:
-#            plotter_options = self._plotter_options
-
-#        self._plotter_options = plotter_options
-        pom = IdeogramOptionsManager()
-        plotter_options = pom.plotter_options
+        if plotter_options is None:
+            pom = IdeogramOptionsManager()
+            plotter_options = pom.plotter_options
 
         if ans:
             self.analyses = ans

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Int
 from traitsui.api import View, Item
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
@@ -24,8 +24,10 @@ from traitsui.tabular_adapter import TabularAdapter
 class UnknownsAdapter(TabularAdapter):
     columns = [('Run ID', 'record_id')]
     font = 'helvetica 10'
+#    record_id_width = Int(50)
 
 class ReferencesAdapter(TabularAdapter):
     columns = [('Run ID', 'record_id')]
     font = 'helvetica 10'
+#    record_id_width = Int(50)
 #============= EOF =============================================

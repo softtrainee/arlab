@@ -38,6 +38,7 @@ from src.helpers.formatting import floatfmt
 from numpy import log10
 from src.processing.plotters.point_move_tool import PointMoveTool
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
+import time
 # from src.processing.figure import AgeResult
 
 # def weighted_mean(x, errs):
@@ -454,7 +455,7 @@ class Ideogram(Plotter):
                                     additional_info=additional_info
                                     )
 
-        d = lambda *args: self._update_meta(g, scatter, group_id, *args)
+        d = lambda obj, name, old, new: self._update_metadata(g, scatter, group_id, obj, name, old, new)
         scatter.index.on_trait_change(d, 'metadata_changed')
 
         p = g.plots[plotid]
@@ -489,22 +490,40 @@ class Ideogram(Plotter):
     def _cmp_analyses(self, x):
         return x.age.nominal_value
 
-    def _update_bounds(self, graph, scatter, group_id):
-        self._update_graph(graph, scatter, group_id, bounds_only=True)
+    def _update_metadata(self, g, scatter, group_id, obj, name, old, new):
+        sel = obj.metadata.get('selections', None)
+        if sel:
+            obj.was_selected = True
+            self._update_graph(g, scatter, group_id)
+        elif hasattr(obj, 'was_selected'):
+            if obj.was_selected:
+                self._update_graph(g, scatter, group_id)
+            obj.was_selected = False
 
-    def _update_meta(self, graph, scatter, group_id):
-        self._update_graph(graph, scatter, group_id)
+    _last_bounds_update = None
+    def _update_bounds(self, *args, **kw):
+        # limit the update graph rate when only resizing
+        # update only every 0.5s
+        if not self._last_bounds_update or time.time() - self._last_bounds_update > 1:
+            self._update_graph(*args, **kw)
+#        else:
+        self._last_bounds_update = time.time()
 
     def _update_graph(self, graph, scatter, group_id, bounds_only=False):
+        import inspect
+        stack = inspect.stack()
+        self.debug('update graph called by {}'.format(stack[1][3]))
+
         xmi, xma = graph.get_x_limits()
         ideo = graph.plots[0]
         sel = scatter.index.metadata['selections']
-        if self._prev_selection.has_key(scatter):
-            if self._prev_selection[scatter] == sel:
-                if not bounds_only:
-                    return
+#        if self._prev_selection.has_key(scatter):
+#            if self._prev_selection[scatter] == sel:
+#                if not bounds_only:
+#                    self.debug('skipping graph update')
+#                    return
 
-        self._prev_selection[scatter] = sel
+#        self._prev_selection[scatter] = sel
 
         lp = ideo.plots['plot{}'.format(group_id * 3)][0]
         dp = ideo.plots['plot{}'.format(group_id * 3 + 1)][0]

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, List, on_trait_change, Instance
+from traits.api import Any, List, on_trait_change, Instance, Property, Event
 from traitsui.api import View, UItem, InstanceEditor
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= standard library imports ========================
@@ -32,6 +32,8 @@ class GraphEditor(BaseTraitsEditor):
     processor = Any
     unknowns = List
     _unknowns = List
+    component = Property
+    component_changed = Event
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -68,6 +70,7 @@ class GraphEditor(BaseTraitsEditor):
         graph = self.graph
         graph.clear()
         self._rebuild_graph()
+        self.component_changed = True
 
     def _rebuild_graph(self):
         pass
@@ -93,4 +96,7 @@ class GraphEditor(BaseTraitsEditor):
         for fit in self.tool.fits:
             if fit.fit and fit.show:
                 yield fit
+
+    def _get_component(self):
+        return self.graph.plotcontainer
 #============= EOF =============================================

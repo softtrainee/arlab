@@ -67,16 +67,8 @@ class FluxTask(InterpolationTask):
                           right=Splitter(
                                          PaneItem('pychron.analysis_edit.irradiation'),
                                          PaneItem('pychron.search.query'),
-                                         PaneItem('pychron.search.results'),
                                          orientation='vertical'
                                          )
-
-#                                     PaneItem('pychron.pyscript.editor')
-#                                     ),
-#                          top=PaneItem('pychron.pyscript.description'),
-#                          bottom=PaneItem('pychron.pyscript.example'),
-
-
                           )
 
     def create_dock_panes(self):
