@@ -56,8 +56,6 @@ from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 N = 300
 
 
-
-
 class Ideogram(Plotter):
     ages = None
     errors = None
@@ -108,14 +106,18 @@ class Ideogram(Plotter):
     def _build_xtitle(self, g, xtitle_font, xtick_font, age_unit='Ma'):
         f, s = xtitle_font.split(' ')
         g.set_x_title('Age ({})'.format(age_unit), font=f, size=int(s))
-        g.set_axis_traits(axis='x', tick_label_font=xtick_font)
+        g.set_axis_traits(axis='x',
+#                          tick_label_font=xtick_font
+                          )
 
     def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots, **kw):
         f, s = ytitle_font.split(' ')
         g.set_y_title('Relative Probability', font=f, size=int(s))
         for k, ap in enumerate(aux_plots):
             g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
-            g.set_axis_traits(axis='y', tick_label_font=ytick_font)
+            g.set_axis_traits(axis='y',
+                              tick_label_font=ytick_font
+                              )
 
     def _build_hook(self, g, analyses, aux_plots=None):
         g.analyses = analyses
@@ -364,7 +366,7 @@ class Ideogram(Plotter):
             text = self._build_label_text(wm, we, mswd, valid_mswd, ages.shape[0])
             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
             self._add_data_label(s, text, (wm, ym),
-                                 font=font
+#                                 font=font
                                  )
         # add a tool to move the mean age point
         s.tools.append(PointMoveTool(component=s,

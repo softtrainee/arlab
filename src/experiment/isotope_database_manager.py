@@ -23,7 +23,7 @@ from apptools.preferences.preference_binding import bind_preference
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
-from src.database.records.isotope_record import IsotopeRecord
+from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.processing.analysis import Analysis
 from src.constants import NULL_STR
 
@@ -95,8 +95,8 @@ class IsotopeDatabaseManager(Manager):
             bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         except AttributeError:
             pass
-    def make_analyses(self, ans):
-        return [self._record_factory(ai) for ai in ans]
+    def make_analyses(self, ans, **kw):
+        return [self._record_factory(ai, **kw) for ai in ans]
 
     def load_analyses(self, ans, **kw):
         self._load_analyses(ans, **kw)
@@ -107,10 +107,14 @@ class IsotopeDatabaseManager(Manager):
 
         return self.db.get_irradiation_level(irradiation, level)
 
-    def _record_factory(self, pi):
-        rec = IsotopeRecord(_dbrecord=self.db.get_analysis_uuid(pi.uuid),
-                            graph_id=pi.graph_id,
-                            group_id=pi.group_id)
+    def _record_factory(self, pi, **kw):
+
+        if isinstance(pi, IsotopeRecordView):
+            pi = self.db.get_analysis_uuid(pi.uuid)
+            kw.update(dict(graph_id=pi.graph_id,
+                           group_id=pi.group_id))
+
+        rec = IsotopeRecord(_dbrecord=pi, **kw)
         a = Analysis(isotope_record=rec)
 #        a.load_isotopes()
         return a
@@ -123,7 +127,6 @@ class IsotopeDatabaseManager(Manager):
         return db
 
     def _load_analyses(self, ans, func=None):
-
         if func is None:
             func = lambda x: x.load_isotopes()
 

@@ -28,8 +28,7 @@ from sqlalchemy.orm.session import object_session
 from numpy import array
 #============= local library imports  ==========================
 from src.viewable import Viewable
-from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapter, \
-    BaseResults
+from src.processing.plotters.results_tabular_adapter import BaseResults
 from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
@@ -563,7 +562,9 @@ class Plotter(Viewable):
         ustr = self.metadata_label_text
 #        ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)
 #        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0, font=font)
-        self.plot_label = g.add_plot_label(ustr, 0, 0, font=font)
+        self.plot_label = g.add_plot_label(ustr, 0, 0,
+#                                           font=font
+                                           )
 
     def _get_grouped_analyses(self):
         analyses = self.analyses

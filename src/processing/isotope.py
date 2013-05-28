@@ -178,8 +178,8 @@ class CorrectionIsotopicMeasurement(IsotopicMeasurement):
     pass
     def __init__(self, dbrecord=None, *args, **kw):
         if dbrecord:
-            self._value = dbrecord.user_value
-            self._error = dbrecord.user_error
+            self._value = dbrecord.user_value if dbrecord.user_value is not None else 0
+            self._error = dbrecord.user_error if dbrecord.user_value is not None else 0
 
         super(IsotopicMeasurement, self).__init__(*args, **kw)
 #        if self.dbrecord:

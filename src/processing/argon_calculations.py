@@ -69,11 +69,14 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
     if isinstance(age, (list, tuple, str)):
         age = ufloat(age)
 #    age = (1 / constants.lambdak) * umath.log(1 + JR)
-    r = rad40 / k39
-    if arar_constants is None:
-        arar_constants = ArArConstants()
-    j = (umath.exp(age * arar_constants.lambda_k) - 1) / r
-    return j.nominal_value, j.std_dev
+    try:
+        r = rad40 / k39
+        if arar_constants is None:
+            arar_constants = ArArConstants()
+        j = (umath.exp(age * arar_constants.lambda_k) - 1) / r
+        return j.nominal_value, j.std_dev
+    except ZeroDivisionError:
+        return 1, 0
 #    return j
 def calculate_decay_time(dc, f):
     print dc, f

@@ -22,7 +22,10 @@ from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 from src.processing.tasks.flux.panes import IrradiationPane
 from traitsui.tabular_adapter import TabularAdapter
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
+from src.processing.tasks.analysis_edit.panes import HistoryTablePane, TablePane
+from src.processing.argon_calculations import calculate_flux
 #============= standard library imports ========================
+from numpy import asarray, average
 #============= local library imports  ==========================
 class LevelAdatper(TabularAdapter):
     columns = [('Run ID', 'name')]
@@ -36,11 +39,21 @@ class UnknownsAdapter(LevelAdatper):
 class ReferencesAdapter(LevelAdatper):
     pass
 
+class UnknownsPane(TablePane):
+    id = 'pychron.analysis_edit.unknowns'
+    name = 'Unknowns'
+
+class ReferencesPane(TablePane):
+    name = 'References'
+    id = 'pychron.analysis_edit.references'
+
 class FluxTask(InterpolationTask):
     id = 'pychron.analysis_edit.flux'
     flux_editor_count = 1
     unknowns_adapter = UnknownsAdapter
     references_adapter = ReferencesAdapter
+    references_pane_klass = ReferencesPane
+    unknowns_pane_klass = UnknownsPane
 
     def _default_layout_default(self):
         return TaskLayout(
@@ -74,19 +87,21 @@ class FluxTask(InterpolationTask):
 
     def new_flux(self):
         from src.processing.tasks.flux.flux_editor import FluxEditor
-#        editor = FluxEditor(name='Flux {:03n}'.format(self.flux_editor_count),
-#                              processor=self.manager
-#                              )
-#
-#        self._open_editor(editor)
-
-        from src.processing.tasks.flux.flux_editor import FluxEditor3D
-        editor = FluxEditor3D(name='Flux3D {:03n}'.format(self.flux_editor_count),
+        editor = FluxEditor(name='Flux {:03n}'.format(self.flux_editor_count),
                               processor=self.manager
                               )
 
         self._open_editor(editor)
-        self.flux_editor_count += 1
+#        from src.processing.tasks.flux.flux_editor3D import FluxEditor3D
+#        editor = FluxEditor3D(name='Flux3D {:03n}'.format(self.flux_editor_count),
+#                              processor=self.manager
+#                              )
+#
+#        self._open_editor(editor)
+#        self.flux_editor_count += 1
+
+        self.manager.irradiation = 'NM-251'
+        self.manager.level = 'H'
 
     @on_trait_change('manager:level')
     def _level_changed(self, new):
@@ -113,4 +128,50 @@ class FluxTask(InterpolationTask):
 
                 self.unknowns_pane.items = unks
                 self.references_pane.items = refs
+
+    @on_trait_change('active_editor:tool:calculate_button')
+    def _calculate_flux(self):
+        monitor_age = self.active_editor.tool.monitor_age
+        if not monitor_age:
+            monitor_age = 28.02e6
+
+        # helper funcs
+        def calc_j(ai):
+            ar40 = ai.arar_result['rad40']
+            ar39 = ai.arar_result['k39']
+            return calculate_flux(ar40, ar39, monitor_age)
+
+        def mean_j(ans):
+            js, errs = zip(*[calc_j(ai) for ai in ans])
+            errs = asarray(errs)
+            wts = errs ** -2
+            m, ss = average(js, weights=wts, returned=True)
+            return m, ss ** -0.5
+
+        proc = self.manager
+        def func(ai):
+            ai.load_age()
+
+        analyses = []
+        for i, ri in enumerate(self.active_editor._references[:1]):
+            ans = [ri for ri in ri.labnumber.analyses
+                        if ri.status == 0 and ri.step == '']
+            ans = proc.make_analyses(ans, group_id=i)
+            proc.load_analyses(ans, func=func)
+
+            analyses.extend(ans)
+            me, sd = mean_j(ans)
+
+
+        irrad = self.manager.irradiation
+        level = self.manager.level
+        self._open_ideogram_editor(ans, name='Ideo - {}'.format(irrad, level))
+#        ideo = proc.new_ideogram(ans=analyses)
+#
+#        from src.processing.tasks.analysis_edit.graph_editor import ComponentEditor
+#        editor = ComponentEditor(component=ideo,
+#                                 name='Ideogram')
+#        self._open_editor(editor)
+
+
 #============= EOF =============================================

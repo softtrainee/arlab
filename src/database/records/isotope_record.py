@@ -194,6 +194,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         self.load()
         return True
 
+    def load_age(self):
+        self.load_isotopes()
+        self.debug('load_age {} - {}'.format(self.record_id, self.age))
+
     def add_note(self, text):
         db = self.selector.db
         note = db.add_note(self.dbrecord, text)

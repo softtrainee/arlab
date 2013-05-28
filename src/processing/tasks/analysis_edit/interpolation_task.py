@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, on_trait_change
-
+from traits.api import Any
 from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.analysis_edit.panes import ReferencesPane
@@ -25,8 +25,9 @@ from src.processing.tasks.analysis_edit.adapters import ReferencesAdapter
 #============= local library imports  ==========================
 
 class InterpolationTask(AnalysisEditTask):
-    references_pane = Instance(ReferencesPane)
+    references_pane = Any
     references_adapter = ReferencesAdapter
+    references_pane_klass = ReferencesPane
 
     def create_dock_panes(self):
         panes = super(InterpolationTask, self).create_dock_panes()
@@ -34,10 +35,10 @@ class InterpolationTask(AnalysisEditTask):
         return panes + [self.references_pane]
 
     def _create_references_pane(self):
-        self.references_pane = ReferencesPane(adapter_klass=self.references_adapter)
-        self.references_pane.load_previous_selections()
+        self.references_pane = self.references_pane_klass(adapter_klass=self.references_adapter)
+        self.references_pane.load()
 
-    @on_trait_change('references_pane:items')
+    @on_trait_change('references_pane:[items, update_needed]')
     def _update_references_runs(self, obj, name, old, new):
         if not obj._no_update:
             if self.active_editor:

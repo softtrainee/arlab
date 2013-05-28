@@ -43,18 +43,19 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     # widths
     #===========================================================================
 
-    sample_width = Int(80)
+    labnumber_width = Int(90)
     aliquot_width = Int(50)
+    sample_width = Int(80)
     position_width = Int(50)
+    extract_value_width = Int(60)
+    extract_units_width = Int(40)
     duration_width = Int(60)
     cleanup_width = Int(60)
-    overlap_width = Int(50)
-    autocenter_width = Int(70)
-    pattern_width = Int(125)
-    extract_value_width = Int(85)
-    extract_units_width = Int(50)
-    extract_device_width = Int(125)
-    labnumber_width = Int(90)
+    pattern_width = Int(80)
+
+#    overlap_width = Int(50)
+#    autocenter_width = Int(70)
+#    extract_device_width = Int(125)
     extraction_script_width = Int(125)
     measurement_script_width = Int(125)
     post_measurement_script_width = Int(125)
@@ -70,7 +71,6 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     labnumber_text = Property
     aliquot_text = Property
 
-    font = 'helvetica 12'
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
         if not item.executable:

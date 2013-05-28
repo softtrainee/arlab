@@ -40,15 +40,19 @@ class _myTableView(_TableView):
         super(_myTableView, self).__init__(*args, **kw)
         self.setDragDropMode(QAbstractItemView.DragDrop)
 
-#        editor = self._editor
+        from PySide.QtGui import QFont, QFontMetrics
+        editor = self._editor
 
 #        # reimplement row height
-#        vheader = self.verticalHeader()
-#        size = vheader.minimumSectionSize()
-#        font = editor.adapter.get_font(editor.object, editor.name, 0)
-#        if font is not None:
-#            size = max(size, QFontMetrics(QFont(font)).height())
-#        vheader.setDefaultSectionSize(size)
+        vheader = self.verticalHeader()
+        size = vheader.minimumSectionSize()
+
+        font = editor.adapter.get_font(editor.object, editor.name, 0)
+        if font is not None:
+            size = QFontMetrics(QFont(font)).height()
+
+        vheader.setDefaultSectionSize(size)
+
     def super_keyPressEvent(self, event):
         """ Reimplemented to support edit, insert, and delete by keyboard.
         
@@ -83,6 +87,7 @@ class _myTableView(_TableView):
                 editor is editing ExperimentQueue.automated_runs
             
             '''
+
             with no_update(editor.object):
                 if factory.multi_select:
                     for row in reversed(sorted(editor.multi_selected_rows)):
