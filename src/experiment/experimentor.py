@@ -169,14 +169,14 @@ class Experimentor(Experimentable):
                     sample = dbln.sample
                     if sample:
                         ai.sample = sample.name
-#                        self.debug('sample {}'.format(ai.sample))
-
+                        #self.debug('sample {}'.format(ai.sample))
+    
                     ipos = dbln.irradiation_position
                     if not ipos is None:
                         level = ipos.level
                         irrad = level.irradiation
                         ai.irradiation = '{}{}'.format(irrad.name, level.name)
-#                        self.debug('irrad {}'.format(ai.irradiation))
+                        #self.debug('irrad {}'.format(ai.irradiation))
 
     def _modify_steps(self, ans, exclude=None):
         if exclude is None:
@@ -192,7 +192,7 @@ class Experimentor(Experimentable):
             if arun.skip:
                 continue
 
-            if arun.state != 'not run':
+            if arun.state in ('canceled','failed'):
                 continue
 #            if arun.state == 'canceled':
 #                continue
@@ -247,7 +247,9 @@ class Experimentor(Experimentable):
             else:
                 aoff = 0
 #             print arun.labnumber, aoff
-            arun.aliquot += aoff
+
+            if arun.state == 'not run':
+                arun.aliquot += aoff
 
     def _modify_aliquots(self, ans, exclude=None):
         if exclude is None:
@@ -268,7 +270,7 @@ class Experimentor(Experimentable):
                 arun.aliquot = 0
                 continue
 
-            if arun.state != 'not run':
+            if arun.state in ('failed','canceled'):
                 continue
 
             # dont set degas or pause aliquot
@@ -297,7 +299,8 @@ class Experimentor(Experimentable):
                     st = stdict[arunid] if arunid in stdict else 0
 
             if not arun.user_defined_aliquot:
-                arun.aliquot = int(st + c - offset)
+                if arun.state =='not run':
+                    arun.aliquot = int(st + c - offset)
             else:
                 c = 0
                 fixed_dict[arunid] = arun.aliquot
@@ -361,9 +364,9 @@ class Experimentor(Experimentable):
         self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 
-#    @on_trait_change('experiment_queues')
-#    def _update_queues(self, new):
-#        self.executor.set_experiment_queues(new)
+#     @on_trait_change('experiment_queues')
+#     def _update_queues(self, new):
+#         self.executor.set_experiment_queues(new)
     @on_trait_change('experiment_factory:run_factory:changed')
     def _queue_dirty(self):
         self.experiment_queue.changed = True
@@ -374,8 +377,8 @@ class Experimentor(Experimentable):
 
     @on_trait_change('executor:update_needed')
     def _refresh1(self):
-        self.update_info()
         self.executor.clear_run_states()
+        self.update_info()
 
     @on_trait_change('executor:non_clear_update_needed')
     def _refresh2(self):

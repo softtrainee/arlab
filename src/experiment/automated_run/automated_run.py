@@ -298,7 +298,8 @@ class AutomatedRun(Loggable):
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
-                                check_conditions
+                                check_conditions,
+                                True #refresh graph after each iteration
                                 )
 
     def py_equilibration(self, eqtime=None, inlet=None, outlet=None,
@@ -337,7 +338,8 @@ class AutomatedRun(Loggable):
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
-                                check_conditions
+                                check_conditions,
+                                False # dont refresh after each iteration
                                 )
 
     def py_baselines(self, ncounts, starttime, mass, detector,
@@ -369,7 +371,9 @@ class AutomatedRun(Loggable):
         result = self._measure_iteration(gn,
                             self._get_data_writer(gn),
                             ncounts, starttime, series, fits,
-                            check_conditions)
+                            check_conditions,
+                            True # dont refresh after each iteration
+                            )
 
         if self.plot_panel:
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
@@ -1045,7 +1049,7 @@ anaylsis_type={}
         return True
 
     def _measure_iteration(self, grpname, data_write_hook,
-                           ncounts, starttime, series, fits, check_conditions):
+                           ncounts, starttime, series, fits, check_conditions, refresh):
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
 
@@ -1115,7 +1119,8 @@ anaylsis_type={}
                 func(x, signal, graph_kw)
 
             data_write_hook(x, keys, signals)
-            invoke_in_main_thread(graph._update_graph)
+            if refresh:
+                invoke_in_main_thread(graph.refresh)
 #             do_after(100, graph._update_graph)
 
         return True

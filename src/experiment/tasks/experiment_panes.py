@@ -210,17 +210,17 @@ class ExperimentFactoryPane(TraitsDockPane):
 #                                     Label('Step Heat Template'),
                                     ),
                              HGroup(
-                                 RFItem('template',
-                                       label='Step Heat Template',
-#                                         editor=EnumEditor(name=make_rf_name('templates'))
-                                        editor=EnumEditor(name='templates'
-#                                                           make_rf_name('templates')
-                                                          )
-                                       ),
-                                 RFItem('edit_template',
-                                        show_label=False,
-                                      editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
-                                      )
+                                RFItem('template',
+                                        label='Step Heat Template',
+                                        editor=EnumEditor(name=make_rf_name('templates'))
+#                                         editor=EnumEditor(name='templates'
+# #                                                           make_rf_name('templates')
+#                                                         )
+                                        ),
+                                RFItem('edit_template',
+                                       show_label=False,
+                                     editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
+                                     )
                                     ),
 
                              RFItem('duration', label='Duration (s)',
