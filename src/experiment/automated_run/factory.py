@@ -90,8 +90,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     # templates
     #===========================================================================
     template = String
-    templates = Property(depends_on='update_templates_needed')
-    update_templates_needed = Event
+    templates = List#Property(depends_on='update_templates_needed')
+#     update_templates_needed = Event
     edit_template = Event
     edit_template_label = Property(depends_on='template')
     #===========================================================================
@@ -125,7 +125,11 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     edit_mode_label = Property(depends_on='edit_mode')
     edit_enabled = Bool(False)
 
-
+#     def _template_changed(self):
+#         print self, self.template
+    
+    def load_templates(self):
+        self.templates=self._get_templates()
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -255,8 +259,14 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             arvs = [self._new_run()]
         else:
             if self.position:
-                s = int(self.position)
-                e = int(self.endposition)
+                
+                #is position a int or list of ints
+                if ',' in self.position:
+                    s=int(self.position.split(',')[0])
+                else:
+                    s = int(self.position)
+                    e = int(self.endposition)
+                    
                 if e:
                     if e < s:
                         self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
@@ -583,7 +593,7 @@ post_equilibration_script:name
 
     def _template_closed(self):
         self.template = os.path.splitext(self._template.name)[0]
-        self.update_templates_needed = True
+#         self.update_templates_needed = True
         del self._template
 
     def _edit_template_fired(self):
@@ -718,7 +728,7 @@ post_equilibration_script:name
         extension = '.lp,.txt'
         return self._ls_directory(p, extension)
 
-    @cached_property
+#     @cached_property
     def _get_templates(self):
         p = paths.incremental_heat_template_dir
         extension = '.txt'

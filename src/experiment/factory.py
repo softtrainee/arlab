@@ -32,8 +32,8 @@ class ExperimentFactory(Loggable):
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
-    templates = DelegatesTo('run_factory')
-    template = DelegatesTo('run_factory')
+#     templates = DelegatesTo('run_factory')
+#     template = DelegatesTo('run_factory')
 
     add_button = Button('Add')
     clear_button = Button('Clear')
@@ -115,7 +115,8 @@ class ExperimentFactory(Loggable):
     def _set_extract_device(self, ed):
         self._extract_device = ed
         self.run_factory = self._run_factory_factory()
-        self.run_factory.update_templates_needed = True
+#         self.run_factory.update_templates_needed = True
+        self.run_factory.load_templates()
         if self.queue:
             self.queue.set_extract_device(ed)
 #===============================================================================

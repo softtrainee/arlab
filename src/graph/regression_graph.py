@@ -190,7 +190,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     self._plot_regression(plot, si, fl, ul, ll)
 
             except ValueError, e:
-                print e
                 break
         else:
             self.regression_results = self.regressors
