@@ -150,10 +150,16 @@ class ExperimentEditorTask(EditorTask):
         self.manager.test_queues()
         self.manager.path = path
         self.manager.update_info()
-        if self.manager.executor.isAlive():
-            if self.manager.executor.changed_flag:
-                self.manager.executor.end_at_run_completion = False
-        self.manager.executor.changed_flag = False
+
+        '''
+            if the queue is edited while the executor is running the end_at_run_completion is True
+            set it to its previous value
+        '''
+        ex = self.manager.executor
+        if ex.isAlive():
+            if ex.changed_flag:
+                ex.end_at_run_completion = ex.prev_end_at_run_completion
+            ex.changed_flag = False
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -162,6 +168,7 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('active_editor:queue:update_needed')
     def _update_runs(self, new):
         self.manager.update_info()
+        self.active_editor.dirty = True
 #        self.debug('runs changed {}'.format(len(new)))
 #        executor = self.manager.executor
 #        if executor.isAlive():

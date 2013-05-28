@@ -299,7 +299,7 @@ class AutomatedRun(Loggable):
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
                                 check_conditions,
-                                True #refresh graph after each iteration
+                                True  # refresh graph after each iteration
                                 )
 
     def py_equilibration(self, eqtime=None, inlet=None, outlet=None,
@@ -339,7 +339,7 @@ class AutomatedRun(Loggable):
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits,
                                 check_conditions,
-                                False # dont refresh after each iteration
+                                False  # dont refresh after each iteration
                                 )
 
     def py_baselines(self, ncounts, starttime, mass, detector,
@@ -372,7 +372,7 @@ class AutomatedRun(Loggable):
                             self._get_data_writer(gn),
                             ncounts, starttime, series, fits,
                             check_conditions,
-                            True # dont refresh after each iteration
+                            True  # dont refresh after each iteration
                             )
 
         if self.plot_panel:
@@ -1225,7 +1225,13 @@ anaylsis_type={}
 
         # do preliminary processing of data
         # returns signals dict and peak_center table
-        ss, pc = self._preliminary_processing(cp)
+        try:
+            ss, pc = self._preliminary_processing(cp)
+        except Exception, e:
+            self.debug('preliminary_processing - {}'.format(e))
+            self.warning('could not process isotope signals. saving to database')
+            return
+
         self._processed_signals_dict = ss
 
         ln = self.labnumber
@@ -1659,8 +1665,12 @@ anaylsis_type={}
 #=========================================
 '''.format(tb))
 #            self.save_error_flag = True
-            self.experiment_manager.cancel(cancel_run=True,
-                                           msg='Could not save {} to Mass Spec database'.format(rid))
+
+            if not globalv.experiment_debug:
+                self.experiment_manager.cancel(cancel_run=True,
+                                               msg='Could not save {} to Mass Spec database'.format(rid))
+            else:
+                self.debug('skipping cancel')
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
