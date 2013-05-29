@@ -89,6 +89,10 @@ class ProcessingPlugin(BaseTaskPlugin):
                                                       factory=BatchEditAction,
                                                       path='MenuBar/Edit'
                                                       ),
+                                       SchemaAddition(id='new_ideogram',
+                                                      factory=IdeogramAction,
+                                                      path='MenuBar/Edit'
+                                                      )
                                        ]
                               )
 

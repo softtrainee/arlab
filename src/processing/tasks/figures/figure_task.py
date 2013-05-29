@@ -51,7 +51,8 @@ class FigureTask(AnalysisEditTask):
         return panes + [self.plotter_options_pane,
                         ]
 
-    def new_ideogram(self, ans, name='Ideo'):
+    def new_ideogram(self, ans=None, name='Ideo'):
+
         from src.processing.tasks.figures.figure_editor import IdeogramEditor
         func = self.manager.new_ideogram
         klass = IdeogramEditor
@@ -64,8 +65,11 @@ class FigureTask(AnalysisEditTask):
         self._new_figure(ans, name, func, klass)
 
     def _new_figure(self, ans, name, func, klass):
-        self.unknowns_pane.items = ans
-        comp = func(ans)
+        comp = None
+        if ans:
+            self.unknowns_pane.items = ans
+            comp = func(ans)
+
         editor = klass(component=comp,
                        name=name,
                        processor=self.manager,
@@ -85,8 +89,8 @@ class FigureTask(AnalysisEditTask):
         if name == 'initialized':
             return
 
-        po = self.plotter_options_pane.pom.plotter_options
-        ans = self.unknowns_pane.items
-        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
-        self.active_editor.component = comp
+        self.active_editor.rebuild()
+#        po = self.plotter_options_pane.pom.plotter_options
+#        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
+#        self.active_editor.component = comp
 #============= EOF =============================================

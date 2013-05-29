@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, on_trait_change
+from traits.api import HasTraits, Any, Instance, on_trait_change, List
 from traitsui.api import View, Item, UItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -29,7 +29,8 @@ class FigureEditor(BaseTraitsEditor):
     tool = Any
     plotter_options_manager = Any
     processor = Any
-
+    unknowns = List
+    _unknowns = List
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
@@ -37,13 +38,42 @@ class FigureEditor(BaseTraitsEditor):
                        editor=EnableComponentEditor()))
         return v
 
+    def rebuild(self):
+        pass
 
 class IdeogramEditor(FigureEditor):
     plotter_options_manager = Instance(IdeogramOptionsManager, ())
-#    @on_trait_change('plotter_options_manager.plotter_options.[+, aux_plots:+]')
-#    def _update_options(self, name, new):
-#        po = self.plotter_options_manager.plotter_options
-#        self.processor.new_ideogram(plotter_options=po)
+    _cached_unknowns = List
+
+    @on_trait_change('unknowns[]')
+    def _update_unknowns(self):
+        self.rebuild()
+
+    def rebuild(self):
+        if self._cached_unknowns:
+            # removed items:
+            if len(self.unknowns) < len(self._cached_unknowns):
+                ans = [ui for ui, ci in zip(self._unknowns, self._cached_unknowns)
+                                        if ci in self.unknowns]
+            # added items
+            elif len(self.unknowns) > len(self._cached_unknowns):
+                nonloaded = list(set(self.unknowns) - set(self._cached_unknowns))
+                nonloaded = self.processor.make_analyses(nonloaded)
+                self.processor.load_analyses(nonloaded)
+                ans = self._unknowns.extend(nonloaded)
+            else:
+                ans = self._unknowns
+        else:
+            unks = self.unknowns
+            unks = self.processor.make_analyses(unks)
+            self.processor.load_analyses(unks)
+            ans = unks
+
+        self._cached_unknowns = self.unknowns[:]
+        self._unknowns = ans
+        po = self.plotter_options_manager.plotter_options
+        comp = self.processor.new_ideogram(ans=ans, plotter_options=po)
+        self.component = comp
 
 class SpectrumEditor(FigureEditor):
     plotter_options_manager = Instance(SpectrumOptionsManager, ())
