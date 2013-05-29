@@ -40,10 +40,10 @@ class IdeogramAction(ProcessorAction):
     def perform(self, event):
 
         task = event.task
-        if not task.id == 'pychron.processing':
+        if not task.id == 'pychron.processing.figures':
             app = task.window.application
             win = app.create_window(TaskWindowLayout(
-                                               'pychron.processing'
+                                               'pychron.processing.figures'
                                                )
                               )
             win.open()
