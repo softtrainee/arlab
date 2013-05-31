@@ -53,10 +53,14 @@ class ImportManager(IsotopeDatabaseManager):
     custom_label1 = Str('Imported')
     filter_str = Str(enter_set=True, auto_set=False)
 
-    include_analyses = Bool(True)
-    include_blanks = Bool(True)
-    include_airs = Bool(True)
-    include_cocktails = Bool(True)
+#    include_analyses = Bool(True)
+    include_analyses = Bool(False)
+#    include_blanks = Bool(True)
+    include_blanks = Bool(False)
+#    include_airs = Bool(True)
+    include_airs = Bool(False)
+#    include_cocktails = Bool(True)
+    include_cocktails = Bool(False)
     include_list = List
     update_irradiations_needed = Event
     dry_run = Bool(True)
