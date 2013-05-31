@@ -27,7 +27,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction
+    BatchEditAction, RefitIsotopeEvolutionAction
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -92,6 +92,10 @@ class ProcessingPlugin(BaseTaskPlugin):
                                        SchemaAddition(id='new_ideogram',
                                                       factory=IdeogramAction,
                                                       path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='refit',
+                                                      factory=RefitIsotopeEvolutionAction,
+                                                      path='MenuBar/Edit'
                                                       )
                                        ]
                               )
@@ -107,12 +111,11 @@ class ProcessingPlugin(BaseTaskPlugin):
 #                            ),
                 TaskFactory(id='pychron.recall', factory=self._recall_task_factory, name='Recall'),
                 TaskFactory(id='pychron.entry', factory=self._labnumber_task_factory, name='Labnumber',
-                            accelerator='Ctrl+Shift+L'),
+                            ),
                 TaskFactory(id='pychron.analysis_edit.blanks', factory=self._blanks_edit_task_factory,
                             name='Blanks',
                             ),
                 TaskFactory(id='pychron.analysis_edit.flux', factory=self._flux_task_factory, name='Flux',
-                            accelerator='Ctrl+Shift+f'
                             ),
                 TaskFactory(id='pychron.analysis_edit.series', factory=self._series_task_factory,
                             name='Series',

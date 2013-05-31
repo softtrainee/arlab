@@ -35,7 +35,7 @@ from traits.api import HasTraits, Any, String, on_trait_change
 # from src.helpers.logger_setup import add_console
 from src.globals import globalv
 from src.helpers.color_generators import colorname_generator
-from src.helpers.logger_setup import new_logger, NAME_WIDTH
+from src.helpers.logger_setup import new_logger
 from threading import current_thread
 from src.ui.thread import currentThreadName
 
@@ -43,6 +43,7 @@ from src.ui.dialogs import myConfirmationDialog, myMessageDialog
 from src.ui.gui import invoke_in_main_thread
 
 color_name_gen = colorname_generator()
+NAME_WIDTH = 40
 
 class Loggable(HasTraits):
 

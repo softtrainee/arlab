@@ -600,6 +600,7 @@ class IsotopeAdapter(DatabaseAdapter):
             return
 
         q = sess.query(meas_AnalysisTable)
+        q = q.join(gen_LabTable)
         q = q.filter(meas_AnalysisTable.labnumber == ln)
 
         try:
@@ -708,7 +709,7 @@ class IsotopeAdapter(DatabaseAdapter):
             pass
 
     def get_labnumber(self, labnum):
-        return self._retrieve_item(gen_LabTable, labnum, key='identifier')
+        return self._retrieve_item(gen_LabTable, str(labnum), key='identifier')
 #        if isinstance(labnum, str):
 #            labnum = convert_identifier(labnum)
 #

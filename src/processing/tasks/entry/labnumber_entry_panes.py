@@ -63,10 +63,23 @@ class ImporterPane(TraitsDockPane):
     def traits_view(self):
         v = View(
                  VGroup(
-                     HGroup(spring, Item('import_button', show_label=False), Item('dry_run')),
+                     HGroup(
+                            HGroup(Item('include_analyses', label='Analyses'),
+                                Item('include_blanks', label='Blanks'),
+                                Item('include_airs', label='Airs'),
+                                Item('include_cocktails', label='Cocktails'),
+                                label='Include',
+                                show_border=True,
+                                ),
+                            HGroup(spring, Item('import_button', show_label=False), Item('dry_run'),
+                                   label='Import',
+                                   show_border=True
+                                   ),
+                            ),
                      VGroup(
                          HGroup(spring, Item('data_source')),
-                         VFold(
+#                         VFold(
+                         VGroup(
                              VGroup(
                                     Item('object.importer.dbconn_spec', style='custom', show_label=False),
                                     HGroup(spring, Item('object.importer.connect_button', show_label=False)),

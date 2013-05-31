@@ -77,4 +77,19 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         editor.unknowns = self.unknowns_pane.items
         self._open_editor(editor)
         self.iso_evo_editor_count += 1
+
+    def refit_isotopes(self):
+        irrad = 'NM-205'
+        level = 'E'
+        db = self.manager.db
+        level = db.get_irradiation_level(irrad, level)
+        print level
+        for pi in level.positions:
+            ln = pi.labnumber
+            sample = ln.sample
+            if sample.project.name in ('j', 'Minna Bluff'):
+                for ai in ln.analyses:
+                    self.manager.refit_isotopes(ai)
+                    return
+
 #============= EOF =============================================

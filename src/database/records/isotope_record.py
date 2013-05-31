@@ -51,7 +51,9 @@ from pyface.timer.do_later import do_later
 from src.database.records.ui.analysis_summary import AnalysisSummary
 from src.database.records.ui.fit_selector import FitSelector
 from src.helpers.isotope_utils import sort_isotopes
+from collections import namedtuple
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
+Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -301,16 +303,24 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # database record
 #===============================================================================
+
     def load_isotopes(self):
         if self.dbrecord:
             for iso in self.dbrecord.isotopes:
                 if iso.kind == 'signal':
-                    result = iso.results[-1]
+                    result = None
+                    if iso.results:
+                        result = iso.results[-1]
+
                     name = iso.molecular_weight.name
                     det = iso.detector.name
                     r = Isotope(dbrecord=iso, dbresult=result, name=name, detector=det)
                     fit = self._get_db_fit(name, 'signal')
-                    r.set_fit(fit)
+                    if fit is None:
+                        fit = Fit(fit='linear', filter_outliers=True,
+                                  filter_outlier_iterations=1,
+                                  filter_outlier_std_devs=2)
+                        r.set_fit(fit)
                     self.isotopes[name] = r
             '''
             
@@ -326,11 +336,17 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                           dbrecord=iso,
                           name=name, detector=det)
                 if iso.kind == 'baseline':
-                    result = iso.results[-1]
+                    result = None
+                    if iso.results:
+                        result = iso.results[-1]
                     r = Baseline(dbresult=result,
                                  **kw)
                     fit = self._get_db_fit(name, 'baseline')
-                    r.set_fit(fit)
+                    if fit is None:
+                        fit = Fit(fit='average_sem', filter_outliers=True,
+                                  filter_outlier_iterations=1,
+                                  filter_outlier_std_devs=2)
+                        r.set_fit(fit)
                     i.baseline = r
 
                 if iso.kind == 'sniff':
@@ -735,11 +751,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_db_fit(self, name, kind):
         record = self.dbrecord
         selhist = record.selected_histories
-        selfithist = selhist.selected_fits
-        fits = selfithist.fits
-        return next((fi for fi in fits
-                        if fi.isotope.molecular_weight.name == name and
+        if selhist:
+            selfithist = selhist.selected_fits
+            fits = selfithist.fits
+            return next((fi for fi in fits
+                            if fi.isotope.molecular_weight.name == name and
                             fi.isotope.kind == kind), None)
+
+
+
 #===============================================================================
 # property get/set
 #===============================================================================

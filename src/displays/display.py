@@ -58,9 +58,10 @@ class DisplayController(ApplicationController):
     title = Str
 
     default_color = Color('black')
-    default_size = Int
+#    default_size = Int
     bg_color = Color
     font_name = Str
+    font_size = Int(12)
     max_blocks = Int(0)
 
     editor_klass = DisplayEditor
@@ -109,6 +110,8 @@ class DisplayController(ApplicationController):
         v = View(UItem('qmessage', editor=self.editor_klass(bg_color=self.bg_color,
                                                            clear='clear_event',
                                                            refresh='refresh',
+                                                           font_name=self.font_name,
+                                                           font_size=self.font_size,
                                                            max_blocks=self.max_blocks
                                                        )),
                  x=self.x, y=self.y, width=self.width,

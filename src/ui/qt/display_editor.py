@@ -18,7 +18,7 @@
 from traits.api import Color, Str, Event, Int
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
-from PySide.QtGui import QTextEdit, QPlainTextEdit, QTextCursor, QPalette, QColor
+from PySide.QtGui import QTextEdit, QPlainTextEdit, QTextCursor, QPalette, QColor, QFont
 from Queue import Empty
 
 #============= standard library imports ========================
@@ -48,6 +48,13 @@ class _DisplayEditor(Editor):
         self.sync_value(self.factory.clear, 'clear', mode='from')
         self.sync_value(self.factory.refresh, 'refresh', mode='from')
 
+        fmt = self.control.currentCharFormat()
+        if self.factory.font_name:
+            fmt.setFont(QFont(self.factory.font_name))
+        if self.factory.font_size:
+            fmt.setFontPointSize(self.factory.font_size)
+        self.control.setCurrentCharFormat(fmt)
+
     def _refresh_fired(self):
         self.update_editor()
 
@@ -59,6 +66,7 @@ class _DisplayEditor(Editor):
         '''
         '''
         ctrl = self.control
+
         if self.value:
             try:
                 v, c, force = self.value.get(timeout=0.0001)
@@ -83,6 +91,8 @@ class _DisplayEditor(Editor):
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
     bg_color = Color
+    font_name = Str
+    font_size = Int
     clear = Str
     refresh = Str
     max_blocks = Int(0)

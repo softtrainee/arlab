@@ -64,6 +64,7 @@ class MassSpecExtractor(Extractor):
                            include_analyses=False,
                            include_blanks=False,
                            include_airs=False,
+                           include_cocktails=False,
                            include_list=None,
                            dry_run=True,):
         self.connect()
@@ -91,7 +92,8 @@ class MassSpecExtractor(Extractor):
                          include_analyses,
                          include_blanks,
                          include_airs,
-                         include_list
+                         include_cocktails,
+                         include_list,
                          )
         if not dry_run:
             dest.commit()
@@ -101,6 +103,7 @@ class MassSpecExtractor(Extractor):
                     include_analyses=False,
                     include_blanks=False,
                     include_airs=False,
+                    include_cocktails=False,
                     include_list=None):
         '''
             add all levels and positions for dbirrad
@@ -140,14 +143,42 @@ class MassSpecExtractor(Extractor):
                     self.info('============ Adding Analyses ============')
                     for ai in ip.analyses:
                         self._add_analysis(dest, ln, ai)
+
                         if include_blanks:
-                            self.info('============ Adding Associated Blanks ============')
                             self._add_associated_unknown_blanks(dest, ai)
                         if include_airs:
-                            self.info('============ Adding Associated Airs ============')
                             self._add_associated_airs(dest, ai)
+                        if include_cocktails:
+                            self._add_associated_cocktails(dest, ai)
+
 
                 dest.flush()
+
+    def _add_associated_cocktails(self, dest, dba):
+        ms = dba.login_session.machine
+        if ms:
+            ms = ms.Label
+            if not ms in ('Pychron Obama', 'Pychron Jan', 'Obama', 'Jan'):
+                return
+
+            self.info('============ Adding Associated Airs ============')
+            def add_hook(dest, bi):
+                self._add_cocktail_blanks(dest, bi)
+
+            def make_labnumber(bi):
+                ln = bi.RID
+                if ln.startswith('c-'):
+                    ln = '-'.join(bi.RID.split('-')[:-1])
+                else:
+                    msname = self._get_ms_identifier(bi)
+                    ln = 'c-00-{}'.format(msname)
+                return ln
+
+            self._add_associated(dest, dba, make_labnumber,
+                                 atype=1,
+                                 add_hook=add_hook,
+                                 analysis_type='cocktail'
+                                 )
 
     def _add_associated_airs(self, dest, dba):
         '''
@@ -158,13 +189,14 @@ class MassSpecExtractor(Extractor):
             if not ms in ('Pychron Obama', 'Pychron Jan', 'Obama', 'Jan'):
                 return
 
+            self.info('============ Adding Associated Airs ============')
             def add_hook(dest, bi):
                 self._add_air_blanks(dest, bi)
 
             def make_labnumber(bi):
                 ln = bi.RID
                 if ln.startswith('a-'):
-                    ln = '-'.join(bi.RID.split('-')[:-1])
+                    ln = '-'.join(ln.split('-')[:-1])
                 else:
                     msname = self._get_ms_identifier(bi)
                     ln = 'a-00-{}'.format(msname)
@@ -172,44 +204,49 @@ class MassSpecExtractor(Extractor):
 
             self._add_associated(dest, dba, make_labnumber,
                                  atype=2,
-                                 add_hook=add_hook)
+                                 add_hook=add_hook,
+                                 analysis_type='air'
+                                 )
 
-    def _add_air_blanks(self, dest, dba, _cache=[]):
-        atype = 5
-        post = dba.RunDateTime
-        ms = dba.login_session.machine.Label
-        def func(q):
-            q = q.join(RunScriptTable)
-            q = q.filter(RunScriptTable.Label == 'Blank Pipette 2')
-            return q
+    def _add_air_blanks(self, dest, dba):
+        def make_labnumber(bi):
+            ln = bi.RID
 
-        br = self._find_analyses(ms, post, -2, atype, filter_hook=func)
-        ar = self._find_analyses(ms, post, 2, atype, maxtries=1, filter_hook=func)
+            if not ln.startswith('ba'):
+                ms = self._get_ms_identifier(bi)
+                ln = 'ba-00-{}'.format(ms)
+            else:
+                # remove aliquot
+                ln = '-'.join(ln.split('-')[:-1])
+            return ln
 
-        for bi in br + ar:
-            ln = make_labnumber(bi)
-            if ln not in _cache:
-                _cache.append(ln)
-                ln = dest.add_labnumber(ln)
-            self._add_analysis(dest, ln, bi)
+        self._add_associated(dest, dba, make_labnumber, atype=5,
+                             analysis_type='blank_air'
+                             )
 
-    def _get_ms_identifier(self, ai):
-        msname = ai.login_session.machine
-        if msname == 'Pychron Obama':
-            msname = 'PO'
-        elif msname == 'Pychron Jan':
-            msname = 'PJ'
-        elif msname == 'Jan':
-            msname = 'J'
-        else:
-            msname = 'O'
-        return msname
+    def _add_cocktail_blanks(self, dest, dba):
+        def make_labnumber(bi):
+            ln = bi.RID
+
+            if not ln.startswith('bc'):
+                ms = self._get_ms_identifier(bi)
+                ln = 'bc-00-{}'.format(ms)
+            else:
+                # remove aliquot
+                ln = '-'.join(ln.split('-')[:-1])
+            return ln
+
+        self._add_associated(dest, dba, make_labnumber, atype=5,
+                             analysis_type='blank_coctail'
+                             )
 
     def _add_associated_unknown_blanks(self, dest, dba):
         '''
             get blanks +/- Nhrs from dba run date
         
         '''
+        self.info('============ Adding Associated Blanks ============')
+
         def make_labnumber(bi):
             ln = bi.RID
 
@@ -227,11 +264,13 @@ class MassSpecExtractor(Extractor):
             q = q.filter(not_(RunScriptTable.Label.in_(['Blank Pipette 1', 'Blank Pipette 2'])))
             return q
 
-        self._add_associated(dest, dba, make_labnumber, filter_hook=filter_func)
+        self._add_associated(dest, dba, make_labnumber,
+                             filter_hook=filter_func)
 
     def _add_associated(self, dest, dba, make_labnumber,
                         _cache=[],
                         atype=5,
+                        analysis_type='blank_unknown',
                         add_hook=None,
                         **kw
                         ):
@@ -245,9 +284,23 @@ class MassSpecExtractor(Extractor):
             if ln not in _cache:
                 _cache.append(ln)
                 ln = dest.add_labnumber(ln)
-            self._add_analysis(dest, ln, bi)
-            if add_hook:
-                add_hook(dest, bi)
+                dest.flush()
+
+            if self._add_analysis(dest, ln, bi, analysis_type=analysis_type):
+                if add_hook:
+                    add_hook(dest, bi)
+
+    def _get_ms_identifier(self, ai):
+        msname = ai.login_session.machine
+        if msname == 'Pychron Obama':
+            msname = 'PO'
+        elif msname == 'Pychron Jan':
+            msname = 'PJ'
+        elif msname == 'Jan':
+            msname = 'J'
+        else:
+            msname = 'O'
+        return msname
 
     def _find_analyses(self, ms, post, delta, atype, step=100, maxtries=10, **kw):
         if delta < 0:
@@ -302,7 +355,7 @@ class MassSpecExtractor(Extractor):
         except NoResultFound:
             pass
 
-    def _add_analysis(self, dest, dest_labnumber, dbanalysis, _ed_cache=[]):
+    def _add_analysis(self, dest, dest_labnumber, dbanalysis, analysis_type='unknown', _ed_cache=[], _an_cache=[]):
         #=======================================================================
         # add analysis
         #=======================================================================
@@ -310,14 +363,18 @@ class MassSpecExtractor(Extractor):
         step = dbanalysis.Increment
         changeable = dbanalysis.changeable
 
-        ans = dest.get_unique_analysis(dest_labnumber, aliquot, step=step)
-        if ans:
-            return
-
         try:
             al = int(aliquot)
         except ValueError:
-            al = id(aliquot)
+            if '-' in aliquot:
+                al = int(aliquot.split('-')[-1])
+            else:
+                al = id(aliquot)
+
+        ans = dest.get_unique_analysis(dest_labnumber, al, step=step)
+        if ans:
+#            self.debug('{}-{}{} already exists'.format(dest_labnumber, aliquot, step))
+            return
 
         dest_an = dest.add_analysis(dest_labnumber,
                                  aliquot=al,
@@ -327,13 +384,15 @@ class MassSpecExtractor(Extractor):
                                  )
         if dest_an is None:
             return
+
         dest.flush()
 
         if isinstance(dest_labnumber, (str, int, long)):
             iden = str(dest_labnumber)
         else:
             iden = dest_labnumber.identifier
-        self.info('Adding analysis {}-{}{}'.format(iden, aliquot, step))
+
+        self.info('Adding analysis {}-{}{}'.format(iden, al, step))
 
         #=======================================================================
         # add measurement
@@ -341,7 +400,11 @@ class MassSpecExtractor(Extractor):
         ms = dbanalysis.login_session.machine
         if ms:
             ms = ms.Label.lower()
-            dest.add_measurement(dest_an, 'unknown', ms)
+            if ms == 'pychron obama':
+                ms = 'obama'
+            elif ms == 'pychron jan':
+                ms = 'jan'
+            dest.add_measurement(dest_an, analysis_type, ms)
 
         #=======================================================================
         # add extraction
@@ -364,7 +427,7 @@ class MassSpecExtractor(Extractor):
             pkt = iso.peak_time_series[-1]
             blob = pkt.PeakTimeBlob
             endianness = '>'
-            sx, _sy = zip(*[struct.unpack('{}ff'.format(endianness),
+            sy, sx = zip(*[struct.unpack('{}ff'.format(endianness),
                                        blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
             blob = pkt.PeakNeverBslnCorBlob
@@ -392,8 +455,6 @@ class MassSpecExtractor(Extractor):
             if iso.baseline:
                 baseline = iso.baseline.PeakTimeBlob
 
-#            print sx
-#            print noncor_y
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
             # add baseline
             for data, k in (
