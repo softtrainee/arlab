@@ -279,10 +279,14 @@ class OLSRegressor(BaseRegressor):
         if isinstance(d, str):
             d = d.lower()
             fits = ['linear', 'parabolic', 'cubic']
-            d = fits.index(d) + 1
+            if d in fits:
+                d = fits.index(d) + 1
+            else:
+                d = None
 
         if d is None:
             d = 1
+
         self._degree = d
         self.dirty = True
 
