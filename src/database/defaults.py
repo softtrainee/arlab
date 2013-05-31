@@ -67,7 +67,14 @@ def load_isotopedb_defaults(db):
                 h = f.readline()
                 nholes, _diam = h.split(',')
                 nholes = int(nholes)
-                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
+
+                holes = []
+                for i, l in enumerate(f):
+                    try:
+                        holes.append(map(float, l.strip().split(',')))
+                    except ValueError:
+                        break
+
                 blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
                 db.add_irradiation_holder(t, geometry=blob)
     db.commit()

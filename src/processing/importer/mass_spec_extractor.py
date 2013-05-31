@@ -20,6 +20,11 @@ from src.processing.importer.extractor import Extractor
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from src.database.database_connection_spec import DBConnectionSpec
 import struct
+import datetime
+from sqlalchemy.sql.expression import and_, not_
+from src.database.orms.massspec_orm import AnalysesTable, MachineTable, \
+    LoginSessionTable, RunScriptTable
+from sqlalchemy.orm.exc import NoResultFound
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ImportName(HasTraits):
@@ -33,11 +38,17 @@ class MassSpecExtractor(Extractor):
     db = Instance(MassSpecDatabaseAdapter, ())
 
     def _dbconn_spec_default(self):
-        return DBConnectionSpec(database='massspecdata',
-                                username='massspec',
-                                password='DBArgon',
-                                host='129.138.12.160'
+        return DBConnectionSpec(database='massspecdata_minnabluff',
+                                username='root',
+                                password='Argon',
+                                host='localhost'
                                 )
+#        return DBConnectionSpec(database='massspecdata',
+#                                username='massspec',
+#                                password='DBArgon',
+#                                host='129.138.12.160'
+#                                )
+
     def _connect_button_fired(self):
         self.connect()
 
@@ -49,13 +60,19 @@ class MassSpecExtractor(Extractor):
         self.db.kind = 'mysql'
         self.db.connect()
 
-    def import_irradiation(self, dest, name, include_analyses=False, include_list=None):
+    def import_irradiation(self, dest, name,
+                           include_analyses=False,
+                           include_blanks=False,
+                           include_airs=False,
+                           include_list=None,
+                           dry_run=True,):
         self.connect()
 
         self.dbimport = dest.add_import(
                                         source=self.db.name,
                                         source_host=self.db.host,
                                         )
+
         # is irrad already in dest
         dbirrad = dest.get_irradiation(name)
         skipped = True
@@ -72,13 +89,19 @@ class MassSpecExtractor(Extractor):
         # add all the levels and positions for this irradiation
         self._add_levels(dest, dbirrad, name,
                          include_analyses,
+                         include_blanks,
+                         include_airs,
                          include_list
                          )
-
-        dest.commit()
+        if not dry_run:
+            dest.commit()
         return ImportName(name=name, skipped=skipped)
 
-    def _add_levels(self, dest, dbirrad, name, include_analyses, include_list=None):
+    def _add_levels(self, dest, dbirrad, name,
+                    include_analyses=False,
+                    include_blanks=False,
+                    include_airs=False,
+                    include_list=None):
         '''
             add all levels and positions for dbirrad
             if include_analyses is True add all analyses
@@ -110,17 +133,176 @@ class MassSpecExtractor(Extractor):
                     fl = dest.add_flux(ip.J, ip.JEr)
                     fh.flux = fl
 
-#                    dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
                 sample = self._add_sample_project(dest, ip)
                 ln.sample = sample
 
                 if include_analyses:
+                    self.info('============ Adding Analyses ============')
                     for ai in ip.analyses:
                         self._add_analysis(dest, ln, ai)
+                        if include_blanks:
+                            self.info('============ Adding Associated Blanks ============')
+                            self._add_associated_unknown_blanks(dest, ai)
+                        if include_airs:
+                            self.info('============ Adding Associated Airs ============')
+                            self._add_associated_airs(dest, ai)
 
                 dest.flush()
 
-    def _add_analysis(self, dest, dest_labnumber, dbanalysis):
+    def _add_associated_airs(self, dest, dba):
+        '''
+        '''
+        ms = dba.login_session.machine
+        if ms:
+            ms = ms.Label
+            if not ms in ('Pychron Obama', 'Pychron Jan', 'Obama', 'Jan'):
+                return
+
+            def add_hook(dest, bi):
+                self._add_air_blanks(dest, bi)
+
+            def make_labnumber(bi):
+                ln = bi.RID
+                if ln.startswith('a-'):
+                    ln = '-'.join(bi.RID.split('-')[:-1])
+                else:
+                    msname = self._get_ms_identifier(bi)
+                    ln = 'a-00-{}'.format(msname)
+                return ln
+
+            self._add_associated(dest, dba, make_labnumber,
+                                 atype=2,
+                                 add_hook=add_hook)
+
+    def _add_air_blanks(self, dest, dba, _cache=[]):
+        atype = 5
+        post = dba.RunDateTime
+        ms = dba.login_session.machine.Label
+        def func(q):
+            q = q.join(RunScriptTable)
+            q = q.filter(RunScriptTable.Label == 'Blank Pipette 2')
+            return q
+
+        br = self._find_analyses(ms, post, -2, atype, filter_hook=func)
+        ar = self._find_analyses(ms, post, 2, atype, maxtries=1, filter_hook=func)
+
+        for bi in br + ar:
+            ln = make_labnumber(bi)
+            if ln not in _cache:
+                _cache.append(ln)
+                ln = dest.add_labnumber(ln)
+            self._add_analysis(dest, ln, bi)
+
+    def _get_ms_identifier(self, ai):
+        msname = ai.login_session.machine
+        if msname == 'Pychron Obama':
+            msname = 'PO'
+        elif msname == 'Pychron Jan':
+            msname = 'PJ'
+        elif msname == 'Jan':
+            msname = 'J'
+        else:
+            msname = 'O'
+        return msname
+
+    def _add_associated_unknown_blanks(self, dest, dba):
+        '''
+            get blanks +/- Nhrs from dba run date
+        
+        '''
+        def make_labnumber(bi):
+            ln = bi.RID
+
+            if not ln.startswith('bu'):
+                ed = 'F' if ln.startswith('B2') else 'C02'
+                ms = self._get_ms_identifier(bi)
+                ln = 'bu-{}-{}'.format(ed, ms)
+            else:
+                # remove aliquot
+                ln = '-'.join(ln.split('-')[:-1])
+            return ln
+
+        def filter_func(q):
+            q = q.join(RunScriptTable)
+            q = q.filter(not_(RunScriptTable.Label.in_(['Blank Pipette 1', 'Blank Pipette 2'])))
+            return q
+
+        self._add_associated(dest, dba, make_labnumber, filter_hook=filter_func)
+
+    def _add_associated(self, dest, dba, make_labnumber,
+                        _cache=[],
+                        atype=5,
+                        add_hook=None,
+                        **kw
+                        ):
+        post = dba.RunDateTime
+        ms = dba.login_session.machine.Label
+        br = self._find_analyses(ms, post, -2, atype, **kw)
+        ar = self._find_analyses(ms, post, 2, atype, maxtries=1, **kw)
+
+        for bi in br + ar:
+            ln = make_labnumber(bi)
+            if ln not in _cache:
+                _cache.append(ln)
+                ln = dest.add_labnumber(ln)
+            self._add_analysis(dest, ln, bi)
+            if add_hook:
+                add_hook(dest, bi)
+
+    def _find_analyses(self, ms, post, delta, atype, step=100, maxtries=10, **kw):
+        if delta < 0:
+            step = -step
+
+        for i in range(maxtries):
+            rs = self._filter_analyses(ms, post, delta + i * step, 5, atype, **kw)
+            if rs:
+                return rs
+        else:
+            return []
+
+    def _filter_analyses(self, ms, post, delta, lim, at, filter_hook=None):
+        '''
+            ms= spectrometer 
+            post= timestamp
+            delta= time in hours
+            at=analysis type
+            
+            if delta is negative 
+            get all before post and after post-delta
+
+            if delta is post 
+            get all before post+delta and after post
+        '''
+        sess = self.db.get_session()
+        q = sess.query(AnalysesTable)
+        q = q.join(LoginSessionTable)
+        q = q.join(MachineTable)
+#
+        win = datetime.timedelta(hours=delta)
+        dt = post + win
+        if delta < 0:
+            a, b = dt, post
+        else:
+            a, b = post, dt
+
+        q = q.filter(MachineTable.Label == ms)
+        q = q.filter(and_(
+                          AnalysesTable.SpecRunType == at,
+                          AnalysesTable.RunDateTime >= a,
+                          AnalysesTable.RunDateTime <= b,
+                          )
+                     )
+
+        if filter_hook:
+            q = filter_hook(q)
+        q = q.limit(lim)
+
+        try:
+            return q.all()
+        except NoResultFound:
+            pass
+
+    def _add_analysis(self, dest, dest_labnumber, dbanalysis, _ed_cache=[]):
         #=======================================================================
         # add analysis
         #=======================================================================
@@ -128,11 +310,51 @@ class MassSpecExtractor(Extractor):
         step = dbanalysis.Increment
         changeable = dbanalysis.changeable
 
+        ans = dest.get_unique_analysis(dest_labnumber, aliquot, step=step)
+        if ans:
+            return
+
+        try:
+            al = int(aliquot)
+        except ValueError:
+            al = id(aliquot)
+
         dest_an = dest.add_analysis(dest_labnumber,
-                                 aliquot=int(aliquot),
+                                 aliquot=al,
                                  comment=changeable.Comment,
-                                 step=step
+                                 step=step,
+                                 analysis_timestamp=dbanalysis.RunDateTime
                                  )
+        if dest_an is None:
+            return
+        dest.flush()
+
+        if isinstance(dest_labnumber, (str, int, long)):
+            iden = str(dest_labnumber)
+        else:
+            iden = dest_labnumber.identifier
+        self.info('Adding analysis {}-{}{}'.format(iden, aliquot, step))
+
+        #=======================================================================
+        # add measurement
+        #=======================================================================
+        ms = dbanalysis.login_session.machine
+        if ms:
+            ms = ms.Label.lower()
+            dest.add_measurement(dest_an, 'unknown', ms)
+
+        #=======================================================================
+        # add extraction
+        #=======================================================================
+        ed = dbanalysis.HeatingItemName
+        if ed not in _ed_cache:
+            dest.add_extraction_device(ed)
+            _ed_cache.append(ed)
+
+        dest.add_extraction(dest_an, cleanup_duration=dbanalysis.FirstStageDly + dbanalysis.SecondStageDly,
+                            extract_duration=dbanalysis.TotDurHeating,
+                            extract_value=dbanalysis.FinalSetPwr,
+                            )
 
         #=======================================================================
         # add isotopes
@@ -152,18 +374,24 @@ class MassSpecExtractor(Extractor):
             except Exception:
                 continue
 
-            detname = iso.detector.detector_type.Label
-            det = dest.get_detector(detname)
-            if det is None:
-                det = dest.add_detector(detname)
-                dest.flush()
-#                    db.flush()
+            det = None
+            try:
+                detname = iso.detector.detector_type.Label
+                det = dest.get_detector(detname)
+                if det is None:
+                    det = dest.add_detector(detname)
+                    dest.flush()
+            except AttributeError, e:
+                self.debug('mass spec extractor {}', e)
 
             '''
                 mass spec saves peak time with baseline correction.
                 pychron wants uncorrected
             '''
-            baseline = iso.baseline.PeakTimeBlob
+            baseline = ''
+            if iso.baseline:
+                baseline = iso.baseline.PeakTimeBlob
+
 #            print sx
 #            print noncor_y
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
@@ -185,6 +413,7 @@ class MassSpecExtractor(Extractor):
                 dest.add_fit(fit_hist, dbiso, fit=fit)
 
         self.dbimport.analyses.append(dest_an)
+        return True
 
     def _add_sample_project(self, dest, dbpos):
 
@@ -193,6 +422,7 @@ class MassSpecExtractor(Extractor):
         material = dbpos.Material
 
         dest.add_material(material)
+
         project = dest.add_project(project.Project)
 
         return dest.add_sample(
@@ -233,8 +463,7 @@ class MassSpecExtractor(Extractor):
                 self.info('adding production ratio {}'.format(prname))
                 dbpr = dest.add_irradiation_production(**kw)
             return dbpr
-#    def _add_irradiation(self, dest, name, dbpr, dbchron):
-#        dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
+
     def get_labnumbers(self, filter_str=None):
         self.connect()
         lns = [ImportName(name='{}'.format(i[0])) for i in self.db.get_run_ids(filter_str=filter_str)]

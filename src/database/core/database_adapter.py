@@ -283,6 +283,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             self.info('adding {}= {}'.format(attr, name))
             self._add_item(item)
             nitem = item
+            self.flush()
+            self.debug('add unique flush')
 #            self.info('{}= {} already exists'.format(attr, name))
         return nitem
 

@@ -28,6 +28,7 @@ from src.database.core.base_orm import BaseMixin, NameMixin
 from sqlalchemy.sql.expression import func
 from datetime import datetime
 from sqlalchemy.schema import Table
+import uuid
 # from sqlalchemy.types import FLOAT
 
 Base = declarative_base()
@@ -35,8 +36,8 @@ Base = declarative_base()
 def foreignkey(name):
     return Column(Integer, ForeignKey('{}.id'.format(name)))
 
-def stringcolumn(size=40):
-    return Column(String(size))
+def stringcolumn(size=40, *args, **kw):
+    return Column(String(size), *args, **kw)
 
 
 #===============================================================================
@@ -253,7 +254,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     import_id = foreignkey('gen_ImportTable')
     user_id = foreignkey('gen_UserTable')
 
-    uuid = stringcolumn(40)
+    uuid = stringcolumn(40, default=lambda:str(uuid.uuid4()))
     analysis_timestamp = Column(DateTime, default=func.now())
     endtime = Column(Time)
     status = Column(Integer, default=0)

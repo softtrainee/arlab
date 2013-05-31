@@ -197,7 +197,6 @@ class qtLED(QLabel):
         xpm += [s.strip() for s in self.ascii_led.splitlines()]
 
         def _update():
-
             qim = QImage(xpm)
             pix = QPixmap.fromImage(qim)
             self.setPixmap(pix)

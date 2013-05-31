@@ -61,6 +61,7 @@ from src.experiment.utilities.identifier import convert_identifier
 # from src.paths import paths
 # import binascii
 import hashlib
+from sqlalchemy.orm.exc import NoResultFound
 
 # @todo: change rundate and runtime to DateTime columns
 
@@ -591,6 +592,29 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
+    def get_unique_analysis(self, ln, ai, step=None):
+        sess = self.get_session()
+
+        ln = self.get_labnumber(ln)
+        if not ln:
+            return
+
+        q = sess.query(meas_AnalysisTable)
+        q = q.filter(meas_AnalysisTable.labnumber == ln)
+
+        try:
+            ai = int(ai)
+        except ValueError:
+            return
+
+        q = q.filter(meas_AnalysisTable.aliquot == int(ai))
+        if step:
+            q = q.filter(meas_AnalysisTable.step == step)
+        q = q.limit(1)
+        try:
+            return q.one()
+        except NoResultFound:
+            return
 
     def get_analysis_uuid(self, uuid):
 #        return meas_AnalysisTable, 'uuid'

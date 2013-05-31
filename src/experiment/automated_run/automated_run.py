@@ -830,11 +830,14 @@ anaylsis_type={}
             self.info('======== Post Equilibration Finished unsuccessfully ========')
 
     def do_post_termination(self):
+        oex = self.executable
+        self.executable = False
         self.info('========= Post Termination Started ========')
         self.do_post_equilibration()
         self.do_post_measurement()
         self._alive = False
         self.info('========= Post Termination Finished ========')
+        self.executable = oex
 
     def _plot_panel_closed(self):
         if self.measuring:

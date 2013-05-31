@@ -17,12 +17,13 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property
 from traitsui.api import View, Item, TabularEditor, VGroup, spring, HGroup, \
-    EnumEditor, ImageEditor, VFold, UItem
+    EnumEditor, ImageEditor, VFold, UItem, Spring
 from pyface.tasks.traits_task_pane import TraitsTaskPane
-from src.irradiation.irradiated_position import IrradiatedPositionAdapter
+# from src.irradiation.irradiated_position import IrradiatedPositionAdapter
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
+from src.processing.entry.irradiated_position import IrradiatedPositionAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ImportNameAdapter(TabularAdapter):
@@ -62,7 +63,7 @@ class ImporterPane(TraitsDockPane):
     def traits_view(self):
         v = View(
                  VGroup(
-                     HGroup(spring, Item('import_button', show_label=False)),
+                     HGroup(spring, Item('import_button', show_label=False), Item('dry_run')),
                      VGroup(
                          HGroup(spring, Item('data_source')),
                          VFold(
@@ -74,13 +75,15 @@ class ImporterPane(TraitsDockPane):
                              VGroup(
 
                                     HGroup(Item('import_kind', show_label=False),
-                                           UItem('open_button', visible_when='import_kind=="rid_list"')
+                                           UItem('open_button', visible_when='import_kind=="rid_list"'),
                                            ),
+                                    UItem('text_selected'),
                                     HGroup(
                                            Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
                                                                     editable=False,
                                                                     selected='selected',
-                                                                    multi_select=True
+                                                                    multi_select=True,
+                                                                    scroll_to_row='scroll_to_row'
                                                                     )),
 #                                    CustomLabel('custom_label1',
 #                                             color='blue',
