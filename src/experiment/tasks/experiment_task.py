@@ -57,13 +57,6 @@ class ExperimentEditorTask(EditorTask):
                           top=PaneItem('pychron.experiment.controls')
                           )
 
-#    def prepare_destroy(self):
-#        self.manager.executor.cancel(confirm=False)
-#        self.manager.stop_file_listener()
-
-#    def create_central_pane(self):
-#        return AnalysesPane(model=self.manager)
-
     def create_dock_panes(self):
         return [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),

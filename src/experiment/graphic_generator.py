@@ -31,6 +31,7 @@ from chaco.data_label import DataLabel
 from src.paths import paths
 from chaco.plot_graphics_context import PlotGraphicsContext
 from traitsui.menu import Action
+from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 class myDataLabel(DataLabel):
     label_position = Any
@@ -44,7 +45,7 @@ class GraphicGeneratorController(Controller):
         self.model.save()
 
     def traits_view(self):
-        w, h = 500, 500
+        w, h = 750, 750
         v = View(
                  UItem('container', editor=ComponentEditor(), style='custom'),
                  width=w + 2,
@@ -57,7 +58,7 @@ class GraphicGeneratorController(Controller):
 class GraphicModel(HasTraits):
     container = Instance(OverlayPlotContainer)
     def save(self, path=None):
-        print self.container.bounds
+#        print self.container.bounds
 
         if path is None:
             dlg = FileDialog(action='save as', default_directory=paths.data_dir)
@@ -68,9 +69,13 @@ class GraphicModel(HasTraits):
             if not path.endswith('.png'):
                 path = '{}.png'.format(path)
 
-            c = self.container
+            c = self.container.components[0]
             gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
 #            c.use_backbuffer = False
+
+            c.x_axis.visible = False
+            c.y_axis.visible = False
+
             gc.render_component(c)
 #            c.use_backbuffer = True
             gc.save(path)
@@ -86,10 +91,11 @@ class GraphicModel(HasTraits):
 
 
         data = ArrayPlotData()
-        p = Plot(data=data)
+        p = Plot(data=data, padding=2)
         p.x_grid.visible = False
         p.y_grid.visible = False
-
+        p.x_axis_visible = False
+        p.y_axis_visible = False
         p.index_range.low_setting = -w / 2
         p.index_range.high_setting = w / 2
 
@@ -139,7 +145,8 @@ class GraphicModel(HasTraits):
             label = myDataLabel(component=plot,
                               data_point=(x, y),
                               label_text=l,
-                              bgcolor=fc
+                              bgcolor='transparent',
+
                               )
             plot.overlays.append(label)
 
@@ -188,7 +195,7 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
     i = 0
     off = 0
     reader = csv.reader(open(path, 'r'), delimiter=',')
-    for row in reader:
+    for k, row in enumerate(reader):
         row = map(str.strip, row)
         if row:
             e = Element('point')
@@ -214,13 +221,34 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
                pretty_print=True)
     return out
 
-if __name__ == '__main__':
+def open_txt(p):
     gm = GraphicModel()
-    p = '/Users/ross/Sandbox/graphic_gen.csv'
-    p = make_xml(p)
+    p = make_xml(p,
+                 default_radius=0.0175,
+                 default_bounds=(1, 1))
 
 #    p = '/Users/ross/Sandbox/graphic_gen_from_csv.xml'
     gm.load(p)
     gcc = GraphicGeneratorController(model=gm)
+    return gcc
+if __name__ == '__main__':
+    gm = GraphicModel()
+    p = '/Users/ross/Sandbox/2mmirrad.txt'
+    p = '/Users/ross/Sandbox/2mmirrad_ordered.txt'
+    p = '/Users/ross/Sandbox/1_75mmirrad_ordered.txt'
+    p = '/Users/ross/Sandbox/1_75mmirrad_ordered.txt'
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_ordered1.txt'
+#    p = '/Users/ross/Sandbox/graphic_gen.csv'
+#    gcc1 = open_txt(p)
+#    do_later(gcc1.edit_traits)
+
+    p = '/Users/ross/Sandbox/1_75mmirrad.txt'
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mmirrad_continuous.txt'
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad.txt'
+
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
+    gcc = open_txt(p)
     gcc.configure_traits()
+
 #============= EOF =============================================

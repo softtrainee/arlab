@@ -62,7 +62,7 @@ class AnalysesTable(Base):
     Aliquot = Column(Integer)
     Increment = Column(String(20))
     SpecParametersID = Column(Integer, default=0)
-    RunScriptID = Column(Integer, default=0)
+    RunScriptID = Column(Integer, ForeignKey('RunScriptTable.RunScriptID'))
 
     HeatingItemName = Column(String(80))
     FinalSetPwr = Column(Float, default=0)
@@ -102,6 +102,7 @@ class AnalysesTable(Base):
                               uselist=False,
                               )
     positions = relationship('AnalysisPositionTable')
+    runscript = relationship('RunScriptTable', uselist=False)
 
 class ArArAnalysisTable(Base):
     '''

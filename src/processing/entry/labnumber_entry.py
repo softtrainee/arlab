@@ -29,10 +29,13 @@ from src.processing.entry.irradiation import Irradiation
 from src.processing.entry.level import Level
 from src.processing.entry.flux_monitor import FluxMonitor
 from src.processing.entry.db_entry import DBEntry
-from src.irradiation.irradiated_position import IrradiatedPosition, \
-    IrradiatedPositionAdapter
+# from src.irradiation.irradiated_position import IrradiatedPosition, \
+#    IrradiatedPositionAdapter
 from src.constants import NULL_STR, ALPHAS
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.processing.entry.irradiated_position import IrradiatedPositionAdapter, \
+    IrradiatedPosition
+import math
 
 
 class LabnumberEntry(IsotopeDatabaseManager):
@@ -120,16 +123,41 @@ class LabnumberEntry(IsotopeDatabaseManager):
         s.j = self.auto_j
         s.j_err = self.auto_j_err
 
-    def _load_irradiated_samples(self, name):
+    def _load_holder_positions(self, holder):
+        import struct
+        geom = holder.geometry
+        if geom:
+            geom = [struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)]
+            pr = True  # true is positive
+            offset = 0
+            i = 1
+            c = 0
+            for x, y in geom:
+                '''
+                    assume points listed in clockwise order
+                    
+                    increment hole_offset when passed 12 oclock
+                '''
+                r = math.atan2(x, y)
+                if pr < 0 and r >= 0:
+                    offset = 100 * i
+                    i += 1
+                    c = 0
 
-        p = os.path.join(self._get_map_path(), name)
-        self.irradiated_positions = []
-        with open(p, 'r') as f:
-            line = f.readline()
-            nholes, diam = line.split(',')
-            for ni in range(int(nholes)):
-                self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
+                self.irradiated_positions.append(IrradiatedPosition(hole=c + offset))
+                c += 1
 
+        elif holder.name:
+            self._load_holder_positons_from_file(holder.name)
+
+    def _load_holder_positons_from_file(self, name):
+            p = os.path.join(self._get_map_path(), name)
+            self.irradiated_positions = []
+            with open(p, 'r') as f:
+                line = f.readline()
+                nholes, diam = line.split(',')
+                for ni in range(int(nholes)):
+                    self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
 
     def _save_to_db(self):
         db = self.db
@@ -273,7 +301,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
             if _prev_tray != level.tray:
                 if not self.confirmation_dialog('Irradiation Tray changed. Copy labnumbers to new tray'):
-                    self._load_irradiated_samples(level.tray)
+                    self._load_holder_positions(level.tray)
 
 
     def _add_level_button_fired(self):
@@ -367,9 +395,9 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
         if level:
             if level.holder:
-                holder = level.holder.name
-                if holder:
-                    self._load_irradiated_samples(holder)
+#                holder = level.holder.name
+#                if level.holder:
+                self._load_holder_positions(level.holder)
 
             positions = level.positions
             if positions:

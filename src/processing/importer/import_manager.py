@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Enum, Instance, Str, Password, \
-     Button, List, Any, Bool, Property, Event
+     Button, List, Any, Bool, Property, Event, cached_property, Int
 # from traitsui.api import View, Item, VGroup, HGroup, spring, Group, TabularEditor
 # from traitsui.tabular_adapter import TabularAdapter
 # from apptools.preferences.preference_binding import bind_preference
@@ -44,14 +44,56 @@ class ImportManager(IsotopeDatabaseManager):
     import_button = Button('Import')
     open_button = Button('Open')
     names = List
+    readable_names = Property(depends_on='names, names[]')
     selected = Any
+    text_selected = Str
+    scroll_to_row = Int
     imported_names = List
     custom_label1 = Str('Imported')
     filter_str = Str(enter_set=True, auto_set=False)
 
     include_analyses = Bool(True)
-
+    include_blanks = Bool(True)
+    include_airs = Bool(True)
+    include_list = List
     update_irradiations_needed = Event
+    dry_run = Bool(True)
+
+    @cached_property
+    def _get_readable_names(self):
+        return [ni.name for ni in self.names]
+
+    def _text_selected_changed(self):
+        txt = self.text_selected
+        if ',' in txt:
+            txt = txt.split(',')
+        elif ':' in txt:
+
+            start, end = txt.split(':')
+            shead, scnt = start.split('-')
+            ntxt = []
+            if not end:
+                return
+
+            for i in range(int(end) - int(scnt) + 1):
+                ntxt.append('{}-{}'.format(shead, int(scnt) + i))
+
+            txt = ntxt
+        else:
+            txt = [txt]
+
+        def get_name(name):
+            return next((ni for ni in self.names if ni.name == name), None)
+
+        sel = []
+        for ti in txt:
+            name = get_name(ti)
+            if name is not None:
+                sel.append(name)
+        if sel:
+            self.selected = sel
+            self.scroll_to_row = self.names.index(sel[0])
+
 
     def _filter_str_changed(self):
         func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
@@ -67,31 +109,54 @@ class ImportManager(IsotopeDatabaseManager):
     def _import_button_fired(self):
 #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
-            if self.import_kind == 'rid_list':
-                '''
-                    load the import list
-                '''
-                self.selected = self.names
-            else:
-                self.selected = [records('NM-216')]
+#            if self.import_kind == 'rid_list':
+#                '''
+#                    load the import list
+#                '''
+#                self.selected = self.names
+#            else:
+#                self.selected = [records('NM-216')]
 
             if self.selected:
+                selected = [(si.name, tuple()) for si in self.selected]
+
+            selected = [
+                         # ('NM-205', ['E', ]),
+#                         ('NM-205', ['F' , 'G', 'H', 'O']),
+#                         ('NM-213', ['A', 'C', 'I', 'J', 'K', 'L']),
+#                         ('NM-216', ['C', 'D', 'E', 'F']),
+#                         ('NM-220', ['L', 'M', 'N', 'O']),
+#                         ('NM-222', ['A', 'B', 'C', 'D']),
+#                         ('NM-256', ['E', 'F'])
+                         ('NM-256', ['E', ])
+                        ]
+
+            if selected:
                 if self.db.connect():
                     # clear imported
                     self.imported_names = []
+                    self.db.reset()
 
+                    self.db.save_username = 'jake({})'.format(self.db.username)
+                    self.info('====== Import Started  ======')
+                    self.info('user name= {}'.format(self.db.save_username))
                     # get import func from importer
                     func = getattr(self.importer, 'import_{}'.format(self.import_kind))
-                    for si in self.selected:
-                        r = func(self.db, si.name,
-                                 self.include_analyses,
-                                 include_list=['C', ]
+                    for si, inc in selected:
+                        r = func(self.db, si,
+                                 include_analyses=self.include_analyses,
+                                 include_blanks=self.include_blanks,
+                                 include_airs=self.include_airs,
+                                 dry_run=self.dry_run,
+                                 include_list=inc
                                  )
                         if r:
                             self.imported_names.append(r)
+                        self.db.flush()
 
                     if self.imported_names:
                         self.update_irradiations_needed = True
+                    self.info('====== Import Finished ======')
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':
