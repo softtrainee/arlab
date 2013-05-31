@@ -303,9 +303,10 @@ class MeasurementPyScript(ValvePyScript):
                    action=None,
                    resume=False
                    ):
-        if self._syntax_checking:
-            if isinstance(action, str):
-                self.execute_snippet(action)
+
+#        if self._syntax_checking:
+#            if isinstance(action, str):
+#                self.execute_snippet(action)
 
         self._automated_run_call('py_add_action', attr, comp, value,
                                  start_count=start_count,

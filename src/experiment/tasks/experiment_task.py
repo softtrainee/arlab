@@ -141,7 +141,6 @@ class ExperimentEditorTask(EditorTask):
 
         self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
         self.manager.test_queues()
-        self.manager.path = path
         self.manager.update_info()
 
         '''
@@ -199,7 +198,6 @@ class ExperimentEditorTask(EditorTask):
                 editor = self.editor_area.editors[0]
 
         if editor:
-
             p = editor.path
             if os.path.isfile(p):
                 group = editor.group
@@ -211,7 +209,7 @@ class ExperimentEditorTask(EditorTask):
                         for ei in self.editor_area.editors
                             if ei.group == group and ei.merge_id >= min_idx]
 
-                self.manager.execute_queues(qs, text, hash_val)
+                self.manager.execute_queues(qs, p, text, hash_val)
 
     @on_trait_change('window:closing')
     def _prompt_on_close(self, event):
