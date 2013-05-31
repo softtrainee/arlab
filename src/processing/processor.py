@@ -15,6 +15,12 @@
 #===============================================================================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.plotter_options_manager import IdeogramOptionsManager
+import datetime
+from src.database.orms.isotope_orm import meas_AnalysisTable, \
+    meas_MeasurementTable, gen_AnalysisTypeTable
+from sqlalchemy.sql.expression import and_
+from sqlalchemy.orm.exc import NoResultFound
+from src.processing.analysis import Analysis
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits, List, Instance, on_trait_change, Any, DelegatesTo
@@ -34,6 +40,103 @@ from src.processing.plotter_options_manager import IdeogramOptionsManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
+    def refit_isotopes(self, analysis, fits=None, keys=None):
+        if not isinstance(analysis, Analysis):
+            analysis = self.make_analyses([analysis])[0]
+
+        analysis.load_isotopes()
+        if keys is None:
+            keys = [iso.molecular_weight.name for iso in analysis.dbrecord.isotopes
+                                if iso.kind == 'signal']
+        if fits is None:
+            fits = ['linear', ] * len(keys)
+
+        for key, fit in zip(keys, fits):
+            self.info('fitting {} {} {}'.format(analysis.record_id, key, fit))
+            print analysis.isotopes[key].uvalue
+            return
+
+    def _find_analyses(self, ms, post, delta, atype, step=100, maxtries=10, **kw):
+        if delta < 0:
+            step = -step
+
+        for i in range(maxtries):
+            rs = self._filter_analyses(ms, post, delta + i * step, 5, atype, **kw)
+            if rs:
+                return rs
+        else:
+            return []
+
+    def _filter_analyses(self, ms, post, delta, lim, at, filter_hook=None):
+        '''
+            ms= spectrometer 
+            post= timestamp
+            delta= time in hours
+            at=analysis type
+            
+            if delta is negative 
+            get all before post and after post-delta
+
+            if delta is post 
+            get all before post+delta and after post
+        '''
+        sess = self.db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(meas_MeasurementTable)
+        q = q.join(gen_AnalysisTypeTable)
+
+        win = datetime.timedelta(hours=delta)
+        dt = post + win
+        if delta < 0:
+            a, b = dt, post
+        else:
+            a, b = post, dt
+
+        q = q.filter(and_(
+                          gen_AnalysisTypeTable.name == at,
+                          meas_AnalysisTable.analysis_timestamp >= a,
+                          meas_AnalysisTable.analysis_timestamp <= b,
+                          ))
+
+        if filter_hook:
+            q = filter_hook(q)
+        q = q.limit(lim)
+
+        try:
+            return q.all()
+        except NoResultFound:
+            pass
+
+    def preceeding_blank_correct(self, analysis, keys=None):
+        from src.regression.interpolation_regressor import InterpolationRegressor
+        if not isinstance(analysis, Analysis):
+            analysis = self.make_analyses([analysis])[0]
+            analysis.load_isotopes()
+
+        ms = analysis.spectrometer
+        post = analysis.timestamp
+        delta = -1
+        atype = 'blank_{}'.format(analysis.analysis_type)
+        br = self._find_analyses(ms, post, delta, atype)
+
+        br = self.make_analyses(br)
+        self.load_analyses(br)
+
+        if keys is None:
+            keys = analysis.isotope_keys
+
+
+        for key in keys:
+            r_xs, r_ys, r_es = [(ai.timestamp, ai.isotopes[key].value, ai.isotopes[key].error) for ai in br
+                                                    if key in ai.isotopes]
+
+            reg = InterpolationRegressor(xs=r_xs,
+                                     ys=r_ys,
+                                     yserr=r_es,
+                                     kind='preceeding')
+            print key, reg.predict(post)
+#        return reg.predict(ant)
+
     def recall(self):
         pass
 #        if self.db:

@@ -36,6 +36,7 @@ class BaseMeasurement(HasTraits):
         super(BaseMeasurement, self).__init__(*args, **kw)
         if dbrecord:
             xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
+
             self.xs = array(xs)
             self.ys = array(ys)
 

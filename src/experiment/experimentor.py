@@ -141,18 +141,10 @@ class Experimentor(Experimentable):
             dont use cache
             cache labnumbers for quick retrieval
         '''
-#        ca = '_cached_{}'.format(arun.labnumber)
-# #         print ca, hasattr(self,ca)
-#        dbln = None
-#        if hasattr(self, ca):
-#            dbln = getattr(self, ca)
-
-#        if not dbln:
         db = self.db
         ln = arun.labnumber
         ln = convert_identifier(ln)
         dbln = db.get_labnumber(ln)
-#            setattr(self, ca, dbln)
 
         return dbln
 
@@ -221,12 +213,11 @@ class Experimentor(Experimentable):
                         c = 1
 
                 ln = self._get_labnumber(arun)
-#                 ln = db.get_labnumber(arunid)
                 if ln is not None:
                     st = 0
                     if ln.analyses:
-                        an = ln.analyses[-1]
-                        if an.aliquot != arun.aliquot:
+                        an = next((ai for ai in ln.analyses if ai.aliquot == arun.aliquot), None)
+                        if not an:
                             st = 0
                         else:
                             try:

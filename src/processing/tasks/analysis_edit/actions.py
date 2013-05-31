@@ -78,6 +78,12 @@ class IsotopeEvolutionAction(AnalysisEditAction):
     method = 'new_isotope_evolution'
     task_id = 'pychron.analysis_edit.isotope_evolution'
 
+class RefitIsotopeEvolutionAction(AnalysisEditAction):
+    name = 'Refit Isotope Evolution...'
+    accelerator = 'Ctrl+Shift+f'
+    method = 'refit_isotopes'
+    task_id = 'pychron.analysis_edit.isotope_evolution'
+
 class ICFactorAction(AnalysisEditAction):
     name = 'IC Factor...'
     accelerator = 'Ctrl+t'

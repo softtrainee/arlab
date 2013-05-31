@@ -30,6 +30,7 @@ from src.processing.importer.mass_spec_extractor import Extractor, \
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.constants import NULL_STR
 from collections import namedtuple
+import time
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -55,6 +56,7 @@ class ImportManager(IsotopeDatabaseManager):
     include_analyses = Bool(True)
     include_blanks = Bool(True)
     include_airs = Bool(True)
+    include_cocktails = Bool(True)
     include_list = List
     update_irradiations_needed = Event
     dry_run = Bool(True)
@@ -121,14 +123,14 @@ class ImportManager(IsotopeDatabaseManager):
                 selected = [(si.name, tuple()) for si in self.selected]
 
             selected = [
-                         # ('NM-205', ['E', ]),
-#                         ('NM-205', ['F' , 'G', 'H', 'O']),
-#                         ('NM-213', ['A', 'C', 'I', 'J', 'K', 'L']),
-#                         ('NM-216', ['C', 'D', 'E', 'F']),
-#                         ('NM-220', ['L', 'M', 'N', 'O']),
-#                         ('NM-222', ['A', 'B', 'C', 'D']),
-#                         ('NM-256', ['E', 'F'])
-                         ('NM-256', ['E', ])
+#                          ('NM-205', ['E', ]),
+                         ('NM-205', ['E', 'F' , 'G', 'H', 'O']),
+                         ('NM-213', ['A', 'C', 'I', 'J', 'K', 'L']),
+                         ('NM-216', ['C', 'D', 'E', 'F']),
+                         ('NM-220', ['L', 'M', 'N', 'O']),
+                         ('NM-222', ['A', 'B', 'C', 'D']),
+                         ('NM-256', ['E', 'F'])
+#                         ('NM-256', ['F', ])
                         ]
 
             if selected:
@@ -142,11 +144,13 @@ class ImportManager(IsotopeDatabaseManager):
                     self.info('user name= {}'.format(self.db.save_username))
                     # get import func from importer
                     func = getattr(self.importer, 'import_{}'.format(self.import_kind))
+                    st = time.time()
                     for si, inc in selected:
                         r = func(self.db, si,
                                  include_analyses=self.include_analyses,
                                  include_blanks=self.include_blanks,
                                  include_airs=self.include_airs,
+                                 include_cocktails=self.include_cocktails,
                                  dry_run=self.dry_run,
                                  include_list=inc
                                  )
@@ -156,7 +160,7 @@ class ImportManager(IsotopeDatabaseManager):
 
                     if self.imported_names:
                         self.update_irradiations_needed = True
-                    self.info('====== Import Finished ======')
+                    self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':
