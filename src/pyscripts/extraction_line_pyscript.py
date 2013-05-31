@@ -253,6 +253,11 @@ class ExtractionPyScript(ValvePyScript):
         if value == '':
             value = self.extract_value
 
+        if isinstance(name, (list, tuple)):
+            self.warning('invalid position {}'.format(name))
+            self.cancel()
+            return
+
         name = name.lower()
         self.move_to_position(name)
 
@@ -367,13 +372,13 @@ class ExtractionPyScript(ValvePyScript):
 
         self.info('acquire {}'.format(name))
         r = self.runner.get_resource(name)
-        
-        s=False
+
+        s = False
         if not clear:
             s = r.isSet()
             if s:
                 self.info('waiting for access')
-        
+
         while s:
             if self._cancel:
                 break

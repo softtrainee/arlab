@@ -301,7 +301,7 @@ class Experimentor(Experimentable):
             idcnt_dict[arunid] = c
             stdict[arunid] = st
 
-    def execute_queues(self, queues, text, text_hash):
+    def execute_queues(self, queues, path, text, text_hash):
 #        if self.executor.isAlive():
 #            self.debug('cancel execution')
 #            self.executor.cancel()
@@ -313,7 +313,7 @@ class Experimentor(Experimentable):
         self.executor.trait_set(experiment_queues=queues,
                                 experiment_queue=queues[0],
                                 text=text,
-                                path=self.path,
+                                path=path,
                                 text_hash=text_hash,
                                 stats=self.stats
                                 )

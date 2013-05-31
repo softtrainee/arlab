@@ -116,7 +116,7 @@ class ExperimentEditor(BaseTraitsEditor):
         if queues is None:
             queues = [self.queue]
         if self._validate_experiment_queues(queues):
-            self._dump_experiment_queues(path, queues)
+            path = self._dump_experiment_queues(path, queues)
         self.path = path
         self.dirty = False
 

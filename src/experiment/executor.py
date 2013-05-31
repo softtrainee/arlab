@@ -314,7 +314,6 @@ class ExperimentExecutor(Experimentable):
     def execute(self):
         self.debug('%%%%%%%%%%%%%%%%%%% Starting Execution')
                     # check for blank before starting the thread
-
         if self._pre_execute_check():
             self.stats.start_timer()
             self.stats.nruns_finished = 0
@@ -336,12 +335,10 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     return
 
-            nonfound = self._check_for_managers(exp)
-            if nonfound:
-                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
-                self.info('experiment canceled because could not find managers {}'.format(nonfound))
-                self._alive = False
+            managers_ok = self.check_managers(exp)
+            if not managers_ok:
                 return
+
             else:
                 mon, isok = self._monitor_factory()
 
@@ -351,6 +348,16 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     return
             return True
+
+    def check_managers(self, exp):
+        nonfound = self._check_for_managers(exp)
+        if nonfound:
+            self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+            self.info('experiment canceled because could not find managers {}'.format(nonfound))
+            self._alive = False
+            return
+
+        return True
 
 #===============================================================================
 # stats
@@ -413,7 +420,9 @@ class ExperimentExecutor(Experimentable):
                 if not man.test_connection():
                     nonfound.append(extract_device)
 
-        needs_spec_man = any([ai.measurement_script for ai in self._get_all_automated_runs()])
+        needs_spec_man = any([ai.measurement_script
+                              for ai in self._get_all_automated_runs()
+                                    if ai.state == 'not run'])
 
         if self.spectrometer_manager is None and needs_spec_man:
             if not globalv.experiment_debug:
@@ -656,8 +665,13 @@ class ExperimentExecutor(Experimentable):
             convert the an AutomatedRunSpec an AutomatedRun
         '''
 
+
         # the first run was checked before delay before runs
         if i > 1:
+            # test manager connections
+            if not self.check_managers(self.experiment_queue):
+                return
+
             self._check_run_aliquot(arv)
 
         arun = arv.make_run()
