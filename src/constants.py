@@ -72,4 +72,12 @@ CANCELED_COLOR = '#FF9999'
 TRUNCATED_COLOR = 'orange'
 FAILED_COLOR = 'red'
 NOT_EXECUTABLE_COLOR = 'red'
+
+
+MINNA_BLUFF_IRRADIATIONS = [('NM-205', ['E', 'F' , 'G', 'H', 'O']),
+('NM-213', ['A', 'C', 'I', 'J', 'K', 'L']),
+('NM-216', ['C', 'D', 'E', 'F']),
+('NM-220', ['L', 'M', 'N', 'O']),
+('NM-222', ['A', 'B', 'C', 'D']),
+('NM-256', ['E', 'F'])]
 #============= EOF =============================================

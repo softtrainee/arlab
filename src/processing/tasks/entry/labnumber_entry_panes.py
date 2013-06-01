@@ -24,6 +24,7 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
 from src.processing.entry.irradiated_position import IrradiatedPositionAdapter
+from traitsui.editors.progress_editor import ProgressEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ImportNameAdapter(TabularAdapter):
@@ -71,10 +72,15 @@ class ImporterPane(TraitsDockPane):
                                 label='Include',
                                 show_border=True,
                                 ),
-                            HGroup(spring, Item('import_button', show_label=False), Item('dry_run'),
+                            VGroup(
+                                   HGroup(spring,
+                                          UItem('import_button'),
+                                          Item('dry_run'),
+
+                                          ),
                                    label='Import',
                                    show_border=True
-                                   ),
+                                   )
                             ),
                      VGroup(
                          HGroup(spring, Item('data_source')),

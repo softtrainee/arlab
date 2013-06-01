@@ -25,6 +25,10 @@ from sqlalchemy.sql.expression import and_, not_
 from src.database.orms.massspec_orm import AnalysesTable, MachineTable, \
     LoginSessionTable, RunScriptTable
 from sqlalchemy.orm.exc import NoResultFound
+import time
+from src.helpers.filetools import unique_path
+import os
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ImportName(HasTraits):
@@ -68,7 +72,8 @@ class MassSpecExtractor(Extractor):
                            include_list=None,
                            dry_run=True,):
         self.connect()
-
+        p, c = unique_path(paths.data_dir, 'import')
+        self.import_err_file = open(p, 'w')
         self.dbimport = dest.add_import(
                                         source=self.db.name,
                                         source_host=self.db.host,
@@ -97,6 +102,8 @@ class MassSpecExtractor(Extractor):
                          )
         if not dry_run:
             dest.commit()
+
+        self.import_err_file.close()
         return ImportName(name=name, skipped=skipped)
 
     def _add_levels(self, dest, dbirrad, name,
@@ -161,7 +168,7 @@ class MassSpecExtractor(Extractor):
             if not ms in ('Pychron Obama', 'Pychron Jan', 'Obama', 'Jan'):
                 return
 
-            self.info('============ Adding Associated Airs ============')
+            self.info('============ Adding Associated Cocktails ============')
             def add_hook(dest, bi):
                 self._add_cocktail_blanks(dest, bi)
 
@@ -380,7 +387,8 @@ class MassSpecExtractor(Extractor):
                                  aliquot=al,
                                  comment=changeable.Comment,
                                  step=step,
-                                 analysis_timestamp=dbanalysis.RunDateTime
+                                 analysis_timestamp=dbanalysis.RunDateTime,
+                                 status=changeable.StatusLevel
                                  )
         if dest_an is None:
             return
@@ -392,7 +400,8 @@ class MassSpecExtractor(Extractor):
         else:
             iden = dest_labnumber.identifier
 
-        self.info('Adding analysis {}-{}{}'.format(iden, al, step))
+        identifier = '{}-{}{}'.format(iden, al, step)
+        self.info('Adding analysis {}'.format(identifier))
 
         #=======================================================================
         # add measurement
@@ -423,6 +432,9 @@ class MassSpecExtractor(Extractor):
         # add isotopes
         #=======================================================================
         fit_hist = None
+        if len(dbanalysis.isotopes) < 4 or len(dbanalysis.isotopes) > 7:
+            self.import_err_file.write('{}\n'.format(identifier))
+
         for iso in dbanalysis.isotopes:
             pkt = iso.peak_time_series[-1]
             blob = pkt.PeakTimeBlob
@@ -435,6 +447,7 @@ class MassSpecExtractor(Extractor):
                 noncor_y = [struct.unpack('{}f'.format(endianness),
                                        blob[i:i + 4])[0] for i in xrange(0, len(blob), 4)]
             except Exception:
+                self.import_err_file.write('{}\n'.format(identifier))
                 continue
 
             det = None
@@ -454,6 +467,15 @@ class MassSpecExtractor(Extractor):
             baseline = ''
             if iso.baseline:
                 baseline = iso.baseline.PeakTimeBlob
+                '''
+                    mass spec stores blobs as y,x
+                
+                    pychron stores as x,y
+                '''
+                ys, xs = zip(*[struct.unpack('{}ff'.format(endianness),
+                                       baseline[i:i + 8]) for i in xrange(0, len(baseline), 8)])
+
+                baseline = ''.join([struct.pack('>ff', x, y) for x, y in zip(xs, ys)])
 
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
             # add baseline
@@ -467,11 +489,11 @@ class MassSpecExtractor(Extractor):
 
             # add to fit history
             #### How to extract fits from Mass Spec???? #####
-            fit = None
-            if fit:
-                if fit_hist is None:
-                    fit_hist = dest.add_fit_history(dest_an)
-                dest.add_fit(fit_hist, dbiso, fit=fit)
+#            fit = None
+#            if fit:
+#                if fit_hist is None:
+#                    fit_hist = dest.add_fit_history(dest_an)
+#                dest.add_fit(fit_hist, dbiso, fit=fit)
 
         self.dbimport.analyses.append(dest_an)
         return True

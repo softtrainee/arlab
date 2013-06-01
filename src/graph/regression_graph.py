@@ -121,6 +121,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def set_fit(self, fi, plotid=0, series=0):
         plot = self.plots[plotid]
+        print plot.plots
         scatter = plot.plots['data{}'.format(series)][0]
         scatter.fit = fi
         scatter.index.metadata['selections'] = []

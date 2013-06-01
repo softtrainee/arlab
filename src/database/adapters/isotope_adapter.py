@@ -261,6 +261,7 @@ class IsotopeAdapter(DatabaseAdapter):
         return fa
 
     def add_fit_history(self, analysis, **kw):
+        kw['user'] = self.save_username
         hist = proc_FitHistoryTable(**kw)
         if analysis:
             analysis.fit_histories.append(hist)
@@ -709,7 +710,7 @@ class IsotopeAdapter(DatabaseAdapter):
             pass
 
     def get_labnumber(self, labnum):
-        return self._retrieve_item(gen_LabTable, str(labnum), key='identifier')
+        return self._retrieve_item(gen_LabTable, labnum, key='identifier')
 #        if isinstance(labnum, str):
 #            labnum = convert_identifier(labnum)
 #
