@@ -133,7 +133,17 @@ class Query(HasTraits):
                 comp = self._convert_comparator(comp)
                 c = d - timedelta(days=d.day - 1)
                 query = query.filter(getattr(attr, comp)(c))
-
+        else:
+            comp = self._convert_comparator(comp)
+            if c.count('-') == 2:
+                fmt = '%m-%d-%Y'
+            elif c.count('-') == 1:
+                fmt = '%m-%Y'
+            else:
+                fmt = '%Y'
+            d = datetime.strptime(c, fmt)
+            print attr, comp, c, d
+            query = query.filter(getattr(attr, comp)(d))
 #        c = '{}'.format(c)
         return query
 

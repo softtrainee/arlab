@@ -180,6 +180,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def get_recent(self):
         return self._get_recent()
+
+    def get_date_range(self, start, end, **kw):
+        qs = self.query_factory(criterion=start, parameter=self.date_str, comparator='>=')
+        qe = self.query_factory(criterion=end, parameter=self.date_str, comparator='<=')
+        return self._execute_query([qs, qe], **kw)
+
 #===============================================================================
 # private
 #===============================================================================
@@ -206,12 +212,15 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         return q
 
-    def _execute_query(self, queries=None):
+    def _execute_query(self, queries=None, limit=None):
         if queries is None:
             queries = self.queries
 
+        if limit is None:
+            limit = self.limit
         # @todo: only get displayed columns
-        dbs, query_str = self._get_selector_records(limit=self.limit,
+
+        dbs, query_str = self._get_selector_records(limit=limit,
                                                     queries=queries
                                                     )
 
@@ -330,7 +339,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         tattr = getattr(self.query_table, timestamp)
         q = q.order_by(tattr.desc())
-        if limit:
+        if limit and limit > 0:
             q = q.limit(limit)
 
         q = q.from_self()

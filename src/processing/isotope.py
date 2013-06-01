@@ -35,13 +35,19 @@ class BaseMeasurement(HasTraits):
     def __init__(self, dbrecord=None, *args, **kw):
         super(BaseMeasurement, self).__init__(*args, **kw)
         if dbrecord:
-            xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
+            try:
+                xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
+            except (ValueError, TypeError):
+                xs, ys = [], []
 
             self.xs = array(xs)
             self.ys = array(ys)
 
     def _unpack_blob(self, blob, endianness='>'):
-        return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+        try:
+            return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+        except struct.error, e:
+            print 'unpack_blob', e
 
 
 class IsotopicMeasurement(BaseMeasurement):

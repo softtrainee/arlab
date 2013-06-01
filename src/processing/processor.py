@@ -40,21 +40,78 @@ from src.processing.analysis import Analysis
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
-    def refit_isotopes(self, analysis, fits=None, keys=None):
+    def refit_isotopes(self, analysis, pd=None, fits=None, keys=None, verbose=False):
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
 
         analysis.load_isotopes()
-        if keys is None:
-            keys = [iso.molecular_weight.name for iso in analysis.dbrecord.isotopes
-                                if iso.kind == 'signal']
-        if fits is None:
-            fits = ['linear', ] * len(keys)
 
+        dbr = analysis.dbrecord
+        if keys is None:
+            keys = [iso.molecular_weight.name for iso in dbr.isotopes
+                                if iso.kind == 'signal']
+
+        '''
+            if spectrometer is map use all linear
+            
+            if spectrometer is Jan or Obama
+                if counts >150 use parabolic
+                else use linear
+        '''
+        if fits is None:
+            if analysis.mass_spectrometer in ('pychron obama', 'pychron jan', 'jan', 'obama'):
+                n = 0
+                if keys:
+                    n = analysis.isotopes[keys[0]].xs.shape[0]
+
+                if n >= 150:
+                    fits = ['parabolic', ] * len(keys)
+                else:
+                    fits = ['linear', ] * len(keys)
+
+            else:
+                fits = ['linear', ] * len(keys)
+
+        db = self.db
+
+        if not dbr.selected_histories:
+            db.add_selected_histories(dbr)
+            db.flush()
+
+        msg = 'fitting isotopes for {}'.format(analysis.record_id)
+        if pd is not None:
+            pd.change_message(msg)
+        self.debug(msg)
+        dbhist = db.add_fit_history(dbr)
         for key, fit in zip(keys, fits):
-            self.info('fitting {} {} {}'.format(analysis.record_id, key, fit))
-            print analysis.isotopes[key].uvalue
-            return
+            dbiso_baseline = next((iso for iso in dbr.isotopes
+                          if iso.molecular_weight.name == key and iso.kind == 'baseline'), None)
+            if dbiso_baseline:
+                if verbose:
+                    self.debug('{} {}'.format(key, fit))
+
+                vv = analysis.isotopes[key]
+                baseline = vv.baseline
+                if not baseline:
+                    continue
+
+                v, e = baseline.value, baseline.error
+                db.add_fit(dbhist, dbiso_baseline, fit='average_sem', filter_outliers=True,
+                           filter_outlier_std_devs=2)
+                db.add_isotope_result(dbiso_baseline, dbhist, signal_=float(v), signal_err=float(e))
+
+                dbiso = next((iso for iso in dbr.isotopes
+                          if iso.molecular_weight.name == key and iso.kind == 'signal'), None)
+                if dbiso:
+                    vv = analysis.isotopes[key]
+                    v, e = vv.value, vv.error
+
+                    db.add_fit(dbhist, dbiso, fit=fit, filter_outliers=True,
+                               filter_outlier_std_devs=2)
+                    db.add_isotope_result(dbiso, dbhist, signal_=float(v), signal_err=float(e))
+
+        if pd is not None:
+            pd.increment()
 
     def _find_analyses(self, ms, post, delta, atype, step=100, maxtries=10, **kw):
         if delta < 0:

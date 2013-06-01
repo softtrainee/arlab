@@ -206,12 +206,14 @@ class AnalysisSummary(HasTraits):
             bv, be = iso.baseline.value, iso.baseline.error
             blv, ble = iso.blank.value, iso.blank.error
             s = iso.get_corrected_value()
+            if fit:
+                fit = fit[0].upper()
 
             isotopes.append(DisplaySignal(isotope=name,
                                    detector=det,
                                    raw_value=rv,
                                    raw_error=re,
-                                   fit=fit[0].upper(),
+                                   fit=fit,
                                    baseline_value=bv,
                                    baseline_error=be,
                                    blank_value=blv,

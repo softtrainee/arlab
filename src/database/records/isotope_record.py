@@ -320,7 +320,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                         fit = Fit(fit='linear', filter_outliers=True,
                                   filter_outlier_iterations=1,
                                   filter_outlier_std_devs=2)
-                        r.set_fit(fit)
+                    r.set_fit(fit)
                     self.isotopes[name] = r
             '''
             
@@ -346,7 +346,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                         fit = Fit(fit='average_sem', filter_outliers=True,
                                   filter_outlier_iterations=1,
                                   filter_outlier_std_devs=2)
-                        r.set_fit(fit)
+                    r.set_fit(fit)
                     i.baseline = r
 
                 if iso.kind == 'sniff':
@@ -613,18 +613,19 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         isos = reversed(self.isotope_keys)
         i = 0
         for iso in isos:
-            dbiso = self.isotopes[iso]
+            isotope = self.isotopes[iso]
             if kind == 'baseline':
-                dbiso = dbiso.baseline
+                isotope = isotope.baseline
 
-            di = dbiso.detector
-            fit = dbiso.fit
-            fo = dbiso.filter_outliers
-            ite = dbiso.filter_outlier_iterations
-            sd = dbiso.filter_outlier_std_devs
+            di = isotope.detector
+            fit = isotope.fit
+            print fit, 'ffff'
+            fo = isotope.filter_outliers
+            ite = isotope.filter_outlier_iterations
+            sd = isotope.filter_outlier_std_devs
 
-            xs = dbiso.xs
-            ys = dbiso.ys
+            xs = isotope.xs
+            ys = isotope.ys
 
             gkw['ytitle'] = '{} ({})'.format(di, iso)
             gkw['xtitle'] = 'Time (s)'
@@ -643,9 +644,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                              filter_outlier_std_devs=sd)
 
             if kind == 'signal':
-                if dbiso.sniff:
-                    graph.new_series(dbiso.sniff.xs,
-                                     dbiso.sniff.ys, plotid=i,
+                if isotope.sniff:
+                    graph.new_series(isotope.sniff.xs,
+                                     isotope.sniff.ys, plotid=i,
                                      label='sniff',
                                      fit=False,
                                      type='scatter',
@@ -654,7 +655,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                                      )
                     graph.set_series_label('sniff', plotid=i)
 #                else:
-#                    print 'no sniff for', dbiso.name
+#                    print 'no sniff for', isotope.name
 
                 # add the sniff
 

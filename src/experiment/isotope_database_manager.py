@@ -150,6 +150,7 @@ class IsotopeDatabaseManager(Manager):
         return self._open_progress(n)
 
     def _open_progress(self, n):
+
         pd = myProgressDialog(max=n - 1, size=(550, 15))
         pd.open()
         return pd

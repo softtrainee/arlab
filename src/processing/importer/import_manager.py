@@ -28,7 +28,7 @@ from traits.api import HasTraits, Enum, Instance, Str, Password, \
 from src.processing.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.constants import NULL_STR
+from src.constants import NULL_STR, MINNA_BLUFF_IRRADIATIONS
 from collections import namedtuple
 import time
 #============= standard library imports ========================
@@ -52,18 +52,53 @@ class ImportManager(IsotopeDatabaseManager):
     imported_names = List
     custom_label1 = Str('Imported')
     filter_str = Str(enter_set=True, auto_set=False)
+    progress = Int
 
-#    include_analyses = Bool(True)
-    include_analyses = Bool(False)
-#    include_blanks = Bool(True)
-    include_blanks = Bool(False)
-#    include_airs = Bool(True)
-    include_airs = Bool(False)
-#    include_cocktails = Bool(True)
-    include_cocktails = Bool(False)
+#    include_analyses = Bool(False)
+#    include_blanks = Bool(False)
+#    include_airs = Bool(False)
+#    include_cocktails = Bool(False)
+    include_analyses = Bool(True)
+    include_blanks = Bool(True)
+    include_airs = Bool(True)
+    include_cocktails = Bool(True)
     include_list = List
     update_irradiations_needed = Event
     dry_run = Bool(True)
+
+    def _do_import(self, selected, pd):
+        func = getattr(self.importer, 'import_{}'.format(self.import_kind))
+        st = time.time()
+        for si, inc in selected:
+            pd.change_message('Importing {} {}'.format(si, inc))
+            pd.increment()
+#            for i in range(10):
+#                time.sleep(0.1)
+#            r = False
+            r = func(self.db,
+                     si,
+                     include_analyses=self.include_analyses,
+                     include_blanks=self.include_blanks,
+                     include_airs=self.include_airs,
+                     include_cocktails=self.include_cocktails,
+                     dry_run=self.dry_run,
+                     include_list=inc
+                     )
+            if r:
+                self.imported_names.append(r)
+                pd.change_message('Imported {} {} successfully'.format(si, inc))
+                pd.increment()
+            else:
+                pd.change_message('Import {} {} failed'.format(si, inc))
+                pd.increment()
+
+            self.db.flush()
+
+        if self.imported_names:
+            self.update_irradiations_needed = True
+
+        self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
+        self.db.close()
 
     @cached_property
     def _get_readable_names(self):
@@ -112,6 +147,7 @@ class ImportManager(IsotopeDatabaseManager):
                 rids = [records(ri.strip()) for ri in fp.read().split('\n')]
                 self.names = rids
 
+    _import_thread = None
     def _import_button_fired(self):
 #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
@@ -122,22 +158,21 @@ class ImportManager(IsotopeDatabaseManager):
 #                self.selected = self.names
 #            else:
 #                self.selected = [records('NM-216')]
-
+            selected = None
             if self.selected:
                 selected = [(si.name, tuple()) for si in self.selected]
 
-            selected = [
-#                          ('NM-205', ['E', ]),
-                         ('NM-205', ['E', 'F' , 'G', 'H', 'O']),
-                         ('NM-213', ['A', 'C', 'I', 'J', 'K', 'L']),
-                         ('NM-216', ['C', 'D', 'E', 'F']),
-                         ('NM-220', ['L', 'M', 'N', 'O']),
-                         ('NM-222', ['A', 'B', 'C', 'D']),
-                         ('NM-256', ['E', 'F'])
-#                         ('NM-256', ['F', ])
-                        ]
+#            selected = [
+#                        ('NM-205', ['E', ]),
+# #                        ('NM-205', ['F' ]),
+# #                        ('NM-256', ['F', ])
+#                        ]
+#            selected = MINNA_BLUFF_IRRADIATIONS
 
             if selected:
+#                if self._import_thread and self._import_thread.isRunning():
+#                    return
+
                 if self.db.connect():
                     # clear imported
                     self.imported_names = []
@@ -147,24 +182,16 @@ class ImportManager(IsotopeDatabaseManager):
                     self.info('====== Import Started  ======')
                     self.info('user name= {}'.format(self.db.save_username))
                     # get import func from importer
-                    func = getattr(self.importer, 'import_{}'.format(self.import_kind))
-                    st = time.time()
-                    for si, inc in selected:
-                        r = func(self.db, si,
-                                 include_analyses=self.include_analyses,
-                                 include_blanks=self.include_blanks,
-                                 include_airs=self.include_airs,
-                                 include_cocktails=self.include_cocktails,
-                                 dry_run=self.dry_run,
-                                 include_list=inc
-                                 )
-                        if r:
-                            self.imported_names.append(r)
-                        self.db.flush()
 
-                    if self.imported_names:
-                        self.update_irradiations_needed = True
-                    self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
+                    n = len(selected) * 2
+                    pd = self.open_progress(n=n)
+                    from src.ui.thread import Thread
+#                    self._do_import(selected, pd)
+                    t = Thread(target=self._do_import, args=(selected, pd))
+                    t.start()
+                    self._import_thread = t
+
+
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':

@@ -25,7 +25,6 @@ def manage_database(url, repo, logger=None, progress=None):
 	n = version(repo)
 	if progress:
 		progress.max = int(n)
-		print progress.max
 
 	for i in range(n + 1):
 		try:
@@ -41,6 +40,9 @@ def manage_database(url, repo, logger=None, progress=None):
 				progress.increment()
 			if logger:
 				logger.info(msg)
+
+	if logger:
+		logger.info('Upgrade complete')
 # if __name__ == '__main__':
 #
 # 	root = '/usr/local/pychron'
