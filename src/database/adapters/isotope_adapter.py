@@ -655,8 +655,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_detector_intercalibration_history(self, value):
         return self._retrieve_item(proc_DetectorIntercalibrationHistoryTable, value)
 
-    def get_experiment(self, value):
-        return self._retrieve_item(meas_ExperimentTable, value)
+    def get_experiment(self, value, key='name'):
+        return self._retrieve_item(meas_ExperimentTable, value, key)
 
 #    def get_extraction(self, value):
 #        return self._retrieve_item(meas_ExtractionTable, value, key='hash')

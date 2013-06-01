@@ -508,16 +508,14 @@ class ExperimentExecutor(Experimentable):
 
         self.info('Starting automated runs set= Set{}'.format(iexp))
 
-#        self.set_selector.selected_index = iexp - 1
-        exp._alive = True
-
         self.db.reset()
 
         # save experiment to database
         self.info('saving experiment "{}" to database'.format(exp.name))
 
-        self.db.add_experiment(exp.path)
+        dbexp = self.db.add_experiment(exp.path)
         self.db.commit()
+        exp.database_identifier = dbexp.id
 
         rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0
@@ -550,10 +548,6 @@ class ExperimentExecutor(Experimentable):
 
             runargs = None
             try:
-#                if cnt >= self.max_allowable_runs:
-#                    self.warning_dialog('Max allowable runs exceeded cnt= {} max= {}. Stopping experiment'.format(cnt, self.max_allowable_runs))
-#                    break
-
                 runspec = rgen.next()
                 if not runspec.skip:
                     runargs = self._launch_run(runspec, cnt)
@@ -581,9 +575,6 @@ class ExperimentExecutor(Experimentable):
                             self._prev_blanks = pb
 
                 self._report_execution_state(run)
-#                if run.quit:
-#                    self._alive = False
-#                    break
 
             if self.end_at_run_completion:
                 break
@@ -594,8 +585,6 @@ class ExperimentExecutor(Experimentable):
                 experiment set will restart at last successful run
             '''
             self._last_ran = None
-#            if run:
-#                run.state = 'fail'
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
 
@@ -622,11 +611,6 @@ class ExperimentExecutor(Experimentable):
 #                man.broadcast(msg)
 
     def _launch_run(self, run, cnt):
-#        if cnt > 0:
-            # clear the info display
-#            invoke_in_main_thread(self.info_display.clear)
-#        self.info_display.clear()
-
         run = self._setup_automated_run(cnt, run)
         run.pre_extraction_save()
         self.info('========== {} =========='.format(run.runid))
@@ -658,13 +642,11 @@ class ExperimentExecutor(Experimentable):
             except ValueError:
                 pass
 
-
 #    def _setup_automated_run(self, i, arun, repo, dm, runner):
     def _setup_automated_run(self, i, arv):
         '''
             convert the an AutomatedRunSpec an AutomatedRun
         '''
-
 
         # the first run was checked before delay before runs
         if i > 1:
@@ -688,7 +670,8 @@ class ExperimentExecutor(Experimentable):
         self.add_backup(arun.uuid)
 
 #        arun.index = i
-        arun.experiment_name = exp.path
+#        arun.experiment_name = exp.path
+        arun.experiment_identifier = exp.database_identifier
         arun.experiment_manager = self
         arun.spectrometer_manager = self.spectrometer_manager
         arun.extraction_line_manager = self.extraction_line_manager

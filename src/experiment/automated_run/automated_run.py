@@ -108,7 +108,8 @@ class AutomatedRun(Loggable):
 #    peak_plot_panel = Any
     arar_age = Instance(ArArAge)
 
-    experiment_name = Str
+    experiment_identifier = Int
+#    experiment_name = Str
     labnumber = Str
     step = Str
     aliquot = CInt
@@ -1257,9 +1258,12 @@ anaylsis_type={}
             pt = time.time()
 
             lab = db.get_labnumber(ln)
-            experiment = db.get_experiment(self.experiment_name)
-            if experiment is None:
-                experiment = db.add_experiment(self.experiment_name)
+
+            experiment = db.get_experiment(self.experiment_identifier, key='id')
+#            experiment = db.get_experiment(self.experiment_name)
+#            if experiment is None:
+#                experiment = db.add_experiment(self.experiment_name)
+
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
 
@@ -1277,8 +1281,11 @@ anaylsis_type={}
                                 comment=self.comment
                                 )
 
-            # added analysis to experiment
-            experiment.analyses.append(a)
+            if experiment is not None:
+                # added analysis to experiment
+                experiment.analyses.append(a)
+            else:
+                self.warning('no experiment found for {}'.format(self.experiment_identifier))
 
             # save extraction
             ext = self._save_extraction(a)
