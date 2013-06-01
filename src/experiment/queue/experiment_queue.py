@@ -15,9 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button, on_trait_change, Bool, \
-    Property, Event
-from traitsui.api import View, Item, TableEditor
+from traits.api import Any , on_trait_change, Int
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
@@ -29,7 +27,7 @@ class ExperimentQueue(BaseExperimentQueue):
     current_run = Any
     selected = Any
     dclicked = Any
-
+    database_identifier = Int
 #    refresh_button = Event
 #    refresh_label = Property(depends_on='was_executed')
 #    was_executed = Bool(False)
@@ -86,20 +84,6 @@ class ExperimentQueue(BaseExperimentQueue):
                     ai.trait_set(state=ci.state, aliqupt=ci.aliquot,
                                  step=ci.step,
                                  skip=ci.skip)
-
-#                for ai in self.automated_runs:
-#                    if ai.skip:
-#                        continue
-#                    crun = next((r for r in cached if r.labnumber == ai.labnumber), None)
-#                    if crun is not None:
-#                        ai.state = crun.state
-#                        cnt = 0
-#                        if ai.labnumber in cnts:
-#                            cnt = cnts[ai.labnumber] + 1
-#
-#                        ai.aliquot = crun.aliquot + cnt
-#                        cnts[ai.labnumber] = cnt
-#                        print 'setting ', crun.aliquot
 
                 newruns = runs[startid:]
 

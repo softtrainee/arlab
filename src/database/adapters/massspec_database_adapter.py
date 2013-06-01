@@ -168,10 +168,10 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         '''
             convert label to mass spec format
         '''
-        if isinstance(label, int):
-            pass
-        elif isinstance(label, str):
+        if isinstance(label, str):
             label = label.capitalize()
+            if label.startswith('Average'):
+                label = 'Average Y'
 
         fit = self._get_fittype(label)
         if fit is None:
@@ -209,7 +209,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if positions:
             if not isinstance(positions, list):
                 positions = [positions]
-    
+
             analysis = self.get_analysis(analysis)
             if analysis:
                 for i, pi in enumerate(positions):
