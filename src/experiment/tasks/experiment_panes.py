@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Color
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, ImageEditor
+    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES

@@ -21,6 +21,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
 from sqlalchemy.sql.expression import and_
 from sqlalchemy.orm.exc import NoResultFound
 from src.processing.analysis import Analysis
+from src.processing.tasks.analysis_edit.fits import Fit
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits, List, Instance, on_trait_change, Any, DelegatesTo
@@ -40,6 +41,36 @@ from src.processing.analysis import Analysis
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Processor(IsotopeDatabaseManager):
+
+    def auto_blank_fit(self, irradiation, level, kind):
+        if kind == 'preceeding':
+            '''
+            1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
+            2. get all analyses for the labnumbers
+            3. sort analyses by run date
+            4. calculate blank
+                1. preceeding/bracketing
+                    get max 2 predictors
+                
+                2. fit
+                    a. group analyses by run date 
+                    b. get n predictors based on group date
+            5. save blank
+            '''
+            db = self.db
+            level = db.get_irradiation_level(irradiation, level)
+
+            labnumbers = [pi.labnumber for pi in level.positions
+                            if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
+            ans = [ai
+                    for ln in labnumbers
+                        for ai in ln.analyses
+                        ]
+            pd = self.open_progress(n=len(ans))
+            for ai in ans:
+                self.preceeding_blank_correct(ai, pd=pd)
+            db.commit()
+
     def refit_isotopes(self, analysis, pd=None, fits=None, keys=None, verbose=False):
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
@@ -113,7 +144,7 @@ class Processor(IsotopeDatabaseManager):
         if pd is not None:
             pd.increment()
 
-    def _find_analyses(self, ms, post, delta, atype, step=100, maxtries=10, **kw):
+    def _find_analyses(self, ms, post, delta, atype, step=0.5, maxtries=10, **kw):
         if delta < 0:
             step = -step
 
@@ -143,6 +174,9 @@ class Processor(IsotopeDatabaseManager):
         q = q.join(gen_AnalysisTypeTable)
 
         win = datetime.timedelta(hours=delta)
+        if isinstance(post, float):
+            post = datetime.datetime.fromtimestamp(post)
+
         dt = post + win
         if delta < 0:
             a, b = dt, post
@@ -164,35 +198,54 @@ class Processor(IsotopeDatabaseManager):
         except NoResultFound:
             pass
 
-    def preceeding_blank_correct(self, analysis, keys=None):
+    def preceeding_blank_correct(self, analysis, keys=None, pd=None):
         from src.regression.interpolation_regressor import InterpolationRegressor
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
             analysis.load_isotopes()
 
+        msg = 'applying preceeding blank for {}'.format(analysis.record_id)
+        if pd is not None:
+            pd.change_message(msg)
+            pd.increment()
+
+        self.info(msg)
         ms = analysis.spectrometer
         post = analysis.timestamp
-        delta = -1
+
+        delta = -2
         atype = 'blank_{}'.format(analysis.analysis_type)
         br = self._find_analyses(ms, post, delta, atype)
 
-        br = self.make_analyses(br)
-        self.load_analyses(br)
+        br = self.make_analyses(br[-1:])
+        br[0].load_isotopes()
+#        self.load_analyses(br)
 
         if keys is None:
             keys = analysis.isotope_keys
 
+        kind = 'blanks'
+        history = self.add_history(analysis, kind)
 
+        fit = 'preceeding'
         for key in keys:
-            r_xs, r_ys, r_es = [(ai.timestamp, ai.isotopes[key].value, ai.isotopes[key].error) for ai in br
-                                                    if key in ai.isotopes]
+            predictors = [ai for ai in br if key in ai.isotopes]
+            if predictors:
+                r_xs, r_y = zip(*[(ai.timestamp, ai.isotopes[key].baseline_corrected_value()
+                                          )
+                                        for ai in predictors])
+                r_ys, r_es = zip(*[(yi.nominal_value, yi.std_dev) for yi in r_y])
+                reg = InterpolationRegressor(xs=r_xs,
+                                         ys=r_ys,
+                                         yserr=r_es,
+                                         kind=fit)
 
-            reg = InterpolationRegressor(xs=r_xs,
-                                     ys=r_ys,
-                                     yserr=r_es,
-                                     kind='preceeding')
-            print key, reg.predict(post)
-#        return reg.predict(ant)
+                fit_obj = Fit(name=key, fit=fit)
+                v, e = reg.predict(post), reg.predict_error(post)
+                analysis.set_blank(key, v[0], e[0])
+                self.apply_correction(history, analysis, fit_obj, predictors, kind)
+            else:
+                self.warning('no preceeding blank for {}'.format(analysis.record_id))
 
     def recall(self):
         pass

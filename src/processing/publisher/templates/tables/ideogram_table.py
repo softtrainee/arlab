@@ -54,7 +54,7 @@ class IdeogramTable(PDFTable):
     _sample_summary_row1 = None
     _sample_summary_row2 = None
     _footnotes = None
-
+    alternate_row_colors = True
     def make(self, analyses):
         self._footnotes = []
 
@@ -181,12 +181,18 @@ class IdeogramTable(PDFTable):
 
     def _make_analysis_row(self, analysis):
         def fmt_attr(v, key='nominal_value', n=5, scale=1, **kw):
+            if v is None:
+                return ''
+
             if isinstance(v, tuple):
                 if key == 'std_dev':
                     v = v[1]
                 else:
                     v = v[0]
+            elif isinstance(v, (float, int)):
+                pass
             else:
+
                 v = getattr(v, key)
 
             v = v / float(scale)
@@ -233,19 +239,19 @@ class IdeogramTable(PDFTable):
                  #==============================================================
                  ('blank_fit', '{}'),
                  ('Ar40_blank', value()),
-                 ('Ar40_blank', error()),
+                 ('Ar40_blank_err', error()),
 
                  ('Ar39_blank', value()),
-                 ('Ar39_blank', error()),
+                 ('Ar39_blank_err', error()),
 
                  ('Ar38_blank', value()),
-                 ('Ar38_blank', error()),
+                 ('Ar38_blank_err', error()),
 
                  ('Ar37_blank', value()),
-                 ('Ar37_blank', error()),
+                 ('Ar37_blank_err', error()),
 
                  ('Ar36_blank', value()),
-                 ('Ar36_blank', error()),
+                 ('Ar36_blank_err', error()),
                  )
         for args in attrs:
             if len(args) == 3:
@@ -416,11 +422,12 @@ class IdeogramTable(PDFTable):
         style.add('VALIGN', (0, sidx), (-1, eidx), 'MIDDLE')
         style.add('ALIGN', (0, sidx), (-1, eidx), 'CENTER')
 
-        for idx, _analysis in analysis_idxs:
-            if idx % 2 == 0:
-                style.add('BACKGROUND', (0, idx), (-1, idx),
-                          colors.lightgrey,
-                          )
+        if self.alternate_row_colors:
+            for idx, _analysis in analysis_idxs:
+                if idx % 2 == 0:
+                    style.add('BACKGROUND', (0, idx), (-1, idx),
+                              colors.lightgrey,
+                              )
 
         # set for footnot rows
         footnote_idxs = _get_idxs(FootNoteRow)

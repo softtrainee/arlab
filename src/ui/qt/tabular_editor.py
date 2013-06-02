@@ -126,12 +126,14 @@ class _myTableView(_TableView):
                     copy_func = lambda x: x.clone_traits()
 
                 if len(si):
-                    idx = si[0].row() + 1
+                    idx = si[-1].row() + 1
                 else:
                     idx = len(self._editor.value) + 1
 
-                for ci in reversed(self._copy_cache):
-                    self._editor.model.insertRow(idx, obj=copy_func(ci))
+                editor = self._editor
+                with no_update(editor.model):
+                    for ci in reversed(self._copy_cache):
+                        editor.model.insertRow(idx, obj=copy_func(ci))
         else:
             self.super_keyPressEvent(event)
 #            super(_myTableView, self).keyPressEvent(event)

@@ -7,10 +7,11 @@ det_hist_table = Table('proc_DetectorParamHistoryTable', meta,
                        Column('user', String(40)),
                        Column('create_date', DateTime),
                        Column('analysis_id', Integer),
-                       Column('detector_id', Integer)
                        )
 det_param_table = Table('proc_DetectorParamTable', meta,
                         Column('id', Integer, primary_key=True),
+                        Column('detector_id', Integer),
+                        Column('history_id', Integer),
                         Column('disc', Float),
                         Column('disc_error', Float),
                        )

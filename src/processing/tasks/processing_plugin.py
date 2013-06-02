@@ -27,7 +27,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction, RefitIsotopeEvolutionAction
+    BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -96,6 +96,10 @@ class ProcessingPlugin(BaseTaskPlugin):
                                        SchemaAddition(id='refit',
                                                       factory=RefitIsotopeEvolutionAction,
                                                       path='MenuBar/Edit'
+                                                      ),
+                                       SchemaAddition(id='sclf_table',
+                                                      factory=SCLFTableAction,
+                                                      path='MenuBar/Edit'
                                                       )
                                        ]
                               )
@@ -131,6 +135,9 @@ class ProcessingPlugin(BaseTaskPlugin):
                             ),
                 TaskFactory(id='pychron.processing.figures', factory=self._figure_task_factory,
                             name='Figures',
+                            ),
+                TaskFactory(id='pychron.processing.publisher', factory=self._publisher_task_factory,
+                            name='Publisher',
                             ),
                 ]
 
@@ -173,6 +180,9 @@ class ProcessingPlugin(BaseTaskPlugin):
         from src.processing.tasks.figures.figure_task import FigureTask
         return FigureTask(manager=self._processor_factory())
 
+    def _publisher_task_factory(self):
+        from src.processing.tasks.publisher.publisher_task import PublisherTask
+        return PublisherTask(manager=self._processor_factory())
 #    def _task_factory(self):
 # #        processor = self.application.get_service(Processor)
 #        return ProcessingTask(manager=self._processor_factory())

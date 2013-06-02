@@ -754,10 +754,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         selhist = record.selected_histories
         if selhist:
             selfithist = selhist.selected_fits
-            fits = selfithist.fits
-            return next((fi for fi in fits
-                            if fi.isotope.molecular_weight.name == name and
-                            fi.isotope.kind == kind), None)
+            if selfithist:
+                fits = selfithist.fits
+                return next((fi for fi in fits
+                                if fi.isotope.molecular_weight.name == name and
+                                fi.isotope.kind == kind), None)
 
 
 

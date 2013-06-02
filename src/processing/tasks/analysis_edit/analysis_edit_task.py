@@ -36,7 +36,9 @@ class AnalysisEditTask(EditorTask):
     plot_editor_pane = Instance(EditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
+
     def prepare_destroy(self):
+        print 'asdfasdf'
         self.unknowns_pane.dump()
 
     def create_dock_panes(self):

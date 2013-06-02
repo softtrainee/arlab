@@ -36,7 +36,6 @@ class UValue(HasTraits):
         self.use = True
 
 class BatchEditPane(TraitsDockPane):
-    disc_value = Float
     values = List
     blanks = List
     unknowns = List
