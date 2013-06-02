@@ -54,14 +54,14 @@ class ImportManager(IsotopeDatabaseManager):
     filter_str = Str(enter_set=True, auto_set=False)
     progress = Int
 
-#    include_analyses = Bool(False)
-#    include_blanks = Bool(False)
-#    include_airs = Bool(False)
-#    include_cocktails = Bool(False)
-    include_analyses = Bool(True)
-    include_blanks = Bool(True)
-    include_airs = Bool(True)
-    include_cocktails = Bool(True)
+    include_analyses = Bool(False)
+    include_blanks = Bool(False)
+    include_airs = Bool(False)
+    include_cocktails = Bool(False)
+#    include_analyses = Bool(True)
+#    include_blanks = Bool(True)
+#    include_airs = Bool(True)
+#    include_cocktails = Bool(True)
     include_list = List
     update_irradiations_needed = Event
     dry_run = Bool(True)
