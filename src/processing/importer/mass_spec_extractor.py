@@ -42,16 +42,16 @@ class MassSpecExtractor(Extractor):
     db = Instance(MassSpecDatabaseAdapter, ())
 
     def _dbconn_spec_default(self):
-        return DBConnectionSpec(database='massspecdata_minnabluff',
-                                username='root',
-                                password='Argon',
-                                host='localhost'
-                                )
-#        return DBConnectionSpec(database='massspecdata',
-#                                username='massspec',
-#                                password='DBArgon',
-#                                host='129.138.12.160'
+#        return DBConnectionSpec(database='massspecdata_minnabluff',
+#                                username='root',
+#                                password='Argon',
+#                                host='localhost'
 #                                )
+        return DBConnectionSpec(database='massspecdata',
+                                username='massspec',
+                                password='DBArgon',
+                                host='129.138.12.160'
+                                )
 
     def _connect_button_fired(self):
         self.connect()
