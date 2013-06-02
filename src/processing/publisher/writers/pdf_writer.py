@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import List
 #============= standard library imports ========================
-from reportlab.platypus.doctemplate import SimpleDocTemplate
+from reportlab.platypus.doctemplate import SimpleDocTemplate, BaseDocTemplate
 from reportlab.lib.units import inch
 # from reportlab.lib.pagesizes import cm
 #============= local library imports  ==========================
@@ -37,7 +37,7 @@ class PDFWriter(BaseWriter):
                            widths=None,
 #                           configure_table=True,
                            add_title=False, add_header=False, tablenum=1, **kw):
-        ta = IdeogramTable()
+        ta = IdeogramTable(**kw)
 #        if widths is None:
 #            info = ta.edit_traits(kind='modal')
 #            if not info.result:
@@ -69,12 +69,17 @@ class PDFWriter(BaseWriter):
     def add_sample(self):
         pass
 
-    def publish(self):
-        doc = SimpleDocTemplate(self.filename,
-                                leftMargin=0.5 * inch,
-                                rightMargin=0.5 * inch,
+    def publish(self, out=None, leftMargin=0.5, rightMargin=0.5, topMargin=0.5):
+        if out is None:
+            out = self.filename
+
+        doc = SimpleDocTemplate(out,
+                                leftMargin=leftMargin * inch,
+                                rightMargin=rightMargin * inch,
+                                topMargin=topMargin * inch,
                                 pagesize=landscape(legal)
 #                                pagesize=(20 * inch, 10 * inch)
                                 )
+
         doc.build(self._flowables)
 #============= EOF =============================================

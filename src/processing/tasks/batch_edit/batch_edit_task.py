@@ -24,7 +24,8 @@ from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 #============= local library imports  ==========================
 
 class BatchEditTask(AnalysisEditTask):
-    batch_edit_pane = Instance(BatchEditPane, ())
+    id = 'pychron.analysis_edit.batch'
+    batch_edit_pane = Instance(BatchEditPane)
     unknowns = List
     def _default_layout_default(self):
         return TaskLayout(
@@ -39,13 +40,16 @@ class BatchEditTask(AnalysisEditTask):
                                          orientation='vertical'
                                          )
                           )
+
     def create_central_pane(self):
+#        return BatchEditPane()
+        self.batch_edit_pane = BatchEditPane()
         return self.batch_edit_pane
-
-#    @on_trait_change('batch_edit_pane:blanks:[nominal_value, std_dev]')
-#    def _update_blanks(self, name, new):
-#        print name, new
-
+#
+# #    @on_trait_change('batch_edit_pane:blanks:[nominal_value, std_dev]')
+# #    def _update_blanks(self, name, new):
+# #        print name, new
+#
     @on_trait_change('unknowns_pane:items')
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
@@ -53,9 +57,12 @@ class BatchEditTask(AnalysisEditTask):
             self.manager.load_analyses(unks)
             self.batch_edit_pane.unknowns = unks
 
-    def new_batch(self):
-        pass
+    def _prompt_for_save(self):
+        return True
 
+    def new_batch(self):
+        print 'new batch'
+#
     def _save_to_db(self):
         self.debug('save to database')
         cname = 'blanks'
@@ -68,5 +75,24 @@ class BatchEditTask(AnalysisEditTask):
                     processor.apply_fixed_correction(history, bi.name,
                                                      bi.nominal_value, bi.std_dev,
                                                      cname)
+
+            funcs = {'disc.':self._add_discrimination,
+                     'ic':self._add_ic_factor
+                     }
+            for value in self.batch_edit_pane.values:
+                if value.use:
+                    func = funcs[value.name]
+                    func(ui, value.nominal_value, value.std_dev)
+
         processor.db.commit()
+
+    def _add_ic_factor(self, analysis, v, e):
+        pass
+
+    def _add_discrimination(self, analysis, v, e):
+        db = self.processor.db
+        hist = db.add_detector_parameter_history(analysis)
+        db.add_detector_parameter(hist, v, e)
+
+
 #============= EOF =============================================

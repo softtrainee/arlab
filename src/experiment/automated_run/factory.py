@@ -90,7 +90,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     # templates
     #===========================================================================
     template = String
-    templates = List#Property(depends_on='update_templates_needed')
+    templates = List  # Property(depends_on='update_templates_needed')
 #     update_templates_needed = Event
     edit_template = Event
     edit_template_label = Property(depends_on='template')
@@ -127,9 +127,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
 #     def _template_changed(self):
 #         print self, self.template
-    
+
     def load_templates(self):
-        self.templates=self._get_templates()
+        self.templates = self._get_templates()
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -259,14 +259,14 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             arvs = [self._new_run()]
         else:
             if self.position:
-                
-                #is position a int or list of ints
+
+                # is position a int or list of ints
                 if ',' in self.position:
-                    s=int(self.position.split(',')[0])
+                    s = int(self.position.split(',')[0])
                 else:
                     s = int(self.position)
                     e = int(self.endposition)
-                    
+
                 if e:
                     if e < s:
                         self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
@@ -425,6 +425,7 @@ weight, comment, skip''')
         if self.edit_mode and \
             self._selected_runs and \
                 not self.suppress_update:
+
             for si in self._selected_runs:
                 setattr(si, name, new)
             self.changed = True
@@ -497,17 +498,22 @@ post_equilibration_script:name
 
     def _aliquot_changed(self):
         if self.edit_mode:
-            if self.aliquot != self.o_aliquot and self.o_aliquot:
-                self.user_defined_aliquot = True
-            else:
-                self.user_defined_aliquot = False
+            if self.aliquot:
+                if self.aliquot != self.o_aliquot and self.o_aliquot:
+                    self.user_defined_aliquot = True
+                else:
+                    self.user_defined_aliquot = False
 
-            if self._selected_runs:
-                for i, si in enumerate(self._selected_runs):
-                    si.aliquot = int(self.aliquot) + i
-                    si.user_defined_aliquot = self.user_defined_aliquot
+                for si in self._selected_runs:
 
+                    if si.aliquot != self.aliquot:
+                        si.user_defined_aliquot = True
+                    else:
+                        si.user_defined_aliquot = self.user_defined_aliquot
 
+                    if si.user_defined_aliquot:
+                        si.aliquot = int(self.aliquot)
+#
     def _labnumber_changed(self, old, new):
         def _load_scripts(_old, _new):
             '''

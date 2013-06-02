@@ -60,6 +60,7 @@ class PDFTable(HasTraits):
     def _make(self, rows):
         ta = Table(rows)
         ta.hAlign = 'LEFT'
+        ta.vAlign = 'TOP'
         self._set_column_widths(ta)
         self._set_row_heights(ta, rows)
 

@@ -515,7 +515,7 @@ class ExperimentExecutor(Experimentable):
 
         dbexp = self.db.add_experiment(exp.path)
         self.db.commit()
-        exp.database_identifier = dbexp.id
+        exp.database_identifier = int(dbexp.id)
 
         rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0

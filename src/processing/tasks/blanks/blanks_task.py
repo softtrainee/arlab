@@ -41,32 +41,14 @@ class BlanksTask(InterpolationTask):
                                          )
                           )
     def new_blank(self):
+        self.manager.auto_blank_fit('NM-205', 'E', 'preceeding')
 
-
-        '''
-            1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
-            2. get all analyses for the labnumbers
-            3. sort analyses by run date
-            4. calculate blank
-                1. preceeding/bracketing
-                    get max 2 predictors
-                
-                2. fit
-                    a. group analyses by run date 
-                    b. get n predictors based on group date
-            5. save blank
-        '''
-        irrad = 'NM-205'
-        level = 'E'
-        db = self.manager.db
-        level = db.get_irradiation_level(irrad, level)
-        for pi in level.positions:
-            ln = pi.labnumber
-            sample = ln.sample
-            if sample.project.name in ('j', 'Minna Bluff'):
-                for ai in ln.analyses:
-                    self.manager.preceeding_blank_correct(ai)
-
+#        for pi in level.positions:
+#            ln = pi.labnumber
+#            sample = ln.sample
+#            if sample.project.name in ('j', 'Minna Bluff'):
+#                for ai in ln.analyses:
+#                    self.manager.preceeding_blank_correct(ai)
 
         return
 

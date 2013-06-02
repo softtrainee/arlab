@@ -10,19 +10,23 @@
 # class IsotopeEvolutionEditor(Editor):
 #    def create(self, parent):
 #        self.control = QWebView(parent)
-# #        self.control.setUrl(QUrl('http://www.google.com'))
-# #        self.control.setUrl(QUrl('file:///Users/ross/Sandbox/publish.pdf'))
-#        self.control.settings().setAttribute(QWebSettings.PluginsEnabled, True)
-# #        self.control.show()
+#    #        self.control.setUrl(QUrl('http://www.google.com'))
+#    #        self.control.setUrl(QUrl('file:///Users/ross/Sandbox/publish.pdf'))
+# #        self.control.settings().setAttribute(QWebSettings.PluginsEnabled, True)
+#    #        self.control.show()
 # #        url = QUrl().fromLocalFile('/Users/ross/Sandbox/publish.pdf')
+# #        print url
 # #        self.control.load(url)
 # #        self.control.load(QUrl('http://www.google.com'))
-#        html = '''<html><body>
-# <object type="application/x-pdf" data="file:///Users/ross/Sandbox/publish.pdf" width="500" height="400"></object>
-# </body>
-# </html>
-# '''
+#        html = '''<html>
+#    <body>
+#    foasdfas
+#    <embed src='file:///Users/ross/Sandbox/publish.pdf'></embed>
+#    </body>
+#    </html>
+#    '''
 #        self.control.setHtml(html)
+# # <object type="application/x-pdf" data="file:///Users/ross/Sandbox/publish.pdf" width="500" height="400"></object>
 
 #===============================================================================
 # Copyright 2013 Jake Ross

@@ -27,23 +27,24 @@ from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
-    meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
-    proc_FitTable, meas_PeakCenterTable, gen_SensitivityTable, proc_FigureTable, \
-    proc_FigureAnalysisTable, meas_PositionTable, meas_ScriptTable, \
-    proc_NotesTable, meas_MonitorTable, med_SnapshotTable
+    meas_SignalTable, meas_PeakCenterTable, meas_PositionTable, \
+    meas_ScriptTable, meas_MonitorTable
+
 
 # med_
-from src.database.orms.isotope_orm import med_ImageTable
+from src.database.orms.isotope_orm import med_ImageTable, med_SnapshotTable
 
 # proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
     proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, proc_SelectedHistoriesTable, \
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
-    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable
+    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
+    proc_DetectorParamrHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
+    proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable
 
 # irrad_
-from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, irrad_ChronologyTable, irrad_LevelTable, \
-    irrad_PositionTable
+from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
+    irrad_ChronologyTable, irrad_LevelTable, irrad_PositionTable
 
 # flux_
 from src.database.orms.isotope_orm import flux_FluxTable, flux_HistoryTable, flux_MonitorTable
@@ -51,7 +52,8 @@ from src.database.orms.isotope_orm import flux_FluxTable, flux_HistoryTable, flu
 # gen_
 from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDeviceTable, gen_ProjectTable, \
     gen_MolecularWeightTable, gen_MaterialTable, gen_MassSpectrometerTable, \
-    gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable, gen_ImportTable
+    gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable, \
+    gen_ImportTable, gen_SensitivityTable
 
 
 from src.database.core.functions import delete_one
@@ -194,6 +196,15 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_detector(self, name, **kw):
         det = gen_DetectorTable(name=name, **kw)
         return self._add_unique(det, 'detector', name)
+
+    def add_detector_parameter_history(self, analysis, **kw):
+        return self._add_history('DetectorParam', analysis, **kw)
+
+    def add_detector_parameter(self, history, **kw):
+        obj = proc_DetectorParamTable(**kw)
+        a = self._add_item(obj)
+        history.parameter = a
+        return a
 
     def add_detector_intercalibration_history(self, analysis, **kw):
         return self._add_history('DetectorIntercalibration', analysis, **kw)
@@ -602,7 +613,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
         q = sess.query(meas_AnalysisTable)
         q = q.join(gen_LabTable)
-        q = q.filter(meas_AnalysisTable.labnumber == ln)
+        q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
 
         try:
             ai = int(ai)
@@ -756,18 +767,6 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_analyses(self, **kw):
         return self._get_items(meas_AnalysisTable, globals(), **kw)
 
-#    def get_labnumbers(self, **kw):
-#        return self._get_items(gen_LabTable, globals(), **kw)
-
-#    def get_materials(self, **kw):
-#        return self._get_items(gen_MaterialTable, globals(), **kw)
-#
-#    def get_samples(self, **kw):
-#        return self._get_items(gen_SampleTable, globals(), **kw)
-#
-#    def get_users(self, **kw):
-#        return self._get_items(gen_UserTable, globals(), **kw)
-
     '''
         new style using _retrieve_items, _get_items is deprecated. 
         rewrite functionality if required
@@ -897,8 +896,6 @@ class IsotopeAdapter(DatabaseAdapter):
             q = q.filter(andclause[0])
 
         return q
-
-
 
 
 if __name__ == '__main__':

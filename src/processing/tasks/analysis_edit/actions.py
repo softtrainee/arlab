@@ -86,7 +86,7 @@ class RefitIsotopeEvolutionAction(AnalysisEditAction):
 
 class ICFactorAction(AnalysisEditAction):
     name = 'IC Factor...'
-    accelerator = 'Ctrl+t'
+    accelerator = 'Ctrl+i'
     method = 'new_ic_factor'
     task_id = 'pychron.analysis_edit.ic_factor'
 
@@ -95,5 +95,11 @@ class BatchEditAction(AnalysisEditAction):
     accelerator = 'Ctrl+Shift+e'
     method = 'new_batch'
     task_id = 'pychron.analysis_edit.batch'
+
+class SCLFTableAction(AnalysisEditAction):
+    name = 'SCLF Table...'
+    accelerator = 'Ctrl+t'
+    method = 'new_sclf_table'
+    task_id = 'pychron.processing.publisher'
 
 #============= EOF =============================================

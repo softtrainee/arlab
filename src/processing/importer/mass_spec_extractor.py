@@ -418,15 +418,20 @@ class MassSpecExtractor(Extractor):
         #=======================================================================
         # add extraction
         #=======================================================================
+
         ed = dbanalysis.HeatingItemName
         if ed not in _ed_cache:
             dest.add_extraction_device(ed)
             _ed_cache.append(ed)
 
-        dest.add_extraction(dest_an, cleanup_duration=dbanalysis.FirstStageDly + dbanalysis.SecondStageDly,
+        ext = dest.add_extraction(dest_an, cleanup_duration=dbanalysis.FirstStageDly + dbanalysis.SecondStageDly,
                             extract_duration=dbanalysis.TotDurHeating,
                             extract_value=dbanalysis.FinalSetPwr,
                             )
+
+        pos = sorted(dbanalysis.positions, key=lambda x:x.PositionOrder)
+        for pi in pos:
+            dest.add_analysis_position(ext, pi)
 
         #=======================================================================
         # add isotopes
