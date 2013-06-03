@@ -619,7 +619,6 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
             di = isotope.detector
             fit = isotope.fit
-            print fit, 'ffff'
             fo = isotope.filter_outliers
             ite = isotope.filter_outlier_iterations
             sd = isotope.filter_outlier_std_devs
