@@ -76,12 +76,12 @@ class SeriesTask(AnalysisEditTask):
         editor = SeriesEditor(name='Series {:03n}'.format(self.series_editor_count),
                               processor=self.manager
                               )
-        selector = self.manager.db.selector
+#        selector = self.manager.db.selector
 
-        selector.queries[0].criterion = 'NM-205'
-        selector._search_fired()
-        selector = self.manager.db.selector
-        self.unknowns_pane.items = selector.records[:10]
+#        selector.queries[0].criterion = 'NM-205'
+#        selector._search_fired()
+#        selector = self.manager.db.selector
+#        self.unknowns_pane.items = selector.records[:10]
         editor.unknowns = self.unknowns_pane.items
         self._open_editor(editor)
         self.series_editor_count += 1

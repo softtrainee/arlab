@@ -70,7 +70,7 @@ class MassSpecExtractor(Extractor):
                            include_airs=False,
                            include_cocktails=False,
                            include_list=None,
-                           dry_run=True,):
+                           dry_run=True):
         self.connect()
         p, c = unique_path(paths.data_dir, 'import')
         self.import_err_file = open(p, 'w')
@@ -92,14 +92,19 @@ class MassSpecExtractor(Extractor):
             skipped = False
 
         dest.flush()
-        # add all the levels and positions for this irradiation
-        self._add_levels(dest, dbirrad, name,
-                         include_analyses,
-                         include_blanks,
-                         include_airs,
-                         include_cocktails,
-                         include_list,
-                         )
+        
+        if dbirrad:
+            # add all the levels and positions for this irradiation
+            self._add_levels(dest, dbirrad, name,
+                             include_analyses,
+                             include_blanks,
+                             include_airs,
+                             include_cocktails,
+                             include_list,
+                             )
+        else:
+            self.warning('no irradiation found or created for {}. not adding levels'.format(name))
+        self.debug('irradiation import dry_run={}'.format(dry_run))
         if not dry_run:
             dest.commit()
 
@@ -117,11 +122,13 @@ class MassSpecExtractor(Extractor):
             if include_analyses is True add all analyses
         '''
         levels = self.db.get_levels_by_irradname(name)
-        if include_list is None:
+        print levels
+        if not include_list:
             include_list = [li.Level for li in levels]
 
         for mli in levels:
             if mli.Level not in include_list:
+                print ' continue'
                 continue
 
             # is level already in dest
@@ -131,9 +138,11 @@ class MassSpecExtractor(Extractor):
 
             # add all irradiation positions for this level
             positions = self.db.get_irradiation_positions(name, mli.Level)
+            print positions, name, mli.Level
             for ip in positions:
                 # is labnumber already in dest
                 ln = dest.get_labnumber(ip.IrradPosition)
+                self.debug(ln)
                 if not ln:
                     ln = dest.add_labnumber(ip.IrradPosition)
                     dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)

@@ -98,7 +98,7 @@ class ImportManager(IsotopeDatabaseManager):
             self.update_irradiations_needed = True
 
         self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
-        self.db.close()
+#        self.db.close()
 
     @cached_property
     def _get_readable_names(self):
