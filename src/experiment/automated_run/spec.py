@@ -33,7 +33,7 @@ class AutomatedRunSpec(Loggable):
     state = Enum('not run', 'extraction',
                  'measurement', 'success', 'failed', 'truncated', 'canceled')
     skip = Bool(False)
-
+    end_after = Bool(False)
     #===========================================================================
     # queue globals
     #===========================================================================
@@ -205,7 +205,7 @@ class AutomatedRunSpec(Loggable):
                    'pattern',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
-                   'sample', 'irradiation', 'username', 'comment'
+                   'sample', 'irradiation', 'username', 'comment', 'skip', 'end_after'
                    )
 
 #===============================================================================

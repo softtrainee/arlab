@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float, DelegatesTo
+from traits.api import Any, Float, DelegatesTo, Int
 from traitsui.api import View, Item, EnumEditor, Group
 #============= standard library imports ========================
 from numpy import linspace, exp
@@ -46,6 +46,7 @@ class MagnetScan(SpectrometerTask):
     start_mass = Float(36)
     stop_mass = Float(40)
     step_mass = Float(1)
+    period = Int(900)
 #    title = 'Magnet Scan'
 #    def _scan_dac(self, values, det, delay=850):
 #
@@ -98,38 +99,48 @@ class MagnetScan(SpectrometerTask):
 #
 #        return intensities
 
-    def _scan_dac(self, values, det, delay=850):
+    def _scan_dac(self, values, det, period=850, start_delay=3):
+        '''
+            period: ms between steps
+            start_delay: wait start_delay s after first step before first measurement.
+            
+            
+        '''
 
         spec = self.spectrometer
 
         mag = spec.magnet
-        mag.settling_time = 0.5
+        mag.settling_time = 0.25
         if globalv.experiment_debug:
-            delay = 1
-            mag.settling_time = 0.5
+            period = 1
+#            mag.settling_time = 0.5
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
+
         do = values[0]
-        intensities = self._magnet_step_hook(do,
-                                             delay=3,
+        mag.set_dac(do, verbose=False)
+        intensities = self._magnet_step_hook(
+#                                             do,
+#                                             period=start_delay,
                                              detector=det,
                                              peak_generator=peak_generator)
         self._graph_hook(do, intensities)
         rintensities = [intensities]
 
-        delay = delay / 1000.
+        period = period / 1000.
         for di in values[1:]:
             if not self.isAlive():
                 break
 
             mag.set_dac(di, verbose=False)
-            intensities = self._magnet_step_hook(di, det, delay=delay,
+            if period:
+                time.sleep(period)
+            intensities = self._magnet_step_hook(detector=det,
                                                  peak_generator=peak_generator)
             self._graph_hook(di, intensities, update_y_limits=True)
 
             rintensities.append(intensities)
 
-#            time.sleep(delay / 1000.)
 
         return rintensities
 
@@ -143,13 +154,11 @@ class MagnetScan(SpectrometerTask):
                             **kw
                             )
 
-    def _magnet_step_hook(self, di, detector=None, peak_generator=None, delay=None):
-
-
+    def _magnet_step_hook(self, detector=None, peak_generator=None):
         spec = self.spectrometer
-        spec.magnet.set_dac(di, verbose=False)
-        if delay:
-            time.sleep(delay)
+#        spec.magnet.set_dac(di, verbose=False)
+#        if delay:
+#            time.sleep(delay)
         intensity = spec.get_intensity(detector)
 
 #            debug
@@ -162,13 +171,14 @@ class MagnetScan(SpectrometerTask):
         sm = self.start_mass
         em = self.stop_mass
         stm = self.step_mass
+        sp = self.period
         if abs(sm - em) > stm:
     #        ds = mag.calculate_dac(sm)
-            self._do_scan(sm, em, stm)
+            self._do_scan(sm, em, stm, period=sp)
             self._alive = False
             self._post_execute()
 
-    def _do_scan(self, sm, em, stm, directions=None, map_mass=True):
+    def _do_scan(self, sm, em, stm, directions=None, map_mass=True, period=850):
         # default to forward scan
         if directions is None:
             directions = [1]
@@ -211,8 +221,8 @@ class MagnetScan(SpectrometerTask):
             if di == -1:
                 sm, em = em, sm
             values = self._calc_step_values(sm, em, stm)
-            
-            if not self._scan_dac(values, self.reference_detector):
+
+            if not self._scan_dac(values, self.reference_detector, period=period):
                 return
 
         return True
@@ -223,6 +233,12 @@ class MagnetScan(SpectrometerTask):
     def _reference_detector_default(self):
         return self.detectors[0]
 
+    def edit_view(self):
+        v = self.traits_view()
+        v.title = self.title
+        v.buttons = ['OK', 'Cancel']
+        return v
+
     def traits_view(self):
         v = View(
                  Group(
@@ -230,6 +246,7 @@ class MagnetScan(SpectrometerTask):
                        Item('start_mass', label='Start'),
                        Item('stop_mass', label='Stop'),
                        Item('step_mass', label='Step'),
+                       Item('period', label='Scan Period (ms)'),
                        label='Magnet Scan',
                        show_border=True
                        )

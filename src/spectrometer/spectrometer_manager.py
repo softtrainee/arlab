@@ -98,7 +98,8 @@ class SpectrometerManager(Manager):
 
     def coincidence_scan_task_factory(self):
         obj = self._factory(CoincidenceScan)
-        info = obj.edit_traits(kind='livemodal')
+        info = obj.edit_traits(view='edit_view',
+                               kind='livemodal')
         if info.result:
             self.open_view(obj.graph)
             obj.execute()

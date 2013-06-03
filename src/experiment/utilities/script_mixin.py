@@ -129,11 +129,14 @@ class ScriptMixin(HasTraits):
 
             sc = self._remove_file_extension(sc)
             if key.lower() in ('u', 'bu') and self.extract_device != NULL_STR:
-                e = self.extract_device.split(' ')[1].lower()
-                if sk == 'extraction':
-                    sc = e
-                elif sk == 'post_equilibration':
-                    sc = 'pump_{}'.format(e)
+                sc = NULL_STR
+                if self.extract_device:
+                    e = self.extract_device.split(' ')[1].lower()
+                    if sk == 'extraction':
+                        sc = e
+                    elif sk == 'post_equilibration':
+                        sc = 'pump_{}'.format(e)
+
             elif key == 'dg':
                 e = self.extract_device.split(' ')[1].lower()
                 sc = '{}_{}'.format(e, sc)

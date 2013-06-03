@@ -80,38 +80,39 @@ class BaseExperimentQueue(Loggable):
             runviews: list of runs
             freq: optional inter
         '''
-        aruns = self.automated_runs
-#        self._suppress_aliquot_update = True
-        if freq:
-            cnt = 0
-            n = len(aruns)
-            for i, ai in enumerate(aruns[::-1]):
-                if cnt == freq:
-                    run = runviews[0].clone_traits()
-                    run.frequency_added = True
-                    aruns.insert(n - i, run)
-                    cnt = 0
-                if ai.analysis_type == 'unknown':
-                    cnt += 1
+        with no_update(self):
+            aruns = self.automated_runs
+    #        self._suppress_aliquot_update = True
+            if freq:
+                cnt = 0
+                n = len(aruns)
+                for i, ai in enumerate(aruns[::-1]):
+                    if cnt == freq:
+                        run = runviews[0].clone_traits()
+                        run.frequency_added = True
+                        aruns.insert(n - i, run)
+                        cnt = 0
+                    if ai.analysis_type == 'unknown':
+                        cnt += 1
 
-#            inserts = [(i, ) for i, ai in enumerate(aruns)
-#                       if ai.analysis_type == 'unknown' and ]
-#            print inserts
-#            for idx, run in reversed(inserts):
-#                run = runviews[0].clone_traits()
-#                aruns.insert(idx, run)
+    #            inserts = [(i, ) for i, ai in enumerate(aruns)
+    #                       if ai.analysis_type == 'unknown' and ]
+    #            print inserts
+    #            for idx, run in reversed(inserts):
+    #                run = runviews[0].clone_traits()
+    #                aruns.insert(idx, run)
 
-#            self.update_needed = True
-        else:
-            if self.selected:
-                idx = aruns.index(self.selected[-1])
-                for ri in reversed(runviews):
-                    aruns.insert(idx, ri)
+    #            self.update_needed = True
             else:
-                aruns.extend(runviews)
-#            self._suppress_aliquot_update = False
+                if self.selected:
+                    idx = aruns.index(self.selected[-1])
+                    for ri in reversed(runviews):
+                        aruns.insert(idx, ri)
+                else:
+                    aruns.extend(runviews)
+    #            self._suppress_aliquot_update = False
 
-        self.update_needed = True
+#        self.update_needed = True
 
     def set_extract_device(self, ed):
         self.extract_device = ed

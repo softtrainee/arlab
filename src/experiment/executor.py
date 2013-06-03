@@ -656,6 +656,9 @@ class ExperimentExecutor(Experimentable):
 
             self._check_run_aliquot(arv)
 
+        if arv.end_after:
+            self.end_at_run_completion = True
+
         arun = arv.make_run()
 
         exp = self.experiment_queue

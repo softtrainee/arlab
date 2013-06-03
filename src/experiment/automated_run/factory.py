@@ -63,6 +63,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     levels = Property(depends_on='selected_irradiation, db')
 
     skip = Bool(False)
+    end_after = Bool(False)
     weight = Float
     comment = Str
 
@@ -105,7 +106,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     sample = Str
     irradiation = Str
 
-
+    info_label = Property(depends_on='labnumber')
     #===========================================================================
     # private
     #===========================================================================
@@ -130,6 +131,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     def load_templates(self):
         self.templates = self._get_templates()
+
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -309,10 +311,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     def _make_irrad_level(self, ln):
         il = ''
         ipos = ln.irradiation_position
-        if not ipos is None:
+        if ipos is not None:
             level = ipos.level
             irrad = level.irradiation
-            il = '{}{}'.format(irrad.name, level.name)
+            il = '{}{} {}'.format(irrad.name, level.name, ipos.position)
         return il
 
     def _new_run(self, excludes=None, **kw):
@@ -420,7 +422,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 extract_units,
 pattern,
 position,
-weight, comment, skip''')
+weight, comment, skip, end_after''')
     def _edit_handler(self, name, new):
         if self.edit_mode and \
             self._selected_runs and \
@@ -598,8 +600,9 @@ post_equilibration_script:name
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _template_closed(self):
+        self.templates = self.load_templates()
         self.template = os.path.splitext(self._template.name)[0]
-#         self.update_templates_needed = True
+#        self.update_templates_needed = True
         del self._template
 
     def _edit_template_fired(self):
@@ -680,6 +683,9 @@ post_equilibration_script:name
 
     def _set_position(self, pos):
         self._position = pos
+
+    def _get_info_label(self):
+        return '{} {} {}'.format(self.labnumber, self.irradiation, self.sample)
 
     def _validate_position(self, pos):
         if not pos.strip():

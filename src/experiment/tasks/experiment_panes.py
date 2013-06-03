@@ -25,7 +25,7 @@ from src.experiment.utilities.identifier import SPECIAL_NAMES
 # from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR, CANCELED_COLOR, \
-    TRUNCATED_COLOR, FAILED_COLOR
+    TRUNCATED_COLOR, FAILED_COLOR, END_AFTER_COLOR
 from src.ui.custom_label_editor import CustomLabel
 from src.paths import paths
 #============= standard library imports ========================
@@ -82,7 +82,10 @@ class ExperimentFactoryPane(TraitsDockPane):
                                         color='red',
                                         width=40
                                         ),
+                            CustomLabel(make_rf_name('info_label'),
+                                        ),
                             spring,
+                            RFItem('end_after', width=30),
                             RFItem('skip')
                             ),
 
@@ -143,12 +146,13 @@ class ExperimentFactoryPane(TraitsDockPane):
                            RFItem('irradiation',
                                       tooltip='Irradiation info retreived from Database',
                                       style='readonly',
-                                      width=70,
+                                      width=90,
                                       ),
                            RFItem('sample',
                                     tooltip='Sample info retreived from Database',
                                     style='readonly',
                                     width=100,
+                                    show_label=False
                                     ),
                           spring
                           ),
@@ -314,6 +318,7 @@ class ExplanationPane(TraitsDockPane):
     truncated = Color(TRUNCATED_COLOR)
     failed = Color(FAILED_COLOR)
     not_executable = Color(NOT_EXECUTABLE_COLOR)
+    end_after = Color(END_AFTER_COLOR)
 
     def traits_view(self):
         v = View(
@@ -348,6 +353,10 @@ class ExplanationPane(TraitsDockPane):
                           ),
                    HGroup(Label('Not Executable'), spring,
                           UItem('not_executable',
+                                style='readonly')
+                          ),
+                   HGroup(Label('End After'), spring,
+                          UItem('end_after',
                                 style='readonly')
                           ),
                       )

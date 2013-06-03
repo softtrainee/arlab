@@ -25,7 +25,8 @@ from envisage.ui.tasks.task_factory import TaskFactory
 from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
-from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction
+from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction, \
+    CoincidenceScanAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -45,15 +46,20 @@ class SpectrometerPlugin(BaseTaskPlugin):
                           factory=self._factory_ion_optics)
 
         return [so, so1, so2]
-    
+
     def _my_task_extensions_default(self):
         return [
-                TaskExtension(actions=[SchemaAddition(id='peak_center',
+                TaskExtension(actions=[
+                                       SchemaAddition(id='peak_center',
                                                       factory=PeakCenterAction,
-                                                      path='MenuBar/Measure')
+                                                      path='MenuBar/Measure'),
+                                       SchemaAddition(id='coincidence',
+                                                      factory=CoincidenceScanAction,
+                                                      path='MenuBar/Measure'),
+
                                        ])
                 ]
-    
+
     def get_spectrometer(self):
         spec = self.application.get_service('src.spectrometer.spectrometer_manager.SpectrometerManager')
         return spec.spectrometer

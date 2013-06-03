@@ -1072,16 +1072,18 @@ anaylsis_type={}
         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
-        for i in xrange(1, ncounts + 1, 1):
-            ck = self._check_iteration(i, ncounts, check_conditions)
+        iter_cnt = 0
+        while 1:
+#        for iter_cnt in xrange(1, ncounts + 1, 1):
+            ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
             if ck == 'break':
                 break
             elif ck == 'cancel':
                 return False
 
-            if i % 50 == 0:
-                self.info('collecting point {}'.format(i))
-
+            if iter_cnt % 50 == 0:
+                self.info('collecting point {}'.format(iter_cnt))
+            iter_cnt += 1
             _debug = globalv.automated_run_debug
             m = self.integration_time * 0.99 if not _debug else 0.1
             time.sleep(m)
@@ -1098,7 +1100,7 @@ anaylsis_type={}
             if starttime is None:
                 starttime = time.time()
 
-            x = time.time() - starttime  # if not self._debug else i + starttime
+            x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
 
             self.signals = dict(zip(keys, signals))
 
@@ -1136,21 +1138,26 @@ anaylsis_type={}
                 return ti
 
     def _check_iteration(self, i, ncounts, check_conditions):
+
         if self.plot_panel is None:
             return 'break'
 
-        n = i - 1
+        # exit the while loop if counts greater than max of original counts and the plot_panel counts
+        maxcounts = max(ncounts, self.plot_panel.ncounts)
+        if i > maxcounts:
+            return 'break'
+
         if check_conditions:
             termination_condition = self._check_conditions(self.termination_conditions, i)
             if termination_condition:
-                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, n, ncounts),
+                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, i, ncounts),
                           color='red'
                           )
                 return 'cancel'
 
             truncation_condition = self._check_conditions(self.truncation_conditions, i)
             if truncation_condition:
-                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, n, ncounts),
+                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, i, ncounts),
                           color='red'
                           )
                 self.state = 'truncated'
@@ -1159,7 +1166,7 @@ anaylsis_type={}
 
             action_condition = self._check_conditions(self.action_conditions, i)
             if action_condition:
-                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, n, ncounts),
+                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, i, ncounts),
                           color='red'
                           )
                 action_condition.perform(self.measurement_script)
@@ -1975,20 +1982,20 @@ anaylsis_type={}
 #        spec = self.spectrometer_manager.spectrometer
 #
 #        graph = self.peak_plot_panel.graph
-#        for i, iso in enumerate(isotopes):
+#        for iter_cnt, iso in enumerate(isotopes):
 #            if add_plot:
 #                graph.new_plot(xtitle='Time (s)',
 #                           ytitle='{}'.format(iso))
 #
-#                graph.set_x_limits(0, 400, plotid=i)
-#                pi = graph.plots[i]
+#                graph.set_x_limits(0, 400, plotid=iter_cnt)
+#                pi = graph.plots[iter_cnt]
 #                pi.value_range.margin = 0.5
 #                pi.value_range.tight_bounds = False
 #
 #            graph.new_series(type='scatter',
 #                             marker='circle',
 #                             marker_size=1.25,
-#                             plotid=i)
+#                             plotid=iter_cnt)
 #
 #        kw = dict(series=p.series_cnt, do_after=1)
 #
@@ -2183,8 +2190,8 @@ anaylsis_type={}
 #                signals = [10, 1000, 8, 8, 8, 3]
 #            elif series == 1:
 #                r = random.randint(0, 10)
-#                signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
-#                           0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
+#                signals = [0.1, (0.015 * (iter_cnt - 2800 + r)) ** 2,
+#                           0.1, 1, 0.1, (0.001 * (iter_cnt - 2000 + r)) ** 2
 #                           ]
 #            else:
 #                signals = [1, 2, 3, 4, 5, 6]
@@ -2197,9 +2204,9 @@ anaylsis_type={}
 #        reg.fit=fi
 # #        reg.predict()
 #
-#        i=reg.coefficients[-1]
+#        iter_cnt=reg.coefficients[-1]
 #        ie=reg.coefficient_errors[-1]
-#        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,i,ie))
+#        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,iter_cnt,ie))
 #
 #        mi,ma=g.get_x_limits()
 #        fx=linspace(mi,ma,200)

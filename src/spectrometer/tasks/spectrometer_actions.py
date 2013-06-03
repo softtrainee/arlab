@@ -68,6 +68,15 @@ class PeakCenterAction(Action):
         man.do_peak_center(confirm_save=True, warn=True)
 #        man.open_peak_center()
 
+class CoincidenceScanAction(Action):
+    name = 'Coincidence...'
+    def perform(self, event):
+        man = get_manager(event, SPECTROMETER_PROTOCOL)
+#        man.do_coincidence()
+        man.coincidence_scan_task_factory()
+
+#        open_manager(event.window.application, obj)
+
 class RelativePositionsAction(Action):
     def perform(self, event):
         man = get_manager(event, SPECTROMETER_PROTOCOL)
@@ -75,13 +84,7 @@ class RelativePositionsAction(Action):
 #        open_manager(event.window.application, obj)
 
 
-class CoincidenceScanAction(Action):
-    def perform(self, event):
-        man = get_manager(event, SPECTROMETER_PROTOCOL)
 
-        man.coincidence_scan_task_factory()
-
-#        open_manager(event.window.application, obj)
 
 
 

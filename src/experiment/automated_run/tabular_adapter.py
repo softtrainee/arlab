@@ -20,7 +20,7 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
     SKIP_COLOR, NOT_EXECUTABLE_COLOR, CANCELED_COLOR, TRUNCATED_COLOR, \
-    FAILED_COLOR
+    FAILED_COLOR, END_AFTER_COLOR
 # from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
 # def get_name(func):
@@ -89,7 +89,10 @@ class AutomatedRunSpecAdapter(TabularAdapter):
             color = TRUNCATED_COLOR  # '#FF7EDF'  # magenta
         elif item.state == 'failed':
             color = FAILED_COLOR  # '#FF7EDF'  # magenta
+        elif item.end_after:
+            color = END_AFTER_COLOR
         else:
+
             if row % 2 == 0:
                 color = 'white'
             else:
