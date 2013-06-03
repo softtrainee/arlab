@@ -61,7 +61,7 @@ class BatchEditTask(AnalysisEditTask):
         return True
 
     def new_batch(self):
-        print 'new batch'
+        pass
 #
     def _save_to_db(self):
         self.debug('save to database')
@@ -84,15 +84,13 @@ class BatchEditTask(AnalysisEditTask):
                     func = funcs[value.name]
                     func(ui, value.nominal_value, value.std_dev)
 
-        processor.db.commit()
-
     def _add_ic_factor(self, analysis, v, e):
         pass
 
     def _add_discrimination(self, analysis, v, e):
-        db = self.processor.db
-        hist = db.add_detector_parameter_history(analysis)
-        db.add_detector_parameter(hist, v, e)
+        db = self.manager.db
+        hist = db.add_detector_parameter_history(analysis.dbrecord)
+        db.add_detector_parameter(hist, disc=v, disc_error=e)
 
 
 #============= EOF =============================================

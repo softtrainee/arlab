@@ -25,6 +25,7 @@ class BaseIrradiatedPosition(HasTraits):
     material = Str
     sample = Str
     hole = Int
+    alt_hole = Int
     project = Str
     j = Float(0)
     j_err = Float(0)
@@ -69,6 +70,7 @@ class IrradiatedPosition(BaseIrradiatedPosition):
 class BaseIrradiatedPositionAdapter(TabularAdapter):
     columns = [
                ('Hole', 'hole'),
+               ('Alt. Hole', 'alt_hole'),
                ('Labnumber', 'labnumber'),
                ('Sample', 'sample'),
                ('Project', 'project'),

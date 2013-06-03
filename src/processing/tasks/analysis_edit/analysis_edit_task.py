@@ -86,10 +86,12 @@ class AnalysisEditTask(EditorTask):
         task = self._open_external_task(_id)
         task.recall([recview])
 
-    def _save_to_db(self):
+    def _save_to_db(self, dry_run):
         if self.active_editor:
             if hasattr(self.active_editor, 'save'):
                 self.active_editor.save()
+                if not dry_run:
+                    self.manager.db.commit()
 
     def _set_previous_selection(self, pane, new):
         if new:
@@ -140,6 +142,11 @@ manager:db:selector:dclicked
     @on_trait_change('controls_pane:save_button')
     def _save_fired(self):
         self._save_to_db()
+        if not self.controls_pane.dry_run:
+            self.manager.db.commit()
+            self.info('committing changes')
+        else:
+            self.info('dry run- not committing changes')
 
     @on_trait_change('unknowns_pane:previous_selection')
     def _update_up_previous_selection(self, obj, name, old, new):

@@ -59,8 +59,6 @@ class BlanksEditor(InterpolationEditor):
                     self.debug('saving {} {}'.format(ui.record_id, si.name))
                     self.processor.apply_correction(history, ui, si, self._references, cname)
 
-        self.processor.db.commit()
-
     @on_trait_change('graph:regression_results')
     def _update_regression(self, new):
         gen = self._graph_generator()

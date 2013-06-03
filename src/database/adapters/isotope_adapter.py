@@ -39,7 +39,7 @@ from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTa
     proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, proc_SelectedHistoriesTable, \
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
     proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
-    proc_DetectorParamrHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
+    proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable
 
 # irrad_
