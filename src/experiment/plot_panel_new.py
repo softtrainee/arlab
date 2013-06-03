@@ -197,7 +197,7 @@ class PlotPanel(Viewable):
                         ('J', arar_age.j),
                         ('K/Ca', arar_age.kca),
                         ('K/Cl', arar_age.kcl),
-                        ('*40Ar %', arar_age.rad40),
+                        ('*40Ar %', arar_age.rad40_percent),
                         ('IC', arar_age.ic_factor)
                         ]
                      ]
