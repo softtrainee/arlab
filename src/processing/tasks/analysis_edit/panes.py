@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, List, Instance, Property, Any, Event
+from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool
 from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
@@ -145,6 +145,7 @@ class ReferencesPane(HistoryTablePane):
 
 
 class ControlsPane(TraitsDockPane):
+    dry_run = Bool(True)
     save_button = Button('Save')
     tool = Instance(IAnalysisEditTool)
     id = 'pychron.analysis_edit.controls'
@@ -153,7 +154,7 @@ class ControlsPane(TraitsDockPane):
         v = View(
                  VGroup(
                         UItem('tool', style='custom'),
-                        HGroup(spring, UItem('save_button'))
+                        HGroup(spring, UItem('save_button'), Item('dry_run'))
                         )
                  )
         return v

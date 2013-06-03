@@ -145,6 +145,7 @@ class MassSpecExtractor(Extractor):
 
                 sample = self._add_sample_project(dest, ip)
                 ln.sample = sample
+                ln.note = ip.Note
 
                 if include_analyses:
                     self.info('============ Adding Analyses ============')
@@ -157,7 +158,6 @@ class MassSpecExtractor(Extractor):
                             self._add_associated_airs(dest, ai)
                         if include_cocktails:
                             self._add_associated_cocktails(dest, ai)
-
 
                 dest.flush()
 

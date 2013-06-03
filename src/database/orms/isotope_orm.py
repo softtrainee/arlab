@@ -162,12 +162,13 @@ class proc_DetectorIntercalibrationTable(Base, BaseMixin):
                         backref='detector_intercalibration',
                         )
 
-class proc_DetectorParamrHistoryTable(Base, HistoryMixin):
+class proc_DetectorParamHistoryTable(Base, HistoryMixin):
     pass
 
 class proc_DetectorParamTable(Base, BaseMixin):
     history_id = foreignkey('proc_DetectorParamHistoryTable')
-    detector_id = foreignkey('gen_DetectorTable')
+    disc = Column(Float)
+    disc_error = Column(Float)
 
 class proc_FigureTable(Base, NameMixin):
     create_date = Column(DateTime, default=func.now())
@@ -282,6 +283,9 @@ class meas_AnalysisTable(Base, BaseMixin):
     detector_intercalibration_histories = relationship('proc_DetectorIntercalibrationHistoryTable',
                                                        backref='analysis')
     detector_intercalibration_sets = relationship('proc_DetectorIntercalibrationSetTable',
+                                                   backref='analysis')
+
+    detector_param_histories = relationship('proc_DetectorParamHistoryTable',
                                                    backref='analysis')
 
     fit_histories = relationship('proc_FitHistoryTable', backref='analysis')

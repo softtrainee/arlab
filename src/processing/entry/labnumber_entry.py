@@ -124,27 +124,35 @@ class LabnumberEntry(IsotopeDatabaseManager):
         s.j_err = self.auto_j_err
 
     def _load_holder_positions(self, holder):
+        self.irradiated_positions = []
         import struct
         geom = holder.geometry
         if geom:
             geom = [struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)]
-            pr = True  # true is positive
             offset = 0
             i = 1
             c = 0
+            pr = 1
             for x, y in geom:
                 '''
                     assume points listed in clockwise order
                     
                     increment hole_offset when passed 12 oclock
+                    
+                    
                 '''
                 r = math.atan2(x, y)
                 if pr < 0 and r >= 0:
                     offset = 100 * i
                     i += 1
                     c = 0
+                pr = r
 
-                self.irradiated_positions.append(IrradiatedPosition(hole=c + offset))
+                self.irradiated_positions.append(IrradiatedPosition(
+                                                                    hole=c,
+                                                                    alt_hole=c + offset,
+                                                                    x=x, y=y
+                                                                    ))
                 c += 1
 
         elif holder.name:
