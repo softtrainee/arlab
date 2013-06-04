@@ -56,7 +56,8 @@ class RunParser(Loggable):
                 try:
                     script_info[rattr] = args[idx]
                 except IndexError, e:
-                    self.debug('base schedule _run_parser {} {}'.format(e, attr))
+                    pass
+#                    self.debug('base schedule _run_parser {} {}'.format(e, attr))
 
         return script_info
 
@@ -146,7 +147,8 @@ class RunParser(Loggable):
                     param = args[idx]
                     params[rattr] = float(param.strip())
                 except IndexError, e:
-                    self.debug('{} {}'.format(e, attr))
+                    pass
+#                    self.debug('{} {}'.format(e, attr))
                 except ValueError, e:
                     pass
 #                     self.debug('{} {} {}'.format(e, attr, param))
