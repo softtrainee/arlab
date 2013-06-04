@@ -125,8 +125,8 @@ class Experimentor(Experimentable):
         ans = self._get_all_automated_runs()
 
         exclude = ('dg', 'pa')
+#        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))
         self._modify_aliquots_steps(ans, exclude=exclude)
-        self._update_run_info(ans, exclude=exclude)
 
         self.debug('info updated')
 
@@ -141,12 +141,32 @@ class Experimentor(Experimentable):
 
         return dbln
 
-    def _update_run_info(self, ans, exclude=None):
-        self.debug('update run info')
+    def _group_analyses(self, ans, exclude=None):
+        if exclude is None:
+            exclude = tuple()
+        key = lambda x: x.labnumber
 
-        for ln, aruns in self._group_analyses(ans, exclude=exclude):
-            dbln = self._get_labnumber(ln)
-            if dbln:
+        ans = sorted(ans, key=key)
+        return ((ln, group) for ln, group in groupby(ans, key) if ln not in exclude)
+
+    def _modify_aliquots_steps(self, ans, exclude=None):
+        '''
+        '''
+        LAlphas = list(ALPHAS)
+        groups = self._group_analyses(ans, exclude=exclude)
+        db = self.db
+        for ln, analyses in groups:
+            oln = ln
+            if '-' in ln:
+                ln = ln.split('-')[0]
+            special = ln in ANALYSIS_MAPPING
+
+            analysis = db.get_last_analysis(convert_identifier(oln))
+            if analysis:
+                dbln = analysis.labnumber
+                aliquot_start = analysis.aliquot
+                st = analysis.step
+                step_start = LAlphas.index(st)
 
                 sample = dbln.sample
                 if sample:
@@ -157,54 +177,17 @@ class Experimentor(Experimentable):
                     level = irradiationpos.level
                     irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
 
-                for ai in aruns:
-                    ai.trait_set(sample=sample or '',
-                                 irradiation=irradiationpos or ''
-                                 )
-
-    def _group_analyses(self, ans, exclude=None):
-        if exclude is None:
-            exclude = tuple()
-        key = lambda x: x.labnumber
-
-        ans = sorted(ans, key=key)
-        return ((ln, group) for ln, group in groupby(ans, key) if ln not in exclude)
-
-    def _modify_aliquots_steps(self, ans, exclude=None):
-
-        '''
-            sort the ans by labnumber
-        '''
-        LAlphas = list(ALPHAS)
-        groups = self._group_analyses(ans)
-        db = self.db
-        for ln, analyses in groups:
-            if ln in exclude:
-                continue
-
-            oln = ln
-            if '-' in ln:
-                ln = ln.split('-')[0]
-            special = ln in ANALYSIS_MAPPING
-
-            dbln = self._get_labnumber(oln)
-            if dbln is None:
-                continue
             else:
-                analysis = db.get_last_analysis(dbln)
-                if analysis:
-                    aliquot_start = analysis.aliquot
-                    st = analysis.step
-                    step_start = LAlphas.index(st)
-                else:
-                    aliquot_start = 0
-                    step_start = 0
+                aliquot_start = 0
+                step_start = 0
 
             ganalyses = groupby(analyses, key=lambda x: x.extract_group)
             for egroup, aruns in ganalyses:
                 aliquot_cnt = 1
                 step_cnt = 1
                 for arun in aruns:
+                    arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
+
                     if arun.skip:
                         arun.aliquot = 0
                         continue
@@ -355,6 +338,27 @@ class Experimentor(Experimentable):
         return e
 
 #============= EOF =============================================
+#    def _update_run_info(self, ans, exclude=None):
+#        self.debug('update run info')
+#
+#        for ln, aruns in self._group_analyses(ans, exclude=exclude):
+#            dbln = self._get_labnumber(ln)
+#            if dbln:
+#
+#                sample = dbln.sample
+#                if sample:
+#                    sample = sample.name
+#
+#                irradiationpos = dbln.irradiation_position
+#                if irradiationpos:
+#                    level = irradiationpos.level
+#                    irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
+#
+#                for ai in aruns:
+#                    ai.trait_set(sample=sample or '',
+#                                 irradiation=irradiationpos or ''
+#                                 )
+
 #    def _modify_aliquots2(self, ans, exclude=None):
 #        if exclude is None:
 #            exclude = tuple()
