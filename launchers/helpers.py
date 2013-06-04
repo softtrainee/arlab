@@ -36,7 +36,8 @@ def build_version(ver, debug=False):
 
     from src.paths import paths
     paths.bundle_root = root
-
+    if '.' in ver:
+        ver=ver.split('.')[0]
     paths.build(ver)
 
     # build globals

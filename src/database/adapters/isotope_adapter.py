@@ -604,7 +604,7 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
-    def get_last_analysis(self, ln):
+    def get_last_analysis(self, ln, aliquot=None):
         ln = self.get_labnumber(ln)
         if not ln:
             return
@@ -618,6 +618,10 @@ class IsotopeAdapter(DatabaseAdapter):
         q = sess.query(meas_AnalysisTable)
         q = q.join(gen_LabTable)
         q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
+        if aliquot:
+            q = q.filter(meas_AnalysisTable.aliquot == aliquot)
+            q = q.order_by(meas_AnalysisTable.step.desc())
+        
         q = q.order_by(meas_AnalysisTable.aliquot.desc())
         q = q.limit(1)
         try:

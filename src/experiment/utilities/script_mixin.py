@@ -90,7 +90,57 @@ class ScriptMixin(HasTraits):
             name = name.replace('{}_'.format(self.mass_spectrometer), '')
         return name
 
-    def _load_default_scripts(self, key):
+
+    def _load_default_scripts(self, labnumber):
+        self.debug('load default scripts for {}'.format(labnumber))
+        # if labnumber is int use key='U'
+        try:
+            _ = int(labnumber)
+            labnumber = 'u'
+        except ValueError:
+            pass
+
+        labnumber = str(labnumber).lower()
+
+        defaults=self._load_default_file()
+        if defaults:    
+            if labnumber in defaults:
+                default_scripts=defaults[labnumber]
+                for skey in SCRIPT_KEYS:
+                    new_script_name=default_scripts.get(skey) or NULL_STR
+                    new_script_name = self._remove_file_extension(new_script_name)
+                    if labnumber in ('u', 'bu') and self.extract_device != NULL_STR:
+                        if self.extract_device:
+                            e = self.extract_device.split(' ')[1].lower()
+                            if skey == 'extraction':
+                                new_script_name = e
+                            elif skey == 'post_equilibration':
+                                new_script_name = 'pump_{}'.format(e)
+        
+                    elif labnumber == 'dg':
+                        e = self.extract_device.split(' ')[1].lower()
+                        new_script_name = '{}_{}'.format(e, new_script_name)
+        
+                    script = getattr(self, '{}_script'.format(skey))
+                    script.name=new_script_name
+        
+    def _load_default_file(self):
+        # open the yaml config file
+        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+        if not os.path.isfile(p):
+            self.warning('Script defaults file does not exist {}'.format(p))
+            return
+
+        with open(p, 'r') as fp:
+            defaults = yaml.load(fp)
+
+        # convert keys to lowercase
+        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
+        return defaults
+        
+    
+#============= EOF =============================================
+def _load_default_scripts2(self, key):
         self.debug('load default scripts for {}'.format(key))
         setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
 
@@ -142,7 +192,11 @@ class ScriptMixin(HasTraits):
                 sc = '{}_{}'.format(e, sc)
 
             script = getattr(self, '{}_script'.format(sk))
-            if not sc in script.names:
-                sc = NULL_STR
+            
+            print sk, sc, script.names, sc in script.names
+#             if not sc in script.names:
+#                 sc = NULL_STR
+            
+            
+            print sk, sc
             setter(sk, sc)
-#============= EOF =============================================

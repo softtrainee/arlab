@@ -40,8 +40,13 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
-    aliquot = Long
-    o_aliquot = Either(Long, Int)
+    
+    aliquot=Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
+    _aliquot=Int
+    o_aliquot=Int
+    
+#     aliquot = Long
+#     o_aliquot = Either(Long, Int)
     user_defined_aliquot = False
     special_labnumber = Str
 
@@ -355,7 +360,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             setattr(arv, '_prev_{}'.format(attr), getattr(self, attr))
 
         if self.user_defined_aliquot:
-            print 'setting aliquit'
+            self.debug('setting user defined aliquot')
             arv.user_defined_aliquot = True
             arv.aliquot = int(self.aliquot)
 
@@ -491,23 +496,24 @@ post_equilibration_script:name
         else:
             self._frequency_enabled = False
 
-    def _aliquot_changed(self):
-        if self.edit_mode:
-            if self.aliquot:
-                if self.aliquot != self.o_aliquot and self.o_aliquot:
-                    self.user_defined_aliquot = True
-                else:
-                    self.user_defined_aliquot = False
-
-                for si in self._selected_runs:
-
-                    if si.aliquot != self.aliquot:
-                        si.user_defined_aliquot = True
-                    else:
-                        si.user_defined_aliquot = self.user_defined_aliquot
-
-                    if si.user_defined_aliquot:
-                        si.aliquot = int(self.aliquot)
+#     def _aliquot_changed(self):
+#         if self.edit_mode:
+#             if self.aliquot:
+#                 pass
+#                 if self.aliquot != self.o_aliquot and self.o_aliquot:
+#                     self.user_defined_aliquot = True
+#                 else:
+#                     self.user_defined_aliquot = False
+# 
+#                 for si in self._selected_runs:
+# 
+#                     if si.aliquot != self.aliquot:
+#                         si.user_defined_aliquot = True
+#                     else:
+#                         si.user_defined_aliquot = self.user_defined_aliquot
+# 
+#                     if si.user_defined_aliquot:
+#                         si.aliquot = int(self.aliquot)
 #
     def _labnumber_changed(self, old, new):
         def _load_scripts(_old, _new):
@@ -528,7 +534,7 @@ post_equilibration_script:name
             if _new in ANALYSIS_MAPPING or \
                 _old in ANALYSIS_MAPPING or not _old and _new:
                 # set default scripts
-                self._load_default_scripts(key=_new)
+                self._load_default_scripts(_new)
 
         labnumber = self.labnumber
         if not labnumber or labnumber == NULL_STR:
@@ -551,7 +557,9 @@ post_equilibration_script:name
 
         self.irradiation = ''
         self.sample = ''
-        self.aliquot = 0
+        
+        self._aliquot=0
+#         self.aliquot = 0
         self.o_aliquot = 0
         if labnumber:
             # convert labnumber (a, bg, or 10034 etc)
@@ -565,12 +573,13 @@ post_equilibration_script:name
                     pass
 
                 try:
-                    a = ln.analyses[-1].aliquot + 1
-                    self.o_aliquot = a
+                    a = int(ln.analyses[-1].aliquot + 1)
                 except IndexError, e:
                     a = 1
 
-                self.aliquot = a
+                self._aliquot = a
+                self.o_aliquot = a
+#                 self.aliquot = a
 
                 self.irradiation = self._make_irrad_level(ln)
                 _load_scripts(old, new)
@@ -583,7 +592,7 @@ post_equilibration_script:name
                     if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
                         db.add_labnumber(labnumber)
                         db.commit()
-                        self.aliquot = 1
+                        self._aliquot = 1
                         _load_scripts(old, new)
                     else:
                         self.labnumber = ''
@@ -758,6 +767,29 @@ post_equilibration_script:name
             ps += ds
 
         return ps
+    
+    
+    def _set_aliquot(self, a):
+        if a!=self.o_aliquot:
+            self.user_defined_aliquot=True
+        
+        if self.edit_mode:                    
+            for si in self._selected_runs:
+                if si.aliquot != a:
+                    si.user_defined_aliquot = True
+                else:
+                    si.user_defined_aliquot = self.user_defined_aliquot
+# 
+                if si.user_defined_aliquot:
+                    si.aliquot = int(a)
+            self.update_info_needed=True
+      
+        self.o_aliquot=self._aliquot
+        self._aliquot=int(a)
+        
+    def _get_aliquot(self):
+        return self._aliquot
+            
 #============= EOF =============================================
 
 

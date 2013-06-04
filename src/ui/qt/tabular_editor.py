@@ -128,10 +128,10 @@ class _myTableView(_TableView):
                 if len(si):
                     idx = si[-1].row() + 1
                 else:
-                    idx = len(self._editor.value) + 1
+                    idx = len(self._editor.value)
 
                 editor = self._editor
-                with no_update(editor.model):
+                with no_update(editor.object):
                     for ci in reversed(self._copy_cache):
                         editor.model.insertRow(idx, obj=copy_func(ci))
         else:
