@@ -34,9 +34,9 @@ class Experimentable(IsotopeDatabaseManager):
     add_queues_flag = Event
 
     def _get_all_automated_runs(self):
-        return [ai for ei in self.experiment_queues
+        return (ai for ei in self.experiment_queues
                     for ai in ei.automated_runs
-                        if ai.executable]
+                        if ai.executable)
 
     def _reload_from_disk(self):
 #        if not self._alive:
