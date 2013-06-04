@@ -37,7 +37,7 @@ from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
 from src.deprecate import deprecated
 from src.simple_timeit import timethis
-
+LAlphas = list(ALPHAS)
 
 class Experimentor(Experimentable):
     experiment_factory = Instance(ExperimentFactory)
@@ -148,62 +148,67 @@ class Experimentor(Experimentable):
 
         ans = sorted(ans, key=key)
         return ((ln, group) for ln, group in groupby(ans, key) if ln not in exclude)
-
+    
+    
     def _modify_aliquots_steps(self, ans, exclude=None):
         '''
         '''
-        LAlphas = list(ALPHAS)
+        
         groups = self._group_analyses(ans, exclude=exclude)
         db = self.db
         for ln, analyses in groups:
-            oln = ln
+#             oln = ln
             if '-' in ln:
                 ln = ln.split('-')[0]
             special = ln in ANALYSIS_MAPPING
 
-            analysis = db.get_last_analysis(convert_identifier(oln))
+            cln=convert_identifier(ln)
+            analysis = db.get_last_analysis(cln)
             if analysis:
                 dbln = analysis.labnumber
-                aliquot_start = analysis.aliquot
-                st = analysis.step
-                step_start = LAlphas.index(st)
-
                 sample = dbln.sample
                 if sample:
                     sample = sample.name
-
+    
                 irradiationpos = dbln.irradiation_position
                 if irradiationpos:
                     level = irradiationpos.level
                     irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
-
-            else:
-                aliquot_start = 0
-                step_start = 0
-
-            ganalyses = groupby(analyses, key=lambda x: x.extract_group)
-            for egroup, aruns in ganalyses:
-                aliquot_cnt = 1
-                step_cnt = 1
-                for arun in aruns:
-                    arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
-
-                    if arun.skip:
-                        arun.aliquot = 0
-                        continue
-
-                    if arun.state in ('failed', 'canceled'):
-                        continue
-
-                    if not arun.user_defined_aliquot:
-                        if arun.state == 'not run':
-                            arun.aliquot = int(aliquot_start + aliquot_cnt)
-                            if not egroup:
-                                aliquot_cnt += 1
-
-                    if not special and egroup:
-                        arun._step = int(step_start + step_cnt)
-                        step_cnt += 1
+            
+            for aliquot, analyses in groupby(analyses, key=lambda x: x.aliquot):
+                ganalyses = groupby(analyses, key=lambda x: x.extract_group)
+                
+                an=db.get_last_analysis(cln, aliquot=aliquot)
+                if an:
+                    aliquot_start=an.aliquot
+                    step_start=LAlphas.index(an.step)+1
+                else:
+                    aliquot_start=0
+                    step_start=0
+                    
+                for egroup, aruns in ganalyses:
+                    aliquot_cnt = 1
+                    step_cnt = 1
+                    for arun in aruns:
+                        arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
+    
+                        if arun.skip:
+                            arun.aliquot = 0
+                            continue
+    
+                        if arun.state in ('failed', 'canceled'):
+                            continue
+    
+                        if not arun.user_defined_aliquot:
+                            if arun.state == 'not run':
+                                arun.aliquot = int(aliquot_start + aliquot_cnt)
+                                if not egroup:
+                                    aliquot_cnt += 1
+    
+                        if not special and egroup:
+                            
+                            arun._step = int(step_start + step_cnt)
+                            step_cnt += 1
 
     def execute_queues(self, queues, path, text, text_hash):
         self.debug('setup executor')
