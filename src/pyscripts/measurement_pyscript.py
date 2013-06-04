@@ -181,11 +181,13 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def peak_center(self, detector='AX', isotope='Ar40', calc_time=False):
+    def peak_center(self, detector='AX', isotope='Ar40', period=850, calc_time=False):
         if calc_time:
             self._estimated_duration += 45
             return
-        self._automated_run_call('py_peak_center', detector=detector, isotope=isotope)
+
+        self._automated_run_call('py_peak_center', detector=detector,
+                                 isotope=isotope, period=period)
 
     @verbose_skip
     @command_register

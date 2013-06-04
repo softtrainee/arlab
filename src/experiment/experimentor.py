@@ -21,6 +21,7 @@ from pyface.file_dialog import FileDialog
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
 #============= standard library imports ========================
+from itertools import groupby
 #============= local library imports  ==========================
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
@@ -32,8 +33,10 @@ from src.experiment.executor import ExperimentExecutor
 from src.paths import paths
 from src.experiment.utilities.file_listener import FileListener
 from src.experiment.experimentable import Experimentable
-from src.experiment.utilities.identifier import convert_identifier
+from src.experiment.utilities.identifier import convert_identifier, \
+    ANALYSIS_MAPPING
 from src.deprecate import deprecated
+from src.simple_timeit import timethis
 
 
 class Experimentor(Experimentable):
@@ -109,206 +112,118 @@ class Experimentor(Experimentable):
             self.filelistener.stop()
 
     def update_info(self):
-        self._update(all_info=True, stats=True)
+        self._update()
 #===============================================================================
 # info update
 #===============================================================================
-    def _update(self, all_info=False, stats=True):
+    def _update(self):
         self.debug('update runs')
 
-        if stats:
-            self.debug('updating stats')
-            self.stats.calculate()
+        self.debug('updating stats')
+        self.stats.calculate()
 
-#        print len(self.experiment_queues)
         ans = self._get_all_automated_runs()
-        # update the aliquots
 
-        self._modify_aliquots(ans, exclude=('dg', 'pa'))
+        exclude = ('dg', 'pa')
+        self._modify_aliquots_steps(ans, exclude=exclude)
+        self._update_run_info(ans, exclude=exclude)
 
-        # update the steps
-        self._modify_steps(ans, exclude=('dg', 'pa'))
-
-        # update run info
-        if not all_info:
-            ans = ans[-1:]
-
-        self._update_info(ans, exclude=('dg', 'pa'))
         self.debug('info updated')
 
-    def _get_labnumber(self, arun):
+    def _get_labnumber(self, ln):
         '''
             dont use cache
             cache labnumbers for quick retrieval
         '''
         db = self.db
-        ln = arun.labnumber
         ln = convert_identifier(ln)
         dbln = db.get_labnumber(ln)
 
         return dbln
 
-    def _update_info(self, ans, exclude=None):
-        if exclude is None:
-            exclude = tuple()
+    def _update_run_info(self, ans, exclude=None):
         self.debug('update run info')
 
-        for ai in ans:
-#            self.debug('ln {}'.format(ai.labnumber))
-            if ai.labnumber and not ai.labnumber in exclude:
-                dbln = self._get_labnumber(ai)
-                if dbln:
-                    sample = dbln.sample
-                    if sample:
-                        ai.sample = sample.name
-                        # self.debug('sample {}'.format(ai.sample))
+        for ln, aruns in self._group_analyses(ans, exclude=exclude):
+            dbln = self._get_labnumber(ln)
+            if dbln:
 
-                    ipos = dbln.irradiation_position
-                    if not ipos is None:
-                        level = ipos.level
-                        irrad = level.irradiation
-                        ai.irradiation = '{}{}'.format(irrad.name, level.name)
-                        # self.debug('irrad {}'.format(ai.irradiation))
+                sample = dbln.sample
+                if sample:
+                    sample = sample.name
 
-    def _modify_steps(self, ans, exclude=None):
+                irradiationpos = dbln.irradiation_position
+                if irradiationpos:
+                    level = irradiationpos.level
+                    irrad = level.irradiation
+                    irradiationpos = '{}{}'.format(irrad.name, level.name)
+
+                for ai in aruns:
+                    ai.sample = sample or ''
+                    ai.irradiation = irradiationpos or ''
+
+    def _group_analyses(self, ans, exclude=None):
         if exclude is None:
             exclude = tuple()
-        self.debug('modifying steps')
 
-        idcnt_dict = dict()
-        stdict = dict()
-        extract_group = -1
-        aoffs = dict()
-        for arun in ans:
-            arunid = arun.labnumber
-            if arun.skip:
+        key = lambda x: x.labnumber
+        ans = sorted(ans, key=key)
+        ans = (ai for ai in ans if ai.labnumber not in exclude)
+        return groupby(ans, key)
+
+    def _modify_aliquots_steps(self, ans, exclude=None):
+
+        '''
+            sort the ans by labnumber
+        '''
+        LAlphas = list(ALPHAS)
+        groups = self._group_analyses(ans)
+        db = self.db
+        for ln, analyses in groups:
+            if ln in exclude:
                 continue
 
-            if arun.state in ('canceled', 'failed'):
+            oln = ln
+            if '-' in ln:
+                ln = ln.split('-')[0]
+            special = ln in ANALYSIS_MAPPING
+
+            dbln = self._get_labnumber(oln)
+            if dbln is None:
                 continue
-#            if arun.state == 'canceled':
-#                continue
-#            if arun.aliquot == '##':
-#                continue
-
-            # dont set degas or pause aliquot
-            if arunid in exclude:
-                continue
-
-            if arun.extract_group:
-                if not arun.extract_group == extract_group:
-                    if arunid in aoffs:
-                        aoffs[arunid] += 1
-                    else:
-                        aoffs[arunid] = 0
-
-#                    aoff += 1
-                    idcnt_dict, stdict = dict(), dict()
-                    c = 1
-                else:
-                    if arunid in idcnt_dict:
-                        c = idcnt_dict[arunid]
-                        c += 1
-                    else:
-                        c = 1
-
-                ln = self._get_labnumber(arun)
-                if ln is not None:
-                    st = 0
-                    if ln.analyses:
-                        an = next((ai for ai in ln.analyses if ai.aliquot == arun.aliquot), None)
-                        if not an:
-                            st = 0
-                        else:
-                            try:
-                                st = an.step
-                                st = list(ALPHAS).index(st) + 1
-                            except (IndexError, ValueError):
-                                st = 0
-                else:
-                    st = stdict[arunid] if arunid in stdict else 0
-
-                arun._step = st + c
-                idcnt_dict[arunid] = c
-                stdict[arunid] = st
-                extract_group = arun.extract_group
-
-            if arunid in aoffs:
-                aoff = aoffs[arunid]
             else:
-                aoff = 0
-#             print arun.labnumber, aoff
-
-            if arun.state == 'not run':
-                arun.aliquot += aoff
-
-    def _modify_aliquots(self, ans, exclude=None):
-        if exclude is None:
-            exclude = tuple()
-        self.debug('modifying aliquots')
-#        print ans
-        offset = 0
-
-        # update the aliquots
-        idcnt_dict = dict()
-        stdict = dict()
-        fixed_dict = dict()
-
-        for arun in ans:
-            arunid = arun.labnumber
-
-            if arun.skip:
-                arun.aliquot = 0
-                continue
-
-            if arun.state in ('failed', 'canceled'):
-                continue
-
-            # dont set degas or pause aliquot
-            if arunid in exclude:
-                continue
-
-            c = 1
-            st = 0
-
-            if arunid in fixed_dict:
-                st = fixed_dict[arunid]
-
-            if arunid in idcnt_dict:
-                c = idcnt_dict[arunid]
-                if not arun.extract_group:
-                    c += 1
-                st = stdict[arunid] if arunid in stdict else 0
-            else:
-                ln = self._get_labnumber(arun)
-                if ln is not None:
-                    try:
-                        st = ln.analyses[-1].aliquot
-                    except IndexError:
-                        st = 0
+                analysis = db.get_last_analysis(dbln)
+                if analysis:
+                    aliquot_start = analysis.aliquot
+                    st = analysis.step
+                    step_start = LAlphas.index(st)
                 else:
-                    st = stdict[arunid] if arunid in stdict else 0
+                    aliquot_start = 0
+                    step_start = 0
 
-            if not arun.user_defined_aliquot:
-                if arun.state == 'not run':
-                    arun.aliquot = int(st + c - offset)
-            else:
-                c = 0
-                fixed_dict[arunid] = arun.aliquot
-                st = arun.aliquot
+            ganalyses = groupby(analyses, key=lambda x: x.extract_group)
+            aliquot_cnt = 1
+            step_cnt = 1
+            for egroup, aruns in ganalyses:
+                for arun in aruns:
+                    if arun.skip:
+                        arun.aliquot = 0
+                        continue
 
-#            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
-            idcnt_dict[arunid] = c
-            stdict[arunid] = st
+                    if arun.state in ('failed', 'canceled'):
+                        continue
+
+                    if not arun.user_defined_aliquot:
+                        if arun.state == 'not run':
+                            arun.aliquot = int(aliquot_start + aliquot_cnt)
+                            if not egroup:
+                                aliquot_cnt += 1
+
+                    if not special and egroup:
+                        arun._step = int(step_start + step_cnt)
+                        step_cnt += 1
 
     def execute_queues(self, queues, path, text, text_hash):
-#        if self.executor.isAlive():
-#            self.debug('cancel execution')
-#            self.executor.cancel()
-#        else:
-#            self.debug('stop file listener')
-#            self.stop_file_listener()
-
         self.debug('setup executor')
         self.executor.trait_set(experiment_queues=queues,
                                 experiment_queue=queues[0],
@@ -323,15 +238,6 @@ class Experimentor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
-#    def _refresh_fired(self):
-#        self._update(all_info=True, stats=True)
-#        executor = self.executor
-#        executor.executable = False
-#        print executor.executable
-#        if executor.isAlive():
-#            executor.end_at_run_completion = True
-#            executor.changed_flag = True
-
     @on_trait_change('executor:experiment_queue')
     def _activate_editor(self, eq):
         self.activate_editor_event = id(eq)
@@ -359,9 +265,6 @@ class Experimentor(Experimentable):
         self.stats.experiment_queues = self.experiment_queues
         self.stats.calculate()
 
-#     @on_trait_change('experiment_queues')
-#     def _update_queues(self, new):
-#         self.executor.set_experiment_queues(new)
     @on_trait_change('experiment_factory:run_factory:changed')
     def _queue_dirty(self):
         self.experiment_queue.changed = True
@@ -395,20 +298,6 @@ class Experimentor(Experimentable):
             executor.end_at_run_completion = True
             executor.changed_flag = True
 
-#    @on_trait_change('''refresh_button,
-# , executor:update_needed''')
-#    def _refresh(self, name, new):
-#        self.update_info()
-#
-#        self.executor.clear_run_states()
-#
-#        executor = self.executor
-#        if name not in ('update_needed', 'refresh_button'):
-#            executor.executable = False
-#            if executor.isAlive():
-#                executor.end_at_run_completion = True
-#                executor.changed_flag = True
-
     def _experiment_queue_changed(self, eq):
         if eq:
             self.experiment_factory.queue = eq
@@ -424,7 +313,6 @@ class Experimentor(Experimentable):
         rf = ef.run_factory
         rf.edit_mode = False
         if new:
-#            self.selected = new
             rf.special_labnumber = '---'
             rf._labnumber = '---'
             rf.labnumber = ''
@@ -468,6 +356,136 @@ class Experimentor(Experimentable):
         return e
 
 #============= EOF =============================================
+#    def _modify_aliquots2(self, ans, exclude=None):
+#        if exclude is None:
+#            exclude = tuple()
+#        self.debug('modifying aliquots')
+# #        print ans
+#        offset = 0
+#
+#        # update the aliquots
+#        idcnt_dict = dict()
+#        stdict = dict()
+#        fixed_dict = dict()
+#
+#        for arun in ans:
+#            arunid = arun.labnumber
+#
+#            if arun.skip:
+#                arun.aliquot = 0
+#                continue
+#
+#            if arun.state in ('failed', 'canceled'):
+#                continue
+#
+#            # dont set degas or pause aliquot
+#            if arunid in exclude:
+#                continue
+#
+#            c = 1
+#            st = 0
+#
+#            if arunid in fixed_dict:
+#                st = fixed_dict[arunid]
+#
+#            if arunid in idcnt_dict:
+#                c = idcnt_dict[arunid]
+#                if not arun.extract_group:
+#                    c += 1
+#                st = stdict[arunid] if arunid in stdict else 0
+#            else:
+#                ln = self._get_labnumber(arun.labnumber)
+#                if ln is not None:
+#                    try:
+#                        st = ln.analyses[-1].aliquot
+#                    except IndexError:
+#                        st = 0
+#                else:
+#                    st = stdict[arunid] if arunid in stdict else 0
+#
+#            if not arun.user_defined_aliquot:
+#                if arun.state == 'not run':
+#                    arun.aliquot = int(st + c - offset)
+#            else:
+#                c = 0
+#                fixed_dict[arunid] = arun.aliquot
+#                st = arun.aliquot
+#
+# #            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
+#            idcnt_dict[arunid] = c
+#            stdict[arunid] = st
+
+#    def _modify_steps(self, ans, exclude=None):
+#        if exclude is None:
+#            exclude = tuple()
+#        self.debug('modifying steps')
+#
+#        idcnt_dict = dict()
+#        stdict = dict()
+#        extract_group = -1
+#        aoffs = dict()
+#        for arun in ans:
+#            arunid = arun.labnumber
+#            if arun.skip:
+#                continue
+#
+#            if arun.state in ('canceled', 'failed'):
+#                continue
+# #            if arun.state == 'canceled':
+# #                continue
+# #            if arun.aliquot == '##':
+# #                continue
+#
+#            # dont set degas or pause aliquot
+#            if arunid in exclude:
+#                continue
+#
+#            if arun.extract_group:
+#                if not arun.extract_group == extract_group:
+#                    if arunid in aoffs:
+#                        aoffs[arunid] += 1
+#                    else:
+#                        aoffs[arunid] = 0
+#
+# #                    aoff += 1
+#                    idcnt_dict, stdict = dict(), dict()
+#                    c = 1
+#                else:
+#                    if arunid in idcnt_dict:
+#                        c = idcnt_dict[arunid]
+#                        c += 1
+#                    else:
+#                        c = 1
+#
+#                ln = self._get_labnumber(arun.labnumber)
+#                if ln is not None:
+#                    st = 0
+#                    if ln.analyses:
+#                        an = next((ai for ai in ln.analyses if ai.aliquot == arun.aliquot), None)
+#                        if not an:
+#                            st = 0
+#                        else:
+#                            try:
+#                                st = an.step
+#                                st = list(ALPHAS).index(st) + 1
+#                            except (IndexError, ValueError):
+#                                st = 0
+#                else:
+#                    st = stdict[arunid] if arunid in stdict else 0
+#
+#                arun._step = st + c
+#                idcnt_dict[arunid] = c
+#                stdict[arunid] = st
+#                extract_group = arun.extract_group
+#
+#            if arunid in aoffs:
+#                aoff = aoffs[arunid]
+#            else:
+#                aoff = 0
+# #             print arun.labnumber, aoff
+#
+#            if arun.state == 'not run':
+#                arun.aliquot += aoff
 #     def _clear_cache(self):
 #         for di in dir(self):
 #             if di.startswith('_cached'):

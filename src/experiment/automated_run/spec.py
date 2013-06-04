@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, Either
+from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, Either, on_trait_change
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -87,6 +87,7 @@ class AutomatedRunSpec(Loggable):
     frequency_added = False
 
     _estimated_duration = 0
+    _changed = False
 
     def to_string(self):
         attrs = ['labnumber', 'aliquot', 'step',
@@ -106,8 +107,8 @@ class AutomatedRunSpec(Loggable):
             
             this is a good point to set executable as well
         '''
-        if not self._estimated_duration:
-            arun = self.make_run(new_uuid=False)
+        if not self._estimated_duration or self._changed:
+            arun = None
             s = 0
             script_oks = []
             for si in SCRIPT_NAMES:
@@ -121,6 +122,9 @@ class AutomatedRunSpec(Loggable):
                     s += script.get_estimated_duration()
                     script_oks.append(ok)
                 else:
+                    if arun is None:
+                        arun = self.make_run(new_uuid=False)
+
                     script = getattr(arun, si)
                     if script is not None:
                         ok = script.syntax_ok()
@@ -164,6 +168,8 @@ class AutomatedRunSpec(Loggable):
 #            print 'param', k, v
             if hasattr(self, k):
                 setattr(self, k, v)
+
+        self._changed = False
 
     def _remove_mass_spectrometer_name(self, name):
         if self.mass_spectrometer:
@@ -217,6 +223,12 @@ class AutomatedRunSpec(Loggable):
     def _update_aliquot(self, new):
         self.aliquot = new
 
+    @on_trait_change(''' 
+    measurment_script, post_measurment_script,
+    post_equilibration_script, extraction_script,extract_+, position, duration, cleanup
+    ''')
+    def _spec_changed(self):
+        self._changed = True
 #===============================================================================
 # property get/set
 #===============================================================================

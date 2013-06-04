@@ -99,7 +99,7 @@ class MagnetScan(SpectrometerTask):
 #
 #        return intensities
 
-    def _scan_dac(self, values, det, period=850, start_delay=3):
+    def _scan_dac(self, values, det, start_delay=3):
         '''
             period: ms between steps
             start_delay: wait start_delay s after first step before first measurement.
@@ -111,8 +111,10 @@ class MagnetScan(SpectrometerTask):
 
         mag = spec.magnet
         mag.settling_time = 0.25
-        if globalv.experiment_debug:
-            period = 1
+
+        period = self.period
+#        if globalv.experiment_debug:
+#            period = 1
 #            mag.settling_time = 0.5
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
@@ -171,14 +173,14 @@ class MagnetScan(SpectrometerTask):
         sm = self.start_mass
         em = self.stop_mass
         stm = self.step_mass
-        sp = self.period
+
         if abs(sm - em) > stm:
     #        ds = mag.calculate_dac(sm)
-            self._do_scan(sm, em, stm, period=sp)
+            self._do_scan(sm, em, stm)
             self._alive = False
             self._post_execute()
 
-    def _do_scan(self, sm, em, stm, directions=None, map_mass=True, period=850):
+    def _do_scan(self, sm, em, stm, directions=None, map_mass=True):
         # default to forward scan
         if directions is None:
             directions = [1]
@@ -222,7 +224,7 @@ class MagnetScan(SpectrometerTask):
                 sm, em = em, sm
             values = self._calc_step_values(sm, em, stm)
 
-            if not self._scan_dac(values, self.reference_detector, period=period):
+            if not self._scan_dac(values, self.reference_detector):
                 return
 
         return True
