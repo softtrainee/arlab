@@ -155,21 +155,20 @@ class Experimentor(Experimentable):
                 irradiationpos = dbln.irradiation_position
                 if irradiationpos:
                     level = irradiationpos.level
-                    irrad = level.irradiation
-                    irradiationpos = '{}{}'.format(irrad.name, level.name)
+                    irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
 
                 for ai in aruns:
-                    ai.sample = sample or ''
-                    ai.irradiation = irradiationpos or ''
+                    ai.trait_set(sample=sample or '',
+                                 irradiation=irradiationpos or ''
+                                 )
 
     def _group_analyses(self, ans, exclude=None):
         if exclude is None:
             exclude = tuple()
-
         key = lambda x: x.labnumber
+
         ans = sorted(ans, key=key)
-        ans = (ai for ai in ans if ai.labnumber not in exclude)
-        return groupby(ans, key)
+        return ((ln, group) for ln, group in groupby(ans, key) if ln not in exclude)
 
     def _modify_aliquots_steps(self, ans, exclude=None):
 
@@ -202,9 +201,9 @@ class Experimentor(Experimentable):
                     step_start = 0
 
             ganalyses = groupby(analyses, key=lambda x: x.extract_group)
-            aliquot_cnt = 1
-            step_cnt = 1
             for egroup, aruns in ganalyses:
+                aliquot_cnt = 1
+                step_cnt = 1
                 for arun in aruns:
                     if arun.skip:
                         arun.aliquot = 0
