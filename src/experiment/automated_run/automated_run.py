@@ -389,7 +389,7 @@ class AutomatedRun(Loggable):
         writer = self._get_data_writer(group)
 
         return self._peak_hop(cycles, hops, writer,
-                       starttime, series)
+                              starttime, series)
 
 
     def py_peak_center(self, **kw):
@@ -993,9 +993,17 @@ anaylsis_type={}
             return next((i for i, (n, ii) in enumerate(original_idx)
                                                     if ii == isot))
 
-        for _ in xrange(0, ncycles, 1):
-            if not self._alive:
+        iter_count = 1
+        while 1:
+            ck = self._check_iteration(iter_count, ncounts, True)
+            if ck == 'break':
+                break
+            elif ck == 'cancel':
                 return False
+
+#        for _ in xrange(0, ncycles, 1):
+#            if not self._alive:
+#                return False
 
             for hopstr , counts in hops:
                 if not self._alive:
@@ -1022,10 +1030,15 @@ anaylsis_type={}
                         starttime = time.time()
 
                     x = time.time() - starttime
-                    vs = spec.get_intensity(dets)
-                    self.signals = dict(zip(dets, vs))
+                    data = spec.get_intensity(dets)
+                    if data is not None:
+                        keys, signals = data
+                    else:
+                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
 
-                    for signal, fi, iso in zip(vs, fits, isos):
+                    self.signals = dict(zip(dets, signals))
+
+                    for signal, fi, iso in zip(signals, fits, isos):
                         pi = idx_func(iso)
                         if len(graph.series[pi]) < series + 1:
                             graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
@@ -1045,7 +1058,7 @@ anaylsis_type={}
                         graph_kw['fit'] = fi
                         func(x, signal, graph_kw)
 
-                    data_write_hook(x, dets, vs)
+                    data_write_hook(x, dets, signals)
                     invoke_in_main_thread(graph._update_graph)
 #                     do_after(100, graph._update_graph)
                     time.sleep(integration_time)
@@ -1072,7 +1085,7 @@ anaylsis_type={}
         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
-        iter_cnt = 0
+        iter_cnt = 1
         while 1:
 #        for iter_cnt in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(iter_cnt, ncounts, check_conditions)

@@ -36,9 +36,6 @@ class Script(Loggable):
     names = Property(depends_on='mass_spectrometer')
     edit = Button
     kind = 'ExtractionLine'
-    can_edit = Bool(True)
-    cb = Bool(True)
-    cb_edit = Bool(False)
 
     def get_parameter(self, key, default=None):
         p = os.path.join(self._get_root(), '{}_{}.py'.format(self.mass_spectrometer.lower(), self.name))
@@ -74,18 +71,8 @@ class Script(Loggable):
             task = win.active_task
             win.open()
 
-        task.kind=self.kind
+        task.kind = self.kind
         task.open(path=p)
- #            from src.pyscripts.editor import PyScriptEditor
- #            from src.pyscripts.tasks.pyscript_editor import PyScriptEditor
- #            editor = PyScriptEditor(application=self.application)
-#        else:
-#            pass
- #            from src.pyscripts.measurement_editor import MeasurementPyScriptEditor
- #            editor = MeasurementPyScriptEditor(application=self.application)
-
- #        editor.open_script(p)
- #        editor.open_view(editor)
 
     def traits_view(self):
         return View(HGroup(
@@ -95,23 +82,10 @@ class Script(Loggable):
                                 width= -225,
                                 editor=EnumEditor(name='names')),
                            UItem('edit',
-                                enabled_when='name and name!="---" and can_edit',
+                                enabled_when='name and name!="---"',
                                 ),
-                           UItem('cb',
-                                 enabled_when='name and name!="---" and can_edit',
-                                 visible_when='cb_edit'
-                                 ),
                            )
                     )
-
-#    def _get_scripts(self, es):
-# #        if self.mass_spectrometer != '---':
-#        es = [self._clean_script_name(ei) for ei in es]
-# #            k = '{}_'.format(self.mass_spectrometer)
-# #            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
-#
-#        es = [NULL_STR] + es
-#        return es
 
     def _clean_script_name(self, name):
         name = self._remove_mass_spectrometer_name(name)

@@ -604,6 +604,27 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
+    def get_last_analysis(self, ln):
+        ln = self.get_labnumber(ln)
+        if not ln:
+            return
+
+        sess = self.get_session()
+
+        ln = self.get_labnumber(ln)
+        if not ln:
+            return
+
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(gen_LabTable)
+        q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
+        q = q.order_by(meas_AnalysisTable.aliquot.desc())
+        q = q.limit(1)
+        try:
+            return q.one()
+        except NoResultFound:
+            return
+
     def get_unique_analysis(self, ln, ai, step=None):
         sess = self.get_session()
 
