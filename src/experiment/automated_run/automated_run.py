@@ -126,7 +126,7 @@ class AutomatedRun(Loggable):
     extract_device = Str
     duration = Float
 
-#    tray = Str
+    tray = Str
     position = Str
 #    endposition = Int
 #    multiposition = Bool
@@ -609,9 +609,9 @@ anaylsis_type={}
 #        del self.info_display
         if self.plot_panel:
             self.plot_panel.automated_run = None
-            self.plot_panel.on_trait_change(self._plot_panel_closed,
-                                            'close_event', remove=True)
-            self.plot_panel.close_ui()
+#            self.plot_panel.on_trait_change(self._plot_panel_closed,
+#                                            'close_event', remove=True)
+#            self.plot_panel.close_ui()
 
 #            del self.plot_panel
 
@@ -852,16 +852,17 @@ anaylsis_type={}
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
         if plot_panel is None:
-            title = 'Plot Panel {}'.format(self.runid)
+#            title = 'Plot Panel {}'.format(self.runid)
+            title = self.runid
             if self.sample:
                 title = '{} {}'.format(title, self.sample)
             if self.irradiation:
                 title = '{} {}'.format(title, self.irradiation)
 
             plot_panel = PlotPanel(
-                             window_y=0.05,  # + 0.01 * self.index,
-                             window_x=0.6,  # + 0.01 * self.index,
-                             window_title=title,
+#                             window_y=0.05,  # + 0.01 * self.index,
+#                             window_x=0.6,  # + 0.01 * self.index,
+                             plot_title=title,
                              stack_order=stack_order,
                              arar_age=self.arar_age,
                              sample=self.sample,
@@ -869,8 +870,8 @@ anaylsis_type={}
                              )
 
             plot_panel.reset()
-            plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
-            self.experiment_manager.open_view(plot_panel)
+#            plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
+#            self.experiment_manager.open_view(plot_panel)
 
         return plot_panel
 
@@ -1847,18 +1848,18 @@ anaylsis_type={}
         hdn = self.extract_device.replace(' ', '_').lower()
         an = self.analysis_type.split('_')[0]
         script.setup_context(tray=self.tray,
-                          position=self.get_position_list(),
-                          disable_between_positions=self.disable_between_positions,
-                          duration=self.duration,
-                          extract_value=self.extract_value,
-                          extract_units=self.extract_units,
-                          cleanup=self.cleanup,
-                          extract_device=hdn,
-                          analysis_type=an,
-                          ramp_rate=self.ramp_rate,
-                          pattern=self.pattern,
-                          beam_diameter=self.beam_diameter
-                          )
+                            position=self.get_position_list(),
+                            disable_between_positions=self.disable_between_positions,
+                            duration=self.duration,
+                            extract_value=self.extract_value,
+                            extract_units=self.extract_units,
+                            cleanup=self.cleanup,
+                            extract_device=hdn,
+                            analysis_type=an,
+                            ramp_rate=self.ramp_rate,
+                            pattern=self.pattern,
+                            beam_diameter=self.beam_diameter
+                            )
 
     def _add_script_extension(self, name, ext='.py'):
         return name if name.endswith(ext) else name + ext

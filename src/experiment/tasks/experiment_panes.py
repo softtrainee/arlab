@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Color
+from traits.api import Color, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
     ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
@@ -234,6 +234,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                              RFItem('cleanup', label='Cleanup (s)',
                                   tooltip='Set the number of seconds to getter the sample gas'
                                   ),
+                             RFItem('beam_diameter'),
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
                              RFItem('pattern', editor=EnumEditor(name=make_rf_name('patterns'))),
                              label='Extract',
@@ -362,5 +363,13 @@ class ExplanationPane(TraitsDockPane):
                       )
 
                )
+        return v
+
+
+class IsotopeEvolutionPane(TraitsDockPane):
+    name = 'Isotope Evolutions'
+    plot_panel = Instance('src.experiment.plot_panel_new.PlotPanel')
+    def traits_view(self):
+        v = View(UItem('plot_panel', style='custom'))
         return v
 #============= EOF =============================================
