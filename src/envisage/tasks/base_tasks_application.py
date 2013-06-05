@@ -23,7 +23,6 @@ from envisage.ui.tasks.tasks_application import TasksApplication
 
 class BaseTasksApplication(TasksApplication, Loggable):
     uis = List
-
     def open_view(self, obj, **kw):
         info = obj.edit_traits(**kw)
         self.uis.append(info)

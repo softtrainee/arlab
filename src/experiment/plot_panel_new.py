@@ -309,12 +309,30 @@ class PlotPanel(Loggable):
                                              use_inspector_tool=True,
                                              padding_bottom=35
                                       )
-    def traits_view(self):
 
-        graph_grp = Item('graph', show_label=False,
-                       height=0.72,
-                       style='custom')
+    def graph_view(self):
+        gg = self._get_graph_group()
+        gg.height = 0.90
 
+        v = View(
+                  VSplit(
+                        gg,
+                        Group(
+                              Item('ncounts'),
+                              label='Controls',
+                             ),
+                        )
+                 )
+        return v
+
+    def summary_view(self):
+        g = self._get_display_group()
+        g.orientation = 'vertical'
+        g.layout = 'normal'
+        v = View(g)
+        return v
+
+    def _get_display_group(self):
         results_grp = Group(
                             HGroup(
                                   Item('correct_for_baseline'),
@@ -353,16 +371,23 @@ class PlotPanel(Loggable):
                             results_grp,
                             ratios_grp,
                             summary_grp,
-                            Group(
-                                   Item('ncounts'),
-                                   label='Controls',
-                                   ),
-                               layout='tabbed'
-                               )
+                            layout='tabbed'
+                            )
+        return display_grp
+
+    def _get_graph_group(self):
+        graph_grp = Item('graph', show_label=False,
+                         style='custom')
+        return graph_grp
+
+    def traits_view(self):
+        gg = self._get_graph_group()
+        gg.height = 0.72
+
         v = View(
                  VSplit(
-                        graph_grp,
-                        display_grp
+                        gg,
+                        self._get_display_group()
 
                         ),
 #                 width=650,

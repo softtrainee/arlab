@@ -176,11 +176,11 @@ class Experimentor(Experimentable):
                     level = irradiationpos.level
                     irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
 
-            for aliquot, analyses in groupby(analyses, key=lambda x: x.aliquot):
+            for aliquot, ais in groupby(analyses, key=lambda x: x.aliquot):
                 if not special:
-                    ganalyses = groupby(analyses, key=lambda x: x.extract_group)
+                    ganalyses = groupby(ais, key=lambda x: x.extract_group)
                 else:
-                    ganalyses = ((0, analyses),)
+                    ganalyses = ((0, ais),)
 
                 an = db.get_last_analysis(cln, aliquot=aliquot)
                 aliquot_start = 0

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Color, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label
+    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, InstanceEditor
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
@@ -112,7 +112,7 @@ class ExperimentFactoryPane(TraitsDockPane):
 
     def _get_info_group(self):
         grp = Group(
-                   HGroup(spring, CustomLabel('help_label', size=14), spring),
+#                   HGroup(spring, CustomLabel('help_label', size=14), spring),
                    HGroup(
                           RFItem('selected_irradiation',
                                label='Irradiation',
@@ -122,22 +122,25 @@ class ExperimentFactoryPane(TraitsDockPane):
 #                                 label='Level',
                                  editor=EnumEditor(name=make_rf_name('levels'))),
 
-                          RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
-                                 ),
+#                          RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
+#                                 ),
 
                           ),
 
                    HGroup(RFItem('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
                                ),
-                          RFItem('frequency')
+                          RFItem('frequency', width=50),
+                          spring
                           ),
                    HGroup(RFItem('labnumber',
-                              tooltip='Enter a Labnumber'
+                              tooltip='Enter a Labnumber',
+                              width=100,
                               ),
                           RFItem('_labnumber', show_label=False,
                               editor=EnumEditor(name=make_rf_name('labnumbers')),
                               width=100,
                               ),
+                              spring,
                          ),
                    HGroup(
                            RFItem('aliquot',
@@ -367,9 +370,21 @@ class ExplanationPane(TraitsDockPane):
 
 
 class IsotopeEvolutionPane(TraitsDockPane):
+    id = 'pychron.experiment.isotope_evolution'
     name = 'Isotope Evolutions'
     plot_panel = Instance('src.experiment.plot_panel_new.PlotPanel')
     def traits_view(self):
-        v = View(UItem('plot_panel', style='custom'))
+        v = View(UItem('plot_panel', editor=InstanceEditor(view='graph_view'),
+                       style='custom'))
         return v
+
+class SummaryPane(TraitsDockPane):
+    id = 'pychron.experiment.summary'
+    name = 'Summary'
+    plot_panel = Instance('src.experiment.plot_panel_new.PlotPanel')
+    def traits_view(self):
+        v = View(UItem('plot_panel', editor=InstanceEditor(view='summary_view'),
+                       style='custom'))
+        return v
+
 #============= EOF =============================================

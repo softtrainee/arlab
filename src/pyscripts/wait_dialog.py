@@ -153,16 +153,16 @@ class WaitDialog(Loggable):
     def traits_view(self):
         v = View(VGroup(
                         Item('message', width=1.0, show_label=False, style='readonly'),
-                        HGroup(Item('high', label='Set Max. Seconds'), spring),
+                        HGroup(Item('high', label='Set Max. Seconds'), spring, UItem('continue_button')),
                         Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
                                                            low_name='low_name',
                                                            high_name='wtime',
                                                            )),
-                        HGroup(
-                               UItem('continue_button'),
-                               spring,
-#                               UItem('cancel_button'),
-                               )
+#                        HGroup(
+#                               UItem('continue_button'),
+#                               spring,
+# #                               UItem('cancel_button'),
+#                               )
                         ),
                )
         return v
