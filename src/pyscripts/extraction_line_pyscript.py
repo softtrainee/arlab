@@ -68,6 +68,7 @@ class ExtractionPyScript(ValvePyScript):
                            ramp_rate='',
                            duration=0,
                            cleanup=0,
+                           beam_diameter=None,
                            run_identifier='default_runid'
                            )
 #===============================================================================
@@ -105,6 +106,11 @@ class ExtractionPyScript(ValvePyScript):
     @property
     def extract_units(self):
         return self.get_context()['extract_units']
+
+    @property
+    def beam_diameter(self):
+        return self.get_context()['beam_diameter']
+
 #===============================================================================
 # commands
 #===============================================================================

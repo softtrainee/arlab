@@ -125,10 +125,12 @@ class AutomatedRun(Loggable):
     mass_spectrometer = Str
     extract_device = Str
     duration = Float
-    tray = Str
+
+#    tray = Str
     position = Str
-    endposition = Int
-    multiposition = Bool
+#    endposition = Int
+#    multiposition = Bool
+
     autocenter = Bool
     overlap = CInt
     cleanup = CInt
@@ -137,8 +139,9 @@ class AutomatedRun(Loggable):
     weight = Float
     comment = Str
     pattern = Str
+    beam_diameter = Float
 
-    ic_factor = Any
+#    ic_factor = Any
 
     analysis_type = Str
     disable_between_positions = Bool(False)
@@ -1139,7 +1142,8 @@ anaylsis_type={}
 
             data_write_hook(x, keys, signals)
             if refresh:
-                invoke_in_main_thread(graph.refresh)
+                graph.refresh()
+#                invoke_in_main_thread(graph.refresh)
 #             do_after(100, graph._update_graph)
 
         return True
@@ -1500,10 +1504,12 @@ anaylsis_type={}
         self.info('saving detector intercalibration')
 
         if self.arar_age:
-            self.ic_factor = ic = self.arar_age.ic_factor
+            ic = self.arar_age.ic_factor
+#            self.ic_factor = ic = self.arar_age.ic_factor
 
         else:
-            self.ic_factor = ic = ArArAge(application=self.application).ic_factor
+#            self.ic_factor = ic = ArArAge(application=self.application).ic_factor
+            ic = ArArAge(application=self.application).ic_factor
 
         def func():
             self.info('default ic_factor={}'.format(ic))
@@ -1850,7 +1856,8 @@ anaylsis_type={}
                           extract_device=hdn,
                           analysis_type=an,
                           ramp_rate=self.ramp_rate,
-                          pattern=self.pattern
+                          pattern=self.pattern,
+                          beam_diameter=self.beam_diameter
                           )
 
     def _add_script_extension(self, name, ext='.py'):

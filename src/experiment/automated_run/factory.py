@@ -40,11 +40,11 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
-    
-    aliquot=Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
-    _aliquot=Int
-    o_aliquot=Int
-    
+
+    aliquot = Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
+    _aliquot = Int
+    o_aliquot = Int
+
 #     aliquot = Long
 #     o_aliquot = Either(Long, Int)
     user_defined_aliquot = False
@@ -80,8 +80,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     _default_extract_units = 'watts'
 
     duration = Float
-
     cleanup = Float
+    beam_diameter = Float
 
     pattern = Str
     patterns = Property
@@ -324,12 +324,12 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes = []
 
         if arv.analysis_type in ('blank_unknown', 'pause'):
-            excludes.extend(('extract_value', 'extract_units', 'pattern'))
+            excludes.extend(('extract_value', 'extract_units', 'pattern', 'beam_diameter'))
             if arv.analysis_type == 'pause':
                 excludes.extend(('cleanup', 'position'))
         elif arv.analysis_type not in ('unknown', 'degas'):
             excludes.extend(('position', 'extract_value', 'extract_units', 'pattern',
-                             'cleanup', 'duration',
+                             'cleanup', 'duration', 'beam_diameter'
                              ))
 
         self._set_run_values(arv, excludes=excludes)
@@ -348,7 +348,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         for attr in (
                      'position',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
-                     'pattern',
+                     'pattern', 'beam_diameter',
                      'weight', 'comment',
                      'sample', 'irradiation',
                      'skip', 'mass_spectrometer', 'extract_device'
@@ -377,7 +377,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes = []
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
-                     'pattern',
+                     'pattern', 'beam_diameter'
                      'position',
                      'weight', 'comment',
                      ):
@@ -418,7 +418,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
-pattern,
+pattern,beam_diameter,
 position,
 weight, comment, skip, end_after''')
     def _edit_handler(self, name, new):
@@ -504,14 +504,14 @@ post_equilibration_script:name
 #                     self.user_defined_aliquot = True
 #                 else:
 #                     self.user_defined_aliquot = False
-# 
+#
 #                 for si in self._selected_runs:
-# 
+#
 #                     if si.aliquot != self.aliquot:
 #                         si.user_defined_aliquot = True
 #                     else:
 #                         si.user_defined_aliquot = self.user_defined_aliquot
-# 
+#
 #                     if si.user_defined_aliquot:
 #                         si.aliquot = int(self.aliquot)
 #
@@ -557,8 +557,8 @@ post_equilibration_script:name
 
         self.irradiation = ''
         self.sample = ''
-        
-        self._aliquot=0
+
+        self._aliquot = 0
 #         self.aliquot = 0
         self.o_aliquot = 0
         if labnumber:
@@ -767,29 +767,29 @@ post_equilibration_script:name
             ps += ds
 
         return ps
-    
-    
+
+
     def _set_aliquot(self, a):
-        if a!=self.o_aliquot:
-            self.user_defined_aliquot=True
-        
-        if self.edit_mode:                    
+        if a != self.o_aliquot:
+            self.user_defined_aliquot = True
+
+        if self.edit_mode:
             for si in self._selected_runs:
                 if si.aliquot != a:
                     si.user_defined_aliquot = True
                 else:
                     si.user_defined_aliquot = self.user_defined_aliquot
-# 
+#
                 if si.user_defined_aliquot:
                     si.aliquot = int(a)
-            self.update_info_needed=True
-      
-        self.o_aliquot=self._aliquot
-        self._aliquot=int(a)
-        
+            self.update_info_needed = True
+
+        self.o_aliquot = self._aliquot
+        self._aliquot = int(a)
+
     def _get_aliquot(self):
         return self._aliquot
-            
+
 #============= EOF =============================================
 
 

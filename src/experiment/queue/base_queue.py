@@ -303,11 +303,13 @@ class BaseExperimentQueue(Loggable):
 
     def _get_dump_attrs(self):
         header = ['labnumber',
+                  'sample',
                   'position',
                   'e_value',
                   'e_units',
                   'duration',
                   'cleanup',
+                  'beam_diameter',
                   'pattern',
                   'e_group',
                   'extraction', 'measurement', 'post_eq', 'post_meas',
@@ -317,11 +319,13 @@ class BaseExperimentQueue(Loggable):
                   'autocenter',
                   ]
         attrs = ['labnumber',
+                  'sample',
                   'position',
                   'extract_value',
                   'extract_units',
                   'duration',
                   'cleanup',
+                  'beam_diameter',
                   'pattern',
                   'extract_group',
                   'extraction_script', 'measurement_script',

@@ -362,7 +362,7 @@ class PlotPanel(Viewable):
                         display_grp
 
                         ),
-                 width=750,
+                 width=650,
                  height=0.9,
                  x=self.window_x,
                  y=self.window_y,

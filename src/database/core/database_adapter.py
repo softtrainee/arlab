@@ -19,7 +19,7 @@ from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cach
 #=============standard library imports ========================
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError
+from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError
 import os
 #=============local library imports  ==========================
 
@@ -342,35 +342,46 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
 
     def _retrieve_item(self, table, value, key='name'):
-        if not isinstance(value, (str, int, unicode, long, float, list, tuple)):
-            return value
-
         sess = self.get_session()
         if sess is None:
             return
+        if not isinstance(value, (str, int, unicode, long, float, list, tuple)):
+            return value
 
-        q = sess.query(table)
         if not isinstance(value, (list, tuple)):
             value = (value,)
         if not isinstance(key, (list, tuple)):
             key = (key,)
 
-        for k, v in zip(key, value):
-            q = q.filter(getattr(table, k) == v)
+        def __retrieve():
+            q = sess.query(table)
+            for k, v in zip(key, value):
+                q = q.filter(getattr(table, k) == v)
 
-        try:
-            return q.one()
-        except MultipleResultsFound:
-            self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
             try:
-                if hasattr(table, 'id'):
-                    q = q.order_by(table.id.desc())
-                return q.limit(1).all()[-1]
-            except (SQLAlchemyError, IndexError, AttributeError), e:
-                self.debug('no rows for {} {} {}'.format(table.__tablename__, key, value))
+                return q.one()
 
-        except NoResultFound:
-            self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
+            except StatementError:
+                import traceback
+                self.debug(traceback.format_exc())
+                sess.rollback()
+                return __retrieve()
+
+            except MultipleResultsFound:
+                self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
+                try:
+                    if hasattr(table, 'id'):
+                        q = q.order_by(table.id.desc())
+                    return q.limit(1).all()[-1]
+
+                except (SQLAlchemyError, IndexError, AttributeError), e:
+                    self.debug('no rows for {} {} {}'.format(table.__tablename__, key, value))
+
+            except NoResultFound:
+                self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
+
+        # __retrieve is recursively called if a StatementError is raised
+        return __retrieve()
 
     @deprecated
     def _get_items(self, table, gtables,
