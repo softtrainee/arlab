@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, on_trait_change, Any
 from traitsui.api import View, Item
 from pyface.action.action import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
@@ -69,6 +69,35 @@ from pyface.tasks.action.task_action import TaskAction
 #                if manager.load():
 #                    if manager.load_experiment_queue(saveable=True):
 #                        self._open_editor(event, 'pychron.experiment')
+class ResetLayoutAction(TaskAction):
+    name = 'Reset Layout'
+    def perform(self, event):
+        self.task.window.reset_layout()
+
+
+class MinimizeAction(TaskAction):
+    name = 'Minimize'
+    accelerator = 'Ctrl+m'
+    def perform(self, event):
+        app = self.task.window.application
+        app.active_window.control.showMinimized()
+
+class RaiseAction(TaskAction):
+    window = Any
+    style = 'toggle'
+    def perform(self, event):
+        self.window.activate()
+        self.checked = True
+
+    @on_trait_change('window:deactivated')
+    def _on_deactivate(self):
+        self.checked = False
+
+class RaiseUIAction(TaskAction):
+    style = 'toggle'
+    def perform(self, event):
+#        self.ui.control.activate()
+        self.checked = True
 
 class GenericSaveAction(TaskAction):
     name = 'Save'

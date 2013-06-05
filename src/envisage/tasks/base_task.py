@@ -26,39 +26,13 @@ from pyface.action.api import ActionItem, Group
 # from pyface.tasks.action.task_action import TaskAction
 from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAction
 from pyface.tasks.task_window_layout import TaskWindowLayout
-from pyface.tasks.action.task_action import TaskAction
 from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
-    GenericFindAction
-#    GenericOpenAction, GenericNewAction
+    GenericFindAction, RaiseAction, RaiseUIAction, ResetLayoutAction, \
+    MinimizeAction
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-class MinimizeAction(TaskAction):
-    name = 'Minimize'
-    accelerator = 'Ctrl+m'
-    def perform(self, event):
-        app = self.task.window.application
-        app.active_window.control.showMinimized()
-
-class RaiseAction(TaskAction):
-    window = Any
-    style = 'toggle'
-    def perform(self, event):
-        self.window.activate()
-        self.checked = True
-
-    @on_trait_change('window:deactivated')
-    def _on_deactivate(self):
-        self.checked = False
-
-class RaiseUIAction(TaskAction):
-    style = 'toggle'
-    def perform(self, event):
-#        self.ui.control.activate()
-        self.checked = True
-
 
 class WindowGroup(Group):
     items = List
@@ -94,7 +68,7 @@ class WindowGroup(Group):
                             added.append(vi.active_task.id)
                 else:
                     items.append(ActionItem(action=RaiseUIAction(
-                                                                 name=vi.title,
+                                                                 name=vi.title or vi.id,
                                                                  ui=vi,
                                                                  checked=checked,
                                                            )))
@@ -237,7 +211,9 @@ class BaseTask(Task):
 
     def _window_menu(self):
         window_menu = SMenu(
-                          Group(MinimizeAction()),
+                          Group(MinimizeAction(),
+                                ResetLayoutAction()
+                                ),
                           WindowGroup(),
                           name='Window')
 

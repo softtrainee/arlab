@@ -16,14 +16,15 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, on_trait_change
-from traitsui.api import View, Item
+# from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.base_task import BaseManagerTask
+# from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
-     ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane
-from pyface.tasks.task_window_layout import TaskWindowLayout
+     ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane, \
+    SummaryPane
+# from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.paths import paths
@@ -44,14 +45,23 @@ class ExperimentEditorTask(EditorTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          left=Tabbed(
-                                      PaneItem('pychron.experiment.factory'),
-                                      PaneItem('pychron.experiment.console')
+                          left=Splitter(
+                                        PaneItem('pychron.experiment.wait', height=125),
+                                        Tabbed(
+                                               PaneItem('pychron.experiment.factory'),
+                                               PaneItem('pychron.experiment.isotope_evolution'),
+                                               PaneItem('pychron.experiment.summary'),
+                                               ),
+                                         orientation='vertical'
                                       ),
                           right=Splitter(
                                          PaneItem('pychron.experiment.stats'),
-                                         PaneItem('pychron.experiment.explanation'),
-                                         PaneItem('pychron.experiment.wait'),
+                                         Tabbed(
+                                                PaneItem('pychron.experiment.console', height=425),
+                                                PaneItem('pychron.experiment.explanation', height=425),
+                                                ),
+
+#                                         PaneItem('pychron.experiment.wait'),
                                          orientation='vertical'
                                          ),
                           top=PaneItem('pychron.experiment.controls')
@@ -60,6 +70,7 @@ class ExperimentEditorTask(EditorTask):
     def create_dock_panes(self):
 
         self.isotope_evolution_pane = IsotopeEvolutionPane()
+        self.summary_pane = SummaryPane()
 
         return [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
@@ -68,7 +79,8 @@ class ExperimentEditorTask(EditorTask):
                 ConsolePane(model=self.manager.executor),
                 WaitPane(model=self.manager.executor),
                 ExplanationPane(),
-                self.isotope_evolution_pane
+                self.isotope_evolution_pane,
+                self.summary_pane
                 ]
 
 #===============================================================================
@@ -79,6 +91,7 @@ class ExperimentEditorTask(EditorTask):
 #        path = os.path.join(paths.experiment_dir, 'aaa.txt')
         path = self.open_file_dialog()
         if path:
+#            self.window.reset_layout()
             manager = self.manager
             if manager.verify_database_connection(inform=True):
                 if manager.load():
@@ -182,6 +195,7 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('manager:executor:current_run:plot_panel')
     def _update_plot_panel(self, new):
         self.isotope_evolution_pane.plot_panel = new
+        self.summary_pane.plot_panel = new
 
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):

@@ -377,7 +377,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes = []
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
-                     'pattern', 'beam_diameter'
+                     'pattern', 'beam_diameter',
                      'position',
                      'weight', 'comment',
                      ):

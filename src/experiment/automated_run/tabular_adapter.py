@@ -38,6 +38,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     duration_width = Int(60)
     cleanup_width = Int(60)
     pattern_width = Int(80)
+    beam_diameter_width = Int(70)
 
 #    overlap_width = Int(50)
 #    autocenter_width = Int(70)
@@ -52,6 +53,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     # number values
     #===========================================================================
     extract_value_text = Property
+    beam_diameter_text = Property
     duration_text = Property
     cleanup_text = Property
     labnumber_text = Property
@@ -91,11 +93,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         ln = it.labnumber
         if it.user_defined_aliquot:
             ln = '{}-{:02n}'.format(it.labnumber, it.aliquot)
-#         else:
-#             if self.item.step:
-#                 ln = make_runid(it.labnumber,
-#                                     it.aliquot,
-#                                     it.step)
+
         return ln
 
     def _get_aliquot_text(self, trait, item):
@@ -108,12 +106,10 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         if it.step:
             al = '{}{}'.format(al, it.step)
 
-#        if  it.step:
-#            al = '{:02n}{}'.format(it.aliquot, it.step)
-#        elif it.aliquot:
-#            al = '{:02n}'.format(it.aliquot)
-
         return al
+
+    def _get_beam_diameter_text(self, trait, item):
+        return self._get_number('beam_diameter')
 
     def _get_extract_value_text(self, trait, item):
         return self._get_number('extract_value')
@@ -123,20 +119,12 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
     def _get_cleanup_text(self, trait, item):
         return self._get_number('cleanup')
-#
-#    def _get_aliquot_text(self, trait, item):
-#        return self._get_number('aliquot')
 
     def _get_number(self, attr):
         '''
             dont display 0.0's
         '''
         v = getattr(self.item, attr)
-#        if isinstance(v, str):
-#            try:
-#                v = '{:03n}'.format(int(v))
-#            except ValueError:
-#                v = ''
         if v:
             return '{:02n}'.format(v)
         else:
