@@ -68,6 +68,7 @@ class AutomatedRunSpec(Loggable):
     duration = Float
     cleanup = Float
     pattern = Str
+    beam_diameter = Float
     #===========================================================================
     # info
     #===========================================================================
@@ -92,7 +93,7 @@ class AutomatedRunSpec(Loggable):
     def to_string(self):
         attrs = ['labnumber', 'aliquot', 'step',
                    'extract_value', 'extract_units',
-                   'position', 'duration', 'cleanup',
+                   'position', 'duration', 'cleanup', 'beam_diameter',
                    'mass_spectrometer', 'extract_device',
                    'extraction_script', 'measurement_script',
                    'post_equilibration_script', 'post_measurement_script'
@@ -209,6 +210,7 @@ class AutomatedRunSpec(Loggable):
                    'extract_value', 'extract_units',
                    'position', 'duration', 'cleanup',
                    'pattern',
+                   'beam_diameter',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
                    'sample', 'irradiation', 'username', 'comment', 'skip', 'end_after'

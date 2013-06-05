@@ -139,6 +139,7 @@ class RunParser(Loggable):
                      'extract_value',
                      # ver 2.0
                      ('e_value', 'extract_value'),
+                     'beam_diameter'
                      ]:
             attr, rattr = self._get_attr(attr)
             idx = self._get_idx(header, attr)

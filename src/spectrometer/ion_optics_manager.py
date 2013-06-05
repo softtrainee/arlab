@@ -171,15 +171,16 @@ class IonOpticsManager(Manager):
                                            reference_isotope=isotope,
                                            spectrometer=spec
                                            )
-
+        graph = pc.graph
         # bind to the graphs close_func
         # self.close is called when graph window is closed
         # use so we can stop the timer
-        pc.graph.close_func = self.close
+        graph.close_func = self.close
         # set graph window attributes
-        pc.graph.window_title = 'Peak Center {}({}) @ {:0.3f}'.format(detector, isotope, center_dac)
-
-        self.open_view(pc.graph)
+        graph.window_title = 'Peak Center {}({}) @ {:0.3f}'.format(detector, isotope, center_dac)
+        graph.window_width = 300
+        graph.window_height = 250
+        self.open_view(graph)
 
         dac_d = pc.get_peak_center()
         self.peak_center_result = dac_d

@@ -21,21 +21,7 @@ from traitsui.tabular_adapter import TabularAdapter
 from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
     SKIP_COLOR, NOT_EXECUTABLE_COLOR, CANCELED_COLOR, TRUNCATED_COLOR, \
     FAILED_COLOR, END_AFTER_COLOR
-# from src.experiment.utilities.identifier import make_runid
 #============= local library imports  ==========================
-# def get_name(func):
-#    def _get_name(obj, trait, item):
-#        name = func(obj, trait, item)
-#
-#        if name:
-#            name, _ext = os.path.splitext(name)
-#
-#            if '_' in name:
-#                ns = name.split('_')
-#                name = '_'.join(ns[1:])
-#
-#        return name if name else ''
-#    return _get_name
 
 class AutomatedRunSpecAdapter(TabularAdapter):
 
@@ -163,7 +149,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         cols = [
 #                ('', 'state'),
                  ('Labnumber', 'labnumber'),
-                ('Aliquot', 'aliquot'),
+                 ('Aliquot', 'aliquot'),
                  ('Sample', 'sample'),
                  ('Position', 'position'),
 #                 ('Autocenter', 'autocenter'),
@@ -172,6 +158,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Units', 'extract_units'),
                  ('Duration', 'duration'),
                  ('Cleanup', 'cleanup'),
+                 ('Beam Diam.', 'beam_diameter'),
                  ('Pattern', 'pattern'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
