@@ -33,6 +33,7 @@ from src.ui.text_table import TextTableAdapter, SimpleTextTableAdapter, \
 from src.ui.qt.text_table_editor import TextTableEditor, FastTextTableEditor
 # from src.database.records.ui.analysis_summary import SignalAdapter
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
+from src.loggable import Loggable
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -69,18 +70,20 @@ class SignalAdapter(MultiTextTableAdapter):
              ]
 
 
-class PlotPanelHandler(ViewableHandler):
-    pass
+# class PlotPanelHandler(ViewableHandler):
+#    pass
 
-class PlotPanel(Viewable):
+# class PlotPanel(Viewable):
+class PlotPanel(Loggable):
 #    automated_run = Any
     arar_age = Instance(ArArAge)
     sample = Str
     irradiation = Str
     graph = Instance(Graph)
-    window_x = 0
-    window_y = 0
-    window_title = ''
+#    window_x = 0
+#    window_y = 0
+#    window_title = ''
+    plot_title = Str
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
     _ncounts = CInt
@@ -122,17 +125,21 @@ class PlotPanel(Viewable):
         '''
 
         g = self.graph
-        g.suppress_regression = True
+#        g.suppress_regression = True
 #        # construct plot panels graph
-        for det in dets:
-            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope),
+
+        for i, det in enumerate(dets):
+            g.new_plot(
+                       title=self.plot_title if i == 0 else '',
+                       ytitle='{} {} (fA)'.format(det.name, det.isotope),
+                       xtitle='time (s)',
                        padding_left=60,
-                       padding_right=10
+                       padding_right=10,
                        )
 
         g.set_x_limits(min=0, max=400)
 #
-        g.suppress_regression = False
+#        g.suppress_regression = False
         self.detectors = dets
 
     def clear_displays(self):
@@ -250,22 +257,17 @@ class PlotPanel(Viewable):
                 v = sig[iso]
             else:
                 v = ufloat(0, 0)
-#                v, e = 0, 0
 
             if iso in base:
                 bv = base[iso]
-#                bv = bv.nominal_value, bv.std_dev
             else:
                 bv = ufloat(0, 0)
-#                bv, be = 0, 0
 
             if iso in blank:
                 blv = blank[iso]
-#                blv, ble = blv.nominal_value, blv.std_dev
             else:
                 blv = ufloat(0, 0)
 
-#                blv, ble = 0, 0
             iv = v
             if cfb:
                 iv = iv - bv
@@ -302,9 +304,10 @@ class PlotPanel(Viewable):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
                                                 stack_order=self.stack_order
                                              ),
-                                      bind_index=False,
-                                      use_data_tool=False,
-                                      use_inspector_tool=True
+                                             bind_index=False,
+                                             use_data_tool=False,
+                                             use_inspector_tool=True,
+                                             padding_bottom=35
                                       )
     def traits_view(self):
 
@@ -362,12 +365,12 @@ class PlotPanel(Viewable):
                         display_grp
 
                         ),
-                 width=650,
-                 height=0.9,
-                 x=self.window_x,
-                 y=self.window_y,
-                 title=self.window_title,
-                 handler=PlotPanelHandler
+#                 width=650,
+#                 height=0.9,
+#                 x=self.window_x,
+#                 y=self.window_y,
+#                 title=self.window_title,
+#                 handler=PlotPanelHandler
                  )
         return v
 

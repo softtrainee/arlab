@@ -80,6 +80,9 @@ class BaseExperimentQueue(Loggable):
             runviews: list of runs
             freq: optional inter
         '''
+        if not runviews:
+            return
+
         with no_update(self):
             aruns = self.automated_runs
     #        self._suppress_aliquot_update = True

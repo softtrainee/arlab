@@ -54,6 +54,7 @@ from src.ui.thread import Thread
 # from src.ui.gui import invoke_in_main_thread
 # from pyface.image_resource import ImageResource
 from src.pyscripts.wait_dialog import WaitDialog
+from src.experiment.automated_run.automated_run import AutomatedRun
 # from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
@@ -70,7 +71,7 @@ class ExperimentExecutor(Experimentable):
 
     wait_dialog = Instance(WaitDialog, ())
 
-#    current_run = Instance(AutomatedRun)
+    current_run = Instance(AutomatedRun)
 
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
@@ -216,7 +217,8 @@ class ExperimentExecutor(Experimentable):
             self.cancel()
 
     def cancel(self, style='queue', cancel_run=False, msg=None, confirm=True):
-        arun = self.experiment_queue.current_run
+        arun = self.current_run
+#        arun = self.experiment_queue.current_run
         if style == 'queue':
             name = os.path.basename(self.path)
             name, _ = os.path.splitext(name)
@@ -662,7 +664,8 @@ class ExperimentExecutor(Experimentable):
         arun = arv.make_run()
 
         exp = self.experiment_queue
-        exp.current_run = arun
+#        exp.current_run = arun
+        self.current_run = arun
         self.debug('setup run {} of {}'.format(i, exp.name))
         self.debug('%%%%%%%%%%%%%%% Comment= {} %%%%%%%%%%%%%'.format(arun.comment))
 

@@ -32,6 +32,8 @@ class StackedGraph(Graph):
     equi_stack = True
     panel_height = 100
     _has_title = False
+    padding_bottom = 50
+
     def add_minor_xticks(self, plotid=0, **kw):
         if plotid != 0:
             kw['aux_component'] = self.plots[0]
@@ -57,7 +59,7 @@ class StackedGraph(Graph):
         '''
         '''
 #        self.plotcontainer.stack_order = 'bottom_to_top'
-        bottom = self.plotcontainer.stack_order == 'bottom_to_top'
+#        bottom = self.plotcontainer.stack_order == 'bottom_to_top'
 #        if self.equi_stack:
 #            kw['resizable'] = 'h'
 #            if 'bounds' not in kw:
@@ -144,7 +146,7 @@ class StackedGraph(Graph):
         pt = 20 if self._has_title else 10
         for i, pi in enumerate(comps):
             if n == 1:
-                pi.padding_bottom = 50
+                pi.padding_bottom = self.padding_bottom
 
                 pi.padding_top = pt
                 pi.index_axis.visible = True
@@ -152,7 +154,7 @@ class StackedGraph(Graph):
             else:
                 pi.padding_top = 0
                 if i == 0:
-                    pi.padding_bottom = 50
+                    pi.padding_bottom = self.padding_bottom
                     pi.index_axis.visible = True
                 else:
                     pi.index_axis.visible = False

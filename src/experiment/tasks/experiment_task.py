@@ -22,7 +22,7 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
-     ControlsPane, ConsolePane, ExplanationPane, WaitPane
+     ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
@@ -58,6 +58,9 @@ class ExperimentEditorTask(EditorTask):
                           )
 
     def create_dock_panes(self):
+
+        self.isotope_evolution_pane = IsotopeEvolutionPane()
+
         return [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
                 StatsPane(model=self.manager),
@@ -65,6 +68,7 @@ class ExperimentEditorTask(EditorTask):
                 ConsolePane(model=self.manager.executor),
                 WaitPane(model=self.manager.executor),
                 ExplanationPane(),
+                self.isotope_evolution_pane
                 ]
 
 #===============================================================================
@@ -174,6 +178,10 @@ class ExperimentEditorTask(EditorTask):
     def _update_editors(self, new):
         self.manager.experiment_queues = [ei.queue for ei in new]
 #        self.manager.executor.executable = False
+
+    @on_trait_change('manager:executor:current_run:plot_panel')
+    def _update_plot_panel(self, new):
+        self.isotope_evolution_pane.plot_panel = new
 
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):
