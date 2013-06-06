@@ -55,7 +55,7 @@ class Experimentor(Experimentable):
     #===========================================================================
     # permissions
     #===========================================================================
-    max_allowable_runs = 10000
+#    max_allowable_runs = 10000
     can_edit_scripts = True
     _last_ver_time = None
     _ver_timeout = 10
@@ -155,9 +155,11 @@ class Experimentor(Experimentable):
         '''
         '''
         def get_is_special(ln):
+            special = False
             if '-' in ln:
-                ln = ln.split('-')[0]
-            return ln, ln in ANALYSIS_MAPPING
+                special = ln.split('-')[0] in ANALYSIS_MAPPING
+            return ln, special
+#            return ln, ln in ANALYSIS_MAPPING
 
         groups = self._group_analyses(ans, exclude=exclude)
         db = self.db
@@ -176,42 +178,61 @@ class Experimentor(Experimentable):
                     level = irradiationpos.level
                     irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
 
-            for aliquot, ais in groupby(analyses, key=lambda x: x.aliquot):
-                if not special:
-                    ganalyses = groupby(ais, key=lambda x: x.extract_group)
+            for ki, an_iter in groupby(analyses, key=lambda x:x.user_defined_aliquot):
+                if ki:
+                    for aliquot, ais in groupby(an_iter, key=lambda x: x.aliquot):
+                        self._set_aliquot_step(ais, special, cln, aliquot, sample, irradiationpos)
                 else:
-                    ganalyses = ((0, ais),)
+                    self._set_aliquot_step(an_iter, special, cln, 0, sample, irradiationpos)
+#                    analyses = an_iter
+#            if k1:
+#                uda_ans = ans1
+#                analyses = ans2
+#            else:
+#                uda_ans = ans2
+#                analyses = ans1
 
-                an = db.get_last_analysis(cln, aliquot=aliquot)
-                aliquot_start = 0
-                step_start = 0
-                if an:
-                    aliquot_start = an.aliquot
-                    if an.step:
-                        step_start = LAlphas.index(an.step)
 
-                for egroup, aruns in ganalyses:
-                    aliquot_cnt = 1
-                    step_cnt = 1
-                    for arun in aruns:
-                        arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
 
-                        if arun.skip:
-                            arun.aliquot = 0
-                            continue
 
-                        if arun.state in ('failed', 'canceled'):
-                            continue
+    def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
+        db = self.db
+        if not special:
+            ganalyses = groupby(ais, key=lambda x: x.extract_group)
+        else:
+            ganalyses = ((0, ais),)
 
-                        if not arun.user_defined_aliquot:
-                            if arun.state == 'not run':
-                                arun.aliquot = int(aliquot_start + aliquot_cnt)
-                                if special or not egroup:
-                                    aliquot_cnt += 1
+        an = db.get_last_analysis(cln, aliquot=aliquot)
+        aliquot_start = 0
+        step_start = 0
+        if an:
+            aliquot_start = an.aliquot
+            if an.step:
+                step_start = LAlphas.index(an.step)
 
-                        if not special and egroup:
-                            arun._step = int(step_start + step_cnt)
-                            step_cnt += 1
+        for aliquot_cnt, (egroup, aruns) in enumerate(ganalyses):
+#                    aliquot_cnt =
+            step_cnt = 1
+            for arun in aruns:
+                arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
+
+                if arun.skip:
+                    arun.aliquot = 0
+                    continue
+
+                if arun.state in ('failed', 'canceled'):
+                    continue
+
+                if not arun.user_defined_aliquot:
+                    if arun.state == 'not run':
+#                        print cln, aliquot_start , aliquot_cnt
+                        arun.aliquot = int(aliquot_start + aliquot_cnt + 1)
+                        if special or not egroup:
+                            aliquot_cnt += 1
+
+                if not special and egroup:
+                    arun._step = int(step_start + step_cnt)
+                    step_cnt += 1
 
     def execute_queues(self, queues, path, text, text_hash):
         self.debug('setup executor')
@@ -292,10 +313,17 @@ class Experimentor(Experimentable):
         if eq:
             self.experiment_factory.queue = eq
             qf = self.experiment_factory.queue_factory
-            for a in ('username', 'mass_spectrometer', 'extract_device', 'username',
+            for a in ('username', 'mass_spectrometer', 'extract_device',
                       'delay_before_analyses', 'delay_between_analyses'
                       ):
-                setattr(qf, a, getattr(eq, a))
+                v = getattr(eq, a)
+                if v is not None:
+                    if isinstance(v, str):
+                        v = v.strip()
+                        if v:
+                            setattr(qf, a, v)
+                    else:
+                        setattr(qf, a, v)
 
     @on_trait_change('experiment_queue:selected')
     def _selected_changed(self, new):
@@ -324,7 +352,7 @@ class Experimentor(Experimentable):
 #===============================================================================
     def _executor_default(self):
         e = ExperimentExecutor(db=self.db,
-                               application=self.application
+#                               application=self.application
                                )
 
         e.on_trait_change(self.update_info, 'update_needed')
@@ -332,16 +360,16 @@ class Experimentor(Experimentable):
 
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,
-                              application=self.application,
+#                              application=self.application,
                               queue=self.experiment_queue,
-                              max_allowable_runs=self.max_allowable_runs,
-                              can_edit_scripts=self.can_edit_scripts
+#                              max_allowable_runs=self.max_allowable_runs,
+#                              can_edit_scripts=self.can_edit_scripts
                               )
 
-        from src.globals import globalv
-        if globalv.experiment_debug:
-            e.queue_factory.mass_spectrometer = 'Jan'
-            e.queue_factory.extract_device = 'Fusions Diode'
+#        from src.globals import globalv
+#        if globalv.experiment_debug:
+#            e.queue_factory.mass_spectrometer = 'Jan'
+#            e.queue_factory.extract_device = 'Fusions Diode'
 
         return e
 

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.constants import NULL_STR
+from src.constants import NULL_STR, LINE_STR
 from src.deprecate import deprecated
 
 ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
@@ -30,7 +30,7 @@ NON_EXTRACTABLE = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                       bg='Background', c='Cocktail', a='Air'
                       )
 
-SPECIAL_NAMES = [NULL_STR, 'Air', 'Cocktail', 'Blank Unknown',
+SPECIAL_NAMES = ['Special Labnumber', LINE_STR, 'Air', 'Cocktail', 'Blank Unknown',
                  'Blank Air', 'Blank Cocktail', 'Background', 'Pause', 'Degas']
 
 SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',

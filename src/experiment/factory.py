@@ -24,7 +24,7 @@ from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
-from src.constants import NULL_STR
+from src.constants import NULL_STR, LINE_STR
 from src.loggable import Loggable
 
 class ExperimentFactory(Loggable):
@@ -45,8 +45,8 @@ class ExperimentFactory(Loggable):
 
     queue = Instance(ExperimentQueue, ())
 
-    ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
-    ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
+#    ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
+#    ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
 
     _username = String
     _mass_spectrometer = String
@@ -58,8 +58,8 @@ class ExperimentFactory(Loggable):
     #===========================================================================
     # permisions
     #===========================================================================
-    max_allowable_runs = Int(10000)
-    can_edit_scripts = Bool(True)
+#    max_allowable_runs = Int(10000)
+#    can_edit_scripts = Bool(True)
 
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
@@ -68,9 +68,15 @@ class ExperimentFactory(Loggable):
         self.queue.clear_frequency_runs()
 
     def _add_button_fired(self):
+
+        eg = max(list(set([ai.extract_group for ai in self.queue.automated_runs])))
+
+
         new_runs, freq = self.run_factory.new_runs(
                                                    auto_increment_position=self.auto_increment_position,
-                                                   auto_increment_id=self.auto_increment_id)
+                                                   auto_increment_id=self.auto_increment_id,
+                                                   extract_group_cnt=eg
+                                                   )
         self.queue.add_runs(new_runs, freq)
 
     def _edit_mode_button_fired(self):
@@ -122,17 +128,20 @@ class ExperimentFactory(Loggable):
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_ok_add(self):
-        '''
-            tol should be a user permission
-        '''
-        tol = self.max_allowable_runs
-        ntest = len(self.queue.automated_runs) < tol
-        return  self.ok_run and self._labnumber and ntest
+#    def _get_ok_add(self):
+#        '''
+#            tol should be a user permission
+#        '''
+#        print self._mass_spectrometer, not self._mass_spectrometer in ('Spectrometer', LINE_STR)
+#        print bool(self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR))
+#        return self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR)
+#        tol = self.max_allowable_runs
+#        ntest = len(self.queue.automated_runs) < tol
+#        return  self.ok_run and self._labnumber and ntest
 
-    def _get_ok_run(self):
-        return (self._mass_spectrometer and self._mass_spectrometer != NULL_STR) and\
-                (self._extract_device and self._extract_device != NULL_STR) and self._username
+#    def _get_ok_run(self):
+#        return (self._mass_spectrometer and self._mass_spectrometer != NULL_STR) and\
+#                (self._extract_device and self._extract_device != NULL_STR) and self._username
 #===============================================================================
 # views
 #===============================================================================
@@ -162,16 +171,16 @@ class ExperimentFactory(Loggable):
             klass = AutomatedRunFactory
 
         rf = klass(db=self.db,
-                   application=self.application,
+#                   application=self.application,
                    extract_device=self._extract_device,
                    mass_spectrometer=self._mass_spectrometer,
-                   can_edit=self.can_edit_scripts
+#                   can_edit=self.can_edit_scripts
                    )
 
         return rf
 
-    def _can_edit_scripts_changed(self):
-        self.run_factory.can_edit = self.can_edit_scripts
+#    def _can_edit_scripts_changed(self):
+#        self.run_factory.can_edit = self.can_edit_scripts
 
 #===============================================================================
 # defaults
@@ -181,8 +190,11 @@ class ExperimentFactory(Loggable):
 
     def _queue_factory_default(self):
         eq = ExperimentQueueFactory(db=self.db,
-                                 application=self.application
-                                 )
+#                                    application=self.application
+                                    )
         return eq
 
+    def _db_changed(self):
+        self.queue_factory.db = self.db
+        self.run_factory.db = self.db
 #============= EOF =============================================

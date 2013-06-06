@@ -80,7 +80,7 @@ class ExperimentEditorTask(EditorTask):
                 WaitPane(model=self.manager.executor),
                 ExplanationPane(),
                 self.isotope_evolution_pane,
-                self.summary_pane
+                self.summary_pane,
                 ]
 
 #===============================================================================

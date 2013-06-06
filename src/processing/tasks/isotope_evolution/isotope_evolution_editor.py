@@ -84,7 +84,6 @@ class IsotopeEvolutionEditor(GraphEditor):
                             for plot in g.plots:
                                 g.add_vertical_rule(ti, plot=plot)
 
-#                        g.redraw()
         self.info('========================================')
         self.component.invalidate_and_redraw()
 
