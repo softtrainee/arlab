@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import Color, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, InstanceEditor
+    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, InstanceEditor, \
+    CheckListEditor
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
@@ -27,7 +28,6 @@ from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR, CANCELED_COLOR, \
     TRUNCATED_COLOR, FAILED_COLOR, END_AFTER_COLOR
 from src.ui.custom_label_editor import CustomLabel
-from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -60,12 +60,16 @@ class ExperimentFactoryPane(TraitsDockPane):
                  VGroup(
                      VGroup(
                             QFItem('username'),
-                            QFItem('mass_spectrometer',
-                                 editor=EnumEditor(name=make_qf_name('mass_spectrometers')),
-                             ),
-                            QFItem('extract_device',
-                                 editor=EnumEditor(name=make_qf_name('extract_devices')),
-                             ),
+                            HGroup(
+                                   QFItem('mass_spectrometer',
+                                          show_label=False,
+                                          editor=EnumEditor(name=make_qf_name('mass_spectrometers')),
+                                          ),
+                                   QFItem('extract_device',
+                                          show_label=False,
+                                          editor=EnumEditor(name=make_qf_name('extract_devices')),
+                                          )
+                                   ),
                             QFItem('delay_before_analyses'),
                             QFItem('delay_between_analyses')
                             ),
@@ -82,13 +86,12 @@ class ExperimentFactoryPane(TraitsDockPane):
                                         color='red',
                                         width=40
                                         ),
-                            CustomLabel(make_rf_name('info_label'),
-                                        ),
                             spring,
                             RFItem('end_after', width=30),
                             RFItem('skip')
                             ),
-
+                    CustomLabel(make_rf_name('info_label'),
+                                ),
     #                  UCustom('run_factory', enabled_when='ok_run'),
                     VFold(
                      self._get_info_group(),
@@ -106,7 +109,8 @@ class ExperimentFactoryPane(TraitsDockPane):
                             Item('auto_increment_id', label='L#'),
                             Item('auto_increment_position', label='Position'),
                             )
-                        )
+                        ),
+                 width=225
                  )
         return v
 
@@ -115,8 +119,10 @@ class ExperimentFactoryPane(TraitsDockPane):
 #                   HGroup(spring, CustomLabel('help_label', size=14), spring),
                    HGroup(
                           RFItem('selected_irradiation',
-                               label='Irradiation',
-                               editor=EnumEditor(name=make_rf_name('irradiations'))),
+#                                 label='Irradiation',
+
+                                 show_label=False,
+                                 editor=EnumEditor(name=make_rf_name('irradiations'))),
                           RFItem('selected_level',
                                  show_label=False,
 #                                 label='Level',
@@ -127,7 +133,9 @@ class ExperimentFactoryPane(TraitsDockPane):
 
                           ),
 
-                   HGroup(RFItem('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
+                   HGroup(RFItem('special_labnumber',
+                                 show_label=False,
+                                 editor=EnumEditor(values=SPECIAL_NAMES),
                                ),
                           RFItem('frequency', width=50),
                           spring
@@ -137,8 +145,9 @@ class ExperimentFactoryPane(TraitsDockPane):
                               width=100,
                               ),
                           RFItem('_labnumber', show_label=False,
-                              editor=EnumEditor(name=make_rf_name('labnumbers')),
-                              width=100,
+#                              editor=EnumEditor(name=make_rf_name('labnumbers')),
+                              editor=CheckListEditor(name=make_rf_name('labnumbers')),
+                              width= -20,
                               ),
                               spring,
                          ),
@@ -159,14 +168,15 @@ class ExperimentFactoryPane(TraitsDockPane):
                                     ),
                           spring
                           ),
-                   RFItem('weight',
-                        label='Weight (mg)',
-                        tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis',
-                        ),
-                   RFItem('comment',
-                        tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
-                        ),
-
+                    HGroup(
+                           RFItem('weight',
+                                  label='Weight (mg)',
+                                  tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis',
+                                  ),
+                           RFItem('comment',
+                                  tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
+                                  )
+                           ),
                        show_border=True,
                        label='Info'
                        )
@@ -219,17 +229,18 @@ class ExperimentFactoryPane(TraitsDockPane):
                              HGroup(
                                 RFItem('template',
                                         label='Step Heat Template',
-                                        editor=EnumEditor(name=make_rf_name('templates'))
-#                                         editor=EnumEditor(name='templates'
-# #                                                           make_rf_name('templates')
-#                                                         )
+                                        editor=EnumEditor(name=make_rf_name('templates')),
+                                        show_label=False,
                                         ),
                                 RFItem('edit_template',
                                        show_label=False,
-                                     editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
+                                       editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
                                      )
                                     ),
-
+                             HGroup(RFItem('extract_group_button', show_label=False,
+                                           tooltip='Group selected runs as a step heating experiment'
+                                           ),
+                                    RFItem('extract_group', label='Group ID')),
                              RFItem('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'
 
@@ -386,5 +397,10 @@ class SummaryPane(TraitsDockPane):
         v = View(UItem('plot_panel', editor=InstanceEditor(view='summary_view'),
                        style='custom'))
         return v
+
+# from pyface.tasks.enaml_dock_pane import EnamlDockPane
+# class TestEnamlPane(EnamlDockPane):
+#    def create_component(self):
+#        pass
 
 #============= EOF =============================================

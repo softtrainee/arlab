@@ -16,10 +16,10 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Property, cached_property, Int, \
-    Any
+    Any, String
 from traitsui.api import View, Item, EnumEditor, VGroup
 from src.loggable import Loggable
-from src.constants import NULL_STR
+from src.constants import NULL_STR, LINE_STR
 import os
 from src.paths import paths
 from ConfigParser import ConfigParser
@@ -33,10 +33,10 @@ class ExperimentQueueFactory(Loggable):
 
     username = Str
 
-    mass_spectrometer = Str
+    mass_spectrometer = String('Spectrometer')
     mass_spectrometers = Property
 
-    extract_device = Str
+    extract_device = String('Extract Device')
     extract_devices = Property
 
     delay_between_analyses = Int(30)
@@ -44,13 +44,14 @@ class ExperimentQueueFactory(Loggable):
     tray = Str
     trays = Property
 
+
     ok_make = Property(depends_on='mass_spectrometer, username')
     def _get_ok_make(self):
         ms = self.mass_spectrometer.strip()
         un = self.username.strip()
 #        ed = self.extract_device.strip()
 
-        return ms and ms != NULL_STR and un
+        return ms and not ms in ('Spectrometer', LINE_STR)  and un
 #                ed and ed != NULL_STR and  \
 #                    un
 #===============================================================================
@@ -104,7 +105,7 @@ class ExperimentQueueFactory(Loggable):
             names = self._get_names_from_config(cp, 'Extraction Devices')
         else:
             names = ['Fusions Diode', 'Fusions UV', 'Fusions CO2']
-        return [NULL_STR] + names
+        return ['Extract Device', LINE_STR] + names
 
     @cached_property
     def _get_mass_spectrometers(self):
@@ -122,7 +123,7 @@ class ExperimentQueueFactory(Loggable):
         else:
             names = ['Jan', 'Obama']
 
-        return [NULL_STR] + names
+        return ['Spectrometer', LINE_STR] + names
 
     def _get_names_from_config(self, cp, section):
         config = ConfigParser()

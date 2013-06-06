@@ -79,7 +79,7 @@ class Script(Loggable):
                            Label(self.label),
                            spring,
                            UItem('name',
-                                width= -225,
+                                width= -125,
                                 editor=EnumEditor(name='names')),
                            UItem('edit',
                                 enabled_when='name and name!="---"',

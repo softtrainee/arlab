@@ -330,7 +330,7 @@ class ExperimentExecutor(Experimentable):
             self._was_executed = True
 
     def _pre_execute_check(self):
-        exp = self.experiment_queues[0]
+        exp = self.experiment_queue
         if self._has_preceeding_blank_or_background(exp):
             if not self.massspec_importer.connect():
                 if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -734,7 +734,7 @@ class ExperimentExecutor(Experimentable):
         types = ['air', 'unknown', 'cocktail']
         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
         # get first air, unknown or cocktail
-        aruns = self.experiment_queue.automated_runs
+        aruns = exp.automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                             if a.analysis_type in types and \
                                 not a.skip and \

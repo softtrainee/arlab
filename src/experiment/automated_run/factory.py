@@ -23,7 +23,7 @@ from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
+from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES, LINE_STR
 from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
     convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
     make_special_identifier, make_standard_identifier
@@ -48,7 +48,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #     aliquot = Long
 #     o_aliquot = Either(Long, Int)
     user_defined_aliquot = False
-    special_labnumber = Str
+    special_labnumber = Str('Special Labnumber')
 
     _labnumber = Str
     labnumbers = Property(depends_on='project, selected_level')
@@ -56,9 +56,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     project = Any
     projects = Property(depends_on='db')
 
-    selected_irradiation = Any
+    selected_irradiation = Any('Irradiation')
     irradiations = Property(depends_on='db')
-    selected_level = Any
+    selected_level = Any('Level')
     levels = Property(depends_on='selected_irradiation, db')
 
     skip = Bool(False)
@@ -79,6 +79,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     extract_units_names = List(['---', 'watts', 'temp', 'percent'])
     _default_extract_units = 'watts'
 
+    extract_group = Int(enter_set=True, auto_set=False)
+    extract_group_button = Button('Group Selected')
+
     duration = Float
     cleanup = Float
     beam_diameter = Float
@@ -89,7 +92,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     #===========================================================================
     # templates
     #===========================================================================
-    template = String
+    template = String('Step Heat Template')
     templates = List  # Property(depends_on='update_templates_needed')
 #     update_templates_needed = Event
     edit_template = Event
@@ -171,7 +174,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
         special = labnumber in ANALYSIS_MAPPING
         return labnumber, special
 
-    def new_runs(self, auto_increment_position, auto_increment_id=False):
+    def new_runs(self, auto_increment_position, auto_increment_id=False, extract_group_cnt=0):
         '''
             returns a list of runs even if its only one run 
                     also returns self.frequency if using special labnumber else None
@@ -180,8 +183,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
         freq = self.frequency if special else None
 
-        if self.template and self.template != NULL_STR and not freq and not special :
-            arvs = self._render_template()
+        if self.use_template() and not freq and not special:
+#        if self.template and self.template  and not freq and not special :
+            arvs = self._render_template(extract_group_cnt)
         else:
             arvs = self._new_runs()
 
@@ -235,20 +239,20 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
                           )
         return template
 
-    def _render_template(self):
+    def _render_template(self, cnt):
         arvs = []
         template = self._new_template()
 
         for st in template.steps:
             if st.value or st.duration or st.cleanup:
-                arv = self._new_run(extract_group=self._extract_group_cnt,
+                arv = self._new_run(extract_group=cnt + 1,
                                     step=st.step_id,
                                     position=self.position
                                     )
                 arv.trait_set(**st.make_dict(self.duration, self.cleanup))
                 arvs.append(arv)
 
-        self._extract_group_cnt += 1
+#        self._extract_group_cnt += 1
         return arvs
 
     def _new_runs(self):
@@ -377,6 +381,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
             excludes = []
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
+                     'extract_group',
                      'pattern', 'beam_diameter',
                      'position',
                      'weight', 'comment',
@@ -415,19 +420,36 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _extract_group_button_fired(self):
+        if self.edit_mode and \
+            self._selected_runs and \
+                not self.suppress_update:
+
+            eg = self._selected_runs[0].extract_group + 1
+            self.extract_group = eg
+#            self.trait
+#            for si in self._selected_runs:
+#                si.extract_group = eg
+#            self.update_info_needed = True
+
 
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
 pattern,beam_diameter,
 position,
-weight, comment, skip, end_after''')
+weight, comment, skip, end_after, extract_group''')
     def _edit_handler(self, name, new):
+
         if self.edit_mode and \
             self._selected_runs and \
                 not self.suppress_update:
 
             for si in self._selected_runs:
                 setattr(si, name, new)
+
+            if name == 'extract_group':
+                self.update_info_needed = True
+
             self.changed = True
 
     @on_trait_change('''measurement_script:name, 
@@ -467,7 +489,7 @@ post_equilibration_script:name
         self._labnumber = NULL_STR
 
     def _special_labnumber_changed(self):
-        if self.special_labnumber != NULL_STR:
+        if not self.special_labnumber in ('Special Labnumber', LINE_STR):
             ln = convert_special_name(self.special_labnumber)
             if ln:
                 if ln in ('dg', 'pa'):
@@ -633,8 +655,11 @@ post_equilibration_script:name
 #        return {'a':'1:xxx','g':'2:bbb',}
         if self.db:
             keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
-            keys = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(keys)]
-            keys = [(NULL_STR, '00:{}'.format(NULL_STR))] + keys
+            keys = [(a, '{:02n}:{}'.format(i + 2, b)) for i, (a, b) in enumerate(keys)]
+            keys = [
+                    ('Irradiation', '00:Irradiation'.format(NULL_STR)),
+                    (LINE_STR, '01:{}'.format(LINE_STR)),
+                    ] + keys
             return dict(keys)
         else:
             return dict()
@@ -642,12 +667,17 @@ post_equilibration_script:name
     @cached_property
     def _get_levels(self):
         if self.db:
-            irrad = self.db.get_irradiation(self.selected_irradiation)
-            r = [(NULL_STR, '00:{}'.format(NULL_STR))]
-            if irrad:
-                rr = sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
-                rr = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(rr)]
-                r.extend(rr)
+            r = [
+                 ('Level', '00:Level'.format(NULL_STR)),
+                 (LINE_STR, '01:{}'.format(LINE_STR)),
+                 ]
+
+            if self.selected_irradiation and self.selected_irradiation != 'Irradiation':
+                irrad = self.db.get_irradiation(self.selected_irradiation)
+                if irrad:
+                    rr = sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
+                    rr = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(rr)]
+                    r.extend(rr)
 
             return dict(r)
         else:
@@ -666,7 +696,7 @@ post_equilibration_script:name
     @cached_property
     def _get_labnumbers(self):
         lns = []
-        if self.selected_level and self.selected_level != NULL_STR:
+        if self.selected_level and not self.selected_level in ('Level', LINE_STR):
             lns = [str(pi.labnumber.identifier)
                     for pi in self.selected_level.positions]
 
@@ -677,8 +707,8 @@ post_equilibration_script:name
                 lns = [str(ln.identifier)
                     for s in project.samples
                         for ln in s.labnumbers]
-
-        return [NULL_STR] + sorted(lns)
+        return sorted(lns)
+#        return [NULL_STR] + sorted(lns)
 
     def _get_position(self):
         return self._position
@@ -733,8 +763,11 @@ post_equilibration_script:name
         else:
             self.extract_units = NULL_STR
 
+    def _use_template(self):
+        return self.template and not self.template in ('Step Heat Template', LINE_STR)
+
     def _get_edit_template_label(self):
-        return 'Edit' if self.template and self.template != NULL_STR else 'New'
+        return 'Edit' if self._use_template() else 'New'
 
     @cached_property
     def _get_patterns(self):
@@ -750,11 +783,12 @@ post_equilibration_script:name
         if self.template in temps:
             self.template = temps[temps.index(self.template)]
         else:
-            self.template = NULL_STR
-        return temps
+            self.template = 'Step Heat Template'
+
+        return ['Step Heat Template', LINE_STR] + temps
 
     def _ls_directory(self, p, extension):
-        ps = [NULL_STR]
+        ps = []
         def test(path):
             return any([path.endswith(ext) for ext in extension.split(',')])
 
