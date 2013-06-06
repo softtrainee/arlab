@@ -68,68 +68,24 @@ class StackedGraph(Graph):
         n = len(self.plotcontainer.components)
 #        print n
         if 'title' in kw:
+            if self._has_title:
+                kw.pop('title')
             self._has_title = True
-#
+
         if n > 0:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
                 kw['bounds'] = (1, self.panel_height)
-# #            key = 'padding_top'
-# #            if 'title' not in kw:
-# #                kw['padding_top'] =
-#
-#            pass
-#        else:
-
-#            if bottom:
-#                kw['padding_bottom'] = 0
-#                if 'title' not in kw:
-#                    kw['padding_top'] = 20
-#                else:
-#                    kw['padding_top'] = 30
-#            else:
-#                kw['padding_bottom'] = 30
-#                kw['padding_top'] = 0
-#        print kw
 
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
 
         if n >= 1:
-#        if n >1:
-#            if not bottom:
-# #                plotiter = self.plots[1:]
-#                plotiter1 = self.plots[:-1]
-#            else:
-# #                plotiter = self.plots[:-1]
-#                plotiter1 = self.plots[1:]
-
-#            pm = self.plots[0]
             pm = self.plotcontainer.components[0]
             pind = pm.index_range
             for pi in self.plotcontainer.components[1:]:
                 pi.index_range = pind
 
-#            link = True
-#            if 'link' in kw:
-#                link = kw['link']
-#
-#            if link:
-#                pm = self.plots[0].index_mapper
-# #                pii = self.plots[0].index_axis
-# #                for pi in self.plots[1:]:
-# #                    pi.index_mapper = pm
-# #                    pi.index_axis = pii
-# #                print pi, link, self.plots[0]
-# ##                pi.padding_top = 0
-# ##                pi.padding_bottom = 0
-#                if link:
-# ##                    pi.index_range = self.plots[0].index_range
-#                    p.index_mapper = self.plots[0].index_mapper
-#            for pi in plotiter1:
-#                pi.index_axis.visible = False
-#                pi.padding_top = 0
-#                pi.padding_bottom = 0
         self.set_paddings()
         self._bounds_changed(self.plotcontainer.bounds)
 #        p.border_visible = False

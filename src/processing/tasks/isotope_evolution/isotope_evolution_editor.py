@@ -45,18 +45,49 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
+from traits.api import HasTraits, Instance, Dict
 from traitsui.api import View, Item, UItem
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 #============= standard library imports ========================
-from numpy import Inf
+from numpy import Inf, polyfit
 from enable.component_editor import ComponentEditor
 # from src.graph.regression_graph import StackedRegressionGraph
 from chaco.plot_containers import GridPlotContainer
+from src.processing.equilibration_utils import calc_optimal_eqtime
 #============= local library imports  ==========================
 
 class IsotopeEvolutionEditor(GraphEditor):
     container = Instance(GridPlotContainer)
+    graphs = Dict
+    def calculate_optimal_eqtime(self):
+        # get x,y data
+        self.info('========================================')
+        self.info('           Optimal Eq. Results')
+        self.info('========================================')
+
+        for unk in self._unknowns:
+
+            for fit in self.tool.fits:
+                if fit.fit and fit.use:
+                    isok = fit.name
+                    iso = unk.isotopes[isok]
+                    sniff = iso.sniff
+                    if sniff:
+                        xs, ys = sniff.xs, sniff.ys
+                        _rise_rates, ti, _vi = calc_optimal_eqtime(xs, ys)
+
+                        xs, ys = iso.xs, iso.ys
+                        m, b = polyfit(xs[:50], ys[:50], 1)
+                        self.info('{:<12s} {}  t={:0.1f}  initial static pump={:0.2e} (fA/s)'.format(unk.record_id, isok, ti, m))
+                        g = self.graphs[unk.record_id]
+                        if ti:
+                            for plot in g.plots:
+                                g.add_vertical_rule(ti, plot=plot)
+
+#                        g.redraw()
+        self.info('========================================')
+        self.container.invalidate_and_redraw()
+
     def save(self):
         for unk in self._unknowns:
             self._save_fit(unk)
@@ -82,20 +113,20 @@ class IsotopeEvolutionEditor(GraphEditor):
         n = len(unk)
         c = 1
         r = 1
-        if n > 2:
-            r = 2
-
-        while n > r * c:
-    #            if gpi.fixed == 'cols':
-    #                r += 1
-    #            else:
-            c += 1
-
         if n == 1:
             r = c = 1
+        elif n > 2:
+            r = 2
+
+            while n > r * c:
+                c += 1
+                if c > 7:
+                    r += 1
+
+        display_sniff = True
 
         self.container = self._container_factory((r, c))
-        g = self.graph
+
         for j, unk in enumerate(self._unknowns):
             set_ytitle = j % c == 0
             set_xtitle = j >= (n / r)
@@ -107,7 +138,9 @@ class IsotopeEvolutionEditor(GraphEditor):
                 if fit.fit and fit.use:
                     set_x_flag = True
                     isok = fit.name
-                    kw = dict(padding=[50, 1, 1, 1])
+                    kw = dict(padding=[50, 1, 1, 1],
+                              title=unk.record_id
+                              )
                     if set_ytitle:
     #                        kw = dict(padding=[50, 1, 1, 1])
                         kw['ytitle'] = '{} (fA)'.format(isok)
@@ -119,6 +152,14 @@ class IsotopeEvolutionEditor(GraphEditor):
 
                     if isok in unk.isotopes:
                         iso = unk.isotopes[isok]
+                        if display_sniff:
+                            sniff = iso.sniff
+                            if sniff:
+                                g.new_series(sniff.xs, sniff.ys,
+                                             plotid=i,
+                                             type='scatter',
+                                             fit=False)
+
                         xs, ys = iso.xs, iso.ys
                         g.new_series(xs, ys,
                                      fit=fit.fit,
@@ -131,7 +172,7 @@ class IsotopeEvolutionEditor(GraphEditor):
                 g.set_x_limits(0, ma * 1.1)
                 g.refresh()
 
-    #            self.graphs.append(g)
+            self.graphs[unk.record_id] = g
             self.container.add(g.plotcontainer)
 
     def traits_view(self):
@@ -146,7 +187,6 @@ class IsotopeEvolutionEditor(GraphEditor):
     def _container_factory(self, shape):
         return GridPlotContainer(shape=shape,
                                  spacing=(1, 1),
-                                 bgcolor='lightgray',
-
+#                                 bgcolor='lightgray',
                                  )
 #============= EOF =============================================
