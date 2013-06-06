@@ -55,6 +55,7 @@ from src.ui.thread import Thread
 # from pyface.image_resource import ImageResource
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
+from pyface.constant import CANCEL, NO
 # from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
@@ -699,7 +700,7 @@ class ExperimentExecutor(Experimentable):
             arun.monitor = mon
         return arun
 
-    def _get_blank(self, kind, ms):
+    def _get_blank(self, kind, ms, last=False):
         db = self.db
         sel = db.selector_factory(style='single')
         sess = db.get_session()
@@ -709,27 +710,34 @@ class ExperimentExecutor(Experimentable):
         q = q.join(gen_MassSpectrometerTable)
         q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
         q = q.filter(gen_MassSpectrometerTable.name == ms)
-        dbs = q.all()
 
-        sel.load_records(dbs, load=False)
+        dbr = None
+        if last:
+            q = q.order_by(meas_AnalysisTable.aliquot.asc())
+            q = q.limit(1)
+            dbr = q.one()
+#            dbr
+#            sel.load_records([dbs], load=False)
+#            dbr = sel.records[-1]
+        else:
+            dbs = q.all()
+            sel.load_records(dbs, load=False)
+            sel.selected = sel.records[-1]
+            info = sel.edit_traits(kind='livemodal')
+            if info.result:
+                dbr = sel.selected
 
-#        sel.selected = sel.records[-1]
+        if dbr:
+            dbr = sel._record_factory(dbr)
+#            dbr.load()
+            self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
 
-        info = sel.edit_traits(kind='livemodal')
-        if info.result:
-            dbr = sel.selected
-            if dbr:
-                dbr = sel._record_factory(dbr)
-                dbr.load()
-                self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
-
-                self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
-
-                return True
+            self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+            return dbr
 
     def _has_preceeding_blank_or_background(self, exp):
-        if globalv.experiment_debug:
-            return True
+#        if globalv.experiment_debug:
+#            return True
 
         types = ['air', 'unknown', 'cocktail']
         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
@@ -743,10 +751,29 @@ class ExperimentExecutor(Experimentable):
         if fa:
             ind, an = fa
             if ind == 0:
-                if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
+                pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer, last=True)
+                if pdbr:
+                    msg = '''First "{}" not preceeded by a blank. 
+Select from database?
+
+If "No" use last "blank_{}" 
+Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 else:
+                    msg = 'First "{}" not preceeded by a blank. Select from database?'
+
+                retval = self.confirmation_dialog(msg,
+                                                  cancel=True, return_retval=True)
+                if retval == CANCEL:
                     return
+                elif retval == NO:
+                    return self._get_blank(an.analysis_type, exp.mass_spectrometer, last=True)
+                else:
+                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
+
+#                if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
+#                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
+#                else:
+#                    return
             else:
                 pa = aruns[ind - 1]
 #                print pa, pa.analysis_type, btypes

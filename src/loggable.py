@@ -92,17 +92,20 @@ class Loggable(HasTraits):
 
         dialog.open()
 
-    def confirmation_dialog(self, msg, title=''):
+    def confirmation_dialog(self, msg, return_retval=False, cancel=False, title=''):
 #        return False
 
         dlg = myConfirmationDialog(
-                                message=msg,
-                                title=title,
-                                style='modal')
+                                   cancel=cancel,
+                                   message=msg,
+                                   title=title,
+                                   style='modal')
         retval = dlg.open()
-#
-        from pyface.api import YES
-        return retval == YES
+        if return_retval:
+            return retval
+        else:
+            from pyface.api import YES
+            return retval == YES
 #         dlg.control = dlg._create_control(None)
 #
 # #         invoke_in_main_thread

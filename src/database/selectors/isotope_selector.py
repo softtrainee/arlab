@@ -114,16 +114,16 @@ class IsotopeAnalysisSelector(DatabaseSelector):
     analysis_type = Str('Analysis Type')
     analysis_types = Property
 
-
     def _record_factory(self, idn):
-        if isinstance(idn, str):
+        if isinstance(idn, meas_AnalysisTable):
+            dbr = idn
+        elif isinstance(idn, str):
             uuid = idn
         else:
             uuid = idn.uuid
-        dbr = self.db.get_analysis_uuid(uuid)
-        d = self.record_klass(_dbrecord=dbr)
-        return d
+            dbr = self.db.get_analysis_uuid(uuid)
 
+        return self.record_klass(_dbrecord=dbr)
 
     def _get_selector_records(self, queries=None, limit=None, use_filters=True, **kw):
         sess = self.db.get_session()
