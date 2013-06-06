@@ -904,7 +904,11 @@ class Graph(Viewable, ContextMenuMixin):
     def add_vertical_rule(self, v, plotid=0, **kw):
         '''
         '''
-        plot = self.plots[plotid]
+        if 'plot' in kw:
+            plot = kw['plot']
+        else:
+            plot = self.plots[plotid]
+
         l = GuideOverlay(plot, value=v, orientation='v', **kw)
 
         plot.overlays.append(l)

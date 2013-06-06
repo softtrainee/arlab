@@ -31,8 +31,14 @@ def calc_optimal_eqtime(xs, ys):
 
     tol = 0.1
     rm = where(rise_rates < tol)[0]
-    idx = min(rm)
-    return rise_rates, xs[idx], ys[idx]
+    try:
+        idx = min(rm)
+        xx, yy = xs[idx], ys[idx]
+    except Exception, e:
+        xx, yy = None, None
+        print 'calc optimal eqtime', e
+
+    return rise_rates, xx, yy
 
 # def sniff(t, mag=1):
 #    rate = 0.5

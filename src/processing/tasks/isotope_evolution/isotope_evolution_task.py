@@ -45,26 +45,18 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                                          orientation='vertical'
                                          )
 
-#                                     PaneItem('pychron.pyscript.editor')
-#                                     ),
-#                          top=PaneItem('pychron.pyscript.description'),
-#                          bottom=PaneItem('pychron.pyscript.example'),
-
-
                           )
 
     def create_dock_panes(self):
-        self.unknowns_pane = UnknownsPane(adapter_klass=self.unknowns_adapter)
+        self._create_unknowns_pane()
         self.controls_pane = ControlsPane()
         return [
 
                 self.unknowns_pane,
-                self.controls_pane
+                self.controls_pane,
+                self._create_query_pane()
                 ]
-#        panes = super(FluxTask, self).create_dock_panes()
-#        return panes + [
-#                      IrradiationPane(model=self.manager)
-#                      ]
+
     def new_isotope_evolution(self):
         from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor
         editor = IsotopeEvolutionEditor(name='Iso Evo {:03n}'.format(self.iso_evo_editor_count),
@@ -72,16 +64,20 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                               )
         selector = self.manager.db.selector
 
-        selector.queries[0].criterion = 'NM-251'
-        selector._search_fired()
-        selector = self.manager.db.selector
+#        selector.queries[0].criterion = 'NM-251'
+#        selector._search_fired()
+#        selector = self.manager.db.selector
         self.unknowns_pane.items = selector.records[150:160]
+#
         editor.unknowns = self.unknowns_pane.items
         self._open_editor(editor)
         self.iso_evo_editor_count += 1
 
     _refit_thread = None
     def refit_isotopes(self, dry_run=False):
+        self.debug('refit disabled')
+        return
+
         from src.ui.thread import Thread
         if not self._refit_thread or not self._refit_thread.isRunning():
             pd = self.manager.open_progress()
@@ -168,4 +164,10 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                         self._refit_analyses(ln.analyses, dry_run, pd)
 
 
+#===============================================================================
+# equilibration tools
+#===============================================================================
+    def calculate_optimal_eqtime(self):
+        if self.active_editor:
+            self.active_editor.calculate_optimal_eqtime()
 #============= EOF =============================================

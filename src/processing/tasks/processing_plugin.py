@@ -29,6 +29,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
+from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -42,8 +43,31 @@ class ProcessingPlugin(BaseTaskPlugin):
                                               )
 
         return [process_so]
+    def _make_task_extension(self, actions, **kw):
+        return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p) for i, f, p in actions])
 
     def _my_task_extensions_default(self):
+        return [
+                self._make_task_extension([
+                                           ('recall_action', RecallAction, 'MenuBar/File'),
+                                           ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
+                                           ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
+                                           ('flux_edit', FluxAction, 'MenuBar/Edit'),
+                                           ('series', SeriesAction, 'MenuBar/Edit'),
+                                           ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
+                                           ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
+                                           ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
+                                           ('new_ideogram', IdeogramAction, 'MenuBar/Edit'),
+                                           ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
+                                           ('sclf_table', SCLFTableAction, 'MenuBar/Edit')
+                                           ]),
+                self._make_task_extension([
+                                           ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
+                                           ],
+                                          id='pychron.analysis_edit.isotope_evolution')
+
+                ]
+
         return [
                 TaskExtension(
                               actions=[
@@ -57,53 +81,54 @@ class ProcessingPlugin(BaseTaskPlugin):
 #                                                      factory=SpectrumAction,
 #                                                      path='MenuBar/File/New'
 #                                                      ),
-                                       SchemaAddition(
-                                                      id='recall_action',
-                                                      factory=RecallAction,
-                                                      path='MenuBar/File'
-                                                      ),
-                                       SchemaAddition(id='labnumber_entry',
-                                                      factory=LabnumberEntryAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='blank_edit',
-                                                      factory=BlankEditAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='flux_edit',
-                                                      factory=FluxAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='series',
-                                                      factory=SeriesAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='iso_evo',
-                                                      factory=IsotopeEvolutionAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='ic_factor',
-                                                      factory=ICFactorAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='batch_edit',
-                                                      factory=BatchEditAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='new_ideogram',
-                                                      factory=IdeogramAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='refit',
-                                                      factory=RefitIsotopeEvolutionAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
-                                       SchemaAddition(id='sclf_table',
-                                                      factory=SCLFTableAction,
-                                                      path='MenuBar/Edit'
-                                                      )
+#                                       SchemaAddition(
+#                                                      id='recall_action',
+#                                                      factory=RecallAction,
+#                                                      path='MenuBar/File'
+#                                                      ),
+#                                       SchemaAddition(id='labnumber_entry',
+#                                                      factory=LabnumberEntryAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='blank_edit',
+#                                                      factory=BlankEditAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='flux_edit',
+#                                                      factory=FluxAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='series',
+#                                                      factory=SeriesAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='iso_evo',
+#                                                      factory=IsotopeEvolutionAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='ic_factor',
+#                                                      factory=ICFactorAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='batch_edit',
+#                                                      factory=BatchEditAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='new_ideogram',
+#                                                      factory=IdeogramAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='refit',
+#                                                      factory=RefitIsotopeEvolutionAction,
+#                                                      path='MenuBar/Edit'
+#                                                      ),
+#                                       SchemaAddition(id='sclf_table',
+#                                                      factory=SCLFTableAction,
+#                                                      path='MenuBar/Edit'
+#                                                      )
                                        ]
-                              )
+                              ),
+                TaskExtension(actions=[])
 
                 ]
 

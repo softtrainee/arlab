@@ -126,7 +126,8 @@ class HistoryTablePane(TablePane):
                                                             editable=True,
                                                             drag_external=True,
                                                             selected='selected',
-                                                            dclicked='dclicked'
+                                                            dclicked='dclicked',
+                                                            multi_select=True
 #                                                            auto_resize_rows=True
                                                             )
                             )
