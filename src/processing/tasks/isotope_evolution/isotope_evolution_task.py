@@ -15,15 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from traits.api import HasTraits
-# from traitsui.api import View, Item
-# from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout
-# from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
-from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
+from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout, Tabbed
+from src.processing.tasks.analysis_edit.panes import ControlsPane
 from src.constants import MINNA_BLUFF_IRRADIATIONS
 import time
+from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -36,24 +33,28 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         return TaskLayout(
                           id='pychron.analysis_edit.isotope_evolution',
                           left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
+                                        Tabbed(
+                                               PaneItem('pychron.processing.editor'),
+                                               PaneItem('pychron.analysis_edit.unknowns'),
+                                               ),
+                                        PaneItem('pychron.analysis_edit.controls'),
+                                        orientation='vertical'
+                                      ),
                           right=Splitter(
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          )
-
                           )
 
     def create_dock_panes(self):
         self._create_unknowns_pane()
         self.controls_pane = ControlsPane()
+        self.plot_editor_pane = PlotEditorPane()
         return [
 
                 self.unknowns_pane,
                 self.controls_pane,
+                self.plot_editor_pane,
                 self._create_query_pane()
                 ]
 

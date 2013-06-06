@@ -57,7 +57,7 @@ from src.processing.equilibration_utils import calc_optimal_eqtime
 #============= local library imports  ==========================
 
 class IsotopeEvolutionEditor(GraphEditor):
-    container = Instance(GridPlotContainer)
+    component = Instance(GridPlotContainer)
     graphs = Dict
     def calculate_optimal_eqtime(self):
         # get x,y data
@@ -86,7 +86,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 
 #                        g.redraw()
         self.info('========================================')
-        self.container.invalidate_and_redraw()
+        self.component.invalidate_and_redraw()
 
     def save(self):
         for unk in self._unknowns:
@@ -125,7 +125,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 
         display_sniff = True
 
-        self.container = self._container_factory((r, c))
+        self.component = self._container_factory((r, c))
 
         for j, unk in enumerate(self._unknowns):
             set_ytitle = j % c == 0
@@ -173,15 +173,16 @@ class IsotopeEvolutionEditor(GraphEditor):
                 g.refresh()
 
             self.graphs[unk.record_id] = g
-            self.container.add(g.plotcontainer)
+            self.component.add(g.plotcontainer)
+
 
     def traits_view(self):
-        v = View(UItem('container',
+        v = View(UItem('component',
                        style='custom',
                        editor=ComponentEditor()))
         return v
 
-    def _container_default(self):
+    def _component_default(self):
         return self._container_factory((1, 1))
 
     def _container_factory(self, shape):
@@ -189,4 +190,5 @@ class IsotopeEvolutionEditor(GraphEditor):
                                  spacing=(1, 1),
 #                                 bgcolor='lightgray',
                                  )
+
 #============= EOF =============================================

@@ -20,7 +20,7 @@ from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
-from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
+# from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
