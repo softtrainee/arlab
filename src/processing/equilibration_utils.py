@@ -20,7 +20,7 @@ from traitsui.api import View, Item
 #============= standard library imports ========================
 from numpy import asarray, convolve, exp, linspace, where, ones_like
 from pylab import plot, show, axvline, legend, \
-    xlabel, ylabel, polyval, axhline
+    xlabel, ylabel, polyval, axhline, ylim, xlim
 #============= local library imports  ==========================
 def calc_optimal_eqtime(xs, ys):
 
@@ -52,7 +52,7 @@ def calc_optimal_eqtime(xs, ys):
 #    legend()
 #    show()
 
-def F(t, mag=1, rate=0.5):
+def F(t, mag=1, rate=0.8):
     '''
         extraction line - mass spec equilibration function
     '''
@@ -68,9 +68,9 @@ def G(t, rate=1):
 
 
 if __name__ == '__main__':
-    eq_m = -1
-    mag = 100
-    ts = linspace(0, 20, 500)
+    eq_m = -0.3
+    mag = 3000
+    ts = linspace(0, 200, 500)
     f = F(ts, mag=mag)
     g = G(ts, rate=eq_m)
     fg = f - g
@@ -78,24 +78,41 @@ if __name__ == '__main__':
     plot(ts, g, label='G Consumption')
     plot(ts, fg, label='F-G (Sniff Evo)')
 
-    rf, ti, vi = calc_optimal_eqtime(ts, f)
-    axvline(x=ti, ls='--', color='blue')
-    rfg, ti, vi = calc_optimal_eqtime(ts[1:], fg[1:])
-    axvline(x=ti, ls='--', color='red')
+    rf, rollover_F, vi_F = calc_optimal_eqtime(ts, f)
+    rfg, rollover_FG, vi_FG = calc_optimal_eqtime(ts, fg)
+    m = -0.6
 
-    m = -2
-    b = vi - m * ti
+    axvline(x=rollover_F, ls='--', color='blue')
+    axvline(x=rollover_FG, ls='--', color='red')
+
+    idx = list(ts).index(rollover_F)
+
+    b = fg[idx] - m * rollover_F
     evo = polyval((m, b), ts)
-    plot(ts, evo, ls='-.', color='red', label='Static Evo.')
-    ee = where(evo > 100)[0]
-    ti = ts[max(ee)]
-    print ti
+    plot(ts, evo, ls='-.', color='blue', label='Static Evo. A')
+    ee = where(evo > mag)[0]
+    to_F = ts[max(ee)]
+    print 'F', rollover_F, b, to_F
 
-    axvline(x=ti, ls='-', color='black')
+
+    b = vi_FG - m * rollover_FG
+    evo = polyval((m, b), ts)
+    plot(ts, evo, ls='-.', color='red', label='Static Evo. B')
+
+    print polyval((m, b), 200)
+    ee = where(evo > mag)[0]
+    to_FG = ts[max(ee)]
+    print 'FG', rollover_FG, b, to_FG
+
+    axvline(x=to_FG, ls='-', color='red')
+    axvline(x=to_F, ls='-', color='blue')
+
     axhline(y=mag, ls='-', color='black')
-    plot([ti], [mag], 'bo')
+#    plot([ti], [mag], 'bo')
 
     legend(loc=0)
+    ylim(2980, 3020)
+    xlim(0, 20)
     ylabel('Intensity')
     xlabel('t (s)')
 #    fig = gcf()

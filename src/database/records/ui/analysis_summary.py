@@ -87,6 +87,15 @@ class AnalysisSummaryAdapter(TextTableAdapter):
         info_table = self._make_info_table(record)
         return [info_table]
 
+    def _keyword(self, args):
+        name, value = args
+        return BoldCell('{}:'.format(name)), TextCell(value)
+
+    def _make_keyword_row(self, keys):
+        cells = [ci  for pairs in map(self._keyword, keys)
+                        for ci in pairs]
+        return TextRow(*cells)
+
     def _make_info_table(self, record):
 
         irrad = ''
@@ -97,43 +106,52 @@ class AnalysisSummaryAdapter(TextTableAdapter):
         j, je = record.j.nominal_value, record.j.std_dev
         flux = u'{} {}{}'.format(floatfmt(j), PLUSMINUS, errorfmt(j, je))
         sens = ''
+#        rows = [ci  for pairs in map(self._keyword, (('Analysis ID', record.record_id),
+#                                                         ('Irradiation', irrad),
+#                                                         ('Sample', record.sample)
+#                                                    ))
+#                                                    for ci in pairs]
+#        keywords1 = []
+
         tt = TextTable(
-                       TextRow(
-                               BoldCell('Analysis ID:'),
-                               TextCell('{}'.format(record.record_id)),
-                               BoldCell('Irradiation:'),
-                               TextCell(irrad),
-                               BoldCell('Sample:'),
-                               TextCell('{}'.format(record.sample))
-                               ),
-                       TextRow(
-                               BoldCell('Date:'),
-                               TextCell('{}'.format(record.rundate)),
-                               BoldCell('Time:'),
-                               TextCell('{}'.format(record.runtime))
-                               ),
-                       TextRow(
-                               BoldCell('Spectrometer:'),
-                               TextCell('{}'.format(record.mass_spectrometer)),
-                               BoldCell('Device:'),
-                               TextCell('{}'.format(record.extract_device))
-                               ),
-                       TextRow(
-                               BoldCell('J:'),
-                               TextCell(flux),
-                               BoldCell('Sensitivity:'),
-                               TextCell(sens)
-                               ),
-                       TextRow(
-                               BoldCell('Position:'),
-                               TextCell(record.position),
-                               BoldCell('Extract ({}):'.format(record.extract_units)),
-                               TextCell(record.extract_value),
-                               BoldCell('Duration (s):'),
-                               TextCell(record.extract_duration),
-                               BoldCell('Cleanup (s):'),
-                               TextCell(record.cleanup_duration),
-                               ),
+                       self._make_keyword_row([('Analysis ID', record.record_id),
+                                              ('Irradiation', irrad),
+                                              ('Sample', record.sample),
+                                              ('Comment', record.comment)]),
+                       self._make_keyword_row(
+                                              [('Date', record.rundate),
+                                               ('Time', record.runtime)]
+                                              ),
+                       self._make_keyword_row(
+                                              [('Spectrometer', record.mass_spectrometer),
+                                               ('Device', record.extract_device)]
+                                              ),
+                       self._make_keyword_row([('J', flux),
+                                               ('Sensitivity', sens)
+                                               ]),
+                       self._make_keyword_row([('Position', record.position),
+                                               ('Extract ({})'.format(record.extract_units),
+                                                record.extract_value),
+                                               ('Duration (s)', record.extract_duration),
+                                               ('Cleanup (s)', record.cleanup_duration)
+                                               ]
+                                              ),
+#                       TextRow(
+#                               BoldCell('J:'),
+#                               TextCell(flux),
+#                               BoldCell('Sensitivity:'),
+#                               TextCell(sens)
+#                               ),
+#                       TextRow(
+#                               BoldCell('Position:'),
+#                               TextCell(record.position),
+#                               BoldCell('Extract ({}):'.format(record.extract_units)),
+#                               TextCell(record.extract_value),
+#                               BoldCell('Duration (s):'),
+#                               TextCell(record.extract_duration),
+#                               BoldCell('Cleanup (s):'),
+#                               TextCell(record.cleanup_duration),
+#                               ),
                        border=False
                        )
         return tt
@@ -226,40 +244,43 @@ class AnalysisSummary(HasTraits):
         return isotopes
 
     def traits_view(self):
+        ODD_COLOR = '#CCFFFF'
+        BG_COLOR = 'light yellow'
+        HEADER_COLOR = 'lightgray'
         top = UItem('record',
                               editor=TextTableEditor(adapter=AnalysisSummaryAdapter(),
-                                                     bg_color='light yellow'
+                                                     bg_color=BG_COLOR
                                                      ),
                               height=0.25
                               )
         left = VGroup(
                     UItem('record',
                           editor=TextTableEditor(adapter=AgeAdapter(),
-                                                 bg_color='light yellow'
+                                                 bg_color=BG_COLOR
                                                  ),
                           height=0.12
                           ),
                     UItem('signals',
                            editor=TextTableEditor(adapter=RawAdapter(),
-                                                 bg_color='light yellow',
-                                                 odd_color='#9EE8FF',
-                                                 header_color='lightgray'
+                                                 bg_color=BG_COLOR,
+                                                 odd_color=ODD_COLOR,
+                                                 header_color=HEADER_COLOR
                                                  ),
                           height=0.25
                           ),
                       UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
-                                                              bg_color='light yellow',
-                                                              odd_color='#9EE8FF',
-                                                              header_color='lightgray'
+                                                              bg_color=BG_COLOR,
+                                                              odd_color=ODD_COLOR,
+                                                              header_color=HEADER_COLOR
                                                ),
 
                             height=0.25,
                             width=0.75
                             ))
         right = UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
-                                                                      bg_color='light yellow',
-                                                                      odd_color='#9EE8FF',
-                                                                      header_color='lightgray'
+                                                                      bg_color=BG_COLOR,
+                                                                      odd_color=ODD_COLOR,
+                                                                      header_color=HEADER_COLOR
                                                        ),
                                     height=0.25,
                                     width=0.25

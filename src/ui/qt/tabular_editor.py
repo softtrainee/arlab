@@ -16,6 +16,9 @@
 
 #============= enthought library imports =======================
 from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QTableView
+from PySide.QtGui import QFont, QFontMetrics
+from PySide.QtCore import Qt
+
 from PySide import QtCore
 from traits.api import Bool, on_trait_change, Any, Str, Event, List, Callable
 from traitsui.editors.tabular_editor import TabularEditor
@@ -40,7 +43,6 @@ class _myTableView(_TableView):
         super(_myTableView, self).__init__(*args, **kw)
         self.setDragDropMode(QAbstractItemView.DragDrop)
 
-        from PySide.QtGui import QFont, QFontMetrics
         editor = self._editor
 
 #        # reimplement row height
@@ -49,9 +51,12 @@ class _myTableView(_TableView):
 
         font = editor.adapter.get_font(editor.object, editor.name, 0)
         if font is not None:
-            size = QFontMetrics(QFont(font)).height()
+            fnt = QFont(font)
+            size = QFontMetrics(fnt)
+            vheader.setDefaultSectionSize(size.height())
+            hheader = self.horizontalHeader()
 
-        vheader.setDefaultSectionSize(size)
+            hheader.setFont(fnt)
 
     def super_keyPressEvent(self, event):
         """ Reimplemented to support edit, insert, and delete by keyboard.

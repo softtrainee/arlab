@@ -25,6 +25,7 @@ from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction
+
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
@@ -56,11 +57,11 @@ class ProcessingPlugin(BaseTaskPlugin):
 #                                                      factory=SpectrumAction,
 #                                                      path='MenuBar/File/New'
 #                                                      ),
-#                                       SchemaAddition(
-#                                                      id='recall_action',
-#                                                      factory=RecallAction,
-#                                                      path='MenuBar/File'
-#                                                      ),
+                                       SchemaAddition(
+                                                      id='recall_action',
+                                                      factory=RecallAction,
+                                                      path='MenuBar/File'
+                                                      ),
                                        SchemaAddition(id='labnumber_entry',
                                                       factory=LabnumberEntryAction,
                                                       path='MenuBar/Edit'

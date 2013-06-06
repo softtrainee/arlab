@@ -95,8 +95,10 @@ class IsotopeDatabaseManager(Manager):
             bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         except AttributeError:
             pass
+
     def make_analyses(self, ans, **kw):
-        return [self._record_factory(ai, **kw) for ai in ans]
+        if ans:
+            return [self._record_factory(ai, **kw) for ai in ans]
 
     def load_analyses(self, ans, **kw):
         self._load_analyses(ans, **kw)
@@ -130,6 +132,9 @@ class IsotopeDatabaseManager(Manager):
         return db
 
     def _load_analyses(self, ans, func=None):
+        if not ans:
+            return
+
         if func is None:
             func = lambda x: x.load_isotopes()
 

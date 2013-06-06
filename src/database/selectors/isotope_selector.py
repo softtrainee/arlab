@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Property
+from traits.api import Int, Property, Str
 # from traits.api import HasTraits, Any, List, String, \
 #    Float, Bool, Int, Instance, Property, Dict, Enum, on_trait_change, \
 #    Str, Trait, cached_property
@@ -34,6 +34,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
 from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.database.core.query import  IsotopeQuery
+from src.constants import NULL_STR, LINE_STR
 
 class IsotopeResultsAdapter(BaseResultsAdapter):
     columns = [
@@ -85,19 +86,6 @@ class IsotopeAnalysisSelector(DatabaseSelector):
     tabular_adapter = IsotopeResultsAdapter
 #    multi_graphable = Bool(True)
 
-#    def _load_hook(self):
-#        jt = self._join_table_parameters
-#        if jt:
-#            self.join_table_parameter = str(jt[0])
-#    def _selected_changed(self):
-#        print self.selected
-#    def set_data_manager(self, kind, **kw):
-#        if kind == 'FTP':
-#            dm = FTPH5DataManager(**kw)
-#        else:
-#            dm = H5DataManager(**kw)
-#
-#        self.data_manager = dm
     lookup = {'Labnumber':([gen_LabTable], gen_LabTable.identifier),
               'Step':([], meas_AnalysisTable.step),
               'Aliquot':([], meas_AnalysisTable.aliquot),
@@ -121,6 +109,12 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 
               }
 
+    mass_spectrometer = Str('Spectrometer')
+    mass_spectrometers = Property
+    analysis_type = Str('Analysis Type')
+    analysis_types = Property
+
+
     def _record_factory(self, idn):
         if isinstance(idn, str):
             uuid = idn
@@ -131,31 +125,66 @@ class IsotopeAnalysisSelector(DatabaseSelector):
         return d
 
 
-    def _get_selector_records(self, queries=None, limit=None, **kw):
+    def _get_selector_records(self, queries=None, limit=None, use_filters=True, **kw):
         sess = self.db.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.filter(meas_AnalysisTable.status != -1)
+        if queries and use_filters:
+            qs = self._build_filters()
+            if qs:
+
+                queries = queries + qs
+#                queries.extend(qs)
 
         return self._get_records(q, queries, limit, timestamp='analysis_timestamp')
 
+    def _get_mass_spectrometers(self):
+        db = self.db
+        mas = ['Spectrometer', LINE_STR]
+        ms = db.get_mass_spectrometers()
+        if ms:
+            mas += [m.name for m in ms]
+        return mas
 
-#        return records, q.statement, ', '.join(arguments)
-#        return q.all()
+    def _get_analysis_types(self):
+        db = self.db
+        ats = ['Analysis Type', LINE_STR]
+        ai = db.get_analysis_types()
+        if ai:
+            ats += [aii.name.capitalize() for aii in ai]
+        return ats
 
+    def _analysis_type_changed(self):
+        self._refresh_results()
 
-#        return self._db.get_analyses(**kw)
+    def _mass_spectrometer_changed(self):
+        self._refresh_results()
 
-#    def _get__join_table_parameters(self):
-#        dv = self._db.get_devices()
-#        return list(set([di.name for di in dv if di.name is not None]))
+    def _refresh_results(self):
+        import inspect
+        stack = inspect.stack()
+        self.debug('update graph called by {}'.format(stack[1][3]))
 
+#        qs = self._build_filters()
+#        if qs:
+#            qq = self.queries
+        self.execute_query(load=False)
 
+    def _build_filters(self):
+        ma = self.mass_spectrometer
+        an = self.analysis_type
+        qs = []
+#        if pr != NULL_STR:
+#            q = selector.query_factory(parameter='Project', criterion=pr)
+#            qs.append(q)
+        if ma not in ('Spectrometer', LINE_STR):
+            q = self.query_factory(parameter='Mass Spectrometer', criterion=ma)
+            qs.append(q)
 
-#        f = lambda x:[str(col)
-#                           for col in x.__table__.columns]
-#        params = f(b)
-#        return list(params)
-#        return
+        if an not in ('Analysis Type', LINE_STR):
+            q = self.query_factory(parameter='Analysis Type', criterion=an)
+            qs.append(q)
 
+        return qs
 #============= EOF =============================================
 

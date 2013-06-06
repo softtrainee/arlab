@@ -44,16 +44,16 @@ class RecallEditor(BaseTraitsEditor):
                         UItem('signal_graph',
                               style='custom',
                               label='Signals',
-                              defined_when='signal_graph'
+#                              defined_when='signal_graph'
                               ),
                         UItem('baseline_graph',
                               style='custom',
-                              defined_when='baseline_graph',
+#                              defined_when='baseline_graph',
                               label='Baselines',
                               ),
                         UItem('peak_center_graph',
                               style='custom',
-                              defined_when='peak_center_graph',
+#                              defined_when='peak_center_graph',
                               label='Peak Center',
                               ),
 #                       layout='tabbed'
