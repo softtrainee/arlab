@@ -17,13 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, on_trait_change, List, Any
 from src.envisage.tasks.editor_task import EditorTask
-from src.processing.tasks.analysis_edit.panes import UnknownsPane, \
-    ReferencesPane, ControlsPane
+from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
 from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.database.records.isotope_record import IsotopeRecordView
-from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
+from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 from src.processing.analysis import Analysis
 
 #============= standard library imports ========================
@@ -33,7 +32,7 @@ class AnalysisEditTask(EditorTask):
     unknowns_pane = Any
     controls_pane = Instance(ControlsPane)
 #    results_pane = Instance(ResultsPane)
-    plot_editor_pane = Instance(EditorPane)
+    plot_editor_pane = Instance(PlotEditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
 
@@ -47,7 +46,7 @@ class AnalysisEditTask(EditorTask):
         self._create_unknowns_pane()
 
         self.controls_pane = ControlsPane()
-        self.plot_editor_pane = EditorPane()
+        self.plot_editor_pane = PlotEditorPane()
 
         return [
                 self.unknowns_pane,

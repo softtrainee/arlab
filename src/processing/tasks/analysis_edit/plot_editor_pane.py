@@ -71,7 +71,7 @@ def flatten(nested):
     except TypeError:
         yield nested
 
-class EditorPane(TraitsDockPane):
+class PlotEditorPane(TraitsDockPane):
     component = Any
     name = 'Editor'
     id = 'pychron.processing.editor'

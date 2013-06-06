@@ -33,6 +33,8 @@ class GraphEditor(BaseTraitsEditor):
     unknowns = List
     _unknowns = List
     component = Property
+    _component = Any
+
     component_changed = Event
 
     def normalize(self, xs, start=None):
@@ -99,4 +101,5 @@ class GraphEditor(BaseTraitsEditor):
 
     def _get_component(self):
         return self.graph.plotcontainer
+
 #============= EOF =============================================
