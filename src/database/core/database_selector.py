@@ -174,8 +174,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.load_records(dbs, load=False)
 
 #    def execute_query(self, filter_str=None):
-    def execute_query(self, queries=None, load=True):
-        dbs = self._execute_query(queries)
+    def execute_query(self, queries=None, load=True, use_filters=True):
+        dbs = self._execute_query(queries, use_filters=use_filters)
         self.load_records(dbs, load=load)
 
     def get_recent(self):
@@ -201,6 +201,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _assemble_query(self, q, queries, lookup):
         joined = []
         for qi in queries:
+            if not qi.criterion:
+                continue
+
             if lookup.has_key(qi.parameter):
                 tabs, attr = lookup[qi.parameter]
                 for tab in tabs:
@@ -212,7 +215,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         return q
 
-    def _execute_query(self, queries=None, limit=None):
+    def _execute_query(self, queries=None, limit=None, use_filters=True):
         if queries is None:
             queries = self.queries
 
@@ -221,7 +224,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         # @todo: only get displayed columns
 
         dbs, query_str = self._get_selector_records(limit=limit,
-                                                    queries=queries
+                                                    queries=queries,
+                                                    use_filters=use_filters,
                                                     )
 
         if not self.verbose:

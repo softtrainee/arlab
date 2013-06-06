@@ -38,13 +38,9 @@ class AnalysisEditTask(EditorTask):
     unknowns_pane_klass = UnknownsPane
 
     def prepare_destroy(self):
-        print 'asdfasdf'
         self.unknowns_pane.dump()
 
     def create_dock_panes(self):
-        selector = self.manager.db.selector
-        selector.queries[0].criterion = 'NM-251'
-        selector._search_fired()
 
         self._create_unknowns_pane()
 
@@ -55,14 +51,21 @@ class AnalysisEditTask(EditorTask):
                 self.unknowns_pane,
                 self.controls_pane,
                 self.plot_editor_pane,
+                self._create_query_pane()
 #                self.results_pane,
-                QueryPane(model=selector),
-
                 ]
+    def _create_query_pane(self):
+        selector = self.manager.db.selector
+
+#        selector.queries[0].criterion = 'NM-251'
+        selector._search_fired()
+
+        return QueryPane(model=selector)
 
     def _create_unknowns_pane(self):
         self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
         up.load()
+        return up
 
     def _open_ideogram_editor(self, ans, name):
         _id = 'pychron.processing.figures'

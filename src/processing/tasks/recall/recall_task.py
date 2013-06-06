@@ -18,15 +18,39 @@
 from traits.api import on_trait_change
 from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.recall.recall_editor import RecallEditor
+from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
+from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class RecallTask(EditorTask):
+class RecallTask(AnalysisEditTask):
     name = 'Recall'
+    def _default_layout_default(self):
+        return TaskLayout(
+                          id='pychron.recall',
+#                          left=Splitter(
+#                                     PaneItem('pychron.analysis_edit.unknowns'),
+#                                     orientation='vertical'
+#                                     ),
+                          left=Splitter(
+                                         PaneItem('pychron.search.query'),
+                                         orientation='vertical'
+                                         )
 
-    def recall(self, records=None):
-        if records is None:
-            records = self.manager.recall()
+#                                     PaneItem('pychron.pyscript.editor')
+#                                     ),
+#                          top=PaneItem('pychron.pyscript.description'),
+#                          bottom=PaneItem('pychron.pyscript.example'),
+
+
+                          )
+    def create_dock_panes(self):
+        return [
+#                self._create_unknowns_pane(),
+                self._create_query_pane()
+                ]
+
+    def recall(self, records):
 
         ans = self.manager.make_analyses(records)
 

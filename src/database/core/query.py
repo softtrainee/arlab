@@ -24,13 +24,17 @@ from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import and_
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class NItem(Item):
+    pass
+    padding = -15
 
 def compile_query(query):
     from sqlalchemy.sql import compiler
-    try:
-        from MySQLdb.converters import conversions, escape
-    except ImportError:
-        return 'no sql conversion available'
+#    try:
+#        from MySQLdb.converters import conversions, escape
+#    except ImportError:
+#        return 'no sql conversion available'
+
     dialect = query.session.bind.dialect
     statement = query.statement
     comp = compiler.SQLCompiler(dialect, statement)
@@ -40,7 +44,10 @@ def compile_query(query):
         v = comp.params[k]
         if isinstance(v, unicode):
             v = v.encode(enc)
-        params.append(escape(v, conversions))
+        params.append(v)
+#        params.append(
+#                      escape(v, conversions)
+#                      )
 
     comp = comp.string.encode(enc)
     comp = comp.replace('?', '%s')
@@ -263,31 +270,39 @@ class Query(HasTraits):
 # views
 #===============================================================================
     def traits_view(self):
+
         top = HGroup(
-                Item('parameter', editor=EnumEditor(name='parameters'),
+
+                NItem('parameter', editor=EnumEditor(name='parameters'),
 #                     width= -100
                      ),
 #                Spring(springy=False,
 #                       width= -5),
-                Item('comparator',
+                NItem('comparator',
                      editor=EnumEditor(name='comparisons'),
                      ),
-                Item('add'),
-                Spring(springy=False,
-                       width=50, visible_when='not removable'),
-                Item('remove', visible_when='removable'),
-                show_labels=False
+#                NItem('add'),
+#                Spring(springy=False,
+#                       width=50, visible_when='not removable'),
+                show_labels=False,
+
                 )
 
         bottom = HGroup(
-                        Item('criterion'),
-                        Item('criterion', width= -30,
-                             show_label=False,
+                        NItem('add',
+                              ),
+                        NItem('remove',
+                               visible_when='removable'),
+                        NItem('criterion',
+                              ),
+                        NItem('criterion', width= -30,
                              editor=CheckListEditor(name='criteria')),
-
+                        show_labels=False
                         )
 
-        v = View(VGroup(top, bottom))
+        v = View(VGroup(top, bottom,
+                        show_border=True
+                        ))
         return v
 
 class IsotopeQuery(Query):

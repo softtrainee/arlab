@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int
 from traitsui.api import View, Item, InstanceEditor, ListEditor, \
-    VGroup, UItem, spring, HGroup, VSplit
+    VGroup, UItem, spring, HGroup, VSplit, EnumEditor
 
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
@@ -37,10 +37,8 @@ class QueryPane(TraitsDockPane):
                              editor=myTabularEditor(adapter=ResultsAdapter(),
                                                     selected='selected',
                                                     scroll_to_row='scroll_to_row',
-#                                                    selected_row='selected_row',
                                                     update='update',
                                                     column_clicked='column_clicked',
-#                                                    editable=False,
                                                     multi_select=True,
                                                     operations=['move'],
                                                     editable=True,
@@ -48,26 +46,34 @@ class QueryPane(TraitsDockPane):
                                                     dclicked='dclicked'
                                                     ),
                              show_label=False,
-#                               height=0.75,
-#                               width=600,
                             )
                         )
+
         query_grp = VGroup(
                         CustomLabel('dbstring', color='red'),
                         Item('queries', show_label=False,
                                    style='custom',
-                                   height=0.25,
                                    editor=ListEditor(mutable=False,
                                                   style='custom',
                                                   editor=InstanceEditor())
                              ),
-                        HGroup(spring, UItem('search')))
-
+                           HGroup(UItem('mass_spectrometer',
+                                 label='Spec.',
+                                 editor=EnumEditor(name='mass_spectrometers'),
+                                 ),
+                            UItem('analysis_type',
+                                 editor=EnumEditor(name='analysis_types'),
+                                 ),
+                            UItem('search',
+                                  )
+                            )
+                        )
 
         v = View(
                  VSplit(
                         results_grp,
-                        query_grp
+                        query_grp,
+#                        filter_grp,
                         )
                  )
         return v
@@ -90,6 +96,7 @@ class ResultsAdapter(TabularAdapter):
     mass_spectrometer_width = Int(50)
     aliquot_width = Int(50)
     timestamp_width = Int(110)
+    irradiation_info_width = Int(65)
 
 
 # class ResultsPane(TraitsDockPane):

@@ -39,6 +39,7 @@ class MeasurementPyScript(ValvePyScript):
     ncounts = 0
     info_color = MEASUREMENT_COLOR
     _time_zero = None
+    _time_zero_offset = 0
 
     _series_count = 0
     _regress_id = 0
@@ -91,7 +92,7 @@ class MeasurementPyScript(ValvePyScript):
             return
         self.ncounts = ncounts
         if not self._automated_run_call('py_sniff', ncounts,
-                           self._time_zero,
+                           self._time_zero, self._time_zero_offset,
                            series=self._series_count):
 
             self.cancel()
@@ -105,8 +106,10 @@ class MeasurementPyScript(ValvePyScript):
             return
 
         self.ncounts = ncounts
-        if not self._automated_run_call('py_data_collection', ncounts, self._time_zero,
-                      series=self._series_count):
+        if not self._automated_run_call('py_data_collection', ncounts,
+                                        self._time_zero,
+                                        self._time_zero_offset,
+                                        series=self._series_count):
             self.cancel()
 
 #        self._regress_id = self._series_count
@@ -131,12 +134,14 @@ class MeasurementPyScript(ValvePyScript):
             ncounts *= 0.25
 
         self.ncounts = ncounts
-        if not self._automated_run_call('py_baselines', ncounts, self._time_zero,
-                               mass,
-                               detector,
-                               settling_time=settling_time,
-                               series=self._series_count,
-                               nintegrations=cycles):
+        if not self._automated_run_call('py_baselines', ncounts,
+                                        self._time_zero,
+                                        self._time_zero_offset,
+                                        mass,
+                                        detector,
+                                        settling_time=settling_time,
+                                        series=self._series_count,
+                                        nintegrations=cycles):
 #
             self.cancel()
         self._series_count += 1
@@ -328,8 +333,20 @@ class MeasurementPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def set_time_zero(self):
-        self._time_zero = time.time()
+    def set_time_zero(self, offset=0):
+        '''
+            set the time_zero value. 
+            add offset to time_zero
+            e.g 
+                
+                T_o= ion pump closes
+                offset seconds after T_o. define time_zero
+                
+                T_eq= inlet closes
+            
+        '''
+        self._time_zero = time.time() + offset
+        self._time_zero_offset = offset
 
     @verbose_skip
     @command_register

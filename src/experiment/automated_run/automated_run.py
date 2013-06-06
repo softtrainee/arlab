@@ -285,7 +285,7 @@ class AutomatedRun(Loggable):
         if self.spectrometer_manager:
             self.spectrometer_manager.spectrometer.set_parameter(name, v)
 
-    def py_data_collection(self, ncounts, starttime, series=0):
+    def py_data_collection(self, ncounts, starttime, starttime_offset, series=0):
         if not self._alive:
             return
 
@@ -301,7 +301,8 @@ class AutomatedRun(Loggable):
         check_conditions = True
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series, fits,
+                                ncounts, starttime, starttime_offset,
+                                series, fits,
                                 check_conditions,
                                 True  # refresh graph after each iteration
                                 )
@@ -327,7 +328,7 @@ class AutomatedRun(Loggable):
         t.start()
         return evt
 
-    def py_sniff(self, ncounts, starttime, series=0):
+    def py_sniff(self, ncounts, starttime, starttime_offset, series=0):
         if not self._alive:
             return
 
@@ -341,7 +342,8 @@ class AutomatedRun(Loggable):
         check_conditions = False
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series, fits,
+                                ncounts, starttime, starttime_offset,
+                                series, fits,
                                 check_conditions,
                                 False  # dont refresh after each iteration
                                 )
@@ -354,7 +356,7 @@ class AutomatedRun(Loggable):
             return
 
         ion = self.ion_optics_manager
-        invoke_in_main_thread(self.plot_panel.show)
+#        invoke_in_main_thread(self.plot_panel.show)
 #        self.plot_panel.show()
 
         if mass:
@@ -1070,7 +1072,8 @@ anaylsis_type={}
         return True
 
     def _measure_iteration(self, grpname, data_write_hook,
-                           ncounts, starttime, series, fits, check_conditions, refresh):
+                           ncounts, starttime, starttime_offset,
+                           series, fits, check_conditions, refresh):
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
 
@@ -1078,13 +1081,14 @@ anaylsis_type={}
             self.warning('no spectrometer manager')
             return True
 
-#        self.condition_truncated = False
         graph = self.plot_panel.graph
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
-            graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
+            graph.set_x_limits(-starttime_offset, self._total_counts + (ma - mi) * 0.25)
+        elif starttime_offset > mi:
+            graph.set_x_limits(min= -starttime_offset)
 
         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer

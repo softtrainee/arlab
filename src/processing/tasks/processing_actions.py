@@ -71,18 +71,18 @@ class SpectrumAction(ProcessorAction):
 #        processor = self._get_processor()
 #        processor.new_ideogram()
 
-class NewRecallAction(ProcessorAction):
-    name = 'Recall'
-    accelerator = 'Ctrl+Shift+R'
-    def perform(self, event):
-        app = event.task.window.application
-        win = app.create_window(TaskWindowLayout(
-                                           'pychron.recall'
-                                           )
-                          )
-        win.open()
-        task = win.active_task
-        task.recall()
+# class NewRecallAction(ProcessorAction):
+#    name = 'Recall'
+#    accelerator = 'Ctrl+Shift+R'
+#    def perform(self, event):
+#        app = event.task.window.application
+#        win = app.create_window(TaskWindowLayout(
+#                                           'pychron.recall'
+#                                           )
+#                          )
+#        win.open()
+# #        task = win.active_task
+# #        task.recall()
 
 class RecallAction(ProcessorAction):
     name = 'Recall'
@@ -98,8 +98,9 @@ class RecallAction(ProcessorAction):
                               )
             win.open()
             task = win.active_task
-
-        task.recall()
+        else:
+            task.window.activate()
+#        task.recall()
 #        processor = self._get_processor()
 #        processor.new_ideogram()
 

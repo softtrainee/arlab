@@ -294,7 +294,7 @@ class PlotPanel(Loggable):
         return self._ncounts
 
     def _set_ncounts(self, v):
-        self.info('{} set to terminate after {} counts'.format(self.window_title, v))
+        self.info('{} set to terminate after {} counts'.format(self.plot_title, v))
         self._ncounts = v
 
     def _graph_default(self):
@@ -342,7 +342,7 @@ class PlotPanel(Loggable):
                                   editor=FastTextTableEditor(adapter=SignalAdapter(),
                                                          bg_color='lightyellow',
                                                          header_color='lightgray',
-                                                         font_size=12
+                                                         font_size=10
                                                          ),
                                          width=0.8
                                          ),
