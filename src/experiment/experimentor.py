@@ -37,18 +37,20 @@ from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
 from src.deprecate import deprecated
 from src.simple_timeit import timethis
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 
-class Experimentor(Experimentable):
+# class Experimentor(Experimentable):
+class Experimentor(IsotopeDatabaseManager):
     experiment_factory = Instance(ExperimentFactory)
-    experiment_queue = Instance(ExperimentQueue)
+#    experiment_queue = Instance(ExperimentQueue)
     executor = Instance(ExperimentExecutor)
 
     stats = Instance(StatsGroup, ())
 
-    title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
-    filelistener = None
-    username = Str
+#    title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
+#    filelistener = None
+#    username = Str
 
     save_enabled = Bool
 
@@ -56,9 +58,9 @@ class Experimentor(Experimentable):
     # permissions
     #===========================================================================
 #    max_allowable_runs = 10000
-    can_edit_scripts = True
-    _last_ver_time = None
-    _ver_timeout = 10
+#    can_edit_scripts = True
+#    _last_ver_time = None
+#    _ver_timeout = 10
 
 #    selected = Any
 #    pasted = Event
@@ -69,7 +71,7 @@ class Experimentor(Experimentable):
     #===========================================================================
     execute_event = Event
     activate_editor_event = Event
-    clear_display_event = Event
+#    clear_display_event = Event
 
     def test_queues(self, qs=None):
         if qs is None:
@@ -79,10 +81,6 @@ class Experimentor(Experimentable):
             qi.test_runs()
         self.executor.executable = all([ei.executable for ei in qs])
 
-#    def test_runs(self):
-#        for ei in self.experiment_queues:
-#            ei.test_runs()
-
     def test_connections(self):
         if not self.db:
             return
@@ -90,10 +88,6 @@ class Experimentor(Experimentable):
         if not self.db.connect():
             self.warning_dialog('Failed connecting to database. {}'.format(self.db.url))
             return
-
-#        if not self.repository.connect():
-#            self.warning_dialog('Failed connecting to repository {}'.format(self.repository.url))
-#            return
 
         return True
 
@@ -116,6 +110,11 @@ class Experimentor(Experimentable):
 #===============================================================================
 # info update
 #===============================================================================
+    def _get_all_automated_runs(self):
+        return (ai for ei in self.executor.experiment_queues
+                    for ai in ei.automated_runs
+                        if ai.executable)
+
     def _update(self):
         self.debug('update runs')
 
@@ -149,7 +148,8 @@ class Experimentor(Experimentable):
             exclude = tuple()
         key = lambda x: x.labnumber
 
-        return ((ln, group) for ln, group in groupby(sorted(ans, key=key), key) if ln not in exclude)
+        return ((ln, group) for ln, group in groupby(sorted(ans, key=key), key)
+                                if ln not in exclude)
 
     def _modify_aliquots_steps(self, ans, exclude=None):
         '''
@@ -159,14 +159,10 @@ class Experimentor(Experimentable):
             if '-' in ln:
                 special = ln.split('-')[0] in ANALYSIS_MAPPING
             return ln, special
-#            return ln, ln in ANALYSIS_MAPPING
 
-        groups = self._group_analyses(ans, exclude=exclude)
-        db = self.db
-        for ln, analyses in groups:
-            ln, special = get_is_special(ln)
-            cln = convert_identifier(ln)
-            analysis = db.get_last_analysis(cln)
+        def get_analysis_info(li):
+            sample, irradiationpos = '', ''
+            analysis = db.get_last_analysis(li)
             if analysis:
                 dbln = analysis.labnumber
                 sample = dbln.sample
@@ -176,31 +172,31 @@ class Experimentor(Experimentable):
                 irradiationpos = dbln.irradiation_position
                 if irradiationpos:
                     level = irradiationpos.level
-                    irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
+                    irradiationpos = '{}{}'.format(level.irradiation.name,
+                                                   level.name)
+            return sample, irradiationpos
 
-            for ki, an_iter in groupby(analyses, key=lambda x:x.user_defined_aliquot):
+        db = self.db
+        groups = self._group_analyses(ans, exclude=exclude)
+        for ln, analyses in groups:
+            ln, special = get_is_special(ln)
+            cln = convert_identifier(ln)
+
+            sample, irradiationpos = get_analysis_info(cln)
+
+            for ki, an_iter in groupby(analyses,
+                                       key=lambda x:x.user_defined_aliquot):
                 if ki:
-                    for aliquot, ais in groupby(an_iter, key=lambda x: x.aliquot):
-                        self._set_aliquot_step(ais, special, cln, aliquot, sample, irradiationpos)
+                    for aliquot, ais in groupby(an_iter,
+                                                key=lambda x: x.aliquot):
+                        self._set_aliquot_step(ais, special, cln, aliquot,
+                                               sample, irradiationpos)
                 else:
-                    self._set_aliquot_step(an_iter, special, cln, 0, sample, irradiationpos)
-#                    analyses = an_iter
-#            if k1:
-#                uda_ans = ans1
-#                analyses = ans2
-#            else:
-#                uda_ans = ans2
-#                analyses = ans1
-
-
-
+                    self._set_aliquot_step(an_iter, special, cln, 0,
+                                           sample, irradiationpos)
 
     def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
         db = self.db
-        if not special:
-            ganalyses = groupby(ais, key=lambda x: x.extract_group)
-        else:
-            ganalyses = ((0, ais),)
 
         an = db.get_last_analysis(cln, aliquot=aliquot)
         aliquot_start = 0
@@ -210,8 +206,12 @@ class Experimentor(Experimentable):
             if an.step:
                 step_start = LAlphas.index(an.step)
 
+        if not special:
+            ganalyses = groupby(ais, key=lambda x: x.extract_group)
+        else:
+            ganalyses = ((0, ais),)
+
         for aliquot_cnt, (egroup, aruns) in enumerate(ganalyses):
-#                    aliquot_cnt =
             step_cnt = 1
             for arun in aruns:
                 arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
@@ -352,7 +352,7 @@ class Experimentor(Experimentable):
 #===============================================================================
     def _executor_default(self):
         e = ExperimentExecutor(db=self.db,
-#                               application=self.application
+                               application=self.application
                                )
 
         e.on_trait_change(self.update_info, 'update_needed')

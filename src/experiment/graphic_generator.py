@@ -32,6 +32,7 @@ from src.paths import paths
 from chaco.plot_graphics_context import PlotGraphicsContext
 from traitsui.menu import Action
 from pyface.timer.do_later import do_later
+import math
 #============= local library imports  ==========================
 class myDataLabel(DataLabel):
     label_position = Any
@@ -195,6 +196,9 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
     i = 0
     off = 0
     reader = csv.reader(open(path, 'r'), delimiter=',')
+    writer = open(path + 'angles.txt', 'w')
+    _header = reader.next()
+
     for k, row in enumerate(reader):
         row = map(str.strip, row)
         if row:
@@ -202,6 +206,9 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
             x, y, l = Element('x'), Element('y'), Element('label')
             x.text = row[0]
             y.text = row[1]
+
+            a = math.degrees(math.atan2(float(y.text), float(x.text)))
+            writer.write('{} {}\n'.format(k + 1, a))
             l.text = str(i + 1 + off)
 
             e.append(l)
@@ -243,11 +250,11 @@ if __name__ == '__main__':
 #    do_later(gcc1.edit_traits)
 
     p = '/Users/ross/Sandbox/1_75mmirrad.txt'
-    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mmirrad_continuous.txt'
-    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad.txt'
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'
+#    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad.txt'
 
-    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
-    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
+#    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
+#    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
     gcc = open_txt(p)
     gcc.configure_traits()
 

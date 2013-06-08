@@ -205,10 +205,10 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager:activate_editor_event')
     def _set_active_editor(self, new):
-        self.debug('activating editor {}'.format(new))
+#        self.debug('activating editor {}'.format(new))
         for ei in self.editor_area.editors:
             if id(ei.queue) == new:
-                self.debug('editor {} activated'.format(new))
+#                self.debug('editor {} activated'.format(new))
                 self.editor_area.activate_editor(ei)
                 break
 

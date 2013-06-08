@@ -24,7 +24,8 @@ from src.processing.processor import Processor
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.processing.tasks.processing_actions import IdeogramAction, \
-    RecallAction, SpectrumAction, LabnumberEntryAction
+    RecallAction, SpectrumAction, LabnumberEntryAction, \
+    EquilibrationInspectorAction
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
@@ -49,122 +50,45 @@ class ProcessingPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):
         return [
                 self._make_task_extension([
-                                           ('recall_action', RecallAction, 'MenuBar/File'),
-                                           ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
-                                           ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
-                                           ('flux_edit', FluxAction, 'MenuBar/Edit'),
-                                           ('series', SeriesAction, 'MenuBar/Edit'),
-                                           ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
-                                           ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
-                                           ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
-                                           ('new_ideogram', IdeogramAction, 'MenuBar/Edit'),
-                                           ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
-                                           ('sclf_table', SCLFTableAction, 'MenuBar/Edit')
-                                           ]),
+                   ('recall_action', RecallAction, 'MenuBar/File'),
+                   ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
+                   ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
+                   ('flux_edit', FluxAction, 'MenuBar/Edit'),
+                   ('series', SeriesAction, 'MenuBar/Edit'),
+                   ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
+                   ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
+                   ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
+                   ('new_ideogram', IdeogramAction, 'MenuBar/Edit'),
+                   ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
+                   ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
+                   ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools')
+                   ]),
                 self._make_task_extension([
-                                           ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
-                                           ],
-                                          id='pychron.analysis_edit.isotope_evolution')
-
+                   ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
+                   ],
+                   id='pychron.analysis_edit.isotope_evolution')
                 ]
 
-        return [
-                TaskExtension(
-                              actions=[
-#                                       SchemaAddition(
-#                                                      id='new_ideogram_action',
-#                                                      factory=IdeogramAction,
-#                                                      path='MenuBar/File/New'
-#                                                      ),
-#                                       SchemaAddition(
-#                                                      id='new_spectrum_action',
-#                                                      factory=SpectrumAction,
-#                                                      path='MenuBar/File/New'
-#                                                      ),
-#                                       SchemaAddition(
-#                                                      id='recall_action',
-#                                                      factory=RecallAction,
-#                                                      path='MenuBar/File'
-#                                                      ),
-#                                       SchemaAddition(id='labnumber_entry',
-#                                                      factory=LabnumberEntryAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='blank_edit',
-#                                                      factory=BlankEditAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='flux_edit',
-#                                                      factory=FluxAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='series',
-#                                                      factory=SeriesAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='iso_evo',
-#                                                      factory=IsotopeEvolutionAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='ic_factor',
-#                                                      factory=ICFactorAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='batch_edit',
-#                                                      factory=BatchEditAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='new_ideogram',
-#                                                      factory=IdeogramAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='refit',
-#                                                      factory=RefitIsotopeEvolutionAction,
-#                                                      path='MenuBar/Edit'
-#                                                      ),
-#                                       SchemaAddition(id='sclf_table',
-#                                                      factory=SCLFTableAction,
-#                                                      path='MenuBar/Edit'
-#                                                      )
-                                       ]
-                              ),
-                TaskExtension(actions=[])
 
-                ]
+    def _meta_task_factory(self, i, f, n):
+        return TaskFactory(id=i, factory=f, name=n)
+
 
     def _tasks_default(self):
         return [
-#                TaskFactory(id='pychron.processing',
-#                            factory=self._task_factory,
-#                            accelerator='Ctrl+P',
-#                            name='Processing'
-#                            ),
-                TaskFactory(id='pychron.recall', factory=self._recall_task_factory, name='Recall'),
-                TaskFactory(id='pychron.entry', factory=self._labnumber_task_factory, name='Labnumber',
-                            ),
-                TaskFactory(id='pychron.analysis_edit.blanks', factory=self._blanks_edit_task_factory,
-                            name='Blanks',
-                            ),
-                TaskFactory(id='pychron.analysis_edit.flux', factory=self._flux_task_factory, name='Flux',
-                            ),
-                TaskFactory(id='pychron.analysis_edit.series', factory=self._series_task_factory,
-                            name='Series',
-                            ),
-                TaskFactory(id='pychron.analysis_edit.isotope_evolution', factory=self._iso_evo_task_factory,
-                            name='Series',
-                            ),
-                TaskFactory(id='pychron.analysis_edit.ic_factor', factory=self._ic_factor_task_factory,
-                            name='IC Factor',
-                            ),
-                TaskFactory(id='pychron.analysis_edit.batch', factory=self._batch_edit_task_factory,
-                            name='Batch Edit',
-                            ),
-                TaskFactory(id='pychron.processing.figures', factory=self._figure_task_factory,
-                            name='Figures',
-                            ),
-                TaskFactory(id='pychron.processing.publisher', factory=self._publisher_task_factory,
-                            name='Publisher',
-                            ),
+                self._meta_task_factory(i, f, n)
+                    for i, f, n in (
+                        ('pychron.recall', self._recall_task_factory, 'Recall'),
+                        ('pychron.entry', self._labnumber_task_factory, 'Labnumber'),
+                        ('pychron.analysis_edit.blanks', self._blanks_edit_task_factory, 'Blanks'),
+                        ('pychron.analysis_edit.flux', self._flux_task_factory, 'Flux'),
+                        ('pychron.analysis_edit.series', self._series_task_factory, 'Series'),
+                        ('pychron.analysis_edit.isotope_evolution', self._iso_evo_task_factory, 'Isotope Evolution'),
+                        ('pychron.analysis_edit.ic_factor', self._ic_factor_task_factory, 'IC Factor'),
+                        ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),
+                        ('pychron.processing.figures', self._figure_task_factory, 'Figures'),
+                        ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher')
+                                    )
                 ]
 
     def _processor_factory(self):

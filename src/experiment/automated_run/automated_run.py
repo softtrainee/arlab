@@ -348,7 +348,7 @@ class AutomatedRun(Loggable):
                                 False  # dont refresh after each iteration
                                 )
 
-    def py_baselines(self, ncounts, starttime, mass, detector,
+    def py_baselines(self, ncounts, starttime, starttime_offset, mass, detector,
                     series=0, nintegrations=5, settling_time=4,
                     fit='average_SEM'
                     ):
@@ -376,7 +376,9 @@ class AutomatedRun(Loggable):
         check_conditions = False
         result = self._measure_iteration(gn,
                             self._get_data_writer(gn),
-                            ncounts, starttime, series, fits,
+                            ncounts, starttime,
+                            starttime_offset,
+                            series, fits,
                             check_conditions,
                             True  # dont refresh after each iteration
                             )

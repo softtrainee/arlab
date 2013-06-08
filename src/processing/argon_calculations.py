@@ -62,12 +62,12 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
         
         solve age equation for J
     '''
-    if isinstance(rad40, (list, tuple, str)):
-        rad40 = ufloat(rad40)
-    if isinstance(k39, (list, tuple, str)):
-        k39 = ufloat(k39)
-    if isinstance(age, (list, tuple, str)):
-        age = ufloat(age)
+    if isinstance(rad40, (list, tuple)):
+        rad40 = ufloat(*rad40)
+    if isinstance(k39, (list, tuple)):
+        k39 = ufloat(*k39)
+    if isinstance(age, (list, tuple)):
+        age = ufloat(*age)
 #    age = (1 / constants.lambdak) * umath.log(1 + JR)
     try:
         r = rad40 / k39

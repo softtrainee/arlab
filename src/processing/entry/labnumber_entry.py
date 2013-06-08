@@ -526,6 +526,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
             self.tray = ts[-1]
 
         return ts
+
     def _get_map_path(self):
         return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
 

@@ -470,7 +470,7 @@ class ExperimentExecutor(Experimentable):
             if self.end_at_run_completion:
                 break
 
-        self.info('Executed {:n} sets. total runs={:n}'.format(ec, rc))
+        self.info('Executed {:n} queues. total runs={:n}'.format(ec, rc))
         self._alive = False
 
     def _delay(self, delay, message='between'):
@@ -700,7 +700,7 @@ class ExperimentExecutor(Experimentable):
             arun.monitor = mon
         return arun
 
-    def _get_blank(self, kind, ms, last=False):
+    def _get_blank(self, kind, ms, last=False, info=True):
         db = self.db
         sel = db.selector_factory(style='single')
         sess = db.get_session()
@@ -730,7 +730,8 @@ class ExperimentExecutor(Experimentable):
         if dbr:
             dbr = sel._record_factory(dbr)
 #            dbr.load()
-            self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
+            if info:
+                self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
 
             self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
             return dbr
@@ -751,7 +752,8 @@ class ExperimentExecutor(Experimentable):
         if fa:
             ind, an = fa
             if ind == 0:
-                pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer, last=True)
+                pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer,
+                                       last=True, info=False)
                 if pdbr:
                     msg = '''First "{}" not preceeded by a blank. 
 Select from database?

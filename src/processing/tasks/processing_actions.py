@@ -28,12 +28,21 @@ class ProcessorAction(Action):
         processor = app.get_service('src.processing.processor.Processor')
         return processor
 
-# class FindAction(ProcessorAction):
-#    name = 'Find...'
-#    accelerator = 'Ctrl+f'
-#    def perform(self, event):
-#        processor = self._get_processor(event)
-#        processor.find()
+class EquilibrationInspectorAction(Action):
+    name = 'Equilibration Inspector...'
+    def perform(self, event):
+        from src.processing.utils.equil import EquilibrationInspector
+
+        eq = EquilibrationInspector()
+        eq.refresh()
+        app = event.task.window.application
+        app.open_view(eq)
+
+
+
+
+
+
 
 class IdeogramAction(ProcessorAction):
     name = 'Ideogram'
@@ -68,21 +77,6 @@ class SpectrumAction(ProcessorAction):
 
         task.new_spectrum()
 
-#        processor = self._get_processor()
-#        processor.new_ideogram()
-
-# class NewRecallAction(ProcessorAction):
-#    name = 'Recall'
-#    accelerator = 'Ctrl+Shift+R'
-#    def perform(self, event):
-#        app = event.task.window.application
-#        win = app.create_window(TaskWindowLayout(
-#                                           'pychron.recall'
-#                                           )
-#                          )
-#        win.open()
-# #        task = win.active_task
-# #        task.recall()
 
 class RecallAction(ProcessorAction):
     name = 'Recall'
@@ -100,9 +94,6 @@ class RecallAction(ProcessorAction):
             task = win.active_task
         else:
             task.window.activate()
-#        task.recall()
-#        processor = self._get_processor()
-#        processor.new_ideogram()
 
 
 class LabnumberEntryAction(Action):
@@ -124,15 +115,5 @@ class LabnumberEntryAction(Action):
             task.window.activate()
 
 
-
-#        app = event.task.window.application
-
-#        manager = app.get_service('src.processing.entry.labnumber_entry.LabnumberEntry')
-    #        manager = self._get_labnumber_entry(event)
-#        if manager.verify_database_connection(inform=True):
-
-    #            lne = manager._labnumber_entry_factory()
-#            self._open_editor(event)
-    #            open_manager(event.window.application, lne)
 
 #============= EOF =============================================

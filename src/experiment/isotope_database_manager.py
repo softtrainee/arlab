@@ -44,7 +44,10 @@ class IsotopeDatabaseManager(Manager):
     def __init__(self, bind=True, connect=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
         if bind:
-            self.bind_preferences()
+            try:
+                self.bind_preferences()
+            except AttributeError, e:
+                self.debug('bind exception. {}'.format(e))
 
         if connect and not self.db.connect():
             self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
