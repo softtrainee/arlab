@@ -233,6 +233,7 @@ class ExperimentPlugin(BaseTaskPlugin):
                 TaskFactory(id=self.id,
                             factory=self._task_factory,
                             name='Experiment',
+                            task_group='experiment'
                             ),
 #                TaskFactory(id='pychron.labnumber_entry',
 #                            factory=self._labnumber_task_factory,

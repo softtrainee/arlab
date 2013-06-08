@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
 from traitsui.api import View, UItem, Group, InstanceEditor, HGroup, \
-    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup, RangeEditor
+    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup, RangeEditor, \
+        VFold
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
@@ -26,6 +27,10 @@ from src.ui.led_editor import LEDEditor
 # from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 
 
+def SUItem(name, **kw):
+    return UItem('object.stage_manager.{}'.format(name),
+                defined_when='mode!="client"',
+                 **kw)
 
 class BaseLaserPane(TraitsTaskPane):
     def traits_view(self):
@@ -40,6 +45,11 @@ class BaseLaserPane(TraitsTaskPane):
 #             v=View()
         return v
 
+class AxesPane(TraitsDockPane):
+    name = 'Axes'
+    def traits_view(self):
+        agrp = SUItem('stage_controller', style='custom')
+        return View(agrp)
 
 class StageControlPane(TraitsDockPane):
     name = 'Stage'
@@ -52,11 +62,6 @@ class StageControlPane(TraitsDockPane):
 
         def SItem(name, **kw):
             return Item(make_sm_name(name),
-                        defined_when='mode!="client"',
-                         **kw)
-
-        def SUItem(name, **kw):
-            return UItem('object.stage_manager.{}'.format(name),
                         defined_when='mode!="client"',
                          **kw)
 
@@ -73,7 +78,7 @@ class StageControlPane(TraitsDockPane):
         #
         #=======================================================================
 
-        agrp = SUItem('stage_controller', style='custom')
+#         agrp = SUItem('stage_controller', style='custom')
         pgrp = Group(
                      SUItem('calibrated_position_entry',
                            tooltip='Enter a positon e.g 1 for a hole, or 3,4 for X,Y'
@@ -143,6 +148,9 @@ class StageControlPane(TraitsDockPane):
                            )
 
             cgrp = Group(
+                         SUItem('stage_controller', style='custom',
+                                label='Axes'
+                                ),
                          cngrp,
                          cagrp,
                          SUItem('points_programmer',
@@ -153,10 +161,14 @@ class StageControlPane(TraitsDockPane):
                               style='custom'),
                          layout='tabbed'
                          )
-            v = View(agrp,
-                     hgrp,
-                     pgrp,
-                     cgrp
+            v = View(
+#                      VFold(agrp,
+                            VGroup(
+                                  hgrp,
+                                  pgrp,
+                                  cgrp
+                                )
+#                            )
                      )
         else:
             v = View()
@@ -224,9 +236,9 @@ class ClientPane(TraitsTaskPane):
                        UItem('enable', editor=ButtonEditor(label_value='enable_label'))
                        ),
                  Item('position'),
-                 Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
-                 Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
-                 Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('x', editor=RangeEditor(low=-25.0, high=25.0)),
+                 Item('y', editor=RangeEditor(low=-25.0, high=25.0)),
+                 Item('z', editor=RangeEditor(low=-25.0, high=25.0)),
                  title='Laser Manager',
                  )
         return v
@@ -245,6 +257,9 @@ class FusionsCO2StagePane(StageControlPane):
 class FusionsCO2ControlPane(ControlPane):
     id = 'pychron.fusions.co2.control'
 
+class FusionsCO2AxesPane(AxesPane):
+    id = 'pychron.fusions.co2.axes'
+
 #===============================================================================
 # Diode
 #===============================================================================
@@ -261,6 +276,10 @@ class FusionsDiodeStagePane(StageControlPane):
 
 class FusionsDiodeControlPane(ControlPane):
     id = 'pychron.fusions.diode.control'
+
+
+class FusionsDiodeAxesPane(AxesPane):
+    id = 'pychron.fusions.diode.axes'
 
 
 class FusionsDiodeSupplementalPane(SupplementalPane):
