@@ -247,4 +247,11 @@ class ExtractionEditor(PyScriptEditor):
     kind = 'Extraction'
     def _editor_default(self):
         return ParameterEditor(editor=self)
+
+
+class BakeoutEditor(PyScriptEditor):
+    kind = 'Bakeout'
+    def _editor_default(self):
+        return ParameterEditor(editor=self)
+
 #============= EOF =============================================

@@ -31,7 +31,7 @@ class GraphPane(TraitsTaskPane):
 
 class ControllerPane(TraitsDockPane):
     id = 'bakeout.controller'
-    name = 'Controller'
+    name = 'Channels'
     def traits_view(self):
         controller_grp = HGroup()
         for tr in self.model._get_controller_names():
@@ -43,34 +43,37 @@ class ControlsPane(TraitsDockPane):
     id = 'bakeout.controls'
     name = 'Controls'
     def traits_view(self):
-        control_grp = HGroup(
-                             VGroup(Item('execute',
-                                         editor=ButtonEditor(label_value='execute_label'), show_label=False,
-                                         enabled_when='execute_ok'),
-                                    HGroup(spring, Item('training_run', label='Training Run'))
-                                    ),
-                             HGroup(Item('configuration',
+        control_grp = VGroup(
+                            HGroup(Item('execute',
+                                        editor=ButtonEditor(label_value='execute_label'), show_label=False,
+                                        enabled_when='execute_ok'),
+                                   Item('training_run', label='Training Run')
+                                   ),
+                             VGroup(
+                                    HGroup(Item('configuration',
                                          editor=EnumEditor(name='configurations'),
                                          show_label=False),
-                                    Item('save',
-                                         show_label=False)),
+                                           Item('save',
+                                         show_label=False)
+                                    ),
+                                    show_border=True,
+                                    label='Configuration'
+                                    ),
                              VGroup('include_pressure',
                                     'include_heat',
-                                    'include_temp', enabled_when='not active'),
-#                             label='Control', show_border=True
+                                    'include_temp',
+                                    label='Graphs',
+                                    show_border=True,
+                                    enabled_when='not active'),
+                             VGroup(
+                                    Item('update_interval',
+                                         label='Sample Period (s)'),
+                                    Item('scan_window', label='Data Window (mins)'),
+                                    label='Scan',
+                                    show_border=True,
+                                    )
                              )
         v = View(control_grp)
-        return v
-
-class ScanPane(TraitsDockPane):
-    id = 'bakeout.scan'
-    name = 'Scan'
-    def traits_view(self):
-        scan_grp = VGroup(Item('update_interval',
-                          label='Sample Period (s)'),
-                          Item('scan_window', label='Data Window (mins)'), label='Scan',
-                          )
-        v = View(scan_grp)
         return v
 
 #============= EOF =============================================

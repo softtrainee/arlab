@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 # from src.pyscripts.pyscript_editor import PyScriptManager
-from src.pyscripts.manager import PyScriptManager
+# from src.pyscripts.manager import PyScriptManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

@@ -48,7 +48,7 @@ import datetime
 from src.bakeout.classifier import Classifier
 from collections import namedtuple
 from src.utils import get_display_size
-from src.bakeout.bakeout_pyscript_manager import BakeoutPyScriptManager
+# from src.bakeout.bakeout_pyscript_manager import BakeoutPyScriptManager
 
 
 BATCH_SET_BAUDRATE = False
@@ -137,18 +137,19 @@ class BakeoutManager(Manager):
 #            dm.new_array('/{}'.format(n), 'data', d.transpose())
 #
 #        dm.close()
-    def open_script(self):
-        se = BakeoutPyScriptManager()
-        if se.open_script():
-            se.on_trait_change(self.refresh_scripts,
-                               'refresh_scripts_event')
-            self.open_view(se)
 
-    def new_script(self):
-        se = BakeoutPyScriptManager()
-        se.on_trait_change(self.refresh_scripts,
-                           'refresh_scripts_event')
-        self.open_view(se)
+#     def open_script(self):
+#         se = BakeoutPyScriptManager()
+#         if se.open_script():
+#             se.on_trait_change(self.refresh_scripts,
+#                                'refresh_scripts_event')
+#             self.open_view(se)
+#
+#     def new_script(self):
+#         se = BakeoutPyScriptManager()
+#         se.on_trait_change(self.refresh_scripts,
+#                            'refresh_scripts_event')
+#         self.open_view(se)
 
     def find_bakeout(self):
         db = self.database

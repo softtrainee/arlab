@@ -22,7 +22,7 @@ from envisage.plugin import Plugin
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.bakeout.tasks.bakeout_task import BakeoutTask
 from src.bakeout.bakeout_manager import BakeoutManager
-from src.envisage.tasks.base_task import BaseTaskPlugin
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -31,7 +31,8 @@ class BakeoutPlugin(BaseTaskPlugin):
     def _tasks_default(self):
         ts = [TaskFactory(id='bakeout',
                         name='Main',
-                        factory=self._bakeout_factory)]
+                        factory=self._bakeout_factory),
+              ]
         return ts
 
     def _bakeout_factory(self):

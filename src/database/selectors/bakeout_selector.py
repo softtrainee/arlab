@@ -39,6 +39,7 @@ class BakeoutDBSelector(DatabaseSelector):
 #    tabular_adapter = BakeoutTabularAdapter
     lookup = {'Run Date':([], BakeoutTable.timestamp), }
 
+    dclick_recall_enabled = True
 #    def _record_factory(self, idn):
 #        return idn
 
