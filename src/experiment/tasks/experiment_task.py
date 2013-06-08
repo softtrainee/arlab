@@ -32,6 +32,9 @@ import hashlib
 import os
 from pyface.constant import CANCEL, YES, NO
 
+
+
+
 class ExperimentEditorTask(EditorTask):
     wildcard = '*.txt'
     group_count = 0
@@ -55,12 +58,12 @@ class ExperimentEditorTask(EditorTask):
                                          orientation='vertical'
                                       ),
                           right=Splitter(
-                                         PaneItem('pychron.experiment.stats'),
                                          Tabbed(
+                                                PaneItem('pychron.experiment.stats'),
                                                 PaneItem('pychron.experiment.console', height=425),
                                                 PaneItem('pychron.experiment.explanation', height=425),
                                                 ),
-
+                                         PaneItem('pychron.extraction_line.canvas_dock'),
 #                                         PaneItem('pychron.experiment.wait'),
                                          orientation='vertical'
                                          ),
@@ -68,11 +71,10 @@ class ExperimentEditorTask(EditorTask):
                           )
 
     def create_dock_panes(self):
-
         self.isotope_evolution_pane = IsotopeEvolutionPane()
-        self.summary_pane = SummaryPane()
+#         self.summary_pane = SummaryPane()
 
-        return [
+        panes = [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
                 StatsPane(model=self.manager),
                 ControlsPane(model=self.manager.executor),
@@ -80,8 +82,16 @@ class ExperimentEditorTask(EditorTask):
                 WaitPane(model=self.manager.executor),
                 ExplanationPane(),
                 self.isotope_evolution_pane,
-                self.summary_pane,
+#                 self.summary_pane,
                 ]
+
+        app = self.window.application
+        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        print man
+        if man:
+            from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
+            panes.append(CanvasDockPane(model=man))
+        return panes
 
 #===============================================================================
 # generic actions
@@ -195,7 +205,7 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('manager:executor:current_run:plot_panel')
     def _update_plot_panel(self, new):
         self.isotope_evolution_pane.plot_panel = new
-        self.summary_pane.plot_panel = new
+#         self.summary_pane.plot_panel = new
 
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):

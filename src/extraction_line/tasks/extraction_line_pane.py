@@ -23,7 +23,14 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= local library imports  ==========================
 
 class CanvasPane(TraitsTaskPane):
-    id = 'extraction_line.canvas'
+    id = 'pychron.extraction_line.canvas'
+    name = 'Extraction Line'
+    def traits_view(self):
+        v = View(UItem('canvas', style='custom'))
+        return v
+
+class CanvasDockPane(TraitsDockPane):
+    id = 'pychron.extraction_line.canvas_dock'
     name = 'Extraction Line'
     def traits_view(self):
         v = View(UItem('canvas', style='custom'))

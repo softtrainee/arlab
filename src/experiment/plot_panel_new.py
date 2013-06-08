@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
     Str, CInt, HasTraits, Event
-from traitsui.api import View, Item, Group, HGroup, spring, VSplit, UItem, HSplit
+from traitsui.api import View, Item, Group, HGroup, spring, VSplit, UItem, \
+    HSplit, VGroup
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
 
@@ -327,17 +328,17 @@ class PlotPanel(Loggable):
 
     def summary_view(self):
         g = self._get_display_group()
-        g.orientation = 'vertical'
-        g.layout = 'normal'
+#         g.orientation = 'vertical'
+#         g.layout = 'normal'
         v = View(g)
         return v
 
     def _get_display_group(self):
         results_grp = Group(
-                            HGroup(
-                                  Item('correct_for_baseline'),
-                                  Item('correct_for_blank'),
-                                  spring),
+#                             HGroup(
+#                                   Item('correct_for_baseline'),
+#                                   Item('correct_for_blank'),
+#                                   spring),
                             UItem('display_signals',
                                   editor=FastTextTableEditor(adapter=SignalAdapter(),
                                                          bg_color='lightyellow',
@@ -366,13 +367,13 @@ class PlotPanel(Loggable):
                                  ),
                             label='Summary'
                           )
-
         display_grp = Group(
                             results_grp,
                             ratios_grp,
                             summary_grp,
                             layout='tabbed'
                             )
+
         return display_grp
 
     def _get_graph_group(self):
@@ -387,7 +388,10 @@ class PlotPanel(Loggable):
         v = View(
                  VSplit(
                         gg,
-                        self._get_display_group()
+                        VGroup(
+                              Item('ncounts'),
+                               self._get_display_group()
+                             ),
 
                         ),
 #                 width=650,

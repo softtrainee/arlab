@@ -147,7 +147,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                           RFItem('_labnumber', show_label=False,
 #                              editor=EnumEditor(name=make_rf_name('labnumbers')),
                               editor=CheckListEditor(name=make_rf_name('labnumbers')),
-                              width= -20,
+                              width=-20,
                               ),
                               spring,
                          ),
@@ -284,11 +284,11 @@ class ControlsPane(TraitsDockPane):
         v = View(
                  HGroup(
                         UItem('resume_button', enabled_when='delaying_between_runs'),
-                        Spring(springy=False, width= -10),
+                        Spring(springy=False, width=-10),
                         Item('delay_between_runs_readback',
                               label='Delay Countdown',
                               style='readonly', format_str='%i',
-                              width= -50),
+                              width=-50),
 
                         CustomLabel('extraction_state_label',
                                     color_name='extraction_state_color'
@@ -302,9 +302,9 @@ class ControlsPane(TraitsDockPane):
                               enabled_when='not object._alive',
                               editor=ButtonEditor(label_value='refresh_label')
                               ),
-                        Spring(width= -20, springy=False),
+                        Spring(width=-20, springy=False),
                         Item('end_at_run_completion'),
-                        Spring(width= -20, springy=False),
+                        Spring(width=-20, springy=False),
                         UItem('cancel_run_button', enabled_when='can_cancel'),
                         UItem('truncate_button', enabled_when='measuring'),
                         UItem('truncate_style', enabled_when='measuring'),
@@ -385,7 +385,8 @@ class IsotopeEvolutionPane(TraitsDockPane):
     name = 'Isotope Evolutions'
     plot_panel = Instance('src.experiment.plot_panel_new.PlotPanel')
     def traits_view(self):
-        v = View(UItem('plot_panel', editor=InstanceEditor(view='graph_view'),
+        v = View(UItem('plot_panel',
+#                        editor=InstanceEditor(view='graph_view'),
                        style='custom'))
         return v
 

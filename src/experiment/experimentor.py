@@ -343,9 +343,9 @@ class Experimentor(IsotopeDatabaseManager):
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_title(self):
-        if self.experiment_queue:
-            return 'Experiment {}'.format(self.experiment_queue.name)
+#     def _get_title(self):
+#         if self.experiment_queue:
+#             return 'Experiment {}'.format(self.experiment_queue.name)
 
 #===============================================================================
 # defaults
@@ -361,7 +361,7 @@ class Experimentor(IsotopeDatabaseManager):
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,
 #                              application=self.application,
-                              queue=self.experiment_queue,
+#                               queue=self.experiment_queue,
 #                              max_allowable_runs=self.max_allowable_runs,
 #                              can_edit_scripts=self.can_edit_scripts
                               )

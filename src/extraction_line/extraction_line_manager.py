@@ -289,6 +289,8 @@ class ExtractionLineManager(Manager):
         if p is not None:
             self.canvas.load_canvas(p)
 
+#     def set_canvas_size(self, width=None, height=None):
+#         self.canvas.set_size(width, height)
 #    def pressure_update(self, o, oo, n):
 #        '''
 #        on_trait_change handler for gauge_manager.gauges.pressure
