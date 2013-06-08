@@ -20,9 +20,10 @@ ETSConfig.toolkit = "qt4"
 
 if __name__ == '__main__':
     from helpers import build_version
-    build_version('_bakeout')
+    build_version('_bakeout', debug=True)
 
-    from src.envisage.bakedpy_run import launch
+#    from src.envisage.bakedpy_run import launch
+    from src.bakeout.bakedpy_run import launch
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('bakeout', level='DEBUG')

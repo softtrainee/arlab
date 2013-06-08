@@ -28,6 +28,7 @@ from src.bakeout.tasks.bakeout_plugin import BakeoutPlugin
 
 from src.helpers.logger_setup import new_logger
 from src.bakeout.bakedpy_application import Bakedpy
+from src.pyscripts.tasks.pyscript_plugin import PyScriptPlugin
 
 def launch():
     logger = new_logger('launcher')
@@ -36,10 +37,10 @@ def launch():
 #               WorkbenchPlugin(),
                TasksPlugin(),
                BakeoutPlugin(),
+               PyScriptPlugin(),
 #               BakedpyUIPlugin()
                ]
     app = Bakedpy(plugins=plugins)
-
     app.run()
 
     logger.info('Quitting Bakedpy')

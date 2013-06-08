@@ -23,7 +23,8 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.envisage.tasks.editor_task import EditorTask
-from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEditor
+from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEditor, \
+    BakeoutEditor
 from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
     ExamplePane, EditorPane, CommandEditorPane
 from src.paths import paths
@@ -127,6 +128,8 @@ class PyScriptTask(EditorTask):
 #        if self.kind == 'Measurement':
         if kind == 'Measurement':
             klass = MeasurementEditor
+        elif kind == 'Bakeout':
+            klass = BakeoutEditor
         else:
             klass = ExtractionEditor
 

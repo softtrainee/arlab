@@ -15,48 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, List, Either
-from traitsui.api import View, Item
-from pyface.tasks.task import Task
-from src.bakeout.tasks.bakeout_pane import  GraphPane, \
-    ControllerPane, ControlsPane, ScanPane
-from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed, \
-    VSplitter, HSplitter
+from traits.api import HasTraits, Any
+from pyface.tasks.task_layout import TaskLayout, PaneItem
 from pyface.tasks.action.schema import SMenu, SMenuBar
 from pyface.tasks.action.task_action import TaskAction
-from pyface.tasks.action.task_toggle_group import TaskToggleGroup
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_task import BaseTask
+from src.bakeout.tasks.bakeout_pane import  GraphPane, \
+    ControllerPane, ControlsPane
 
-# class mySplitter(Splitter):
-#    items = List(Either(PaneItem, Tabbed, Splitter), pretty_skip=True)
 
-class BakeoutTask(Task):
+class BakeoutTask(BaseTask):
     id = 'bakeout.main'
     name = 'Bakeout'
     bakeout = Any
 
     def _default_layout_default(self):
-        return TaskLayout(top=VSplitter(
-                                   HSplitter(
-                                            PaneItem('bakeout.controls'),
-                                            PaneItem('bakeout.scan'),
-                                            orientation='horizontal'
-                                            ),
-                                   PaneItem('bakeout.controller',
-                                            ),
-                                    orientation='vertical'
-                                   )
+        return TaskLayout(top=PaneItem('bakeout.controller'),
+                          left=PaneItem('bakeout.controls'),
                           )
 
     def activated(self):
         self.bakeout.reset_general_scan()
-
-    def open_script(self):
-        self.bakeout.open_script()
-
-    def new_script(self):
-        self.bakeout.new_script()
 
     def find_bakeout(self):
         self.bakeout.find_bakeout()
@@ -66,26 +48,18 @@ class BakeoutTask(Task):
 
     def _menu_bar_default(self):
         file_menu = SMenu(
-                          TaskAction(name='New Script...',
-                                       method='new_script'),
-                          TaskAction(name='Open Script...',
-                                       method='open_script'),
-                          TaskAction(name='Find Bake...',
+                          TaskAction(id='find_bake',
+                                     name='Find Bake...',
                                      accelerator='Ctrl+F',
                                      method='find_bakeout'),
                           TaskAction(name='Open Latest Bake...',
                                        method='open_latest_bakeout'),
                           id='File', name='&File'
                           )
-        view_menu = SMenu(
-#                          TaskToggleGroup(),
-                          id='View', name='&View')
-        edit_menu = SMenu(id='Edit', name='&Edit')
 
         mb = SMenuBar(
                       file_menu,
-                      view_menu,
-                      edit_menu
+                      self._view_menu(),
                       )
         return mb
 
@@ -97,7 +71,7 @@ class BakeoutTask(Task):
         panes = [
                  ControlsPane(model=self.bakeout),
                  ControllerPane(model=self.bakeout),
-                 ScanPane(model=self.bakeout)
+#                  ScanPane(model=self.bakeout)
                  ]
 
         return panes

@@ -26,7 +26,9 @@ class Ramp(Command):
     setpoint = Float(1)
     rate = Float(1)
     start = Str
-    period = Float(60)
+    _default_period = 60
+    period = Float(_default_period)
+
     def traits_view(self):
         v = View(Item('setpoint', label='Setpoint (C)'),
                Item('rate', label='Rate C/hr'),
@@ -47,11 +49,15 @@ class Ramp(Command):
         except (ValueError, TypeError):
             pass
 
+
         words = [('setpoint', self.setpoint, True),
-               ('rate', self.rate, True),
-               ('start', start, True),
-               ('period', self.period, True)
+                 ('rate', self.rate, True),
                ]
+        if start is not None:
+            words.append(('start', start, True))
+
+        if self.period != self._default_period:
+            words.append(('period', self.period, True))
 
         return self._keywords(words)
 

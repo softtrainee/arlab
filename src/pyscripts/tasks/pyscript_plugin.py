@@ -25,6 +25,7 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from src.pyscripts.tasks.pyscript_actions import OpenPyScriptAction, \
     NewPyScriptAction
 from pyface.tasks.action.task_action import TaskAction
+from pyface.tasks.action.schema import SMenu
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -35,10 +36,15 @@ class PyScriptPlugin(BaseTaskPlugin):
             return TaskAction(name='Replace',
                               method='replace')
 
-        return [
+        exts = [
                 TaskExtension(
                               task_id='pychron.pyscript',
-                              actions=[SchemaAddition(id='replace',
+                              actions=[SchemaAddition(
+                                                      id='Edit',
+                                                      factory=lambda:SMenu(id='Edit', name='Edit'),
+                                                      path='MenuBar',
+                                                      ),
+                                       SchemaAddition(id='replace',
                                             path='MenuBar/Edit',
                                             factory=_replace_action
                                             )
@@ -48,6 +54,18 @@ class PyScriptPlugin(BaseTaskPlugin):
                 TaskExtension(
 #                              task_id='pychron.pyscript',
                               actions=[
+                                       SchemaAddition(
+                                                      id='Open',
+                                                      factory=lambda:SMenu(id='Open', name='Open'),
+                                                      path='MenuBar/File',
+                                                      before='find_bake'
+                                                      ),
+                                       SchemaAddition(
+                                                      id='New',
+                                                      factory=lambda:SMenu(id='New', name='New'),
+                                                      path='MenuBar/File',
+                                                      before='find_bake'
+                                                      ),
                                        SchemaAddition(id='open_script',
                                                     path='MenuBar/File/Open',
                                                     factory=OpenPyScriptAction
@@ -63,6 +81,7 @@ class PyScriptPlugin(BaseTaskPlugin):
 
                                        ])
                 ]
+        return exts
 
     def _tasks_default(self):
         return [TaskFactory(

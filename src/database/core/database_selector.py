@@ -83,6 +83,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     records = List
     num_records = Property(depends_on='records')
     search = Button
+    dclick_recall_enabled = Bool(False)
 #    open_button = Button
 #    open_button_label = 'Open'
 
@@ -360,10 +361,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # handlers
 #===============================================================================
-#    def _dclicked_changed(self):
+    def _dclicked_changed(self):
 #        self.debug('dclicked changed {}'.format(self.dclicked))
-#        if self.dclicked:
-#            self._open_selected()
+        if self.dclicked and self.dclick_recall_enabled:
+            self._open_selected()
 
     def _open_button_fired(self):
         self.debug('open button fired')
@@ -386,7 +387,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.dbstring = 'Database: {} at {}'.format(self.db.name, self.db.host)
         else:
             self.dbstring = 'Database: {}'.format(self.db.name)
-
 
 #    def _selected_changed(self):
 #        if self.selected:
@@ -432,7 +432,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def _view_factory(self):
         editor = myTabularEditor(adapter=self.tabular_adapter(),
-#                               dclicked='object.dclicked',
+                               dclicked='object.dclicked',
                                selected='object.selected',
                                selected_row='object.selected_row',
                                update='update',
