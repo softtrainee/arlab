@@ -70,16 +70,17 @@ class ProcessingPlugin(BaseTaskPlugin):
                 ]
 
 
-    def _meta_task_factory(self, i, f, n):
-        return TaskFactory(id=i, factory=f, name=n)
+    def _meta_task_factory(self, i, f, n, task_group=None):
+        return TaskFactory(id=i, factory=f, name=n, task_group=task_group)
 
 
     def _tasks_default(self):
         return [
-                self._meta_task_factory(i, f, n)
-                    for i, f, n in (
+                self._meta_task_factory(*args)
+                    for args in (
+                        ('pychron.entry', self._labnumber_task_factory, 'Labnumber', 'experiment'),
+
                         ('pychron.recall', self._recall_task_factory, 'Recall'),
-                        ('pychron.entry', self._labnumber_task_factory, 'Labnumber'),
                         ('pychron.analysis_edit.blanks', self._blanks_edit_task_factory, 'Blanks'),
                         ('pychron.analysis_edit.flux', self._flux_task_factory, 'Flux'),
                         ('pychron.analysis_edit.series', self._series_task_factory, 'Series'),
@@ -88,7 +89,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),
                         ('pychron.processing.figures', self._figure_task_factory, 'Figures'),
                         ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher')
-                                    )
+                        )
                 ]
 
     def _processor_factory(self):

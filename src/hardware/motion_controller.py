@@ -322,7 +322,10 @@ class MotionController(CoreDevice):
 # view
 #===============================================================================
     def traits_view(self):
-        return View(self.get_control_group())
+        grp = self.get_control_group()
+        grp.label = ''
+        grp.show_border = False
+        return View(grp)
 
     def get_control_group(self):
         g = VGroup(show_border=True,

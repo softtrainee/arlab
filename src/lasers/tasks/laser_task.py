@@ -21,7 +21,8 @@ from src.envisage.tasks.base_task import BaseHardwareTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \
     FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane, \
     FusionsCO2Pane, FusionsCO2StagePane, FusionsCO2ControlPane, \
-    FusionsDiodeSupplementalPane, FusionsDiodeClientPane, FusionsCO2ClientPane
+    FusionsDiodeSupplementalPane, FusionsDiodeClientPane, FusionsCO2ClientPane, \
+    FusionsCO2AxesPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
@@ -37,9 +38,12 @@ class FusionsTask(BaseLaserTask):
     def _default_layout_default(self):
         return TaskLayout(left=PaneItem('{}.stage'.format(self.id)),
                           top=Splitter(
-                                       PaneItem('{}.control'.format(self.id),
-                                                width=200
-                                                ),
+#                                        Tabbed(
+                                              PaneItem('{}.control'.format(self.id),
+                                                       width=200
+                                                       ),
+#                                               PaneItem('{}.axes'.format(self.id))
+#                                               ),
                                        PaneItem('pychron.lasers.pulse',
                                                 width=300),
                                        Tabbed(
@@ -65,11 +69,12 @@ class FusionsCO2Task(FusionsTask):
             return []
         else:
             return [
-                FusionsCO2StagePane(model=self.manager),
-                FusionsCO2ControlPane(model=self.manager),
-                PulsePane(model=self.manager),
-                OpticsPane(model=self.manager),
-                ]
+#                     FusionsCO2AxesPane(model=self.manager),
+                    FusionsCO2StagePane(model=self.manager),
+                    FusionsCO2ControlPane(model=self.manager),
+                    PulsePane(model=self.manager),
+                    OpticsPane(model=self.manager),
+                    ]
 
 class FusionsDiodeTask(FusionsTask):
     id = 'fusions.diode'

@@ -88,6 +88,7 @@ class SpectrometerPlugin(BaseTaskPlugin):
 
     def _tasks_default(self):
         ts = [TaskFactory(id='pychron.spectrometer',
+                          task_group='hardware',
                          factory=self._task_factory,
                          name='Spectrometer'
                          )]

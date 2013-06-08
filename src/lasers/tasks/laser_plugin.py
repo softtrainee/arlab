@@ -120,6 +120,7 @@ class FusionsPlugin(BaseLaserPlugin):
     task_name = Str
     def _tasks_default(self):
         return [TaskFactory(id=self.id,
+                            task_group='hardware',
                             factory=self._task_factory,
                             name=self.task_name
                             )

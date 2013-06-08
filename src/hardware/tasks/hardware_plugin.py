@@ -74,7 +74,8 @@ class HardwarePlugin(BaseTaskPlugin):
     def _tasks_default(self):
         return [TaskFactory(id='tasks.hardware',
                             name='Hardware',
-                            factory=self._factory
+                            factory=self._factory,
+                            task_group='hardware'
                             )
                 ]
 

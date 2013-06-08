@@ -31,6 +31,7 @@ from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
     MinimizeAction
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
+from itertools import groupby
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -156,33 +157,84 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
         task = manager.controller.task
         application = task.window.application
 
-        items = []
-        for factory in application.task_factories:
-            for win in application.windows:
-                if win.active_task.id == factory.id:
-                    checked = True
-                    break
-            else:
-                checked = False
+        groups = []
+        def groupfunc(task_factory):
+            gid = 0
+            if hasattr(task_factory, 'task_group'):
+                gid = task_factory.task_group
 
-            action = myTaskWindowLaunchAction(task_id=factory.id,
-                                              checked=checked)
+            return gid
 
-            if hasattr(factory, 'accelerator'):
-                action.accelerator = factory.accelerator
+        for gi, factories in groupby(application.task_factories, groupfunc):
+            items = []
+            for factory in factories:
+#         for factory in application.task_factories:
+                for win in application.windows:
+                    if win.active_task.id == factory.id:
+                        checked = True
+                        break
+                else:
+                    checked = False
 
-            items.append(ActionItem(action=action))
-        return items
+                action = myTaskWindowLaunchAction(task_id=factory.id,
+                                                  checked=checked)
+
+                if hasattr(factory, 'accelerator'):
+                    action.accelerator = factory.accelerator
+
+                    items.append(ActionItem(action=action))
+            groups.append(Group(*items))
+
+        print groups
+        return groups
+
+class TaskGroup(Group):
+    items = List
 
 class BaseTask(Task):
     def _menu_bar_default(self):
         return self._menu_bar_factory()
 
+    def _view_groups(self):
+        def groupfunc(task_factory):
+            gid = 0
+            if hasattr(task_factory, 'task_group'):
+                gid = task_factory.task_group
+                if gid:
+                    gid = ('hardware', 'experiment').index(gid) + 1
+                else:
+                    gid = 0
+
+            return gid
+
+        application = self.window.application
+        groups = []
+        for _, factories in groupby(sorted(application.task_factories,
+                                           key=groupfunc),
+                                    key=groupfunc):
+            items = []
+            for factory in factories:
+                for win in application.windows:
+                    if win.active_task.id == factory.id:
+                        checked = True
+                        break
+                else:
+                    checked = False
+
+                action = myTaskWindowLaunchAction(task_id=factory.id,
+                                                  checked=checked)
+
+                if hasattr(factory, 'accelerator'):
+                    action.accelerator = factory.accelerator
+
+                items.append(ActionItem(action=action))
+            groups.append(TaskGroup(items=items))
+        return groups
+
     def _view_menu(self):
+        grps = self._view_groups()
         view_menu = SMenu(
-#                         TaskToggleGroup(),
-                          myTaskWindowLaunchGroup(),
-#                         TaskWindowToggleGroup(),
+                        *grps,
                           id='View', name='&View')
         return view_menu
 

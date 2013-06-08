@@ -87,7 +87,8 @@ class PyScriptPlugin(BaseTaskPlugin):
         return [TaskFactory(
                             id='pychron.pyscript',
                             name='PyScript',
-                            factory=self._task_factory
+                            factory=self._task_factory,
+                            task_group='experiment'
                             )
                 ]
 
