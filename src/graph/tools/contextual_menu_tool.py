@@ -62,20 +62,33 @@ class ContextualMenuTool(Interactor):
     def normal_right_down(self, event):
         '''
         '''
-        def display_menu(parent, event):
+        def display_menu(plot):
+            parent = self.parent
+
             if not parent.use_context_menu:
                 return
             control = event.window.control
+            ex, ey = event.x, event.y
             size = control.size()
             h = size.height()
-            x = event.x
-            y = h - event.y
-#            y = event.y
-
-#            parent._control = window
+            ey = h - ey
+            pw = control
+            offsetx = 0
+            offsety = 0
+            while 1:
+                pw = pw.parentWidget()
+                if not pw:
+                    break
+                x, y = pw.pos().toTuple()
+                if x and y:
+                    break
+                offsetx += x
+                offsety += y
 
             menu_manager = parent.get_contextual_menu()
             menu = menu_manager.create_menu(control, None)
+            x += ex + offsetx
+            y += ey + offsety + menu.height()
 
             menu.show(x, y)
             menu_manager.destroy()
@@ -93,35 +106,12 @@ class ContextualMenuTool(Interactor):
 
             self.parent.selected_plot = plot
             self.parent.close_popup()
-#            print plot
-#            for ci in plot.components:
-#                if ci.is_in(event.x, event.y):
-#                    self.parent.selected_plot = plot
-#                    break
 
+            display_menu(plot)
 
-#            while isinstance(plot, Plot):
-#                print plot.components_at(event.x, event.y)
-
-#                plots = plot.components_at(event.x, event.y)
-
-#                if plots:
-#                    plot = plots[0]
-#                else:
-#                    break
-#            print plot
-#
-#            try:
-#                self.parent.selected_plot = plot
-#            except:
-#                pass
-#            display_menu(self.parent, event)
         else:
             self.parent.selected_plot = None
 
-        display_menu(self.parent, event)
-            # if hasattr(self.parent, 'explanable_items'):
-    #            self.parent.selected_plotid = self.parent.plotcontainer.explanable_items.index(plot)
 
         event.handled = True
 #============= EOF ====================================
