@@ -139,16 +139,17 @@ class ExtractionLineCanvas(HasTraits):
         '''
 
         from enable.component_editor import ComponentEditor
-        w, h = self._get_canvas_size()
+#         w, h = self._get_canvas_size()
         g = Item('canvas2D',
                     style='custom',
                     # visible_when='twod_canvas',
                     show_label=False,
-                    editor=ComponentEditor(width=w,
-                                           height=h
+                    editor=ComponentEditor(
+#                                             width=w ,
+#                                             height=h
                                             ),
-                 width=h * self.canvas2D.aspect_ratio,
-                 height=h,
+#                 width=h * self.canvas2D.aspect_ratio,
+#                 height=h,
                 label='2D'
                 )
         return g
