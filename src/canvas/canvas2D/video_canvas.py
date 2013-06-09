@@ -23,6 +23,7 @@ from src.canvas.canvas2D.video_underlay import VideoUnderlay
 
 
 class VideoCanvas(SceneCanvas):
+    use_backbuffer = True
     video = Any
     camera = None
     padding = 0
