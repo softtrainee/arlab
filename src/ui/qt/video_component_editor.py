@@ -59,6 +59,7 @@ class _VideoComponentEditor(_LaserComponentEditor):
 
     def update(self):
         if self.control:
+            self.value.draw_valid = False
             self.control.repaint()
 
 #    def onClose(self):

@@ -112,7 +112,7 @@ class VideoSource(HasTraits):
             self._cached_image = Image.new_frame(self.image_path, swap_rb=True)
 
     def _get_video_data(self):
-        evts = self.poller.poll(10)
+        evts = self.poller.poll(50)
         if evts:
             sock, _id = evts[0]
             resp = sock.recv()
@@ -121,8 +121,14 @@ class VideoSource(HasTraits):
             if evts:
                 sock, _id = evts[0]
                 resp = sock.recv()
-                buf = StringIO()
-                buf.write(resp)
+
+                '''
+                    faster to create new cStringIO new 
+                    than truncate an existing 
+                    buffer
+                '''
+                buf = StringIO(resp)
+#                 buf.write(resp)
                 buf.seek(0)
                 img = PILImage.open(buf)
                 img = img.convert('RGB')
