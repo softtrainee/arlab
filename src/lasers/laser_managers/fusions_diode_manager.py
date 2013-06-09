@@ -189,16 +189,6 @@ class FusionsDiodeManager(FusionsLaserManager):
         return self._set_laser_power_hook(temp, mode='closed', use_calibration=self.use_calibrated_temperature)
 
 
-
-#    def enable_laser(self):
-#        '''
-#        '''
-#        if self.fiber_light.auto_onoff and self.fiber_light.state:
-#            self.fiber_light.power_off()
-#
-#        #simple calls logicboard.enable_laser
-#        if super(FusionsDiodeManager, self).enable_laser():
-#            return self.control_module_manager.enable()
 #===============================================================================
 # private
 #===============================================================================

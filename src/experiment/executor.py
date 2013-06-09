@@ -56,6 +56,7 @@ from src.ui.thread import Thread
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
 from pyface.constant import CANCEL, NO
+from src.ui.qt.gui import invoke_in_main_thread
 # from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
@@ -276,12 +277,12 @@ class ExperimentExecutor(Experimentable):
 
             i = 0
             while not end_flag.is_set():
-#                print i, i % 100
                 if i % iperiod < threshold:
-                    self.extraction_state_label = label
-                    self.extraction_state_color = color
+                    kw = dict(extraction_state_label=label,
+                            extraction_state_color=color)
                 else:
-                    self.extraction_state_label = ''
+                    kw = dict(extraction_state_label='')
+                invoke_in_main_thread(self.trait_set, **kw)
 
                 time.sleep(period)
                 i += 1
