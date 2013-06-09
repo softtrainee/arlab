@@ -185,13 +185,15 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
                     items.append(ActionItem(action=action))
             groups.append(Group(*items))
 
-        print groups
         return groups
 
 class TaskGroup(Group):
     items = List
 
 class BaseTask(Task):
+    def _menu_bar_factory(self):
+        return
+
     def _menu_bar_default(self):
         return self._menu_bar_factory()
 
@@ -267,6 +269,7 @@ class BaseTask(Task):
                                 ResetLayoutAction()
                                 ),
                           WindowGroup(),
+                          id='Window',
                           name='Window')
 
         return window_menu
@@ -323,19 +326,20 @@ class BaseManagerTask(BaseTask):
         return mb
 
 class BaseHardwareTask(BaseManagerTask):
-    def _menu_bar_factory(self, menus=None):
-        extraction_menu = SMenu(id='Extraction', name='&Extraction')
-        measure_menu = SMenu(
-# #                              PeakCenterAction(),
-                            id='Measure', name='Measure',
-                            before='help.menu'
-                            )
-        ms = [extraction_menu, measure_menu]
-        if not menus:
-            menus = ms
-        else:
-            menus.extend(ms)
-        return super(BaseHardwareTask, self)._menu_bar_factory(menus=menus)
+    pass
+#     def _menu_bar_factory(self, menus=None):
+#         extraction_menu = SMenu(id='Extraction', name='&Extraction')
+#         measure_menu = SMenu(
+# # #                              PeakCenterAction(),
+#                             id='Measure', name='Measure',
+#                             before='help.menu'
+#                             )
+#         ms = [extraction_menu, measure_menu]
+#         if not menus:
+#             menus = ms
+#         else:
+#             menus.extend(ms)
+#         return super(BaseHardwareTask, self)._menu_bar_factory(menus=menus)
 # class BaseManagerTask(BaseTask):
 #    manager = Any
 

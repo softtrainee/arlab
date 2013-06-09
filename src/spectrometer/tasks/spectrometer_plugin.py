@@ -27,6 +27,7 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction, \
     CoincidenceScanAction
+from pyface.tasks.action.schema import SMenu
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -50,13 +51,19 @@ class SpectrometerPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):
         return [
                 TaskExtension(actions=[
-                                       SchemaAddition(id='peak_center',
-                                                      factory=PeakCenterAction,
-                                                      path='MenuBar/Measure'),
-                                       SchemaAddition(id='coincidence',
-                                                      factory=CoincidenceScanAction,
-                                                      path='MenuBar/Measure'),
-
+                   SchemaAddition(id='Measure',
+                                  factory=lambda: SMenu(id='Measure',
+                                                        name='Measure'),
+                                  path='MenuBar',
+                                  before='Window',
+                                  after='Tools'
+                                  ),
+                   SchemaAddition(id='peak_center',
+                                  factory=PeakCenterAction,
+                                  path='MenuBar/Measure'),
+                   SchemaAddition(id='coincidence',
+                                  factory=CoincidenceScanAction,
+                                  path='MenuBar/Measure'),
                                        ])
                 ]
 

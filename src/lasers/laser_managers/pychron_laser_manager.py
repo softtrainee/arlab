@@ -83,7 +83,9 @@ class PychronLaserManager(BaseLaserManager):
         return self.connected
 
     def bind_preferences(self, pref_id):
-        pass
+        from apptools.preferences.preference_binding import bind_preference
+        bind_preference(self, 'use_video', '{}.use_video'.format(pref_id))
+        self.stage_manager.bind_preferences(pref_id)
 
     def open(self):
         host = self.host
@@ -382,6 +384,17 @@ class PychronLaserManager(BaseLaserManager):
     def _get_z(self):
         return self._z
 
+    def _stage_manager_default(self):
+        '''
+        '''
+
+        args = dict(name='stage',
+                    configuration_name='stage',
+                    configuration_dir_name=self.name,
+                    parent=self,
+                    )
+        return self._stage_manager_factory(args)
+
 
 class PychronUVLaserManager(PychronLaserManager):
     fire = Event
@@ -504,9 +517,9 @@ class PychronUVLaserManager(PychronLaserManager):
                      Item('zoom', style='simple'),
                      HGroup(Item('mask', editor=EnumEditor(name='masks')), Item('mask', show_label=False)),
                      HGroup(Item('attenuator', editor=EnumEditor(name='attenuators')), Item('attenuator', show_label=False)),
-                     Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
-                     Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
-                     Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
+                     Item('x', editor=RangeEditor(low=-25.0, high=25.0)),
+                     Item('y', editor=RangeEditor(low=-25.0, high=25.0)),
+                     Item('z', editor=RangeEditor(low=-25.0, high=25.0)),
                      enabled_when='connected'
                      ),
                  title='Laser Manager',

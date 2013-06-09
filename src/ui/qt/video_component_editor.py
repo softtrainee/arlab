@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Any
+from traits.api import Any, Int
 #============= standard library imports ========================
 # from wx import EVT_IDLE, EVT_PAINT
 from PySide.QtCore import QTimer
@@ -30,6 +30,7 @@ class _VideoComponentEditor(_LaserComponentEditor):
     '''
     '''
     playTimer = Any
+    fps = Int
     def init(self, parent):
         '''
         Finishes initializing the editor by creating the underlying toolkit
@@ -43,6 +44,12 @@ class _VideoComponentEditor(_LaserComponentEditor):
         self.playTimer.setInterval(1000 / self.value.fps)
         self.playTimer.start()
         self.value.on_trait_change(self.stop, 'closed_event')
+
+        self.value.on_trait_change(self._update_fps, 'fps')
+
+
+    def _update_fps(self):
+        self.playTimer.setInterval(1000 / self.value.fps)
 
     def stop(self):
         try:

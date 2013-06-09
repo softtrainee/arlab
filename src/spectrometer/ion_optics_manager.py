@@ -16,8 +16,11 @@
 
 #============= enthought library imports =======================
 from traits.api import Range, Instance, Bool, \
-     Button, Any, DelegatesTo, Str, Float, Enum
-from traitsui.api import View, Item, EnumEditor
+     Button, Any, DelegatesTo, Str, Float, Enum, HasTraits, List
+from traitsui.api import View, Item, EnumEditor, Handler
+import apptools.sweet_pickle as pickle
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.graph.graph import Graph
 from src.spectrometer.jobs.peak_center import PeakCenter
@@ -25,9 +28,47 @@ from src.spectrometer.jobs.peak_center import PeakCenter
 from src.spectrometer.detector import Detector
 from src.constants import NULL_STR
 from src.ui.thread import Thread
-from src.ui.gui import invoke_in_main_thread
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.paths import paths
+import os
+from src.helpers.isotope_utils import sort_isotopes
+# from src.ui.gui import invoke_in_main_thread
+
+class PeakCenterConfigHandler(Handler):
+    def closed(self, info, isok):
+        if isok:
+            info.object.dump()
+        return isok
+
+class PeakCenterConfig(HasTraits):
+    detectors = List(transient=True)
+    detector = Instance(Detector, transient=True)
+    detector_name = Str
+    isotope = Str('Ar40')
+    isotopes = List(transient=True)
+    dac = Float
+
+    directions = Enum('Increase', 'Decrease', 'Oscillate')
+    def dump(self):
+        p = os.path.join(paths.hidden_dir, 'peak_center_config')
+        with open(p, 'wb') as fp:
+            pickle.dump(self, fp)
+
+    def _detector_changed(self):
+        if self.detector:
+            self.detector_name = self.detector.name
+
+    def traits_view(self):
+        v = View(Item('detector', editor=EnumEditor(name='detectors')),
+               Item('isotope', editor=EnumEditor(name='isotopes')),
+               Item('dac'),
+               Item('directions'),
+               buttons=['OK', 'Cancel'],
+               kind='livemodal',
+               title='Peak Center',
+               handler=PeakCenterConfigHandler
+               )
+        return v
+
 
 class IonOpticsManager(Manager):
     magnet_dac = Range(0.0, 6.0)
@@ -39,16 +80,17 @@ class IonOpticsManager(Manager):
     spectrometer = Any
 
     peak_center = Instance(PeakCenter)
+    peak_center_config = Instance(PeakCenterConfig)
     canceled = False
 
     peak_center_result = None
 
-    detectors = DelegatesTo('spectrometer')
-    detector = Instance(Detector)
-    isotope = Str('Ar40')
-    dac = Float
-
-    directions = Enum('Increase', 'Decrease', 'Oscillate')
+#     detectors = DelegatesTo('spectrometer')
+#     detector = Instance(Detector)
+#     isotope = Str('Ar40')
+#     dac = Float
+#
+#     directions = Enum('Increase', 'Decrease', 'Oscillate')
 
     def get_mass(self, isotope_key):
         spec = self.spectrometer
@@ -119,24 +161,32 @@ class IonOpticsManager(Manager):
 #        return dac
 
     def do_peak_center(self, detector=None, isotope=None,
-                       period=None,
+                       period=900,
                        center_dac=None,
                        save=True,
                        confirm_save=False,
                        warn=False,
                        new_thread=True
                        ):
+        directions = 'Increase'
 #        spec = self.spectrometer
         if detector is None or isotope is None:
-            self.dac = 0
-            info = self.edit_traits(view='peak_center_config_view')
+            pcc = self.peak_center_config
+            info = pcc.edit_traits()
+#             info = self.edit_traits(view='peak_center_config_view')
             if not info.result:
                 return
             else:
-                detector = self.detector.name
-                isotope = self.isotope
-                if self.dac > 0:
-                    center_dac = self.dac
+
+                detector = pcc.detector.name
+                isotope = pcc.isotope
+                dac = pcc.dac
+                directions = pcc.directions
+
+#                 detector = self.detector.name
+#                 isotope = self.isotope
+                if dac > 0:
+                    center_dac = dac
 
         if center_dac is None:
             center_dac = self.get_center_dac(detector, isotope)
@@ -147,14 +197,14 @@ class IonOpticsManager(Manager):
         if new_thread:
             t = Thread(name='ion_optics.peak_center', target=self._peak_center,
                        args=(detector, isotope, period, center_dac,
-                             self.directions,
+                             directions,
                              save, confirm_save, warn))
             t.start()
             self._thread = t
             return t
         else:
             self._peak_center(detector, isotope, period, center_dac,
-                             self.directions,
+                             directions,
                              save, confirm_save, warn)
 
     def _peak_center(self, detector, isotope, period, center_dac,
@@ -162,6 +212,7 @@ class IonOpticsManager(Manager):
                      save, confirm_save, warn):
 
         self.debug('doing pc')
+
 
         spec = self.spectrometer
         self.peak_center = pc = PeakCenter(center_dac=center_dac,
@@ -245,19 +296,43 @@ class IonOpticsManager(Manager):
 #    def _graph_default(self):
 #        return self._graph_factory()
 
-    def _detector_default(self):
-        return self.detectors[0]
+#     def _detector_default(self):
+#         return self.detectors[0]
 
-    def peak_center_config_view(self):
-        v = View(Item('detector', editor=EnumEditor(name='detectors')),
-               Item('isotope'),
-               Item('dac'),
-               Item('directions'),
-               buttons=['OK', 'Cancel'],
-               kind='livemodal',
-               title='Peak Center'
-               )
-        return v
+    def _peak_center_config_default(self):
+        config = None
+        p = os.path.join(paths.hidden_dir, 'peak_center_config')
+        if os.path.isfile(p):
+            try:
+                with open(p) as fp:
+                    config = pickle.load(fp)
+                    config.detectors = dets = self.spectrometer.detectors
+                    config.detector = next((di for di in dets if di.name == config.detector_name), None)
+
+            except Exception, e:
+                print 'peak center config', e
+
+        if config is None:
+            config = PeakCenterConfig()
+            config.detectors = self.spectrometer.detectors
+            config.detector = config.detectors[0]
+
+        keys = self.spectrometer.molecular_weights.keys()
+        config.isotopes = sort_isotopes(keys)
+
+
+        return config
+
+#     def peak_center_config_view(self):
+#         v = View(Item('detector', editor=EnumEditor(name='detectors')),
+#                Item('isotope'),
+#                Item('dac'),
+#                Item('directions'),
+#                buttons=['OK', 'Cancel'],
+#                kind='livemodal',
+#                title='Peak Center'
+#                )
+#         return v
 #    def graph_view(self):
 #        v = View(Item('graph', show_label=False, style='custom'),
 #                 width=300,

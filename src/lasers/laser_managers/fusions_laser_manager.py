@@ -611,8 +611,6 @@ class FusionsLaserManager(LaserManager):
     def _get_record_brightness(self):
         return self.record_brightness and self._get_machine_vision() is not None
 
-    def _get_units(self):
-        return '(W)' if self.use_calibrated_power else '(%)'
 
 #========================= defaults =======================
     def get_power_database(self):

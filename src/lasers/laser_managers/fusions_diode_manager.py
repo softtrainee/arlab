@@ -44,7 +44,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     '''
     id = 'pychron.fusions.diode'
     name = 'fusions_diode'
-    configuration_dir_name = 'diode'
+    configuration_dir_name = 'fusions_diode'
 
     pyrometer = Instance(MikronGA140Pyrometer)
     temperature_controller = Instance(WatlowEZZone)
@@ -296,14 +296,14 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         '''
         tm = DPi32TemperatureMonitor(name='temperature_monitor',
-                                     configuration_dir_name='diode')
+                                     configuration_dir_name=self.configuration_dir_name)
         return tm
 
     def _pyrometer_default(self):
         '''
         '''
         p = MikronGA140Pyrometer(name='pyrometer',
-                                 configuration_dir_name='diode')
+                                 configuration_dir_name=self.configuration_dir_name)
         return p
 
     def _laser_controller_default(self):
@@ -311,7 +311,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         b = FusionsDiodeLogicBoard(name='laser_controller',
                                    configuration_name='laser_controller',
-                                   configuration_dir_name='diode')
+                                   configuration_dir_name=self.configuration_dir_name)
         return b
 
 #    def _control_module_default(self):
@@ -327,7 +327,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         args = dict(name='stage',
                     configuration_name='stage',
-                            configuration_dir_name='diode',
+                            configuration_dir_name=self.configuration_dir_name,
                              parent=self,
                              )
         return self._stage_manager_factory(args)

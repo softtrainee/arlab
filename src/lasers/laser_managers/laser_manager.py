@@ -50,12 +50,19 @@ class BaseLaserManager(Manager):
     enabled_led = Instance(LED, ())
     enabled = Bool(False)
 
-    stage_manager = Any
+    stage_manager = Instance(StageManager)
+#     stage_manager = Any
     requested_power = Any
     status_text = Str
     pulse = Any
     laser_controller = Any
     mode = 'normal'
+
+    use_calibrated_power = Bool(True)
+    requested_power = Property(Float, depends_on='_requested_power')
+    units = Property(depends_on='use_calibrated_power')
+    _requested_power = Float
+    _calibrated_power = None
 
     def is_ready(self):
         return True
@@ -98,7 +105,9 @@ class BaseLaserManager(Manager):
         self.open_view(pm)
 
     def open_pattern_maker(self):
-        pm = PatternMakerView()
+        pm = PatternMakerView(
+                              executor=self.pattern_executor
+                              )
         pm.load_pattern()
         self.open_view(pm)
 
@@ -151,16 +160,82 @@ class BaseLaserManager(Manager):
 #    def get_control_buttons(self):
 #        return [('enable', 'enable_label', None)]
 
+#===============================================================================
+# getter/setters
+#===============================================================================
     def _get_enable_label(self):
         '''
         '''
         return 'DISABLE' if self.enabled else 'ENABLE'
 
+    def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
+
+        if self.use_calibrated_power and use_calibration:
+            pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
+            if pc is None:
+                return
+
+            if power < 0.1:
+                power = 0
+            else:
+                power = pc.get_input(power)
+                if verbose:
+                    self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
+#                if coeffs is not None:
+#                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
+#                    if verbose:
+#                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+        return power
+
+    def _get_requested_power(self):
+        return self._requested_power
+
+    def _get_units(self):
+        return '(W)' if self.use_calibrated_power else '(%)'
+#===============================================================================
+# handlers
+#===============================================================================
     def _enabled_changed(self):
         if self.enabled:
             self.enabled_led.state = 'green'
         else:
             self.enabled_led.state = 'red'
+
+    def _use_video_changed(self):
+        if not self.use_video:
+            try:
+                self.stage_manager.video.close()
+            except AttributeError, e:
+                print 'use video 1', e
+
+        try:
+            sm = self._stage_manager_factory(self.stage_args)
+
+            sm.stage_controller = self.stage_manager.stage_controller
+            sm.stage_controller.parent = sm
+            if self.plugin_id:
+                sm.bind_preferences(self.plugin_id)
+            sm.visualizer = self.stage_manager.visualizer
+
+            sm.load()
+
+            self.stage_manager = sm
+        except AttributeError, e:
+            print 'use video 2', e
+
+
+    def _stage_manager_factory(self, args):
+        self.stage_args = args
+        if self.use_video:
+            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+            klass = VideoStageManager
+        else:
+            klass = StageManager
+
+        args['parent'] = self
+        sm = klass(**args)
+        return sm
+
 
 class LaserManager(BaseLaserManager):
     '''
@@ -173,7 +248,7 @@ class LaserManager(BaseLaserManager):
 #    enabled = Bool(False)
 
 #    graph_manager = Instance(GraphManager, ())
-    stage_manager = Instance(StageManager)
+#     stage_manager = Instance(StageManager)
 #    pattern_executor = Instance(PatternExecutor)
     power_calibration_manager = Instance(PowerCalibrationManager)
     laser_script_executor = Instance(LaserScriptExecutor)
@@ -192,11 +267,11 @@ class LaserManager(BaseLaserManager):
     status_text = Str
     pulse = Instance(Pulse)
 
-    requested_power = Property(Float, depends_on='_requested_power')
-    units = Property(depends_on='use_calibrated_power')
-    _requested_power = Float
-    _calibrated_power = None
-    use_calibrated_power = Bool(True)
+#     use_calibrated_power = Bool(True)
+#     requested_power = Property(Float, depends_on='_requested_power')
+#     units = Property(depends_on='use_calibrated_power')
+#     _requested_power = Float
+#     _calibrated_power = None
 
 #    internal_meter_response = DelegatesTo('laser_controller')
 
@@ -218,6 +293,7 @@ class LaserManager(BaseLaserManager):
         bind_preference(self, 'window_x', '{}.x'.format(pref_id))
         bind_preference(self, 'window_y', '{}.y'.format(pref_id))
         bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
+
         self.stage_manager.bind_preferences(pref_id)
 
     def set_xy(self, xy, velocity=None):
@@ -449,27 +525,27 @@ class LaserManager(BaseLaserManager):
 
             self.disable_laser()
 
-    def _use_video_changed(self):
-        if not self.use_video:
-            try:
-                self.stage_manager.video.close()
-            except AttributeError, e:
-                print e
-
-        try:
-            sm = self._stage_manager_factory(self.stage_args)
-
-            sm.stage_controller = self.stage_manager.stage_controller
-            sm.stage_controller.parent = sm
-            if self.plugin_id:
-                sm.bind_preferences(self.plugin_id)
-            sm.visualizer = self.stage_manager.visualizer
-
-            sm.load()
-
-            self.stage_manager = sm
-        except AttributeError, e:
-            print e
+#     def _use_video_changed(self):
+#         if not self.use_video:
+#             try:
+#                 self.stage_manager.video.close()
+#             except AttributeError, e:
+#                 print e
+#
+#         try:
+#             sm = self._stage_manager_factory(self.stage_args)
+#
+#             sm.stage_controller = self.stage_manager.stage_controller
+#             sm.stage_controller.parent = sm
+#             if self.plugin_id:
+#                 sm.bind_preferences(self.plugin_id)
+#             sm.visualizer = self.stage_manager.visualizer
+#
+#             sm.load()
+#
+#             self.stage_manager = sm
+#         except AttributeError, e:
+#             print e
 ##===============================================================================
 # # persistence
 ##===============================================================================
@@ -529,30 +605,30 @@ class LaserManager(BaseLaserManager):
     def _set_laser_power_hook(self, *args, **kw):
         pass
 
-#===============================================================================
-# getter/setters
-#===============================================================================
-    def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
-
-        if self.use_calibrated_power and use_calibration:
-            pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
-            if pc is None:
-                return
-
-            if power < 0.1:
-                power = 0
-            else:
-                power = pc.get_input(power)
-                if verbose:
-                    self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
-#                if coeffs is not None:
-#                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
-#                    if verbose:
-#                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
-        return power
-
-    def _get_requested_power(self):
-        return self._requested_power
+# #===============================================================================
+# # getter/setters
+# #===============================================================================
+#     def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
+#
+#         if self.use_calibrated_power and use_calibration:
+#             pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
+#             if pc is None:
+#                 return
+#
+#             if power < 0.1:
+#                 power = 0
+#             else:
+#                 power = pc.get_input(power)
+#                 if verbose:
+#                     self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
+# #                if coeffs is not None:
+# #                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
+# #                    if verbose:
+# #                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+#         return power
+#
+#     def _get_requested_power(self):
+#         return self._requested_power
 
 
 
@@ -569,17 +645,17 @@ class LaserManager(BaseLaserManager):
             self.on_trait_change(lm.update_imb, 'laser_controller:internal_meter_response')
         return lm
 
-    def _stage_manager_factory(self, args):
-        self.stage_args = args
-        if self.use_video:
-            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
-            klass = VideoStageManager
-        else:
-            klass = StageManager
-
-        args['parent'] = self
-        sm = klass(**args)
-        return sm
+#     def _stage_manager_factory(self, args):
+#         self.stage_args = args
+#         if self.use_video:
+#             from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+#             klass = VideoStageManager
+#         else:
+#             klass = StageManager
+#
+#         args['parent'] = self
+#         sm = klass(**args)
+#         return sm
 #===============================================================================
 # defaults
 #===============================================================================

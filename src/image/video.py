@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Any, Bool, Float, List, Str
+from traits.api import  Any, Bool, Float, List, Str, Int
 #=============standard library imports ========================
 from threading import Thread, Lock, Event
 import time
@@ -57,9 +57,22 @@ class Video(Image):
     output_path = Str
     output_mode = Str('MPEG')
     ffmpeg_path = Str
+    fps = Int
 
     def is_open(self):
         return self.cap is not None
+
+
+    def _get_remote_device(self, url):
+        from src.image.video_source import VideoSource
+        vs = VideoSource()
+        vs.set_url(url)
+        vs.on_trait_change(self._update_fps, 'fps')
+
+        return vs
+
+    def _update_fps(self, fps):
+        self.fps = fps
 
     def open(self, user=None, identifier=0, force=False):
         '''
@@ -73,13 +86,19 @@ class Video(Image):
             if globalv.video_test:
                 self.cap = 1
             else:
-                # ideally an identifier is passed in
-                try:
-                    self.cap = get_capture_device()
-                    self.cap.open(identifier)
-                except Exception, e:
-                    print 'video.open', e
-                    self.cap = None
+
+                if isinstance(identifier, str):
+                    self.cap = self._get_remote_device(identifier)
+                    # identifier is a url
+#                     self.cap = self._get_remote_device()
+                else:
+                    # ideally an identifier is passed in
+                    try:
+                        self.cap = get_capture_device()
+                        self.cap.open(identifier)
+                    except Exception, e:
+                        print 'video.open', e
+                        self.cap = None
 
         if not user in self.users:
             self.users.append(user)
@@ -122,6 +141,8 @@ class Video(Image):
 #        cap = self.cap
 #        if cap:
 #            set_frame_index(cap, ind)
+#     def _get_remote_device(self, url):
+
 
     def _get_frame(self, lock=True, **kw):
         cap = self.cap

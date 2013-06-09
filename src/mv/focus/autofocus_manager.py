@@ -95,7 +95,7 @@ class AutoFocusManager(Manager):
                     return params
 
                 except Exception, e:
-                    print e
+                    print 'autofocus load parameter', e
                     return FocusParameters()
         else:
             return FocusParameters()

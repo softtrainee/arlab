@@ -30,7 +30,6 @@ from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction, 
 class ExtractionLinePlugin(BaseTaskPlugin):
     id = 'pychron.extraction_line.plugin'
 
-
 #    manager = Instance(ExtractionLineManager)
     def _my_task_extensions(self):
         return [TaskExtension(actions=[SchemaAddition(id='refresh_canvas',

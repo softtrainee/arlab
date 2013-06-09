@@ -16,9 +16,9 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool, Event, Enum, on_trait_change
-from traitsui.api import Group, Item, HGroup, VGroup
-from pyface.timer.api import do_later
+ Float, Bool, Event, Enum, on_trait_change, Str
+# from traitsui.api import Group, Item, HGroup, VGroup
+# from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
 from chaco.plot_graphics_context import PlotGraphicsContext
 #============= standard library imports ========================
@@ -40,9 +40,9 @@ from src.canvas.canvas2D.camera import Camera
 from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 # from video_component_editor import VideoComponentEditor
-from src.helpers.media import play_sound
-from src.mv.autocenter_manager import AutoCenterManager
-from src.mv.focus.autofocus_manager import AutoFocusManager
+# from src.helpers.media import play_sound
+# from src.mv.autocenter_manager import AutoCenterManager
+# from src.mv.focus.autofocus_manager import AutoFocusManager
 from src.ui.stage_component_editor import VideoComponentEditor
 
 try:
@@ -82,9 +82,12 @@ class VideoStageManager(StageManager):
     configure_autocenter_button = Button('Configure')
 
 #    mosaic_manager = Instance(MosaicManager)
-    autofocus_manager = Instance(AutoFocusManager)
-    autocenter_manager = Instance(AutoCenterManager)
-
+#     autofocus_manager = Instance(AutoFocusManager)
+#     autocenter_manager = Instance(AutoCenterManager)
+#     # from src.mv.autocenter_manager import AutoCenterManager
+# from src.mv.focus.autofocus_manager import AutoFocusManager
+    autocenter_manager = Instance('src.mv.autocenter_manager.AutoCenterManager')
+    autofocus_manager = Instance('src.mv.focus.autofocus_manager.AutoFocusManager')
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
 
@@ -96,7 +99,8 @@ class VideoStageManager(StageManager):
 
     use_video_archiver = Bool(True)
     video_archiver = Instance(Archiver)
-    video_identifier = Enum(1, 2)
+    video_identifier = Str
+#     video_identifier = Enum(1, 2)
     use_video_server = Bool(False)
     video_server = Instance(VideoServer)
 
@@ -200,7 +204,9 @@ class VideoStageManager(StageManager):
         super(VideoStageManager, self).initialize_stage()
 
         if self.video:
-            self.video.open()
+            self.video.open(
+                            identifier=self.video_identifier
+                            )
 
         s = self.stage_controller
         if s.axes:
@@ -244,7 +250,7 @@ class VideoStageManager(StageManager):
 #            from src.helpers.media import play_sound
 
             # play camera shutter sound
-            play_sound('shutter')
+#             play_sound('shutter')
 
             self._render_snapshot(path)
 #            if self.render_with_markup:
@@ -634,7 +640,9 @@ class VideoStageManager(StageManager):
 #        return CameraCalibrationManager()
 
     def _autocenter_manager_default(self):
-        return AutoCenterManager(video=self.video,
+        if self.parent.mode != 'client':
+            from src.mv.autocenter_manager import AutoCenterManager
+            return AutoCenterManager(video=self.video,
 #                                 pxpermm=self.pxpercmx / 10.,
 #                                    stage_controller=self.stage_controller,
 #                                    laser_manager=self.parent,
@@ -651,7 +659,9 @@ class VideoStageManager(StageManager):
 #                             )
 
     def _autofocus_manager_default(self):
-        return AutoFocusManager(video=self.video,
+        if self.parent.mode != 'client':
+            from src.mv.focus.autofocus_manager import AutoFocusManager
+            return AutoFocusManager(video=self.video,
                                 laser_manager=self.parent,
                                 stage_controller=self.stage_controller,
                                 canvas=self.canvas,

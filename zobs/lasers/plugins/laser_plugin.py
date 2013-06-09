@@ -54,7 +54,7 @@ class LaserPlugin(CorePlugin):
         plugin = ip.get_plugin(self.klass[1].replace('Manager', ''), category='hardware')
 #        mode = plugin.get('mode')
         mode = ip.get_parameter(plugin, 'mode')
-
+        print 'mmm', mode
         if mode == 'client':
             klass = ip.get_parameter(plugin, 'klass')
             if klass is None:
@@ -69,9 +69,10 @@ class LaserPlugin(CorePlugin):
                     try:
                         params[attr] = tag.find(attr).text.strip()
                     except Exception, e:
-                        print e
+                        print 'Load client connection parameters failed', attr, e
             except Exception, e:
-                print e
+                print 'Load client connection parameters failed', e
+
             params['name'] = self.name
             factory = __import__(pkg, fromlist=[klass])
             m = getattr(factory, klass)(**params)
