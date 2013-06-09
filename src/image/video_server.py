@@ -24,6 +24,7 @@ from numpy import array
 #============= local library imports  ==========================
 from src.image.video import Video
 from src.loggable import Loggable
+
 class VideoServer(Loggable):
     video = Instance(Video)
     port = 1084
@@ -79,7 +80,7 @@ class VideoServer(Loggable):
         context = zmq.Context()
         sock = context.socket(zmq.PUB)
         sock.bind('tcp://*:{}'.format(self.port))
-        fps = 5
+        fps = 10
 
 #        if use_color:
 #            kw = dict(swap_rb=True)
@@ -93,13 +94,16 @@ class VideoServer(Loggable):
         pt = time.time()
         while not stop.isSet():
 
-            f = video.get_frame()
-
+            f = video.get_frame(gray=False)
 #            new_frame.clear()
-#            im = Image.fromarray(f.ndarray)
-#            s = StringIO()
-#            im.save(s, 'JPEG')
-#            sock.send(s.getvalue())
+            im = Image.fromarray(array(f))
+            s = StringIO()
+            im.save(s, 'JPEG')
+
+            sock.send(str(fps))
+            sock.send(s.getvalue())
+
+            time.sleep(1.0 / fps)
 #            w, h = f.size()
 #            header = array([w, h, fps, depth])
 #            data = array([header.tostring(), f.ndarray.tostring()], dtype='str')
@@ -107,11 +111,11 @@ class VideoServer(Loggable):
 #            sock.send(f.ndarray.tostring())
 
 
-            nt = time.time()
-            st = ((1.0 / fps) - (nt - pt))
-            if st > 0:
-                time.sleep(st)
-            pt = nt
+#             nt = time.time()
+#             st = ((1.0 / fps) - (nt - pt))
+#             if st > 0:
+#                 time.sleep(st)
+#             pt = nt
 
 #            time.sleep(max(0.001 /, fp - (time.time() - t)))
 

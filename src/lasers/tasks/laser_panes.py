@@ -29,7 +29,7 @@ from src.ui.led_editor import LEDEditor
 
 def SUItem(name, **kw):
     return UItem('object.stage_manager.{}'.format(name),
-                defined_when='mode!="client"',
+#                 defined_when='mode!="client"',
                  **kw)
 
 class BaseLaserPane(TraitsTaskPane):
@@ -62,17 +62,17 @@ class StageControlPane(TraitsDockPane):
 
         def SItem(name, **kw):
             return Item(make_sm_name(name),
-                        defined_when='mode!="client"',
+#                         defined_when='mode!="client"',
                          **kw)
 
         def CItem(name, **kw):
             return Item('object.stage_manager.canvas.{}'.format(name),
-                        defined_when='mode!="client"',
+#                         defined_when='mode!="client"',
                         **kw)
 
         def CUItem(name, **kw):
             return UItem('object.stage_manager.canvas.{}'.format(name),
-                        defined_when='mode!="client"',
+#                         defined_when='mode!="client"',
                          **kw)
         #=======================================================================
         #
@@ -115,63 +115,76 @@ class StageControlPane(TraitsDockPane):
                        label='Canvas'
                        )
 
-        if self.model.mode != 'client':
-            if self.model.stage_manager.__class__.__name__ == 'VidoeStageManager':
-    #             isinstance(self.model.stage_manager, VideoStageManager):
-                    mvgrp = VGroup(
-                              HGroup(SItem('use_autocenter', label='Enabled'),
-                                     SUItem('autocenter_button',
-                                          enabled_when='use_autocenter'),
-                                     SUItem('configure_autocenter_button')
-                                  ),
-                              SUItem('autofocus_manager', style='custom'),
-                              label='Machine Vision', show_border=True
-                              )
-                    recgrp = VGroup(
-                              HGroup(SItem('snapshot_button', show_label=False),
-                                    VGroup(SItem('auto_save_snapshot'),
-                                     SItem('render_with_markup'))),
-                             SUItem('record', editor=ButtonEditor(label_value=make_sm_name('record_label'))),
-                             show_border=True,
-                             label='Recording'
-                             )
-            else:
-                mvgrp = Group()
-                recgrp = Group()
+#         if self.model.mode != 'client':
+        print self.model.mode
+        print self.model.stage_manager.__class__.__name__
+        mode = self.model.mode
+        if self.model.stage_manager.__class__.__name__ == 'VideoStageManager':
+            mvgrp = VGroup(
+                      HGroup(SItem('use_autocenter', label='Enabled'),
+                             SUItem('autocenter_button',
+                                  enabled_when='use_autocenter'),
+                             SUItem('configure_autocenter_button')
+                          ),
+                      SUItem('autofocus_manager', style='custom'),
+                      label='Machine Vision', show_border=True,
+                      )
 
-            cagrp = VGroup(
-                           mvgrp,
-                           recgrp,
-    #                   label='Machine Vision', show_border=True)
-                           visible_when='use_video',
-                           label='Camera'
-                           )
-
-            cgrp = Group(
-                         SUItem('stage_controller', style='custom',
-                                label='Axes'
-                                ),
-                         cngrp,
-                         cagrp,
-                         SUItem('points_programmer',
-                              label='Points',
-                              style='custom'),
-                         SUItem('tray_calibration_manager',
-                              label='Calibration',
-                              style='custom'),
-                         layout='tabbed'
-                         )
-            v = View(
-#                      VFold(agrp,
-                            VGroup(
-                                  hgrp,
-                                  pgrp,
-                                  cgrp
-                                )
-#                            )
+            recgrp = VGroup(
+                      HGroup(SItem('snapshot_button', show_label=False),
+                            VGroup(SItem('auto_save_snapshot'),
+                             SItem('render_with_markup'))),
+                     SUItem('record', editor=ButtonEditor(label_value=make_sm_name('record_label'))),
+                     show_border=True,
+                     label='Recording'
                      )
         else:
-            v = View()
+            recgrp = Group()
+
+        cagrp = VGroup(
+                       recgrp,
+#                   label='Machine Vision', show_border=True)
+                       visible_when='use_video',
+                       label='Camera'
+                       )
+        if mode != 'client':
+            cagrp.content.extend((mvgrp,))
+
+        cgrp = Group(
+                     SUItem('stage_controller', style='custom',
+                            label='Axes'
+                            ),
+                     cngrp,
+                     cagrp,
+                     layout='tabbed'
+                     )
+
+        if mode != 'client':
+            grps = (
+                     SUItem('points_programmer',
+                          label='Points',
+                          defined_when='mode!="client"',
+                          style='custom'),
+
+                     SUItem('tray_calibration_manager',
+                          label='Calibration',
+                          style='custom',
+                          defined_when='mode!="client"',
+
+                          ))
+            cgrp.content.extend(grps)
+
+        v = View(
+#                      VFold(agrp,
+                        VGroup(
+                              hgrp,
+                              pgrp,
+                              cgrp
+                            )
+#                            )
+                 )
+#         else:
+#             v = View()
 
 
         return v

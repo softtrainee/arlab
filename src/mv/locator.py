@@ -396,7 +396,7 @@ class Locator(Loggable):
 
         draw_circle(src, cpt, radius, color=color, thickness=1)
 
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness=-1):
         '''
             convenience function for drawing indicators
         '''

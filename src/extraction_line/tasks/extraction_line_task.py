@@ -31,7 +31,7 @@ class ExtractionLineTask(BaseHardwareTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          top=PaneItem('pychorn.extraction_line.gauges'),
+                          top=PaneItem('pychron.extraction_line.gauges'),
                           left=PaneItem('pychron.extraction_line.explanation')
                           )
 

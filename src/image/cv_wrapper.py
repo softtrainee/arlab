@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from numpy import array, asarray
+from numpy import array, asarray, ndarray
 from collections import namedtuple
 
 try:
@@ -122,6 +122,8 @@ def resize(src, w, h, dst=None):
     if dst is None:
         dst = CreateMat(int(h), int(w), CV_8UC3)
 
+    if isinstance(src, ndarray):
+        src = asMat(src)
     Resize(src, dst)
     return dst
 

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Event
+from traits.api import Event, Any, Instance, Int, on_trait_change
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
@@ -23,13 +23,12 @@ from src.canvas.canvas2D.video_underlay import VideoUnderlay
 
 
 class VideoCanvas(SceneCanvas):
-    video = None
+    video = Any
     camera = None
     padding = 0
     closed_event = Event
-    fps = 5
-    def close_video(self):
-        self.closed_event = True
+    fps = Int(5)
+    video_underlay = Instance(VideoUnderlay)
 
     def __init__(self, *args, **kw):
         '''
@@ -37,7 +36,9 @@ class VideoCanvas(SceneCanvas):
         '''
         super(VideoCanvas, self).__init__(*args, **kw)
 
-        self.video_underlay = VideoUnderlay(component=self, video=self.video)
+        self.video_underlay = VideoUnderlay(component=self,
+                                            video=self.video
+                                            )
 
         self.underlays.insert(0, self.video_underlay)
 
@@ -58,5 +59,16 @@ class VideoCanvas(SceneCanvas):
 
         if self.camera:
             self.fps = self.camera.fps
+
+    def _video_changed(self):
+        if self.video_underlay:
+            self.video_underlay.video = self.video
+
+    @on_trait_change('video:fps')
+    def _update_fps(self, new):
+        self.fps = new
+
+    def close_video(self):
+        self.closed_event = True
 
 #============= EOF ====================================

@@ -20,12 +20,16 @@
 from pyface.action.action import Action
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
+from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class BaseLaserAction(Action):
     manager_name = None
+    manager = None
     def _get_manager(self, event, app=None):
+
+        print self.manager_name
         if self.manager is not None:
             manager = self.manager
         else:
@@ -64,4 +68,43 @@ class OpenAutoTunerAction(LocalLaserAction):
         manager = self._get_manager(event)
         if manager is not None:
             manager.open_autotuner()
+
+class LaserTaskAction(TaskAction):
+    _enabled = None
+    def _task_changed(self):
+        if self.task:
+            if self.task.id in ('pychron.fusions.co2',
+                                'pychron.fusions.diode'):
+                self._enabled = True
+            else:
+                self._enabled = False
+
+    def _enabled_update(self):
+        '''
+             reimplement ListeningAction's _enabled_update
+        '''
+        if self.enabled_name:
+            if self.object:
+                self.enabled = bool(self._get_attr(self.object,
+                                                   self.enabled_name, False))
+            else:
+                self.enabled = False
+        elif self._enabled is not None:
+            self.enabled = self._enabled
+        else:
+            self.enabled = bool(self.object)
+
+class OpenPatternAction(LaserTaskAction):
+    name = 'Open Pattern...'
+    method = 'open_pattern'
+
+
+class NewPatternAction(LaserTaskAction):
+    name = 'New Pattern...'
+    method = 'new_pattern'
+
+# class ExecutePatternAction(LaserTaskAction):
+#     name = 'Execute Pattern...'
+#     method = 'execute_pattern'
+
 #============= EOF =============================================

@@ -49,6 +49,7 @@ class SceneCanvas(BaseDataCanvas):
             self.request_redraw()
 
     def _draw_hook(self, gc, *args, **kw):
-        self.scene.render_components(gc, self)
+        if self.scene:
+            self.scene.render_components(gc, self)
 
 #============= EOF =============================================

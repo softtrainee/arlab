@@ -53,20 +53,39 @@ class FusionsTask(BaseLaserTask):
                                        )
                           )
 
+#===============================================================================
+# action handlers
+#===============================================================================
+    def open_pattern(self):
+        if self.manager:
+            self.manager.open_pattern_maker()
+    def new_pattern(self):
+        if self.manager:
+            self.manager.new_pattern_maker()
+    def execute_pattern(self):
+        if self.manager:
+            self.manager.execute_pattern()
+
+
+
 class FusionsCO2Task(FusionsTask):
     id = 'pychron.fusions.co2'
     name = 'Fusions CO2'
     def create_central_pane(self):
-        if self.manager.mode == 'client':
-            return FusionsCO2ClientPane(model=self.manager)
-        else:
-            return FusionsCO2Pane(model=self.manager)
+#         if self.manager.mode == 'client':
+#             return FusionsCO2ClientPane(model=self.manager)
+#         else:
+#             return FusionsCO2Pane(model=self.manager)
 
         return FusionsCO2Pane(model=self.manager)
 
     def create_dock_panes(self):
         if self.manager.mode == 'client':
-            return []
+            return [
+
+                    FusionsCO2StagePane(model=self.manager),
+                    FusionsCO2ControlPane(model=self.manager),
+                    ]
         else:
             return [
 #                     FusionsCO2AxesPane(model=self.manager),

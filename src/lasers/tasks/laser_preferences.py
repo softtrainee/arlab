@@ -48,13 +48,12 @@ class LaserPreferences(BasePreferencesHelper):
 
 
 class FusionsLaserPreferences(LaserPreferences):
-    preferences_path = 'pychron.fusions.diode'
 
     use_video = Bool(False)
     video_output_mode = Enum('MPEG', 'Raw')
     ffmpeg_path = File
 
-    video_identifier = Enum(1, 2)
+    video_identifier = Str
     use_video_server = Bool(False)
     video_server_port = Int(1084)
 
@@ -105,8 +104,20 @@ class FusionsLaserPreferences(LaserPreferences):
             value = super(LaserPreferences, self)._get_value(name, value)
         return value
 
+
+class FusionsDiodePreferences(FusionsLaserPreferences):
+    preferences_path = 'pychron.fusions.diode'
+
+class FusionsCO2Preferences(FusionsLaserPreferences):
+    preferences_path = 'pychron.fusions.co2'
+
+
+
+#===============================================================================
+# Panes
+#===============================================================================
 class FusionsLaserPreferencesPane(PreferencesPane):
-    model_factory = FusionsLaserPreferences
+
 
     def traits_view(self):
         grps = self.get_additional_groups()
@@ -147,9 +158,9 @@ class FusionsLaserPreferencesPane(PreferencesPane):
                                 label='Server'
                                 )
         videogrp = VGroup(Item('use_video'),
-                          VGroup(
-#                         Item('video_identifier', label='ID',
-#                               enabled_when='use_video'),
+                        VGroup(
+                         Item('video_identifier', label='ID',
+                              enabled_when='use_video'),
                          Item('video_output_mode', label='Output Mode'),
                          Item('ffmpeg_path', label='FFmpeg Location'),
                          Item('use_autocenter', label='Auto Center'),
@@ -198,7 +209,9 @@ class FusionsLaserPreferencesPane(PreferencesPane):
 
 
 class FusionsDiodePreferencesPane(FusionsLaserPreferencesPane):
-    pass
+    model_factory = FusionsDiodePreferences
+
 class FusionsCO2PreferencesPane(FusionsLaserPreferencesPane):
-    pass
+    model_factory = FusionsCO2Preferences
+
 #============= EOF =============================================

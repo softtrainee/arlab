@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 from traits.api import Bool, Float, Button, Instance, Range, Str, Property, \
     Event
-from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring
+from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring, VGroup
 from chaco.api import AbstractOverlay
 #============= standard library imports ========================
 from numpy import array, transpose
@@ -259,7 +259,8 @@ class Pattern(Viewable):
 
     def _graph_factory(self, with_image=False):
         g = Graph(
-
+                  window_height=250,
+                  window_width=300,
                   container_dict=dict(
                                         padding=0
                                         ))
@@ -339,16 +340,19 @@ class Pattern(Viewable):
                      Item('target_radius'),
                      Item('show_overlap'),
                      Item('beam_radius', enabled_when='show_overlap'),
-                     Item('graph',
-    #                      resizable=False,
-                          show_label=False, style='custom'),
+
                        show_border=True,
                        label='Pattern'
                        )
 
     def maker_view(self):
-        v = View(self.maker_group(),
-                 buttons=['OK', 'Cancel'],
+        v = View(HGroup(
+                        self.maker_group(),
+                        Item('graph',
+    #                      resizable=False,
+                          show_label=False, style='custom'),
+                        ),
+#                  buttons=['OK', 'Cancel'],
                  resizable=True
                  )
         return v

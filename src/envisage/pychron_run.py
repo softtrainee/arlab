@@ -49,8 +49,8 @@ logger = new_logger('launcher')
 PACKAGE_DICT = dict(
 #                   DatabasePlugin='src.database.plugins.database_plugin',
                    ExperimentPlugin='src.experiment.tasks.experiment_plugin',
-#                   ScriptPlugin='src.scripts.plugins.script_plugin',
                    ExtractionLinePlugin='src.extraction_line.tasks.extraction_line_plugin',
+                   VideoPlugin='src.image.tasks.video_plugin',
 #                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
 #                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
 

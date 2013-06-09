@@ -82,6 +82,7 @@ class PatternExecutor(Patternable):
             # convert name_or_pickle into a file like obj
             fp = cStringIO.StringIO()
             fp.write(name_or_pickle)
+            fp.seek(0)
 
         # self._load_pattern sets self.pattern
         pattern = self._load_pattern(fp, path)
@@ -92,10 +93,19 @@ class PatternExecutor(Patternable):
 #        pname = name
 #        if not name.endswith('.lp'):
 #            pname = name + '.lp'
+        def test_name(ni):
+            path = os.path.join(paths.pattern_dir, ni)
+            if os.path.isfile(path):
+                return path
+        p = test_name(name)
+        if p:
+            return p
+        else:
+            pname = name
+            if not name.endswith('.lp'):
+                pname = name + '.lp'
+                return test_name(pname)
 
-        path = os.path.join(paths.pattern_dir, name)
-        if os.path.isfile(path):
-            return path
 
     def stop(self):
         self.info('User requested stop')

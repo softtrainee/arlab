@@ -66,6 +66,12 @@ class HardwarePlugin(BaseTaskPlugin):
 
     my_managers = List(contributes_to='pychron.hardware.managers')
 
+
+    sources = List(contributes_to='pychron.video.sources')
+
+    def _sources_default(self):
+        return [('pvs://localhost:1081', 'Hardware')]
+
     def _my_task_extensions_default(self):
         return [TaskExtension(actions=[SchemaAddition(id='Flag Manager',
                                                       factory=OpenFlagManagerAction,

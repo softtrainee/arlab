@@ -373,6 +373,7 @@ class Manager(Viewable, RPCable):
             klass = 'Remote{}'.format(klass)
             params['rpc_port'] = port
             params['rpc_host'] = host
+
         try:
             package = manager_package_dict[klass]
             class_factory = self.get_manager_factory(package, klass)
@@ -381,8 +382,9 @@ class Manager(Viewable, RPCable):
 
                 self.add_trait(manager, m)
                 return m
+
         except KeyError, e:
-            print e
+            print 'create manager', e
             pass
 
     def create_device(self, device_name, gdict=None, dev_class=None, prefix=None):
@@ -434,6 +436,7 @@ class Manager(Viewable, RPCable):
     def _file_dialog_(self, action, **kw):
         '''
         '''
+#         print 'file_dialog', kw
         dlg = FileDialog(action=action, **kw)
         if dlg.open() == OK:
             return dlg.path

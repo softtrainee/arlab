@@ -111,8 +111,11 @@ class InitializationParser(XMLParser):
 #        root = tree.getroot()
         return [t.tag for t in list(tree)]
 
+    def get_parameters(self, *args, **kw):
+        return self._get_parameters(all=True, *args, **kw)
+
     def get_parameter(self, subtree, name, all=True, **kw):
-        pa = self._get_paramaters(subtree, name, all=all, **kw)
+        pa = self._get_parameters(subtree, name, all=all, **kw)
         if pa:
             return pa[0]
 
@@ -149,10 +152,10 @@ class InitializationParser(XMLParser):
         self.save()
 
     def get_flags(self, manager, **kw):
-        return self._get_paramaters(manager, 'flag', **kw)
+        return self._get_parameters(manager, 'flag', **kw)
 
     def get_timed_flags(self, manager, **kw):
-        return self._get_paramaters(manager, 'timed_flag', **kw)
+        return self._get_parameters(manager, 'timed_flag', **kw)
 
     def get_rpc_params(self, manager):
         if isinstance(manager, tuple):
@@ -186,10 +189,10 @@ class InitializationParser(XMLParser):
         return dev
 
     def get_devices(self, manager, **kw):
-        return self._get_paramaters(manager, 'device', **kw)
+        return self._get_parameters(manager, 'device', **kw)
 
     def get_processor(self, manager, **kw):
-        p = self._get_paramaters(manager, 'processor', **kw)
+        p = self._get_parameters(manager, 'processor', **kw)
         if p:
             return p[0]
 
@@ -202,13 +205,13 @@ class InitializationParser(XMLParser):
         pl = self.get_plugin_group('hardware')
         ps = [pi for pi in [self.get_processor(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
-        nps = self._get_paramaters(pl, 'processor')
+        nps = self._get_parameters(pl, 'processor')
         if nps:
             ps += nps
         return ps
 
     def get_server(self, manager, **kw):
-        p = self._get_paramaters(manager, 'server', **kw)
+        p = self._get_parameters(manager, 'server', **kw)
         if p:
             return p[0]
 
@@ -217,12 +220,12 @@ class InitializationParser(XMLParser):
                     for p in self.get_plugins('hardware', element=True)] if pi]
         h = self.get_plugin_group('hardware')
         if h is not None:
-            hs = self._get_paramaters(h, 'server')
+            hs = self._get_parameters(h, 'server')
             if hs:
                 servers += hs
         return servers
 
-    def _get_paramaters(self, subtree, tag, all=False, element=False):
+    def _get_parameters(self, subtree, tag, all=False, element=False):
 
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)

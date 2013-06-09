@@ -25,7 +25,15 @@ from chaco.api import AbstractOverlay
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
+
+    '''
+        video only needs to be an object the implements
+        get_image_data([,size=(w,h)])
+            returns  ndarray
+    '''
     video = Any
+
+
 #    video = Instance(Video)
 #    use_backbuffer = True
 #    use_backbuffer = False

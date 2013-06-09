@@ -370,7 +370,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         x = None
         y = None
-        ax = self.axes[key]
+        try:
+            ax = self.axes[key]
+        except KeyError:
+            self.debug('No axes key. {} keys={}'.format(key, self.axes.keys))
         aid = ax.id
         if self.groupobj is not None:
             if aid in map(int, self.groupobj.axes):

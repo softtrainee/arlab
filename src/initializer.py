@@ -254,7 +254,8 @@ class Initializer(Loggable):
                 if man is None:
                     man = manager.create_manager(mi, host=host,
                                                  port=port, remote=remote)
-            except AttributeError:
+            except AttributeError, e:
+                print 'initializaer', e
 #                self.warning(e)
                 try:
                     man = manager.create_manager(mi,

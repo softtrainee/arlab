@@ -28,7 +28,10 @@ from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane, \
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
-    OpenAutoTunerAction
+    OpenAutoTunerAction, NewPatternAction, \
+    OpenPatternAction
+from pyface.tasks.action.schema import SMenu, GroupSchema
+from pyface.action.group import Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -46,20 +49,16 @@ class BaseLaserPlugin(BaseTaskPlugin):
             raise NotImplementedError
 
         so = self.service_offer_factory(
-#                          protocol='.'.join(self.klass),
                           protocol=ILaserManager,
-#                          'src.lasers.laser_managers.laser_manager.ILaserManager',
                           factory=self._manager_factory)
         return [so]
 
     def _manager_factory(self):
         '''
         '''
-#        factory = __import__(self.klass[0], fromlist=[self.klass[1]])
 
         ip = InitializationParser()
         plugin = ip.get_plugin(self.klass[1].replace('Manager', ''), category='hardware')
-#        mode = plugin.get('mode')
         mode = ip.get_parameter(plugin, 'mode')
 
         if mode == 'client':
@@ -76,9 +75,10 @@ class BaseLaserPlugin(BaseTaskPlugin):
                     try:
                         params[attr] = tag.find(attr).text.strip()
                     except Exception, e:
-                        print e
+                        print 'client comms fail', attr, e
             except Exception, e:
-                print e
+                print 'client comms fail', e
+
             params['name'] = self.name
             factory = __import__(pkg, fromlist=[klass])
             m = getattr(factory, klass)(**params)
@@ -96,7 +96,6 @@ class BaseLaserPlugin(BaseTaskPlugin):
     def _managers_default(self):
         '''
         '''
-#        app = self.application
         d = []
 
         if self.klass is not None:
@@ -126,12 +125,48 @@ class FusionsPlugin(BaseLaserPlugin):
                             )
                 ]
 
+    sources = List(contributes_to='pychron.video.sources')
+    def _sources_default(self):
+        ip = InitializationParser()
+        plugin = ip.get_plugin(self.task_name.replace(' ', ''),
+                               category='hardware')
+        source = ip.get_parameter(plugin, 'video_source')
+        rs = []
+        if source:
+            rs = [(source, self.task_name)]
+        return rs
 
+    def _my_task_extensions_default(self):
+        def efactory():
+            return SMenu(id='Extraction', name='Extraction')
+        return [TaskExtension(actions=[
+                                       SchemaAddition(id='Extraction',
+                                                      factory=efactory,
+                                                      path='MenuBar',
+                                                      before='Tools',
+                                                      after='View'
+                                                      ),
+                                       SchemaAddition(id='fusions_laser_group',
+                                                     factory=lambda: GroupSchema(id='FusionsLaserGroup'
+                                                                           ),
+                                                     path='MenuBar/Extraction'
+                                                     ),
+                                       SchemaAddition(id='pattern',
+                                                      factory=lambda:Group(
+                                                                           OpenPatternAction(),
+                                                                           NewPatternAction(),
+                                                                           ),
+                                                      path='MenuBar/Extraction'
+                                                      )
+                                       ]
+                              )
+                       ]
 class FusionsCO2Plugin(FusionsPlugin):
     id = 'pychron.fusions.co2'
     name = 'fusions_co2'
     klass = ('src.lasers.laser_managers.fusions_co2_manager', 'FusionsCO2Manager')
     task_name = 'Fusions CO2'
+
     def _task_factory(self):
         t = FusionsCO2Task(manager=self._get_manager())
         return t
@@ -139,6 +174,24 @@ class FusionsCO2Plugin(FusionsPlugin):
     def _preferences_panes_default(self):
         return [FusionsCO2PreferencesPane]
 
+    def _my_task_extensions_default(self):
+        exts = super(FusionsCO2Plugin, self)._my_task_extensions_default()
+        def factory_scan():
+            return OpenScannerAction(self._get_manager())
+
+        def factory_tune():
+            return OpenAutoTunerAction(self._get_manager())
+
+        return exts + [TaskExtension(actions=[
+                                              SchemaAddition(id='fusions_co2_group',
+                                                     factory=lambda: GroupSchema(id='FusionsCO2Group'
+                                                                           ),
+                                                     path='MenuBar/Extraction'
+                                                     ),
+
+                                              ]
+                              )
+                       ]
 
 class FusionsDiodePlugin(FusionsPlugin):
     id = 'pychron.fusions.diode'
@@ -151,22 +204,26 @@ class FusionsDiodePlugin(FusionsPlugin):
         def factory_tune():
             return OpenAutoTunerAction(self._get_manager())
 
-        return [TaskExtension(actions=[
-                                       SchemaAddition(id='open_scan',
-                                                        factory=factory_scan,
-#                                                      factory=OpenScannerAction,
-#                                                      factory=OpenFlagManagerAction,
-                                                        path='MenuBar/Extraction'),
-                                       SchemaAddition(id='open_autotune',
-                                                        factory=factory_tune,
-#                                                      factory=OpenScannerAction,
-#                                                      factory=OpenFlagManagerAction,
-                                                        path='MenuBar/Extraction'),
+        exts = super(FusionsDiodePlugin, self)._my_task_extensions_default()
+        return exts + [TaskExtension(actions=[
+                        SchemaAddition(id='fusions_diode_group',
+                         factory=lambda: GroupSchema(id='FusionsDiodeGroup'
+                                               ),
+                         path='MenuBar/Extraction'
+                         ),
+                           SchemaAddition(id='fusions_diode_group',
+                                          factory=lambda: Group(),
+                                          path='MenuBar/Extraction'
+                                          ),
+                           SchemaAddition(id='open_scan',
+                                          factory=factory_scan,
+                                        path='MenuBar/Extraction/FusionsDiodeGroup'),
+                           SchemaAddition(id='open_autotune',
+                                          factory=factory_tune,
+                                        path='MenuBar/Extraction/FusionsDiodeGroup'),
                                        ]
                               )
-                ]
-
-
+                       ]
 
     def _preferences_panes_default(self):
         return [FusionsDiodePreferencesPane]

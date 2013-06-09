@@ -49,7 +49,7 @@ class FusionsCO2Manager(FusionsLaserManager):
 
     _stop_signal = None
 
-    configuration_dir_name = 'co2'
+    configuration_dir_name = 'fusions_co2'
 
 #    def _brightness_meter_default(self):
 #        mv = self._get_machine_vision()

@@ -14,9 +14,13 @@
 # limitations under the License.
 #===============================================================================
 
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
 #============= enthought library imports =======================
-from traits.api import Property, Enum, Str, on_trait_change
-from traitsui.api import View, Item, InstanceEditor
+from traits.api import Property, Enum, Str, on_trait_change, Button, Any, Event, \
+    Bool
+from traitsui.api import View, Item, InstanceEditor, ButtonEditor, HGroup, Spring, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -37,6 +41,31 @@ class PatternMakerView(Saveable, Patternable):
                         ),
                         depends_on='_kind')
     _kind = Str('CircularContour')
+
+    executor = Any
+    execute_button = Button('Execute')
+#     execute_button = Event
+    execute_label = Property(depends_on='executor._alive')
+    execute_enabled = Property
+    def _get_execute_enabled(self):
+#         if self.executor:
+#             if self.pattern.name:
+        return self.executor and self.pattern.name
+
+    def _get_execute_label(self):
+        if self.executor:
+            return 'Stop' if self.executor.isPatterning() else 'Start'
+        else:
+            return 'Start'
+
+    def _execute_button_fired(self):
+        if self.executor:
+            if self.executor.isPatterning():
+                self.executor.stop()
+            else:
+
+                self.executor.load_pattern(self.pattern.name)
+                self.executor.execute(block=False)
 
     def load_pattern(self):
         p = self.open_file_dialog(default_directory=paths.pattern_dir)
@@ -87,10 +116,17 @@ class PatternMakerView(Saveable, Patternable):
                  Item('pattern_name',
                       style='readonly', show_label=False),
                  Item('kind', show_label=False),
+                 HGroup(Item('execute_button',
+                             show_label=False,
+                             editor=ButtonEditor(label_value='execute_label'),
+                             enabled_when='execute_enabled'
+                             ),
+                        spring,
+                        ),
                  Item('pattern',
                       style='custom',
                       editor=InstanceEditor(view='maker_view'),
-                       show_label=False),
+                      show_label=False),
                  handler=self.handler_klass,
                  buttons=SaveableButtons,
                  title='Pattern Editor'
@@ -127,4 +163,9 @@ class PatternMakerView(Saveable, Patternable):
     def _pattern_default(self):
         p = self.pattern_factory(self.kind)
         return p
+
+if __name__ == '__main__':
+    pm = PatternMakerView()
+    pm.load_pattern()
+    pm.configure_traits()
 #============= EOF =============================================
