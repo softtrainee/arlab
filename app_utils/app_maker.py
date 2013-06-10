@@ -47,17 +47,26 @@ def make():
     for name in apps:
         template = None
         if name in ('diode', 'co2', 'valve', 'uv'):
-            template = PychronTemplate()
+            template = Template()
             template.root = args.root[0]
-            template.icon_name = 'py{}_icon.icns'.format(name)
-            template.bundle_name = 'py{}'.format(name)
             template.version = args.version[0]
             template.name = name
+
+            template.icon_name = 'py{}_icon.icns'.format(name)
+            template.bundle_name = 'py{}'.format(name)
+        elif name in ('bakedpy'):
+            template = Template()
+            template.root = args.root[0]
+            template.version = args.version[0]
+            template.name = name
+            template.icon_name = '{}_icon.icns'.format(name)
+            template.bundle_name = name
+
 
         if template is not None:
             template.build()
         else:
-            print "Invalid application flavor. Use 'diode', 'co2', 'valve', 'uv'"
+            print "Invalid application flavor. Use 'diode', 'co2', 'valve', 'uv', 'bakedpy'"
 
 
 class Template(object):
@@ -89,6 +98,7 @@ class Template(object):
         #=======================================================================
         ins.build_app(op)
         ins.make_egg()
+        ins.make_migrate_repos()
         ins.make_argv()
 
 
@@ -134,18 +144,26 @@ class Maker(object):
     version = None
     name = None
     def copy_resource(self, src):
-        name = os.path.basename(src)
-        shutil.copyfile(src,
-                        self._resource_path(name))
+        if os.path.isfile(src):
+            name = os.path.basename(src)
+            shutil.copyfile(src,
+                            self._resource_path(name))
 
     def _resource_path(self, name):
         return os.path.join(self.dest, 'Resources', name)
+    def make_migrate_repos(self):
+
+        root = self.root
+        p = os.path.join(root, 'src', 'database', 'migrate')
+        shutil.copytree(p, self._resource_path('migrate_repositories'))
+
 
     def make_egg(self):
         from setuptools import setup, find_packages
 
         pkgs = find_packages(self.root,
-                            exclude=('launchers', 'tests', 'app_utils')
+                            exclude=('launchers', 'tests',
+                                     'app_utils')
                             )
 
         setup(name='pychron',
@@ -165,6 +183,10 @@ class Maker(object):
         shutil.copyfile(egg_root,
                         self._resource_path(eggname)
                         )
+
+
+
+
     def make_argv(self):
         argv = '''
 import os

@@ -1,8 +1,27 @@
-#!/usr/bin/env python
 from migrate.versioning.api import test, version_control, upgrade, version
-from migrate.exceptions import DatabaseAlreadyControlledError, KnownError
+from migrate.exceptions import DatabaseAlreadyControlledError, KnownError, \
+	InvalidRepositoryError
 import os
 
+def manage_version(url, base_repo):
+	repo = os.path.join(os.path.dirname(__file__), base_repo)
+
+	try:
+		version_control(url, repo)
+	except InvalidRepositoryError:
+		from src.paths import paths
+		repo = os.path.join(paths.app_resources, 'migrate_repositories', base_repo)
+		try:
+			version_control(url, repo)
+		except InvalidRepositoryError:
+			pass
+		except DatabaseAlreadyControlledError:
+			pass
+
+	except DatabaseAlreadyControlledError:
+		pass
+
+	return repo
 
 def manage_database(url, repo, logger=None, progress=None):
 
@@ -15,14 +34,10 @@ def manage_database(url, repo, logger=None, progress=None):
 		b = os.path.split(path[1:])[0]
 		if not os.path.isdir(b):
 			os.mkdir(b)
-	repo = os.path.join(os.path.dirname(__file__), repo)
 
-	try:
-		version_control(url, repo)
-	except DatabaseAlreadyControlledError:
-		pass
-#
+	repo = manage_version(url, repo)
 	n = version(repo)
+
 	if progress:
 		progress.max = int(n)
 
