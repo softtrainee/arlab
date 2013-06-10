@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Button, Property, Bool
+from traits.api import Instance, Button, Property, Bool, Int
 from traitsui.api import View, Item, ButtonEditor
 #============= standard library imports ========================
 from threading import Thread, Event
@@ -24,11 +24,12 @@ from numpy import array
 #============= local library imports  ==========================
 from src.image.video import Video
 from src.loggable import Loggable
+import zmq
 
 class VideoServer(Loggable):
     video = Instance(Video)
-    port = 1084
-
+    port = Int(1084)
+    quality = Int(75)
     _started = False
     use_color = True
     start_button = Button
@@ -48,7 +49,7 @@ class VideoServer(Loggable):
         return v
 
     def _video_default(self):
-        return Video()
+        return Video(swap_rb=True)
 
     def stop(self):
 #        if self._started:
@@ -79,7 +80,11 @@ class VideoServer(Loggable):
 #         sock = context.socket(zmq.PUB)
         sock = context.socket(zmq.REP)
         sock.bind('tcp://*:{}'.format(self.port))
-        self.request_reply(sock)
+
+        poll = zmq.Poller()
+        poll.register(sock, zmq.POLLIN)
+
+        self.request_reply(sock, poll)
 #        if use_color:
 #            kw = dict(swap_rb=True)
 #            depth = 3
@@ -89,26 +94,34 @@ class VideoServer(Loggable):
 
 #         pt = time.time()
 
-    def request_reply(self, sock):
+    def request_reply(self, sock, poll):
         stop = self._stop_signal
         video = self.video
         fps = 10
         import Image
         from cStringIO import StringIO
+        quality = self.quality
         while not stop.isSet():
-            resp = sock.recv()
-            if resp == 'FPS':
-                buf = str(fps)
-            else:
-                f = video.get_frame(gray=False)
 
-    #            new_frame.clear()
-                im = Image.fromarray(array(f))
-                s = StringIO()
-                im.save(s, 'JPEG')
-                buf = s.getvalue()
+            socks = dict(poll.poll(100))
+            if socks.get(sock) == zmq.POLLIN:
+                resp = sock.recv()
+                if resp == 'FPS':
+                    buf = str(fps)
+                elif resp.startswith('QUALITY'):
+                    quality = int(resp[7:])
+                    buf = ''
+                else:
+                    f = video.get_frame()
 
-            sock.send(buf)
+        #            new_frame.clear()
+
+                    im = Image.fromarray(array(f))
+                    s = StringIO()
+                    im.save(s, 'JPEG', quality=quality)
+                    buf = s.getvalue()
+
+                sock.send(buf)
 
 
     def publisher(self, sock):

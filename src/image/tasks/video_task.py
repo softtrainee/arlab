@@ -78,12 +78,14 @@ class VideoTask(BaseManagerTask):
                  ]
         return panes
 
-    @on_trait_change('controls_pane:[show_grids,fps]')
+    @on_trait_change('controls_pane:[show_grids,fps, quality]')
     def _update_control(self, name, new):
         if name == 'show_grids':
             self.video_pane.component.show_grids = new
         elif name == 'fps':
             self.video_pane.component.fps = new
+        elif name == 'quality':
+            self.video_source.quality = new
 
     @on_trait_change('source_pane:[selected_connection, source:+]')
     def _update_source(self, name, new):

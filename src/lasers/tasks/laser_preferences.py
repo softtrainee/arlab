@@ -56,6 +56,7 @@ class FusionsLaserPreferences(LaserPreferences):
     video_identifier = Str
     use_video_server = Bool(False)
     video_server_port = Int(1084)
+    video_server_quality = Range(1, 75, 75)
 
     show_grids = Bool(True)
     show_laser_position = Bool(True)
@@ -153,7 +154,9 @@ class FusionsLaserPreferencesPane(PreferencesPane):
                      )
         vservergrp = VGroup(Item('use_video_server', label='Use Server'),
                                 Item('video_server_port', label='Port',
-                                enabled_when='use_video_server'),
+                                     enabled_when='use_video_server'),
+                                Item('video_server_quality', label='Quality',
+                                     enabled_when='use_video_server'),
                                 show_border=True,
                                 label='Server'
                                 )

@@ -49,18 +49,15 @@ def parse_url(url):
     return islocal, r
 
 class VideoSource(HasTraits):
-#     _cached_image = None
-#     def __init__(self, *args, **kw):
-#         super(VideoSource, self).__init__(*args, **kw)
-#         self._cached_image = self._get_image_data()
-    _cached_image = None
 
-    image_path = File('/Users/ross/Sandbox/archive/images/diodefailsnapshot.jpg')
+    image_path = File
     host = Str('localhost')
     port = Int(1080)
-    fps = Int
+    quality = Int
+
     _sock = None
     poller = None
+    _cached_image = None
 
     def __init__(self, *args, **kw):
         super(VideoSource, self).__init__(*args, **kw)
@@ -119,6 +116,9 @@ class VideoSource(HasTraits):
         if self.image_path:
             self._cached_image = Image.new_frame(self.image_path, swap_rb=True)
 
+    def _quality_changed(self):
+        resp = self._get_reply('QUALITY{}'.format(self.quality))
+
     def _get_reply(self, request, timeout=50):
         if not self._connected:
             return
@@ -152,12 +152,6 @@ class VideoSource(HasTraits):
 
     def _get_video_data(self):
         if self._connected:
-#             resp = self._get_reply('FPS')
-#             try:
-#                 self.fps = int(resp)
-#             except (ValueError, TypeError):
-#                 pass
-
             resp = self._get_reply('IMAGE')
             if resp:
                 buf = StringIO(resp)
@@ -165,49 +159,6 @@ class VideoSource(HasTraits):
                 img = PILImage.open(buf)
                 img = img.convert('RGB')
                 self._cached_image = array(img)
-
-        return self._cached_image
-
-#     tt = time.time()
-    def _get_video_data2(self):
-#         t = time.time()
-#         print 'fff', id(self), t - self.tt
-#         self.tt = t
-
-        evts = self.poller.poll(50)
-        if evts:
-            sock, _id = evts[0]
-            resp = sock.recv()
-            try:
-                self.fps = int(resp)
-            except ValueError:
-                return self._cached_image
-
-            evts = self.poller.poll(50)
-            if evts:
-                sock, _id = evts[0]
-                resp = sock.recv()
-
-                '''
-                    faster to create new cStringIO new 
-                    than truncate an existing 
-                    buffer
-                '''
-                buf = StringIO(resp)
-                buf.seek(0)
-                img = PILImage.open(buf)
-                img = img.convert('RGB')
-                self._cached_image = array(img)
-            self._no_connection_cnt = 0
-
-        else:
-            self._no_connection_cnt += 1
-
-        if self._no_connection_cnt > 20:
-            p = os.path.join(os.path.dirname(__file__), 'no_connection.jpg')
-            self._cached_image = Image.new_frame(p,
-                                                swap_rb=True)
-            self._no_connection_cnt = 0
 
         return self._cached_image
 
