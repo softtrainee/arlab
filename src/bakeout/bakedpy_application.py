@@ -26,8 +26,11 @@ import copy
 from src.loggable import Loggable
 from envisage.ui.tasks.tasks_application import TasksApplication
 from pyface.tasks.task_window_layout import TaskWindowLayout
+from pyface.splash_screen import SplashScreen
+from pyface.image_resource import ImageResource
+from src.applications.pychron_application import PychronApplication
 
-class Bakedpy(TasksApplication, Loggable):
+class Bakedpy(PychronApplication, Loggable):
     '''
     '''
     id = 'tasks.bakedpy'
@@ -40,16 +43,15 @@ class Bakedpy(TasksApplication, Loggable):
 #        about_dialog = AboutDialog(parent=self.workbench.active_window.control)
 #        return about_dialog
 
-#    def _splash_screen_default(self):
-#        from src.paths import paths
-#        sp = SplashScreen(
-#                          image=ImageResource(name='splash.png',
-#                                                search_path=[paths.pychron_src_root,
-#                                                             paths.pychron_dev_src_root
-#                                                             ]
-#                                                ),
-#                          )
-#        return sp
+#     def _splash_screen_default(self):
+#         from src.paths import paths
+#         sp = SplashScreen(
+#                           image=ImageResource(name='splash.png',
+#                                                 search_path=[
+#                                                              ]
+#                                                 ),
+#                           )
+#         return sp
     default_layout = [TaskWindowLayout('bakeout',
                                        size=(800, 800)) ]
 #    def _prepare_exit(self):

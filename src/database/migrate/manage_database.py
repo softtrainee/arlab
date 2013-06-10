@@ -5,7 +5,6 @@ import os
 
 def manage_version(url, base_repo):
 	repo = os.path.join(os.path.dirname(__file__), base_repo)
-	print repo
 	try:
 		version_control(url, repo)
 	except InvalidRepositoryError:
@@ -29,13 +28,13 @@ def manage_database(url, repo, logger=None, progress=None):
 # 	url = 'sqlite:///{}'.format(name)
 
 	kind, path = url.split('://')
-
+	if logger:
+		logger.debug('sadfa {} {}'.format(url, repo))
 	if kind == 'sqlite':
 		b = os.path.split(path[1:])[0]
 		if not os.path.isdir(b):
 			os.mkdir(b)
-	
-	print url, repo
+
 	repo = manage_version(url, repo)
 	n = version(repo)
 

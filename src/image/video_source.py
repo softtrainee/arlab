@@ -119,7 +119,7 @@ class VideoSource(HasTraits):
     def _quality_changed(self):
         resp = self._get_reply('QUALITY{}'.format(self.quality))
 
-    def _get_reply(self, request, timeout=50):
+    def _get_reply(self, request, timeout=100):
         if not self._connected:
             return
 

@@ -29,7 +29,7 @@ class BakeoutAdapter(PathDatabaseAdapter):
     path_table = BakeoutPathTable
 
     def manage_database(self):
-        self.debug(self.url)
+        self.debug('mmma {}'.format(self.url))
         manage_database(self.url, 'bakeoutdb', logger=self.logger)
 
 #==============================================================================

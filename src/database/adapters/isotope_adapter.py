@@ -214,7 +214,9 @@ class IsotopeAdapter(DatabaseAdapter):
                                      'detector_intercalibration', history, **kw)
         if a:
             detector = self.get_detector(detector)
-            detector.intercalibrations.append(a)
+            if detector:
+                a.detector_id = detector.id
+#             detector.intercalibrations.append(a)
 
         return a
 
@@ -621,7 +623,7 @@ class IsotopeAdapter(DatabaseAdapter):
         if aliquot:
             q = q.filter(meas_AnalysisTable.aliquot == aliquot)
             q = q.order_by(meas_AnalysisTable.step.desc())
-        
+
         q = q.order_by(meas_AnalysisTable.aliquot.desc())
         q = q.limit(1)
         try:

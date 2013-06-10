@@ -45,76 +45,22 @@ class NewportMotionController(MotionController):
         '''
 
         # try to get x position to test comms
+        if super(NewportMotionController, self).initialize(*args, **kw):
+            r = True if self.get_current_position('x') is not None else False
 
-        r = True if self.get_current_position('x') is not None else False
+            # force group destruction
+            self.destroy_group(force=True)
 
-        # force group destruction
-        self.destroy_group(force=True)
+            # get and clear any error
+            self.read_error()
 
-        # get and clear any error
-        self.read_error()
-
-        return r
-
-#    def axes_factory(self, config=None):
-#        if config is None:
-#
-#            config = self.get_configuration(self.config_path)
-#
-#        mapping = self.config_get(config, 'General', 'mapping')
-#        if mapping is not None:
-#            mapping = mapping.split(',')
-#        else:
-#            mapping = 'x,y,z'
-#
-#        lp = self.config_get(config, 'General', 'loadposition')
-#        if lp is not None:
-#            loadposition = [float(f) for f in lp.split(',')]
-#        else:
-#            loadposition = [0, 0, 0]
-#
-#        config_path = self.configuration_dir_path
-#        for i, a in enumerate(mapping):
-#            self.info('loading axis {},{}'.format(i, a))
-#            limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
-#            na = self._axis_factory(config_path,
-#                                  name=a,
-#                                  id=i + 1,
-#                                  negative_limit=limits[0],
-#                                  positive_limit=limits[1],
-#                                  loadposition=loadposition[i]
-#                                  )
-#
-#            self.axes[a] = na
+            return r
 
     def load_additional_args(self, config):
         '''
         '''
         self.axes_factory(config)
-#        mapping = self.config_get(config, 'General', 'mapping')
-#        if mapping is not None:
-#            mapping = mapping.split(',')
-#        else:
-#            return False
-#
-#        lp = self.config_get(config, 'General', 'loadposition')
-#        if lp is not None:
-#            loadposition = [float(f) for f in lp.split(',')]
-#        else:
-#            loadposition = [0, 0, 0]
-
         config_path = self.configuration_dir_path
-#        for i, a in enumerate(mapping):
-#            limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
-#            na = self._axis_factory(config_path,
-#                                  name = a,
-#                                  id = i + 1,
-#                                  negative_limit = limits[0],
-#                                  positive_limit = limits[1],
-#                                  loadposition = loadposition[i]
-#                                  )
-#
-#            self.axes[a] = na
         group = config.get('Optional', 'group')
         joystick = config.get('Optional', 'joystick')
         if group:
@@ -201,38 +147,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if self.axes.has_key('x'):
             return self.axes['x'].id == 2
 
-#    def get_xyz(self):
-#
-#        xax = self.axes['x']
-#        yax = self.axes['y']
-#        zax = self.axes['z']
-#
-# #        v = self.ask('1TP?;2TP?', verbose=False)
-#        v = self.ask('{}TP?;{}TP?;{}TP?'.format(xax.id, yax.id, zax.id), verbose=False)
-#        if v is None:
-#            return 0, 0, 0
-#
-#        vs = v.split('\n')
-#        nv = []
-#        for vi in vs:
-#            if vi.strip():
-#                nv.append(float(vi))
-#
-#            print 'vvvv', vi
-#
-#        while len(nv) < 3:
-#            nv.append(0)
-#        x, y, z = [float(vi) for vi in vs if vi.strip()]
-#        v = map(float, v.split('\n'))
-#        print v
-#        x, y, z = 0, 0, 0
-#
-#        x = self._sign_correct(v[0], 'x', ratio=False) / xax.drive_ratio
-#        y = self._sign_correct(v[1], 'y', ratio=False) / yax.drive_ratio
-#        z = self._sign_correct(v[2], 'z', ratio=False) / zax.drive_ratio
-
-#        return nv
-
+#===============================================================================
+# RPCable
+#===============================================================================
     def get_current_position(self, aid):
         ''' 
         '''

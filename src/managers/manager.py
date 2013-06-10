@@ -387,7 +387,8 @@ class Manager(Viewable, RPCable):
             print 'create manager', e
             pass
 
-    def create_device(self, device_name, gdict=None, dev_class=None, prefix=None):
+    def create_device(self, device_name, gdict=None, dev_class=None,
+                      prefix=None, obj=None):
         '''
         '''
         device = None
@@ -412,6 +413,9 @@ class Manager(Viewable, RPCable):
                 return
 
         device = class_factory(name=device_name)
+        if obj is not None:
+            device.copy_traits(obj, traits=['configuration_dir_name',
+                                            ])
 
         if device is not None:
             if prefix:
