@@ -199,14 +199,16 @@ class VideoStageManager(StageManager):
 #        super(VideoStageManager, self).finish_loading()
 #        if self.use_video_server:
 #            self.video_server.start()
-
-    def initialize_stage(self):
-        super(VideoStageManager, self).initialize_stage()
-
+    def initialize_video(self):
         if self.video:
             self.video.open(
                             identifier=self.video_identifier
                             )
+
+
+    def initialize_stage(self):
+        super(VideoStageManager, self).initialize_stage()
+        self.initialize_video()
 
         s = self.stage_controller
         if s.axes:

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change
+from traits.api import HasTraits, on_trait_change, Any
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= standard library imports ========================
@@ -53,7 +53,7 @@ class ExperimentEditorTask(EditorTask):
                                         Tabbed(
                                                PaneItem('pychron.experiment.factory'),
                                                PaneItem('pychron.experiment.isotope_evolution'),
-                                               PaneItem('pychron.experiment.summary'),
+#                                                PaneItem('pychron.experiment.summary'),
                                                ),
                                          orientation='vertical'
                                       ),
@@ -63,7 +63,7 @@ class ExperimentEditorTask(EditorTask):
                                                 PaneItem('pychron.experiment.console', height=425),
                                                 PaneItem('pychron.experiment.explanation', height=425),
                                                 ),
-                                         PaneItem('pychron.extraction_line.canvas_dock'),
+#                                          PaneItem('pychron.extraction_line.canvas_dock'),
 #                                         PaneItem('pychron.experiment.wait'),
                                          orientation='vertical'
                                          ),
@@ -72,7 +72,6 @@ class ExperimentEditorTask(EditorTask):
 
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
-#         self.summary_pane = SummaryPane()
 
         panes = [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
@@ -87,12 +86,40 @@ class ExperimentEditorTask(EditorTask):
 
         app = self.window.application
         man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-        print man
         if man:
             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
             panes.append(CanvasDockPane(model=man))
+
+        from src.lasers.laser_managers.ilaser_manager import ILaserManager
+        man = app.get_service(ILaserManager)
+        if man:
+            from src.image.tasks.video_task import VideoTask
+            vt = VideoTask()
+#             plugin = app.get_plugin('pychron.video')
+#             task = plugin.tasks[0].factory()
+#             self.window.add_task(task)
+
+            video = man.stage_manager.video
+            man.initialize_video()
+            pane = vt.new_video_dock_pane(video=video)
+            panes.append(pane)
+
         return panes
 
+    @on_trait_change('source_pane:[selected_connection, source:+]')
+    def _update_source(self, name, new):
+        from src.image.video_source import parse_url
+        if name == 'selected_connection':
+            islocal, r = parse_url(new)
+            if islocal:
+                pass
+            else:
+                self.source_pane.source.host = r[0]
+                self.source_pane.source.port = r[1]
+        else:
+            url = self.source_pane.source.url()
+
+            self.video_source.set_url(url)
 #===============================================================================
 # generic actions
 #===============================================================================

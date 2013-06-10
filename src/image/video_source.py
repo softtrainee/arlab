@@ -27,6 +27,7 @@ from numpy import asarray, array
 #============= local library imports  ==========================
 from src.image.image import Image
 from src.image.cv_wrapper import resize
+import time
 
 
 def parse_url(url):
@@ -83,18 +84,25 @@ class VideoSource(HasTraits):
             self.host, self.port = r
             self.reset_connection()
 
-    def reset_connection(self):
+    def reset_connection(self, clear_connection_count=True):
         if self._sock:
-            self.poller.unregister(self._sock)
-
+            try:
+                self.poller.unregister(self._sock)
+            except KeyError:
+                pass
         context = zmq.Context()
-        self._sock = context.socket(zmq.SUB)
+        self._sock = context.socket(zmq.REQ)
 
         self._sock.connect('tcp://{}:{}'.format(self.host,
                                                   self.port))
-        self._sock.setsockopt(zmq.SUBSCRIBE, '')
+#         self._sock.setsockopt(zmq.SUBSCRIBE, '')
         self.poller.register(self._sock, zmq.POLLIN)
-        self._no_connection_cnt = 0
+        if clear_connection_count:
+            self._no_connection_cnt = 0
+        self._connected = True
+        self._reset = True
+        return self._sock
+
 
     def get_image_data(self, size=None):
         if self._sock is None:
@@ -111,12 +119,70 @@ class VideoSource(HasTraits):
         if self.image_path:
             self._cached_image = Image.new_frame(self.image_path, swap_rb=True)
 
+    def _get_reply(self, request, timeout=50):
+        if not self._connected:
+            return
+
+        poll = self.poller
+        client = self._sock
+        try:
+            client.send(request)
+        except Exception:
+            return
+
+        socks = dict(poll.poll(timeout))
+        if socks.get(client) == zmq.POLLIN:
+            reply = client.recv()
+            return reply
+
+        else:
+            client.setsockopt(zmq.LINGER, 0)
+            client.close()
+            poll.unregister(client)
+
+            self._no_connection_cnt += 1
+            if self._no_connection_cnt > 5:
+                self._connected = False
+                p = os.path.join(os.path.dirname(__file__), 'no_connection.jpg')
+                self._cached_image = Image.new_frame(p,
+                                                swap_rb=True)
+            else:
+                self.reset_connection(clear_connection_count=False)
+                return self._get_reply(request, timeout)
+
     def _get_video_data(self):
+        if self._connected:
+#             resp = self._get_reply('FPS')
+#             try:
+#                 self.fps = int(resp)
+#             except (ValueError, TypeError):
+#                 pass
+
+            resp = self._get_reply('IMAGE')
+            if resp:
+                buf = StringIO(resp)
+                buf.seek(0)
+                img = PILImage.open(buf)
+                img = img.convert('RGB')
+                self._cached_image = array(img)
+
+        return self._cached_image
+
+#     tt = time.time()
+    def _get_video_data2(self):
+#         t = time.time()
+#         print 'fff', id(self), t - self.tt
+#         self.tt = t
+
         evts = self.poller.poll(50)
         if evts:
             sock, _id = evts[0]
             resp = sock.recv()
-            self.fps = int(resp)
+            try:
+                self.fps = int(resp)
+            except ValueError:
+                return self._cached_image
+
             evts = self.poller.poll(50)
             if evts:
                 sock, _id = evts[0]
@@ -128,7 +194,6 @@ class VideoSource(HasTraits):
                     buffer
                 '''
                 buf = StringIO(resp)
-#                 buf.write(resp)
                 buf.seek(0)
                 img = PILImage.open(buf)
                 img = img.convert('RGB')

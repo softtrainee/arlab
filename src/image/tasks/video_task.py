@@ -18,11 +18,11 @@
 from traits.api import HasTraits, Instance, on_trait_change, File, Str, Int, \
     List, Any
 from traitsui.api import View, Item
-from pyface.tasks.task_layout import PaneItem, TaskLayout
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
-from src.image.tasks.video_pane import VideoPane, SourcePane
+from src.image.tasks.video_pane import VideoPane, SourcePane, ControlsPane
 from src.image.video_source import VideoSource, parse_url
 
 
@@ -31,15 +31,28 @@ class VideoTask(BaseManagerTask):
     name = 'Video Display'
     video_source = Instance(VideoSource, ())
     source_pane = Instance(SourcePane)
+    controls_pane = Instance(ControlsPane)
     available_connections = List
 
     def _default_layout_default(self):
         return TaskLayout(
 #                           top=PaneItem('pychron.extraction_line.gauges'),
-                        left=PaneItem('pychron.video.source')
+                        left=Splitter(
+                                      PaneItem('pychron.video.source'),
+                                      PaneItem('pychron.video.controls'),
+                                      orientation='vertical'
+                                      ),
+
 #                          width=500,
 #                          height=500
                           )
+
+    def new_video_dock_pane(self, video=None):
+        from src.image.tasks.video_pane import VideoDockPane
+        if video is None:
+            video = self.video_source
+
+        return VideoDockPane(video=video)
 
     def prepare_destroy(self):
         pass
@@ -50,20 +63,27 @@ class VideoTask(BaseManagerTask):
 
                                     )
 
-        self.video_pane.component.fps = 1
         return self.video_pane
 
     def create_dock_panes(self):
         self.source_pane = SourcePane(
                                       connections=dict(self.available_connections)
                                       )
+
+        self.controls_pane = ControlsPane()
         self.video_source.set_url(self.source_pane.source.url())
         panes = [
-                 self.source_pane
-#                  GaugePane(model=self.manager),
-#                  ExplanationPane(model=self.manager)
+                 self.source_pane,
+                 self.controls_pane
                  ]
         return panes
+
+    @on_trait_change('controls_pane:[show_grids,fps]')
+    def _update_control(self, name, new):
+        if name == 'show_grids':
+            self.video_pane.component.show_grids = new
+        elif name == 'fps':
+            self.video_pane.component.fps = new
 
     @on_trait_change('source_pane:[selected_connection, source:+]')
     def _update_source(self, name, new):

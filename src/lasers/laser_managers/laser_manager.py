@@ -64,6 +64,9 @@ class BaseLaserManager(Manager):
     _requested_power = Float
     _calibrated_power = None
 
+    def initialize_video(self):
+        if self.use_video:
+            self.stage_manager.initialize_video()
     def is_ready(self):
         return True
 

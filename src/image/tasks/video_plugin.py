@@ -32,6 +32,7 @@ class VideoPlugin(BaseTaskPlugin):
         if file then should be a path to an image
         if pvs than should be address to a Pychron Video Server
     '''
+    id = 'pychron.video'
     sources = ExtensionPoint(List,
                                    id='pychron.video.sources'
                             )

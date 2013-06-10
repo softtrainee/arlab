@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, File, String, Int, Enum, Instance, Dict
-from traitsui.api import View, Item, UItem, InstanceEditor, EnumEditor
+from traits.api import HasTraits, Any, File, String, Int, Enum, Instance, Dict, \
+    on_trait_change, Bool, Range
+from traitsui.api import View, Item, UItem, InstanceEditor, EnumEditor, RangeEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from enable.component_editor import ComponentEditor
 from src.canvas.canvas2D.video_canvas import VideoCanvas
@@ -37,8 +38,8 @@ class LocalSource(Source):
         return 'file://{}'.format(self.path)
 
 class RemoteSource(Source):
-    host = String('localhost')
-    port = Int(1084)
+    host = String('localhost', enter_set=True, auto_set=False)
+    port = Int(1084, enter_set=True, auto_set=False)
     def traits_view(self):
         return View(
                     Item('host'),
@@ -49,14 +50,25 @@ class RemoteSource(Source):
     def url(self):
         return 'pvs://{}:{}'.format(self.host, self.port)
 
+class ControlsPane(TraitsDockPane):
+    name = 'Controls'
+    id = 'pychron.video.controls'
+    show_grids = Bool(False)
+    fps = Range(1, 12, 10)
+    def traits_view(self):
+        v = View(
+                 Item('show_grids', label='Grid'),
+                 Item('fps')
+                 )
+        return v
+
 class SourcePane(TraitsDockPane):
-    name = 'source'
+    name = 'Source'
     id = 'pychron.video.source'
     kind = Enum('Remote', 'Local')
     source = Instance(Source)
     connections = Dict
     selected_connection = Any
-
 
     def traits_view(self):
         v = View(
@@ -66,7 +78,7 @@ class SourcePane(TraitsDockPane):
                  UItem('selected_connection',
                        editor=EnumEditor(name='connections'),
                        style='custom'
-                       )
+                       ),
                  )
         return v
 
@@ -79,23 +91,40 @@ class SourcePane(TraitsDockPane):
     def _source_default(self):
         return RemoteSource()
 
-class VideoPane(TraitsTaskPane):
+class BaseVideoPane(HasTraits):
     component = Any
     video = Any
+    @on_trait_change('video:fps')
+    def _update_fps(self):
+        print 'set component fps', self.video.fps
+        self.component.fps = self.video.fps
 
     def _video_changed(self):
         self.component.video = self.video
 
     def _component_default(self):
-        c = VideoCanvas(video=self.video)
+        c = VideoCanvas(video=self.video,
+                        show_axes=False,
+                        show_grids=False,
+                        padding=5
+
+
+                        )
         return c
 
     def traits_view(self):
         v = View(
                  UItem('component',
                        style='custom',
-                        editor=VideoComponentEditor()
+                       editor=VideoComponentEditor()
                        )
                  )
         return v
+
+class VideoPane(TraitsTaskPane, BaseVideoPane):
+    pass
+
+class VideoDockPane(TraitsDockPane, BaseVideoPane):
+    id = 'pychron.video'
+    name = 'Video'
 #============= EOF =============================================

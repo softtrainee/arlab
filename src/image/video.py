@@ -72,6 +72,7 @@ class Video(Image):
         return vs
 
     def _update_fps(self, fps):
+        print 'update fps', fps
         self.fps = fps
 
     def open(self, user=None, identifier=0, force=False):

@@ -69,19 +69,17 @@ class VideoServer(Loggable):
         self._started = True
 
     def _broadcast(self):
-        stop = self._stop_signal
 #        new_frame = self._new_frame_ready
-        video = self.video
-        use_color = self.use_color
+
 
 
         self.info('video broadcast thread started')
         import zmq
         context = zmq.Context()
-        sock = context.socket(zmq.PUB)
+#         sock = context.socket(zmq.PUB)
+        sock = context.socket(zmq.REP)
         sock.bind('tcp://*:{}'.format(self.port))
-        fps = 10
-
+        self.request_reply(sock)
 #        if use_color:
 #            kw = dict(swap_rb=True)
 #            depth = 3
@@ -89,9 +87,37 @@ class VideoServer(Loggable):
 #            kw = dict(gray=True)
 #            depth = 1
 
+#         pt = time.time()
+
+    def request_reply(self, sock):
+        stop = self._stop_signal
+        video = self.video
+        fps = 10
         import Image
         from cStringIO import StringIO
-        pt = time.time()
+        while not stop.isSet():
+            resp = sock.recv()
+            if resp == 'FPS':
+                buf = str(fps)
+            else:
+                f = video.get_frame(gray=False)
+
+    #            new_frame.clear()
+                im = Image.fromarray(array(f))
+                s = StringIO()
+                im.save(s, 'JPEG')
+                buf = s.getvalue()
+
+            sock.send(buf)
+
+
+    def publisher(self, sock):
+        stop = self._stop_signal
+        video = self.video
+        use_color = self.use_color
+        fps = 10
+        import Image
+        from cStringIO import StringIO
         while not stop.isSet():
 
             f = video.get_frame(gray=False)
@@ -104,20 +130,6 @@ class VideoServer(Loggable):
             sock.send(s.getvalue())
 
             time.sleep(1.0 / fps)
-#            w, h = f.size()
-#            header = array([w, h, fps, depth])
-#            data = array([header.tostring(), f.ndarray.tostring()], dtype='str')
-#            sock.send(header.tostring())
-#            sock.send(f.ndarray.tostring())
-
-
-#             nt = time.time()
-#             st = ((1.0 / fps) - (nt - pt))
-#             if st > 0:
-#                 time.sleep(st)
-#             pt = nt
-
-#            time.sleep(max(0.001 /, fp - (time.time() - t)))
 
 # class VideoServer2(Loggable):
 #    video = Instance(Video)
