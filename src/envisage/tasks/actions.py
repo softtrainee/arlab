@@ -22,58 +22,42 @@ from pyface.tasks.task_window_layout import TaskWindowLayout
 from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
-# class DefaultAction(Action):
-#    def _get_experimentor(self, event):
-#        return self._get_service(event, 'src.experiment.experimentor.Experimentor')
-#
-#    def _get_service(self, event, name):
-#        app = event.task.window.application
-#        return app.get_service(name)
-#
-#    def _open_editor(self, event, task_id):
-#        application = event.task.window.application
-#        for wi in application.windows:
-#            if wi.active_task.id == task_id:
-#                wi.activate()
-#                break
-#        else:
-#            win = application.create_window(TaskWindowLayout(task_id))
-#            win.open()
+import os
+from src.paths import paths
+import shelve
 
-# class GenericNewAction(DefaultAction):
-#    name = 'New'
-#    accelerator = 'Ctrl+N'
-#    def perform(self, event):
-#        task = event.task
-#        if hasattr(task, 'new'):
-#            task.new()
-#        else:
-#            manager = self._get_experimentor(event)
-#            if manager.verify_database_connection(inform=True):
-#    #        if manager.verify_credentials():
-#                if manager.load():
-#                    self._open_editor(event, 'pychron.experiment')
-
-# class GenericOpenAction(DefaultAction):
-#    name = 'Open...'
-#    accelerator = 'Ctrl+O'
-#    def perform(self, event):
-#        task = event.task
-#        if hasattr(task, 'open'):
-#            task.open()
-#        else:
-#            # default is to open experiment
-#            manager = self._get_experimentor(event)
-#            if manager.verify_database_connection(inform=True):
-#    #        if manager.verify_credentials():
-#                if manager.load():
-#                    if manager.load_experiment_queue(saveable=True):
-#                        self._open_editor(event, 'pychron.experiment')
 class ResetLayoutAction(TaskAction):
     name = 'Reset Layout'
     def perform(self, event):
         self.task.window.reset_layout()
 
+class PositionAction(Action):
+    name = 'Window Positions'
+    def perform(self, event):
+        from src.envisage.tasks.layout_manager import LayoutManager
+        app = event.task.window.application
+        lm = LayoutManager(app)
+        lm.edit_traits()
+
+# class SavePositionAction(Action):
+#     name = 'Save Positions'
+#     def perform(self, event):
+#         from src.envisage.tasks.layout_manager import LayoutManager
+#         app = event.task.window.application
+#         lm = LayoutManager(app)
+#
+#
+#         lm.new_layout()
+
+
+#         p = os.path.join(paths.hidden_dir, 'window_positions')
+#
+#         d = shelve.open(p)
+#         app = event.task.window.application
+#         for win in app.windows:
+#
+#         d[win.active_task.id] = [win.position
+#         d.close()
 
 class MinimizeAction(TaskAction):
     name = 'Minimize'

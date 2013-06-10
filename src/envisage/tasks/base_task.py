@@ -28,7 +28,7 @@ from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAc
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
     GenericFindAction, RaiseAction, RaiseUIAction, ResetLayoutAction, \
-    MinimizeAction
+    MinimizeAction, PositionAction
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from itertools import groupby
@@ -191,6 +191,7 @@ class TaskGroup(Group):
     items = List
 
 class BaseTask(Task):
+
     def _menu_bar_factory(self):
         return
 
@@ -266,7 +267,8 @@ class BaseTask(Task):
     def _window_menu(self):
         window_menu = SMenu(
                           Group(MinimizeAction(),
-                                ResetLayoutAction()
+                                ResetLayoutAction(),
+                                PositionAction(),
                                 ),
                           WindowGroup(),
                           id='Window',
