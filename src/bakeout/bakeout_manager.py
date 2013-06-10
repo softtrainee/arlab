@@ -190,7 +190,15 @@ class BakeoutManager(Manager):
         for i, name in enumerate(self._get_controller_names()):
             self._setup_graph(name, i)
 
+
+        #stop all timers first
         cs = self._get_controllers()
+        for c in cs:
+            c.stop_timer()
+            
+        #delay to allow threads to exit
+        time.sleep(0.5)
+
         for i, c in enumerate(cs):
         # reset the general timers
             c.start_timer()

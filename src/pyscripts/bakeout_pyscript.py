@@ -78,7 +78,7 @@ class BakeoutPyScript(PyScript):
 #            self._ys.append(temperature)
 #            return
 
-        if self._syntax_checking or self._cancel:
+        if self._cancel:
             return
 
         c = self.controller
@@ -138,7 +138,7 @@ class BakeoutPyScript(PyScript):
 #            self._ys.append(temperature)
 #            return
 
-        if self._syntax_checking or self._cancel:
+        if self._cancel:
             return
 
         # convert duration from units to seconds
