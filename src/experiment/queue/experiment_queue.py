@@ -36,7 +36,7 @@ class ExperimentQueue(BaseExperimentQueue):
         ci = obj.clone_traits()
         ci.state = 'not run'
         if obj.user_defined_aliquot:
-            ci.aliquot=obj.aliquot
+            ci.aliquot = obj.aliquot
         else:
             ci.aliquot = 0
         return ci
