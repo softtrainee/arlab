@@ -1090,7 +1090,7 @@ anaylsis_type={}
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(-starttime_offset, self._total_counts + (ma - mi) * 0.25)
         elif starttime_offset > mi:
-            graph.set_x_limits(min= -starttime_offset)
+            graph.set_x_limits(min=-starttime_offset)
 
         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer
@@ -1534,6 +1534,7 @@ anaylsis_type={}
             func = getattr(db, 'add_{}'.format(name))
             uv, ue = ic.nominal_value, ic.std_dev
             func(history, 'CDD', user_value=uv, user_error=float(ue))
+
         return self._time_save(func, 'detector intercalibration')
 
     def _save_blank_info(self, analysis):

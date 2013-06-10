@@ -191,12 +191,12 @@ class BakeoutManager(Manager):
             self._setup_graph(name, i)
 
 
-        #stop all timers first
+        # stop all timers first
         cs = self._get_controllers()
         for c in cs:
             c.stop_timer()
-            
-        #delay to allow threads to exit
+
+        # delay to allow threads to exit
         time.sleep(0.5)
 
         for i, c in enumerate(cs):
@@ -862,8 +862,13 @@ class BakeoutManager(Manager):
                             kind='sqlite',
                             application=self.application
                             )
-        db.manage_database()
+        try:
+            db.manage_database()
+        except Exception, e:
+            import traceback
+            self.debug(traceback.format_exc())
         db.connect()
+
         return db
 
 #==============================================================================

@@ -430,12 +430,12 @@ class StageManager(Manager):
 
             msg = 'homing all motors'
             homed = ['x', 'y', 'z']
-            home_kwargs = dict(x= -25, y= -25, z=50)
+            home_kwargs = dict(x=-25, y=-25, z=50)
 
         elif self.home_option == 'XY':
             msg = 'homing x,y'
             homed = ['x', 'y']
-            home_kwargs = dict(x= -25, y= -25)
+            home_kwargs = dict(x=-25, y=-25)
         else:
 #            define_home =
             msg = 'homing {}'.format(self.home_option)
@@ -1159,6 +1159,12 @@ class StageManager(Manager):
 #        self.do_pattern('testpattern')
         self.do_pattern('pattern003')
 
+
+    def create_device(self, *args, **kw):
+        dev = super(StageManager, self).create_device(*args, **kw)
+        dev.parent = self
+        return dev
+
 #===============================================================================
 # factories
 #===============================================================================
@@ -1178,7 +1184,7 @@ class StageManager(Manager):
             factory = AerotechMotionController
 
         m = factory(name='{}controller'.format(self.name),
-                    configuration_name='stage_controller',
+#                     configuration_name='stage_controller',
                     configuration_dir_name=self.configuration_dir_name,
                     parent=self
                     )

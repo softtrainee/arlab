@@ -55,7 +55,6 @@ class InitializationParser(XMLParser):
     '''
     def __init__(self, *args, **kw):
         p = os.path.join(paths.setup_dir, 'initialization.xml')
-        print p
         if os.path.isfile(p):
             super(InitializationParser, self).__init__(p, *args, **kw)
         else:
