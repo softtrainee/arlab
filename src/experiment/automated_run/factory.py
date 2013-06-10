@@ -232,7 +232,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #===============================================================================
     def _new_template(self):
         template = IncrementalHeatTemplate()
-        if self.template and self.template != NULL_STR:
+        if self.template and \
+            self.template not in ('Step Heat Template', LINE_STR):
             template.load(os.path.join(paths.incremental_heat_template_dir,
                                        '{}.txt'.format(self.template)
                                        )
@@ -624,9 +625,8 @@ post_equilibration_script:name
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _template_closed(self):
-        self.templates = self.load_templates()
+        self.load_templates()
         self.template = os.path.splitext(self._template.name)[0]
-#        self.update_templates_needed = True
         del self._template
 
     def _edit_template_fired(self):

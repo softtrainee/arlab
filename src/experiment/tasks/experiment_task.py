@@ -33,8 +33,6 @@ import os
 from pyface.constant import CANCEL, YES, NO
 
 
-
-
 class ExperimentEditorTask(EditorTask):
     wildcard = '*.txt'
     group_count = 0

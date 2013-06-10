@@ -43,7 +43,7 @@ LAlphas = list(ALPHAS)
 # class Experimentor(Experimentable):
 class Experimentor(IsotopeDatabaseManager):
     experiment_factory = Instance(ExperimentFactory)
-#    experiment_queue = Instance(ExperimentQueue)
+    experiment_queue = Instance(ExperimentQueue)
     executor = Instance(ExperimentExecutor)
 
     stats = Instance(StatsGroup, ())
