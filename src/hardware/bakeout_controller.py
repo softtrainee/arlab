@@ -228,6 +228,9 @@ Add {}'.format(sd)):
     def start_timer(self):
         if self._timer is not None:
             self._timer.Stop()
+            #wait for timer to exit
+            time.sleep(0.05)
+            
         self.info('starting update timer')
         self._timer = Timer(self.update_interval * 1000., self._update_)
 

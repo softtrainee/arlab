@@ -167,11 +167,12 @@ class Paths():
         #==============================================================================
         # #database
         #==============================================================================
-        db_path = '/usr/local/pychron'
+#        db_path = '/usr/local/pychron
+        db_path=stable_root
         self.device_scan_root = device_scan_root = join(db_path, 'device_scans')
         self.device_scan_db = join(device_scan_root, 'device_scans.sqlite')
-        self.bakeout_db_root = bakeout_db_root = join(db_path, 'bakeoutdb')
-        self.bakeout_db = join(bakeout_db_root, 'bakeouts.sqlite')
+        self.bakeout_db_root = join(db_path, 'bakeoutdb')
+        self.bakeout_db = join(db_path, 'bakeouts.db')
         self.co2laser_db_root = join(db_path, 'co2laserdb')
         self.co2laser_db = join(db_path, 'co2.sqlite')
         self.uvlaser_db_root = join(db_path, 'uvlaserdb')
