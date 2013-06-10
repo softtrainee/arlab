@@ -45,6 +45,8 @@ class BaseDataCanvas(DataView):
     use_pan = Bool(True)
 
     plot = None
+
+
     def cmap_plot(self, z):
 
 

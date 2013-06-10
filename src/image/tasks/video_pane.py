@@ -55,10 +55,12 @@ class ControlsPane(TraitsDockPane):
     id = 'pychron.video.controls'
     show_grids = Bool(False)
     fps = Range(1, 12, 10)
+    quality = Range(1, 75, 10)
     def traits_view(self):
         v = View(
                  Item('show_grids', label='Grid'),
-                 Item('fps')
+                 Item('fps'),
+                 Item('quality')
                  )
         return v
 

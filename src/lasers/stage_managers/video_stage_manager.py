@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool, Event, Enum, on_trait_change, Str
+ Float, Bool, Event, Enum, on_trait_change, Str, Int
 # from traitsui.api import Group, Item, HGroup, VGroup
 # from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -102,6 +102,8 @@ class VideoStageManager(StageManager):
     video_identifier = Str
 #     video_identifier = Enum(1, 2)
     use_video_server = Bool(False)
+    video_server_port = Int
+    video_server_quality = Int
     video_server = Instance(VideoServer)
 
     use_media_server = Bool(False)
@@ -137,6 +139,13 @@ class VideoStageManager(StageManager):
         bind_preference(self, 'use_video_server',
                         '{}.use_video_server'.format(pref_id)
                         )
+        if self.use_video_server:
+            bind_preference(self.video_server, 'port',
+                            '{}.video_server_port'.format(pref_id)
+                            )
+            bind_preference(self.video_server, 'quality',
+                            '{}.video_server_quality'.format(pref_id)
+                            )
 
         bind_preference(self.video_archiver, 'archive_months',
                         '{}.video_archive_months'.format(pref_id)
@@ -633,7 +642,11 @@ class VideoStageManager(StageManager):
         return v
 
     def _video_server_default(self):
-        return VideoServer(video=self.video)
+        return VideoServer(video=self.video,
+
+#                            port=self.video_server_port,
+#                            quality=self.video_server_quality,
+                           )
 
     def _video_archiver_default(self):
         return Archiver()

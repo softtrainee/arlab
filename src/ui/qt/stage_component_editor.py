@@ -69,7 +69,8 @@ class _LaserComponentEditor(_ComponentEditor):
                     (Qt.Key_Down, 'down')):
 
             if ekey == sk:
-                self.value.key_released(n)
+                if hasattr(self.value, 'key_released'):
+                    self.value.key_released(n)
                 break
 
     def _keyboard_focus_changed(self):
