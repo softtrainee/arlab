@@ -29,7 +29,8 @@ class BakeoutAdapter(PathDatabaseAdapter):
     path_table = BakeoutPathTable
 
     def manage_database(self):
-        manage_database(self.url, 'bakeoutdb')
+        self.debug(self.url)
+        manage_database(self.url, 'bakeoutdb', logger=self.logger)
 
 #==============================================================================
 #    getters

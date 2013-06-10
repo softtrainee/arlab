@@ -507,7 +507,6 @@ post_equilibration_script:name
                     else:
                         msname = ms.name[0].capitalize()
                         edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
-    #                     ln = make_special_identifier(ln, ed.id, ms.id)
                         ln = make_special_identifier(ln, edname, msname)
 
                 self.labnumber = ln
@@ -519,25 +518,6 @@ post_equilibration_script:name
         else:
             self._frequency_enabled = False
 
-#     def _aliquot_changed(self):
-#         if self.edit_mode:
-#             if self.aliquot:
-#                 pass
-#                 if self.aliquot != self.o_aliquot and self.o_aliquot:
-#                     self.user_defined_aliquot = True
-#                 else:
-#                     self.user_defined_aliquot = False
-#
-#                 for si in self._selected_runs:
-#
-#                     if si.aliquot != self.aliquot:
-#                         si.user_defined_aliquot = True
-#                     else:
-#                         si.user_defined_aliquot = self.user_defined_aliquot
-#
-#                     if si.user_defined_aliquot:
-#                         si.aliquot = int(self.aliquot)
-#
     def _labnumber_changed(self, old, new):
         def _load_scripts(_old, _new):
             '''
