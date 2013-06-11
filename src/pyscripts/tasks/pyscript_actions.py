@@ -34,7 +34,11 @@ class OpenPyScriptAction(Action):
             task.open()
         else:
             application = event.task.window.application
-            win = application.create_window(TaskWindowLayout('pychron.pyscript'))
+            win = application.create_window(TaskWindowLayout('pychron.pyscript',
+                                                             size=(1200, 100)
+                                                             ),
+
+                                            )
             task = win.active_task
             if task.open():
                 win.open()

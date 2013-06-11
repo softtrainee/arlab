@@ -1159,7 +1159,6 @@ class StageManager(Manager):
 #        self.do_pattern('testpattern')
         self.do_pattern('pattern003')
 
-
     def create_device(self, *args, **kw):
         dev = super(StageManager, self).create_device(*args, **kw)
         dev.parent = self
