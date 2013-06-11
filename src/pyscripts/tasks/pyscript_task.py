@@ -18,7 +18,7 @@
 from traits.api import HasTraits, String, List, Instance, Property, Any, Enum, \
     on_trait_change
 from traitsui.api import View, Item, EnumEditor, UItem, Label
-from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, Splitter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task import BaseManagerTask
@@ -30,7 +30,7 @@ from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
 from src.paths import paths
 
 class PyScriptTask(EditorTask):
-
+    name = 'PyScript'
     kind = String
     kinds = List(['Extraction', 'Measurement'])
     commands_pane = Instance(CommandsPane)
@@ -49,14 +49,25 @@ class PyScriptTask(EditorTask):
     def _default_layout_default(self):
         return TaskLayout(
                           id='pychron.pyscript',
-                          left=Tabbed(
-                                     PaneItem('pychron.pyscript.commands'),
-                                     PaneItem('pychron.pyscript.editor')
+                          left=Splitter(
+                                        PaneItem('pychron.pyscript.commands_editor',
+                                          height=100,
+                                          width=510,
+                                          ),
+#                                      Tabbed(
+                                            PaneItem('pychron.pyscript.editor',
+                                              width=510,
+                                              ),
+#                                             PaneItem('pychron.pyscript.commands',
+#                                               width=525,
+#                                               ),
+                                        orientation='vertical',
                                      ),
+#                                 ),
+                          right=PaneItem('pychron.pyscript.commands',
+                                         width=175),
 #                          top=PaneItem('pychron.pyscript.description'),
-                          bottom=PaneItem('pychron.pyscript.commands_editor'),
-
-
+#                           bottom=
                           )
     def create_dock_panes(self):
         self.commands_pane = CommandsPane()
@@ -103,11 +114,11 @@ class PyScriptTask(EditorTask):
             self._open_editor(path='')
             return True
 
-#    def open(self):
-#        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
-#        path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
-#        self._open_file(path)
-#        return True
+    def open(self):
+        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
+#         path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
+        self._open_file(path)
+        return True
 
     def _open_file(self, path, **kw):
         self.info('opening pyscript: {}'.format(path))

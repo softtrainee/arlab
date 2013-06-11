@@ -15,45 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, List, String, Float, Bool, on_trait_change, Str
+from traits.api import HasTraits, Int, List, String, Float, Bool, \
+    on_trait_change, Str, Enum
 from traitsui.api import View, Item, VGroup, Group, HGroup, Label, Spring, \
     UItem, ListEditor, InstanceEditor, spring, EnumEditor
 #============= standard library imports ========================
 import re
 from src.helpers.filetools import str_to_bool
-from src.pyscripts.hop import Hop
 from src.loggable import Loggable
 from src.constants import NULL_STR, FIT_TYPES
 import os
 from src.paths import paths
 from ConfigParser import ConfigParser
+from traitsui.table_column import ObjectColumn
+from traitsui.editors.table_editor import TableEditor
+from traitsui.extras.checkbox_column import CheckboxColumn
+from src.pyscripts.parameters import MeasurementAction, Detector, Hop, \
+    MeasurementTruncation, MeasurementTermination
 #============= local library imports  ==========================
-class Detector(HasTraits):
-    fit = Str
-    use = Bool
-    label = Str
-    ref = Bool
-    isotope = Str
-    isotopes = [NULL_STR, 'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-    def traits_view(self):
-        v = View(HGroup(
-                        UItem('use'),
-                        UItem('label',
-                              width= -30,
-                              style='readonly'),
-                        UItem('isotope',
-                             editor=EnumEditor(name='isotopes'),
-                             enabled_when='use'),
-                        UItem('fit',
-                            enabled_when='use',
-                            editor=EnumEditor(values=[NULL_STR] + FIT_TYPES))
-                        )
-                 )
-        return v
-
-    def _use_changed(self):
-        if self.use and not self.fit:
-            self.fit = 'linear'
 
 class ParameterEditor(Loggable):
     body = String
@@ -63,7 +42,6 @@ class ParameterEditor(Loggable):
     def traits_view(self):
         v = View()
         return v
-
 
 STR_FMT = "{}= '{}'"
 FMT = '{}= {}'
@@ -120,6 +98,15 @@ NCYCLES_REGEX = re.compile(r'(NCYCLES) *= *')
 BASELINE_NCYCLES_REGEX = re.compile(r'(BASELINE_NCYCLES) *= *')
 HOPS_REGEX = re.compile(r'(HOPS) *= *\[')
 
+
+#===============================================================================
+# conditions
+#===============================================================================
+ACTIONS_REGEX = re.compile(r'ACTIONS *= *')
+TRUNCATIONS_REGEX = re.compile(r'TRUNCATIONS *= *')
+TERMINATIONS_REGEX = re.compile(r'TERMINATIONS *= *')
+
+
 class MeasurementParameterEditor(ParameterEditor):
     #===========================================================================
     # counts
@@ -160,6 +147,13 @@ class MeasurementParameterEditor(ParameterEditor):
     use_peak_hop = Bool
     baseline_ncycles = Int
     hops = List
+
+    #===========================================================================
+    # conditions
+    #===========================================================================
+    actions = List
+    truncations = List
+    terminations = List
 
     fits = String
     suppress_update = False
@@ -224,11 +218,61 @@ class MeasurementParameterEditor(ParameterEditor):
         if hoplist:
             self.hops = self._extract_hops(hoplist)
 
+        actions = self._extract_multiline_parameter(lines, 'actions')
+        if actions:
+            self.actions = self._extract_actions(actions)
+
+        truncations = self._extract_multiline_parameter(lines, 'truncations')
+        if truncations:
+            self.truncations = self._extract_truncations(truncations)
+
+        terminations = self._extract_multiline_parameter(lines, 'terminations')
+        if terminations:
+            self.terminations = self._extract_truncations(terminations)
+
         for name, _cast in attrs:
             if name not in found:
                 nv = self._get_new_value(name, getattr(self, name))
                 lines.insert(3, nv)
+
         self.suppress_update = False
+
+    def _extract_actions(self, items):
+        acs = []
+        for use, (key, comp, crit, start,
+                  freq, action, resume) in items:
+            ac = MeasurementAction(use=use,
+                                   key=key,
+                                   comparator=comp,
+                                   criterion=crit,
+                                   start_count=start,
+                                   frequency=freq,
+                                   action=action,
+                                   resume=resume
+                                   )
+            acs.append(ac)
+        return acs
+
+    def _extract_truncations(self, items):
+        return self._extract_conditions(MeasurementTruncation, items)
+
+    def _extract_terminations(self, items):
+        return self._extract_conditions(MeasurementTermination, items)
+
+    def _extract_conditions(self, klass, items, **kw):
+        acs = []
+        for use, (key, comp, crit, start, freq) in items:
+            ac = klass(use=use,
+                       key=key,
+                       comparator=comp,
+                       criterion=crit,
+                       start_count=start,
+                       frequency=freq,
+                       **kw
+                       )
+            acs.append(ac)
+
+        return acs
 
     def _extract_hops(self, hl):
         hops = []
@@ -306,7 +350,7 @@ class MeasurementParameterEditor(ParameterEditor):
         nv = self._get_new_value(name, new)
         ostr = []
         modified = False
-
+        print regex, name, new
         body = self.editor.getText()
         for i, li in enumerate(body.split('\n')):
 
@@ -328,6 +372,34 @@ class MeasurementParameterEditor(ParameterEditor):
         self.editor.setText(body)
         return modified
 
+    def _modify_body_multiline(self, param, new):
+        if not self.editor or self.suppress_update:
+            return
+
+        body = self.editor.getText()
+        lines = body.split('\n')
+        regex = self._get_regex(param)
+        endline = self._endline
+        rlines = []
+        start = None
+        # delete the previous entry
+
+        for i, li in enumerate(lines):
+            if regex.match(li.strip()):
+                idx = i
+                start = True
+                continue
+            elif start :
+                if endline(li):
+                    start = False
+                continue
+
+            rlines.append(li)
+
+        rlines.insert(idx, new)
+        body = '\n'.join(rlines)
+        self.editor.setText(body)
+
     def _get_regex(self, name):
         return globals()['{}_REGEX'.format(name.upper())]
 
@@ -345,12 +417,43 @@ class MeasurementParameterEditor(ParameterEditor):
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('actions:[], actions[]')
+    def _update_actions(self, name, new):
+        self._update_conditions(self.actions, 'actions')
+
+    @on_trait_change('terminations:[], terminations[]')
+    def _update_terminations(self, name, new):
+        self._update_conditions(self.terminations, 'terminations')
+
+    @on_trait_change('truncations:[], truncations[]')
+    def _update_truncations(self, name, new):
+        self._update_conditions(self.truncations, 'truncations')
+
+    def _update_conditions(self, items, name):
+        acs = [
+               ac.to_string()
+                for ac in items
+             ]
+
+        acs = ['{},'.format(hi) for hi in acs if hi]
+        nacs = [acs[0]]
+        for hi in acs[1:]:
+            nacs.append('        {}'.format(hi))
+
+        dname = '{} = ['.format(name.upper())
+        n = len(dname) - 1
+        action_str = '{}{}\n{}]'.format(dname,
+                                      '\n'.join(nacs),
+                                      n * ' ',
+                                      )
+
+        return self._modify_body_multiline(name.lower(), action_str)
+
     @on_trait_change('''peak_center_+, eq_+, multicollect_counts, baseline_+,
 use_peak_hop, ncycles, baseline_ncycles
 ''')
     def _update_value(self, name, new):
-        if not self.suppress_update:
-            return self._modify_body(name, new)
+        return self._modify_body(name, new)
 
     @on_trait_change('hops:[counts,detectors, position]')
     def _update_hops(self, obj, name, new):
@@ -361,7 +464,7 @@ use_peak_hop, ncycles, baseline_ncycles
         nhs = [hs[0]]
         for hi in hs[1:]:
             nhs.append('        {}'.format(hi))
-        hopstr = 'HOPS = [{}]'.format('\n'.join(nhs))
+        hopstr = 'HOPS = [{}\n]'.format('\n'.join(nhs))
 
         ho = self.hops[0]
         det = ho.detectors.split(',')[0]
@@ -439,6 +542,8 @@ use_peak_hop, ncycles, baseline_ncycles
 #        [Detector(label=di) for di in ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']]
         return detectors
 
+    def _new_action(self):
+        return MeasurementAction()
 #===============================================================================
 #
 #===============================================================================
@@ -452,9 +557,9 @@ use_peak_hop, ncycles, baseline_ncycles
                                       ),
                                  HGroup(
                                         Label('Use'),
-                                        Spring(springy=False, width= -32),
+                                        Spring(springy=False, width=-32),
                                         Label('Ref. Iso'),
-                                        Spring(springy=False, width= -35),
+                                        Spring(springy=False, width=-35),
                                         Label('Fit')
                                         ),
                                  UItem('active_detectors',
@@ -527,16 +632,86 @@ use_peak_hop, ncycles, baseline_ncycles
                                show_border=True
                                )
 
+
+        action_editor = TableEditor(columns=[
+                                      CheckboxColumn(name='use', width=20),
+                                      ObjectColumn(name='key',
+                                                    label='Key'),
+                                      ObjectColumn(name='comparator',
+                                                    label='Comp.'),
+                                      ObjectColumn(name='criterion',
+                                                    label='Crit.'),
+                                      ObjectColumn(name='start_count',
+                                                    label='Start'),
+#                                       ObjectColumn(name='frequency',
+#                                                    label='Freq.'
+#                                                    ),
+                                      CheckboxColumn(name='resume',
+                                                   label='Resume'),
+                                      ],
+                             deletable=True,
+                             row_factory=self._new_action
+                             )
+
+        truncation_editor = TableEditor(columns=[
+                                      CheckboxColumn(name='use', width=20),
+                                      ObjectColumn(name='key',
+                                                    label='Key'),
+                                      ObjectColumn(name='comparator',
+                                                    label='Comp.'),
+                                      ObjectColumn(name='criterion',
+                                                    label='Crit.'),
+                                      ObjectColumn(name='start_count',
+                                                    label='Start'),
+                                      ],
+                             deletable=True,
+                             row_factory=self._new_action
+                             )
+
+        termination_editor = TableEditor(columns=[
+                                      CheckboxColumn(name='use', width=20),
+                                      ObjectColumn(name='key',
+                                                    label='Key'),
+                                      ObjectColumn(name='comparator',
+                                                    label='Comp.'),
+                                      ObjectColumn(name='criterion',
+                                                    label='Crit.'),
+                                      ObjectColumn(name='start_count',
+                                                    label='Start'),
+                                      ],
+                             deletable=True,
+                             row_factory=self._new_action
+                             )
+
+        actions_grp = VGroup(
+                                UItem(
+                                      'actions', editor=action_editor,
+                                      style='custom'
+                                      ),
+                                UItem(
+                                      'truncations', editor=truncation_editor,
+                                      style='custom'
+                                      ),
+                                UItem(
+                                      'terminations', editor=termination_editor,
+                                      style='custom'
+                                      ),
+                                label='Conditions'
+                                )
+
+
         v = View(VGroup(
                      Item('use_peak_hop'),
                      peak_hop_group,
-                     Group(multicollect_grp,
+                     Group(
+                           actions_grp,
+                           multicollect_grp,
                            baseline_grp,
+                           peak_center_grp,
+                           equilibration_grp,
                            layout='tabbed',
                            visible_when='not use_peak_hop'
                            ),
-                     peak_center_grp,
-                     equilibration_grp
                      )
                 )
         return v
