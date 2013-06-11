@@ -27,6 +27,7 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('bakeout', level='DEBUG')
+
     launch()
 
 # ============= EOF ====================================

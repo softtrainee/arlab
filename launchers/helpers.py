@@ -37,11 +37,11 @@ def build_version(ver, debug=False):
     from src.paths import paths
     paths.bundle_root = root
     if '-' in ver:
-        ver=ver.split('-')[0]
+        ver = ver.split('-')[0]
     paths.build(ver)
 
     # build globals
-    build_globals()
+    build_globals(debug)
 
 def build_sys_path(ver, root):
     merc = os.path.join(os.path.expanduser('~'),
@@ -62,12 +62,14 @@ def add_eggs(root):
                 sys.path.insert(0, os.path.join(root, egg_name))
 
 
-def build_globals():
+def build_globals(debug):
     from src.helpers.parsers.initialization_parser import InitializationParser
     ip = InitializationParser()
 
     from src.globals import globalv
     globalv.build(ip)
+
+    globalv.debug = debug
 # #    use_ipc = ip.get_global('use_ipc')
 #    boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
 #    for attr, func in [('use_ipc', boolfunc),
