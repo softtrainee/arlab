@@ -38,7 +38,7 @@ class BakeoutTask(BaseTask):
                           )
 
     def activated(self):
-        self.bakeout.reset_general_scan()
+        self.bakeout.activate()
 
     def find_bakeout(self):
         self.bakeout.find_bakeout()

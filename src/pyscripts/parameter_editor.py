@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Int, List, String, Float, Bool, \
     on_trait_change, Str, Enum
 from traitsui.api import View, Item, VGroup, Group, HGroup, Label, Spring, \
-    UItem, ListEditor, InstanceEditor, spring, EnumEditor
+    UItem, ListEditor, InstanceEditor, spring, EnumEditor, TableEditor
 #============= standard library imports ========================
 import re
 from src.helpers.filetools import str_to_bool
@@ -555,20 +555,37 @@ use_peak_hop, ncycles, baseline_ncycles
                                            tooltip='Number of data points to collect'
                                            )
                                       ),
-                                 HGroup(
-                                        Label('Use'),
-                                        Spring(springy=False, width=-32),
-                                        Label('Ref. Iso'),
-                                        Spring(springy=False, width=-35),
-                                        Label('Fit')
-                                        ),
+#                                  HGroup(
+#                                         Label('Use'),
+# #                                         Spring(springy=False, width=-32),
+#                                         Label('Ref. Iso'),
+# #                                         Spring(springy=False, width=-35),
+#                                         Label('Fit')
+#                                         ),
                                  UItem('active_detectors',
                                        style='custom',
-                                       editor=ListEditor(mutable=False,
-                                                         style='custom',
-#                                                         columns=2,
-                                                         editor=InstanceEditor(),
-                                                         ),
+                                       editor=TableEditor(
+                                        sortable=False,
+                                        reorderable=False,
+                                        columns=[
+                                        ObjectColumn(name='label',
+                                                     editable=False,
+                                                     label='Det.'),
+                                        CheckboxColumn(name='use', label='Use'),
+                                        ObjectColumn(name='isotope',
+                                                     editor=EnumEditor(name='isotopes')
+                                                     ),
+                                        ObjectColumn(name='fit',
+                                                     editor=EnumEditor(values=[NULL_STR] + FIT_TYPES)
+                                                     ),
+
+
+                                                                   ])
+#                                        editor=ListEditor(mutable=False,
+#                                                          style='custom',
+# #                                                         columns=2,
+#                                                          editor=InstanceEditor(),
+#                                                          ),
 #                                        height= -50,
                                        ),
 

@@ -215,6 +215,8 @@ Add {}'.format(sd)):
                                                       'bakeout'),
                                 name=self.script,
                                 controller=self)
+
+            self.info('executing script {}, {}'.format(t.name, t.root))
             t.bootstrap()
             t.execute(new_thread=True, finished_callback=self.end)
 
@@ -228,9 +230,9 @@ Add {}'.format(sd)):
     def start_timer(self):
         if self._timer is not None:
             self._timer.Stop()
-            #wait for timer to exit
+            # wait for timer to exit
             time.sleep(0.05)
-            
+
         self.info('starting update timer')
         self._timer = Timer(self.update_interval * 1000., self._update_)
 
@@ -280,8 +282,7 @@ Add {}'.format(sd)):
         self.write(register, value, nregisters=2, **kw)
 
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
-#        self.led.state = 'red'
-#        if self.isActive() and self.isAlive():
+
         if self.isActive():
             if msg is None:
                 msg = 'bakeout finished'
@@ -297,39 +298,12 @@ Add {}'.format(sd)):
 
             if self._active_script is not None:
                 self._active_script.cancel()
-#                self._active_script = None
+                self._active_script = None
 
             self.setpoint = 0
             self._duration = 0
             self.active = False
             self.state_enabled = False
-#            self.process_value = 0
-
-#    def complex_query(self, **kw):
-#        if 'verbose' in kw and kw['verbose']:
-#            self.info('Do complex query')
-#
-#        t = self.read_process_value(1, **kw)
-#        hp = self.read_heat_power(**kw)
-#
-#        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
-#        data = None
-#        if data is not None:
-#            t = data[0]
-#            hp = data[1]
-#
-#        if self.simulation:
-# #            t = 4 + self.closed_loop_setpoint
-#            t = self.get_random_value() + self.closed_loop_setpoint
-#            hp = self.get_random_value()
-#            time.sleep(0.25)
-#
-#        try:
-#            self.heat_power_value = hp
-#            self.process_value = t
-#            self.process_value_flag = True
-#        except (ValueError, TypeError, UnboundLocalError), e:
-#            print e
 
     def get_temp_and_power(self, **kw):
         pr = super(BakeoutController, self).get_temp_and_power(**kw)
@@ -515,7 +489,7 @@ Add {}'.format(sd)):
                     VGroup(
                             Item('script', show_label=False,
                                  editor=EnumEditor(name='scripts'),
-                                                         width= -200,
+                                                         width=-200,
                                 enabled_when='not active'
                                  ),
                             Item('duration', label='Duration (hrs)',

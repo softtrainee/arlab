@@ -43,6 +43,10 @@ class PyScriptTask(EditorTask):
 #    editor = Instance(ParameterEditor, ())
 
     wildcard = '*.py'
+    def activated(self):
+        from pyface.timer.do_later import do_later
+        do_later(self.window.reset_layout)
+
     def _default_directory_default(self):
         return paths.scripts_dir
 
@@ -77,9 +81,6 @@ class PyScriptTask(EditorTask):
                 self.commands_pane,
                 self.command_editor_pane,
                 self.editor_pane,
-#                DescriptionPane(model=self),
-#                ExamplePane(model=self),
-#                EditorPane(model=self)
                 ]
 
     @on_trait_change('commands_pane:command_object')
@@ -114,11 +115,11 @@ class PyScriptTask(EditorTask):
             self._open_editor(path='')
             return True
 
-    def open(self):
-        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
-#         path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
-        self._open_file(path)
-        return True
+#     def open(self):
+#         path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
+# #         path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
+#         self._open_file(path)
+#         return True
 
     def _open_file(self, path, **kw):
         self.info('opening pyscript: {}'.format(path))
@@ -151,8 +152,9 @@ class PyScriptTask(EditorTask):
 #        self.editor.editor = editor
 #        editor.editor = self.editor
 
-        self.editor_area.add_editor(editor)
-        self.editor_area.activate_editor(editor)
+#         self.editor_area.add_editor(editor)
+#         self.editor_area.activate_editor(editor)
+        super(PyScriptTask, self)._open_editor(editor)
 
 #    def _save_file(self, path):
 #        pass

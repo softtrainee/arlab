@@ -21,7 +21,7 @@ from traits.api import Any
 #============= standard library imports ========================
 from numpy import linspace
 #============= local library imports  ==========================
-from src.pyscripts.pyscript import PyScript, makeRegistry
+from src.pyscripts.pyscript import PyScript, makeRegistry, verbose_skip
 import time
 
 
@@ -61,6 +61,7 @@ class BakeoutPyScript(PyScript):
     def get_command_register(self):
         return command_register.commands.items()
 
+    @verbose_skip
     @command_register
     def ramp(self, temperature=0, rate=0, start=None, period=60):
         temperature = float(temperature)
@@ -126,6 +127,7 @@ class BakeoutPyScript(PyScript):
             else:
                 time.sleep(period)
 
+    @verbose_skip
     @command_register
     def setpoint(self, temperature=0, duration=0, units='h'):
 
