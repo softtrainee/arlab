@@ -29,11 +29,13 @@ class UValue(HasTraits):
     std_dev = Float
     name = Str
     use = Bool
-    def _nominal_value_changed(self):
-        self.use = True
+    def _nominal_value_changed(self, old, new):
+        if old:
+            self.use = True
 
-    def _std_dev_changed(self):
-        self.use = True
+    def _std_dev_changed(self, old, new):
+        if old:
+            self.use = True
 
 class BatchEditPane(TraitsDockPane):
     values = List
@@ -42,16 +44,44 @@ class BatchEditPane(TraitsDockPane):
     def _unknowns_changed(self):
         keys = set([ki  for ui in self.unknowns
                         for ki in ui.isotope_keys])
-        self.blanks = [UValue(name=ki) for ki in list(keys)]
+        keys = sort_isotopes(list(keys))
+
+        blanks = []
+        for ki in keys:
+            blank = next((bi for bi in self.blanks if bi.name == ki), None)
+            if blank is None:
+                blank = UValue(name=ki)
+            blanks.append(blank)
+
+        self.blanks = blanks
+
+        keys = set([iso.detector  for ui in self.unknowns
+                        for iso in ui.isotopes.itervalues()
+                            ])
+        keys = sort_isotopes(list(keys))
+        values = []
+        for ki in keys:
+            # vi.name includes "IC "
+            value = next((vi for vi in self.values if vi.name[3:] == ki), None)
+            if value is None:
+                value = UValue(name='IC {}'.format(ki))
+            values.append(value)
+
+        self.values = [UValue(name='disc')] + values
 
     def _discrimination_group(self):
         cols = [
                 ObjectColumn(name='name', editable=False),
-                ObjectColumn(name='nominal_value', label='Value'),
-                ObjectColumn(name='std_dev', label='Error'),
+                ObjectColumn(name='nominal_value',
+                             width=75,
+                             label='Value'),
+                ObjectColumn(name='std_dev',
+                             width=75,
+                             label='Error'),
                 CheckboxColumn(name='use', label='Use')
                 ]
-        grp = VGroup(UItem('values', editor=TableEditor(columns=cols)),
+        grp = VGroup(UItem('values', editor=TableEditor(columns=cols,
+                                                        sortable=False,)),
                      label='Detectors'
                      )
         return grp
@@ -59,11 +89,17 @@ class BatchEditPane(TraitsDockPane):
     def _blanks_group(self):
         cols = [
                 ObjectColumn(name='name', editable=False),
-                ObjectColumn(name='nominal_value', label='Value'),
-                ObjectColumn(name='std_dev', label='Error'),
+                ObjectColumn(name='nominal_value',
+                             width=75,
+                             label='Value'),
+                ObjectColumn(name='std_dev',
+                             width=75,
+                             label='Error'),
                 CheckboxColumn(name='use', label='Use')
                 ]
-        grp = VGroup(UItem('blanks', editor=TableEditor(columns=cols)),
+        grp = VGroup(UItem('blanks', editor=TableEditor(columns=cols,
+                                                        sortable=False,
+                                                        )),
                      label='Blanks'
                      )
         return grp
@@ -71,7 +107,6 @@ class BatchEditPane(TraitsDockPane):
     def _values_default(self):
         v = [
              UValue(name='disc.'),
-             UValue(name='ic'),
              ]
         return v
 

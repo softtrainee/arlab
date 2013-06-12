@@ -1524,16 +1524,20 @@ anaylsis_type={}
             user = self.username
             user = user if user else NULL_STR
 
-            name = 'detector_intercalibration'
-            funchist = getattr(db, 'add_{}_history'.format(name))
-            self.info('{} adding {} history for {}'.format(user, name, self.runid))
-            history = funchist(analysis, user=user)
+            self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
 
-            setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
+            history = db.add_detector_intercalibration_history(analysis, user=user)
+            db.flush()
+#             funchist = getattr(db, 'add_{}_history'.format(name))
+#             history = funchist(analysis, user=user)
+            analysis.selected_histories.selected_detector_intercalibration = history
+#             setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
 
-            func = getattr(db, 'add_{}'.format(name))
             uv, ue = ic.nominal_value, ic.std_dev
-            func(history, 'CDD', user_value=uv, user_error=float(ue))
+            db.add_detector_intercalibration(history, 'CDD',
+                                             user_value=uv, user_error=float(ue))
+#             func = getattr(db, 'add_{}'.format(name))
+#             func(history, 'CDD', user_value=uv, user_error=float(ue))
 
         return self._time_save(func, 'detector intercalibration')
 

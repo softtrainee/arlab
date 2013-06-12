@@ -63,8 +63,8 @@ class BakeoutManager(Manager):
     bakeout5 = Instance(BakeoutController)
     bakeout6 = Instance(BakeoutController)
 
-    update_interval = Float(2)
-    scan_window = Float(10)
+    update_interval = Float(2, enter_set=True, auto_set=False)
+    scan_window = Float(10, enter_set=True, auto_set=False)
 
     execute = Event
     execute_ok = Property(depends_on='bakeout+:execute_dirty')
@@ -308,13 +308,11 @@ class BakeoutManager(Manager):
         buf_x = []
 #         for ci, (_name, i, pi, hi) in enumerate(self.data_buffer):
         n = len(data)
+        kwargs = dict(track_y=False, pad=0.05)
         for ci, (_name, i, pi, hi) in enumerate(data):
             track_x = ci == n - 1
-            kwargs = dict(series=i,
-                        track_x=track_x,
-                        track_y=False,
-#                        do_later=10
-                        )
+            kwargs['track_x'] = track_x
+            kwargs['series'] = i
             if include_temp:
                 kwargs['plotid'] = temp_id
                 nx = g.record(pi, **kwargs)
@@ -477,12 +475,29 @@ class BakeoutManager(Manager):
         else:
             self.active = bool(len(self._get_active_controllers()))
 
-    def _update_interval_changed(self):
-        for tr in self._get_controller_names():
-            bc = self.trait_get(tr)[tr]
-            bc.update_interval = self.update_interval
+    def _scan_window_changed(self):
+        dl = self.scan_window * 60 / self.update_interval
+        self.graph.set_data_limits(dl)
 
-        self.graph.set_scan_delay(self.update_interval)
+        mi, _ = self.graph.get_x_limits()
+        self.graph.set_x_limits(min=mi, max=mi + self.scan_window * 60)
+
+    def _update_interval_changed(self):
+#         for tr in self._get_controller_names():
+#             bc = self.trait_get(tr)[tr]
+#             bc.update_interval = self.update_interval
+#             bc.
+        v = self.update_interval
+        for ci in self._get_controllers():
+            if ci._timer:
+                ci._timer.set_interval(v)
+            ci.update_interval = v
+
+        self.graph.set_scan_delay(v)
+
+        dl = self.scan_window * 60 / v
+        self.graph.set_data_limits(dl)
+
 
     def _configuration_changed(self):
         for tr in self._get_controller_names():
@@ -740,23 +755,23 @@ class BakeoutManager(Manager):
         graph.clear()
         kw['data_limit'] = self.scan_window * 60 / self.update_interval
         kw['scan_delay'] = self.update_interval
-        
+
         self.plotids = [0, 1, 2]
 
         # temps
 
         if include_bits[0]:
-            p=graph.new_plot(show_legend='ll', **kw)
+            p = graph.new_plot(show_legend='ll', **kw)
             graph.set_y_title('Temp (C)')
-            p.x_grid.visible=False
+            p.x_grid.visible = False
         else:
             self.plotids = [0, 0, 1]
 
         # heat power
 
         if include_bits[1]:
-            p=graph.new_plot(**kw)
-            p.x_grid.visible=False
+            p = graph.new_plot(**kw)
+            p.x_grid.visible = False
             graph.set_y_title('Heat Power (%)', plotid=self.plotids[1])
         elif not include_bits[0]:
             self.plotids = [0, 0, 0]
@@ -766,8 +781,8 @@ class BakeoutManager(Manager):
         # pressure
 
         if include_bits[2]:
-            p=graph.new_plot(**kw)
-            p.x_grid.visible=False
+            p = graph.new_plot(**kw)
+            p.x_grid.visible = False
             graph.set_y_title('Pressure (torr)', plotid=self.plotids[2])
 
         if include_bits:

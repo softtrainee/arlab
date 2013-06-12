@@ -35,6 +35,7 @@ class TextCell(HasTraits):
     bold = False
     format = Callable
     width = Int
+    col_span = None
     def __init__(self, text, *args, **kw):
         super(TextCell, self).__init__(**kw)
 

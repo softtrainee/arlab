@@ -138,6 +138,12 @@ class PyScriptEditor(Editor):
     kind = String
     commands = Property(depends_on='kind')
 
+    def get_scroll(self):
+        return self.control.code.verticalScrollBar().value()
+
+    def set_scroll(self, vp):
+        return self.control.code.verticalScrollBar().setValue(vp)
+
     @cached_property
     def _get_commands(self):
         if self.kind:

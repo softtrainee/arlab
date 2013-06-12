@@ -48,7 +48,7 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
                ('Type', 'analysis_type')
 #               ('Irradiation', 'irradiation_level')
                ]
-    font = 'monospace'
+#     font = 'monospace 14'
 #    rid_width = Int(50)
     labnumber_width = Int(90)
     aliquot_width = Int(50)

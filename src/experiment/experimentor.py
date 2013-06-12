@@ -40,12 +40,26 @@ from src.simple_timeit import timethis
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 
+from itertools import tee
+
+def partition(seq, predicate):
+    '''
+        http://stackoverflow.com/questions/949098/python-split-a-list-based-on-a-condition
+        partition seqeunce based on evaluation of predicate(i)
+        
+        returns 2 generators
+        True_eval, False_eval
+    '''
+
+    l1, l2 = tee((predicate(item), item) for item in seq)
+    return (i for p, i in l1 if p), (i for p, i in l2 if not p)
+
 # class Experimentor(Experimentable):
 class Experimentor(IsotopeDatabaseManager):
     experiment_factory = Instance(ExperimentFactory)
     experiment_queue = Instance(ExperimentQueue)
     executor = Instance(ExperimentExecutor)
-
+    experiment_queues = List
     stats = Instance(StatsGroup, ())
 
 #    title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
@@ -111,9 +125,10 @@ class Experimentor(IsotopeDatabaseManager):
 # info update
 #===============================================================================
     def _get_all_automated_runs(self):
-        return (ai for ei in self.executor.experiment_queues
+        return [ai for ei in self.experiment_queues
                     for ai in ei.automated_runs
-                        if ai.executable)
+                        if ai.executable
+                        ]
 
     def _update(self):
         self.debug('update runs')
@@ -122,7 +137,7 @@ class Experimentor(IsotopeDatabaseManager):
         self.stats.calculate()
 
         ans = self._get_all_automated_runs()
-
+#         print len([i for i in ans])
         exclude = ('dg', 'pa')
 #        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))
         self._modify_aliquots_steps(ans, exclude=exclude)
@@ -184,16 +199,11 @@ class Experimentor(IsotopeDatabaseManager):
 
             sample, irradiationpos = get_analysis_info(cln)
 
-            for ki, an_iter in groupby(analyses,
-                                       key=lambda x:x.user_defined_aliquot):
-                if ki:
-                    for aliquot, ais in groupby(an_iter,
-                                                key=lambda x: x.aliquot):
-                        self._set_aliquot_step(ais, special, cln, aliquot,
-                                               sample, irradiationpos)
-                else:
-                    self._set_aliquot_step(an_iter, special, cln, 0,
-                                           sample, irradiationpos)
+            # group analyses by aliquot
+            for aliquot, ais in groupby(analyses,
+                                        key=lambda x: x.aliquot):
+                self._set_aliquot_step(ais, special, cln, aliquot,
+                                       sample, irradiationpos)
 
     def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
         db = self.db

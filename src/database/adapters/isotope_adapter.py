@@ -203,7 +203,10 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_detector_parameter(self, history, **kw):
         obj = proc_DetectorParamTable(**kw)
         a = self._add_item(obj)
-        history.parameter = a
+        if history:
+            history.parameters.append(a)
+            obj.history_id = history.id
+
         return a
 
     def add_detector_intercalibration_history(self, analysis, **kw):

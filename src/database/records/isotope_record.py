@@ -21,7 +21,7 @@ from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSpli
 
 #============= standard library imports ========================
 from uncertainties import ufloat
-import re
+# import re
 import struct
 #============= local library imports  ==========================
 # from src.database.isotope_analysis.blanks_summary import BlanksSummary
@@ -66,20 +66,20 @@ class EditableGraph(HasTraits):
         except KeyError:
             pass
 
-    def traits_view(self):
-        v = View(
-                 VSplit(
-                        UItem('graph',
-                              style='custom',
-                             height=0.75
-                             ),
-                         UItem('fit_selector',
-                               style='custom',
-                              height=0.25)
-                    )
-                 )
-
-        return v
+#     def traits_view(self):
+#         v = View(
+#                  VSplit(
+#                         UItem('graph',
+#                               style='custom',
+#                              height=0.75
+#                              ),
+#                          UItem('fit_selector',
+#                                style='custom',
+#                               height=0.25)
+#                     )
+#                  )
+#
+#         return v
 
 class IsotopeRecordView(HasTraits):
     group_id = 0
@@ -146,7 +146,19 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     position = DBProperty()
     extract_device = DBProperty()
     extract_units = DBProperty()
+
+    '''
+        ic factor should belong to each detector
+        
+        this ic_factor is the 40-36(CDD) factor, but its necessary
+        to specify other ic's such as 40-39(AX).
+        
+        also should be able to specify reference detector ie H1
+    '''
     ic_factor = DBProperty()
+    discrimination = DBProperty()
+
+
     irradiation = DBProperty()
     status = DBProperty()
     peak_center_dac = DBProperty()
@@ -498,15 +510,21 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         dbr = self.dbrecord
         histories = getattr(dbr, '{}_histories'.format(name))
         if histories:
-            hist = None
-            shists = dbr.selected_histories
-            if shists:
-                hist = getattr(shists, 'selected_{}'.format(name))
+#             hist = None
+#             shists = dbr.selected_histories[-1]
+#             if shists:
+#                 hist = getattr(shists, 'selected_{}'.format(name))
 
-            if hist is None:
-                hist = histories[-1]
+#             if hist is None:
+#                 hist = histories[-1]
 
+            hist = dbr.selected_histories
+#             print hist, 'selected_{}'.format(name)
+            hist = getattr(hist, 'selected_{}'.format(name))
             return getattr(hist, name)
+#             print hist
+
+#             return getattr(hist, name)
 
     def _get_detector_intercalibrations(self):
         ds = self.dbrecord.detector_intercalibration_histories
@@ -549,6 +567,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             return lev.irradiation
         except AttributeError:
             pass
+
+    def _get_discrimination(self):
+        disc = ufloat(1, 0)
+        name = 'detector_param'
+        item = self._get_history_item(name)
+        if item:
+            disc = ufloat(item.disc, item.disc_error)
+        return disc
 
     @cached_property
     def _get_ic_factor(self):

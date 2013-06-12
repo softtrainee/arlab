@@ -19,6 +19,7 @@ from traits.api import Any , on_trait_change, Int
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
+import hashlib
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -49,7 +50,7 @@ class ExperimentQueue(BaseExperimentQueue):
                 self.update_needed = True
 #                self.refresh_button = True
 
-    def test_runs(self):
+    def test_runs(self, tested=None):
 #         self.executable=True
         runs = self.cleaned_automated_runs
 
@@ -60,15 +61,19 @@ class ExperimentQueue(BaseExperimentQueue):
             for ri in runs:
                 for si in SCRIPT_NAMES:
                     sn = getattr(ri, si)
-                    if not sn in tested:
+                    script = getattr(ar, si)
+                    if script:
+                        shash = hashlib.md5(script.text).digest()
+
                         setattr(ar.script_info, '{}_name'.format(si), sn)
-                        script = getattr(ar, si)
-                        if script is not None:
-                            tested.append(sn)
-                            if not script.syntax_ok():
+                        nscript = getattr(ar, si)
+                        nhash = hashlib.md5(nscript.text).digest()
+                        if shash != nhash:
+                            if not nscript.syntax_ok():
                                 return 'Error in script {}'.format(script.name)
 
         self.executable = True
+        return tested
 
     def new_runs_generator(self, last_ran=None):
         runs = self.cleaned_automated_runs

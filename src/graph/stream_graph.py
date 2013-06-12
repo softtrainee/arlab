@@ -116,6 +116,13 @@ class StreamGraph(Graph):
     def set_scan_delay(self, v, plotid=0):
         self.scan_delays[plotid] = v
 
+    def set_data_limits(self, d, plotid=None):
+        if plotid is None:
+            for i in range(len(self.scan_delays)):
+                self.data_limits[i] = d
+        else:
+            self.data_limits[plotid] = d
+
     def set_time_zero(self, plotid=0):
 
         tg = time_generator(self.scan_delays[plotid])
@@ -155,7 +162,7 @@ class StreamGraph(Graph):
 
     def record(self, y, x=None, series=0, plotid=0,
                track_x=True, track_y=True, do_after=None, track_y_pad=5,
-               aux=False, ** kw):
+               aux=False, pad=0.1, **kw):
 
         xn, yn = self.series[plotid][series]
 
@@ -185,9 +192,9 @@ class StreamGraph(Graph):
 
         dl = self.data_limits[plotid]
         sd = self.scan_delays[plotid]
-
+        pad = dl * pad
 #        lim = MAX_LIMIT
-        pad = 100
+#         pad = 100
 #        print lim, nx, ny
         lim = -dl * sd - 1000
         new_xd = hstack((xd[lim:], [nx]))

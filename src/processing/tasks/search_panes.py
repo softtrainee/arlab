@@ -90,7 +90,7 @@ class ResultsAdapter(TabularAdapter):
                ('Type', 'analysis_type')
 #               ('Irradiation', 'irradiation_level')
                ]
-    font = 'monospace 10'
+    font = 'monospace 12'
 #    rid_width = Int(50)
     labnumber_width = Int(50)
     mass_spectrometer_width = Int(50)

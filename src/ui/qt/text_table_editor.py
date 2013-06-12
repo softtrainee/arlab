@@ -98,6 +98,8 @@ class _TextTableEditor(Editor):
         cell_fmt = QTextTableCellFormat()
         cell_fmt.setFontPointSize(10)
 
+        max_cols = max([len(row.cells) for row in tab.items])
+
         for ri, row in enumerate(tab.items):
             c = bc
             if row.color:
@@ -112,6 +114,7 @@ class _TextTableEditor(Editor):
             if c:
                 cell_fmt.setBackground(c)
 
+            span_offset = 0
             for ci, cell in enumerate(row.cells):
                 if cell.bg_color:
                     cell_fmt.setBackground(QColor(cell.bg_color))
@@ -120,10 +123,19 @@ class _TextTableEditor(Editor):
                 else:
                     cell_fmt.setFontWeight(QFont.Normal)
 
-                tcell = table.cellAt(ri, ci)
+                cs = cell.col_span
+                if cs:
+                    if cs == -1:
+                        cs = max_cols
+
+                    table.mergeCells(ri, ci, 1, cs)
+
+                tcell = table.cellAt(ri, ci + span_offset)
                 tcell.setFormat(cell_fmt)
                 cur = tcell.firstCursorPosition()
                 cur.insertText(cell.text)
+                if cs:
+                    span_offset = cs
 
 
 class _FastTextTableEditor(_TextTableEditor):
