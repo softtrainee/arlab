@@ -36,7 +36,7 @@ class Scene(HasTraits):
     scene_browser = Instance(SceneBrowser)
     selected = Any
     layout_needed = Event
-
+    font = None
     @on_trait_change('layers:visible')
     def _refresh(self):
         self.layout_needed = True
@@ -59,6 +59,8 @@ class Scene(HasTraits):
             if li.visible:
                 for ci in li.components:
                     ci.set_canvas(canvas)
+                    if self.font:
+                        ci.font = self.font
                     ci.render(gc)
 
     def get_items(self, klass):

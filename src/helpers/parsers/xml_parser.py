@@ -38,13 +38,14 @@ class XMLParser(object):
             self._root = Element('root')
 
     def _parse_file(self, p):
+        path = None
         if isinstance(p, (str, unicode)):
             if os.path.isfile(p):
                 if isinstance(p, str):
-                    p = open(p, 'r')
+                    path = open(p, 'r')
 
-        if p:
-            txt = p.read()
+        if path:
+            txt = path.read()
             self._root = XML(txt)
 
     def load(self, fp):

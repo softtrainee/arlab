@@ -250,64 +250,35 @@ class Spectrometer(SpectrometerDevice):
                      **kw)
         self.detectors.append(d)
 
-
 #===============================================================================
 # signals
 #===============================================================================
     def get_intensities(self, record=True, tagged=True):
-        if not self.microcontroller:
-            return
+        keys, signals = None, None
+        if self.microcontroller:
+            datastr = self.microcontroller.ask('GetData', verbose=False)
+            keys = []
+            signals = []
+            if datastr:
+                if not 'ERROR' in datastr:
+                    try:
+                        data = [float(d) for d in datastr.split(',')]
+                    except:
 
-        datastr = self.microcontroller.ask('GetData', verbose=False)
-        keys = []
-        signals = []
-        if datastr:
-            if not 'ERROR' in datastr:
-                try:
-                    data = [float(d) for d in datastr.split(',')]
-                except:
+                        if tagged:
+                            data = [d for d in datastr.split(',')]
 
-                    if tagged:
-                        data = [d for d in datastr.split(',')]
+                            keys = [data[i] for i in range(0, len(data), 2)]
+                            signals = map(float, [data[i + 1] for i in range(0, len(data), 2)])
 
-                        keys = [data[i] for i in range(0, len(data), 2)]
-                        signals = map(float, [data[i + 1] for i in range(0, len(data), 2)])
-#
-#                        for i in range(0, len(data), 2):
-#                            keys.append(data[i])
-#                            signals.append(float(data[i + 1]))
-        else:
-            signals = [(i + self.testcnt) + random.random() for i in range(6)]
+        if not keys:
+            signals = [(i * 2 + self.testcnt * 0.1) + random.random() for i in range(6)]
             self.testcnt += 1
             if tagged:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 
         self.intensity_dirty = dict(zip(keys, signals))
         return keys, signals
-#        if not tagged:
-#            #update the detector current value
-# #            for det, dat in zip(self.detectors, data):
-# #
-# #                if det.active:
-# #                    det.intensity = dat
-# #                else:
-# #                    det.intensity = 0
-#            rdata = data
-#        else:
-#            return []
-#            data = []
-#            rdata = []
-#            for det in self.detectors:
-#                sig = 0
-#                if det.name in keys:
-#                    sig = signals[keys.index(det.name)]
-#                rdata.append(sig)
-#                data.append((det.name, sig))
-#
-#        if record:
-#            self.databuffer = ','.join([str(yi) for yi in rdata])
-
-#        return data
 
     def get_intensity(self, dkeys):
         '''
@@ -324,8 +295,6 @@ class Spectrometer(SpectrometerDevice):
             else:
                 return signals[keys.index(dkeys)]
 
-
-#        return data
     def get_hv_correction(self, current=False):
         source = self.source
         cur = source.current_hv

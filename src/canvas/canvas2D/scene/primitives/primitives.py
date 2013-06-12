@@ -72,7 +72,8 @@ class Primitive(HasTraits):
 
     primitives = List
     label = Property
-    font = str_to_font('modern 14')
+    font = Str('modern 14')
+#     font = str_to_font('modern 14')
 
     def _get_label(self):
         return '{} {} {}'.format(self.klass_name, self.name, self.identifier)
@@ -170,7 +171,7 @@ class Primitive(HasTraits):
             tw = gc.get_full_text_extent(t)[0]
             x = x + w / 2.0 - tw / 2.0
 
-            gc.set_font(self.font)
+            gc.set_font(str_to_font(self.font))
             gc.set_text_position(x, y + h / 2 - 6)
             gc.show_text(str(self.name))
             gc.draw_path()
@@ -192,8 +193,8 @@ class Primitive(HasTraits):
         g = VGroup(Item('name'), Item('klass_name', label='Type'),
                    Item('default_color'),
                    Item('active_color'),
-                   HGroup(Item('x', format_str='%0.3f', width= -50),
-                          Item('y', format_str='%0.3f', width= -50))
+                   HGroup(Item('x', format_str='%0.3f', width=-50),
+                          Item('y', format_str='%0.3f', width=-50))
                    )
         cg = self._get_group()
         if cg is not None:
@@ -700,7 +701,7 @@ class Label(QPrimitive):
             gc.draw_path()
 
         gc.set_fill_color((0, 0, 0))
-        gc.set_font(self.font)
+        gc.set_font(str_to_font(self.font))
         for i, li in enumerate(lines[::-1]):
             _, h, _, _ = gc.get_full_text_extent(li)
             gc.set_text_position(x, y + i * h)
