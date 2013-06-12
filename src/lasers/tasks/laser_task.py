@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item, TextEditor
+from traits.api import HasTraits, Any, Property
+# from traitsui.api import View, Item, TextEditor
 from src.envisage.tasks.base_task import BaseHardwareTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \
     FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane, \
@@ -30,6 +30,10 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= local library imports  ==========================
 
 class BaseLaserTask(BaseHardwareTask):
+    power_map_enabled = Property(depends_on='manager')
+    def _get_power_map_enabled(self):
+        return self.manager.mode != 'client'
+
     def activated(self):
         if self.manager.stage_manager:
             self.manager.stage_manager.keyboard_focus = True
@@ -66,6 +70,11 @@ class FusionsTask(BaseLaserTask):
         if self.manager:
             self.manager.execute_pattern()
 
+    def open_power_map(self):
+        if self.manager:
+            pm = self.manager.get_power_map_manager()
+
+            self.window.application.open_view(pm)
 
 
 class FusionsCO2Task(FusionsTask):

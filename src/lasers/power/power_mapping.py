@@ -195,7 +195,7 @@ class PowerMapping(Loggable):
 
         if self.isAlive():
             self.parent._save_to_db(dm.get_current_path())
-            dm.close()
+            dm.close_file()
 
         self._alive = False
         canvas.request_redraw()

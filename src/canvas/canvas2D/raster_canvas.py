@@ -20,6 +20,9 @@ from pylab import get_cmap, zeros
 #=============local library imports  ==========================
 from base_canvas import BaseCanvas
 
+from kiva.fonttools.font import str_to_font
+FONT = str_to_font('modern 12')
+
 class RasterCanvas(BaseCanvas):
     '''
     '''
@@ -137,6 +140,7 @@ class RasterCanvas(BaseCanvas):
                       (xx, y + ncolorsteps * height / 2.0, fmt.format(self.max_value / 2.0)),
                       (xx, y + ncolorsteps * height, fmt.format(self.max_value)),
                       ]:
+            gc.set_font(FONT)
             gc.set_text_position(x, y)
             gc.show_text(t)
 

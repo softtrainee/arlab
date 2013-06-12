@@ -75,7 +75,13 @@ class LaserTaskAction(TaskAction):
         if self.task:
             if self.task.id in ('pychron.fusions.co2',
                                 'pychron.fusions.diode'):
-                self._enabled = True
+                enabled = True
+                if self.enabled_name:
+                     if self.object:
+                         enabled = bool(self._get_attr(self.object,
+                                                   self.enabled_name, False))
+                if enabled:
+                    self._enabled = True
             else:
                 self._enabled = False
 
@@ -103,6 +109,10 @@ class NewPatternAction(LaserTaskAction):
     name = 'New Pattern...'
     method = 'new_pattern'
 
+class PowerMapAction(LaserTaskAction):
+    name = 'Power Map...'
+    method = 'open_power_map'
+    enabled_name = 'power_map_enabled'
 # class ExecutePatternAction(LaserTaskAction):
 #     name = 'Execute Pattern...'
 #     method = 'execute_pattern'
