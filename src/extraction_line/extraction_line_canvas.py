@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Property, Float, Enum
-from traitsui.api import View, Item
+from traits.api import HasTraits, Any, Property, Float, Enum, cached_property
+from traitsui.api import View, Item, UItem
 # from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import os
@@ -25,17 +25,19 @@ import os
 # from src.canvas.canvas3D.canvas3D_editor import Canvas3DEditor
 
 from src.paths import paths
+from enable.component_editor import ComponentEditor
 
 
 class ExtractionLineCanvas(HasTraits):
     '''
     '''
     canvas2D = Any
+    alt_canvas2D = Any
 #    canvas3D = Any
     manager = Any
-    style = Enum('2D', '3D')
-    width = Float(300)
-    height = Float(500)
+#     style = Enum('2D', '3D')
+#     width = Float(300)
+#     height = Float(500)
 
 #    def __init__(self, *args, **kw):
 #        '''
@@ -50,95 +52,83 @@ class ExtractionLineCanvas(HasTraits):
     def toggle_item_identify(self, name):
         '''
         '''
-        if self.canvas2D is not None:
-            self.canvas2D.toggle_item_identify(name)
 
-#        if self.canvas3D is not None:
-#            self.canvas3D.toggle_item_identify(name)
+#         if self.canvas2D is not None:
+#             self.canvas2D.toggle_item_identify(name)
+        self._canvas_function('toggle_item_identify', name)
 
     def refresh(self):
         '''
         '''
-#        if self.canvas3D:
-#            self.canvas3D.Refresh()
-        if self.canvas2D:
-            self.canvas2D.request_redraw()
-
-#    def Update(self):
-#        '''
-#        '''
-#        if self.canvas3D:
-#            self.canvas3D.Update()
+        self._canvas_function('request_redraw')
+#         for c in (self.canvas2D, self.alt_canvas2D):
+#             if c:
+#                 c.request_redraw()
 
     def get_object(self, name):
-        if self.style == '2D':
+        if self.canvas2D:
             obj = self.canvas2D._get_object_by_name(name)
-#        else:
-#            obj = self.canvas3D._get_object_by_name(name)
-        return obj
+            return obj
 
     def load_canvas_file(self, path):
         '''
         '''
-        if self.canvas2D:
-            self.canvas2D.load_canvas_file(path)
+#         if self.canvas2D:
+#             self.canvas2D.load_canvas_file(path)
+        self._canvas_function('load_canvas_file', path)
 
     def update_valve_state(self, name, state, *args, **kw):
         '''
             do the specific canvas action
         '''
-        if self.canvas2D:
-            self.canvas2D.update_valve_state(name, state)
-
-#        if self.canvas3D:
-#            self.canvas3D.update_valve_state(name, state)
+#         if self.canvas2D:
+#             self.canvas2D.update_valve_state(name, state)
+#         if self.alt_canvas2D:
+#             self.alt_canvas2D.update_valve_state(name, state)
+#         for c in (self.canvas2D, self.alt_canvas2D):
+#             if c:
+#                 c.update_valve_state(name, state)
+        self._canvas_function('update_valve_state', name, state)
 
     def update_valve_lock_state(self, name, state, *args, **kw):
         '''
             do the specific canvas action
         '''
-        if self.canvas2D:
-            self.canvas2D.update_valve_lock_state(name, state)
+        self._canvas_function('update_valve_lock_state', name, state)
+#         for c in (self.canvas2D, self.alt_canvas2D):
+#             if c:
+#                 c.update_valve_lock_state(name, state)
+#         if self.canvas2D:
+#         if self.alt_canvas2D:
+#             self.canvas2D.update_valve_lock_state(name, state)
+    def _canvas_function(self, func, *args, **kw):
+        for c in (self.canvas2D, self.alt_canvas2D):
+            if c:
+                getattr(c, func)(*args, **kw)
 
-#        if self.canvas3D:
-#            self.canvas3D.update_valve_state(name, state)
-
-    def _canvas2D_default(self):
-        '''
-        '''
+    def _canvas_factory(self, name, default=None):
         from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
-#        vx, vy = ExtractionLineCanvas2D.get_canvas_view_range()
 
         e = ExtractionLineCanvas2D(
                                    manager=self.manager,
-#                                   view_x_range=vx,
-#                                   view_y_range=vy
                                    )
-        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+        p = os.path.join(paths.canvas2D_dir, name)
+        if not os.path.isfile(p):
+            p = os.path.join(paths.canvas2D_dir, default)
+
         e.load_canvas_file(p)
-
         return e
-#
-#    def _canvas3D_default(self):
-#        '''
-#        '''
-#        return
-# #        e = ExtractionLineCanvas3DDummy(manager=self.manager)
-# #        return e
 
-    def _get_canvas_size(self):
-        '''
-        '''
+    def _alt_canvas2D_default(self):
+        return self._canvas_factory('alt_canvas.xml', default='canvas.xml')
 
-        w = self.width
-        h = self.height
-        return w, h
+    def _canvas2D_default(self):
+        return self._canvas_factory('canvas.xml')
 
     def _canvas2D_group(self):
         '''
         '''
 
-        from enable.component_editor import ComponentEditor
 #         w, h = self._get_canvas_size()
         g = Item('canvas2D',
                     style='custom',
@@ -169,12 +159,19 @@ class ExtractionLineCanvas(HasTraits):
 #                    )
 #
 #        return g
+    def alt_canvas_view(self):
+        v = View(UItem('alt_canvas2D',
+                       style='custom',
+                       editor=ComponentEditor()
+                     )
+               )
 
+        return v
     def traits_view(self):
         '''
         '''
-        if self.style == '2D':
-            c = self._canvas2D_group()
+#         if self.style == '2D':
+        c = self._canvas2D_group()
 #        else:
 #            c = self._canvas3D_group()
         v = View(c)

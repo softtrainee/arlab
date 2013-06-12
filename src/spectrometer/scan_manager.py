@@ -395,8 +395,9 @@ class ScanManager(Manager):
                                                       padding=5
                                                       )
                                   )
+
         n = self.graph_scan_width * 60
-        plot=g.new_plot(padding=[55, 5, 5, 50],
+        plot = g.new_plot(padding=[55, 5, 5, 50],
                    data_limit=n,
                    xtitle='Time',
                    ytitle='Signal',
@@ -404,8 +405,8 @@ class ScanManager(Manager):
                    bgcolor='whitesmoke'
                    )
 
-        plot.x_grid.visible=False
-        
+        plot.x_grid.visible = False
+
         for i, det in enumerate(self.detectors):
 #            if not det.active:
             g.new_series(visible=det.active,

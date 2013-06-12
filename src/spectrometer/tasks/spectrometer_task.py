@@ -76,8 +76,15 @@ class SpectrometerTask(BaseHardwareTask):
         return g
 
     def create_dock_panes(self):
-        return [ControlsPane(model=self.scan_manager),
+        panes = [ControlsPane(model=self.scan_manager),
                 ReadoutPane(model=self.scan_manager),
                 IntensitiesPane(model=self.scan_manager)
                 ]
+        app = self.window.application
+        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        if man:
+            from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
+            panes.append(CanvasDockPane(model=man))
+        return panes
+
 #============= EOF =============================================

@@ -28,6 +28,7 @@ from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from pyface.action.menu_manager import MenuManager
 from traitsui.menu import Action
+import os
 
 W = 2
 H = 2
@@ -94,7 +95,8 @@ class ExtractionLineCanvas2D(SceneCanvas):
 #        return next((i for i in self.valves.itervalues() if i.name == name), None)
 
     def load_canvas_file(self, p):
-        self.scene.load(p)
+        if os.path.isfile(p):
+            self.scene.load(p)
 
     def _over_item(self, event):
         x , y = event.x, event.y
@@ -252,7 +254,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
         state = item.state
         if isinstance(item, RoughValve) and not state:
             event.handled = True
-            
+
             from src.ui.dialogs import myConfirmationDialog
             from pyface.api import NO
             dlg = myConfirmationDialog(
@@ -260,9 +262,9 @@ class ExtractionLineCanvas2D(SceneCanvas):
                                 title='Verfiy Valve Action',
                                 style='modal')
             retval = dlg.open()
-            if retval==NO:
-                return 
-            
+            if retval == NO:
+                return
+
         state = not state
 
         ok = False

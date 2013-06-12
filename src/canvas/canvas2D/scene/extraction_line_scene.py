@@ -112,6 +112,11 @@ class ExtractionLineScene(Scene):
         if tree is None:
             return
 
+        # get label font
+        font = tree.find('font')
+        if font is not None:
+            self.font = font.text.strip()
+
         color_dict = dict()
         # get default colors
         for c in tree.findall('color'):

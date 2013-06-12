@@ -47,6 +47,7 @@ class ExtractionLineManager(Manager):
     
     '''
     canvas = Instance(ExtractionLineCanvas)
+#     alt_canvas = Instance(AlternateExtractionLineCanvas)
     explanation = Instance(ExtractionLineExplanation, ())
 
     valve_manager = Instance(Manager)
@@ -221,9 +222,9 @@ class ExtractionLineManager(Manager):
 
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
-        bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
-        bind_preference(self.canvas, 'width', 'pychron.extraction_line.width')
-        bind_preference(self.canvas, 'height', 'pychron.extraction_line.height')
+#         bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
+#         bind_preference(self.canvas, 'width', 'pychron.extraction_line.width')
+#         bind_preference(self.canvas, 'height', 'pychron.extraction_line.height')
 
         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
@@ -240,24 +241,10 @@ class ExtractionLineManager(Manager):
 
     def reload_scene_graph(self):
         self.info('reloading canvas scene')
-#         iddict = dict()
-        # remember the explanation settings
-#         exp = self.explanation
-#         if exp:
-#             for ev in exp.explanable_items:
-#                 i = ev.identify
-#                 iddict[ev.name] = i
 
         if self.canvas is not None:
-            if self.canvas.style == '2D':
-                p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
-                self.canvas.load_canvas_file(p)
-#            else:
-#                self.canvas.canvas3D.setup()  # canvas3D_dir, 'extractionline3D.txt')
-#        if self.canvas.style == '2D':
-# #            self.canvas.invalidate_and_redraw()
-#        else:
-#            if self.canvas is not None:
+            p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+            self.canvas.load_canvas_file(p)
 
             # load state
             if self.valve_manager:
@@ -265,21 +252,9 @@ class ExtractionLineManager(Manager):
                     vc = self.canvas.get_object(k)
                     if vc:
                         vc.soft_lock = v.software_lock
-#                         v.canvas_valve = vc
                         vc.state = v.state
 
-#                         try:
-#                             vc.identify = iddict[vc.name]
-#                         except:
-#                             pass
-
             self.canvas.refresh()
-#            canvas = self.canvas.canvas2D
-
-#            canvas._layout_needed = True
-#            canvas.request_redraw()
-#            canvas._layout_needed = False
-#            self.view_controller = self._view_controller_factory()
 
     def load_canvas(self):
         '''
@@ -575,6 +550,8 @@ class ExtractionLineManager(Manager):
         '''
         return ExtractionLineCanvas(manager=self)
 
+#     def _alt_canvas_default(self):
+#         return AlternateExtractionLineCanvas(_canvas=self.canvas)
 #    def _pumping_monitor_default(self):
 #        '''
 #        '''
