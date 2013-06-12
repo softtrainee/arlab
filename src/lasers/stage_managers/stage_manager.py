@@ -1183,7 +1183,7 @@ class StageManager(Manager):
             factory = AerotechMotionController
 
         m = factory(name='{}controller'.format(self.name),
-#                     configuration_name='stage_controller',
+                    configuration_name='stage_controller',
                     configuration_dir_name=self.configuration_dir_name,
                     parent=self
                     )

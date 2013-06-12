@@ -29,7 +29,7 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction, NewPatternAction, \
-    OpenPatternAction
+    OpenPatternAction, PowerMapAction
 from pyface.tasks.action.schema import SMenu, GroupSchema
 from pyface.action.group import Group
 #============= standard library imports ========================
@@ -140,26 +140,33 @@ class FusionsPlugin(BaseLaserPlugin):
         def efactory():
             return SMenu(id='Extraction', name='Extraction')
         return [TaskExtension(actions=[
-                                       SchemaAddition(id='Extraction',
-                                                      factory=efactory,
-                                                      path='MenuBar',
-                                                      before='Tools',
-                                                      after='View'
-                                                      ),
-                                       SchemaAddition(id='fusions_laser_group',
-                                                     factory=lambda: GroupSchema(id='FusionsLaserGroup'
-                                                                           ),
-                                                     path='MenuBar/Extraction'
-                                                     ),
-                                       SchemaAddition(id='pattern',
-                                                      factory=lambda:Group(
-                                                                           OpenPatternAction(),
-                                                                           NewPatternAction(),
-                                                                           ),
-                                                      path='MenuBar/Extraction'
-                                                      )
-                                       ]
-                              )
+                   SchemaAddition(id='Extraction',
+                                  factory=efactory,
+                                  path='MenuBar',
+                                  before='Tools',
+                                  after='View'
+                                  ),
+                   SchemaAddition(id='fusions_laser_group',
+                                 factory=lambda: GroupSchema(id='FusionsLaserGroup'
+                                                       ),
+                                 path='MenuBar/Extraction'
+                                 ),
+                   SchemaAddition(id='pattern',
+                                  factory=lambda:Group(
+                                                       OpenPatternAction(),
+                                                       NewPatternAction(),
+                                                       ),
+                                  path='MenuBar/Extraction'
+                                  ),
+                   SchemaAddition(id='power_map',
+                                  factory=lambda: Group(
+                                                        PowerMapAction(),
+                                                        ),
+                                  path='MenuBar/Extraction'
+                                  )
+
+                              ]
+                            )
                        ]
 class FusionsCO2Plugin(FusionsPlugin):
     id = 'pychron.fusions.co2'
@@ -179,8 +186,8 @@ class FusionsCO2Plugin(FusionsPlugin):
         def factory_scan():
             return OpenScannerAction(self._get_manager())
 
-        def factory_tune():
-            return OpenAutoTunerAction(self._get_manager())
+#         def factory_tune():
+#             return OpenAutoTunerAction(self._get_manager())
 
         return exts + [TaskExtension(actions=[
                                               SchemaAddition(id='fusions_co2_group',

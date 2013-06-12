@@ -445,7 +445,8 @@ class LaserManager(BaseLaserManager):
 
     def get_power_map_manager(self):
         from src.lasers.power.power_map_manager import PowerMapManager
-        pm = PowerMapManager(laser_manager=self, database=self.get_power_map_database())
+        pm = PowerMapManager(laser_manager=self,
+                             database=self.get_power_map_database())
         return pm
 
     def get_power_map_database(self):
