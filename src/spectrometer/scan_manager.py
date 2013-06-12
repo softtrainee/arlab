@@ -396,7 +396,7 @@ class ScanManager(Manager):
                                                       )
                                   )
         n = self.graph_scan_width * 60
-        g.new_plot(padding=[55, 5, 5, 50],
+        plot=g.new_plot(padding=[55, 5, 5, 50],
                    data_limit=n,
                    xtitle='Time',
                    ytitle='Signal',
@@ -404,26 +404,27 @@ class ScanManager(Manager):
                    bgcolor='whitesmoke'
                    )
 
+        plot.x_grid.visible=False
+        
         for i, det in enumerate(self.detectors):
 #            if not det.active:
-            s, p = g.new_series(visible=det.active,
+            g.new_series(visible=det.active,
 #                         use_downsampling=False,
                          color=det.color)
 #            print s.use_downsampling
             g.set_series_label(det.name)
             det.series_id = i
 
-        p = g.plots[0]
 #        print p, p.plots
-        cp = p.plots[det.name][0]
-        dt = DataTool(plot=cp, component=p,
+        cp = plot.plots[det.name][0]
+        dt = DataTool(plot=cp, component=plot,
                       normalize_time=True,
                       use_date_str=False)
         dto = DataToolOverlay(
-                              component=p,
+                              component=plot,
                               tool=dt)
-        p.tools.append(dt)
-        p.overlays.append(dto)
+        plot.tools.append(dt)
+        plot.overlays.append(dto)
 
 #        self.graph_ymax_auto = True
 #        self.graph_ymin_auto = True
