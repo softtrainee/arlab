@@ -59,6 +59,18 @@ class BlanksEditor(InterpolationEditor):
                     self.debug('saving {} {}'.format(ui.record_id, si.name))
                     self.processor.apply_correction(history, ui, si, self._references, cname)
 
+    def _update_unknowns_hook(self):
+        '''
+            load references based on unknowns
+        '''
+        ans = set([ai for ui in self._unknowns
+                    for ai in self.processor.find_associated_analyses(ui)])
+
+        ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
+        ans = self.processor.make_analyses(ans)
+        self.task.references_pane.items = ans
+
+
     @on_trait_change('graph:regression_results')
     def _update_regression(self, new):
         gen = self._graph_generator()
@@ -77,7 +89,8 @@ class BlanksEditor(InterpolationEditor):
         p_ues = reg.predict_error(xs)
 
         for ui, v, e in zip(self._unknowns, p_uys, p_ues):
-            ui.set_blank(iso, v, e)
+            ui.set_temporary_blank(iso, v, e)
+
         return p_uys, p_ues
 
     def _rebuild_graph(self):
@@ -116,6 +129,7 @@ class BlanksEditor(InterpolationEditor):
             set_x_flag = True
             fit = fit.fit.lower()
             c_uys, c_ues = None, None
+
             if self._unknowns:
                 c_uys, c_ues = zip(*[get_isotope(ui, iso, 'blank')
                             for ui in self._unknowns
@@ -146,6 +160,7 @@ class BlanksEditor(InterpolationEditor):
                 graph.set_series_label('Unknowns-Current', plotid=i)
 
             if r_es and r_ys:
+                reg = None
                 # plot references
                 if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
                     reg = InterpolationRegressor(xs=r_xs,
@@ -165,7 +180,8 @@ class BlanksEditor(InterpolationEditor):
                                        yerror=ArrayDataSource(data=r_es),
                                        fit=fit,
                                        plotid=i)
-                    reg = l.regressor
+                    if hasattr(l, 'regressor'):
+                        reg = l.regressor
 #                    if fit.startswith('average'):
 #                        reg2 = MeanRegressor(xs=r_xs, ys=r_ys, yserr=r_es)
 #                    else:
@@ -178,17 +194,18 @@ class BlanksEditor(InterpolationEditor):
 #                    ui.set_blank(iso, v, e)
 #                        ui.blank.value = v
 #                        ui.blank.error = e
-                p_uys, p_ues = self._set_interpolated_values(iso, reg, c_uxs)
-                # display the predicted values
-                ss, _ = graph.new_series(c_uxs,
-                                         p_uys,
-                                         isotope=iso,
-                                         yerror=ArrayDataSource(p_ues),
-                                         fit=False,
-                                         type='scatter',
-                                         plotid=i,
-                                         )
-                graph.set_series_label('Unknowns-predicted', plotid=i)
+                if reg:
+                    p_uys, p_ues = self._set_interpolated_values(iso, reg, c_uxs)
+                    # display the predicted values
+                    ss, _ = graph.new_series(c_uxs,
+                                             p_uys,
+                                             isotope=iso,
+                                             yerror=ArrayDataSource(p_ues),
+                                             fit=False,
+                                             type='scatter',
+                                             plotid=i,
+                                             )
+                    graph.set_series_label('Unknowns-predicted', plotid=i)
             i += 1
 
         if set_x_flag:

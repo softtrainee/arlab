@@ -16,10 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Bool, Property, on_trait_change, \
-    List, Event
+    List, Event, Enum
 from traitsui.api import View, Item, HGroup, VGroup, Spring, spring, \
-    UItem, EnumEditor, ListEditor, InstanceEditor, Label
+    UItem, EnumEditor, ListEditor, InstanceEditor, Label, TableEditor
 from src.constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
+from traitsui.table_column import ObjectColumn
+from traitsui.extras.checkbox_column import CheckboxColumn
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Fit(HasTraits):
@@ -27,6 +29,7 @@ class Fit(HasTraits):
     use = Bool
     show = Bool
     fit_types = Property
+#     fit = Enum(FIT_TYPES)
     fit = Str
     valid = Property(depends_on=('fit, use, show'))
 
@@ -46,8 +49,10 @@ class Fit(HasTraits):
         v = View(HGroup(
                         UItem('name', style='readonly'),
                         UItem('show'),
-                        UItem('fit', editor=EnumEditor(name='fit_types'),
-                             enabled_when='show'
+                        UItem('fit',
+                              editor=EnumEditor(name='fit_types'),
+                              enabled_when='show',
+                              width=-50,
                              ),
                         UItem('use'),
                         )
@@ -59,8 +64,27 @@ class FitSelector(HasTraits):
     fits = List(Fit)
     update_needed = Event
     fit_klass = Fit
-
     def traits_view(self):
+
+        cols = [ObjectColumn(name='name', editable=False),
+                CheckboxColumn(name='show'),
+                ObjectColumn(name='fit',
+                             editor=EnumEditor(name='fit_types',
+                                               ),
+                             ),
+                CheckboxColumn(name='use')
+                ]
+        editor = TableEditor(columns=cols,
+                             sortable=False,
+                             )
+
+        v = View(UItem('fits',
+                       style='custom',
+                       editor=editor
+                       ))
+        return v
+
+    def traits_view2(self):
         header = HGroup(
                         Spring(springy=False, width=50),
                         Label('Show'),

@@ -41,7 +41,7 @@ class BlanksTask(InterpolationTask):
                                          )
                           )
     def new_blank(self):
-        self.manager.auto_blank_fit('NM-205', 'E', 'preceeding')
+#         self.manager.auto_blank_fit('NM-205', 'E', 'preceeding')
 
 #        for pi in level.positions:
 #            ln = pi.labnumber
@@ -49,12 +49,12 @@ class BlanksTask(InterpolationTask):
 #            if sample.project.name in ('j', 'Minna Bluff'):
 #                for ai in ln.analyses:
 #                    self.manager.preceeding_blank_correct(ai)
-
-        return
+#         return
 
         from src.processing.tasks.blanks.blanks_editor import BlanksEditor
         editor = BlanksEditor(name='Blanks {:03n}'.format(self.blank_editor_count),
-                              processor=self.manager
+                              processor=self.manager,
+                              task=self
                               )
 
         self._open_editor(editor)

@@ -198,6 +198,19 @@ class Processor(IsotopeDatabaseManager):
         except NoResultFound:
             pass
 
+    def find_associated_analyses(self, analysis):
+        ms = analysis.spectrometer
+        post = analysis.timestamp
+
+        delta = -2
+        atype = 'blank_{}'.format(analysis.analysis_type)
+        br = self._find_analyses(ms, post, delta, atype)
+
+        delta = 2
+        ar = self._find_analyses(ms, post, delta, atype)
+
+        return br + ar
+
     def preceeding_blank_correct(self, analysis, keys=None, pd=None):
         from src.regression.interpolation_regressor import InterpolationRegressor
         if not isinstance(analysis, Analysis):
@@ -355,10 +368,20 @@ class Processor(IsotopeDatabaseManager):
     def _apply_blanks_correction(self, history, analysis, fit_obj, predictors):
         ss = analysis.isotopes[fit_obj.name]
 
+
+        '''
+            the blanks_editor may have set a temporary blank
+            use that instead of the saved blank
+        '''
+        if hasattr(ss, 'temporary_blank'):
+            blank = ss.temporary_blank
+        else:
+            blank = ss.blank
+
         item = self.db.add_blanks(history,
                     isotope=fit_obj.name,
-                    user_value=float(ss.blank.value),
-                    user_error=float(ss.blank.error),
+                    user_value=float(blank.value),
+                    user_error=float(blank.error),
                     fit=fit_obj.fit)
 
 #        ps = self.interpolation_correction.predictors

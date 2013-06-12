@@ -30,6 +30,7 @@ class InterpolationEditor(GraphEditor):
     references = List
     _references = List
 
+
     @on_trait_change('references[]')
     def _update_references(self):
         self.make_references()
