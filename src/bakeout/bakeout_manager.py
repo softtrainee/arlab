@@ -740,21 +740,23 @@ class BakeoutManager(Manager):
         graph.clear()
         kw['data_limit'] = self.scan_window * 60 / self.update_interval
         kw['scan_delay'] = self.update_interval
-
+        
         self.plotids = [0, 1, 2]
 
         # temps
 
         if include_bits[0]:
-            graph.new_plot(show_legend='ll', **kw)
+            p=graph.new_plot(show_legend='ll', **kw)
             graph.set_y_title('Temp (C)')
+            p.x_grid.visible=False
         else:
             self.plotids = [0, 0, 1]
 
         # heat power
 
         if include_bits[1]:
-            graph.new_plot(**kw)
+            p=graph.new_plot(**kw)
+            p.x_grid.visible=False
             graph.set_y_title('Heat Power (%)', plotid=self.plotids[1])
         elif not include_bits[0]:
             self.plotids = [0, 0, 0]
@@ -764,7 +766,8 @@ class BakeoutManager(Manager):
         # pressure
 
         if include_bits[2]:
-            graph.new_plot(**kw)
+            p=graph.new_plot(**kw)
+            p.x_grid.visible=False
             graph.set_y_title('Pressure (torr)', plotid=self.plotids[2])
 
         if include_bits:
