@@ -54,11 +54,11 @@ class MeasurementCondition(HasTraits):
     use = Bool
     key = Enum('age',)
     comparator = Enum('<', '>', '<=', '>=')
-    criterion = Float
-    start_count = Int
-    frequency = Int
+    criterion = Float(enter_set=True, auto_set=False)
+    start_count = Int(enter_set=True, auto_set=False)
+    frequency = Int(enter_set=True, auto_set=False)
     def to_string(self):
-        return "({}, ('{}','{}',{},{},{},))".format(self.use,
+        return "({}, ('{}','{}',{},{},{}))".format(self.use,
                                                self.key,
                                                self.comparator,
                                                self.criterion,

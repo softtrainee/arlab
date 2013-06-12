@@ -215,7 +215,7 @@ def visualize_flux_contour(p, holder,):
             zs = hstack((zs, z))
 
         xi = linspace(0, r, zs.shape[0])
-        yi = linspace(0, -r, zs.shape[0])
+        yi = linspace(-r, r, zs.shape[0])
         X = xi[None, :]
         Y = yi[:, None]
 
@@ -236,7 +236,9 @@ def visualize_flux_contour(p, holder,):
             cb = colorbar()
             cb.set_label('J %')
         if use_2d:
-            scatter(xs, ys, marker='o', c='b', s=25)
+            scatter(xs, ys, marker='o',
+                    cmap=cm.jet,
+                    c=zs, s=50)
         else:
             ax.scatter(xs, ys, zs, marker='o', c='b', s=30)
 #        else:
@@ -265,7 +267,8 @@ def visualize_flux_contour(p, holder,):
     show()
 
 if __name__ == '__main__':
-    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G_radial.txt'
+#     p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G_radial.txt'
+    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G2.txt'
 #    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G.txt'
     holder = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'
 #    visualize_flux(p, holder)

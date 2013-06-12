@@ -22,7 +22,7 @@ from traitsui.api import View, Item, UItem, VSplit, VGroup, HGroup, HSplit
 # from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
     pfloatfmt
-from src.constants import PLUSMINUS
+from src.constants import PLUSMINUS, NULL_STR
 from src.ui.qt.text_table_editor import TextTableEditor
 from kiva.fonttools import Font
 from src.ui.text_table import BoldCell, TextCell, TextRow, \
@@ -88,8 +88,13 @@ class AnalysisSummaryAdapter(TextTableAdapter):
         return [info_table]
 
     def _keyword(self, args):
-        name, value = args
-        return BoldCell('{}:'.format(name)), TextCell(value)
+        kw = {}
+        if len(args) == 3:
+            name, value, kw = args
+        else:
+            name, value = args
+
+        return BoldCell('{}:'.format(name)), TextCell(value, **kw)
 
     def _make_keyword_row(self, keys):
         cells = [ci  for pairs in map(self._keyword, keys)
@@ -105,7 +110,10 @@ class AnalysisSummaryAdapter(TextTableAdapter):
 
         j, je = record.j.nominal_value, record.j.std_dev
         flux = u'{} {}{}'.format(floatfmt(j), PLUSMINUS, errorfmt(j, je))
-        sens = ''
+        sens = NULL_STR
+
+        disc, disc_err = record.discrimination.nominal_value, record.discrimination.std_dev
+        disc = u'{} {}{}'.format(floatfmt(disc), PLUSMINUS, errorfmt(disc, disc_err))
 #        rows = [ci  for pairs in map(self._keyword, (('Analysis ID', record.record_id),
 #                                                         ('Irradiation', irrad),
 #                                                         ('Sample', record.sample)
@@ -117,18 +125,19 @@ class AnalysisSummaryAdapter(TextTableAdapter):
                        self._make_keyword_row([('Analysis ID', record.record_id),
                                               ('Irradiation', irrad),
                                               ('Sample', record.sample),
-                                              ('Comment', record.comment)]),
+                                              ]),
+                       self._make_keyword_row([('Comment',
+                                                record.comment, {'col_span':-1})]),
                        self._make_keyword_row(
                                               [('Date', record.rundate),
-                                               ('Time', record.runtime)]
+                                               ('Time', record.runtime),
+                                               ('Disc.', disc),
+                                               ]
                                               ),
                        self._make_keyword_row(
                                               [('Spectrometer', record.mass_spectrometer),
                                                ('Device', record.extract_device)]
                                               ),
-                       self._make_keyword_row([('J', flux),
-                                               ('Sensitivity', sens)
-                                               ]),
                        self._make_keyword_row([('Position', record.position),
                                                ('Extract ({})'.format(record.extract_units),
                                                 record.extract_value),
@@ -136,6 +145,9 @@ class AnalysisSummaryAdapter(TextTableAdapter):
                                                ('Cleanup (s)', record.cleanup_duration)
                                                ]
                                               ),
+                       self._make_keyword_row([('J', flux, {'col_span':2}),
+                                               ('Sensitivity', sens, {'col_span':2})
+                                               ]),
 #                       TextRow(
 #                               BoldCell('J:'),
 #                               TextCell(flux),
@@ -247,49 +259,72 @@ class AnalysisSummary(HasTraits):
         ODD_COLOR = '#CCFFFF'
         BG_COLOR = 'light yellow'
         HEADER_COLOR = 'lightgray'
-        top = UItem('record',
+        summary = UItem('record',
                               editor=TextTableEditor(adapter=AnalysisSummaryAdapter(),
                                                      bg_color=BG_COLOR
                                                      ),
-                              height=0.25
+                              height=0.3
                               )
-        left = VGroup(
-                    UItem('record',
-                          editor=TextTableEditor(adapter=AgeAdapter(),
-                                                 bg_color=BG_COLOR
-                                                 ),
-                          height=0.12
-                          ),
-                    UItem('signals',
+
+        raw = UItem('signals',
                            editor=TextTableEditor(adapter=RawAdapter(),
                                                  bg_color=BG_COLOR,
                                                  odd_color=ODD_COLOR,
                                                  header_color=HEADER_COLOR
                                                  ),
-                          height=0.25
-                          ),
-                      UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
-                                                              bg_color=BG_COLOR,
-                                                              odd_color=ODD_COLOR,
-                                                              header_color=HEADER_COLOR
+                          height=0.3
+                          )
+        signal = UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
+                                                               bg_color=BG_COLOR,
+                                                               odd_color=ODD_COLOR,
+                                                               header_color=HEADER_COLOR
+                                                ),
+                          height=0.3,
+                          width=0.65
+                      )
+        age = UItem('record',
+                        editor=TextTableEditor(adapter=AgeAdapter(),
+                                               bg_color=BG_COLOR
                                                ),
+                        width=0.35
+                        )
 
-                            height=0.25,
-                            width=0.75
-                            ))
-        right = UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
-                                                                      bg_color=BG_COLOR,
-                                                                      odd_color=ODD_COLOR,
-                                                                      header_color=HEADER_COLOR
-                                                       ),
-                                    height=0.25,
-                                    width=0.25
-                                    )
+#
+#         left = VGroup(
+#
+#                     UItem('record',
+#                           editor=TextTableEditor(adapter=AgeAdapter(),
+#                                                  bg_color=BG_COLOR
+#                                                  ),
+#                           height=0.12
+#                           ),
+#                       UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
+#                                                               bg_color=BG_COLOR,
+#                                                               odd_color=ODD_COLOR,
+#                                                               header_color=HEADER_COLOR
+#                                                ),
+#
+#                             height=0.25,
+#                             width=0.75
+#                             ))
+#         right = UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
+#                                                                       bg_color=BG_COLOR,
+#                                                                       odd_color=ODD_COLOR,
+#                                                                       header_color=HEADER_COLOR
+#                                                        ),
+#                                     height=0.25,
+#                                     width=0.25
+#                                     )
 
         v = View(
-                 VSplit(top,
-                        HSplit(left, right
-                              ),
+                 VSplit(
+                        summary,
+                        VGroup(raw,
+                               HSplit(
+                                      signal,
+                                      age
+                                      )
+                               )
                         )
                  )
         return v

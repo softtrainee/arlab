@@ -37,7 +37,7 @@ class Timer(QThread):
         self.start()
 
     def run(self):
-        p = self._period
+#         p = self._period
         func = self._func
         flag = self._flag
         args = self._args
@@ -58,7 +58,7 @@ class Timer(QThread):
 #            ct=time.time()
 #            print p - ct - st, ct, st
 #            print max(0, p - time.time() + st), p,
-            flag.wait(max(0, p - time.time() + st))
+            flag.wait(max(0, self._period - time.time() + st))
 
 #            t = time.time()
     def stop(self):
@@ -69,4 +69,7 @@ class Timer(QThread):
 
     def IsRunning(self):
         return not self._flag.is_set()
+
+    def set_interval(self, v):
+        self._period = v
 #============= EOF =====================================

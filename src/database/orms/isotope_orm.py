@@ -133,13 +133,6 @@ class proc_BackgroundsTable(Base, BaseMixin):
     fit = stringcolumn()
     sets = relationship('proc_BackgroundsSetTable', backref='backgrounds')
 
-
-class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
-    intercalibration_id = foreignkey('proc_DetectorIntercalibrationTable')
-    ic_analysis_id = foreignkey('meas_AnalysisTable')
-
-
-
 class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
     detector_intercalibration = relationship('proc_DetectorIntercalibrationTable',
                                               backref='history',
@@ -151,24 +144,40 @@ class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
                             uselist=False
                             )
 
-
 class proc_DetectorIntercalibrationTable(Base, BaseMixin):
     history_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
     detector_id = foreignkey('gen_DetectorTable')
     user_value = Column(Float)
     user_error = Column(Float)
     fit = stringcolumn()
+
     sets = relationship('proc_DetectorIntercalibrationSetTable',
                         backref='detector_intercalibration',
                         )
 
+class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
+    intercalibration_id = foreignkey('proc_DetectorIntercalibrationTable')
+    ic_analysis_id = foreignkey('meas_AnalysisTable')
+
+
 class proc_DetectorParamHistoryTable(Base, HistoryMixin):
-    pass
+    detector_param = relationship('proc_DetectorParamTable',
+                                              backref='history',
+                                            uselist=False
+                                              )
+    selected = relationship('proc_SelectedHistoriesTable',
+                            backref='selected_detector_param',
+                            uselist=False
+                            )
 
 class proc_DetectorParamTable(Base, BaseMixin):
     history_id = foreignkey('proc_DetectorParamHistoryTable')
     disc = Column(Float)
     disc_error = Column(Float)
+#     selected = relationship('proc_SelectedHistoriesTable',
+#                             backref='selected_detector_param',
+#                             uselist=False
+#                             )
 
 class proc_FigureTable(Base, NameMixin):
     create_date = Column(DateTime, default=func.now())
@@ -210,6 +219,7 @@ class proc_SelectedHistoriesTable(Base, BaseMixin):
     selected_det_intercal_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
     selected_fits_id = foreignkey('proc_FitHistoryTable')
     selected_arar_id = foreignkey('proc_ArArHistoryTable')
+    selected_det_param_id = foreignkey('proc_DetectorParamHistoryTable')
 
 class proc_IsotopeResultsTable(Base, BaseMixin):
     signal_ = Column(Float(32))

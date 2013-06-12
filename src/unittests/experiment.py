@@ -43,32 +43,35 @@ class ExperimentTest(unittest.TestCase):
         self.assertEqual(len(qs), 1)
 
     def testNRuns(self):
+        n = 10
         queue = self._load_queues()[0]
-        self.assertEqual(len(queue.automated_runs), 9)
+        self.assertEqual(len(queue.automated_runs), n)
 
     def testAliquots(self):
         queue = self._load_queues()[0]
-        aqs = (31, 31, 2, 32, 32, 200, 3, 40, 41)
+#         aqs = (31, 31, 2, 32, 32, 200, 201, 3, 40, 41)
+        aqs = (31, 31, 2, 32, 32, 200, 200, 3, 40, 41)
         for aq, an in zip(aqs, queue.automated_runs):
             self.assertEqual(an.aliquot, aq)
 
     def testSteps(self):
         queue = self._load_queues()[0]
-        sts = ('A', 'B', '', 'A', 'B', '', '', '')
+#         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
+        sts = ('A', 'B', '', 'A', 'B', 'A', 'B', '', '')
         for st, an in zip(sts, queue.automated_runs):
             self.assertEqual(an.step, st)
-
+# # #
     def testSample(self):
         queue = self._load_queues()[0]
         samples = ('NM-779', 'NM-779', '', 'NM-779', 'NM-779', 'NM-779',
-                   '', 'NM-791', 'NM-791'
+                   'NM-779', '', 'NM-791', 'NM-791'
                    )
         for sample, an in zip(samples, queue.automated_runs):
             self.assertEqual(an.sample, sample)
-
+# # #
     def testIrradation(self):
         queue = self._load_queues()[0]
-        irrads = ('NM-251H', 'NM-251H', '', 'NM-251H', 'NM-251H',
+        irrads = ('NM-251H', 'NM-251H', '', 'NM-251H', 'NM-251H', 'NM-251H',
                   'NM-251H', '', 'NM-251H', 'NM-251H')
         for irrad, an in zip(irrads, queue.automated_runs):
             self.assertEqual(an.irradiation, irrad)
@@ -87,7 +90,7 @@ class ExperimentTest(unittest.TestCase):
                 qs.append(editor.queue)
 
         man.test_queues(qs)
-        man.executor.experiment_queues = qs
+        man.experiment_queues = qs
         man.update_info()
         man.path = path
         man.executor.reset()

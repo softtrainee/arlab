@@ -106,6 +106,14 @@ ACTIONS_REGEX = re.compile(r'ACTIONS *= *')
 TRUNCATIONS_REGEX = re.compile(r'TRUNCATIONS *= *')
 TERMINATIONS_REGEX = re.compile(r'TERMINATIONS *= *')
 
+class memo_scroll(object):
+    def __init__(self, editor):
+        self.editor = editor
+    def __enter__(self, *args):
+        self._prev_scroll = self.editor.get_scroll()
+
+    def __exit__(self, *args):
+        self.editor.set_scroll(self._prev_scroll)
 
 class MeasurementParameterEditor(ParameterEditor):
     #===========================================================================
@@ -316,9 +324,11 @@ class MeasurementParameterEditor(ParameterEditor):
 
         if rlines:
             r = '\n'.join(rlines)
+
             try:
                 return eval(r)
             except Exception, e:
+                print r
                 self.debug(e)
 
     def _extract_parameter(self, line, attr, cast=None):
@@ -346,59 +356,62 @@ class MeasurementParameterEditor(ParameterEditor):
         if not self.editor or self.suppress_update:
             return
 
-        regex = self._get_regex(name)
-        nv = self._get_new_value(name, new)
-        ostr = []
-        modified = False
-        print regex, name, new
-        body = self.editor.getText()
-        for i, li in enumerate(body.split('\n')):
+        with memo_scroll(self.editor):
+            regex = self._get_regex(name)
+            nv = self._get_new_value(name, new)
+            ostr = []
+            modified = False
+            print regex, name, new
+            body = self.editor.getText()
+            for i, li in enumerate(body.split('\n')):
 
-            if li.startswith('def main('):
-                main_idx = i
+                if li.startswith('def main('):
+                    main_idx = i
 
-            if regex.match(li.strip()):
-                ostr.append(nv)
-                modified = True
-            else:
-                ostr.append(li)
+                if regex.match(li.strip()):
+                    ostr.append(nv)
+                    modified = True
+                else:
+                    ostr.append(li)
 
-#        print name, new, modified
+    #        print name, new, modified
 
-        if not modified:
-            ostr.insert(main_idx, nv)
+            if not modified:
+                ostr.insert(main_idx, nv)
 
-        body = '\n'.join(ostr)
-        self.editor.setText(body)
-        return modified
+            body = '\n'.join(ostr)
+            self.editor.setText(body)
+            return modified
 
     def _modify_body_multiline(self, param, new):
         if not self.editor or self.suppress_update:
             return
 
-        body = self.editor.getText()
-        lines = body.split('\n')
-        regex = self._get_regex(param)
-        endline = self._endline
-        rlines = []
-        start = None
-        # delete the previous entry
+        with memo_scroll(self.editor):
 
-        for i, li in enumerate(lines):
-            if regex.match(li.strip()):
-                idx = i
-                start = True
-                continue
-            elif start :
-                if endline(li):
-                    start = False
-                continue
+            body = self.editor.getText()
+            lines = body.split('\n')
+            regex = self._get_regex(param)
+            endline = self._endline
+            rlines = []
+            start = None
+            # delete the previous entry
 
-            rlines.append(li)
+            for i, li in enumerate(lines):
+                if regex.match(li.strip()):
+                    idx = i
+                    start = True
+                    continue
+                elif start :
+                    if endline(li):
+                        start = False
+                    continue
 
-        rlines.insert(idx, new)
-        body = '\n'.join(rlines)
-        self.editor.setText(body)
+                rlines.append(li)
+
+            rlines.insert(idx, new)
+            body = '\n'.join(rlines)
+            self.editor.setText(body)
 
     def _get_regex(self, name):
         return globals()['{}_REGEX'.format(name.upper())]
@@ -469,9 +482,9 @@ use_peak_hop, ncycles, baseline_ncycles
         ho = self.hops[0]
         det = ho.detectors.split(',')[0]
         iso = ho.position
+
         self._modify_body('multicollect_detector', det)
         self._modify_body('multicollect_isotope', iso)
-
         self._modify_body_multiline('hops', hopstr)
 
 
@@ -539,11 +552,14 @@ use_peak_hop, ncycles, baseline_ncycles
                 det = Detector(label=di)
                 detectors.append(det)
 
-#        [Detector(label=di) for di in ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']]
         return detectors
 
     def _new_action(self):
         return MeasurementAction()
+    def _new_truncation(self):
+        return MeasurementTruncation()
+    def _new_termination(self):
+        return MeasurementTermination()
 #===============================================================================
 #
 #===============================================================================
@@ -555,13 +571,6 @@ use_peak_hop, ncycles, baseline_ncycles
                                            tooltip='Number of data points to collect'
                                            )
                                       ),
-#                                  HGroup(
-#                                         Label('Use'),
-# #                                         Spring(springy=False, width=-32),
-#                                         Label('Ref. Iso'),
-# #                                         Spring(springy=False, width=-35),
-#                                         Label('Fit')
-#                                         ),
                                  UItem('active_detectors',
                                        style='custom',
                                        editor=TableEditor(
@@ -581,12 +590,6 @@ use_peak_hop, ncycles, baseline_ncycles
 
 
                                                                    ])
-#                                        editor=ListEditor(mutable=False,
-#                                                          style='custom',
-# #                                                         columns=2,
-#                                                          editor=InstanceEditor(),
-#                                                          ),
-#                                        height= -50,
                                        ),
 
                                  label='Multicollect',
@@ -682,7 +685,7 @@ use_peak_hop, ncycles, baseline_ncycles
                                                     label='Start'),
                                       ],
                              deletable=True,
-                             row_factory=self._new_action
+                             row_factory=self._new_truncation
                              )
 
         termination_editor = TableEditor(columns=[
@@ -697,22 +700,25 @@ use_peak_hop, ncycles, baseline_ncycles
                                                     label='Start'),
                                       ],
                              deletable=True,
-                             row_factory=self._new_action
+                             row_factory=self._new_termination
                              )
 
-        actions_grp = VGroup(
+        cond_grp = VGroup(
+                                Group(
                                 UItem(
                                       'actions', editor=action_editor,
                                       style='custom'
-                                      ),
+                                      ), label='Actions'),
+                                Group(
                                 UItem(
                                       'truncations', editor=truncation_editor,
                                       style='custom'
-                                      ),
+                                      ), label='Truncations'),
+                                Group(
                                 UItem(
                                       'terminations', editor=termination_editor,
                                       style='custom'
-                                      ),
+                                      ), label='Terminations'),
                                 label='Conditions'
                                 )
 
@@ -721,7 +727,7 @@ use_peak_hop, ncycles, baseline_ncycles
                      Item('use_peak_hop'),
                      peak_hop_group,
                      Group(
-                           actions_grp,
+                           cond_grp,
                            multicollect_grp,
                            baseline_grp,
                            peak_center_grp,

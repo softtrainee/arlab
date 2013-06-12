@@ -33,6 +33,7 @@ from chaco.plot_graphics_context import PlotGraphicsContext
 from traitsui.menu import Action
 from pyface.timer.do_later import do_later
 import math
+from src.helpers.filetools import str_to_bool
 #============= local library imports  ==========================
 class myDataLabel(DataLabel):
     label_position = Any
@@ -67,15 +68,22 @@ class GraphicModel(HasTraits):
                 path = dlg.path
 
         if path is not None:
-            if not path.endswith('.png'):
+            head, tail = os.path.splitext(path)
+            print tail
+            if not tail in ('.png', '.jpg'):
                 path = '{}.png'.format(path)
 
-            c = self.container.components[0]
+            c = self.container
             gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
 #            c.use_backbuffer = False
 
-            c.x_axis.visible = False
-            c.y_axis.visible = False
+            for ci in c.components:
+                try:
+                    c.x_axis.visible = False
+                    c.y_axis.visible = False
+                except Exception:
+                    pass
+
 
             gc.render_component(c)
 #            c.use_backbuffer = True
@@ -89,6 +97,12 @@ class GraphicModel(HasTraits):
         bb = outline.find('bounding_box')
         bs = bb.find('width'), bb.find('height')
         w, h = map(lambda b:float(b.text), bs)
+
+        use_label = parser.find('use_label')
+        if use_label is not None:
+            use_label = str_to_bool(use_label.text.strip())
+        else:
+            use_label = True
 
 
         data = ArrayPlotData()
@@ -117,6 +131,7 @@ class GraphicModel(HasTraits):
         for i, pp in enumerate(circles.findall('point')):
             x, y, l = pp.find('x').text, pp.find('y').text, pp.find('label').text
 
+#             print i, pp, x, y
             # load hole specific attrs
             r = pp.find('radius')
             if r is None:
@@ -142,14 +157,14 @@ class GraphicModel(HasTraits):
                    face_color=fc,
                    type='polygon',
                    )[0]
+            if use_label:
+                label = myDataLabel(component=plot,
+                                  data_point=(x, y),
+                                  label_text=l,
+                                  bgcolor='transparent',
 
-            label = myDataLabel(component=plot,
-                              data_point=(x, y),
-                              label_text=l,
-                              bgcolor='transparent',
-
-                              )
-            plot.overlays.append(label)
+                                  )
+                plot.overlays.append(label)
 
         self.container.add(p)
 
@@ -159,7 +174,9 @@ class GraphicModel(HasTraits):
         return c
 
 def make_xml(path, offset=100, default_bounds=(50, 50),
-             default_radius=3
+             default_radius=3, convert_mm=False,
+             make=True,
+             use_label=True
              ):
     '''
         convert a csv into an xml
@@ -169,8 +186,14 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
         ie. group 0. 1,2,3
             group 1. 101,102,103
     '''
-    root = Element('root')
     out = '{}_from_csv.xml'.format(os.path.splitext(path)[0])
+    if not make:
+        return out
+
+    root = Element('root')
+    ul = Element('use_label')
+    ul.text = 'True' if use_label else 'False'
+    root.append(ul)
 
     outline = Element('outline')
     bb = Element('bounding_box')
@@ -204,13 +227,18 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
         if row:
             e = Element('point')
             x, y, l = Element('x'), Element('y'), Element('label')
-            x.text = row[0]
-            y.text = row[1]
 
-            a = math.degrees(math.atan2(float(y.text), float(x.text)))
+            xx, yy = float(row[0]), float(row[1])
+            if convert_mm:
+                xx = xx * 2.54
+                yy = yy * 2.54
+
+            x.text = str(xx)
+            y.text = str(yy)
+
+            a = math.degrees(math.atan2(yy, xx))
             writer.write('{} {}\n'.format(k + 1, a))
             l.text = str(i + 1 + off)
-
             e.append(l)
             e.append(x)
             e.append(y)
@@ -228,16 +256,23 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
                pretty_print=True)
     return out
 
-def open_txt(p):
+def open_txt(p, bounds, radius,
+             use_label=True,
+             convert_mm=False, make=True):
     gm = GraphicModel()
     p = make_xml(p,
-                 default_radius=0.0175,
-                 default_bounds=(1, 1))
-
+                 default_radius=radius,
+                 default_bounds=bounds,
+                 convert_mm=convert_mm,
+                 use_label=use_label,
+                 make=make
+                 )
+    print p
 #    p = '/Users/ross/Sandbox/graphic_gen_from_csv.xml'
     gm.load(p)
     gcc = GraphicGeneratorController(model=gm)
-    return gcc
+
+    return gcc, gm
 if __name__ == '__main__':
     gm = GraphicModel()
     p = '/Users/ross/Sandbox/2mmirrad.txt'
@@ -250,12 +285,23 @@ if __name__ == '__main__':
 #    do_later(gcc1.edit_traits)
 
     p = '/Users/ross/Sandbox/1_75mmirrad.txt'
-    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'
+    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/1_75mmirrad_continuous.txt'
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad.txt'
 
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
-    gcc = open_txt(p)
+    gcc, gm = open_txt(p, (2.54, 2.54), 0.05, convert_mm=True)
+
+    p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
+    gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
+
+#     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
+#     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, use_label=False)
+
+
+#     gm2.container.bgcolor = 'transparent'
+    gm2.container.add(gm.container)
+
     gcc.configure_traits()
 
 #============= EOF =============================================

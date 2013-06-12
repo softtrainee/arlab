@@ -21,11 +21,4 @@ from pyface.tasks.traits_task_pane import TraitsTaskPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class DisplayPane(TraitsTaskPane):
-    def traits_view(self):
-        v = View(
-               Item('display_item', show_label=False, style='custom'),
-               )
-
-        return v
 #============= EOF =============================================

@@ -42,8 +42,8 @@ class RecallTask(AnalysisEditTask):
 #                          top=PaneItem('pychron.pyscript.description'),
 #                          bottom=PaneItem('pychron.pyscript.example'),
 
-
                           )
+
     def create_dock_panes(self):
         return [
 #                self._create_unknowns_pane(),
