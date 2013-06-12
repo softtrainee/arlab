@@ -87,12 +87,10 @@ class AnalysisEditTask(EditorTask):
         task = self._open_external_task(_id)
         task.recall([recview])
 
-    def _save_to_db(self, dry_run):
+    def _save_to_db(self):
         if self.active_editor:
             if hasattr(self.active_editor, 'save'):
                 self.active_editor.save()
-                if not dry_run:
-                    self.manager.db.commit()
 
     def _set_previous_selection(self, pane, new):
         if new:

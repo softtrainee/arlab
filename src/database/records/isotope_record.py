@@ -248,6 +248,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         else:
             self.isotopes[k] = Isotope(value=v, error=e)
 
+    def set_temporary_blank(self, k, v, e):
+        if self.isotopes.has_key(k):
+            iso = self.isotopes[k]
+            iso.temporary_blank = Blank(value=v, error=e)
+
     def set_blank(self, k, v, e):
         blank = None
         if self.isotopes.has_key(k):
