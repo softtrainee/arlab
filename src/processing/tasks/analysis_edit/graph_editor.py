@@ -72,11 +72,17 @@ class GraphEditor(BaseTraitsEditor):
     @on_trait_change('tool:update_needed')
     def _tool_refresh(self):
         self.rebuild_graph()
+        self.refresh_unknowns()
+
+
+    def refresh_unknowns(self):
+        pass
 
     def rebuild_graph(self):
         graph = self.graph
         graph.clear()
         self._rebuild_graph()
+
         self.component_changed = True
 
     def _rebuild_graph(self):

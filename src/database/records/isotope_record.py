@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Property, List, Any, cached_property, \
-    Event, Float, Dict
-from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSplit
+    Event, Float, Dict, on_trait_change
+# from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSplit
 
 #============= standard library imports ========================
 from uncertainties import ufloat
@@ -56,16 +56,16 @@ from src.simple_timeit import timethis
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
-class EditableGraph(HasTraits):
-    graph = Instance(Graph)
-    fit_selector = Instance(FitSelector)
-
-    def __getattr__(self, attr):
-        try:
-            return getattr(self.graph, attr)
-        except KeyError:
-            pass
-
+# class EditableGraph(HasTraits):
+#     graph = Instance(Graph)
+#     fit_selector = Instance(FitSelector)
+#
+#     def __getattr__(self, attr):
+#         try:
+#             return getattr(self.graph, attr)
+#         except KeyError:
+#             pass
+#
 #     def traits_view(self):
 #         v = View(
 #                  VSplit(
@@ -130,8 +130,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #    window_width = 875
     color = 'black'
 
-    signal_graph = Instance(EditableGraph)
-    baseline_graph = Instance(EditableGraph)
+#     signal_graph = Instance(EditableGraph)
+#     baseline_graph = Instance(EditableGraph)
+#     signal_graph = Instance(StackedRegressionGraph)
+#     baseline_graph = Instance(StackedRegressionGraph)
     peak_center_graph = Instance(Graph)
 
     analysis_summary = Instance(AnalysisSummary)
@@ -155,7 +157,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         
         also should be able to specify reference detector ie H1
     '''
-    ic_factor = DBProperty()
+#     ic_factor = DBProperty()
     discrimination = DBProperty()
 
 
@@ -182,6 +184,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return True
 
     def load_age(self):
+        self.age_dirty = True
         self.load_isotopes()
         self.debug('load_age {} - {}'.format(self.record_id, self.age))
 
@@ -303,15 +306,16 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                         result = iso.results[-1]
 
                     name = iso.molecular_weight.name
-                    det = iso.detector.name
-                    r = Isotope(dbrecord=iso, dbresult=result, name=name, detector=det)
-                    fit = self._get_db_fit(name, 'signal')
-                    if fit is None:
-                        fit = Fit(fit='linear', filter_outliers=True,
-                                  filter_outlier_iterations=1,
-                                  filter_outlier_std_devs=2)
-                    r.set_fit(fit)
-                    self.isotopes[name] = r
+                    if name not in self.isotopes:
+                        det = iso.detector.name
+                        r = Isotope(dbrecord=iso, dbresult=result, name=name, detector=det)
+                        fit = self._get_db_fit(name, 'signal')
+                        if fit is None:
+                            fit = Fit(fit='linear', filter_outliers=True,
+                                      filter_outlier_iterations=1,
+                                      filter_outlier_std_devs=2)
+                        r.set_fit(fit)
+                        self.isotopes[name] = r
             '''
             
                 load signals first then baseline and sniffs.
@@ -408,14 +412,16 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # handlers
 #===============================================================================
+
+#===============================================================================
+# private
+#===============================================================================
+
     def _apply_history_change(self, new):
         self.changed = True
 
     def _unpack_blob(self, blob, endianness='>'):
         return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
-
-
-#
 
     def _make_stacked_graph(self, kind, regress=True):
         if regress:
@@ -581,45 +587,57 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             disc = ufloat(item.disc, item.disc_error)
         return disc
 
-    @cached_property
-    def _get_ic_factor(self):
-        ic = ufloat(1.0, 0)
-        name = 'detector_intercalibration'
-        items = self._get_history_item(name)
-#        print items
-        if items:
+    def get_ic_factor(self, det):
+        hist = self.dbrecord.selected_histories.selected_detector_intercalibration
+        r = 1, 0
+        if hist:
+            icf = next((ic for ic in hist.detector_intercalibrations
+                        if ic.detector.name == det), None)
+            if icf:
+                r = icf.user_value, icf.user_error
 
-            '''
-                only get the cdd ic factor for now 
-                its the only one with non unity
-            '''
+        return r
 
-            # get Ar36 detector
-            det = next((iso.detector for iso in self.dbrecord.isotopes
-                      if iso.molecular_weight.name == 'Ar36'), None)
-#            for iso in self.dbrecord.isotopes:
-#                print iso
-            if det:
 
-                # get the intercalibration for this detector
-                item = next((item for item in items if item.detector == det), None)
-                ic = ufloat(item.user_value, item.user_error)
-
-#                if not item.fit:
-#    #                s = Value(value=item.user_value, error=item.user_error)
-#                    ic = item.user_value, item.user_error
-#                else:
-#                    intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
-#                    data = map(intercal, item.sets)
-#                    xs, ys, es = zip(*data)
+#     @cached_property
+#     def _get_ic_factor(self):
+#         ic = ufloat(1.0, 0)
+#         name = 'detector_intercalibration'
+#         items = self._get_history_item(name)
+# #        print items
+#         if items:
 #
-#                    s = InterpolatedRatio(timestamp=self.timestamp,
-#                                          fit=item.fit,
-#                                          xs=xs, ys=ys, es=es
-#                                          )
-#                    ic = s.value, s.error
-
-        return ic
+#             '''
+#                 only get the cdd ic factor for now
+#                 its the only one with non unity
+#             '''
+#
+#             # get Ar36 detector
+#             det = next((iso.detector for iso in self.dbrecord.isotopes
+#                       if iso.molecular_weight.name == 'Ar36'), None)
+# #            for iso in self.dbrecord.isotopes:
+# #                print iso
+#             if det:
+#
+#                 # get the intercalibration for this detector
+#                 item = next((item for item in items if item.detector == det), None)
+#                 ic = ufloat(item.user_value, item.user_error)
+#
+# #                if not item.fit:
+# #    #                s = Value(value=item.user_value, error=item.user_error)
+# #                    ic = item.user_value, item.user_error
+# #                else:
+# #                    intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
+# #                    data = map(intercal, item.sets)
+# #                    xs, ys, es = zip(*data)
+# #
+# #                    s = InterpolatedRatio(timestamp=self.timestamp,
+# #                                          fit=item.fit,
+# #                                          xs=xs, ys=ys, es=es
+# #                                          )
+# #                    ic = s.value, s.error
+#
+#         return ic
 
     @cached_property
     def _get_record_id(self):
@@ -871,26 +889,28 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         if peakcenter:
             return self._make_peak_center_graph(*peakcenter)
 
-    def _baseline_graph_default(self):
-        g = self._make_stacked_graph('baseline')
+#     def _baseline_graph_default(self):
+#         g = self._make_stacked_graph('baseline')
 #            g.refresh()
-        baseline_graph = EditableGraph(graph=g, fit_selector=self.analysis_summary.fit_selector)
-        baseline_graph.fit_selector = FitSelector(analysis=self,
-                                                    kind='baseline',
-                                                    name='Baseline',
-                                                    graph=baseline_graph)
+#         baseline_graph = EditableGraph(graph=g, fit_selector=self.analysis_summary.fit_selector)
+#         baseline_graph.fit_selector = FitSelector(analysis=self,
+#                                                     kind='baseline',
+#                                                     name='Baseline',
+#                                                     graph=baseline_graph)
+#
+#         baseline_graph.fit_selector.refresh()
+#         return baseline_graph
+#         return g
 
-        baseline_graph.fit_selector.refresh()
-        return baseline_graph
+#     def _signal_graph_default(self):
+#         g = self._make_stacked_graph('signal')
+#         return g
+#         fs = self.analysis_summary.fit_selector
+#         signal_graph = EditableGraph(graph=g, fit_selector=self.analysis_summary.fit_selector)
+#         fs.graph = signal_graph
 
-    def _signal_graph_default(self):
-        g = self._make_stacked_graph('signal')
-        fs = self.analysis_summary.fit_selector
-        signal_graph = EditableGraph(graph=g, fit_selector=self.analysis_summary.fit_selector)
-        fs.graph = signal_graph
-
-        fs.refresh()
-        return signal_graph
+#         fs.refresh()
+#         return signal_graph
 #============= EOF =============================================
 
 #    def _selected_changed(self):

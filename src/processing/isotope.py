@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Property, Any, Instance, \
-    Bool, Int, Array, cached_property
+    Bool, Int, Array, cached_property, String
 
 #============= standard library imports ========================
 from uncertainties import ufloat
@@ -61,13 +61,12 @@ class IsotopicMeasurement(BaseMeasurement):
     _value = Float
     _error = Float
 
-    fit = Str
+    fit = String
     filter_outliers = Bool
     filter_outlier_iterations = Int
     filter_outlier_std_devs = Int
 
     regressor = Property(depends_on='xs,ys,fit')
-
     def __init__(self, *args, **kw):
         super(IsotopicMeasurement, self).__init__(*args, **kw)
 

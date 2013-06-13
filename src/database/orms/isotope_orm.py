@@ -134,7 +134,7 @@ class proc_BackgroundsTable(Base, BaseMixin):
     sets = relationship('proc_BackgroundsSetTable', backref='backgrounds')
 
 class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
-    detector_intercalibration = relationship('proc_DetectorIntercalibrationTable',
+    detector_intercalibrations = relationship('proc_DetectorIntercalibrationTable',
                                               backref='history',
 #                                              uselist=False
                                               )

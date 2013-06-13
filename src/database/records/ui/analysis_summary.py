@@ -15,52 +15,56 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Str, Float, Any
+from traits.api import HasTraits, Property, List, Str, Float, Any, Event, cached_property
 from traitsui.api import View, Item, UItem, VSplit, VGroup, HGroup, HSplit
 
 # from src.processing.tasks.text_table import TextTable, TextRow, TextCell, BoldCell, TextTableAdapter
 # from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
     pfloatfmt
-from src.constants import PLUSMINUS, NULL_STR
+from src.constants import PLUSMINUS, NULL_STR, PLUSMINUS_ERR, SIGMA
 from src.ui.qt.text_table_editor import TextTableEditor
 from kiva.fonttools import Font
 from src.ui.text_table import BoldCell, TextCell, TextRow, \
     TextTable, TextTableAdapter, SimpleTextTableAdapter, RatiosAdapter
 from src.experiment.display_signal import DisplaySignal, DisplayRatio
+from src.simple_timeit import timethis
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
+PLUSMINUS_SIGMA = u'{}1{}'.format(PLUSMINUS, SIGMA)
 
 class RawAdapter(SimpleTextTableAdapter):
     columns = [
                ('Isotope', 'isotope', str),
                ('Detector', 'detector', str),
                ('Raw (fA)', 'raw_value'),
-               (u'{}1s'.format(PLUSMINUS), 'raw_error'),
+               (PLUSMINUS_SIGMA, 'raw_error'),
                (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str),
                ('Fit', 'fit', str),
 
                ('Baseline (fA)', 'baseline_value'),
-               (u'{} 1s'.format(PLUSMINUS), 'baseline_error'),
+               (PLUSMINUS_SIGMA, 'baseline_error'),
                (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str),
 
                ('Blank (fA)', 'blank_value'),
-               (u'{} 1s'.format(PLUSMINUS), 'blank_error'),
+               (PLUSMINUS_SIGMA, 'blank_error'),
                (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str),
              ]
 class SignalAdapter(SimpleTextTableAdapter):
     columns = [
                ('Isotope', 'isotope', str),
                ('Detector', 'detector', str),
-               ('Signal (fA)', 'signal_value'),
-               (u'{} 1s'.format(PLUSMINUS), 'signal_error'),
-               ('Error Comp. %', 'error_component', pfloatfmt(n=1))
+               ('Signal (fA)  ', 'signal_value'),
+               (PLUSMINUS_SIGMA, 'signal_error'),
+               ('Error Comp. %', 'error_component', pfloatfmt(n=1)),
+               ('IC Factor', 'ic_factor_value'),
+               (PLUSMINUS_SIGMA, 'ic_factor_error')
                ]
 
 
 class AgeAdapter(TextTableAdapter):
     def _make_tables(self, record):
+        print 'rrrr', record.age
         tt = TextTable(
                        TextRow(
                                BoldCell('Age:'),
@@ -72,7 +76,7 @@ class AgeAdapter(TextTableAdapter):
 
                                ),
                        TextRow(
-                               TextCell(''),
+                               TextCell('w/o J err'),
                                TextCell(''),
                                TextCell(u'{}{}'.format(PLUSMINUS,
                                                      floatfmt(record.age_error_wo_j)))
@@ -178,8 +182,9 @@ class AnalysisSummaryAdapter(TextTableAdapter):
 
 class AnalysisSummary(HasTraits):
     record = Any
-    signals = Property(List, depends_on='record')
-    ratios = Property(List, depends_on='record')
+    update_needed = Event
+    signals = Property(List, depends_on='record, update_needed')
+#     ratios = Property(List, depends_on='record, update_needed')
     def refresh(self):
         pass
 
@@ -196,42 +201,54 @@ class AnalysisSummary(HasTraits):
                 )
         return r
 
-    def _get_ratios(self):
+#     @cached_property
+#     def _get_ratios(self):
+#
+#
+#         def func():
+#             ratios = []
+#             self.record.age
+#             record = self.record
+#             arar_result = record.arar_result
+#             if arar_result:
+#                 rad40 = arar_result['rad40']
+#                 k39 = arar_result['k39']
+#                 s36 = arar_result['s36']
+#                 s39dec_cor = arar_result['s39decay_cor']
+#                 s40 = arar_result['s40']
+#
+#                 ratios = [
+#                         self._make_ratio('40Ar%', rad40, s40, scalar=100),
+#                         self._make_ratio('40/36', s40, s36),
+#                         self._make_ratio('40/39K', s40, k39),
+#                         self._make_ratio('40/39', s40, s39dec_cor),
+#                         self._make_ratio('40*/36', rad40, s36),
+#                         self._make_ratio('40*/39K', rad40, k39),
+#                         self._make_ratio('K/Ca', record.kca, 1),
+#                         self._make_ratio('K/Cl', record.kcl, 1),
+#
+#                         ]
+#
+#     #            self._make_ratio('%40*', rad40, s40, scalar=100)
+#             return ratios
+#         print 'ffff'
+#         return timethis(func)
 
-        ratios = []
-        self.record.age
-        record = self.record
-        arar_result = record.arar_result
-        if arar_result:
-            rad40 = arar_result['rad40']
-            k39 = arar_result['k39']
-            s36 = arar_result['s36']
-            s39dec_cor = arar_result['s39decay_cor']
-            s40 = arar_result['s40']
-
-            ratios = [
-                    self._make_ratio('40Ar%', rad40, s40, scalar=100),
-                    self._make_ratio('40/36', s40, s36),
-                    self._make_ratio('40/39K', s40, k39),
-                    self._make_ratio('40/39', s40, s39dec_cor),
-                    self._make_ratio('40*/36', rad40, s36),
-                    self._make_ratio('40*/39K', rad40, k39),
-                    self._make_ratio('K/Ca', record.kca, 1),
-                    self._make_ratio('K/Cl', record.kcl, 1),
-
-                    ]
-
-#            self._make_ratio('%40*', rad40, s40, scalar=100)
-        return ratios
+#     @cached_property
     def _get_signals(self):
+
         record = self.record
         keys = record.isotope_keys
         isotopes = []
+#         return isotopes
+
         for k in keys:
             iso = record.isotopes[k]
             name = iso.name
             det = iso.detector
             fit = iso.fit
+            icv, ice = record.get_ic_factor(det)
+
             rv, re = iso.value, iso.error
             bv, be = iso.baseline.value, iso.baseline.error
             blv, ble = iso.blank.value, iso.blank.error
@@ -250,7 +267,10 @@ class AnalysisSummary(HasTraits):
                                    blank_error=ble,
                                    signal_value=s.nominal_value,
                                    signal_error=s.std_dev,
-                                   error_component=record.get_error_component(k)
+                                   error_component=record.get_error_component(k),
+                                   ic_factor_value=icv,
+                                   ic_factor_error=ice
+
                                    )
                             )
         return isotopes
@@ -270,7 +290,7 @@ class AnalysisSummary(HasTraits):
                            editor=TextTableEditor(adapter=RawAdapter(),
                                                  bg_color=BG_COLOR,
                                                  odd_color=ODD_COLOR,
-                                                 header_color=HEADER_COLOR
+                                                 header_color=HEADER_COLOR,
                                                  ),
                           height=0.3
                           )
@@ -280,41 +300,21 @@ class AnalysisSummary(HasTraits):
                                                                header_color=HEADER_COLOR
                                                 ),
                           height=0.3,
-                          width=0.65
+                          width=0.75
                       )
+
+        '''
+            changes to the intensities will not trigger this editor to update
+            use "refresh" extended trait name to force editor to redraw.  
+        '''
         age = UItem('record',
-                        editor=TextTableEditor(adapter=AgeAdapter(),
-                                               bg_color=BG_COLOR
+                     editor=TextTableEditor(adapter=AgeAdapter(),
+                                               bg_color=BG_COLOR,
+                                               refresh='update_needed'
                                                ),
-                        width=0.35
+                        width=0.25
                         )
 
-#
-#         left = VGroup(
-#
-#                     UItem('record',
-#                           editor=TextTableEditor(adapter=AgeAdapter(),
-#                                                  bg_color=BG_COLOR
-#                                                  ),
-#                           height=0.12
-#                           ),
-#                       UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
-#                                                               bg_color=BG_COLOR,
-#                                                               odd_color=ODD_COLOR,
-#                                                               header_color=HEADER_COLOR
-#                                                ),
-#
-#                             height=0.25,
-#                             width=0.75
-#                             ))
-#         right = UItem('ratios', editor=TextTableEditor(adapter=RatiosAdapter(),
-#                                                                       bg_color=BG_COLOR,
-#                                                                       odd_color=ODD_COLOR,
-#                                                                       header_color=HEADER_COLOR
-#                                                        ),
-#                                     height=0.25,
-#                                     width=0.25
-#                                     )
 
         v = View(
                  VSplit(

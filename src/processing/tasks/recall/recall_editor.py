@@ -19,6 +19,7 @@ from traits.api import HasTraits, Any, Property, Instance
 from traitsui.api import View, Item, UItem, InstanceEditor, Group, VFold
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.database.records.isotope_record import IsotopeRecord
+from src.processing.tasks.analysis_edit.fits import FitSelector
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -32,6 +33,10 @@ class RecallEditor(BaseTraitsEditor):
 #            return { 'object': self.record}
 #
 #        return super(RecallEditor, self).trait_context()
+#     def _model_changed(self):
+#         if self.model:
+#             keys = self.model.isotope_keys
+#             self.tool.load_fits(keys)
 
     def traits_view(self):
         v = View(
