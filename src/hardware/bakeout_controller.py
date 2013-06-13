@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Event, Float, Str, Instance, Bool, Property, HasTraits
+from traits.api import List, Event, Float, Str, Instance, Bool, Property, \
+     HasTraits, Any
 from traitsui.api import View, Item, spring, HGroup, Label, VGroup, Spring, \
     ButtonEditor, EnumEditor
 #============= standard library imports ========================
@@ -27,7 +28,8 @@ from src.paths import paths
 from watlow_ezzone import WatlowEZZone
 from src.constants import NULL_STR
 from src.pyscripts.bakeout_pyscript import BakeoutPyScript
-from src.ui.led_editor import ButtonLED, LEDEditor
+from src.ui.led_editor import LEDEditor, ButtonLED
+# from src.ui.led_editor import ButtonLED, LEDEditor
 
 # class BakeoutMonitor():
 #    pass
@@ -67,7 +69,8 @@ class BakeoutController(WatlowEZZone):
     scripts = List()
     script = Str(BLANK_SCRIPT)
 #    led = Instance(LED, ())
-    led = Instance(ButtonLED, ())
+#     led = Instance(ButtonLED, ())
+    led = Any
 
 #    alive = Bool(False)
     active = Bool(False)
@@ -441,7 +444,8 @@ Add {}'.format(sd)):
     def traits_view(self):
         '''
         '''
-        state_item = Item('state_button', editor=ButtonEditor(label_value='state_label'),
+        state_item = Item('state_button',
+                          editor=ButtonEditor(label_value='state_label'),
                           show_label=False,
                           enabled_when='state_enabled'
                         )
@@ -449,14 +453,13 @@ Add {}'.format(sd)):
         if self.name.endswith('1'):
             show_label = True
             header_grp = HGroup(
-                            Spring(width=100, springy=False),
+                            Spring(width=95, springy=False),
                             HGroup(
                                    Label(self.name[-1]),
                                    Item('led', editor=LEDEditor(),
                                         show_label=False, style='custom'),
-                            ),
-                            state_item,
-#                            Item('color', show_label=False, style='readonly')
+                                   state_item,
+                                   ),
                             )
             process_grp = HGroup(
                                  Spring(width=35, springy=False),
