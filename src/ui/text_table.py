@@ -42,7 +42,7 @@ class TextCell(HasTraits):
         if self.format:
             self.text = self.format(text)
         else:
-            self.text = str(text)
+            self.text = u'{}'.format(text)
 
 #        for k in kw:
 #            setattr(self, k, kw[k])
@@ -109,7 +109,7 @@ class TextTableAdapter(HasTraits):
 
     def _cell_factory(self, obj, args):
         fmt = floatfmt
-        width = 10
+        width = 12
         if len(args) == 3:
             _, li, fmt = args
         elif len(args) == 4:

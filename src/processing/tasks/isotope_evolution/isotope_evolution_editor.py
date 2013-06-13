@@ -45,7 +45,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Dict
+from traits.api import HasTraits, Instance, Dict, on_trait_change
 from traitsui.api import View, Item, UItem
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 #============= standard library imports ========================
@@ -53,18 +53,23 @@ from numpy import Inf, polyfit
 from enable.component_editor import ComponentEditor
 # from src.graph.regression_graph import StackedRegressionGraph
 from chaco.plot_containers import GridPlotContainer
-from src.processing.equilibration_utils import calc_optimal_eqtime
+from src.simple_timeit import timethis
+# from src.processing.equilibration_utils import calc_optimal_eqtime
 #============= local library imports  ==========================
 
 class IsotopeEvolutionEditor(GraphEditor):
     component = Instance(GridPlotContainer)
     graphs = Dict
+    def _update_regression(self):
+        print 'resulre supasdf'
+
     def calculate_optimal_eqtime(self):
         # get x,y data
         self.info('========================================')
         self.info('           Optimal Eq. Results')
         self.info('========================================')
 
+        from src.processing.utils.equilibration_utils import calc_optimal_eqtime
         for unk in self._unknowns:
 
             for fit in self.tool.fits:
@@ -158,7 +163,7 @@ class IsotopeEvolutionEditor(GraphEditor):
                                              plotid=i,
                                              type='scatter',
                                              fit=False)
-
+                        iso.fit = fit.fit
                         xs, ys = iso.xs, iso.ys
                         g.new_series(xs, ys,
                                      fit=fit.fit,
@@ -174,6 +179,10 @@ class IsotopeEvolutionEditor(GraphEditor):
             self.graphs[unk.record_id] = g
             self.component.add(g.plotcontainer)
 
+    def refresh_unknowns(self):
+        for ui in self._unknowns:
+            ui.load_age()
+            ui.analysis_summary.update_needed = True
 
     def traits_view(self):
         v = View(UItem('component',

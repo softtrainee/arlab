@@ -20,6 +20,7 @@ from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem
+from src.processing.tasks.analysis_edit.panes import ControlsPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -35,7 +36,8 @@ class RecallTask(AnalysisEditTask):
                           left=Splitter(
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
-                                         )
+                                         ),
+                          right=PaneItem('pychron.analysis_edit.controls')
 
 #                                     PaneItem('pychron.pyscript.editor')
 #                                     ),
@@ -45,9 +47,12 @@ class RecallTask(AnalysisEditTask):
                           )
 
     def create_dock_panes(self):
+        self.controls_pane = ControlsPane()
         return [
 #                self._create_unknowns_pane(),
-                self._create_query_pane()
+                self._create_query_pane(),
+                self.controls_pane
+
                 ]
 
     def recall(self, records):
@@ -56,13 +61,22 @@ class RecallTask(AnalysisEditTask):
 
         def func(rec):
             rec.initialize()
-            editor = RecallEditor(model=rec.isotope_record)
-            self.editor_area.add_editor(editor)
+            reditor = RecallEditor(model=rec.isotope_record)
+
+
+            from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor
+            ieditor = IsotopeEvolutionEditor(
+                                            name='IsoEvo {}'.format(reditor.name),
+                                            processor=self.manager,
+                                            )
+            ieditor.unknowns = [rec]
+            self.editor_area.add_editor(ieditor)
+            self.editor_area.add_editor(reditor)
 
         if ans:
             self.manager._load_analyses(ans, func=func)
 
-            ed = self.editor_area.editors[-1]
+            ed = self.editor_area.editors[-2]
             self.editor_area.activate_editor(ed)
 
 #============= EOF =============================================
