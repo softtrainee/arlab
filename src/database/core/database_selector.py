@@ -82,6 +82,8 @@ class SelectorHandler(Handler):
 class DatabaseSelector(Viewable, ColumnSorterMixin):
     records = List
     num_records = Property(depends_on='records')
+#     searchable = Bool(True)
+
     search = Button
     dclick_recall_enabled = Bool(False)
 #    open_button = Button
@@ -89,7 +91,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     db = Instance(DatabaseAdapter)
     tabular_adapter = BaseTabularAdapter
-    dbstring = Str
+    id_string = Str
     title = ''
 
     dclicked = Any
@@ -382,11 +384,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.execute_query(load=False)
 
     @on_trait_change('db.[name,host]')
-    def _dbstring_change(self):
+    def _id_string_change(self):
         if self.db.kind == 'mysql':
-            self.dbstring = 'Database: {} at {}'.format(self.db.name, self.db.host)
+            self.id_string = 'Database: {} at {}'.format(self.db.name, self.db.host)
         else:
-            self.dbstring = 'Database: {}'.format(self.db.name)
+            self.id_string = 'Database: {}'.format(self.db.name)
 
 #    def _selected_changed(self):
 #        if self.selected:
@@ -451,7 +453,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                             ),
 #                             spring, Item('limit')),
                 VGroup(
-                       CustomLabel('dbstring', color='red'),
+                       CustomLabel('id_string', color='red'),
                        VSplit(
                               Item('records',
                                    style='custom',

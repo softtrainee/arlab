@@ -44,7 +44,9 @@ class _CustomLabelEditor(Editor):
 
     def update_editor(self):
         if self.control:
-            self.control.setText(self.value)
+#             print self.object, self.value
+            if isinstance(self.value, (str, int, float, long, unicode)):
+                self.control.setText(str(self.value))
 #            self.control.SetLabel(self.value)
 
     def _create_control(self, parent):

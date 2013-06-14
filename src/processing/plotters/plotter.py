@@ -188,10 +188,10 @@ class Plotter(Viewable):
         title = self._get_plot_option(options, 'title')
         aux_plots = self._assemble_aux_plots(plotter_options)
 
-        xtick_font = self._get_plot_option(plotter_options, 'xtick_font', 'helvetica 10')
-        xtitle_font = self._get_plot_option(plotter_options, 'xtitle_font', 'helvetica 10')
-        ytick_font = self._get_plot_option(plotter_options, 'ytick_font', 'helvetica 10')
-        ytitle_font = self._get_plot_option(plotter_options, 'ytitle_font', 'helvetica 10')
+        xtick_font = self._get_plot_option(plotter_options, 'xtick_font', 'modern 10')
+        xtitle_font = self._get_plot_option(plotter_options, 'xtitle_font', 'modern 10')
+        ytick_font = self._get_plot_option(plotter_options, 'ytick_font', 'modern 10')
+        ytitle_font = self._get_plot_option(plotter_options, 'ytitle_font', 'modern 10')
 #        xtick_font = plotter_options.xtick_font
 #        xtitle_font = plotter_options.xtitle_font
 #        ytick_font = plotter_options.ytick_font
@@ -550,6 +550,7 @@ class Plotter(Viewable):
         x = floatfmt(x, 3)
         we = floatfmt(we, 4)
         pm = '+/-'
+
         return u'{} {}{} {} {}'.format(x, pm, we, mswd, n)
 
     def _unzip_value_error(self, pairs):

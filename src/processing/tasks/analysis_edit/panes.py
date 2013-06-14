@@ -20,12 +20,13 @@ from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
-from src.processing.search.previous_selection import PreviousSelection
+# from src.processing.search.previous_selection import PreviousSelection
 import os
 from src.paths import paths
 import shelve
 import hashlib
 from src.processing.analysis import Marker
+from src.processing.selection.previous_selection import PreviousSelection
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -75,6 +76,10 @@ class HistoryTablePane(TablePane):
     def dump_selection(self):
         records = self.items
         if not records:
+            return
+
+        # this is a set of NonDB analyses so no presistence
+        if not hasattr(records[0], 'uuid'):
             return
 
         def make_name(rec):

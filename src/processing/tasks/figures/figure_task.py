@@ -18,13 +18,14 @@
 from traits.api import HasTraits, on_trait_change, Instance, List
 from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class FigureTask(AnalysisEditTask):
+    name = 'Figure'
     id = 'pychron.processing.figures'
     plotter_options_pane = Instance(PlotterOptionsPane)
 
@@ -32,10 +33,14 @@ class FigureTask(AnalysisEditTask):
         return TaskLayout(
                           id='pychron.analysis_edit',
                           left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.processing.figures.plotter_options'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     PaneItem('pychron.processing.editor'),
+                                     Tabbed(
+                                            PaneItem('pychron.analysis_edit.unknowns'),
+                                            PaneItem('pychron.processing.figures.plotter_options')
+                                            ),
+                                     Tabbed(
+                                            PaneItem('pychron.analysis_edit.controls'),
+                                            PaneItem('pychron.processing.editor'),
+                                            ),
                                      orientation='vertical'
                                      ),
 
@@ -64,6 +69,9 @@ class FigureTask(AnalysisEditTask):
         klass = SpectrumEditor
         self._new_figure(ans, name, func, klass)
 
+    def _save_file(self, path):
+        self.active_editor.save(path)
+
     def _new_figure(self, ans, name, func, klass):
         comp = None
         if ans:
@@ -90,6 +98,8 @@ class FigureTask(AnalysisEditTask):
             return
 
         self.active_editor.rebuild()
+        self.active_editor.dirty = True
+
 #        po = self.plotter_options_pane.pom.plotter_options
 #        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
 #        self.active_editor.component = comp

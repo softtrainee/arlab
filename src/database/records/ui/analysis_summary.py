@@ -64,7 +64,6 @@ class SignalAdapter(SimpleTextTableAdapter):
 
 class AgeAdapter(TextTableAdapter):
     def _make_tables(self, record):
-        print 'rrrr', record.age
         tt = TextTable(
                        TextRow(
                                BoldCell('Age:'),
@@ -118,12 +117,6 @@ class AnalysisSummaryAdapter(TextTableAdapter):
 
         disc, disc_err = record.discrimination.nominal_value, record.discrimination.std_dev
         disc = u'{} {}{}'.format(floatfmt(disc), PLUSMINUS, errorfmt(disc, disc_err))
-#        rows = [ci  for pairs in map(self._keyword, (('Analysis ID', record.record_id),
-#                                                         ('Irradiation', irrad),
-#                                                         ('Sample', record.sample)
-#                                                    ))
-#                                                    for ci in pairs]
-#        keywords1 = []
 
         tt = TextTable(
                        self._make_keyword_row([('Analysis ID', record.record_id),
@@ -152,22 +145,6 @@ class AnalysisSummaryAdapter(TextTableAdapter):
                        self._make_keyword_row([('J', flux, {'col_span':2}),
                                                ('Sensitivity', sens, {'col_span':2})
                                                ]),
-#                       TextRow(
-#                               BoldCell('J:'),
-#                               TextCell(flux),
-#                               BoldCell('Sensitivity:'),
-#                               TextCell(sens)
-#                               ),
-#                       TextRow(
-#                               BoldCell('Position:'),
-#                               TextCell(record.position),
-#                               BoldCell('Extract ({}):'.format(record.extract_units)),
-#                               TextCell(record.extract_value),
-#                               BoldCell('Duration (s):'),
-#                               TextCell(record.extract_duration),
-#                               BoldCell('Cleanup (s):'),
-#                               TextCell(record.cleanup_duration),
-#                               ),
                        border=False
                        )
         return tt
@@ -238,11 +215,7 @@ class AnalysisSummary(HasTraits):
     def _get_signals(self):
 
         record = self.record
-        keys = record.isotope_keys
-        isotopes = []
-#         return isotopes
-
-        for k in keys:
+        def factory(k):
             iso = record.isotopes[k]
             name = iso.name
             det = iso.detector
@@ -256,7 +229,7 @@ class AnalysisSummary(HasTraits):
             if fit:
                 fit = fit[0].upper()
 
-            isotopes.append(DisplaySignal(isotope=name,
+            return DisplaySignal(isotope=name,
                                    detector=det,
                                    raw_value=rv,
                                    raw_error=re,
@@ -270,10 +243,44 @@ class AnalysisSummary(HasTraits):
                                    error_component=record.get_error_component(k),
                                    ic_factor_value=icv,
                                    ic_factor_error=ice
-
                                    )
-                            )
-        return isotopes
+
+        keys = record.isotope_keys
+#         isotopes = []
+#         return isotopes
+        return [factory(k) for k in keys]
+#         for k in keys:
+#             iso = record.isotopes[k]
+#             name = iso.name
+#             det = iso.detector
+#             fit = iso.fit
+#             icv, ice = record.get_ic_factor(det)
+#
+#             rv, re = iso.value, iso.error
+#             bv, be = iso.baseline.value, iso.baseline.error
+#             blv, ble = iso.blank.value, iso.blank.error
+#             s = iso.get_corrected_value()
+#             if fit:
+#                 fit = fit[0].upper()
+#
+#             isotopes.append(DisplaySignal(isotope=name,
+#                                    detector=det,
+#                                    raw_value=rv,
+#                                    raw_error=re,
+#                                    fit=fit,
+#                                    baseline_value=bv,
+#                                    baseline_error=be,
+#                                    blank_value=blv,
+#                                    blank_error=ble,
+#                                    signal_value=s.nominal_value,
+#                                    signal_error=s.std_dev,
+#                                    error_component=record.get_error_component(k),
+#                                    ic_factor_value=icv,
+#                                    ic_factor_error=ice
+#
+#                                    )
+#                             )
+#         return isotopes
 
     def traits_view(self):
         ODD_COLOR = '#CCFFFF'
@@ -314,7 +321,6 @@ class AnalysisSummary(HasTraits):
                                                ),
                         width=0.25
                         )
-
 
         v = View(
                  VSplit(

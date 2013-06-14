@@ -25,7 +25,7 @@ from src.experiment.signal_calculator import SignalCalculator
 # from envisage.import_manager import ImportManager
 from src.experiment.image_browser import ImageBrowser
 from src.helpers.parsers.initialization_parser import InitializationParser
-from src.experiment.export_manager import ExportManager
+# from src.experiment.export_manager import ExportManager
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
@@ -140,10 +140,10 @@ class ExperimentPlugin(BaseTaskPlugin):
                           protocol=ImageBrowser,
                           factory=self._image_browser_factory
                           )
-        so_export_manager = self.service_offer_factory(
-                          protocol=ExportManager,
-                          factory=self._export_manager_factory
-                          )
+#         so_export_manager = self.service_offer_factory(
+#                           protocol=ExportManager,
+#                           factory=self._export_manager_factory
+#                           )
 
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
 #                           factory='src.experiments.process_view.ProcessView'
@@ -156,7 +156,8 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                so_pyscript_manager,
                 so_signal_calculator,
 #                so_import_manager,
-                so_image_browser, so_export_manager,
+                so_image_browser,
+#                 so_export_manager,
                 so_isodb
 #                so_lab_entry
                 ]
@@ -220,10 +221,10 @@ class ExperimentPlugin(BaseTaskPlugin):
         return SignalCalculator()
 
 
-    def _export_manager_factory(self):
-        exp = ExportManager(application=self.application)
-        exp.bind_preferences()
-        return exp
+#     def _export_manager_factory(self):
+#         exp = ExportManager(application=self.application)
+#         exp.bind_preferences()
+#         return exp
 
     def _image_browser_factory(self, *args, **kw):
         return ImageBrowser(application=self.application)

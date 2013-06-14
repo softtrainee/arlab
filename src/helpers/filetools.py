@@ -43,7 +43,7 @@ def unique_path(root, base, extension='txt'):
     p = os.path.join(root, '{}001{}'.format(base, extension))
     cnt = 1
     i = 2
-    while os.path.exists(p):
+    while os.path.isfile(p):
         p = os.path.join(root, '{}{:03n}{}'.format(base, i, extension))
         i += 1
         cnt += 1

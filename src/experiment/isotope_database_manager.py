@@ -24,7 +24,7 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
 from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
-from src.processing.analysis import Analysis
+from src.processing.analysis import Analysis, NonDBAnalysis
 from src.constants import NULL_STR
 
 
@@ -113,7 +113,7 @@ class IsotopeDatabaseManager(Manager):
         return self.db.get_irradiation_level(irradiation, level)
 
     def _record_factory(self, pi, **kw):
-        if isinstance(pi, Analysis):
+        if isinstance(pi, (Analysis, NonDBAnalysis)):
             return pi
 
         if isinstance(pi, IsotopeRecordView):
@@ -139,7 +139,9 @@ class IsotopeDatabaseManager(Manager):
             return
 
         if func is None:
-            func = lambda x: x.load_isotopes()
+            def func(x):
+                if hasattr(x, 'load_isotopes'):
+                    x.load_isotopes()
 
         if len(ans) == 1:
             func(ans[0])

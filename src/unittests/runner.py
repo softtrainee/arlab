@@ -9,5 +9,6 @@ logging_setup('unittests')
 
 paths.build('_diode')
 
-from .database import IsotopeTestCase
-from .experiment import ExperimentTest
+# from .database import IsotopeTestCase
+# from .experiment import ExperimentTest
+from .processing import FileSelectorTest

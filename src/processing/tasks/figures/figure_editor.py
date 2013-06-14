@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, on_trait_change, List
+from traits.api import HasTraits, Any, Instance, on_trait_change, List, File
 from traitsui.api import View, Item, UItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -23,8 +23,10 @@ from enable.component_editor import ComponentEditor as EnableComponentEditor
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager
+import os
 
 class FigureEditor(BaseTraitsEditor):
+    path = File
     component = Any
     tool = Any
     plotter_options_manager = Any
@@ -34,12 +36,34 @@ class FigureEditor(BaseTraitsEditor):
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
-                       width=700,
+                       width=650,
                        editor=EnableComponentEditor()))
         return v
 
     def rebuild(self):
         pass
+
+    def save(self, path):
+        _, tail = os.path.splitext(path)
+        if tail not in ('.pdf', '.png'):
+            path = '{}.pdf'.format(path)
+
+
+        c = self.component
+        _, tail = os.path.splitext(path)
+        if tail == '.pdf':
+            from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+            gc = PdfPlotGraphicsContext(filename=path,
+                                        pagesize='letter'
+                                        )
+        else:
+            from chaco.plot_graphics_context import PlotGraphicsContext
+            gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+
+        gc.render_component(c,
+                            valign='center')
+        gc.save(path)
+
 
 class IdeogramEditor(FigureEditor):
     plotter_options_manager = Instance(IdeogramOptionsManager, ())

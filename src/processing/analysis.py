@@ -23,7 +23,7 @@ from traits.api import HasTraits, Str, Int, Float, Property, Color, Any, cached_
 from src.loggable import Loggable
 
 from src.helpers import alphas
-from src.constants import PLUSMINUS
+from src.constants import PLUSMINUS, ALPHAS
 from uncertainties import ufloat
 
 class Marker(HasTraits):
@@ -136,7 +136,12 @@ class Analysis(Loggable):
         except ZeroDivisionError:
             pe = 'Inf'
 
-        return u'Age= {:0.3f} {}{:0.3f}()'.format(a, PLUSMINUS, e, pe)
+#         pm = unichr(int('b1', 16))
+#         a = '{:0.3f}'.format(a)
+#         e = '{:0.3f}'.format(e)
+#         pe = '({})'.format(pe)
+
+        return u'Age= {:0.3f} +/-{:0.3f}({})'.format(a, e, pe)
 
 #    @property
 #    def timestamp(self):
@@ -199,16 +204,27 @@ class NonDBAnalysis(HasTraits):
     status = Int
     temp_status = Int
     sample = Str
-    analysis_type = 'unknown'
+    analysis_type = Str('unknown')
+    mass_spectrometer = Str
+    irradiation_info = Str
+    timestamp = Str
 
     status_text = Property
     temp_status_text = Property
+    age_units = 'ma'
 
+    #===========================================================================
+    # IsotopeRecord protocol
+    #===========================================================================
+
+    #===========================================================================
+    #
+    #===========================================================================
     def _set_record_id(self, r):
         al = 1
         if '-' in r:
             r, al = r.split('-')
-            if al[-1].upper() in alphas:
+            if al[-1].upper() in ALPHAS:
                 s = al[-1]
                 al = al[:-1]
                 self.step = s
@@ -238,7 +254,7 @@ class NonDBAnalysis(HasTraits):
             pe = abs(e / a * 100)
         except ZeroDivisionError:
             pe = 'Inf'
-        return u'{:0.3f} {}{:0.3f}({:0.2f}%)'.format(a, PLUSMINUS, e, pe)
+        return u'{:0.3f} +/-{:0.3f}({:0.2f}%)'.format(a, e, pe)
 
     def _get_status_text(self):
         return 'OK' if self.status == 0 else 'Omitted'
