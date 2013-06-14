@@ -21,6 +21,7 @@ from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem
 from src.processing.tasks.analysis_edit.panes import ControlsPane
+from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -37,7 +38,11 @@ class RecallTask(AnalysisEditTask):
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          ),
-                          right=PaneItem('pychron.analysis_edit.controls')
+                          right=Splitter(
+                                         PaneItem('pychron.analysis_edit.controls'),
+                                         PaneItem('pychron.processing.editor'),
+                                         orientation='vertical'
+                                         ),
 
 #                                     PaneItem('pychron.pyscript.editor')
 #                                     ),
@@ -48,10 +53,12 @@ class RecallTask(AnalysisEditTask):
 
     def create_dock_panes(self):
         self.controls_pane = ControlsPane()
+        self.plot_editor_pane = PlotEditorPane()
         return [
 #                self._create_unknowns_pane(),
                 self._create_query_pane(),
-                self.controls_pane
+                self.controls_pane,
+                self.plot_editor_pane
 
                 ]
 

@@ -134,6 +134,11 @@ class BakeoutManager(Manager):
             c.load_scripts()
 
     def reset_data_recording(self):
+        if self.data_manager:
+
+#             self.data_manager.close_file()
+            return
+
         controllers = self._get_controllers()
         self.data_manager = self._data_manager_factory(controllers,
                                                        [],
@@ -190,17 +195,17 @@ class BakeoutManager(Manager):
 
         self._load_controllers()
 
-    def kill(self):
-        super(BakeoutManager, self).kill()
-
-        if self.data_manager:
-            self.data_manager.close_file()
-
-        for c in self._get_controllers():
-            c.end()
-            c.stop_timer()
-
-        self._clean_archive()
+#     def kill(self):
+#         super(BakeoutManager, self).kill()
+#
+#         if self.data_manager:
+#             self.data_manager.close_file()
+#
+#         for c in self._get_controllers():
+#             c.end()
+#             c.stop_timer()
+#
+#         self._clean_archive()
 #==============================================================================
 # private
 #==============================================================================
@@ -299,6 +304,7 @@ class BakeoutManager(Manager):
             self.graph.new_series(plotid=self.plotids[1])
 
     def _do_graph(self, data):
+#         self.debug('do graph {}'.format(len(data)))
         g = self.graph
         temp_id = self.plotids[0]
         heat_id = self.plotids[1]
@@ -348,7 +354,6 @@ class BakeoutManager(Manager):
 # datamanager
 #===============================================================================
     def _write_data(self, buf, buf_x):
-
         if isinstance(self.data_manager, CSVDataManager):
             self._write_csv_data(buf, buf_x)
         else:
@@ -545,13 +550,8 @@ class BakeoutManager(Manager):
 
     def _graph_thread(self):
         dq = self.data_queue
+        n = len(self._get_controller_names())
         while 1:
-
-            if self.active:
-                n = len(self.active_controllers)
-            else:
-                n = len(self._get_controller_names())
-
             while dq.qsize() < n:
                 time.sleep(0.1)
 
@@ -689,8 +689,9 @@ class BakeoutManager(Manager):
         dw.build_warehouse()
 
         _dn = dm.new_frame(directory=dw.get_current_dir(),
-                base_frame_name=ni)
-
+                           base_frame_name=ni,
+                           )
+#         dm.new_frame(os.path.join(paths.data_dir, 'foo.hdf5'))
         if style == 'csv':
             d = map(str, map(int, [self.include_temp,
                     self.include_heat, self.include_pressure]))

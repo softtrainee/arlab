@@ -251,7 +251,9 @@ class _LEDEditor(Editor):
             scene = QGraphicsScene()
 #             self.control.setStyleSheet("qtLED { border-style: none; }");
 #             self.control.setAutoFillBackground(True)
-            scene.setBackgroundBrush(QBrush(QColor(240, 240, 240)))
+
+            # system background color
+            scene.setBackgroundBrush(QBrush(QColor(237, 237, 237)))
             self.control.setStyleSheet("border: 0px")
             self.control.setMaximumWidth(100)
             self.control.setMaximumHeight(100)

@@ -68,14 +68,20 @@ class GraphicModel(HasTraits):
                 path = dlg.path
 
         if path is not None:
-            head, tail = os.path.splitext(path)
-            print tail
-            if not tail in ('.png', '.jpg'):
-                path = '{}.png'.format(path)
-
+            _, tail = os.path.splitext(path)
             c = self.container
-            gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
-#            c.use_backbuffer = False
+            if tail == '.pdf':
+                from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+                gc = PdfPlotGraphicsContext(filename=path,
+                                            pagesize='letter'
+                                            )
+
+            else:
+                if not tail in ('.png', '.jpg'):
+                    path = '{}.png'.format(path)
+
+                gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+    #            c.use_backbuffer = False
 
             for ci in c.components:
                 try:
@@ -85,9 +91,10 @@ class GraphicModel(HasTraits):
                     pass
 
 
+            c.use_backbuffer = False
             gc.render_component(c)
 #            c.use_backbuffer = True
-            gc.save(path)
+            gc.save()
 
     def load(self, path):
         parser = ElementTree(file=open(path, 'r'))
@@ -104,13 +111,19 @@ class GraphicModel(HasTraits):
         else:
             use_label = True
 
-
         data = ArrayPlotData()
-        p = Plot(data=data, padding=2)
+        p = Plot(data=data, padding=100)
         p.x_grid.visible = False
         p.y_grid.visible = False
-        p.x_axis_visible = False
-        p.y_axis_visible = False
+        p.x_axis.title = 'X cm'
+        p.y_axis.title = 'Y cm'
+        font = 'modern 22'
+        p.x_axis.title_font = font
+        p.x_axis.tick_label_font = font
+        p.y_axis.title_font = font
+        p.y_axis.tick_label_font = font
+#         p.x_axis_visible = False
+#         p.y_axis_visible = False
         p.index_range.low_setting = -w / 2
         p.index_range.high_setting = w / 2
 
@@ -169,7 +182,7 @@ class GraphicModel(HasTraits):
         self.container.add(p)
 
     def _container_default(self):
-        c = OverlayPlotContainer(bgcolor='green',
+        c = OverlayPlotContainer(bgcolor='white',
                                  )
         return c
 
@@ -290,7 +303,7 @@ if __name__ == '__main__':
 
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
-    gcc, gm = open_txt(p, (2.54, 2.54), 0.05, convert_mm=True)
+    gcc, gm = open_txt(p, (2.54, 2.54), 0.05, convert_mm=True, make=False)
 
     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)

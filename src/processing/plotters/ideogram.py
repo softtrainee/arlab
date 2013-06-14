@@ -33,7 +33,7 @@ from src.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_weighted_mean, calculate_mswd, \
     validate_mswd
 from src.stats.peak_detection import find_peaks
-from src.constants import PLUSMINUS
+from src.constants import PLUSMINUS, SIGMA
 from src.helpers.formatting import floatfmt
 from numpy import log10
 from src.processing.plotters.point_move_tool import PointMoveTool
@@ -125,7 +125,7 @@ class Ideogram(Plotter):
         g.maxprob = None
         g.minprob = None
 
-        group_ids = list(set([a.group_id for a in analyses]))
+#         group_ids = list(set([a.group_id for a in analyses]))
 
         if not analyses:
             return
@@ -157,10 +157,22 @@ class Ideogram(Plotter):
 
         start = 1
         offset = 0
-        for group_id in group_ids:
-            ans = [a for a in analyses if a.group_id == group_id]
+
+        from itertools import groupby
+
+        key = lambda x: x.group_id
+        groups = groupby(sorted(analyses, key=key), key)
+
+        for group_id, analyses in groups:
+            # buffer the analyses generator
+            ans = [ai for ai in analyses]
             labnumber = self.get_labnumber(ans)
-            nages, nerrors = self._get_ages(analyses, group_id)
+            nages, nerrors = self._get_ages(ans)
+
+#         for group_id in group_ids:
+#             ans = [a for a in analyses if a.group_id == group_id]
+#             labnumber = self.get_labnumber(ans)
+#             nages, nerrors = self._get_ages(analyses, group_id)
             offset = self._add_ideo(g, nages, nerrors, xmin, xmax, group_id,
                            start=start,
                            labnumber=labnumber,

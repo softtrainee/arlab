@@ -125,6 +125,7 @@ class H5DataManager(DataManager):
 
     def get_table(self, name, group):
         f = self._frame
+
         try:
             if isinstance(group, str):
                 group = getattr(f.root, group)
@@ -180,6 +181,7 @@ class H5DataManager(DataManager):
 
     def close_file(self):
         try:
+            self.debug('flush and close file {}'.format(self._frame.filename))
             self._frame.close()
         except Exception, e:
             print 'exception closing file', e

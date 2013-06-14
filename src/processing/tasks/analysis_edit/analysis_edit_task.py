@@ -40,7 +40,6 @@ class AnalysisEditTask(EditorTask):
         if self.unknowns_pane:
             self.unknowns_pane.dump()
 
-
     def create_dock_panes(self):
 
         self._create_unknowns_pane()
@@ -58,7 +57,11 @@ class AnalysisEditTask(EditorTask):
     def _create_query_pane(self):
         selector = self.manager.db.selector
         selector._search_fired()
-        return QueryPane(model=selector)
+
+        from src.processing.selection.data_selector import DataSelector
+        ds = DataSelector(database_selector=selector)
+
+        return QueryPane(model=ds)
 
     def _create_unknowns_pane(self):
         self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)

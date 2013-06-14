@@ -57,6 +57,7 @@ class EditorTask(BaseManagerTask, Loggable):
             if path:
                 self._save_file(path)
                 self.active_editor.dirty = False
+                self.active_editor.path = path
 
     def new(self):
         pass

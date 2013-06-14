@@ -45,11 +45,11 @@ class PlotterOption(HasTraits):
         v = View(
                  HGroup(
                         UItem('name',
-                              width= -70,
+                              width=-70,
                               editor=EnumEditor(name='plot_names')),
                         UItem('scale'),
                         UItem('height',
-                              width= -50,
+                              width=-50,
                              ),
 #                        spring,
                         UItem('x_error'),
@@ -61,7 +61,7 @@ class PlotterOption(HasTraits):
         return v
 
 
-FONTS = ['courier', 'modern']
+FONTS = ['modern', ]
 SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 
 
@@ -322,13 +322,13 @@ class IdeogramOptions(AgeOptions):
     def _get_groups(self):
         g = Group(
                   Item('probability_curve_kind',
-                       width= -150,
+                       width=-150,
                        label='Probability Curve Method'),
                   Item('mean_calculation_kind',
-                       width= -150,
+                       width=-150,
                        label='Mean Calculation Method'),
                   Item('error_calc_method',
-                       width= -150,
+                       width=-150,
                        label='Error Calculation Method'),
                   Item('nsigma', label='Age Error NSigma'),
                   Item('include_j_error'),

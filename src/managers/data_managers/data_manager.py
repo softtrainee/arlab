@@ -53,7 +53,9 @@ class DataManager(Manager):
         self._current_frame = name
         return name
 
-    def _new_frame_path(self, path=None, directory='scans', base_frame_name=None, verbose=True):
+    def _new_frame_path(self, path=None, directory='scans',
+                        offset=0,
+                        base_frame_name=None, verbose=True):
         '''
 
         '''

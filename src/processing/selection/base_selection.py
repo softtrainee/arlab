@@ -15,20 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int
-from traitsui.api import View, Item
-from traitsui.tabular_adapter import TabularAdapter
-#============= standard library imports ========================
-#============= local library imports  ==========================
-
-class UnknownsAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
-#    record_id_width = Int(50)
-
-class ReferencesAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
-#     font = 'modern 10'
-#    record_id_width = Int(50)
+# from traits.api import HasTraits, Bool, Any
+# from traitsui.api import View, Item
+# #============= standard library imports ========================
+# #============= local library imports  ==========================
+#
+# class BaseSelection(HasTraits):
+#     searchable = Bool(True)
+#
+# class DatabaseSelection(BaseSelection):
+#     selector = Any
+#
+#
+# class FileSelection(BaseSelection):
+#     pass
 #============= EOF =============================================
