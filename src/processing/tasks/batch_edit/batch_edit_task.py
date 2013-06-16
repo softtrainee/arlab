@@ -127,7 +127,6 @@ class BatchEditTask(AnalysisEditTask):
                         '''
                         det = value.name[3:]
                         ics.append((det, value.nominal_value, value.std_dev))
-
             dets = [args[0] for args in ics]
             for args in ics:
                 self._add_ic_factory(ui.dbrecord, dets, *args)
@@ -143,7 +142,6 @@ class BatchEditTask(AnalysisEditTask):
 
         history = db.add_detector_intercalibration_history(analysis)
         db.flush()
-
         dbdet = db.get_detector(det)
         if dbdet is None:
             self.warning_dialog('Could not find Detector database entry for {}'.format(det))

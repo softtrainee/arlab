@@ -13,22 +13,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
-from numpy import linspace, apply_along_axis, sign, roll, where, Inf
+from numpy import linspace, apply_along_axis, sign, roll, \
+     where, Inf, vectorize, zeros, ones_like
+from scipy.optimize import fsolve
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.regression.ols_regressor import OLSRegressor
 
 class YorkRegressor(OLSRegressor):
-    def _set_degree(self, d):
-        '''
-            York regressor only for linear fit
-        '''
-        self._degree = 1
+    _degree = 1
+#     def _set_degree(self, d):
+#         '''
+#             York regressor only for linear fit
+#         '''
+#         self._degree = 2
 
-    def predict(self, x):
+    def _compute_args(self, mi, Wx, Wy):
+
+        W = Wx * Wy / (pow(mi, 2) * Wy + Wx)
+        sW = sum(W)
+        x_bar = sum(W * self.xs) / sW
+        y_bar = sum(W * self.ys) / sW
+        return W, x_bar, y_bar
+
+    def predict(self, *args, **pw):
+        _slope, intercept = self._predict()
+        return intercept
+
+    def _predict(self, *args, **kw):
         '''
+        
+            YorkRegressor always returns predicted intercept
+            i.e x=0
+            
             based on 
              "Linear least-squares fits with errors in both coordinates", 
              Am. J. Phys 57 #7 p. 642 (1989) by B.C. Reed
@@ -38,55 +58,98 @@ class YorkRegressor(OLSRegressor):
         Wx = 1 / self.xserr ** 2
         Wy = 1 / self.yserr ** 2
 
-        def f(mi):
-            W = Wx * Wy / (mi ** 2 * Wy + Wx)
+        def _f(mi):
+            W, _x_, _y_ = self._compute_args(mi, Wx, Wy)
+            U = xs - _x_
+            V = ys - _y_
 
-            _x_ = sum(W * self.xs) / sum(W)
-            _y_ = sum(W * self.ys) / sum(W)
-            U = self.xs - _x_
-            V = self.ys - _y_
-
-            suma = sum(W ** 2 * U * V / Wx)
-            S = sum(W ** 2 * U ** 2 / Wx)
+            suma = sum((W ** 2 * U * V) / Wx)
+            S = sum((W ** 2 * U ** 2) / Wx)
 
             a = (2 * suma) / (3 * S)
 
-            sumB = sum(W ** 2 * V ** 2 / Wx)
+            sumB = sum((W ** 2 * V ** 2) / Wx)
             B = (sumB - sum(W * U ** 2)) / (3 * S)
 
             g = -sum(W * U * V) / S
 
-            slope = mi ** 3 - 3 * a * mi ** 2 - 3 * B * mi - g
-            intercept = _y_ - m * _x_
-            return slope, intercept
+            ff = pow(mi, 3) - 3 * a * pow(mi, 2) + 3 * B * mi - g
+            return ff
 
-        # get a starting slope
-        m = self.coefficients[0]
+        m = self.coefficients[-1]
+        # find root (slope) that is closest to the nominal linear regression slope
+        roots = fsolve(_f, (m,))
+        b = roots[0]
 
-        for i in range(10):
-            # evaluate f(m) for m-n, m+n and find the roots
-            n = 1 / float(i)
-            ms = linspace(m - n, m + n, 100)
-            fs, cs = apply_along_axis(f, 0, ms)
+        W, _x_, _y_ = self._compute_args(b, Wx, Wy)
+        a = _y_ - b * _x_
+#         from pylab import plot, show
+#         ms = linspace(-1, 1)
+#         plot(ms, vectorize(_f)(ms))
+#         show()
 
-            # find roots
-            # find where fs crosses zero line
-            asign = sign(fs)
-            signchange = ((roll(asign, 1) - asign) != 0).astype(int)
+        print sum(W * (ys - a - b * xs) ** 2) / (len(xs) - 2)
 
-            roots = where(signchange == 1)[0]
+        return b, a
 
-            ss_min = Inf
-            # find root that minminzes ss_resid
-            for ri in roots:
-                m, c = fs[ri], cs[ri]
-                W = Wx * Wy / (ri ** 2 * Wy + Wx)
-                ss = sum(W * ys - c - ri * xs)
-                if ss < ss_min:
-                    ss_min = ss
-                    ri_min = ri
+    def predict_error(self, slope=None):
+        '''
+            YorkRegressor always returns predicted intercept error
+            i.e x=0
+        '''
+        if slope is None:
+            slope, intercept = self._predict()
 
-            # do f(m) around ri_min with tighter bounds
-            m = ri_min
+        xs = self.xs
+        ys = self.ys
 
+        n = len(xs)
+
+        Wx = 1 / self.xserr ** 2
+        Wy = 1 / self.yserr ** 2
+        W, X_bar, Y_bar = self._compute_args(slope, Wx, Wy)
+        U = xs - X_bar
+        V = ys - Y_bar
+#         x = X_bar
+#         x_bar = sum(W * x) / sum(W)
+#         sigma_b = (1 / sum(W * U ** 2)) ** 0.5
+#         sigma_a = (1 / sum(W) + x_bar ** 2 * sigma_b ** 2) ** 0.5
+#         varm = sum(W * U * U)
+        sumA = sum(W * (slope * U - V) ** 2) / sum(W * U ** 2)
+        varm = sumA / float(n - 2)
+#         print varm ** 0.5
+        varc = (sum(W * xs ** 2) / sum(W)) * varm
+        return varm ** 0.5 , varc ** 0.5
+#         return sigma_a
+
+if __name__ == '__main__':
+    from numpy import ones, array
+    xs = [0.89, 1.0, 0.92, 0.87, 0.9, 0.86, 1.08, 0.86, 1.25,
+            1.01, 0.86, 0.85, 0.88, 0.84, 0.79, 0.88, 0.70, 0.81,
+            0.88, 0.92, 0.92, 1.01, 0.88, 0.92, 0.96, 0.85, 1.04
+            ]
+    ys = [0.67, 0.64, 0.76, 0.61, 0.74, 0.61, 0.77, 0.61, 0.99,
+          0.77, 0.73, 0.64, 0.62, 0.63, 0.57, 0.66, 0.53, 0.46,
+          0.79, 0.77, 0.7, 0.88, 0.62, 0.80, 0.74, 0.64, 0.93
+          ]
+    exs = ones(27) * 0.01
+    eys = ones(27) * 0.01
+
+    xs = [0, 0.9, 1.8, 2.6, 3.3, 4.4, 5.2, 6.1, 6.5, 7.4]
+    ys = [5.9, 5.4, 4.4, 4.6, 3.5, 3.7, 2.8, 2.8, 2.4, 1.5]
+    wxs = array([1000, 1000, 500, 800, 200, 80, 60, 20, 1.8, 1])
+    wys = array([1, 1.8, 4, 8, 20, 20, 70, 70, 100, 500])
+    exs = 1 / wxs ** 0.5
+    eys = 1 / wys ** 0.5
+
+#     plot(xs, ys, 'o')
+
+    reg = YorkRegressor(
+                             ys=ys,
+                             xs=xs,
+                             xserr=exs,
+                             yserr=eys
+                             )
+    reg.predict()
+#     show()
 #============= EOF =============================================

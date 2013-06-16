@@ -49,7 +49,8 @@ class TablePane(TraitsDockPane):
                                                             editable=True,
                                                             drag_external=True,
                                                             selected='selected',
-                                                            dclicked='dclicked'
+                                                            dclicked='dclicked',
+                                                            update='update_needed'
 #                                                            auto_resize_rows=True
                                                             ),
                             )
@@ -123,6 +124,7 @@ class HistoryTablePane(TablePane):
         p = os.path.join(paths.hidden_dir, 'stored_selections')
         d = shelve.open(p)
         return d
+
     def traits_view(self):
         v = View(VGroup(
                       UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
@@ -132,7 +134,8 @@ class HistoryTablePane(TablePane):
                                                             drag_external=True,
                                                             selected='selected',
                                                             dclicked='dclicked',
-                                                            multi_select=True
+                                                            multi_select=True,
+                                                            update='update_needed'
 #                                                            auto_resize_rows=True
                                                             )
                             )

@@ -26,8 +26,10 @@ from src.constants import PLUSMINUS, NULL_STR, PLUSMINUS_ERR, SIGMA
 from src.ui.qt.text_table_editor import TextTableEditor
 from kiva.fonttools import Font
 from src.ui.text_table import BoldCell, TextCell, TextRow, \
-    TextTable, TextTableAdapter, SimpleTextTableAdapter, RatiosAdapter
-from src.experiment.display_signal import DisplaySignal, DisplayRatio
+    TextTable, TextTableAdapter, SimpleTextTableAdapter, RatiosAdapter, HtmlCell, \
+    HeaderRow
+from src.experiment.display_signal import DisplaySignal, DisplayRatio, \
+    DisplayEntry
 from src.simple_timeit import timethis
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -39,16 +41,16 @@ class RawAdapter(SimpleTextTableAdapter):
                ('Detector', 'detector', str),
                ('Raw (fA)', 'raw_value'),
                (PLUSMINUS_SIGMA, 'raw_error'),
-               (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str),
+               (u'{}%  '.format(PLUSMINUS), 'raw_error_percent', str),
                ('Fit', 'fit', str),
 
                ('Baseline (fA)', 'baseline_value'),
                (PLUSMINUS_SIGMA, 'baseline_error'),
-               (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str),
+               (u'{}%  '.format(PLUSMINUS), 'baseline_error_percent', str),
 
                ('Blank (fA)', 'blank_value'),
                (PLUSMINUS_SIGMA, 'blank_error'),
-               (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str),
+               (u'{}%  '.format(PLUSMINUS), 'blank_error_percent', str),
              ]
 class SignalAdapter(SimpleTextTableAdapter):
     columns = [
@@ -63,23 +65,43 @@ class SignalAdapter(SimpleTextTableAdapter):
 
 
 class AgeAdapter(TextTableAdapter):
-    def _make_tables(self, record):
-        tt = TextTable(
-                       TextRow(
-                               BoldCell('Age:'),
-                               TextCell(floatfmt(record.age.nominal_value)),
-                               TextCell(u'{}{} {}'.format(PLUSMINUS,
-                                                     floatfmt(record.age.std_dev),
-                                                     record.age_units
-                                                     ))
 
+
+    def _make_tables(self, record):
+        age = record.age.nominal_value
+        age_error = record.age.std_dev
+        age_perror = calc_percent_error(age, age_error, n=3)
+        woj_age_error = record.age_error_wo_j
+        woj_age_perror = calc_percent_error(age, woj_age_error, n=3)
+
+        ar40_39 = record.Ar40_39.nominal_value
+        ar40_39_error = record.Ar40_39.std_dev
+        ar40_39_perror = calc_percent_error(ar40_39, ar40_39_error, n=3)
+
+        tt = TextTable(
+                       HeaderRow(TextCell(''), TextCell('Value'),
+                                 TextCell(u'{}1{}'.format(PLUSMINUS, SIGMA)),
+                                 TextCell('% error')
+                                 ),
+                       TextRow(
+                               BoldCell('Age ({}):'.format(record.age_units)),
+                               TextCell(floatfmt(age)),
+                               TextCell(floatfmt(age_error)),
+                               TextCell(age_perror, n=2)
                                ),
                        TextRow(
-                               TextCell('w/o J err'),
+                               BoldCell('w/o J err:'),
                                TextCell(''),
-                               TextCell(u'{}{}'.format(PLUSMINUS,
-                                                     floatfmt(record.age_error_wo_j)))
-
+                               TextCell(floatfmt(woj_age_error)),
+                               TextCell(woj_age_perror)
+                               ),
+                       TextRow(
+                               BoldCell('40Ar*/39Ar:'),
+                               TextCell(floatfmt(record.Ar40_39.nominal_value)),
+                               TextCell(floatfmt(record.Ar40_39.std_dev)),
+                               TextCell(ar40_39_perror),
+#                                HtmlCell('<sup>40</sup>Ar*/<sup>39</sup>Ar',
+#                                         bold=True)
                                ),
                        border=True
                        )
@@ -161,6 +183,8 @@ class AnalysisSummary(HasTraits):
     record = Any
     update_needed = Event
     signals = Property(List, depends_on='record, update_needed')
+    raw_signals = Property(List, depends_on='record, update_needed')
+#     aux_values = Property(List, depends_on='record, update_needed')
 #     ratios = Property(List, depends_on='record, update_needed')
     def refresh(self):
         pass
@@ -212,8 +236,17 @@ class AnalysisSummary(HasTraits):
 #         return timethis(func)
 
 #     @cached_property
-    def _get_signals(self):
+    def _get_raw_signals(self):
+        return self._get_signal_values()
 
+    def _get_signals(self):
+        record = self.record
+        ec = record.get_error_component('j')
+        return self._get_signal_values() + [DisplayEntry(isotope='J',
+                                                 error_component=ec
+                                                 )]
+
+    def _get_signal_values(self):
         record = self.record
         def factory(k):
             iso = record.isotopes[k]
@@ -249,38 +282,13 @@ class AnalysisSummary(HasTraits):
 #         isotopes = []
 #         return isotopes
         return [factory(k) for k in keys]
-#         for k in keys:
-#             iso = record.isotopes[k]
-#             name = iso.name
-#             det = iso.detector
-#             fit = iso.fit
-#             icv, ice = record.get_ic_factor(det)
-#
-#             rv, re = iso.value, iso.error
-#             bv, be = iso.baseline.value, iso.baseline.error
-#             blv, ble = iso.blank.value, iso.blank.error
-#             s = iso.get_corrected_value()
-#             if fit:
-#                 fit = fit[0].upper()
-#
-#             isotopes.append(DisplaySignal(isotope=name,
-#                                    detector=det,
-#                                    raw_value=rv,
-#                                    raw_error=re,
-#                                    fit=fit,
-#                                    baseline_value=bv,
-#                                    baseline_error=be,
-#                                    blank_value=blv,
-#                                    blank_error=ble,
-#                                    signal_value=s.nominal_value,
-#                                    signal_error=s.std_dev,
-#                                    error_component=record.get_error_component(k),
-#                                    ic_factor_value=icv,
-#                                    ic_factor_error=ice
-#
-#                                    )
-#                             )
-#         return isotopes
+
+#     def _get_aux_values(self):
+#         record = self.record
+#         return [DisplayEntry(name='j',
+#                              error_component=record.get_error_component('j')
+#                              )]
+
 
     def traits_view(self):
         ODD_COLOR = '#CCFFFF'
@@ -293,7 +301,7 @@ class AnalysisSummary(HasTraits):
                               height=0.3
                               )
 
-        raw = UItem('signals',
+        raw = UItem('raw_signals',
                            editor=TextTableEditor(adapter=RawAdapter(),
                                                  bg_color=BG_COLOR,
                                                  odd_color=ODD_COLOR,
@@ -428,7 +436,7 @@ class AnalysisSummary(HasTraits):
 # #        for i, iso in enumerate(isos):
 # #            self._make_corrected_signals(n, i, iso, widths, underline_width)
 #
-#        # add corrected values
+#        # add corrected signals
 #        m = 'Corrected Values'
 #        self.add_text('{{:<{}s}}'.format(underline_width).format(m), underline=True, bold=True)
 # #

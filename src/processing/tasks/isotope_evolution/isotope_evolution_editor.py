@@ -45,7 +45,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Dict, on_trait_change
+from traits.api import HasTraits, Instance, Dict, on_trait_change, Bool
 from traitsui.api import View, Item, UItem
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 #============= standard library imports ========================
@@ -60,9 +60,7 @@ from src.simple_timeit import timethis
 class IsotopeEvolutionEditor(GraphEditor):
     component = Instance(GridPlotContainer)
     graphs = Dict
-    def _update_regression(self):
-        print 'resulre supasdf'
-
+    _suppress_update = Bool
     def calculate_optimal_eqtime(self):
         # get x,y data
         self.info('========================================')
@@ -111,6 +109,8 @@ class IsotopeEvolutionEditor(GraphEditor):
                               if iso.molecular_weight.name == fi.name), None)
 
                 db.add_fit(fit_hist, dbiso, fit=fi.fit)
+#     def _rebuild_graph(self):
+#         timethis(self._rebuild_graph2, msg='total')
 
     def _rebuild_graph(self):
         unk = self._unknowns
@@ -119,7 +119,7 @@ class IsotopeEvolutionEditor(GraphEditor):
         r = 1
         if n == 1:
             r = c = 1
-        elif n > 2:
+        elif n >= 2:
             r = 2
 
             while n > r * c:
@@ -139,7 +139,7 @@ class IsotopeEvolutionEditor(GraphEditor):
             set_x_flag = False
             i = 0
             for fit in self.tool.fits:
-                if fit.fit and fit.use:
+                if fit.fit and fit.show:
                     set_x_flag = True
                     isok = fit.name
                     kw = dict(padding=[50, 1, 1, 1],
@@ -167,6 +167,7 @@ class IsotopeEvolutionEditor(GraphEditor):
                         xs, ys = iso.xs, iso.ys
                         g.new_series(xs, ys,
                                      fit=fit.fit,
+                                     add_tools=False,
                                      plotid=i)
 
                     ma = max(max(iso.xs), ma)
@@ -180,9 +181,10 @@ class IsotopeEvolutionEditor(GraphEditor):
             self.component.add(g.plotcontainer)
 
     def refresh_unknowns(self):
-        for ui in self._unknowns:
-            ui.load_age()
-            ui.analysis_summary.update_needed = True
+        if not self._suppress_update:
+            for ui in self._unknowns:
+                ui.load_age()
+                ui.analysis_summary.update_needed = True
 
     def traits_view(self):
         v = View(UItem('component',

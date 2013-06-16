@@ -20,10 +20,10 @@
 import math
 from functools import partial
 #============= local library imports  ==========================
-def calc_percent_error(v, e):
+def calc_percent_error(v, e, n=2):
         try:
 
-            sigpee = '{:0.2f}'.format(abs(e / v * 100))
+            sigpee = '{{:0.{}f}}'.format(n).format(abs(e / v * 100))
         except ZeroDivisionError:
             sigpee = 'NaN'
         return sigpee

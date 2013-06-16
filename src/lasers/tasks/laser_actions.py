@@ -77,8 +77,8 @@ class LaserTaskAction(TaskAction):
                                 'pychron.fusions.diode'):
                 enabled = True
                 if self.enabled_name:
-                     if self.object:
-                         enabled = bool(self._get_attr(self.object,
+                    if self.object:
+                        enabled = bool(self._get_attr(self.object,
                                                    self.enabled_name, False))
                 if enabled:
                     self._enabled = True

@@ -42,6 +42,7 @@ class myDataLabel(DataLabel):
     label_position = 'center'
     border_visible = False
 
+
 class GraphicGeneratorController(Controller):
     def save(self, info):
         self.model.save()
@@ -305,11 +306,11 @@ if __name__ == '__main__':
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
     gcc, gm = open_txt(p, (2.54, 2.54), 0.05, convert_mm=True, make=False)
 
-    p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
-    gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
+#     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
+#     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
 
-#     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
-#     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, use_label=False)
+    p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
+    gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
 
 
 #     gm2.container.bgcolor = 'transparent'

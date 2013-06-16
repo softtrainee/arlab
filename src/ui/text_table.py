@@ -15,9 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Event, List, on_trait_change, Callable, Bool, Int
+from traits.api import HasTraits, Any, Instance, Event, List, \
+    on_trait_change, Callable, Bool, Int, cached_property, Property
 from src.helpers.formatting import floatfmt
 from src.constants import PLUSMINUS
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # def fixed_width(m, i):
@@ -38,12 +40,20 @@ class TextCell(HasTraits):
     col_span = None
     def __init__(self, text, *args, **kw):
         super(TextCell, self).__init__(**kw)
+        if not text is None:
+            if self.format:
+                self.text = self.format(text)
+            else:
+                self.text = u'{}'.format(text)
 
-        if self.format:
-            self.text = self.format(text)
-        else:
-            self.text = u'{}'.format(text)
+class HtmlCell(TextCell):
+    html = Property
 
+    def _get_html(self):
+        html = self.text
+        if self.bold:
+            html = '<b>{}</b>'.format(html)
+        return html
 #        for k in kw:
 #            setattr(self, k, kw[k])
 class BoldCell(TextCell):

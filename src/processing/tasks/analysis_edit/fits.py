@@ -22,6 +22,8 @@ from traitsui.api import View, Item, HGroup, VGroup, Spring, spring, \
 from src.constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
+from src.ui.qt.table_editor import myTableView
+from src.ui.table_editor import myTableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Fit(HasTraits):
@@ -63,7 +65,15 @@ class FitSelector(HasTraits):
 
     fits = List(Fit)
     update_needed = Event
+    suppress_refresh_unknowns = Bool
+
     fit_klass = Fit
+    command_key = Bool
+
+    def _update_command_key(self, new):
+        print 'set comm', new
+        self.command_key = new
+
     def traits_view(self):
 
         cols = [ObjectColumn(name='name', editable=False),
@@ -74,8 +84,14 @@ class FitSelector(HasTraits):
                              ),
                 CheckboxColumn(name='use')
                 ]
-        editor = TableEditor(columns=cols,
+
+#         def factory(editor=None):
+#             return myTableView(editor=editor)
+
+        editor = myTableEditor(columns=cols,
                              sortable=False,
+                             on_command_key=self._update_command_key
+#                              table_view_factory=factory
                              )
 
         v = View(UItem('fits',
@@ -84,30 +100,17 @@ class FitSelector(HasTraits):
                        ))
         return v
 
-    def traits_view2(self):
-        header = HGroup(
-                        Spring(springy=False, width=50),
-                        Label('Show'),
-                        spring,
-                        Label('Use'),
-                        spring,
-                        )
-        v = View(
-                 VGroup(
-                        header,
-                        Item('fits',
-                             style='custom',
-                             show_label=False,
-                             editor=ListEditor(mutable=False,
-                                            editor=InstanceEditor(),
-                                            style='custom'
-                                                )))
-                 )
-        return v
-
     @on_trait_change('fits:[show, fit]')
-    def _fit_changed(self):
+    def _fit_changed(self, obj, name, old, new):
+        self.suppress_refresh_unknowns = True
+        if self.command_key:
+            for fi in self.fits:
+                fi.trait_set(trait_change_notify=False,
+                               **{name:new}
+                               )
+
         self.update_needed = True
+        self.suppress_refresh_unknowns = False
 
     def load_fits(self, keys):
         self.fits = [

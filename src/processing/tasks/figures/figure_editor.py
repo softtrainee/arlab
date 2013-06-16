@@ -22,17 +22,20 @@ from traitsui.api import View, Item, UItem
 from enable.component_editor import ComponentEditor as EnableComponentEditor
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
-    SpectrumOptionsManager
+    SpectrumOptionsManager, InverseIsochronOptionsManager
 import os
+from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
-class FigureEditor(BaseTraitsEditor):
-    path = File
+class FigureEditor(GraphEditor):
+#     path = File
     component = Any
-    tool = Any
+#     tool = Any
     plotter_options_manager = Any
-    processor = Any
-    unknowns = List
-    _unknowns = List
+#     processor = Any
+#     unknowns = List
+#     _unknowns = List
+    _cached_unknowns = List
+
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
@@ -40,40 +43,25 @@ class FigureEditor(BaseTraitsEditor):
                        editor=EnableComponentEditor()))
         return v
 
-    def rebuild(self):
-        pass
-
-    def save(self, path):
-        _, tail = os.path.splitext(path)
-        if tail not in ('.pdf', '.png'):
-            path = '{}.pdf'.format(path)
-
-
-        c = self.component
-        _, tail = os.path.splitext(path)
-        if tail == '.pdf':
-            from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-            gc = PdfPlotGraphicsContext(filename=path,
-                                        pagesize='letter'
-                                        )
-        else:
-            from chaco.plot_graphics_context import PlotGraphicsContext
-            gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
-
-        gc.render_component(c,
-                            valign='center')
-        gc.save(path)
-
-
-class IdeogramEditor(FigureEditor):
-    plotter_options_manager = Instance(IdeogramOptionsManager, ())
-    _cached_unknowns = List
-
     @on_trait_change('unknowns[]')
     def _update_unknowns(self):
         self.rebuild()
 
+    def set_group(self, idxs, gid):
+        for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
+            if i in idxs:
+                ui.group_id = gid
+                uu.group_id = gid
+
+        self.rebuild()
+
     def rebuild(self):
+        ans = self._gather_unknowns()
+        po = self.plotter_options_manager.plotter_options
+        comp = self._get_component(ans, po)
+        self.component = comp
+
+    def _gather_unknowns(self):
         if self._cached_unknowns:
             # removed items:
             if len(self.unknowns) < len(self._cached_unknowns):
@@ -84,9 +72,9 @@ class IdeogramEditor(FigureEditor):
                 nonloaded = list(set(self.unknowns) - set(self._cached_unknowns))
                 nonloaded = self.processor.make_analyses(nonloaded)
                 self.processor.load_analyses(nonloaded)
-                ans = self._unknowns.extend(nonloaded)
-            else:
-                ans = self._unknowns
+                self._unknowns.extend(nonloaded)
+
+            ans = self._unknowns
         else:
             unks = self.unknowns
             unks = self.processor.make_analyses(unks)
@@ -94,11 +82,30 @@ class IdeogramEditor(FigureEditor):
             ans = unks
 
         self._cached_unknowns = self.unknowns[:]
-        self._unknowns = ans
-        po = self.plotter_options_manager.plotter_options
+        if ans:
+            self._unknowns = ans
+            return ans
+
+    def _get_component(self, ans, po):
+        raise NotImplementedError
+
+class IdeogramEditor(FigureEditor):
+    plotter_options_manager = Instance(IdeogramOptionsManager, ())
+    def _get_component(self, ans, po):
         comp = self.processor.new_ideogram(ans=ans, plotter_options=po)
-        self.component = comp
+        return comp
 
 class SpectrumEditor(FigureEditor):
     plotter_options_manager = Instance(SpectrumOptionsManager, ())
+    def _get_component(self, ans, po):
+        comp = self.processor.new_spectrum(ans=ans, plotter_options=po)
+        return comp
+
+class InverseIsochronEditor(FigureEditor):
+    plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
+    def _get_component(self, ans, po):
+        comp = self.processor.new_inverse_isochron(ans=ans, plotter_options=po)
+        return comp
+
+
 #============= EOF =============================================

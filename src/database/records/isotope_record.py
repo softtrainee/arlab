@@ -110,12 +110,16 @@ class IsotopeRecordView(HasTraits):
             meas = dbrecord.measurement
             if meas is not None:
                 self.mass_spectrometer = meas.mass_spectrometer.name.lower()
-                self.analysis_type = meas.analysis_type.name
+                if meas.analysis_type:
+                    self.analysis_type = meas.analysis_type.name
+
 
             self.uuid = dbrecord.uuid
             self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
             return True
         except Exception, e:
+            import traceback
+            traceback.print_exc()
             print e
 
     def to_string(self):
@@ -588,13 +592,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return disc
 
     def get_ic_factor(self, det):
-        hist = self.dbrecord.selected_histories.selected_detector_intercalibration
         r = 1, 0
-        if hist:
-            icf = next((ic for ic in hist.detector_intercalibrations
-                        if ic.detector.name == det), None)
-            if icf:
-                r = icf.user_value, icf.user_error
+        if self.dbrecord.selected_histories:
+            hist = self.dbrecord.selected_histories.selected_detector_intercalibration
+            if hist:
+                icf = next((ic for ic in hist.detector_intercalibrations
+                            if ic.detector.name == det), None)
+                if icf:
+                    r = icf.user_value, icf.user_error
 
         return r
 

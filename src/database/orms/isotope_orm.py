@@ -138,6 +138,8 @@ class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
                                               backref='history',
 #                                              uselist=False
                                               )
+    # convience
+#     detector_intercalibraion = detector_intercalibrations
 
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_detector_intercalibration',

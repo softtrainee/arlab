@@ -15,26 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property
-from traitsui.api import View, Item
-from traitsui.tabular_adapter import TabularAdapter
-from src.helpers.color_generators import colornames
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from factory import toolkit_factory
 
-class UnknownsAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
-    record_id_text_color = Property
-    def _get_record_id_text_color(self):
-#         print self.item.group_id
-        return colornames[self.item.group_id]
-
-#    record_id_width = Int(50)
-
-class ReferencesAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
-#     font = 'modern 10'
-#    record_id_width = Int(50)
+myTableEditor = toolkit_factory('table_editor', 'myTableEditor')
 #============= EOF =============================================

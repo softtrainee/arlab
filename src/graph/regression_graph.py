@@ -37,6 +37,7 @@ from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
 from src.regression.wls_regressor import WeightedPolynomialRegressor
 from src.regression.least_squares_regressor import LeastSquaresRegressor
+from src.regression.base_regressor import BaseRegressor
 
 class StatsFilterParameters(object):
     '''
@@ -275,6 +276,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                                                scatter, selection)
         elif isinstance(fit, tuple):
             r = self._least_square_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
+        elif issubclass(fit, BaseRegressor):
+            r = self._custom_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter,
+                                               scatter, selection)
 
         else:
             r = self._mean_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
@@ -331,8 +335,28 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        ly = fy - s
 #
 #        return r, fy, ly, uy
+    def _custom_regress(self, x, y, ox, oy, fx, index,
+                      fit, fod, apply_filter, scatter, selection):
+        kw = dict(xs=x, ys=y)
+        if hasattr(scatter, 'yerror'):
+            es = scatter.yerror.get_data()
+            if selection:
+                es = delete(es, selection, 0)
+            kw['yserr'] = es
 
-    def _poly_regress(self, x, y, ox, oy, fx, index, fit, fod, apply_filter, scatter, selection):
+        if hasattr(scatter, 'xerror'):
+            es = scatter.xerror.get_data()
+            if selection:
+                es = delete(es, selection, 0)
+            kw['xserr'] = es
+
+        r = fit(**kw)
+        if apply_filter:
+            r = self._apply_outlier_filter(r, ox, oy, index, fod)
+        return r
+
+    def _poly_regress(self, x, y, ox, oy, fx, index,
+                      fit, fod, apply_filter, scatter, selection):
         if hasattr(scatter, 'yerror'):
             es = scatter.yerror.get_data()
             if selection:

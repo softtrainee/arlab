@@ -35,6 +35,9 @@ class AnalysisEditTask(EditorTask):
     plot_editor_pane = Instance(PlotEditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
+    def _save_file(self, path):
+        if self.active_editor:
+            self.active_editor.save_file(path)
 
     def prepare_destroy(self):
         if self.unknowns_pane:

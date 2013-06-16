@@ -24,6 +24,71 @@ import numpy as np
 from src.regression.mean_regressor import WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.wls_regressor import WeightedPolynomialRegressor
+from src.regression.york_regressor import YorkRegressor
+
+class YorkRegressionTest(TestCase):
+    def setUp(self):
+
+
+        xs = [0.03692, 1.07118]
+        exs = [0.00061, 0.00066]
+        ys = [0.003121, 0.00022]
+        eys = [0.0003, 0.000013]
+
+        xs = [0.89, 1.0, 0.92, 0.87, 0.9, 0.86, 1.08, 0.86, 1.25,
+            1.01, 0.86, 0.85, 0.88, 0.84, 0.79, 0.88, 0.70, 0.81,
+            0.88, 0.92, 0.92, 1.01, 0.88, 0.92, 0.96, 0.85, 1.04
+            ]
+        ys = [0.67, 0.64, 0.76, 0.61, 0.74, 0.61, 0.77, 0.61, 0.99,
+              0.77, 0.73, 0.64, 0.62, 0.63, 0.57, 0.66, 0.53, 0.46,
+              0.79, 0.77, 0.7, 0.88, 0.62, 0.80, 0.74, 0.64, 0.93
+              ]
+        exs = np.ones(27) * 0.01
+        eys = np.ones(27) * 0.01
+
+#         xs = [  1.333, -1.009, 9.720, -2.079, 8.920, -0.938, 10.94, 5.138, 11.37, 9.421]
+#         exs = [ 2.469 , 6.363, 6.045 , 4.061, 5.325, 5.865 , 3.993, 3.787, 3.693, 4.687]
+#         ys = [ -1.367 , 7.232, -0.593, 7.124, 0.468, 8.664 , 5.854, 13.35, 4.279, 11.63]
+#         eys = [0.297  , 4.672 , 2.014, 0.022, 6.868, 2.834 , 4.647, 4.728, 2.274, 4.659]
+
+
+        # Pearson Data with Weights
+        xs = [0, 0.9, 1.8, 2.6, 3.3, 4.4, 5.2, 6.1, 6.5, 7.4]
+        ys = [5.9, 5.4, 4.4, 4.6, 3.5, 3.7, 2.8, 2.8, 2.4, 1.5]
+        wxs = np.array([1000, 1000, 500, 800, 200, 80, 60, 20, 1.8, 1])
+        wys = np.array([1, 1.8, 4, 8, 20, 20, 70, 70, 100, 500])
+        exs = 1 / wxs ** 0.5
+        eys = 1 / wys ** 0.5
+
+        # reed 1992 solutions
+        self.pred_slope = -0.4805
+        self.pred_intercept = 5.4799
+        self.pred_intercept_error = 0.3555
+        self.pred_slope_error = 0.0702
+
+        self.reg = YorkRegressor(
+                                 ys=ys,
+                                 xs=xs,
+                                 xserr=exs,
+                                 yserr=eys
+                                 )
+    def testIntercept(self):
+
+        slope, intercept = self.reg._predict()
+
+        self.assertAlmostEqual(self.pred_intercept, intercept, places=3)
+        self.assertAlmostEqual(self.pred_slope, slope, places=3)
+
+        slope_err, intercept_err = self.reg.predict_error()
+        self.assertAlmostEqual(self.pred_intercept_error, intercept_err, places=3)
+        self.assertAlmostEqual(self.pred_slope_error, slope_err, places=3)
+
+#         self.assertAlmostEqual(-0.365, intercept, places=3)
+#         self.assertAlmostEqual(0.291, e, places=3)
+#         self.assertAlmostEqual(4.544, slope, places=3)
+#         self.assertAlmostEqual(-17.4835, intercept, places=3)
+
+#         self.assertAlmostEqual(5.324, e, places=3)
 
 class WeightedMeanRegressionTest(TestCase):
     def setUp(self):
