@@ -14,7 +14,8 @@
 # limitations under the License.
 #===============================================================================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.processing.plotter_options_manager import IdeogramOptionsManager
+from src.processing.plotter_options_manager import IdeogramOptionsManager, \
+    SpectrumOptionsManager, InverseIsochronOptionsManager
 import datetime
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_MeasurementTable, gen_AnalysisTypeTable
@@ -22,6 +23,9 @@ from sqlalchemy.sql.expression import and_
 from sqlalchemy.orm.exc import NoResultFound
 from src.processing.analysis import Analysis
 from src.processing.tasks.analysis_edit.fits import Fit
+from src.processing.plotters.spectrum import Spectrum
+from src.processing.plotters.ideogram import Ideogram
+from src.processing.plotters.inverse_isochron import InverseIsochron
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits, List, Instance, on_trait_change, Any, DelegatesTo
@@ -262,25 +266,13 @@ class Processor(IsotopeDatabaseManager):
 
     def recall(self):
         pass
-#        if self.db:
-#            if self.db.connect():
-# #                ps = self.search_manager
-# #                ps.selected = None
-#                self.db.selector.load_last(n=100)
-#
-# #                return [self._record_factory(si) for si in ps.selector.records[-1:]]
-#                info = ps.edit_traits(view='modal_view')
-#    #            print info.result
-#                if info.result:
-# #                    ans = [self._record_factory(si) for si in ps.selector.selected]
-#    #                self._load_analyses(ans)
-#                    return ps.selector.selected
-
+#===============================================================================
+# figures
+#===============================================================================
     def new_ideogram(self, ans, plotter_options=None):
         '''
             return a plotcontainer
         '''
-        from src.processing.plotters.ideogram import Ideogram
 
         probability_curve_kind = 'cumulative'
         mean_calculation_kind = 'weighted_mean'
@@ -309,7 +301,7 @@ class Processor(IsotopeDatabaseManager):
             plotter_options = pom.plotter_options
 
         if ans:
-            self.analyses = ans
+#             self.analyses = ans
             gideo = p.build(ans, options=options,
                             plotter_options=plotter_options)
             if gideo:
@@ -317,10 +309,42 @@ class Processor(IsotopeDatabaseManager):
 
             return gideo
 
+    def new_spectrum(self, ans, plotter_options=None):
 
+        p = Spectrum()
 
+        if plotter_options is None:
+            pom = SpectrumOptionsManager()
+            plotter_options = pom.plotter_options
 
+        options = {}
 
+        self._plotter_options = plotter_options
+        if ans:
+#             self.analyses = ans
+            gspec = p.build(ans, options=options,
+                            plotter_options=plotter_options)
+            if gspec:
+                gspec, _plots = gspec
+
+            return gspec
+
+    def new_inverse_isochron(self, ans, plotter_options=None):
+        p = InverseIsochron()
+
+        if plotter_options is None:
+            pom = InverseIsochronOptionsManager()
+            plotter_options = pom.plotter_options
+
+        options = {}
+
+        self._plotter_options = plotter_options
+        if ans:
+#             self.analyses = ans
+            giso = p.build(ans, options=options,
+                            plotter_options=plotter_options)
+            if giso:
+                return giso.plotcontainer
 #===============================================================================
 # corrections
 #===============================================================================

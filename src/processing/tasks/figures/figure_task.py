@@ -20,6 +20,7 @@ from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
+from itertools import groupby
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -56,21 +57,73 @@ class FigureTask(AnalysisEditTask):
         return panes + [self.plotter_options_pane,
                         ]
 
-    def new_ideogram(self, ans=None, name='Ideo'):
+    def group_by_aliquot(self):
+        key = lambda x: x.aliquot
+        self._group_by(key)
 
+    def group_by_labnumber(self):
+        key = lambda x: x.labnumber
+        self._group_by(key)
+
+    def group_selected(self):
+        if self.unknowns_pane.selected:
+            self.active_editor.set_group(
+                                         self._get_selected_indices(),
+                                         self._get_unique_group_id())
+    def _get_selected_indices(self):
+        items = self.unknowns_pane.items
+        return [items.index(si) for si in self.unknowns_pane.selected]
+
+    def clear_grouping(self):
+        '''
+            if selected then set selected group_id to 0
+            else set all to 0
+        '''
+        if self.active_editor:
+            sel = self.unknowns_pane.selected
+            if sel:
+                idx = self._get_selected_indices()
+            else:
+                idx = range(len(self.unknowns_pane.items))
+
+            self.active_editor.set_group(idx, 0)
+            self.unknowns_pane.update_needed = True
+
+    def _group_by(self, key):
+        if self.active_editor:
+            items = self.unknowns_pane.items
+            items = sorted(items, key=key)
+            for i, (_, analyses) in enumerate(groupby(items, key=key)):
+                idxs = [items.index(ai) for ai in analyses]
+                self.active_editor.set_group(idxs, i)
+            self.unknowns_pane.update_needed = True
+
+    def _get_unique_group_id(self):
+
+        gids = {i.group_id for i in self.unknowns_pane.items}
+        return max(gids) + 1
+
+
+    def new_ideogram(self, ans=None, name='Ideo'):
         from src.processing.tasks.figures.figure_editor import IdeogramEditor
         func = self.manager.new_ideogram
         klass = IdeogramEditor
         self._new_figure(ans, name, func, klass)
 
-    def new_spectrum(self, ans, name='Spec'):
+    def new_spectrum(self, ans=None, name='Spec'):
         from src.processing.tasks.figures.figure_editor import SpectrumEditor
         func = self.manager.new_spectrum
         klass = SpectrumEditor
         self._new_figure(ans, name, func, klass)
 
-    def _save_file(self, path):
-        self.active_editor.save(path)
+    def new_inverse_isochron(self, ans=None, name='Inv. Iso.'):
+        func = self.manager.new_inverse_isochron
+        from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
+        klass = InverseIsochronEditor
+        self._new_figure(ans, name, func, klass)
+
+#     def _save_file(self, path):
+#         self.active_editor.save_file(path)
 
     def _new_figure(self, ans, name, func, klass):
         comp = None
@@ -78,7 +131,8 @@ class FigureTask(AnalysisEditTask):
             self.unknowns_pane.items = ans
             comp = func(ans)
 
-        editor = klass(component=comp,
+        editor = klass(
+                       component=comp,
                        name=name,
                        processor=self.manager,
                        make_func=func

@@ -15,26 +15,31 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property
+from traits.api import HasTraits, Event, Callable
 from traitsui.api import View, Item
-from traitsui.tabular_adapter import TabularAdapter
-from src.helpers.color_generators import colornames
+from traitsui.qt4.table_editor import TableEditor as qtTableEditor, TableView
+from traitsui.editors.table_editor import TableEditor
+from PySide.QtCore import Qt
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class myTableView(TableView):
+    def keyPressEvent(self, event):
+        if event.modifiers() & Qt.ControlModifier:
+            self._editor.factory.command_key = True
+        else:
+            return TableView.keyPressEvent(self, event)
 
-class UnknownsAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
-    record_id_text_color = Property
-    def _get_record_id_text_color(self):
-#         print self.item.group_id
-        return colornames[self.item.group_id]
+    def keyReleaseEvent(self, *args, **kwargs):
+        self._editor.factory.command_key = False
+        return TableView.keyReleaseEvent(self, *args, **kwargs)
 
-#    record_id_width = Int(50)
+class myTableEditor(TableEditor):
+    table_view_factory = myTableView
+    command_key = Event
+    on_command_key = Callable
+    def _command_key_changed(self, new):
+        if self.on_command_key:
+            self.on_command_key(new)
 
-class ReferencesAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
-#     font = 'modern 10'
-#    record_id_width = Int(50)
+
 #============= EOF =============================================

@@ -354,7 +354,7 @@ class SpectrumOptions(AgeOptions):
         attrs = super(SpectrumOptions, self)._get_dump_attrs()
         return attrs + ['step_nsigma']
 
-class IsochronOptions(AgeOptions):
+class InverseIsochronOptions(AgeOptions):
     pass
 
 if __name__ == '__main__':

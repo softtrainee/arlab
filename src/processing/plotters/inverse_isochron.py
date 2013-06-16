@@ -25,11 +25,12 @@ from src.processing.plotters.plotter import Plotter
 from src.processing.plotters.results_tabular_adapter import InverseIsochronResults
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
 from src.constants import PLUSMINUS
+from src.regression.york_regressor import YorkRegressor
 
 
 class InverseIsochron(Plotter):
     show_error_ellipse = Bool(False)
-    def build(self, analyses):
+    def build(self, analyses, options=None, plotter_options=None):
         if not analyses:
             return
 
@@ -37,7 +38,7 @@ class InverseIsochron(Plotter):
         yy = [a.Ar36 / a.Ar40 for a in analyses]
         xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev) for xi in xx])
         ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev) for yi in yy])
-        print xerrs, yerrs
+#         print xerrs, yerrs
 #        xs, xerrs = zip(*[(a.nominal_value, a.std_dev()) for a in
 #                          [a.arar_result['s39'] / a.arar_result['s40'] for a in analyses]
 #                          ])
@@ -46,10 +47,12 @@ class InverseIsochron(Plotter):
 
         g = RegressionGraph(container_dict=dict(padding=5,
                                                bgcolor='lightgray'
-                                               ))
+                                               ),
+
+                            )
         g.new_plot(xtitle='39Ar/40Ar',
                    ytitle='36Ar/40Ar',
-#                   padding=padding
+                   padding_let=60
                    )
 
         g.set_grid_traits(visible=False)
@@ -63,21 +66,27 @@ class InverseIsochron(Plotter):
         eo = ErrorEllipseOverlay(component=sc)
         sc.overlays.append(eo)
 
-        g.set_x_limits(min=0)
-        g.set_y_limits(min=0, max=0.004)
+
 #        trapped_4036 = 1
 #        trapped_4036err = 1
 #            rdict = g.regression_results[0]
-        reg = g.regressors[0]
-#        trapped_4036 = 1 / reg.predict(0)
-#        trapped_4036err = reg.predict_error(0)
-        trapped_4036 = 1 / reg.coefficients[0]
-        trapped_4036err = reg.coefficient_errors[0]
+#         reg = g.regressors[0]
+        reg = YorkRegressor(xs=xs, ys=ys, xserr=xerrs, yserr=yerrs)
+
+        trapped_4036 = 1 / reg.predict()
+        trapped_4036err = reg.predict_error()
+#         trapped_4036 = 1 / reg.coefficients[0]
+#         trapped_4036err = reg.coefficient_errors[0]
 
         g.add_horizontal_rule(1 / 295.5)
 
-        txt = u'Trapped 40Ar= {:0.2f} {}{:0.7f}'.format(trapped_4036, PLUSMINUS, trapped_4036err)
+#         txt = u'Trapped 40Ar= {:0.2f} {}{:0.7f}'.format(trapped_4036, PLUSMINUS, trapped_4036err)
+        txt = u'Trapped 40Ar= {:0.2f} +/-{:0.7f}'.format(trapped_4036, trapped_4036err)
+
         g.add_plot_label(txt, 0, 0)
+        g.set_x_limits(min=0)
+        g.set_y_limits(min=0, max=0.004)
+        g.refresh()
 
         return g
 

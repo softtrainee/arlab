@@ -98,6 +98,7 @@ class ImportManager(IsotopeDatabaseManager):
             self.update_irradiations_needed = True
 
         self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
+        pd.close()
 #        self.db.close()
 
     @cached_property
@@ -162,11 +163,11 @@ class ImportManager(IsotopeDatabaseManager):
             if self.selected:
                 selected = [(si.name, tuple()) for si in self.selected]
 
-#            selected = [
-#                        ('NM-205', ['E', ]),
+            selected = [
+#                         ('NM-205', ['E', ]),
 # #                        ('NM-205', ['F' ]),
-# #                        ('NM-256', ['F', ])
-#                        ]
+                        ('NM-256', ['E', 'F', ])
+                        ]
 #            selected = MINNA_BLUFF_IRRADIATIONS
 
             if selected:

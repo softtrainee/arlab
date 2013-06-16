@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, List, on_trait_change, Instance, Property, Event
+from traits.api import Any, List, on_trait_change, Instance, Property, Event, File
 from traitsui.api import View, UItem, InstanceEditor
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= standard library imports ========================
@@ -23,6 +23,7 @@ from numpy import asarray
 from src.processing.tasks.analysis_edit.fits import FitSelector
 from src.helpers.isotope_utils import sort_isotopes
 from src.graph.regression_graph import StackedRegressionGraph
+import os
 #============= local library imports  ==========================
 
 
@@ -36,6 +37,7 @@ class GraphEditor(BaseTraitsEditor):
     _component = Any
 
     component_changed = Event
+    path = File
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -72,7 +74,8 @@ class GraphEditor(BaseTraitsEditor):
     @on_trait_change('tool:update_needed')
     def _tool_refresh(self):
         self.rebuild_graph()
-        self.refresh_unknowns()
+        if not self.tool.suppress_refresh_unknowns:
+            self.refresh_unknowns()
 
 
     def refresh_unknowns(self):
@@ -89,8 +92,9 @@ class GraphEditor(BaseTraitsEditor):
         pass
 
     def _make_unknowns(self):
-        self._unknowns = self.processor.make_analyses(self.unknowns)
-        self.processor.load_analyses(self._unknowns)
+        if self.unknowns:
+            self._unknowns = self.processor.make_analyses(self.unknowns)
+            self.processor.load_analyses(self._unknowns)
 
     def traits_view(self):
         v = View(UItem('graph',
@@ -113,4 +117,23 @@ class GraphEditor(BaseTraitsEditor):
     def _get_component(self):
         return self.graph.plotcontainer
 
+    def save_file(self, path):
+        _, tail = os.path.splitext(path)
+        if tail not in ('.pdf', '.png'):
+            path = '{}.pdf'.format(path)
+
+        c = self.component
+        _, tail = os.path.splitext(path)
+        if tail == '.pdf':
+            from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+            gc = PdfPlotGraphicsContext(filename=path,
+#                                         pagesize='letter'
+                                        )
+        else:
+            from chaco.plot_graphics_context import PlotGraphicsContext
+            gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+
+        gc.render_component(c,
+                            valign='center')
+        gc.save(path)
 #============= EOF =============================================

@@ -147,6 +147,24 @@ def pt_factory(line, holes):
     except Exception, e:
         print e
 
+def draw_circular_grid(r, rings):
+    for ray in range(0, 360, 10):
+
+            m = -math.radians(ray)
+            x = r * math.cos(m)
+            y = r * math.sin(m)
+            plot([0, x], [0, y], ls='-.', color='black')
+
+    for ring in rings:
+        ring /= 100.
+        x = linspace(-ring, ring, 100)
+        y = (ring ** 2 - x ** 2) ** 0.5
+
+        plot(x, -y, ls='-.', color='black')
+        x = linspace(-ring, ring, 100)
+        y = (ring ** 2 - x ** 2) ** 0.5
+        plot(x, y, ls='-.', color='black')
+
 def visualize_flux_contour(p, holder,):
 #    from traits.etsconfig.etsconfig import ETSConfig
 #    ETSConfig.toolkit = 'qt4'
@@ -154,19 +172,12 @@ def visualize_flux_contour(p, holder,):
     use_2d = True
 
     holes = load_holder(holder)
+    x, y = zip(*[(x, y) for x, y, v in holes])
+    scatter(x, y)
     with open(p, 'U') as fp:
         reader = csv.reader(fp)
-#        holes = []
-#        js = []
         reader.next()
 
-#        w = arange(-1, 1, 0.01)
-#        h = arange(-1, 1, 0.01)
-#        n = 200
-#        X, Y = meshgrid(w, h)
-#        print w
-
-#        pts = []
         mi = Inf
         ma = -Inf
         xy = []
@@ -180,91 +191,59 @@ def visualize_flux_contour(p, holder,):
             x, y, v = holes[hole - 1]
             xy.append((x, y))
             z.append(j)
-#            pts.append((x, y, j))
-#            xidx = int((x - 1) * 100)
-#            yidx = int((y - 1) * 100)
+
             mi = min(mi, j)
             ma = max(ma, j)
 
             rs.append(round(((x ** 2 + y ** 2) ** 0.5) * 100))
-#        xy.append((0, 0))
-#        z.append(mi * 0.995)
-#        z.append(mi)
+
         xy = array(xy)
         xx, yy = xy.T
         r = max(xx)
+        rings = list(set(rs))
+
+
+
         zz = None
         z = array(z)
         mz = min(z)
         z = z - mz
         z /= mz
         z *= 100
-        xs = []
-        ys = []
-        zs = []
-#        for t in (0, 90, 180, 270):
+#         xs = []
+#         ys = []
+#         zs = []
 
-#        for t in (0, 90, 180, 270):
-        for t in (0,):
-            t = math.radians(t)
-            nxx = xx * cos(t) - yy * sin(t)
-            nyy = xx * sin(t) + yy * cos(t)
+#         for t in (0,):
+#             t = math.radians(t)
+#             nxx = xx * cos(t) - yy * sin(t)
+#             nyy = xx * sin(t) + yy * cos(t)
+#
+#             xs = hstack((xs, nxx))
+#             ys = hstack((ys, nyy))
+#             zs = hstack((zs, z))
 
-            xs = hstack((xs, nxx))
-            ys = hstack((ys, nyy))
-            zs = hstack((zs, z))
-
-        xi = linspace(0, r, zs.shape[0])
-        yi = linspace(-r, r, zs.shape[0])
+        xi = linspace(0, r, z.shape[0])
+        yi = linspace(-r, r, z.shape[0])
         X = xi[None, :]
         Y = yi[:, None]
 
-        zi = griddata((xs, ys), zs, (X, Y),
+        zi = griddata((xx, yy), z, (X, Y),
                        method='cubic'
                       )
 
-
-        if not use_2d:
-            fig = plt.figure()
-            ax = fig.gca(projection='3d')
-
-        print zz
-#        contour(xi, yi, zi, 30, linewidths=0.5, colors='k',)
-        contourf(xi, yi, zi, 30, cmap=cm.jet, offset=0)
         contourf(xi, yi, zi, 30, cmap=cm.jet)
-        if t == 0:
-            cb = colorbar()
-            cb.set_label('J %')
-        if use_2d:
-            scatter(xs, ys, marker='o',
-                    cmap=cm.jet,
-                    c=zs, s=50)
-        else:
-            ax.scatter(xs, ys, zs, marker='o', c='b', s=30)
-#        else:
-#            ax.contour(xi, Y, zi)
+        cb = colorbar()
+        cb.set_label('J %')
+        scatter(xx, yy, marker='o',
+                cmap=cm.jet,
+                c=z, s=50)
+#         draw_circular_grid(r, rings)
 
-#    for ray in range(0, 370, 10):
-    for ray in range(0, 100, 10):
+        xlabel('X (mm)')
+        ylabel('Y (mm)')
 
-        m = -math.radians(ray)
-        x = r * math.cos(m)
-        y = r * math.sin(m)
-        plot([0, x], [0, y], ls='-.', color='black')
-
-    rings = list(set(rs))
-    print rings
-    for ring in rings:
-        ring /= 100.
-        x = linspace(0, ring, 100)
-        y = (ring ** 2 - x ** 2) ** 0.5
-
-        plot(x, -y, ls='-.', color='black')
-
-
-    xlabel('X (mm)')
-    ylabel('Y (mm)')
-    show()
+        show()
 
 if __name__ == '__main__':
 #     p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G_radial.txt'

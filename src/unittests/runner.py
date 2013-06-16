@@ -11,4 +11,5 @@ paths.build('_diode')
 
 # from .database import IsotopeTestCase
 # from .experiment import ExperimentTest
-from .processing import FileSelectorTest
+# from .processing import FileSelectorTest
+from .regression import YorkRegressionTest

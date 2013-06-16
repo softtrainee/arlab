@@ -67,10 +67,10 @@ class IsotopeEvolutionTask(AnalysisEditTask):
 
 #        selector.queries[0].criterion = 'NM-251'
 #        selector._search_fired()
-#        selector = self.manager.db.selector
-        self.unknowns_pane.items = selector.records[150:160]
+#         selector = self.manager.db.selector
+#         self.unknowns_pane.items = selector.records[150:160]
 #
-        editor.unknowns = self.unknowns_pane.items
+#         editor.unknowns = self.unknowns_pane.items
         self._open_editor(editor)
         self.iso_evo_editor_count += 1
 
@@ -140,7 +140,7 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         start = '1/1/2006'
         end = '1/1/2014'
 
-        ans = self.manager.db.selector.get_date_range(start, end, limit= -1)
+        ans = self.manager.db.selector.get_date_range(start, end, limit=-1)
         pd.max = len([ai for ai in ans if ai.status == 0]) - 1
         self._refit_analyses(ans, dry_run, pd)
 

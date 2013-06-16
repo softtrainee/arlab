@@ -23,7 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
-    IdeogramOptions, SpectrumOptions, IsochronOptions
+    IdeogramOptions, SpectrumOptions, InverseIsochronOptions
 from src.paths import paths
 
 
@@ -166,9 +166,9 @@ class SpectrumOptionsManager(PlotterOptionsManager):
     persistence_name = 'spectrum'
     title = 'Spectrum Plot Options'
 
-class IsochronOptionsManager(PlotterOptionsManager):
-    plotter_options_klass = IsochronOptions
-    persistence_name = 'isochron'
+class InverseIsochronOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = InverseIsochronOptions
+    persistence_name = 'inverse_isochron'
     title = 'Isochron Plot Options'
 
 #============= EOF =============================================

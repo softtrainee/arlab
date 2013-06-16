@@ -105,7 +105,8 @@ class _TextTableEditor(Editor):
 
             cell_fmt = QTextTableCellFormat()
             cell_fmt.setFontPointSize(10)
-
+            css = '''font-size:{}px;'''.format(10)
+            self.control.setStyleSheet(css)
             max_cols = max([len(row.cells) for row in tab.items])
 
             for ri, row in enumerate(tab.items):
@@ -140,9 +141,14 @@ class _TextTableEditor(Editor):
                         table.mergeCells(ri, ci, 1, cs)
 
                     tcell = table.cellAt(ri, ci + span_offset)
-                    tcell.setFormat(cell_fmt)
                     cur = tcell.firstCursorPosition()
-                    cur.insertText(cell.text)
+                    if hasattr(cell, 'html'):
+                        cur.insertHtml('{}'.format(cell.html))
+
+                    else:
+                        tcell.setFormat(cell_fmt)
+                        cur.insertText(cell.text)
+
                     if cs:
                         span_offset = cs
 

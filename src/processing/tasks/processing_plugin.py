@@ -23,14 +23,18 @@ from src.processing.processor import Processor
 # from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
+from pyface.action.group import Group
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction, \
-    EquilibrationInspectorAction
+    EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
+    GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
+from pyface.tasks.action.schema import SMenu
+# from launchers.password_gen import args
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -45,9 +49,35 @@ class ProcessingPlugin(BaseTaskPlugin):
 
         return [process_so]
     def _make_task_extension(self, actions, **kw):
-        return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p) for i, f, p in actions])
+        def make_schema(args):
+            if len(args) == 3:
+                kw = {}
+                i, f, p = args
+            else:
+                i, f, p, kw = args
+            return SchemaAddition(id=i, factory=f, path=p, **kw)
+        return TaskExtension(actions=[make_schema(args)
+                                      for args in actions])
+#         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
+#                                       for i, f, p in actions])
 
     def _my_task_extensions_default(self):
+        def figure_group():
+            return Group(
+                          SpectrumAction(),
+                          IdeogramAction(),
+                          InverseIsochronAction()
+                          )
+        def data_menu():
+            return SMenu(id='Data', name='Data')
+
+        def grouping_group():
+            return Group(GroupSelectedAction(),
+                         GroupbyAliquotAction(),
+                         GroupbyLabnumberAction(),
+                         ClearGroupAction()
+                         )
+
         return [
                 self._make_task_extension([
                    ('recall_action', RecallAction, 'MenuBar/File'),
@@ -58,15 +88,22 @@ class ProcessingPlugin(BaseTaskPlugin):
                    ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
                    ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
                    ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
-                   ('new_ideogram', IdeogramAction, 'MenuBar/Edit'),
                    ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
                    ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
-                   ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools')
+
+                   ('figure_group', figure_group, 'MenuBar/Edit'),
+
+                   ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools'),
+                   ('data', data_menu, 'MenuBar',
+                    {'before':'Tools', 'after':'View'}),
+                   ('grouping_group', grouping_group, 'MenuBar/Data'),
+
                    ]),
                 self._make_task_extension([
                    ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
                    ],
-                   id='pychron.analysis_edit.isotope_evolution')
+                   id='pychron.analysis_edit.isotope_evolution'),
+
                 ]
 
 

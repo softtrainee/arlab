@@ -77,8 +77,8 @@ class RecallTask(AnalysisEditTask):
                                             processor=self.manager,
                                             )
             ieditor.unknowns = [rec]
-            self.editor_area.add_editor(ieditor)
             self.editor_area.add_editor(reditor)
+            self.editor_area.add_editor(ieditor)
 
         if ans:
             self.manager._load_analyses(ans, func=func)

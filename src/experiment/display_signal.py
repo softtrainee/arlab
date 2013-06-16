@@ -64,6 +64,12 @@ class DisplaySignal(HasTraits):
         e = self.intercept_error
         return calc_percent_error(v, e)
 
+class DisplayEntry(DisplaySignal):
+    # set to None so not displayed
+    signal_value = None
+    signal_error = None
+    ic_factor_value = None
+    ic_factor_error = None
 
 class DisplayValue(HasTraits):
     value = Either(Str, Float)

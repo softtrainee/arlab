@@ -41,6 +41,7 @@ from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
 from src.helpers.formatting import floatfmt
 from src.constants import PLUSMINUS
+from uncertainties import ufloat
 
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
@@ -355,19 +356,25 @@ class Plotter(Viewable):
 #                         include_decay_error=ide,
 #                         )
 
-        ages = [ai.calculate_age(include_j_error=ije,
+        ages = [(ai.calculate_age(
                          include_irradiation_error=iie,
-                         include_decay_error=ide) for ai in analyses]
-
-        if unzip:
-
-            ages, errors = zip(*[(a.nominal_value, a.std_dev)
-                                 for a in ages])
-            ages = array(ages)
-            errors = array(errors)
-            return ages, errors
+                         include_decay_error=ide)) for ai in analyses]
+        if not ije:
+            ages = array([a.nominal_value for a in ages])
+            errors = array([a.age_error_wo_j for a in analyses])
+            if unzip:
+                return ages, errors
+            else:
+                return [ufloat(*ui) for ui in zip(ages, errors)]
         else:
-            return ages
+            if unzip:
+                ages, errors = zip(*[(a.nominal_value, a.std_dev)
+                                     for a in ages])
+                ages = array(ages)
+                errors = array(errors)
+                return ages, errors
+            else:
+                return ages
 #    def _get_adapter(self):
 #        return ResultsTabularAdapter
 #

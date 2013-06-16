@@ -121,7 +121,8 @@ class IsotopeAdapter(DatabaseAdapter):
         if history:
             try:
                 getattr(history, key).append(item)
-            except AttributeError:
+            except AttributeError, e:
+                self.debug('add_series_item key={}, error={}'.format(key, e))
                 setattr(history, key, item)
             self._add_item(item)
 
@@ -214,7 +215,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_detector_intercalibration(self, history, detector, **kw):
         a = self._add_series_item('DetectorIntercalibration',
-                                     'detector_intercalibration', history, **kw)
+                                     'detector_intercalibrations', history, **kw)
         if a:
             detector = self.get_detector(detector)
             if detector:
@@ -695,6 +696,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_detector_intercalibration_history(self, value):
         return self._retrieve_item(proc_DetectorIntercalibrationHistoryTable, value)
+
+    def get_detector_intercalibrations_history(self, *args, **kw):
+        return self.get_detector_intercalibration_history(*args, **kw)
 
     def get_experiment(self, value, key='name'):
         return self._retrieve_item(meas_ExperimentTable, value, key)
