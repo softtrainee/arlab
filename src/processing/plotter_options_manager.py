@@ -43,30 +43,24 @@ class PlotterOptionsManager(Viewable):
     def _get_persistence_root(self):
         return os.path.join(paths.plotter_options_dir, self.persistence_name)
 
-    def close(self, ok):
-        if ok:
+    def close(self):
+        # dump the default plotter options
+        if not os.path.isdir(self.persistence_root):
+            try:
+                os.mkdir(self.persistence_root)
+            except OSError:
+                os.mkdir(os.path.dirname(self.persistence_root))
+                os.mkdir(self.persistence_root)
 
-            # dump the default plotter options
-            if not os.path.isdir(self.persistence_root):
-                try:
-                    os.mkdir(self.persistence_root)
-                except OSError:
-                    os.mkdir(os.path.dirname(self.persistence_root))
-                    os.mkdir(self.persistence_root)
+        p = os.path.join(self.persistence_root,
+                         '{}.default'.format(self.plotter_options_name))
+        with open(p, 'w') as fp:
+            obj = self.plotter_options.name
+            pickle.dump(obj, fp)
 
-            p = os.path.join(self.persistence_root,
-                             '{}.default'.format(self.plotter_options_name))
-            with open(p, 'w') as fp:
-                obj = self.plotter_options.name
-                pickle.dump(obj, fp)
+        self.plotter_options.dump(self.persistence_root)
+        self._plotter_options_list_dirty = True
 
-            self.plotter_options.dump(self.persistence_root)
-            self._plotter_options_list_dirty = True
-
-#            self.plotter_options = next((pi for pi in self.plotter_options_list
-#                                         if pi.name == self.plotter_options.name), None)
-
-        return True
 
     def set_plotter_options(self, name):
         self.plotter_options = next((pi for pi in self.plotter_options_list

@@ -54,6 +54,7 @@ from enable.component_editor import ComponentEditor
 # from src.graph.regression_graph import StackedRegressionGraph
 from chaco.plot_containers import GridPlotContainer
 from src.simple_timeit import timethis
+from src.processing.tasks.analysis_edit.fits import IsoEvoFitSelector
 # from src.processing.equilibration_utils import calc_optimal_eqtime
 #============= local library imports  ==========================
 
@@ -61,6 +62,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     component = Instance(GridPlotContainer)
     graphs = Dict
     _suppress_update = Bool
+    tool = Instance(IsoEvoFitSelector, ())
     def calculate_optimal_eqtime(self):
         # get x,y data
         self.info('========================================')
@@ -154,7 +156,17 @@ class IsotopeEvolutionEditor(GraphEditor):
 
                     g.new_plot(**kw)
 
-                    if isok in unk.isotopes:
+                    if isok.endswith('bs'):
+                        isok = isok[:-2]
+                        iso = unk.isotopes[isok]
+                        iso.baseline.fit = fit.fit
+                        xs, ys = iso.baseline.xs, iso.baseline.ys
+                        g.new_series(xs, ys,
+                                     fit=fit.fit,
+#                                      add_tools=False,
+                                     plotid=i)
+                    else:
+#                     if isok in unk.isotopes:
                         iso = unk.isotopes[isok]
                         if display_sniff:
                             sniff = iso.sniff
@@ -167,10 +179,10 @@ class IsotopeEvolutionEditor(GraphEditor):
                         xs, ys = iso.xs, iso.ys
                         g.new_series(xs, ys,
                                      fit=fit.fit,
-                                     add_tools=False,
+#                                      add_tools=False,
                                      plotid=i)
 
-                    ma = max(max(iso.xs), ma)
+                    ma = max(max(xs), ma)
                     i += 1
 
             if set_x_flag:

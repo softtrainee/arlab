@@ -276,7 +276,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                                                scatter, selection)
         elif isinstance(fit, tuple):
             r = self._least_square_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
-        elif issubclass(fit, BaseRegressor):
+        elif isinstance(fit, BaseRegressor):
             r = self._custom_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter,
                                                scatter, selection)
 

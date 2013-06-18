@@ -74,7 +74,6 @@ class ArArAge(HasTraits):
 #    signals = AgeProperty()
 #    _signals = Dict
     isotopes = Dict
-    isotope_keys = Property
 
     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
     age_error = AgeProperty()

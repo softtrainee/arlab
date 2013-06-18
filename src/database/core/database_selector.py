@@ -196,7 +196,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         criterion = 'this month'
         q = self.queries[0]
         q.parameter = self.date_str
-        q.comparator = '<'
+        q.comparator = '>'
         q.trait_set(criterion=criterion, trait_change_notify=False)
 
         return self._execute_query(queries=[q])

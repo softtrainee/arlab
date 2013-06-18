@@ -102,7 +102,7 @@ class FitSelector(HasTraits):
 
     @on_trait_change('fits:[show, fit]')
     def _fit_changed(self, obj, name, old, new):
-        self.suppress_refresh_unknowns = True
+#         self.suppress_refresh_unknowns = True
         if self.command_key:
             for fi in self.fits:
                 fi.trait_set(trait_change_notify=False,
@@ -110,11 +110,11 @@ class FitSelector(HasTraits):
                                )
 
         self.update_needed = True
-        self.suppress_refresh_unknowns = False
+#         self.suppress_refresh_unknowns = False
 
-    def load_fits(self, keys):
+    def load_fits(self, keys, fits):
         self.fits = [
-                     self.fit_klass(name=ki) for ki in keys
+                     self.fit_klass(name=ki, fit=fi) for ki, fi in zip(keys, fits)
                     ]
 
 class InterpolationFit(Fit):
@@ -123,5 +123,14 @@ class InterpolationFit(Fit):
 
 class InterpolationFitSelector(FitSelector):
     fit_klass = InterpolationFit
+
+class IsoEvoFitSelector(FitSelector):
+    def load_fits(self, keys, fits):
+        bs = [
+            '{}bs'.format(ki) for ki in keys
+             ]
+        bfs = ['average_SEM' for fi in fits]
+#         for ki in keys:
+        super(IsoEvoFitSelector, self).load_fits(keys + bs, fits + bfs)
 
 #============= EOF =============================================

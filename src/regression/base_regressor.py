@@ -110,6 +110,21 @@ class BaseRegressor(Loggable):
     def predict_error(self, x, error_calc=None):
         raise NotImplementedError
 
+    def calculate_pearsons_r(self, X, Y):
+
+        Xbar = X.mean()
+        Ybar = Y.mean()
+
+        n = len(X)
+        i_n = (n - 1) ** -1
+
+        sx = (i_n * sum((X - Xbar) ** 2)) ** 0.5
+        sy = (i_n * sum((Y - Ybar) ** 2)) ** 0.5
+        A = (X - Xbar) / sx
+        B = (Y - Ybar) / sy
+        r = i_n * sum(A * B)
+        return r
+
     def calculate_outliers(self, nsigma=2):
         res = self.calculate_residuals()
         cd = abs(res)

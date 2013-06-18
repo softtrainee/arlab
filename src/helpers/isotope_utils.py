@@ -21,6 +21,8 @@ from traitsui.api import View, Item
 #============= local library imports  ==========================
 import re
 def rank_func(x):
+    if isinstance(x, (list, tuple)):
+        x = x[0]
     return re.sub('\D', '', x)
 
 def sort_isotopes(keys, reverse=True):

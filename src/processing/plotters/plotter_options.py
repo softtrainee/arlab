@@ -25,6 +25,9 @@ import os
 from src.constants import NULL_STR
 from src.paths import paths
 from src.viewable import Viewable
+from traitsui.table_column import ObjectColumn
+from traitsui.editors.table_editor import TableEditor
+from traitsui.extras.checkbox_column import CheckboxColumn
 
 class PlotterOption(HasTraits):
     name = Str(NULL_STR)
@@ -41,24 +44,24 @@ class PlotterOption(HasTraits):
                 'kca':'K/Ca',
                 'moles_K39':'K39 Moles'
                 }
-    def traits_view(self):
-        v = View(
-                 HGroup(
-                        UItem('name',
-                              width=-70,
-                              editor=EnumEditor(name='plot_names')),
-                        UItem('scale'),
-                        UItem('height',
-                              width=-50,
-                             ),
-#                        spring,
-                        UItem('x_error'),
-                        UItem('y_error'),
-                        spring,
-                        ),
-                )
-
-        return v
+#     def traits_view(self):
+#         v = View(
+#                  HGroup(
+#                         UItem('name',
+#                               width=-70,
+#                               editor=EnumEditor(name='plot_names')),
+#                         UItem('scale'),
+#                         UItem('height',
+#                               width=-50,
+#                              ),
+# #                        spring,
+#                         UItem('x_error'),
+#                         UItem('y_error'),
+#                         spring,
+#                         ),
+#                 )
+#
+#         return v
 
 
 FONTS = ['modern', ]
@@ -68,7 +71,7 @@ SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 class PlotterOptions(Viewable):
     title = Str
     auto_generate_title = Bool
-    data_type = Str('database')
+#     data_type = Str('database')
     aux_plots = List
 
     xtick_font = Property
@@ -86,7 +89,7 @@ class PlotterOptions(Viewable):
     ytitle_font = Property
     ytitle_font_size = Enum(*SIZES)
     ytitle_font_name = Enum(*FONTS)
-    data_type_editable = Bool(True)
+#     data_type_editable = Bool(True)
 
     def __init__(self, root, clean=False, *args, **kw):
         super(PlotterOptions, self).__init__(*args, **kw)
@@ -133,10 +136,20 @@ class PlotterOptions(Viewable):
     def dump(self, root):
         self._dump(root)
 
+    def _make_dir(self, root):
+        if os.path.isdir(root):
+            return
+        else:
+            self._make_dir(os.path.dirname(root))
+            os.mkdir(root)
+
     def _dump(self, root):
         if not self.name:
             return
         p = os.path.join(root, self.name)
+        print root, self.name
+        self._make_dir(root)
+
         with open(p, 'w') as fp:
             d = dict()
             attrs = self._get_dump_attrs()
@@ -158,7 +171,7 @@ class PlotterOptions(Viewable):
 
     def _get_dump_attrs(self):
         attrs = ['title', 'auto_generate_title',
-                 'data_type',
+#                  'data_type',
                   'aux_plots',
                      'xtick_font_size',
                      'xtick_font_name',
@@ -226,48 +239,53 @@ class PlotterOptions(Viewable):
         return v
 
     def traits_view(self):
-        header_grp = HGroup(Label('Plot'),
-                            Spring(width=132, springy=False),
-                            Label('Scale'),
-                            spring, Label('Height'),
+        axis_grp = VGroup(
+                         self._get_x_axis_group(),
+                         VGroup(
+                                self._create_axis_group('y', 'title'),
+                                self._create_axis_group('y', 'tick'),
+#                                           show_border=True,
+                           label='Y'),
+                         label='Axes'
+                         )
 
-                            Label('X Err.'), Label('Y Err.'),
-                            spring,)
-        default_grp = VGroup(
+
+        cols = [
+              ObjectColumn(name='name',
+                           width=180,
+                           editor=EnumEditor(name='plot_names')),
+              ObjectColumn(name='scale'),
+              CheckboxColumn(name='x_error', label='X Error'),
+              CheckboxColumn(name='y_error', label='Y Error'),
+              ]
+        aux_plots_grp = Item('aux_plots',
+                                  style='custom',
+                                  show_label=False,
+
+                                  editor=TableEditor(columns=cols,
+                                                     sortable=False,
+                                                     deletable=False,
+                                                     reorderable=False
+                                                     ))
+        default_grp = Group(
+                            VGroup(
                              HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
                                     Item('title', springy=True, enabled_when='not auto_generate_title',
                                          tooltip='User specified plot title')),
-                             Item('data_type',
-                                  editor=EnumEditor(values={'database':'0:Database',
-                                                            'data_file':'1:Data File',
-                                                            'manual_entry':'2:Manual Entry'}),
-                                  defined_when='data_type_editable'),
-
-                             Group(
-                                    self._get_x_axis_group(),
-                                    VGroup(
-                                           self._create_axis_group('y', 'title'),
-                                           self._create_axis_group('y', 'tick'),
-#                                           show_border=True,
-                                           label='Y'),
-                                   layout='tabbed'
-                                    ),
-                             header_grp,
-                             Item('aux_plots',
-                                  style='custom',
-                                  show_label=False,
-                                  editor=ListEditor(mutable=False,
-                                                    style='custom',
-                                                    editor=InstanceEditor()))
+#                              Item('data_type',
+#                                   editor=EnumEditor(values={'database':'0:Database',
+#                                                             'data_file':'1:Data File',
+#                                                             'manual_entry':'2:Manual Entry'}),
+#                                   defined_when='data_type_editable'),
+                             ),
+                             aux_plots_grp,
+                             label='Plot'
                              )
+
+        g = Group(default_grp, axis_grp, layout='tabbed')
         grps = self._get_groups()
         if grps:
-            default_grp.label = 'Plot'
-            g = Group(default_grp, layout='tabbed')
             g.content.append(grps)
-
-        else:
-            g = Group(default_grp)
 
         v = View(
                  g,

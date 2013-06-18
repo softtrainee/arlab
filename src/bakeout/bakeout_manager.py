@@ -45,6 +45,7 @@ import datetime
 from src.bakeout.classifier import Classifier
 from src.utils import get_display_size
 from Queue import Queue
+from src.ui.gui import invoke_in_main_thread
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -134,15 +135,12 @@ class BakeoutManager(Manager):
             c.load_scripts()
 
     def reset_data_recording(self):
-        if self.data_manager:
-
-#             self.data_manager.close_file()
-            return
-
         controllers = self._get_controllers()
+#         if not self.data_manager:
         self.data_manager = self._data_manager_factory(controllers,
-                                                       [],
-                                                       style='h5')
+                                                           [],
+                                                           style='h5')
+
         self._current_data_path = cp = self.data_manager.get_current_path()
         self._add_bakeout_to_db(controllers, cp)
 
@@ -458,11 +456,12 @@ class BakeoutManager(Manager):
             self.data_manager.delete_frame()
 
     def _add_bakeout_to_db(self, controllers, path):
+
         db = self.database
         # add to BakeoutTable
         b = db.add_bakeout()
         b.timestamp = datetime.datetime.now()
-
+        print 'asdfasfd', b.timestamp, db.url
         # add to PathTable
         db.add_path(b, path)
 
@@ -532,10 +531,10 @@ class BakeoutManager(Manager):
                         self._classifier_save()
 
                     self.info('commit session to db')
-                    self.database.commit()
+                    invoke_in_main_thread(self.database.commit)
 
                     time.sleep(0.5)
-                    self.open_latest_bake()
+                    invoke_in_main_thread(self.open_latest_bake)
 
                 else:
                     self._db.rollback()
