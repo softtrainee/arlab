@@ -204,15 +204,16 @@ class _myTableView(_TableView):
 #                parent = QtCore.QModelIndex()
 #                model.beginInsertRows(parent, row, row)
 #                editor = self._editor
-                self._editor.object._no_update = True
-                for i, (_, di) in enumerate(reversed(data[1:])):
-#                    print 'insert'
-#                    obj = copy_func1(di)
-#                    editor.callx(editor.adapter.insert, editor.object, editor.name, row + i, obj)
-                    model.insertRow(row=row, obj=copy_func(di))
+#                 self._editor.object._no_update = True
+                with no_update(self._editor.object):
+                    for i, (_, di) in enumerate(reversed(data)):
+    #                    print 'insert'
+    #                    obj = copy_func1(di)
+    #                    editor.callx(editor.adapter.insert, editor.object, editor.name, row + i, obj)
+                        model.insertRow(row=row, obj=copy_func(di))
 
-                self._editor.object._no_update = False
-                model.insertRow(row=row, obj=copy_func(data[0][1]))
+    #                 model.insertRow(row=row, obj=copy_func(data[0][1]))
+#                 self._editor.object._no_update = False
 
 
 #                model.endInsertRows()

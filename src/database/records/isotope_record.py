@@ -133,6 +133,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #    window_height = 500
 #    window_width = 875
     color = 'black'
+    isotope_keys = Property
+    isotope_fits = Property
+
 
 #     signal_graph = Instance(EditableGraph)
 #     baseline_graph = Instance(EditableGraph)
@@ -684,6 +687,16 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         self.load_isotopes()
         keys = self.isotopes.keys()
         return sort_isotopes(keys)
+
+    def _get_isotope_fits(self):
+        keys = self.isotope_keys
+        fs = [self.isotopes[ki].fit
+                    for ki in keys]
+#         fits = [iso.fit for iso in self.isotopes.itervalues()]
+#         z = zip(keys, fits)
+#         zs = sort_isotopes(z)
+#         _ks, fs = zip(*zs)
+        return fs
 
 #===============================================================================
 # dbrecord values

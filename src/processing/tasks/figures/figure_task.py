@@ -51,6 +51,11 @@ class FigureTask(AnalysisEditTask):
                                          )
                           )
 
+    def prepare_destroy(self):
+        if self.active_editor:
+            pom = self.active_editor.plotter_options_manager
+            pom.close()
+
     def create_dock_panes(self):
         panes = super(FigureTask, self).create_dock_panes()
         self.plotter_options_pane = PlotterOptionsPane()

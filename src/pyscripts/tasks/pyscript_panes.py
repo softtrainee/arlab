@@ -79,6 +79,7 @@ class CommandEditorPane(TraitsDockPane):
     command_object = Any
     def traits_view(self):
         v = View(UItem('command_object',
+                       width=-275,
                        editor=InstanceEditor(),
                        style='custom'))
         return v

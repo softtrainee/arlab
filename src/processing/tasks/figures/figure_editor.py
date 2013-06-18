@@ -25,7 +25,7 @@ from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager
 import os
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
-
+from itertools import groupby
 class FigureEditor(GraphEditor):
 #     path = File
     component = Any
@@ -60,6 +60,7 @@ class FigureEditor(GraphEditor):
         po = self.plotter_options_manager.plotter_options
         comp = self._get_component(ans, po)
         self.component = comp
+        self.component_changed = True
 
     def _gather_unknowns(self):
         if self._cached_unknowns:
@@ -83,8 +84,25 @@ class FigureEditor(GraphEditor):
 
         self._cached_unknowns = self.unknowns[:]
         if ans:
+
+            # compress groups
+            self._compress_unknowns(ans)
+
             self._unknowns = ans
             return ans
+
+    def _compress_unknowns(self, ans):
+        key = lambda x: x.group_id
+        ans = sorted(ans, key=key)
+        groups = groupby(ans, key)
+
+        mgid, analyses = groups.next()
+        for ai in analyses:
+            ai.group_id = 0
+
+        for gid, analyses in groups:
+            for ai in analyses:
+                ai.group_id = gid - mgid
 
     def _get_component(self, ans, po):
         raise NotImplementedError

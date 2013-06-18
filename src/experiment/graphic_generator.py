@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Button
+from traits.api import HasTraits, Instance, Any, Button, Float
 from traitsui.api import View, Item, Controller, UItem, HGroup
 from chaco.api import HPlotContainer, OverlayPlotContainer
 from enable.component_editor import ComponentEditor
@@ -42,7 +42,16 @@ class myDataLabel(DataLabel):
     label_position = 'center'
     border_visible = False
 
+class RotatingContainer(OverlayPlotContainer):
+    rotation = Float(45)
 
+    def _draw(self, gc, *args, **kw):
+        w2 = self.width / 2
+        h2 = self.height / 2
+        gc.translate_ctm(w2, h2)
+        gc.rotate_ctm(math.radians(self.rotation))
+        gc.translate_ctm(-w2, -h2)
+        super(RotatingContainer, self)._draw(gc, *args, **kw)
 class GraphicGeneratorController(Controller):
     def save(self, info):
         self.model.save()
@@ -183,7 +192,10 @@ class GraphicModel(HasTraits):
         self.container.add(p)
 
     def _container_default(self):
+
         c = OverlayPlotContainer(bgcolor='white',
+                                 )
+        c = RotatingContainer(bgcolor='white',
                                  )
         return c
 

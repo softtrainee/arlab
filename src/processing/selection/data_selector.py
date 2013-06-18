@@ -39,7 +39,9 @@ class FileSelector(Loggable):
     queries = List
 
     def open_file(self, p=None):
-        p = '/Users/ross/Sandbox/import_template.xls'
+#         p = '/Users/ross/Documents/william_smith2013/fc-2whopper.xls'
+        p = '/Users/ross/Documents/william_smith2013/tray_comparison.xls'
+#         p = '/Users/ross/Sandbox/import_template.xls'
         if p is None:
             dlg = FileDialog(action='open')
             if dlg.open():
@@ -115,6 +117,8 @@ class FileSelector(Loggable):
         if isinstance(v, float):
             v = int(v)
         an.record_id = str(v)
+
+
 
         return an
 

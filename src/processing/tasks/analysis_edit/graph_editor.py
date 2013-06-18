@@ -64,7 +64,10 @@ class GraphEditor(BaseTraitsEditor):
         keys = sort_isotopes(keys)
 
         refiso = self._unknowns[0]
-        self.tool.load_fits(refiso.isotope_keys)
+
+        self.tool.load_fits(refiso.isotope_keys,
+                            refiso.isotope_fits
+                            )
 
         self._update_unknowns_hook()
 

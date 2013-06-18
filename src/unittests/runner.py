@@ -5,11 +5,11 @@ from src.helpers.logger_setup import logging_setup
 ETSConfig.toolkit = 'qt4'
 
 
-logging_setup('unittests')
-
 paths.build('_diode')
+logging_setup('unittests')
 
 # from .database import IsotopeTestCase
 # from .experiment import ExperimentTest
 # from .processing import FileSelectorTest
-from .regression import YorkRegressionTest
+from .york_regression import YorkRegressionTest, NewYorkRegressionTest
+# from .regression import NewYorkRegressionTest

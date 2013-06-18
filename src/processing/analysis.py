@@ -199,6 +199,9 @@ class NonDBAnalysis(HasTraits):
     age = Property
     _age = Float
     _error = Float
+    age_error_wo_j = Property
+    _age_error_wo_j = Float
+
     graph_id = Int
     group_id = Int
     status = Int
@@ -262,6 +265,11 @@ class NonDBAnalysis(HasTraits):
     def _get_temp_status_text(self):
         return 'OK' if self.temp_status == 0 else 'Omitted'
 
+    def _get_age_error_wo_j(self):
+        if self._age_error_wo_j:
+            return self._age_error_wo_j
+        else:
+            return self._error
 class IntegratedAnalysis(NonDBAnalysis):
     rad40_percent = Property
 #    isotope_record = None

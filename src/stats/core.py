@@ -17,11 +17,13 @@
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from numpy import asarray
+from numpy import asarray, average, vectorize
 from scipy.stats import chi2
 #============= local library imports  ==========================
+def _kronecker(ii, jj):
+    return int(ii == jj)
 
-
+kronecker = vectorize(_kronecker)
 
 def calculate_mswd(x, errs, k=1):
 
@@ -30,30 +32,30 @@ def calculate_mswd(x, errs, k=1):
     if n >= 2:
         x = asarray(x)
         errs = asarray(errs)
-
-    #    xmean_u = x.mean()
         xmean_w, _err = calculate_weighted_mean(x, errs)
 
         ssw = (x - xmean_w) ** 2 / errs ** 2
-    #    ssu = (x - xmean_u) ** 2 / errs ** 2
+        mswd_w = ssw.sum() / float(n - k)
 
-        d = 1.0 / (n - k)
-        mswd_w = d * ssw.sum()
-    #    mswd_u = d * ssu.sum()
+#         xmean_u = x.mean()
+#         ssu = (x - xmean_u) ** 2 / errs ** 2
+#         mswd_u = ssu.sum() / float(n - k)
+#         print mswd_w, mswd_u
 
     return mswd_w
 
 def calculate_weighted_mean(x, errs, error=0):
     x = asarray(x)
     errs = asarray(errs)
+    weights = 1 / errs ** 2
+#     weights = asarray(map(lambda e: 1 / e ** 2, errs))
 
-    weights = asarray(map(lambda e: 1 / e ** 2, errs))
+#     wtot = weights.sum()
+#     wmean = (weights * x).sum() / wtot
 
-    wtot = weights.sum()
-    wmean = (weights * x).sum() / wtot
-
+    wmean, sum_weights = average(x, weights=weights, returned=True)
     if error == 0:
-        werr = wtot ** -0.5
+        werr = sum_weights ** -0.5
     elif error == 1:
         werr = 1
     return wmean, werr
