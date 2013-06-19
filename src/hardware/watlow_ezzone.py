@@ -392,12 +392,24 @@ class WatlowEZZone(CoreDevice):
         '''
         if 'verbose' in kw and kw['verbose']:
             self.info('Read temperature')
-
+        
+        t=None
         if self.simulation:
 #            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
         else:
-            t = self.read_process_value(1, **kw)
+            if self.memory_blocks_enabled:
+                args = self.read(self._process_working_address,
+                                 nbytes=13,
+                                 nregisters=self._process_memory_len, **kw)
+                if args:
+                    t,_=args
+#                if not args or not isinstance(args, (tuple, list)):
+#                    args = None, None
+#    
+#                t, _ = args
+            
+#            t = self.read_process_value(1, **kw)
         # print t
         if t is not None:
             try:

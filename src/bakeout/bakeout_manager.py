@@ -461,7 +461,6 @@ class BakeoutManager(Manager):
         # add to BakeoutTable
         b = db.add_bakeout()
         b.timestamp = datetime.datetime.now()
-        print 'asdfasfd', b.timestamp, db.url
         # add to PathTable
         db.add_path(b, path)
 
