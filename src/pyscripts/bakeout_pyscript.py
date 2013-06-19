@@ -88,8 +88,10 @@ class BakeoutPyScript(PyScript):
             if c is not None:
                 # possible to just read the process_value
                 # for now force a query to the device
-                ctemp = int(c.get_temperature())
-                start = max(start, ctemp)
+                t=c.get_temperature()
+                if t is not None:
+                    ctemp = int(t)
+                    start = max(start, ctemp)
 
         self.info('ramping from {} to {} rate= {} C/h, period= {} s'.format(start,
                                                                     temperature,

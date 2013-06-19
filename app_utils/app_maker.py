@@ -168,8 +168,10 @@ class Maker(object):
 
         setup(name='pychron',
               script_args=('bdist_egg',),
+#                           '-b','/Users/argonlab2/Sandbox'),
               version=self.version,
               packages=pkgs
+              
               )
 
         eggname = 'pychron-{}-py2.7.egg'.format(self.version)
@@ -184,8 +186,10 @@ class Maker(object):
                         self._resource_path(eggname)
                         )
 
-
-
+        #remove build dir
+        p=os.path.join(self.root, 'build')
+        print 'removing entire build dir ',p
+        shutil.rmtree(p)
 
     def make_argv(self):
         argv = '''
