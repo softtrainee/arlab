@@ -339,11 +339,11 @@ class SerialCommunicator(Communicator):
 
                 wmsg = '\n'.join(valid)
 
-#            if not globalv.ignore_connection_warnings:
-# #            self.warning_dialog('{}\n{}'.format(msg, wmsg))
-#                if self.confirmation_dialog('{}\n\n{}'.format(msg, wmsg),
-#                                            title='Quit Pychron'):
-#                    os._exit(0)
+            if not globalv.ignore_connection_warnings:
+ #            self.warning_dialog('{}\n{}'.format(msg, wmsg))
+                if self.confirmation_dialog('{}\n{}\n\nQuit Pychron?'.format(msg, wmsg),
+                                            title='Quit Pychron'):
+                    os._exit(0)
 
 #            valid = '\n'.join(['%s' % v for v in valid])
 #            self.warning('''%s is not a valid port address
