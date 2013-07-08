@@ -32,7 +32,17 @@ class ExperimentQueue(BaseExperimentQueue):
 #    refresh_button = Event
 #    refresh_label = Property(depends_on='was_executed')
 #    was_executed = Bool(False)
-
+    def remove_run(self, aid):
+        run=self._find_run(aid)
+        if run is not None:
+            self.automated_runs.remove(run)
+        else:
+            self.debug('Problem removing {}'.format(aid))
+        
+    def _find_run(self, aid):
+        return next((a for a in self.automated_runs 
+                     if make_runid(a.labnumber, a.aliquot, a.step)==aid), None)
+        
     def copy_function(self, obj):
         ci = obj.clone_traits()
         ci.state = 'not run'

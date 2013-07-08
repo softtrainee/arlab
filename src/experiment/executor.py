@@ -26,17 +26,12 @@ import time
 import os
 #============= local library imports  ==========================
 from src.globals import globalv
-# from src.experiment.automated_run.tabular_adapter import ExecuteAutomatedRunAdapter
-# from src.ui.tabular_editor import myTabularEditor
-# from src.experiment.manager import ExperimentManager
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
-# from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
 from src.helpers.parsers.initialization_parser import InitializationParser
-# from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
@@ -45,19 +40,13 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTa
 from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
-# from src.experiment.automated_run.automated_run import AutomatedRun
-# from src.experiment.automated_run.factory import AutomatedRunFactory
-# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
-# from src.ui.gui import invoke_in_main_thread
-# from pyface.image_resource import ImageResource
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
 from pyface.constant import CANCEL, NO
 from src.ui.qt.gui import invoke_in_main_thread
-# from src.experiment.experimentable import Experimentable
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
@@ -74,7 +63,8 @@ class ExperimentExecutor(Experimentable):
     wait_dialog = Instance(WaitDialog, ())
 
     current_run = Instance(AutomatedRun)
-
+    executed_runs=List
+    
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
     delaying_between_runs = Bool(False)
@@ -104,22 +94,9 @@ class ExperimentExecutor(Experimentable):
             next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
     '''
 
-#    right_clicked = Any
-#    selected_row = Any
-#    selected = Any
-#    dclicked = Event
-#    right_clicked = Event
-#    recall_run = Button
-#    edit_run = Button
-#    save_button = Button('Save')
-#    save_as_button = Button('Save As')
-#    edit_enabled = Property(depends_on='selected')
-#    recall_enabled = Property(depends_on='selected')
     extraction_state_label = String
     extraction_state_color = Color
     extraction_state = None
-#    extraction_state_image = Instance(ImageResource)
-
 
     _alive = Bool(False)
     _last_ran = None
@@ -128,7 +105,6 @@ class ExperimentExecutor(Experimentable):
     _was_executed = Bool(False)
     err_message = None
 
-#    repo_kind = Str
     db_kind = Str
     username = Str
 
@@ -151,8 +127,6 @@ class ExperimentExecutor(Experimentable):
         return self._alive
 
     def info(self, msg, log=True, color=None, *args, **kw):
-
-#        self.statusbar = msg
         if self.info_display:
             if color is None:
                 color = 'green'
@@ -174,18 +148,6 @@ class ExperimentExecutor(Experimentable):
 
     def experiment_blob(self):
         return '{}\n{}'.format(self.experiment_queue.path, self.text)
-
-#    def closed(self, ok):
-#        self.selected = None
-#        return super(ExperimentExecutor, self).closed(ok)
-#
-#    def opened(self, ui):
-#        self.info_display.clear()
-#        self.end_at_run_completion = False
-#        self._was_executed = False
-#        self.stats.reset()
-#        self.statusbar = ''
-#        super(ExperimentExecutor, self).opened(ui)
 
     def add_backup(self, uuid_str):
         with open(paths.backup_recovery_file, 'a') as fp:
@@ -314,7 +276,22 @@ class ExperimentExecutor(Experimentable):
 #            t.start()
 #            self._state_thread = t
 
-
+    def clear_run_states(self):
+        for exp in self.experiment_queues:
+            if exp.selected:
+                runs = exp.selected
+            else:
+                runs = exp.automated_runs
+            for ei in runs:
+                ei.state = 'not run'
+    
+    def check_alive(self):
+        if not self.isAlive():
+            self.err_message = 'User quit'
+            return False
+        else:
+            return True
+        
     def execute(self):
         self.debug('%%%%%%%%%%%%%%%%%%% Starting Execution')
                     # check for blank before starting the thread
@@ -330,7 +307,45 @@ class ExperimentExecutor(Experimentable):
             self._execute_thread = t
 
             self._was_executed = True
+    
+    def check_managers(self, exp):
+        nonfound = self._check_for_managers(exp)
+        if nonfound:
+            self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+            self.info('experiment canceled because could not find managers {}'.format(nonfound))
+            self._alive = False
+            return
 
+        return True
+    
+    
+
+    
+
+#===============================================================================
+# stats
+#===============================================================================
+    def _increment_nruns_finished(self):
+        self.stats.nruns_finished += 1
+
+#    def reset_stats(self):
+# #        self._alive = True
+#        self.stats.start_timer()
+#
+#    def stop_stats_timer(self):
+# #        self._alive = False
+#        self.stats.stop_timer()
+
+#===============================================================================
+# handlers
+#===============================================================================
+#    @on_trait_change('experiment_queues[]')
+#    def _update_stats(self):
+#        self.stats.experiment_queues = self.experiment_queues
+#        self.stats.calculate()
+#===============================================================================
+# private
+#===============================================================================
     def _pre_execute_check(self):
         exp = self.experiment_queue
         if self._has_preceeding_blank_or_background(exp):
@@ -352,41 +367,7 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     return
             return True
-
-    def check_managers(self, exp):
-        nonfound = self._check_for_managers(exp)
-        if nonfound:
-            self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
-            self.info('experiment canceled because could not find managers {}'.format(nonfound))
-            self._alive = False
-            return
-
-        return True
-
-#===============================================================================
-# stats
-#===============================================================================
-    def increment_nruns_finished(self):
-        self.stats.nruns_finished += 1
-
-#    def reset_stats(self):
-# #        self._alive = True
-#        self.stats.start_timer()
-#
-#    def stop_stats_timer(self):
-# #        self._alive = False
-#        self.stats.stop_timer()
-
-#===============================================================================
-# handlers
-#===============================================================================
-#    @on_trait_change('experiment_queues[]')
-#    def _update_stats(self):
-#        self.stats.experiment_queues = self.experiment_queues
-#        self.stats.calculate()
-#===============================================================================
-# private
-#===============================================================================
+        
     def _execute(self):
         # test runs first
         for exp in self.experiment_queues:
@@ -433,15 +414,6 @@ class ExperimentExecutor(Experimentable):
                 nonfound.append('spectrometer')
 
         return nonfound
-
-    def clear_run_states(self):
-        for exp in self.experiment_queues:
-            if exp.selected:
-                runs = exp.selected
-            else:
-                runs = exp.automated_runs
-            for ei in runs:
-                ei.state = 'not run'
 
     def _execute_experiment_queues(self):
 
@@ -788,6 +760,10 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 
         return True
 
+    def _update_executed_runs(self, arun):
+        self.executed_runs.append(arun)
+        self.experiment_queue.remove_run(arun)
+    
     def _do_automated_run(self, arun):
         def start_run():
             if not arun.start():
@@ -840,67 +816,12 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 arun.state = 'success'
 
         arun.finish()
-        self.increment_nruns_finished()
-
+        self._increment_nruns_finished()
+        self._update_executed_runs(arun)
+        
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
 
-    def check_alive(self):
-        if not self.isAlive():
-            self.err_message = 'User quit'
-            return False
-        else:
-            return True
-
-#    def _do_automated_run2(self, arun):
-#        def isAlive():
-#            if not self.isAlive():
-#                self.err_message = 'User quit'
-#                return False
-#            else:
-#                return True
-#
-#        if not arun.start():
-#            self.err_message = 'Monitor failed to start'
-#            return
-#
-#        if not isAlive():
-#            return
-#
-#        if arun.extraction_script:
-#            if not arun.do_extraction():
-#                return
-# #                self._alive = False
-#
-#        if not isAlive():
-#            return
-#
-#        if arun.measurement_script:
-#            self.measuring = True
-#            if not arun.do_measurement():
-#                return
-# #                self._alive = False
-#            self.measuring = False
-#
-#        if not isAlive():
-#            return
-#
-#        if arun.post_measurement_script:
-#            if not arun.do_post_measurement():
-#                self._alive = False
-# #                if not arun.state == 'truncate':
-# #                    self._alive = False
-#
-#        arun.finish()
-#        self.increment_nruns_finished()
-#
-#        if arun.state == 'truncated':
-#            fstate = 'truncated'
-#        else:
-#            arun.state = 'success'
-#            fstate = 'finished'
-#
-#        self.info('Automated run {} {}'.format(arun.runid, fstate))
-
+    
     def _end_runs(self):
         self._last_ran = None
         self.stats.stop_timer()
@@ -918,38 +839,6 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 pass
 
         return ans[startid:]
-
-#    def _reload_from_disk(self):
-#        super(ExperimentExecutor, self)._reload_from_disk()
-#        self._update_stats()
-
-#    def _recall_run(self):
-#        selected = self.selected
-#        if selected and self.recall_enabled:
-#            selected = selected[-1]
-#            db = self.db
-#            # recall the analysis and display
-#            db.selector.open_record(selected.uuid)
-#
-#    def _edit_run(self):
-#        selected = self.selected
-#        self.save_enabled = False
-#        if self.edit_enabled and selected:
-#            base_run = selected[0]
-#            ae = AutomatedRunFactory()
-#            ae.load_from_run(base_run)
-#
-# #            ae = AutomatedRunEditor(run=selected[-1])
-#            info = ae.edit_traits(kind='livemodal', view='edit_view')
-#            if info.result:
-#                ae.commit_changes(selected)
-#                self._update()
-#                self.stats.calculate()
-#                self.new_run_gen_needed = True
-#                self.save_enabled = True
-
-#    def _load_experiment_queue_hook(self):
-#        self.executable = all([ei.executable for ei in self.experiment_queues])
 
 #===============================================================================
 # handlers
