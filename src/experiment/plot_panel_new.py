@@ -115,7 +115,13 @@ class PlotPanel(Loggable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
-
+    info_func=None
+    
+    def info(self, *args, **kw):
+        if self.info_func:
+            self.info_func(*args, **kw)
+        else:
+            super(PlotPanel,self).info(*args, **kw)
     def reset(self):
         self.clear_displays()
         self.graph = self._graph_factory()

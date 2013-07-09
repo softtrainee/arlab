@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int, on_trait_change
-from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup, VSplit
+from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup, VSplit, Label
 from pyface.tasks.api import Editor
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
@@ -64,11 +64,14 @@ class ExperimentEditor(BaseTraitsEditor):
                                    scroll_to_bottom=False)
                         )
 
-        executed_grp = UItem('executed_runs',
-                             editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-                                                    editable=False
+        executed_grp = VGroup(Label('Completed Runs'),
+                              UItem('executed_runs',
+                                    editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+                                                    editable=False,
+                                                    auto_update=True,
+                                                    selectable=False
                                                     ),
-                            )
+                            ))
 
         v = View(
                  VSplit(arun_grp,

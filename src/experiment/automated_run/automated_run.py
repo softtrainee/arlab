@@ -141,7 +141,7 @@ class AutomatedRun(Loggable):
     pattern = Str
     beam_diameter = Float
 
-#    ic_factor = Any
+    ic_factor = Any
 
     analysis_type = Str
     disable_between_positions = Bool(False)
@@ -868,9 +868,11 @@ anaylsis_type={}
 #                             window_x=0.6,  # + 0.01 * self.index,
                              plot_title=title,
                              stack_order=stack_order,
+                             info_func=self.info,
                              arar_age=self.arar_age,
                              sample=self.sample,
-                             irradiation=self.irradiation
+                             irradiation=self.irradiation,
+                             
                              )
 
             plot_panel.reset()
@@ -1512,12 +1514,12 @@ anaylsis_type={}
 
         if self.arar_age:
             ic = self.arar_age.ic_factor
-#            self.ic_factor = ic = self.arar_age.ic_factor
-
         else:
-#            self.ic_factor = ic = ArArAge(application=self.application).ic_factor
             ic = ArArAge(application=self.application).ic_factor
-
+        
+        #save ic_factor so it can be exported to secondary db    
+        self.ic_factor=ic
+        
         def func():
             self.info('default ic_factor={}'.format(ic))
             db = self.db
@@ -1528,16 +1530,11 @@ anaylsis_type={}
 
             history = db.add_detector_intercalibration_history(analysis, user=user)
             db.flush()
-#             funchist = getattr(db, 'add_{}_history'.format(name))
-#             history = funchist(analysis, user=user)
             analysis.selected_histories.selected_detector_intercalibration = history
-#             setattr(analysis.selected_histories, 'selected_{}'.format(name), history)
-
             uv, ue = ic.nominal_value, ic.std_dev
             db.add_detector_intercalibration(history, 'CDD',
-                                             user_value=uv, user_error=float(ue))
-#             func = getattr(db, 'add_{}'.format(name))
-#             func(history, 'CDD', user_value=uv, user_error=float(ue))
+                                             user_value=float(uv), 
+                                             user_error=float(ue))
 
         return self._time_save(func, 'detector intercalibration')
 

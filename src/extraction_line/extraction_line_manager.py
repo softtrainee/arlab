@@ -177,6 +177,7 @@ class ExtractionLineManager(Manager):
 #                    self.show_explanation = pickle.load(f)
 #                except pickle.PickleError:
 #                    pass
+        self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL Activated')
         if self.mode == 'client':
             self.start_status_monitor()
         else:

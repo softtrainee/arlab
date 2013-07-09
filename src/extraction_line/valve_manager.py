@@ -124,6 +124,7 @@ class ValveManager(Manager):
     def load_valve_states(self):
         elm = self.extraction_line_manager
         word = self.get_state_word()
+        #self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
@@ -134,6 +135,7 @@ class ValveManager(Manager):
     def load_valve_lock_states(self):
         elm = self.extraction_line_manager
         word = self.get_lock_word()
+        #self.debug('valve lock word= {}'.format(word))
         if word is not None:
             for k in self.valves.keys():
                 if word.has_key(k):

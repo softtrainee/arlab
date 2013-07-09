@@ -39,8 +39,6 @@ def main():
     # build directories
     build_directories(paths)
 
-    #
-
 #    from src.helpers.paths import hidden_dir
 #    path = os.path.join(hidden_dir, 'version_info')
 #    a = VersionInfoDisplay(local_path=path,
@@ -56,8 +54,9 @@ def main():
 #===============================================================================
     from src.globals import globalv
     globalv._test = False
-
-    launch()
+    
+    from src.applications.pyexperiment import PyExperiment as app
+    launch(app)
     os._exit(0)
 
 

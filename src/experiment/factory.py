@@ -26,6 +26,7 @@ from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import NULL_STR, LINE_STR
 from src.loggable import Loggable
+import time
 
 class ExperimentFactory(Loggable):
     db = Any
@@ -37,6 +38,7 @@ class ExperimentFactory(Loggable):
 
     add_button = Button('Add')
     clear_button = Button('Clear')
+    save_button=Button('Save')
     edit_mode_button = Button('Edit')
     edit_enabled = DelegatesTo('run_factory')
 
@@ -46,7 +48,7 @@ class ExperimentFactory(Loggable):
     queue = Instance(ExperimentQueue, ())
 
 #    ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
-#    ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
+    ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
 
     _username = String
     _mass_spectrometer = String
@@ -63,15 +65,26 @@ class ExperimentFactory(Loggable):
 
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
-
+    
     def _clear_button_fired(self):
         self.queue.clear_frequency_runs()
 
+    _prev_add_time=None
     def _add_button_fired(self):
-
-        eg = max(list(set([ai.extract_group for ai in self.queue.automated_runs])))
-
-
+        '''
+            only allow add button to be fired every 0.5s
+        '''
+    
+        if self._prev_add_time:
+            if abs(time.time()-self._prev_add_time)<0.5:
+                self.debug('skipping')
+                return
+            
+        self._prev_add_time=time.time()
+                
+        egs=list(set([ai.extract_group for ai in self.queue.automated_runs]))
+        eg= max(egs) if egs else 0
+    
         new_runs, freq = self.run_factory.new_runs(
                                                    auto_increment_position=self.auto_increment_position,
                                                    auto_increment_id=self.auto_increment_id,
@@ -128,13 +141,13 @@ class ExperimentFactory(Loggable):
 #===============================================================================
 # property get/set
 #===============================================================================
-#    def _get_ok_add(self):
-#        '''
-#            tol should be a user permission
-#        '''
+    def _get_ok_add(self):
+        '''
+            tol should be a user permission
+        '''
 #        print self._mass_spectrometer, not self._mass_spectrometer in ('Spectrometer', LINE_STR)
 #        print bool(self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR))
-#        return self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR)
+        return self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR)
 #        tol = self.max_allowable_runs
 #        ntest = len(self.queue.automated_runs) < tol
 #        return  self.ok_run and self._labnumber and ntest

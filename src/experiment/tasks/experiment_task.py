@@ -67,7 +67,15 @@ class ExperimentEditorTask(EditorTask):
                                          ),
                           top=PaneItem('pychron.experiment.controls')
                           )
-
+    def activated(self):
+        elm=self._get_el_manager()
+        if elm:
+            elm.activate()
+            
+    def _get_el_manager(self):
+        app = self.window.application
+        return app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
 
@@ -82,12 +90,13 @@ class ExperimentEditorTask(EditorTask):
 #                 self.summary_pane,
                 ]
 
-        app = self.window.application
-        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+#        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        man=self._get_el_manager()
         if man:
             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
             panes.append(CanvasDockPane(model=man))
 
+        app = self.window.application
         from src.lasers.laser_managers.ilaser_manager import ILaserManager
         man = app.get_service(ILaserManager)
         if man:
@@ -213,7 +222,8 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('active_editor:queue:update_needed')
     def _update_runs(self, new):
         self.manager.update_info()
-        self.active_editor.dirty = True
+        if self.active_editor.queue.initialized:
+            self.active_editor.dirty = True
 #        self.debug('runs changed {}'.format(len(new)))
 #        executor = self.manager.executor
 #        if executor.isAlive():
@@ -254,7 +264,7 @@ class ExperimentEditorTask(EditorTask):
         if editor is None:
             if self.editor_area.editors:
                 editor = self.editor_area.editors[0]
-
+        self.debug('active editor {}'.format(editor))
         if editor:
             p = editor.path
             if editor.dirty:
@@ -276,7 +286,11 @@ class ExperimentEditorTask(EditorTask):
                             if ei.group == group and ei.merge_id >= min_idx]
 
                 self.manager.execute_queues(qs, p, text, hash_val)
-
+                
+    @on_trait_change('manager:save_event')
+    def _save_queue(self):
+        self.save()
+        
     @on_trait_change('window:closing')
     def _prompt_on_close(self, event):
         '''

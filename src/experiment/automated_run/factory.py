@@ -41,10 +41,10 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     labnumber = String(enter_set=True, auto_set=False)
 
-    aliquot = Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
-    _aliquot = Int
-    o_aliquot = Int
-
+#    aliquot = Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
+#    _aliquot = Int
+#    o_aliquot = Int
+    aliquot=Int(enter_set=True, auto_set=False)
     user_defined_aliquot = False
     special_labnumber = Str('Special Labnumber')
 
@@ -181,7 +181,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
         freq = self.frequency if special else None
 
-        if self.use_template() and not freq and not special:
+        if self._use_template() and not freq and not special:
 #        if self.template and self.template  and not freq and not special :
             arvs = self._render_template(extract_group_cnt)
         else:
@@ -794,27 +794,39 @@ post_equilibration_script:name
 
         return ps
 
-
-    def _set_aliquot(self, a):
-        if a != self.o_aliquot:
-            self.user_defined_aliquot = True
-
+    def _aliquot_changed(self):
         if self.edit_mode:
             for si in self._selected_runs:
-                if si.aliquot != a:
+                if si.aliquot != self.aliquot:
                     si.user_defined_aliquot = True
-                else:
-                    si.user_defined_aliquot = self.user_defined_aliquot
+                    si.assigned_aliquot = int(self.aliquot)
+#                else:
+#                    si.user_defined_aliquot = self.user_defined_aliquot
 #
-                if si.user_defined_aliquot:
-                    si.aliquot = int(a)
+#                if si.user_defined_aliquot:
+#                    si.aliquot = int(self.aliquot)
+                    
             self.update_info_needed = True
-
-        self.o_aliquot = self._aliquot
-        self._aliquot = int(a)
-
-    def _get_aliquot(self):
-        return self._aliquot
+#    def _set_aliquot(self, a):
+#        if a != self.o_aliquot:
+#            self.user_defined_aliquot = True
+#
+#        if self.edit_mode:
+#            for si in self._selected_runs:
+#                if si.aliquot != a:
+#                    si.user_defined_aliquot = True
+#                else:
+#                    si.user_defined_aliquot = self.user_defined_aliquot
+##
+#                if si.user_defined_aliquot:
+#                    si.aliquot = int(a)
+#            self.update_info_needed = True
+#
+#        self.o_aliquot = self._aliquot
+#        self._aliquot = int(a)
+#
+#    def _get_aliquot(self):
+#        return self._aliquot
 
 #============= EOF =============================================
 
