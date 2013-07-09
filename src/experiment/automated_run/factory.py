@@ -45,8 +45,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     _aliquot = Int
     o_aliquot = Int
 
-#     aliquot = Long
-#     o_aliquot = Either(Long, Int)
     user_defined_aliquot = False
     special_labnumber = Str('Special Labnumber')
 
@@ -428,11 +426,6 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
             eg = self._selected_runs[0].extract_group + 1
             self.extract_group = eg
-#            self.trait
-#            for si in self._selected_runs:
-#                si.extract_group = eg
-#            self.update_info_needed = True
-
 
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
@@ -518,6 +511,25 @@ post_equilibration_script:name
         else:
             self._frequency_enabled = False
 
+#    def _aliquot_changed(self):
+#        if self.edit_mode:
+#            if self.aliquot:
+#                if self.aliquot != self.o_aliquot and self.o_aliquot:
+#                    self.user_defined_aliquot = True
+#                else:
+#                    self.user_defined_aliquot = False
+#
+#                refln=self._selected_runs[0].labnumber
+#                for si in self._selected_runs:
+#                    if si.labnumber !=refln:
+#                        if si.aliquot != self.aliquot:
+#                            si.user_defined_aliquot = True
+#                        else:
+#                            si.user_defined_aliquot = self.user_defined_aliquot
+#
+#                    if si.user_defined_aliquot:
+#                        si.aliquot = int(self.aliquot)
+#
     def _labnumber_changed(self, old, new):
         def _load_scripts(_old, _new):
             '''
