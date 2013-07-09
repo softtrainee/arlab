@@ -74,7 +74,9 @@ class ExperimentFactoryPane(TraitsDockPane):
                             QFItem('delay_between_analyses')
                             ),
 
-                     HGroup(UItem('add_button', enabled_when='ok_add'),
+                     HGroup(
+                            UItem('save_button',),
+                            UItem('add_button', enabled_when='ok_add'),
                             UItem('clear_button',
                                      tooltip='Clear all runs added using "frequency"'
                                      ),
@@ -96,7 +98,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                     VFold(
                      self._get_info_group(),
                      self._get_extract_group(),
-                     self._get_position_group(),
+#                     self._get_position_group(),
                      self._get_script_group(),
                      enabled_when=make_qf_name('ok_make')
                      ),
@@ -104,7 +106,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                             UItem('add_button', enabled_when='ok_add'),
                             UItem('clear_button',
                                      tooltip='Clear all runs added using "frequency"'
-                                     ),
+                                  ),
                             Label('Auto Increment'),
                             Item('auto_increment_id', label='L#'),
                             Item('auto_increment_position', label='Position'),
@@ -254,7 +256,9 @@ class ExperimentFactoryPane(TraitsDockPane):
                              label='Extract',
                              show_border=True
                              )
-        return extract_grp
+        return VGroup(extract_grp, self._get_position_group(),
+                      label='Extraction'
+                      )
 
 #===============================================================================
 # execution

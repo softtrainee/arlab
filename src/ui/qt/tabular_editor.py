@@ -26,6 +26,7 @@ from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
     _TableView
 from traitsui.mimedata import PyMimeData
 from src.helpers.ctx_managers import no_update
+import time
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -53,7 +54,7 @@ class _myTableView(_TableView):
         if font is not None:
             fnt = QFont(font)
             size = QFontMetrics(fnt)
-            vheader.setDefaultSectionSize(size.height())
+            vheader.setDefaultSectionSize(size.height()+2)
             hheader = self.horizontalHeader()
 
             hheader.setFont(fnt)
@@ -116,7 +117,8 @@ class _myTableView(_TableView):
 
         else:
             QTableView.keyPressEvent(self, event)
-
+    
+    _prev_paste_time=None
     def keyPressEvent(self, event):
 
         if event.matches(QKeySequence.Copy):
@@ -124,6 +126,12 @@ class _myTableView(_TableView):
                                     self.selectionModel().selectedRows()]
 
         elif event.matches(QKeySequence.Paste):
+            
+            if self._prev_paste_time:
+                if abs(time.time()-self._prev_paste_time)<0.5:
+                    return
+            self._prev_paste_time=time.time()
+            
             if self._copy_cache:
                 si = self.selectedIndexes()
                 copy_func = self.copy_func

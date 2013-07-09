@@ -760,6 +760,9 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 
     def _do_automated_run(self, arun):
         def start_run():
+            
+            self.experiment_queue.set_run_inprogress(arun.runid)
+            
             if not arun.start():
                 self.err_message = 'Monitor failed to start'
                 self._alive = False
@@ -810,14 +813,14 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 arun.state = 'success'
 
         self._increment_nruns_finished()
-        self._update_executed_runs(arun)
+#        self._update_executed_runs(arun)
 
         arun.finish()
 
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
 
-    def _update_executed_runs(self, arun):
-        self.experiment_queue.run_executed(arun.runid)
+#    def _update_executed_runs(self, arun):
+#        self.experiment_queue.run_executed(arun.runid)
 
     def _end_runs(self):
         self._last_ran = None
@@ -834,8 +837,11 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 startid = exp._cached_runs.index(self._last_ran) + 1
             except ValueError:
                 pass
-
-        return ans[startid:]
+            
+        if startid:
+            return [ai for ai in ans][startid:]
+        else:
+            return ans
 
 #===============================================================================
 # handlers
@@ -861,6 +867,7 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 
     def _refresh_button_fired(self):
         self.update_needed = True
+        self.experiment_queue.executed_runs=[]
 
     def _truncate_button_fired(self):
         self.experiment_queue.current_run.truncate_run(self.truncate_style)

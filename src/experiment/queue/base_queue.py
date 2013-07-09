@@ -94,13 +94,13 @@ class BaseExperimentQueue(Loggable):
                         run.frequency_added = True
                         aruns.insert(n - i, run)
                         cnt = 0
-                    if ai.analysis_type == 'unknown':
+                    if ai.analysis_type in ('unknown', 'air','cocktail'):
                         cnt += 1
             else:
                 if self.selected:
                     idx = aruns.index(self.selected[-1])
                     for ri in reversed(runviews):
-                        aruns.insert(idx, ri)
+                        aruns.insert(idx+1, ri)
                 else:
                     aruns.extend(runviews)
 
@@ -121,6 +121,7 @@ class BaseExperimentQueue(Loggable):
 # persistence
 #===============================================================================
     def load(self, txt):
+        self.initialized=False
         if self.automated_runs:
             self._cached_runs = [ci for ci in self.automated_runs
                                 if not ci.skip]

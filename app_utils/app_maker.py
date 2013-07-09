@@ -46,7 +46,8 @@ def make():
     apps = args.applications
     for name in apps:
         template = None
-        if name in ('diode', 'co2', 'valve', 'uv'):
+        flavors=('diode', 'co2', 'valve', 'uv', 'experiment')
+        if name in flavors:
             template = Template()
             template.root = args.root[0]
             template.version = args.version[0]
@@ -66,7 +67,7 @@ def make():
         if template is not None:
             template.build()
         else:
-            print "Invalid application flavor. Use 'diode', 'co2', 'valve', 'uv', 'bakedpy'"
+            print "Invalid application flavor. Use {}".format(', '.join(map("'{}'".format, flavors)))
 
 
 class Template(object):

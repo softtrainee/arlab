@@ -34,6 +34,7 @@ from threading import Event
 from src.helpers.timer import Timer
 from src.ui.gui import invoke_in_main_thread
 from src.loggable import Loggable
+import time
 
 # class WDHandler(ViewableHandler):
 # #    def init(self, info):
@@ -90,7 +91,10 @@ class WaitDialog(Loggable):
     def was_continued(self):
         return self._continued
 
-    def start(self, evt=None):
+    def start(self, block=True, evt=None):
+        if evt is None:
+            evt=Event()
+            
         if evt:
             evt.clear()
             self.end_evt = evt
@@ -98,6 +102,10 @@ class WaitDialog(Loggable):
         self.timer = Timer(1000, self._update_time,
                            delay=1000)
         self._continued = False
+        
+        if block:
+            while not evt.is_set():
+                time.sleep(0.1)
 
     def stop(self):
         self._end()

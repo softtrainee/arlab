@@ -27,7 +27,7 @@ from itertools import groupby
 from src.experiment.queue.experiment_queue import ExperimentQueue
 
 from src.experiment.factory import ExperimentFactory
-from src.constants import ALPHAS
+from src.constants import ALPHAS, NULL_STR
 from src.experiment.stats import StatsGroup
 from src.experiment.executor import ExperimentExecutor
 from src.paths import paths
@@ -85,6 +85,7 @@ class Experimentor(IsotopeDatabaseManager):
     #===========================================================================
     execute_event = Event
     activate_editor_event = Event
+    save_event=Event
 #    clear_display_event = Event
 
     def test_queues(self, qs=None):
@@ -129,7 +130,7 @@ class Experimentor(IsotopeDatabaseManager):
             queues = self.experiment_queues
 
         return [ai for ei in self.experiment_queues
-                    for ai in ei.automated_runs
+                    for ai in ei.executed_runs+ei.automated_runs
                         if ai.executable
                         ]
 
@@ -189,21 +190,25 @@ class Experimentor(IsotopeDatabaseManager):
                 special = ln.split('-')[0] in ANALYSIS_MAPPING
             return ln, special
 
-        def get_analysis_info(li):
-            sample, irradiationpos = '', ''
-            analysis = db.get_last_analysis(li)
-            if analysis:
-                dbln = analysis.labnumber
-                sample = dbln.sample
-                if sample:
-                    sample = sample.name
-
-                irradiationpos = dbln.irradiation_position
-                if irradiationpos:
-                    level = irradiationpos.level
-                    irradiationpos = '{}{}'.format(level.irradiation.name,
-                                                   level.name)
-            return sample, irradiationpos
+#        def get_analysis_info(li):
+#            sample, irradiationpos = '', ''
+#            
+##            analysis = db.get_last_analysis(li)
+##            if analysis:
+##                dbln = analysis.labnumber
+#            dbln=db.get_labnumber(li)
+#            if dbln:
+#                sample = dbln.sample
+#                if sample:
+#                    sample = sample.name
+#
+#                irradiationpos = dbln.irradiation_position
+#                if irradiationpos:
+#                    level = irradiationpos.level
+#                    irradiationpos = '{}{}'.format(level.irradiation.name,
+#                                                   level.name)
+##            self.debug('{} {} {}'.format(li, analysis, sample))
+#            return sample, irradiationpos
 
         db = self.db
         groups = self._group_analyses(ans, exclude=exclude)
@@ -211,15 +216,19 @@ class Experimentor(IsotopeDatabaseManager):
             ln, special = get_is_special(ln)
             cln = convert_identifier(ln)
 
-            sample, irradiationpos = get_analysis_info(cln)
+#            sample, irradiationpos = get_analysis_info(cln)
 
             # group analyses by aliquot
             for aliquot, ais in groupby(analyses,
                                         key=lambda x: x._aliquot):
                 self._set_aliquot_step(ais, special, cln, aliquot,
-                                       sample, irradiationpos)
+#                                       sample, irradiationpos
+                                       )
+#                self._set_aliquot_step(ais, special, cln, aliquot,
+#                                       sample, irradiationpos)
 
-    def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
+#    def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
+    def _set_aliquot_step(self, ais, special, cln, aliquot):
         db = self.db
 
         an = db.get_last_analysis(cln, aliquot=aliquot)
@@ -239,7 +248,7 @@ class Experimentor(IsotopeDatabaseManager):
         for aliquot_cnt, (egroup, aruns) in enumerate(ganalyses):
             step_cnt = 1
             for arun in aruns:
-                arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
+#                arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
 
                 if arun.skip:
                     arun.aliquot = 0
@@ -247,9 +256,9 @@ class Experimentor(IsotopeDatabaseManager):
 
                 if arun.state in ('failed', 'canceled'):
                     continue
-
+                
                 if not arun.user_defined_aliquot:
-                    if arun.state == 'not run':
+                    if arun.state in ('not run', 'extraction','measurement'):
                         arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
                         if special or not egroup:
                             aliquot_cnt += 1
@@ -293,8 +302,8 @@ class Experimentor(IsotopeDatabaseManager):
             '''
             self.executor.stop()
         else:
-            self.execute_event = True
             self.update_info()
+            self.execute_event = True
 
     @on_trait_change('experiment_queues[]')
     def _update_stats(self):
@@ -315,7 +324,8 @@ class Experimentor(IsotopeDatabaseManager):
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):
         self.experiment_factory.run_factory.edit_mode = True
-
+        self._set_factory_runs(self.experiment_queue.selected)
+        
     @on_trait_change('executor:update_needed')
     def _refresh1(self):
         self.executor.clear_run_states()
@@ -333,6 +343,10 @@ class Experimentor(IsotopeDatabaseManager):
         if executor.isAlive():
             executor.end_at_run_completion = True
             executor.changed_flag = True
+            
+    @on_trait_change('experiment_factory:save_button')
+    def _save_update(self):
+        self.save_event=True
 
     def _experiment_queue_changed(self, eq):
         if eq:
@@ -356,14 +370,20 @@ class Experimentor(IsotopeDatabaseManager):
         rf = ef.run_factory
         rf.edit_mode = False
         if new:
-            rf.special_labnumber = '---'
-            rf._labnumber = '---'
-            rf.labnumber = ''
             if len(new) > 1:
-                rf.edit_mode = True
-
+                self._set_factory_runs(new)
+                
+    def _set_factory_runs(self, new):
+        ef = self.experiment_factory
+        rf = ef.run_factory
+        rf.special_labnumber = 'Special Labnumber'
+        rf._labnumber = NULL_STR
+        rf.labnumber = ''
+        rf.edit_mode = True
+        
         rf.suppress_update = True
         rf.set_selected_runs(new)
+#        rf.suppress_update = True
 
 #===============================================================================
 # property get/set
@@ -376,7 +396,8 @@ class Experimentor(IsotopeDatabaseManager):
 # defaults
 #===============================================================================
     def _executor_default(self):
-        e = ExperimentExecutor(db=self.db,
+        e = ExperimentExecutor(
+#                               db=self.db,
                                application=self.application
                                )
 

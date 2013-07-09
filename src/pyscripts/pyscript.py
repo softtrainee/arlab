@@ -622,7 +622,7 @@ class PyScript(Loggable):
             if message is None:
                 message = ''
 
-            evt = Event()
+#            evt = Event()
             wd = WaitDialog()
             wd.trait_set(wtime=timeout,
                          parent=self,
@@ -633,10 +633,12 @@ class PyScript(Loggable):
             st = time.time()
 
             wd.reset()
-            wd.start(evt)
+            wd.start(block=True)
 #            wd.edit_traits(kind='livemoadl')
 #            invoke_in_main_thread(wd.edit_traits)
-            evt.wait(timeout=timeout + 0.25)
+#            while not evt.is_set():
+#                time.sleep(0.1)
+#            evt.wait(timeout=timeout + 0.25)
 #            wd.stop()
 
             if wd._canceled:

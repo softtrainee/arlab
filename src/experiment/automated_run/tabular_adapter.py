@@ -29,24 +29,25 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     # widths
     #===========================================================================
 
-    labnumber_width = Int(70)
+    labnumber_width = Int(80)
     aliquot_width = Int(40)
     sample_width = Int(50)
     position_width = Int(50)
     extract_value_width = Int(50)
     extract_units_width = Int(40)
+    extract_group_width = Int(40)
     duration_width = Int(50)
     cleanup_width = Int(60)
-    pattern_width = Int(50)
+    pattern_width = Int(80)
     beam_diameter_width = Int(65)
 
 #    overlap_width = Int(50)
 #    autocenter_width = Int(70)
 #    extract_device_width = Int(125)
-    extraction_script_width = Int(60)
-    measurement_script_width = Int(70)
-    post_measurement_script_width = Int(60)
-    post_equilibration_script_width = Int(60)
+    extraction_script_width = Int(80)
+    measurement_script_width = Int(90)
+    post_measurement_script_width = Int(90)
+    post_equilibration_script_width = Int(90)
 #    extraction_script_width = Int(125)
 #    measurement_script_width = Int(125)
 #    post_measurement_script_width = Int(125)
@@ -62,6 +63,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     cleanup_text = Property
     labnumber_text = Property
     aliquot_text = Property
+    extract_group_text = Property
 
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
@@ -112,6 +114,9 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
         return al
 
+    def _get_extract_group_text(self, trait, item):
+        return self._get_number('extract_group')
+
     def _get_beam_diameter_text(self, trait, item):
         return self._get_number('beam_diameter')
 
@@ -148,6 +153,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 #                 ('Overlap', 'overlap'),
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
+                 ('Group', 'extract_group'),
                  ('Duration', 'duration'),
                  ('Cleanup', 'cleanup'),
                  ('Beam Diam.', 'beam_diameter'),

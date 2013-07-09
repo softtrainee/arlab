@@ -616,11 +616,6 @@ class IsotopeAdapter(DatabaseAdapter):
             return
 
         sess = self.get_session()
-
-        ln = self.get_labnumber(ln)
-        if not ln:
-            return
-
         q = sess.query(meas_AnalysisTable)
         q = q.join(gen_LabTable)
         q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
@@ -632,8 +627,9 @@ class IsotopeAdapter(DatabaseAdapter):
         q = q.limit(1)
         try:
             return q.one()
-        except NoResultFound:
-            return
+        except NoResultFound, e:
+            self.debug('get last analysis {}'.format(e))
+            return 
 
     def get_unique_analysis(self, ln, ai, step=None):
         sess = self.get_session()
