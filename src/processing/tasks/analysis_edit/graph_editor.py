@@ -24,6 +24,7 @@ from src.processing.tasks.analysis_edit.fits import FitSelector
 from src.helpers.isotope_utils import sort_isotopes
 from src.graph.regression_graph import StackedRegressionGraph
 import os
+import copy
 #============= local library imports  ==========================
 
 
@@ -126,17 +127,28 @@ class GraphEditor(BaseTraitsEditor):
             path = '{}.pdf'.format(path)
 
         c = self.component
+
+        '''
+            chaco becomes less responsive after saving if 
+            use_backbuffer is false and using pdf 
+        '''
+        c.use_backbuffer = True
+
         _, tail = os.path.splitext(path)
         if tail == '.pdf':
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
             gc = PdfPlotGraphicsContext(filename=path,
 #                                         pagesize='letter'
                                         )
+            gc.render_component(c, valign='center')
+            gc.save()
         else:
             from chaco.plot_graphics_context import PlotGraphicsContext
             gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
+            gc.render_component(c)
+            gc.save(path)
 
-        gc.render_component(c,
-                            valign='center')
-        gc.save(path)
+#         with gc:
+#         self.rebuild_graph()
+
 #============= EOF =============================================

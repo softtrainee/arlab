@@ -148,14 +148,17 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         '''
             fired when the index metadata changes e.i user selection
         '''
-        sel = obj.metadata.get('selections', None)
-        if sel:
-            obj.was_selected = True
-            self._update_graph()
-        elif hasattr(obj, 'was_selected'):
-            if obj.was_selected:
-                self._update_graph()
-            obj.was_selected = False
+#         sel = obj.metadata.get('selections', None)
+#
+#         if sel:
+#             obj.was_selected = True
+#             self._update_graph()
+#         elif hasattr(obj, 'was_selected'):
+#             if obj.was_selected:
+#                 self._update_graph()
+#             obj.was_selected = False
+        self._update_graph()
+
 
     def _update_graph(self, *args, **kw):
 #        if self.suppress_regression:
@@ -195,6 +198,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 break
         else:
             self.regression_results = self.regressors
+
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
@@ -267,7 +271,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         low = plot.index_range.low
         high = plot.index_range.high
-
         fx = linspace(low, high, 200)
         if fit in [1, 2, 3]:
             if len(y) < fit + 1:

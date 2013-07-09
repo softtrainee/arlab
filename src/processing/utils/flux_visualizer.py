@@ -14,7 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item
@@ -22,12 +23,13 @@ import csv
 from pylab import polar, show, ylim, Inf, arange, meshgrid, zeros, \
     contour, ones, contourf, array, mgrid, plot, legend, mean, polyfit, \
     polyval, linspace, argmin, argmax, scatter, cm, cos, sin, xlabel, ylabel, \
-    colorbar, hstack
+    colorbar, hstack, rc, gcf, pi
 import math
 # from itertools import groupby
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata
+from src.regression.ols_regressor import MultipleLinearRegressor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 def load_holder(holder):
@@ -165,92 +167,220 @@ def draw_circular_grid(r, rings):
         y = (ring ** 2 - x ** 2) ** 0.5
         plot(x, y, ls='-.', color='black')
 
-def visualize_flux_contour(p, holder,):
-#    from traits.etsconfig.etsconfig import ETSConfig
-#    ETSConfig.toolkit = 'qt4'
-#    from src.regression.ols_regressor import MultipleLinearRegressor
-    use_2d = True
+def get_column_idx(names, header):
+    if not isinstance(names, (list, tuple)):
+        names = (names,)
 
-    holes = load_holder(holder)
-    x, y = zip(*[(x, y) for x, y, v in holes])
-    scatter(x, y)
+    for attr in names:
+        for ai in (attr, attr.lower(), attr.upper(), attr.capitalize()):
+            if ai in header:
+                return header.index(ai)
+
+def load_flux_xls(p, holes, header_offset=1):
+    import xlrd
+    wb = xlrd.open_workbook(p)
+    sheet = wb.sheet_by_index(0)
+    header = sheet.row_values(0)
+    hole_idx = get_column_idx('hole', header)
+    j_idx = get_column_idx('j', header)
+    j_err_idx = get_column_idx(('j_error', 'j err'), header)
+
+    data = []
+    hole_ids = []
+    for ri in range(sheet.nrows - header_offset):
+        ri += header_offset
+
+        hole = sheet.cell_value(ri, hole_idx)
+        if hole:
+            hole = int(hole) - 1
+            j = sheet.cell_value(ri, j_idx)
+            je = sheet.cell_value(ri, j_err_idx)
+            j, je = float(j), float(je)
+            x, y, v = holes[hole]
+            hole_ids.append(hole)
+            data.append((x, y, j, je))
+
+    data = array(data)
+    return data.T, hole_ids
+
+def load_flux_csv(p, holes, delim):
     with open(p, 'U') as fp:
-        reader = csv.reader(fp)
+        reader = csv.reader(fp, delimiter=delim)
         reader.next()
 
         mi = Inf
         ma = -Inf
         xy = []
         z = []
-        rs = []
+        ze = []
+#         rs = []
+        hole_ids = []
         for line in reader:
             if not line:
                 continue
             hole = int(line[0])
+            hole_ids.append(hole - 1)
             j = float(line[1])
+            je = float(line[2])
             x, y, v = holes[hole - 1]
             xy.append((x, y))
             z.append(j)
+            z.append(je)
+#             rs.append(round(((x ** 2 + y ** 2) ** 0.5) * 100))
 
             mi = min(mi, j)
             ma = max(ma, j)
 
-            rs.append(round(((x ** 2 + y ** 2) ** 0.5) * 100))
-
         xy = array(xy)
         xx, yy = xy.T
-        r = max(xx)
-        rings = list(set(rs))
-
-
-
-        zz = None
         z = array(z)
-        mz = min(z)
-        z = z - mz
-        z /= mz
-        z *= 100
-#         xs = []
-#         ys = []
-#         zs = []
 
-#         for t in (0,):
-#             t = math.radians(t)
-#             nxx = xx * cos(t) - yy * sin(t)
-#             nyy = xx * sin(t) + yy * cos(t)
-#
-#             xs = hstack((xs, nxx))
-#             ys = hstack((ys, nyy))
-#             zs = hstack((zs, z))
+        return (xx, yy, z, ze), hole_ids
 
-        xi = linspace(0, r, z.shape[0])
-        yi = linspace(-r, r, z.shape[0])
-        X = xi[None, :]
-        Y = yi[:, None]
+def draw_border(d):
+    r = d / 2.
+    xs = linspace(-r, r, 200)
+    y = (r ** 2 - xs ** 2) ** 0.5
+    plot(xs, y, c='black')
+    plot(xs, -y, c='black')
 
-        zi = griddata((xx, yy), z, (X, Y),
-                       method='cubic'
-                      )
+def visualize_flux_contour(p, holder, delim=','):
+#    from traits.etsconfig.etsconfig import ETSConfig
+#    ETSConfig.toolkit = 'qt4'
+#    from src.regression.ols_regressor import MultipleLinearRegressor
+    use_2d = True
+#     use_2d = False
 
-        contourf(xi, yi, zi, 30, cmap=cm.jet)
+    holes = load_holder(holder)
+
+    if p.endswith('.xls'):
+        (xx, yy, z, ze), hole_ids = load_flux_xls(p, holes)
+    else:
+        (xx, yy, z, ze), hole_ids = load_flux_csv(p, holes, delim)
+
+    r = max(xx)
+
+    ze = (ze / z) * 100
+    mz = min(z)
+    z = z - mz
+    z /= mz
+    z *= 100
+
+    n = z.shape[0]
+    xi = linspace(-r, r, n)
+    yi = linspace(-r, r, n)
+    X = xi[None, :]
+    Y = yi[:, None]
+
+    zi = griddata((xx, yy), z, (X, Y),
+#                         method='linear',
+                    method='cubic',
+#                     fill_value=min(z)
+                    )
+    XX, YY = meshgrid(xi, yi)
+    x, y = zip(*[(x, y) for i, (x, y, v) in enumerate(holes)
+                        if not i in hole_ids])
+
+    calc_dev = True
+#     calc_dev = False
+    age_space = 280.2
+    if use_2d:
+
+        if calc_dev:
+            nz = zeros((n, n))
+            xy = zip(xx, yy)
+#             print xy
+#             print z
+            reg = MultipleLinearRegressor(xs=xy, ys=z, fit='linear')
+            for i in range(n):
+                for j in range(n):
+                    pt = (XX[i, j],
+                          YY[i, j])
+                    v = reg.predict([pt])[0]
+#                     print v
+                    nz[i, j] = v
+            zi = nz - zi
+
+        if age_space:
+            zi *= age_space
+
+        contourf(xi, yi, zi, 50, cmap=cm.jet)
+
         cb = colorbar()
-        cb.set_label('J %')
+
+        label = 'Delta-Age @28.02 (ka)' if age_space else 'J %'
+        cb.set_label(label)
+
+        scatter(x, y, marker='o',
+                c='black',
+                s=200,
+                alpha=0.1
+                )
+
         scatter(xx, yy, marker='o',
                 cmap=cm.jet,
-                c=z, s=50)
+#                 lw=0,
+#                 facecolor='None',
+                c='black',
+#                 c=z,
+                s=200,
+                alpha=0.5
+#                 s=300
+                )
+
+
+#         draw_border(1)
 #         draw_circular_grid(r, rings)
 
-        xlabel('X (mm)')
-        ylabel('Y (mm)')
 
-        show()
+    else:
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.scatter(xx, yy , z, c=z,
+                   s=100,
+                   lw=0,
+                   cmap=cm.jet
+                   )
+
+        # plot error bars
+        for xj, yj, zj, ej in zip(xx, yy, z, ze):
+            ax.plot([xj, xj], [yj, yj], [zj - ej, zj + ej],
+                    c='black')
+#             ax.plot([xj, xj], [yj, yj], [zj, zj - ej])
+#             print X.shape
+#             contourf(xi, yi, zi, 25, cmap=cm.jet)
+
+        ax.contourf(XX, YY, zi,
+                    20,
+                    cmap=cm.jet)
+
+#             contour(XX, YY, zi, 25, cmap=cm.jet,
+#                     )
+#             ax.plot_trisurf(xx, yy, z, cmap=cm.jet, linewidth=0.2)
+#         ax.plot_wireframe(XX, YY, zi, alpha=0.25)
+#         ax.plot_surface(XX, YY, zi, rstride=2, cstride=2,
+#                         shade=True,
+#                         cmap=cm.jet
+#                         )
+        ax.set_zlabel('Delta-J %')
+    f = gcf()
+    f.set_size_inches((8, 8))
+    plt.axes().set_aspect('equal')
+    xlabel('X (mm)')
+    ylabel('Y (mm)')
+    rc('font', **{'size': 24})
+    show()
 
 if __name__ == '__main__':
 #     p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G_radial.txt'
     p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G2.txt'
+    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G3.txt'
+    p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G.xls'
+    p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G2.xls'
+#     p = '/Users/ross/Sandbox/flux_visualizer/runid_contour.txt'
 #    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G.txt'
     holder = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'
 #    visualize_flux(p, holder)
 #    visualize_flux_contour(p, holder)
-    visualize_flux_contour(p, holder)
+    visualize_flux_contour(p, holder, delim='\t')
 #============= EOF =============================================

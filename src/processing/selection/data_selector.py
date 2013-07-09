@@ -40,7 +40,7 @@ class FileSelector(Loggable):
 
     def open_file(self, p=None):
 #         p = '/Users/ross/Documents/william_smith2013/fc-2whopper.xls'
-        p = '/Users/ross/Documents/william_smith2013/tray_comparison.xls'
+        p = '/Users/ross/Documents/william_smith2013/tray_comparison_with_cocktail.xls'
 #         p = '/Users/ross/Sandbox/import_template.xls'
         if p is None:
             dlg = FileDialog(action='open')

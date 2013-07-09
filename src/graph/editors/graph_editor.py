@@ -89,6 +89,7 @@ class GraphEditor(HasTraits):
         f = plot.x_axis.tick_label_font
         n = f.face_name
         s = f.size
+        print f, n
         if not n:
             n = 'Helvetica'
         if not s:

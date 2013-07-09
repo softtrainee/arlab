@@ -25,7 +25,8 @@ from src.processing.plotters.plotter import Plotter
 from src.processing.plotters.results_tabular_adapter import InverseIsochronResults
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
 from src.constants import PLUSMINUS
-from src.regression.york_regressor import YorkRegressor
+from src.regression.new_york_regressor import YorkRegressor, NewYorkRegressor
+# from src.regression.york_regressor import YorkRegressor
 
 
 class InverseIsochron(Plotter):
@@ -71,7 +72,7 @@ class InverseIsochron(Plotter):
 #        trapped_4036err = 1
 #            rdict = g.regression_results[0]
 #         reg = g.regressors[0]
-        reg = YorkRegressor(xs=xs, ys=ys, xserr=xerrs, yserr=yerrs)
+        reg = NewYorkRegressor(xs=xs, ys=ys, xserr=xerrs, yserr=yerrs)
 
         trapped_4036 = 1 / reg.predict()
         trapped_4036err = reg.predict_error()

@@ -59,8 +59,8 @@ class BaseRegressor(Loggable):
 
     def tostring(self, sig_figs=5, error_sig_figs=5):
 
-        cs = self.coefficients
-        ce = self.coefficient_errors
+        cs = self.coefficients[::-1]
+        ce = self.coefficient_errors[::-1]
 
         coeffs = []
         for a, ci, ei in zip(ALPHAS, cs, ce):

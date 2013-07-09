@@ -28,8 +28,10 @@ from src.viewable import Viewable
 from traitsui.table_column import ObjectColumn
 from traitsui.editors.table_editor import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
+from kiva.fonttools.font import str_to_font
 
 class PlotterOption(HasTraits):
+    use = Bool
     name = Str(NULL_STR)
     plot_names = Property
 
@@ -37,6 +39,10 @@ class PlotterOption(HasTraits):
     height = Int(100, enter_set=True, auto_set=False)
     x_error = Bool(False)
     y_error = Bool(False)
+    def _name_changed(self):
+        if self.name != NULL_STR:
+            self.use = True
+
     def _get_plot_names(self):
         return {NULL_STR:NULL_STR,
                 'analysis_number':'Analysis Number',
@@ -64,7 +70,7 @@ class PlotterOption(HasTraits):
 #         return v
 
 
-FONTS = ['modern', ]
+FONTS = ['modern', 'arial']
 SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 
 
@@ -205,7 +211,7 @@ class PlotterOptions(Viewable):
             xn = FONTS[0]
         if xs is None:
             xs = default_size
-        return '{} {}'.format(xn, xs)
+        return str_to_font('{} {}'.format(xn, xs))
 #===============================================================================
 # defaults
 #===============================================================================
@@ -249,12 +255,13 @@ class PlotterOptions(Viewable):
                          label='Axes'
                          )
 
-
         cols = [
+              CheckboxColumn(name='use'),
               ObjectColumn(name='name',
                            width=180,
                            editor=EnumEditor(name='plot_names')),
               ObjectColumn(name='scale'),
+              ObjectColumn(name='height'),
               CheckboxColumn(name='x_error', label='X Error'),
               CheckboxColumn(name='y_error', label='Y Error'),
               ]

@@ -56,20 +56,16 @@ class BasePlateauOverlay(AbstractOverlay):
         return tt
 
 class SpectrumTool(BaseTool, BasePlateauOverlay):
-#    spectrum = Any
-#    group_id = Int
     nsigma = Int(2)
     def hittest(self, screen_pt, threshold=20):
         comp = self.component
 
         ndx = self._get_section(screen_pt)
-
         ys = comp.value.get_data()[::2]
         if ndx < len(ys):
             yd = ys[ndx]
             e = comp.errors[ndx] * self.nsigma
             yl, yu = comp.y_mapper.map_screen(array([yd - e, yd + e]))
-    #        yu = comp.y_mapper.map_screen(yd + e)
 
             if yl < screen_pt[1] < yu:
                 return ndx
@@ -84,18 +80,12 @@ class SpectrumTool(BaseTool, BasePlateauOverlay):
             sels = self.component.index.metadata['selections']
             self.component.index.metadata['selections'] = list(set(sels) ^ set([ndx]))
             self.component.request_redraw()
-#            self.component.invalidate_and_redraw()
 
         event.handled = True
 
     def normal_mouse_move(self, event):
-#        print event.handled
-#        if event.handled:
-#            return
-
         pt = event.x, event.y
-        if self.hittest(pt) and not event.handled:
-#        if self.component.hittest(pt):
+        if self.hittest(pt) is not None and not event.handled:
             event.window.set_pointer('cross')
             hover = self._get_section(pt)
             self.component.index.metadata['hover'] = [hover]
@@ -103,78 +93,6 @@ class SpectrumTool(BaseTool, BasePlateauOverlay):
         else:
             event.window.set_pointer('arrow')
             self.component.index.metadata['hover'] = None
-
-#            print t
-#            print cs, d
-#            print t
-#            print self.spectrum.cumulative39s[self.group_id].index(d)
-
-
-# class SpectrumOverlay(AbstractOverlay):
-#    group_id = 0
-#    def overlay(self, component, gc, *args, **kw):
-#        sels = self.component.index.metadata['selections']
-#
-#        xs = self.component.index.get_data()
-#        ys = self.component.value.get_data()
-#        n = len(xs)
-#        xs = xs[1:n / 2 - 1:2]
-#        yu = ys[1:n / 2 - 1:2]
-#        yl = ys[n / 2::2][::-1]
-# #        print yl
-#        for si in sels:
-#            if si == 0:
-#                p2 = 0, yl[si]
-#                p3 = 0, yu[si]
-#                p4 = xs[si], yu[si]
-#                p5 = xs[si], yl[si]
-#                p1 = p2
-#                p6 = p5
-#
-#            else:
-#                p2 = xs[si - 1], yl[si]
-#                p3 = xs[si - 1], yu[si]
-#                p4 = xs[si], yu[si]
-#                p5 = xs[si], yl[si]
-#
-#                p1 = xs[si - 1], yu[si - 1]
-#
-#                if yl[si] > yu[si + 1]:
-#                    p6 = xs[si], yu[si + 1]
-#                else:
-#                    p6 = xs[si], yl[si + 1]
-#                p7 = p6
-#                p8 = p5
-#
-#                p9 = p2
-#                p10 = p1
-#
-#            pts = self.component.map_screen([p1, p2, p3, p4, p5, p6, p7, p8, p9, p10])
-#
-#            pts[1][1] -= 0.5
-#            pts[2][1] += 1
-#            pts[3][1] += 1
-#            pts[4][1] -= 0.5
-#            pts[4][0] += 1
-#
-#            pts[6][0] -= 1
-#            pts[7][0] -= 1
-#            pts[8][0] += 1
-#            pts[9][0] += 1
-#            gc.set_fill_color((1, 0, 0))
-#            gc.set_stroke_color((1, 0, 0))
-#            gc.set_line_width(1)
-# #            gc.set_line_width(0)
-# #            print pts
-#            x = pts[1][0]
-#            y = pts[1][1]
-#            w = pts[3][0] - pts[1][0]
-#            h = pts[3][1] - pts[4][1]
-# #            gc.rect(x, y - 0.5, w + 1, h + 1)
-#
-#            gc.lines(pts)
-#            gc.draw_path()
-
 
 class SpectrumErrorOverlay(AbstractOverlay):
     nsigma = Int(1)
@@ -207,7 +125,6 @@ class SpectrumErrorOverlay(AbstractOverlay):
                 if i in sels:
                     gc.set_fill_color((0.75, 0, 0))
                 else:
-#                    gc.set_fill_color((0, 0, 0))
                     c = comp.color
                     if isinstance(c, str):
                         c = color_table[c]
@@ -238,18 +155,15 @@ class PlateauTool(DragTool):
         plot = self.component.component
         cur_pt = plot.map_data((event.x, event.y), all_values=True)
         dy = cur_pt[1] - self._prev_pt[1]
-#        dx = cur_pt[0] - self._prev_pt[0]
         self.component.y += dy
         self.component.dragged = True
         self._prev_pt = cur_pt
         event.handled = True
         plot.request_redraw()
-#        event.handled = True
+
 
 class PlateauOverlay(BasePlateauOverlay):
-#    spectrum = Any
     plateau_bounds = Array
-#    cumulative39s = List
     y = Float
     dragged = False
 
@@ -274,20 +188,17 @@ class PlateauOverlay(BasePlateauOverlay):
         return pt1, pt2
 
     def overlay(self, component, gc, *args, **kw):
-#        cs = self.spectrum.cumulative39s[self.group_id]
-
 
         line_width = 4
         points = self._get_line()
         if points:
             pt1, pt2 = points
             with gc:
-    #            comp = component
                 comp = self.component
                 gc.clip_to_rect(comp.x, comp.y, comp.width, comp.height)
                 gc.set_stroke_color((1, 0, 0))
                 gc.set_line_width(line_width)
-#            print pt1, pt2
+
                 y = pt1[1]
                 x1 = pt1[0] + 1
                 x2 = pt2[0] - 1
@@ -300,8 +211,8 @@ class PlateauOverlay(BasePlateauOverlay):
 
 class Spectrum(Plotter):
     padding = List([80, 10, 5, 40])
-    def _get_adapter(self):
-        return SpectrumResultsAdapter
+#     def _get_adapter(self):
+#         return SpectrumResultsAdapter
 
     def _build_xtitle(self, g, xtitle_font, xtick_font, **kw):
         f, s = xtitle_font.split(' ')
@@ -322,7 +233,6 @@ class Spectrum(Plotter):
         labels = []
         for group_id in group_ids:
             anals = [a for a in analyses if a.group_id == group_id]
-#            print len(anals), len(analyses)
             miage, maage, label = self._add_age_spectrum(g, anals, group_id)
 
             ma = max(ma, maage)
@@ -341,24 +251,10 @@ class Spectrum(Plotter):
                          value_scale=ap['scale']
                          )
 
-#        offset = (ma - mi) / len(labels)
-#        for i, l in enumerate(labels):
-#            print mi, offset
-#            l.do_layout()
-#            sx, sy = l._screen_coords
-#            print sx, sy
-#            l._screen_coords = (sx, sy + 5 * i)
-#            l.request_redraw()
-#            l.data_point = (25 + i,
-#                            mi,
-#                            mi + offset * i
-#                            )
-
         self._add_plot_metadata(g)
 
         g.set_y_limits(min=mi, max=ma, pad='0.1')
         g.analyses = analyses
-#        self.graph = g
         return g
 
     def _calculate_total_gas_rad40(self, analyses):
@@ -460,7 +356,6 @@ class Spectrum(Plotter):
             p.value_axis.tick_generator = SparseTicks()
         return ds
 
-#    def _get_plateau(self, ages, k39s, analyses, exclude=None):
     def _get_plateau(self, analyses, exclude=None):
         if exclude is None:
             exclude = []
@@ -486,11 +381,11 @@ class Spectrum(Plotter):
         else:
             return 0, array([0, 0]), 0, 0, 0
 
-    def _get_mswd(self, ages, errors):
-        mswd = calculate_mswd(ages, errors)
-        n = len(ages)
-        valid_mswd = validate_mswd(mswd, n)
-        return mswd, valid_mswd, n
+#     def _get_mswd(self, ages, errors):
+#         mswd = calculate_mswd(ages, errors)
+#         n = len(ages)
+#         valid_mswd = validate_mswd(mswd, n)
+#         return mswd, valid_mswd, n
 
     def _add_age_spectrum(self, g, analyses, group_id):
         xs, ys, es, c39s = self._calculate_spectrum(analyses, group_id=group_id)

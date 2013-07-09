@@ -28,7 +28,7 @@ from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAc
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
     GenericFindAction, RaiseAction, RaiseUIAction, ResetLayoutAction, \
-    MinimizeAction, PositionAction
+    MinimizeAction, PositionAction, IssueAction
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from itertools import groupby
@@ -276,6 +276,13 @@ class BaseTask(Task):
 
         return window_menu
 
+    def _help_menu(self):
+        menu = SMenu(
+                     IssueAction(),
+                     id='help.menu',
+                     name='Help')
+        return menu
+
 class BaseManagerTask(BaseTask):
     default_directory = Unicode
     wildcard = None
@@ -311,9 +318,7 @@ class BaseManagerTask(BaseTask):
                       self._view_menu(),
                       self._tools_menu(),
                       self._window_menu(),
-                      SMenu(
-                            id='help.menu',
-                           name='Help'),
+                      self._help_menu(),
 #                       SMenu(
 #                             ViewMenuManager(),
 #                             id='Window', name='&Window'),

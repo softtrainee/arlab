@@ -119,6 +119,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     multi_select_graph = Bool(False)
     multi_graphable = Bool(False)
 
+    add_query_button = Button('+')
     queries = List(Query)
     lookup = Dict
     style = Enum('normal', 'panel', 'simple', 'single')
@@ -156,6 +157,14 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def query_factory(self, **kw):
         return self._query_factory(**kw)
+
+    def _add_query_button_fired(self):
+        pq = next((pi for pi in self.queries), None)
+        if pq is None:
+            q = self._query_factory()
+            self.queries.append(q)
+        else:
+            self.add_query(pq, pq.parameter, pq.criterion)
 
     def add_query(self, parent_query, parameter, criterion):
         q = self._query_factory(
@@ -204,6 +213,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _assemble_query(self, q, queries, lookup):
         joined = []
         for qi in queries:
+            if not qi.use:
+                continue
+
             if not qi.criterion:
                 continue
 

@@ -79,6 +79,7 @@ class TableSelector(HasTraits):
         return v
 
 class Query(HasTraits):
+    use = Bool(True)
     parameter = String
 #    parameters = Property(depends_on='query_table')
     parameters = Property
@@ -95,9 +96,10 @@ class Query(HasTraits):
 #    query_table = Any
 
     selector = Any
+
     add = Button('+')
     remove = Button('-')
-    removable = Bool(True)
+#     removable = Bool(True)
 
     parent_parameters = List(String)
     parent_criterions = List(String)
@@ -196,11 +198,6 @@ class Query(HasTraits):
 # handlers
 #===============================================================================
     def _add_fired(self):
-
-#        g = TableSelector()
-#        info = g.edit_traits()
-#        if info.result:
-#            self.selector.add_query(g.parameter)
         self.selector.add_query(self, self.parameter, self.criterion)
 
     def _remove_fired(self):
@@ -295,7 +292,7 @@ class Query(HasTraits):
                                visible_when='removable'),
                         NItem('criterion',
                               ),
-                        NItem('criterion', width= -30,
+                        NItem('criterion', width=-30,
                              editor=CheckListEditor(name='criteria')),
                         show_labels=False
                         )

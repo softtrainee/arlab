@@ -51,7 +51,6 @@ class BaseExperimentQueue(Loggable):
 
     stats = Instance(ExperimentStats, ())
 
-#    _suppress_aliquot_update = False
     update_needed = Event
     changed = Event
     name = Property(depends_on='path')
@@ -97,15 +96,6 @@ class BaseExperimentQueue(Loggable):
                         cnt = 0
                     if ai.analysis_type == 'unknown':
                         cnt += 1
-
-    #            inserts = [(i, ) for i, ai in enumerate(aruns)
-    #                       if ai.analysis_type == 'unknown' and ]
-    #            print inserts
-    #            for idx, run in reversed(inserts):
-    #                run = runviews[0].clone_traits()
-    #                aruns.insert(idx, run)
-
-    #            self.update_needed = True
             else:
                 if self.selected:
                     idx = aruns.index(self.selected[-1])
@@ -113,9 +103,6 @@ class BaseExperimentQueue(Loggable):
                         aruns.insert(idx, ri)
                 else:
                     aruns.extend(runviews)
-    #            self._suppress_aliquot_update = False
-
-#        self.update_needed = True
 
     def set_extract_device(self, ed):
         self.extract_device = ed
@@ -127,13 +114,8 @@ class BaseExperimentQueue(Loggable):
 
         self.runs_table = klass()
 
-#        self._suppress_aliquot_update = True
-#        self._no_update=True
         with no_update(self):
             self.runs_table.set_runs(runs)
-#        self._no_update=False
-#        self._suppress_aliquot_update = False
-#        self.update_needed=True
 
 #===============================================================================
 # persistence
@@ -147,13 +129,10 @@ class BaseExperimentQueue(Loggable):
 
         aruns = self._load_runs(txt)
         if aruns:
-#            self._suppress_aliquot_update = True
-#            self._no_update = True
             with no_update(self):
                 self.automated_runs = aruns
-#            self._no_update = False
+
             self.initialized = True
-#            self._suppress_aliquot_update = False
 
 #            lm = self.sample_map
 #            if lm:
@@ -267,7 +246,6 @@ class BaseExperimentQueue(Loggable):
 
                 return
 
-#        aruns = self._add_frequency_runs(meta, aruns)
         return aruns
 
     def _automated_run_factory(self, script_info, params):
@@ -362,10 +340,6 @@ tray: {}
            self.delay_between_analyses,
            self.extract_device,
            self.tray if self.tray else '',
-#           make_frequency_runs('blanks'),
-#           make_frequency_runs('airs'),
-#           make_frequency_runs('cocktails'),
-#           make_frequency_runs('backgrounds'),
            )
 
         if fp:
@@ -373,31 +347,12 @@ tray: {}
         else:
             return s
 
+    def isUpdateable(self):
+        return not self._no_update
 #===============================================================================
 # handlers
 #===============================================================================
-#    def _rearranged_fired(self):
-#        self.update_needed = True
 
-#    def _pasted_changed(self):
-#        sel = self.runs_table.selected
-#
-#        idx = self.automated_runs.index(sel[0])
-# #        self._suppress_aliquot_update = True
-#        for si in self.runs_table.copy_cache[::-1]:
-#            ci = si.clone_traits()
-#            self.automated_runs.insert(idx, ci)
-# #        self._suppress_aliquot_update = False
-#
-#        self.debug('%%%%%%%%%%%%%%%%%%% Paste Update Needed')
-#        self.update_needed = True
-
-#    @on_trait_change('automated_runs[]')
-#    def _update_runs(self):
-#        self.debug('automated runs increase {}'.format(len(self.automated_runs)))
-#        if not self._suppress_aliquot_update:
-#            self.debug('%%%%%%%%%%%%%%%%%%% Len Update Needed')
-#            self.update_needed = True
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -405,25 +360,5 @@ tray: {}
         return [ci for ci in self.automated_runs
                     if not ci.skip and ci.state == 'not run']
 
-#===============================================================================
-# groups
-#===============================================================================
-#     def _get_copy_paste_group(self):
-#         return HGroup(
-#              Item('copy_button', enabled_when='object.selected'),
-#              Item('paste_button', enabled_when='object._copy_cache'),
-#              Item('update_aliquots'),
-#               show_labels=False)
-#===============================================================================
-# views
-#===============================================================================
-#     def traits_view(self):
-#         analysis_table = VGroup(
-# #                                self._get_copy_paste_group(),
-#                                 Item('runs_table', show_label=False, style='custom'),
-#                                 show_border=True,
-#                                 label='Analyses',
-#                                 )
-#         v = View(analysis_table)
-#         return v
+
 #============= EOF =============================================

@@ -54,7 +54,7 @@ import time
 # class mStackedGraph(IsotopeContextMenuMixin, StackedGraph):
 #    pass
 
-N = 300
+N = 500
 
 
 class Ideogram(Plotter):
@@ -103,16 +103,24 @@ class Ideogram(Plotter):
 # #        self.graph.redraw()
 #        self.figure.refresh()
 
+    def _get_font_args(self, font):
+        if isinstance(font, str):
+            f, s = font.split(' ')
+        else:
+            f, s = font.name, font.size
+        return f, s
 
     def _build_xtitle(self, g, xtitle_font, xtick_font, age_unit='Ma'):
-        f, s = xtitle_font.split(' ')
+        f, s = self._get_font_args(xtitle_font)
+#         f, s = xtitle_font.split(' ')
         g.set_x_title('Age ({})'.format(age_unit), font=f, size=int(s))
         g.set_axis_traits(axis='x',
 #                          tick_label_font=xtick_font
                           )
 
     def _build_ytitle(self, g, ytitle_font, ytick_font, aux_plots, **kw):
-        f, s = ytitle_font.split(' ')
+        f, s = self._get_font_args(ytitle_font)
+#         f, s = ytitle_font.split(' ')
         g.set_y_title('Relative Probability', font=f, size=int(s))
         for k, ap in enumerate(aux_plots):
             g.set_y_title(ap['ytitle'], plotid=k + 1, font=f, size=int(s))
@@ -204,8 +212,8 @@ class Ideogram(Plotter):
 
         self._add_plot_metadata(g)
 
-
         return g
+
     def _make_sorted_pairs(self, attr, analyses, group_id):
         ages = self._get_ages(analyses, group_id, unzip=False)
         attrs = [getattr(a, attr) for a in analyses
@@ -316,13 +324,14 @@ class Ideogram(Plotter):
         return bins, probs
 
     def _calculate_stats(self, ages, errors, xs, ys):
-        mswd = calculate_mswd(ages, errors)
-        valid_mswd = validate_mswd(mswd, len(ages))
+        mswd, valid_mswd, n = self._get_mswd(ages, errors)
+#         mswd = calculate_mswd(ages, errors)
+#         valid_mswd = validate_mswd(mswd, len(ages))
 
         if self.mean_calculation_kind == 'kernel':
             wm , we = 0, 0
             delta = 1
-            maxs, mins = find_peaks(ys, delta, xs)
+            maxs, _mins = find_peaks(ys, delta, xs)
             wm = max(maxs, axis=1)[0]
         else:
             wm, we = calculate_weighted_mean(ages, errors)
@@ -341,13 +350,6 @@ class Ideogram(Plotter):
         bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
         wm, we, mswd, valid_mswd = self._calculate_stats(ages, errors, bins, probs)
 
-#        self.results.append(IdeoResults(
-#                                        labnumber=labnumber,
-#                                        age=wm,
-#                                        mswd=mswd,
-#                                        error=we,
-#                                        error_calc_method=self.error_calc_method
-#                                        ))
         minp = min(probs)
         maxp = max(probs)
 
@@ -407,23 +409,6 @@ class Ideogram(Plotter):
                           axis='y', plotid=0)
 
         return ym
-
-#    def _add_data_label(self, s, args):
-#        wm, ym, we, mswd, n = args
-#        label_text = self._build_label_text(*args)
-#        label = DataLabel(component=s, data_point=(wm, ym),
-#                          label_position='top right',
-#                          label_text=label_text,
-#                          border_visible=False,
-#                          bgcolor='transparent',
-#                          show_label_coords=False,
-#                          marker_visible=False,
-#                          text_color=s.color,
-#                          arrow_color=s.color,
-#                          )
-#        s.overlays.append(label)
-#        tool = DataLabelTool(label)
-#        label.tools.append(tool)
 
     def _calc_error(self, we, mswd):
         ec = self.plotter_options.error_calc_method
@@ -601,25 +586,14 @@ class Ideogram(Plotter):
     def _graph_panel_info_changed(self, obj, name, new):
         if obj.ncols * obj.nrows <= self._ngroups:
             oc = self._plotcontainer
-#            op = self._plots
             np, nplots = self.build(padding=obj.padding)
 
             pc = self.figure.graph.plotcontainer
-#            print self.figure.graph.plotcontainer.components
             ind = pc.components.index(oc)
             pc.remove(oc)
             pc.insert(ind, np)
-#            for opi in op:
-#                self.figure.graph.plots.remove(opi)
-
-#            self.figure.graph.plots += op
             self.figure.graph.redraw()
             self._plotcontainer = np
-#            self._plots = nplots
-#            print self._plotcontainer
-#            self.figure.graph.plotcontainer.remove(oc)
-#            self.figure.graph.plotcontainer.
-#        op, r, c = self._create_grid_container(self._ngroups)
 
     def _plot_label_text_changed(self):
         self.plot_label.text = self.plot_label_text

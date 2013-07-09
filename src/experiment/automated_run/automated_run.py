@@ -466,9 +466,9 @@ class AutomatedRun(Loggable):
                                                                 action=action,
                                                                 resume=resume))
     def py_clear_conditions(self):
-        self.clear_terminations()
-        self.clear_truncations()
-        self.clear_actions()
+        self.py_clear_terminations()
+        self.py_clear_truncations()
+        self.py_clear_actions()
 
     def py_clear_terminations(self):
         self.termination_conditions = []

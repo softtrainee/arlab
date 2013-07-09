@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any , on_trait_change, Int
+from traits.api import Any , on_trait_change, Int, List
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
@@ -29,20 +29,27 @@ class ExperimentQueue(BaseExperimentQueue):
     selected = Any
     dclicked = Any
     database_identifier = Int
-#    refresh_button = Event
-#    refresh_label = Property(depends_on='was_executed')
-#    was_executed = Bool(False)
-    def remove_run(self, aid):
-        run=self._find_run(aid)
+    executed_runs = List
+
+    def run_executed(self, aid):
+        run = self._find_run(aid)
+
+        # using the no_update ctx manager was not working
+        # have to manually toggle _no_update
+
+        self._no_update = True
         if run is not None:
             self.automated_runs.remove(run)
+            self.executed_runs.append(run)
         else:
             self.debug('Problem removing {}'.format(aid))
-        
+
+        self._no_update = False
+
     def _find_run(self, aid):
-        return next((a for a in self.automated_runs 
-                     if make_runid(a.labnumber, a.aliquot, a.step)==aid), None)
-        
+        return next((a for a in self.automated_runs
+                     if make_runid(a.labnumber, a.aliquot, a.step) == aid), None)
+
     def copy_function(self, obj):
         ci = obj.clone_traits()
         ci.state = 'not run'

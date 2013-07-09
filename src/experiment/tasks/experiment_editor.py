@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int, on_trait_change
-from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup
+from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup, VSplit
 from pyface.tasks.api import Editor
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
@@ -43,32 +43,38 @@ class ExperimentEditor(BaseTraitsEditor):
 #    def create(self, parent):
 #        self.control = self._create_control(parent)
     def traits_view(self):
-        v = View(
-#                 VGroup(
-#                 HGroup(spring, Item('refresh_button', show_label=False)),
-                 UItem('automated_runs',
-                               show_label=False,
-                               editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-                                            operations=['delete',
-                                                        'move',
- #                                                        'edit'
-                                                        ],
-                                            editable=True,
-                                            dclicked='dclicked',
-                                            selected='selected',
-                                            rearranged='rearranged',
-                                            pasted='pasted',
-                                            copy_function='copy_function',
- #                                             copy_cache='copy_cache',
- #                                             update='update_needed',
+
+        arun_grp = UItem('automated_runs',
+                       editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+                                   operations=['delete',
+                                               'move',
+#                                                        'edit'
+                                               ],
+                                   editable=True,
+                                   dclicked='dclicked',
+                                   selected='selected',
+                                   rearranged='rearranged',
+                                   pasted='pasted',
+                                   copy_function='copy_function',
+#                                             copy_cache='copy_cache',
+#                                             update='update_needed',
 #                                            drag_move=True,
-                                            auto_update=True,
-                                            multi_select=True,
-                                            scroll_to_bottom=False)
-#                       )
-                        ),
+                                   auto_update=True,
+                                   multi_select=True,
+                                   scroll_to_bottom=False)
+                        )
+
+        executed_grp = UItem('executed_runs',
+                             editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+                                                    editable=False
+                                                    ),
+                            )
+
+        v = View(
+                 VSplit(arun_grp,
+                        executed_grp),
                  resizable=True
-                 )
+                )
         return v
 
 

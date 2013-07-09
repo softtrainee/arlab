@@ -91,16 +91,17 @@ class ExperimentEditorTask(EditorTask):
         from src.lasers.laser_managers.ilaser_manager import ILaserManager
         man = app.get_service(ILaserManager)
         if man:
-            from src.image.tasks.video_task import VideoTask
-            vt = VideoTask()
-#             plugin = app.get_plugin('pychron.video')
-#             task = plugin.tasks[0].factory()
-#             self.window.add_task(task)
+            if hasattr(man.stage_manager, 'video'):
+                from src.image.tasks.video_task import VideoTask
+                vt = VideoTask()
+    #             plugin = app.get_plugin('pychron.video')
+    #             task = plugin.tasks[0].factory()
+    #             self.window.add_task(task)
 
-            video = man.stage_manager.video
-            man.initialize_video()
-            pane = vt.new_video_dock_pane(video=video)
-            panes.append(pane)
+                video = man.stage_manager.video
+                man.initialize_video()
+                pane = vt.new_video_dock_pane(video=video)
+                panes.append(pane)
 
         return panes
 
@@ -256,6 +257,14 @@ class ExperimentEditorTask(EditorTask):
 
         if editor:
             p = editor.path
+            if editor.dirty:
+                n, _ = os.path.splitext(os.path.basename(p))
+                msg = '{} has been modified.\n Save changes?'.format(n)
+                if self.confirmation_dialog(msg):
+                    self._save_file(p)
+                else:
+                    return
+
             if os.path.isfile(p):
                 group = editor.group
                 min_idx = editor.merge_id

@@ -225,7 +225,6 @@ class ArArAge(HasTraits):
         else:
             self.include_irradiation_error = include_irradiation_error
 
-
 #        signals = self.signals
 
 #        nsignals = dict()

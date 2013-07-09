@@ -26,10 +26,31 @@ import os
 from src.paths import paths
 import shelve
 
+import webbrowser
+
+#===============================================================================
+# help
+#===============================================================================
+class WebAction(Action):
+    def _open_url(self, url):
+        webbrowser.open_new(url)
+
+
+class IssueAction(WebAction):
+    name = 'Add Request/Report Bug'
+    def perform(self, event):
+        '''
+            goto issues page add an request or report bug
+        '''
+        url = 'http://code.google.com/p/arlab'
+        self._open_url(url)
+
+
 class ResetLayoutAction(TaskAction):
     name = 'Reset Layout'
     def perform(self, event):
         self.task.window.reset_layout()
+
 
 class PositionAction(Action):
     name = 'Window Positions'
@@ -39,25 +60,6 @@ class PositionAction(Action):
         lm = LayoutManager(app)
         lm.edit_traits()
 
-# class SavePositionAction(Action):
-#     name = 'Save Positions'
-#     def perform(self, event):
-#         from src.envisage.tasks.layout_manager import LayoutManager
-#         app = event.task.window.application
-#         lm = LayoutManager(app)
-#
-#
-#         lm.new_layout()
-
-
-#         p = os.path.join(paths.hidden_dir, 'window_positions')
-#
-#         d = shelve.open(p)
-#         app = event.task.window.application
-#         for win in app.windows:
-#
-#         d[win.active_task.id] = [win.position
-#         d.close()
 
 class MinimizeAction(TaskAction):
     name = 'Minimize'
@@ -65,6 +67,7 @@ class MinimizeAction(TaskAction):
     def perform(self, event):
         app = self.task.window.application
         app.active_window.control.showMinimized()
+
 
 class RaiseAction(TaskAction):
     window = Any
@@ -77,23 +80,20 @@ class RaiseAction(TaskAction):
     def _on_deactivate(self):
         self.checked = False
 
+
 class RaiseUIAction(TaskAction):
     style = 'toggle'
     def perform(self, event):
-#        self.ui.control.activate()
         self.checked = True
+
 
 class GenericSaveAction(TaskAction):
     name = 'Save'
     accelerator = 'Ctrl+S'
     def perform(self, event):
         task = self.task
-#        task = event.task
         if hasattr(task, 'save'):
             task.save()
-#        else:
-#            manager = self._get_experimentor(event)
-#            manager.save_experiment_queues()
 
 
 class GenericSaveAsAction(TaskAction):
@@ -106,7 +106,7 @@ class GenericSaveAsAction(TaskAction):
 
 class GenericFindAction(TaskAction):
     accelerator = 'Ctrl+F'
-    name = 'Find...'
+    name = 'Find text...'
     def perform(self, event):
         task = self.task
         if hasattr(task, 'find'):
