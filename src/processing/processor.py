@@ -307,7 +307,7 @@ class Processor(IsotopeDatabaseManager):
             if gideo:
                 gideo, _plots = gideo
 
-            return gideo
+            return gideo, p
 
     def new_spectrum(self, ans, plotter_options=None):
 
@@ -327,7 +327,7 @@ class Processor(IsotopeDatabaseManager):
             if gspec:
                 gspec, _plots = gspec
 
-            return gspec
+            return gspec, p
 
     def new_inverse_isochron(self, ans, plotter_options=None):
         p = InverseIsochron()

@@ -131,13 +131,14 @@ class FigureTask(AnalysisEditTask):
 #         self.active_editor.save_file(path)
 
     def _new_figure(self, ans, name, func, klass):
-        comp = None
+        comp, plotter = None, None
         if ans:
             self.unknowns_pane.items = ans
-            comp = func(ans)
+            comp, plotter = func(ans)
 
         editor = klass(
                        component=comp,
+                       plotter=plotter,
                        name=name,
                        processor=self.manager,
                        make_func=func
@@ -150,6 +151,10 @@ class FigureTask(AnalysisEditTask):
             self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
 
         super(FigureTask, self)._active_editor_changed()
+
+    @on_trait_change('active_editor:plotter:recall_event')
+    def _recall(self, new):
+        print new
 
     @on_trait_change('plotter_options_pane:pom:plotter_options:[+, aux_plots:+]')
     def _options_update(self, name, new):

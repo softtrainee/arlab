@@ -124,19 +124,32 @@ class Experimentor(IsotopeDatabaseManager):
 #===============================================================================
 # info update
 #===============================================================================
-    def _get_all_automated_runs(self):
+    def _get_all_automated_runs(self, queues=None):
+        if queues is None:
+            queues = self.experiment_queues
+
         return [ai for ei in self.experiment_queues
                     for ai in ei.automated_runs
                         if ai.executable
                         ]
 
-    def _update(self):
-        self.debug('update runs')
+    def _update(self, queues=None):
+        if queues is None:
+            queues = self.experiment_queues
 
+        for qi in queues:
+            self.debug('+++++++++++++++++ is updatable {} {}'.format(id(qi), qi.isUpdateable()))
+#             if not qi.isUpdateable():
+#                 return
+        queues = [qi for qi in queues if qi.isUpdateable()]
+        if not queues:
+            return
+
+        self.debug('update runs')
         self.debug('updating stats')
         self.stats.calculate()
 
-        ans = self._get_all_automated_runs()
+        ans = self._get_all_automated_runs(queues)
 #         print len([i for i in ans])
         exclude = ('dg', 'pa')
 #        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))
@@ -169,6 +182,7 @@ class Experimentor(IsotopeDatabaseManager):
     def _modify_aliquots_steps(self, ans, exclude=None):
         '''
         '''
+
         def get_is_special(ln):
             special = False
             if '-' in ln:
@@ -201,7 +215,7 @@ class Experimentor(IsotopeDatabaseManager):
 
             # group analyses by aliquot
             for aliquot, ais in groupby(analyses,
-                                        key=lambda x: x.aliquot):
+                                        key=lambda x: x._aliquot):
                 self._set_aliquot_step(ais, special, cln, aliquot,
                                        sample, irradiationpos)
 
@@ -209,6 +223,7 @@ class Experimentor(IsotopeDatabaseManager):
         db = self.db
 
         an = db.get_last_analysis(cln, aliquot=aliquot)
+
         aliquot_start = 0
         step_start = 0
         if an:
@@ -235,8 +250,7 @@ class Experimentor(IsotopeDatabaseManager):
 
                 if not arun.user_defined_aliquot:
                     if arun.state == 'not run':
-#                        print cln, aliquot_start , aliquot_cnt
-                        arun.aliquot = int(aliquot_start + aliquot_cnt + 1)
+                        arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
                         if special or not egroup:
                             aliquot_cnt += 1
 
@@ -246,6 +260,7 @@ class Experimentor(IsotopeDatabaseManager):
 
     def execute_queues(self, queues, path, text, text_hash):
         self.debug('setup executor')
+
         self.executor.trait_set(experiment_queues=queues,
                                 experiment_queue=queues[0],
                                 text=text,

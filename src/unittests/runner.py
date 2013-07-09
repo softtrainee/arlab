@@ -11,5 +11,6 @@ logging_setup('unittests')
 # from .database import IsotopeTestCase
 # from .experiment import ExperimentTest
 # from .processing import FileSelectorTest
-from .york_regression import YorkRegressionTest, NewYorkRegressionTest
+# from .york_regression import YorkRegressionTest, NewYorkRegressionTest
 # from .regression import NewYorkRegressionTest
+from .bayesian import BayesianTest

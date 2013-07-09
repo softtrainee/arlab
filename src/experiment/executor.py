@@ -63,8 +63,8 @@ class ExperimentExecutor(Experimentable):
     wait_dialog = Instance(WaitDialog, ())
 
     current_run = Instance(AutomatedRun)
-    executed_runs=List
-    
+    executed_runs = List
+
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
     delaying_between_runs = Bool(False)
@@ -284,14 +284,14 @@ class ExperimentExecutor(Experimentable):
                 runs = exp.automated_runs
             for ei in runs:
                 ei.state = 'not run'
-    
+
     def check_alive(self):
         if not self.isAlive():
             self.err_message = 'User quit'
             return False
         else:
             return True
-        
+
     def execute(self):
         self.debug('%%%%%%%%%%%%%%%%%%% Starting Execution')
                     # check for blank before starting the thread
@@ -307,7 +307,7 @@ class ExperimentExecutor(Experimentable):
             self._execute_thread = t
 
             self._was_executed = True
-    
+
     def check_managers(self, exp):
         nonfound = self._check_for_managers(exp)
         if nonfound:
@@ -317,10 +317,10 @@ class ExperimentExecutor(Experimentable):
             return
 
         return True
-    
-    
 
-    
+
+
+
 
 #===============================================================================
 # stats
@@ -367,7 +367,7 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     return
             return True
-        
+
     def _execute(self):
         # test runs first
         for exp in self.experiment_queues:
@@ -421,7 +421,6 @@ class ExperimentExecutor(Experimentable):
         self._alive = True
 
         exp = self.experiment_queue
-
         # check the first aliquot before delaying
         arv = exp.cleaned_automated_runs[0]
         self._check_run_aliquot(arv)
@@ -623,7 +622,6 @@ class ExperimentExecutor(Experimentable):
         '''
             convert the an AutomatedRunSpec an AutomatedRun
         '''
-
         # the first run was checked before delay before runs
         if i > 1:
             # test manager connections
@@ -716,7 +714,7 @@ class ExperimentExecutor(Experimentable):
         types = ['air', 'unknown', 'cocktail']
         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
         # get first air, unknown or cocktail
-        aruns = exp.automated_runs
+        aruns = exp.cleaned_automated_runs
         fa = next(((i, a) for i, a in enumerate(aruns)
                             if a.analysis_type in types and \
                                 not a.skip and \
@@ -760,10 +758,6 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 
         return True
 
-    def _update_executed_runs(self, arun):
-        self.executed_runs.append(arun)
-        self.experiment_queue.remove_run(arun)
-    
     def _do_automated_run(self, arun):
         def start_run():
             if not arun.start():
@@ -815,13 +809,16 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
             if arun.state not in ('truncated', 'canceled', 'failed'):
                 arun.state = 'success'
 
-        arun.finish()
         self._increment_nruns_finished()
         self._update_executed_runs(arun)
-        
+
+        arun.finish()
+
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
 
-    
+    def _update_executed_runs(self, arun):
+        self.experiment_queue.run_executed(arun.runid)
+
     def _end_runs(self):
         self._last_ran = None
         self.stats.stop_timer()

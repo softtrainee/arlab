@@ -104,7 +104,6 @@ class NewYorkRegressor(YorkRegressor):
     '''
         mahon 1996
     '''
-    correlation_coefficient = 0
 
     def _calculate(self):
         b = 0
@@ -175,26 +174,31 @@ class NewYorkRegressor(YorkRegressor):
         cc = W ** 3 * (sig_xy - b * var_x)
 
         da = b ** 2 * (U * V * var_x - U ** 2 * sig_xy)
-        db = b * (U * 2 * var_y - V ** 2 * var_x)
+        db = b * (U ** 2 * var_y - V ** 2 * var_x)
         dc = U * V * var_y - V ** 2 * sig_xy
         dd = da + db - dc
+
+        # eq 19
         dVdb = sum(W ** 2 * (aa + bb)) + 4 * sum(cc * dd)
 
+        # kronecker delta i.e int(i==j)
         kd = identity(W.shape[0])
 
         sW = sum(W)
 
         ee = W ** 2 * (kd - W / sW)
-
+        # eq 20
         dVdx = sum(ee * (b ** 2 * (V * var_x - 2 * U * sig_xy) + \
                      2 * b * U * var_y - V * var_y))
 
+        # eq 21
         dVdy = sum(ee * (b ** 2 * (U * var_x + 2 * V * sig_xy) - \
                      2 * b * V * var_x - U * var_y))
 
+        # eq 18
         a = sum(dVdx ** 2 * var_x + dVdy ** 2 * var_y + 2 * sig_xy * dVdx * dVdy)
-
         var_b = a / dVdb ** 2
+
         return var_b
 
 

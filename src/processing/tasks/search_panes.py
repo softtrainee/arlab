@@ -17,12 +17,14 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int
 from traitsui.api import View, Item, InstanceEditor, ListEditor, \
-    VGroup, UItem, spring, HGroup, VSplit, EnumEditor
+    VGroup, UItem, spring, HGroup, VSplit, EnumEditor, TableEditor
 
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.ui.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 from src.ui.custom_label_editor import CustomLabel
+from traitsui.table_column import ObjectColumn
+from traitsui.extras.checkbox_column import CheckboxColumn
 #============= standard library imports ========================
 #============= local library imports  ==========================
 def selector_name(name):
@@ -55,11 +57,32 @@ class QueryPane(TraitsDockPane):
                                     )
                         )
 
+        editor = ListEditor(mutable=False,
+                          style='custom',
+                          editor=InstanceEditor())
+
+#         cols = [
+#                 CheckboxColumn(name='use', label=''),
+#                 ObjectColumn(name='parameter',
+#                              editor=EnumEditor(name='parameters')
+#                              ),
+#                 ObjectColumn(name='comparator',
+#                              editor=EnumEditor(name='comparisons'),
+#                              label='',
+#                              ),
+#                 ObjectColumn(name='criterion'),
+#                 ObjectColumn(name='criterion',
+#                              editor=EnumEditor(name='criteria'),
+#                              label='', width=-25),
+#                 ]
+#
+#         editor = TableEditor(columns=cols)
         query_grp = Item(selector_name('queries'), show_label=False,
                                    style='custom',
-                                   editor=ListEditor(mutable=False,
-                                                  style='custom',
-                                                  editor=InstanceEditor()),
+                                   editor=editor,
+#                                    editor=ListEditor(mutable=False,
+#                                                   style='custom',
+#                                                   editor=InstanceEditor()),
                              height=0.25,
                              visible_when='kind=="Database"',
                              )
@@ -89,6 +112,8 @@ class QueryPane(TraitsDockPane):
                                results_grp,
                                query_grp,
                                ),
+                        HGroup(spring, UItem(selector_name('add_query_button')),
+                               visible_when='kind=="Database"'),
                         filter_grp
                         )
                  )

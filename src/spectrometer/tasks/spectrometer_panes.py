@@ -88,11 +88,11 @@ class ControlsPane(TraitsDockPane):
         source_grp = UItem('source', style='custom')
 
         graph_cntrl_grp = VGroup(
-                                 hitem('graph_scan_width', 'Scan Width (mins)'),
-                                 hitem('graph_scale', 'Scale'),
-                                 hitem('graph_y_auto', 'Autoscale Y'),
-                                 hitem('graph_ymax', 'Max', format_str='%0.3f'),
-                                 hitem('graph_ymin', 'Min', format_str='%0.3f'),
+                                 Item('graph_scan_width', label='Scan Width (mins)'),
+                                 Item('graph_scale', label='Scale'),
+                                 Item('graph_y_auto', label='Autoscale Y'),
+                                 Item('graph_ymax', label='Max', format_str='%0.3f'),
+                                 Item('graph_ymin', label='Min', format_str='%0.3f'),
                                  HGroup(UItem('record_button', editor=ButtonEditor(label_value='record_label')),
                                         Item('add_marker_button',
                                              show_label=False,

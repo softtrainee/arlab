@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Event, Instance, List
+from traits.api import HasTraits, Any, Event, Instance, List, on_trait_change
 from traitsui.api import View, Item, UItem
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
@@ -77,6 +77,7 @@ class PlotEditorPane(TraitsDockPane):
     id = 'pychron.processing.editor'
     current_editor = Instance(PlotEditor)
     selectors = List
+
 
     def _component_changed(self):
         if self.component:

@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any, Dict, Instance
-from traitsui.api import View, Item, VGroup, TabularEditor
+from traits.api import Property, List, Any, Dict, Instance, Event
+# from traitsui.api import View, Item, VGroup, TabularEditor
 from chaco.array_data_source import ArrayDataSource
 from chaco.tools.broadcaster import BroadcasterTool
 from chaco.plot_containers import GridPlotContainer
@@ -28,7 +28,7 @@ from sqlalchemy.orm.session import object_session
 from numpy import array
 #============= local library imports  ==========================
 from src.viewable import Viewable
-from src.processing.plotters.results_tabular_adapter import BaseResults
+# from src.processing.plotters.results_tabular_adapter import BaseResults
 from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
@@ -40,8 +40,9 @@ from src.processing.plotters.graph_panel_info import GraphPanelInfo
 from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
 from src.helpers.formatting import floatfmt
-from src.constants import PLUSMINUS
+# from src.constants import PLUSMINUS
 from uncertainties import ufloat
+from src.stats.core import validate_mswd, calculate_mswd
 
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
@@ -80,7 +81,7 @@ class mDataLabelTool(DataLabelTool):
 
 class Plotter(Viewable):
     adapter = Property
-    results = List(BaseResults)
+#     results = List(BaseResults)
     graphs = List
 #    graph = Any
     db = Any
@@ -99,17 +100,21 @@ class Plotter(Viewable):
 
     metadata_label_text = Property
 
+    recall_event = Event
+
     def edit_analyses(self):
         self.processing_manager.edit_analyses()
 
     def recall_analysis(self):
         iso_record = self.selected_analysis.isotope_record
-        if not iso_record:
-            return
+        print iso_record
+        if iso_record:
+            self.recall_event = iso_record
 
-        if iso_record.initialize():
-            iso_record.load_graph()
-            iso_record.edit_traits()
+
+#         if iso_record.initialize():
+#             iso_record.load_graph()
+#             iso_record.edit_traits()
 
     def set_status(self, status):
         sa = self.selected_analysis
@@ -183,7 +188,7 @@ class Plotter(Viewable):
             op.remove(*op.components)
 
         self.graphs = []
-        self.results = []
+#         self.results = []
         plots = []
 
         title = self._get_plot_option(options, 'title')
@@ -193,10 +198,6 @@ class Plotter(Viewable):
         xtitle_font = self._get_plot_option(plotter_options, 'xtitle_font', 'modern 10')
         ytick_font = self._get_plot_option(plotter_options, 'ytick_font', 'modern 10')
         ytitle_font = self._get_plot_option(plotter_options, 'ytitle_font', 'modern 10')
-#        xtick_font = plotter_options.xtick_font
-#        xtitle_font = plotter_options.xtitle_font
-#        ytick_font = plotter_options.ytick_font
-#        ytitle_font = plotter_options.ytitle_font
 
         age_unit = analyses[0].age_units
         for i in range(r):
@@ -237,12 +238,9 @@ class Plotter(Viewable):
 
             aux_plots = self._filter_aux_plots(aux_plots)
             for ap in aux_plots:
-#                if isinstance(ap, str):
-#                    name = ap
-#                    scale = 'linear'
-#                    height = 100
-#                    xerror = False
-#                else:
+                if not ap.use:
+                    continue
+
                 name = ap.name
                 scale = ap.scale
                 height = ap.height
@@ -290,7 +288,6 @@ class Plotter(Viewable):
                             plotter=self
                             )
         g.clear()
-#        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
         g._has_title = True
 
         p = g.new_plot(padding=self.padding, title=None if aux_plots else title)
@@ -336,10 +333,12 @@ class Plotter(Viewable):
 
         self._update_graph(graph)
 
-#    def _get_ages_errors(self, analyses, group_id=0):
-#        nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
-#                                   for a in analyses if a.group_id == group_id])
-#        return array(nages), array(nerrors)
+    def _get_mswd(self, ages, errors):
+        mswd = calculate_mswd(ages, errors)
+        n = len(ages)
+        valid_mswd = validate_mswd(mswd, n)
+        return mswd, valid_mswd, n
+
     def _get_ages(self, analyses, group_id=None, unzip=True):
         if group_id is not None:
             analyses = [ai for ai in analyses if ai.group_id == group_id]
@@ -347,14 +346,6 @@ class Plotter(Viewable):
         ije = self.plotter_options.include_j_error
         iie = self.plotter_options.include_irradiation_error
         ide = self.plotter_options.include_decay_error
-#        for ai in analyses:
-#            ai.age_dirty = True
-#            ai.include_decay_error = True
-#            print 'setting', id(ai), ai.include_decay_error
-#            ai.trait_set(include_j_error=ije,
-#                         include_irradiation_error=iie,
-#                         include_decay_error=ide,
-#                         )
 
         ages = [(ai.calculate_age(
                          include_irradiation_error=iie,
@@ -375,67 +366,19 @@ class Plotter(Viewable):
                 return ages, errors
             else:
                 return ages
-#    def _get_adapter(self):
-#        return ResultsTabularAdapter
-#
-#    def _get_toolbar(self):
-#        return
-#
-#    def _get_content(self):
-#        content = Item('results',
-#                      style='custom',
-#                      show_label=False,
-#                      editor=TabularEditor(adapter=self.adapter(),
-#                                           auto_update=True
-#                                           ),
-#                       height=50
-#                       )
-#        return content
 
     def _add_error_bars(self, scatter, errors, axis, nsigma):
         ebo = ErrorBarOverlay(component=scatter, orientation=axis, nsigma=nsigma)
         scatter.underlays.append(ebo)
         setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
-#        if sigma_trait:
-#            self.on_trait_change(ebo.update_sigma, sigma_trait)
 
     def _add_scatter_inspector(self, container, plot, scatter,
                                group_id=0,
                                add_tool=True,
-#                               popup=True,
                                value_format=None,
                                additional_info=None
                                ):
-        # add a scatter hover tool
-#        bc = BroadcasterTool()
-#        broadcaster = BroadcasterTool()
-#        scatter.tools.append(broadcaster)
-#        self.plots[plotid].container.tools.append(broadcaster)
-#        scatter.tools.append(ScatterInspector(scatter,
-# #                                              selection_mode='off'
-#                                              ))
-
-#        broadcaster.tools.append(ScatterInspector(scatter,
-# #                                              selection_mode='off'
-#                                              ))
-
-#        rect_tool = RectSelectionTool(scatter,
-# #                                      parent=self,
-# #                                      plot=self.graph.plots[0],
-#                                      plotid=1
-#                                      )
         if add_tool:
-#            rect_tool = RectSelectionTool(scatter,
-#    #                                      parent=self,
-#                                          container=container,
-#                                          plot=plot,
-#                                          group_id=group_id
-#    #                                      plotid=1
-#                                          )
-#            rect_overlay = RectSelectionOverlay(
-#                                                tool=rect_tool)
-#            scatter.tools.append(rect_tool)
-#            scatter.overlays.append(rect_overlay)
             broadcaster = BroadcasterTool()
             scatter.tools.append(broadcaster)
 
@@ -464,22 +407,7 @@ class Plotter(Viewable):
 
             u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
             scatter.index.on_trait_change(u, 'metadata_changed')
-#        scatter.overlays.append(rect_tool)
-#        overlay = ScatterInspectorOverlay(scatter,
-#                    hover_color="red",
-#                    hover_marker_size=int(scatter.marker_size + 2),
-                    # selection_color='transparent',
-                    # selection_marker_size=int(scatter.marker_size),
-                    # selection_marker=scatter.marker
-#                    selection_outlin
-#                    )
-#        scatter.overlays.append(overlay)
-#        if popup:
-#            u = lambda a, b, c, d: self.update_graph_metadata(scatter, group_id, a, b, c, d)
-#            scatter.index.on_trait_change(u, 'metadata_changed')
 
-
-#        self.metadata = scatter.index.metadata
     def _add_data_label(self, s, text, point, bgcolor='transparent',
                         label_position='top right', color=None, append=True, **kw):
         if color is None:
@@ -514,8 +442,8 @@ class Plotter(Viewable):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
-#        self.debug('update graph metadata')
-        return
+        self.debug('update graph metadata')
+#         return
 
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
 #        hover = scatter.value.metadata.get('hover')
@@ -524,7 +452,8 @@ class Plotter(Viewable):
             hoverid = hover[0]
             try:
                 self.selected_analysis = sorted_ans[hoverid]
-            except IndexError:
+            except IndexError, e:
+                print 'asaaaaa', e
                 return
         else:
             self.selected_analysis = None
@@ -561,17 +490,14 @@ class Plotter(Viewable):
         return u'{} {}{} {} {}'.format(x, pm, we, mswd, n)
 
     def _unzip_value_error(self, pairs):
-#        mk39, mk39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in mk39])
         return zip(*[(ri.nominal_value, ri.std_dev) for ri in pairs])
 
     def _add_plot_metadata(self, g):
         # add meta plot info
         font = self._get_plot_option(self.options, 'metadata_label_font', default='modern 10')
         ustr = self.metadata_label_text
-#        ustr = u'data 1s, age {}s'.format(self.plotter_options.nsigma)
-#        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0, font=font)
         self.plot_label = g.add_plot_label(ustr, 0, 0,
-#                                           font=font
+                                           font=font
                                            )
 
     def _get_grouped_analyses(self):
@@ -584,13 +510,13 @@ class Plotter(Viewable):
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
-        content = self._get_content()
-        tb = self._get_toolbar()
-
-        vg = VGroup(tb, content) if tb is not None else VGroup(content)
-        v = View(vg)
-        return v
+#     def traits_view(self):
+#         content = self._get_content()
+#         tb = self._get_toolbar()
+#
+#         vg = VGroup(tb, content) if tb is not None else VGroup(content)
+#         v = View(vg)
+#         return v
 
 #===============================================================================
 # factories
@@ -629,47 +555,3 @@ class Plotter(Viewable):
         return op, r, c
 
 #============= EOF =============================================
-#    def _show_pop_up(self, popup, analysis, value, obj):
-#        try:
-#            x, y = obj.metadata.get('mouse_xy')
-#        except Exception, e:
-#            popup.Close()
-#            return
-#
-#        def make_status(s):
-#            ss = 'OK' if s == 0 else 'Omitted'
-#            return 'Status= {}'.format(ss)
-#
-#        lines = [
-#                 '{}, {}'.format(analysis.record_id, analysis.sample),
-#                 analysis.age_string,
-#                 value,
-#                 make_status(analysis.status)
-#               ]
-#        t = '\n'.join(lines)
-#        gc = font_metrics_provider()
-#        with gc:
-#            font = popup.GetFont()
-#            from kiva.fonttools import Font
-#            gc.set_font(Font(face_name=font.GetFaceName(),
-#                             size=font.GetPointSize(),
-#                             family=font.GetFamily(),
-# #                             weight=font.GetWeight(),
-# #                             style=font.GetStyle(),
-# #                             underline=0,
-# #                             encoding=DEFAULT
-#                             ))
-#            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-# #            print linewidths, lineheights
-#            ml = max(linewidths)
-#            mh = max(lineheights)
-#
-# #        ch = popup.GetCharWidth()
-#        mh = mh * len(lines)
-# #        print ml, mh
-# #        popup.Freeze()
-#        popup.SetPosition((x + 55, y + 25))
-#        popup.set_size(ml, mh)
-#        popup.SetText(t)
-#        popup.Show(True)
-# #        popup.Thaw()

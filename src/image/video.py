@@ -88,7 +88,7 @@ class Video(Image):
                 self.cap = 1
             else:
 
-                if isinstance(identifier, str):
+                if isinstance(identifier, str) and identifier.startswith('pvs'):
                     self.cap = self._get_remote_device(identifier)
                     # identifier is a url
 #                     self.cap = self._get_remote_device()
@@ -96,7 +96,7 @@ class Video(Image):
                     # ideally an identifier is passed in
                     try:
                         self.cap = get_capture_device()
-                        self.cap.open(identifier)
+                        self.cap.open(int(identifier))
                     except Exception, e:
                         print 'video.open', e
                         self.cap = None

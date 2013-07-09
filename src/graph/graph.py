@@ -53,7 +53,9 @@ from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
 from chaco.array_data_source import ArrayDataSource
 # from chaco.tools.pan_tool import PanTool
-VALID_FONTS = ['Helvetica', 'Arial',
+VALID_FONTS = [
+#                'Helvetica',
+               'Arial',
                'Lucida Grande',
 #               'Times New Roman',
                'Geneva',
@@ -504,7 +506,7 @@ class Graph(Viewable, ContextMenuMixin):
             plot.value_range.high_setting = 'auto'
             plot.value_range.low_setting = 'auto'
 
-    def set_plot_title(self, t, font='Helvetica', size=None, plotid=0):
+    def set_plot_title(self, t, font='modern', size=None, plotid=0):
         p = self.plots[plotid]
         p.title = t
 

@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,30 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from pyface.api import ProgressDialog
+from traits.api import HasTraits
+from traitsui.api import View, Item
+import unittest
+from src.processing.bayesian_modeler import BayesianModeler
 #============= standard library imports ========================
-from PySide.QtCore import QRect, QPoint, QSize
-from pyface.ui.qt4.progress_dialog import ProgressDialog
 #============= local library imports  ==========================
 
-class myProgressDialog(ProgressDialog):
-    show_percent = True
-    show_time = True
-    def get_value(self):
-        if self.progress_bar:
-            return self.progress_bar.value()
-        else:
-            return 0
+class BayesianTest(unittest.TestCase):
 
-    def increment(self, step=1):
-        v = self.get_value()
-        self.update(v + step)
+    @classmethod
+    def setUpClass(cls):
+        cls.modeler = BayesianModeler()
 
-    def increase_max(self, step=1):
-        self.max += step
 
-#     def set_size(self, w, h):
-# #        self.dialog_size = QRect(QPoint(0, 0), QSize(w, h))
-#         self.size = (w, h)
-#         print self.size
+    def testStratOrder(self):
+        ages = [1, 2, 3, 4, 5, 6]
+        self.assertTrue(self.modeler._is_valid(ages))
+
+    def testStratOrderFail(self):
+        ages = [1, 2, 3, 6, 4, 5]
+        self.assertFalse(self.modeler._is_valid(ages))
+
 #============= EOF =============================================

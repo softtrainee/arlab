@@ -116,9 +116,10 @@ class StageControlPane(TraitsDockPane):
                        )
 
 #         if self.model.mode != 'client':
-        print self.model.mode
-        print self.model.stage_manager.__class__.__name__
+
         mode = self.model.mode
+        mvgrp = None
+        recgrp = None
         if self.model.stage_manager.__class__.__name__ == 'VideoStageManager':
             mvgrp = VGroup(
                       HGroup(SItem('use_autocenter', label='Enabled'),
@@ -147,7 +148,7 @@ class StageControlPane(TraitsDockPane):
                        visible_when='use_video',
                        label='Camera'
                        )
-        if mode != 'client':
+        if mode != 'client' and mvgrp:
             cagrp.content.extend((mvgrp,))
 
         cgrp = Group(
@@ -196,7 +197,11 @@ class ControlPane(TraitsDockPane):
         v = View(
                  VGroup(
                         HGroup(
-                               UItem('enabled_led', editor=LEDEditor()),
+                               UItem('enabled_led',
+                                     editor=LEDEditor(),
+                                     style='custom',
+                                     height=-35
+                                     ),
                                UItem('enable', editor=ButtonEditor(label_value='enable_label'))
                                ),
                        HGroup(

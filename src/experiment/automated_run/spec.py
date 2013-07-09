@@ -45,7 +45,9 @@ class AutomatedRunSpec(Loggable):
     # run id
     #===========================================================================
     labnumber = Str
-    aliquot = Int
+    aliquot = Property
+    _aliquot = Int
+    assigned_aliquot = Int
     step = Property(depends_on='_step')
     _step = Int
     user_defined_aliquot = False
@@ -157,7 +159,7 @@ class AutomatedRunSpec(Loggable):
 
         # bind to the runs state
         arun.on_trait_change(self._update_state, 'state')
-        arun.on_trait_change(self._update_aliquot, 'aliquot')
+#         arun.on_trait_change(self._update_aliquot, 'aliquot')
 
         return arun
 
@@ -223,6 +225,7 @@ class AutomatedRunSpec(Loggable):
         self.state = new
 
     def _update_aliquot(self, new):
+        print 'upda', new
         self.aliquot = new
 
     @on_trait_change(''' 
@@ -240,6 +243,14 @@ class AutomatedRunSpec(Loggable):
 #    def _set_state(self, s):
 #        if self._state != 'truncate':
 #            self._state = s
+    def _set_aliquot(self, v):
+        self._aliquot = v
+#
+    def _get_aliquot(self):
+        a = self.assigned_aliquot
+        if not a:
+            a = self._aliquot
+        return a
 
     def _get_analysis_type(self):
         return get_analysis_type(self.labnumber)
