@@ -18,30 +18,28 @@
 from traits.api import HasTraits, Any, Array, Str
 from traitsui.api import View, Item, UItem
 from src.ui.image_editor import ImageEditor
-from numpy import asarray
+from numpy import asarray, array
 from src.viewable import Viewable
 # from traitsui.editors.image_editor import ImageEditor
 # from pyface.ui.qt4.image_resource import ImageResource
 # from pyface.image_resource import ImageResource
 #============= standard library imports ========================
 #============= local library imports  ==========================
-# class StandAloneImage(Viewable):
-class StandAloneImage(HasTraits):
+class StandAloneImage(Viewable):
+#class StandAloneImage(HasTraits):
     image = Any
     source_frame = Array
-    name = Str('fasdf')
     def traits_view(self):
         v = View(
-#                  UItem('name'),
-                UItem('source_frame', editor=ImageEditor()),
+                 UItem('source_frame', editor=ImageEditor()),
                  width=400,
                  height=400,
-#                  handler=self.handler_klass,
+                 handler=self.handler_klass,
                  )
         return v
 
     def load(self, frame, swap_rb=False):
-        self.source_frame = frame
+        self.source_frame = array(frame)
 
     def set_frame(self, i, frame):
 #        print frame

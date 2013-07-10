@@ -87,10 +87,10 @@ class MachineVisionManager(Manager):
     def view_image(self, im, auto_close=True):
         # use a manager to open so will auto close on quit
         self.open_view(im)
-#        if auto_close:
-#            minutes = 1
-#            t = Timer(60 * minutes, im.close)
-#            t.start()
+        if auto_close:
+            minutes = 0.25
+            t = Timer(60 * minutes, im.close_ui)
+            t.start()
 
     def new_image(self, frame=None):
 
