@@ -113,7 +113,7 @@ class PatternExecutor(Patternable):
         if self.controller:
             self.controller.stop()
 
-        if self.pattern:
+        if self.pattern is not None:
             self.controller.linear_move(self.pattern.cx, self.pattern.cy)
             self.pattern.close_ui()
             self.info('Pattern {} stopped'.format(self.pattern_name))
