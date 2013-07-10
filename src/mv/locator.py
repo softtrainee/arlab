@@ -39,6 +39,7 @@ from src.geometry.geometry import sort_clockwise, approximate_polygon_center, \
     calc_length
 from src.geometry.convex_hull import convex_hull
 import math
+from skimage.color.colorconv import rgb2gray, rgb2grey, is_rgb, gray2rgb
 
 
 class Locator(Loggable):
@@ -63,14 +64,16 @@ class Locator(Loggable):
         targets = self._find_targets(image, frame, dim, step=2,
                                      preprocess=True,
                                      filter_targets=True)
-#
+
+#         print image
+#         return dx, dy
         if targets:
             self.info('found {} potential targets'.format(len(targets)))
 
             # draw center indicator
 #            src = image.get_frame(0)
             src = image.source_frame
-            self._draw_center_indicator(src, size=2, shape='rect', radius=int(dim))
+#             self._draw_center_indicator(src, size=2, shape='rect', radius=int(dim))
 
             # draw targets
             self._draw_targets(src, targets)
@@ -145,53 +148,62 @@ class Locator(Loggable):
         if preprocess:
             src = self._preprocess(frame)
         else:
-            src = grayspace(frame)
+            src = grayspace(src)
+
+#         src = frame
+#         src = gray2rgb()
+#         print src
+#         src = rgb2gray(src)
+        image.source_frame = array(colorspace(src))
+#         return
+#         src = array(src)
 #            image.set_frame(0, src)
 #        image.set_frame(0, src)
-#        return
+#         src = colorspace(src)
+#         print src
+#         image.source_frame =
+#         return
+
         seg = RegionSegmenter(use_adaptive_threshold=False)
 #        if seg.use_adaptive_threshold:
 #            n = 1
         if start is None:
-#            start = int(src.ndarray.mean()) - 3 * w
-            start = int(asarray(src).mean()) - 3 * w
+            start = int(array(src).mean()) - 3 * w
 
         fa = self._get_filter_target_area(dim)
 
         for i in range(n):
-#            print i, start + i - w, start + i + w
+            print i, start + i - w, start + i + w
             seg.threshold_low = start + i * step - w
             seg.threshold_high = start + i * step + w
             seg.block_size += 5
             nsrc = seg.segment(src)
-#            print seg.threshold_low, seg.threshold_high, src.ndarray.mean()
 
-            # convert to Mat
-#            nsrc = asMat(nsrc)
-#            nsrc = asarray(nsrc)
+#             nf = array(colorspace(nsrc))
+#             image.source_frame = nf
 
-            nf = asarray(colorspace(nsrc))
+            nf = array(colorspace(nsrc))
 
             # find the contours
             contours, hieararchy = contour(nsrc)
             # convert to color for display
 
-            # draw contours
+#             draw contours
             draw_contour_list(nf, contours, hieararchy)
 
             if set_image:
+                image.source_frame = nf
                 # update the image
-                image.set_frame(0, nf)
-#            time.sleep(0.1)
-
-#            return
+#                 image.set_frame(0, nf)
+#             time.sleep(0.5)
+#             continue
+#             return
             # do polygon approximation
             origin = self._get_frame_center(nsrc)
 #            print origin
             pargs = get_polygons(nsrc, contours, hieararchy)
             targets = self._make_targets(pargs, origin)
 
-#            continue
             # filter targets
             if filter_targets:
                 targets = self._filter_targets(image, frame, dim, targets, fa)
@@ -423,46 +435,22 @@ class Locator(Loggable):
 # preprocessing
 #===============================================================================
     def _preprocess(self, frame,
-                    contrast=True, denoise=10, display=False):
+                    contrast=True, denoise=0):
         '''
             1. convert frame to grayscale
             2. remove noise from frame. increase denoise value for move noise filtering
             3. stretch contrast
         '''
-#        if display:
-#            # open original crop
-#            im = StandAloneImage()
-#            im.load(colorspace(frame))
-#            do_later(im.edit_traits)
-#        print type(frame), frame.shape
+
         frm = grayspace(frame)
-#        print frm
-#        if display:
-#            # open original grayscale crop
-#            im = StandAloneImage()
-#            im.load(colorspace(frm))
-#            do_later(im.edit_traits)
-#        src = frm
-#        print src
-#        src = frm.ndarray[:]
-#        src = asarray(frm[:, :])
-#        denoise = 0
-        # preprocess
+
+#         # preprocess
         if denoise:
             frm = self._denoise(frm, weight=denoise)
-#        contrast = False
+# #        contrast = False
         if contrast:
             frm = self._contrast_equalization(frm)
 
-#        frm = asMat(src)
-#        frm = asMat(src)
-#        if display:
-#            # open preprocessed
-#            vim = StandAloneImage()
-#            vim.load(colorspace(frm))
-#            do_later(vim.edit_traits)
-#        image.set_frame(0, frm)
-#        image.source_frame = asarray(colorspace(frm))
         return frm
 
     def _denoise(self, img, weight):
@@ -472,9 +460,8 @@ class Locator(Loggable):
             http://scipy-lectures.github.com/advanced/image_processing/
             http://en.wikipedia.org/wiki/Total_variation_denoising
         '''
-        from skimage.filter import tv_denoise
-
-        return tv_denoise(asarray(img), weight=weight).astype('uint8')
+        from skimage.filter import denoise_tv_chambolle, denoise_tv_bregman
+        return denoise_tv_chambolle(array(img), weight=weight).astype('uint8')
 
     def _contrast_equalization(self, img):
         '''
@@ -485,7 +472,7 @@ class Locator(Loggable):
         # Contrast stretching
 #        p2 = percentile(img, 2)
 #        p98 = percentile(img, 98)
-        return rescale_intensity(img).astype('uint8')
+        return rescale_intensity(array(img)).astype('uint8')
 
 
 #============= EOF =============================================

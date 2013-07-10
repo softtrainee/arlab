@@ -42,8 +42,10 @@ def convert_bitmap(image, width=None, height=None):
         s = image.shape
         im = QImage(image.tostring(),
                      s[1], s[0],
-                     QImage.Format_RGB888
+                    QImage.Format_RGB888
+#                      QImage.Format_RGB16
                      )
+
         pix = QPixmap.fromImage(QImage.rgbSwapped(im))
 
     if width > 0 and height > 0:
@@ -98,6 +100,7 @@ class _ImageEditor(Editor):
             w = qsize.width()
         else:
             w = None
+
         invoke_in_main_thread(self.set_pixmap, image, w)
 #         self.control.setPixmap(convert_bitmap(image, qsize.width()))
 

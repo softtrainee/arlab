@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Array
+from traits.api import HasTraits, Any, Array, Str
 from traitsui.api import View, Item, UItem
 from src.ui.image_editor import ImageEditor
 from numpy import asarray
@@ -25,14 +25,18 @@ from src.viewable import Viewable
 # from pyface.image_resource import ImageResource
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class StandAloneImage(Viewable):
+# class StandAloneImage(Viewable):
+class StandAloneImage(HasTraits):
     image = Any
     source_frame = Array
+    name = Str('fasdf')
     def traits_view(self):
-        v = View(UItem('source_frame', editor=ImageEditor()),
+        v = View(
+#                  UItem('name'),
+                UItem('source_frame', editor=ImageEditor()),
                  width=400,
                  height=400,
-                handler=self.handler_klass,
+#                  handler=self.handler_klass,
                  )
         return v
 
