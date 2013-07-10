@@ -91,7 +91,6 @@ class Video(Image):
                 if isinstance(identifier, str) and identifier.startswith('pvs'):
                     self.cap = self._get_remote_device(identifier)
                     # identifier is a url
-#                     self.cap = self._get_remote_device()
                 else:
                     # ideally an identifier is passed in
                     try:
@@ -147,7 +146,6 @@ class Video(Image):
 
     def _get_frame(self, lock=True, **kw):
         cap = self.cap
-
 #            if lock:
 #            with self._lock:
 #            with self._lock:
