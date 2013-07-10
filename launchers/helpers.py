@@ -33,7 +33,6 @@ def build_version(ver, debug=False):
         build_sys_path(ver, root)
 
     # can now use src.
-
     from src.paths import paths
     paths.bundle_root = root
     if '-' in ver:
@@ -48,8 +47,9 @@ def build_sys_path(ver, root):
                        'Programming',
                        'mercurial')
     src = os.path.join(merc, 'pychron{}'.format(ver))
+    
     sys.path.insert(0, src)
-
+    
 def add_eggs(root):
     egg_path = os.path.join(root, 'pychron.pth')
     if os.path.isfile(egg_path):
