@@ -409,6 +409,8 @@ class Manager(Viewable, RPCable):
                 class_factory = getattr(m, klass)
 
             except ImportError:
+                import traceback
+                traceback.print_exc()
                 self.warning('Invalid device class {}'.format(klass))
                 return
 

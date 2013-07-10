@@ -55,7 +55,6 @@ class RemoteHardwareManager(Manager):
 
 
     def bind_preferences(self, cp):
-        print cp, 'dddfda'
         try:
             bind_preference(self, 'system_lock', 'pychron.hardware.enable_system_lock')
 

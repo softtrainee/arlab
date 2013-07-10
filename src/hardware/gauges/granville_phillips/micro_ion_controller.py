@@ -150,7 +150,7 @@ class MicroIonController(CoreDevice):
                 pass
 
     def get_pressures(self, verbose=False):
-        self.debug('getting pressure')
+#        self.debug('getting pressure')
         b = self.get_convectron_b_pressure(verbose=verbose)
         self._set_gauge_pressure('CG2', b)
         time.sleep(0.05)
