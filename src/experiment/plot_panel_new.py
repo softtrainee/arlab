@@ -349,9 +349,9 @@ class PlotPanel(Loggable):
                                   editor=FastTextTableEditor(adapter=SignalAdapter(),
                                                          bg_color='lightyellow',
                                                          header_color='lightgray',
-                                                         font_size=10
+                                                         font_size=10,
                                                          ),
-                                         width=0.8
+#                                          width=0.8
                                          ),
                                 label='Results'
                             )
@@ -389,7 +389,7 @@ class PlotPanel(Loggable):
 
     def traits_view(self):
         gg = self._get_graph_group()
-        gg.height = 0.72
+        gg.height = 0.65
 
         v = View(
                  VSplit(

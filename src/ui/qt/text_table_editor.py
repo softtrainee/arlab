@@ -169,7 +169,6 @@ class _FastTextTableEditor(_TextTableEditor):
         fmt = QTextCharFormat()
         fmt.setFont(QFont(self.factory.font_name))
         fmt.setFontPointSize(self.factory.font_size)
-
         bc = QColor(self.factory.bg_color) if self.factory.bg_color else None
         ec, oc, hc = bc, bc, bc
         if self.factory.even_color:
@@ -213,7 +212,7 @@ class TextTableEditor(BasicEditorFactory):
     adapter = Any
     refresh = Str
     font_size = Int(12)
-    font_name = 'consolas'
+    font_name = Str('courier')
 
 class FastTextTableEditor(TextTableEditor):
     '''    

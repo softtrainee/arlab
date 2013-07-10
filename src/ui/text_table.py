@@ -45,6 +45,9 @@ class TextCell(HasTraits):
                 self.text = self.format(text)
             else:
                 self.text = u'{}'.format(text)
+            
+#             if self.width:   
+#                 self.text='{{:<{}s}}'.format(self.width).format(self.text)
 
 class HtmlCell(TextCell):
     html = Property
@@ -157,9 +160,8 @@ class SimpleTextTableAdapter(TextTableAdapter):
 
         rs = [self._make_header_row(columns=columns)]
         rs.extend(
-                   [TextRow(*[self._cell_factory(ri, args)
-                              for args in columns])
-                                for ri in sg]
+                   [TextRow(*[self._cell_factory(ri, args) for args in columns])
+                                                                for ri in sg]
                    )
         tt = TextTable(border=True,
                        *rs
