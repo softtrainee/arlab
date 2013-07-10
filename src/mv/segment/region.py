@@ -38,8 +38,8 @@ class RegionSegmenter(BaseSegmenter):
             src: preprocessing cv.Mat
         '''
 #        image = src.ndarray[:]
-        image = asarray(src)
-
+#         image = asarray(src)
+        image = src[:]
         if self.use_adaptive_threshold:
 #            block_size = 25
             markers = threshold_adaptive(image, self.block_size)

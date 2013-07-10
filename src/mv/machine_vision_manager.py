@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-# from traits.etsconfig.etsconfig import ETSConfig
-# ETSConfig.toolkit = 'qt4'
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
 
 
 #============= enthought library imports =======================
@@ -36,7 +36,7 @@ from src.mv.co2_locator import CO2Locator
 
 class MachineVisionManager(Manager):
     video = Instance(Video)
-    target_image = Instance(StandAloneImage)
+#     target_image = Instance(StandAloneImage)
     pxpermm = Float(23)
 
     def new_co2_locator(self):
@@ -94,21 +94,21 @@ class MachineVisionManager(Manager):
 
     def new_image(self, frame=None):
 
-        if self.target_image is not None:
-            self.target_image.close_ui()
+#         if self.target_image is not None:
+#             self.target_image.close_ui()
 
         im = StandAloneImage(
 #                             title=self.title,
-                             view_identifier='pychron.fusions.co2.target'
+#                              view_identifier='pychron.fusions.co2.target'
                              )
 
-        self.target_image = im
+#         self.target_image = im
         if frame is not None:
-            self.target_image.load(frame, swap_rb=True)
+            im.load(frame, swap_rb=True)
 
         return im
 
-    def _test(self):
+    def _test(self, im):
 
         paths = (
 #                 ('/Users/ross/Sandbox/pos_err/snapshot007.jpg', 1.25),
@@ -128,11 +128,11 @@ class MachineVisionManager(Manager):
 #                 ('/Users/ross/Sandbox/pos_err/pos_err_203_0-001.jpg', 1.25),
 #                 ('/Users/ross/Sandbox/pos_err/pos_err_204_0-001.jpg', 1.25),
                  ('/Users/ross/Sandbox/pos_err/pos_err_206_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_206_1-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_207_0-001.jpg', 1.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_52001.jpg', 2.25),
+#                  ('/Users/ross/Sandbox/pos_err/pos_err_206_1-001.jpg', 1.25),
+#                  ('/Users/ross/Sandbox/pos_err/pos_err_207_0-001.jpg', 1.25),
+#                  ('/Users/ross/Sandbox/pos_err/pos_err_52001.jpg', 2.25),
 #                 ('/Users/ross/Sandbox/pos_err/pos_err_52001.tiff', 2.25),
-                 ('/Users/ross/Sandbox/pos_err/pos_err_52002.jpg', 2.25),
+#                  ('/Users/ross/Sandbox/pos_err/pos_err_52002.jpg', 2.25),
 #                 ('/Users/ross/Sandbox/pos_err/pos_err_53001.jpg', 2.25),
 #                 ('/Users/ross/Sandbox/pos_err/pos_err_53002.jpg', 2.25),
 #                 ('/Users/ross/Sandbox/pos_err/pos_err_53003.jpg', 2.25),
@@ -141,18 +141,20 @@ class MachineVisionManager(Manager):
         fails = 0
         times = []
 
-        im = self.target_image
+#         im = self.target_image
         for p, dim in paths[:]:
             from src.globals import globalv
             # force video to reload test image
             self.video.source_frame = None
             globalv.video_test_path = p
-            self.target_image.load(self.new_image_frame())
-#            return
+#             return
+#             im.source_frame = self.new_image_frame()
+            frm = self.new_image_frame()
+#             self.target_image.load()
 
             cw = ch = dim * 3.2
 #            cw = ch = dim
-            frame = self._crop_image(im.source_frame, cw, ch)
+            frame = self._crop_image(frm, cw, ch)
             im.source_frame = frame
 #            time.sleep(1)
 #            continue
@@ -165,7 +167,8 @@ class MachineVisionManager(Manager):
             loc = self.new_co2_locator()
 
             st = time.time()
-            dx, dy = loc.find(self.target_image, frame, dim * self.pxpermm)
+            dx, dy = loc.find(im, frame, dim * self.pxpermm)
+
             times.append(time.time() - st)
             if dx and dy:
                 self.info('SUCCESS path={}'.format(p))
@@ -189,18 +192,19 @@ class MachineVisionManager(Manager):
         frame = self.new_image_frame()
         im = self.new_image(frame)
         self.view_image(im)
+        return im
 
     def _test_fired(self):
-        self.setup_image()
-#        self._test()
+        im = self.setup_image()
 
         from src.ui.thread import Thread
-        t = Thread(target=self._test)
+        t = Thread(target=self._test, args=(im,))
         t.start()
         self._t = t
-#        from threading import Thread
-#        t = Thread(target=self._test)
-#        t.start()
+
+#         from threading import Thread
+#         t = Thread(target=self._test)
+#         t.start()
 
     def traits_view(self):
         return View('test')
