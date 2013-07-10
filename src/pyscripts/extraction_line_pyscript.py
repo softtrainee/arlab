@@ -438,6 +438,19 @@ class ExtractionPyScript(ValvePyScript):
             r.set(value)
         else:
             self.info('Could not set {}'.format(name))
+    
+    @verbose_skip
+    @command_register
+    def get_resource_value(self, name=None):
+        r = self.runner.get_resource(name)
+        if r is not None:
+            if hasattr(r, 'get'):
+                return r.get()
+            else:
+                return r.isSet()
+        else:
+            self.info('Could not get {}'.format(name))
+    
 
     @verbose_skip
     @command_register
