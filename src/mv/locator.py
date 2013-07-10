@@ -73,11 +73,10 @@ class Locator(Loggable):
             # draw center indicator
 #            src = image.get_frame(0)
             src = image.source_frame
-#             self._draw_center_indicator(src, size=2, shape='rect', radius=int(dim))
+            self._draw_center_indicator(src, size=2, shape='rect', radius=int(dim))
 
             # draw targets
             self._draw_targets(src, targets)
-
 
             if self.use_circle_minimization:
 
@@ -148,21 +147,10 @@ class Locator(Loggable):
         if preprocess:
             src = self._preprocess(frame)
         else:
-            src = grayspace(src)
+            src = grayspace(frame)
 
-#         src = frame
-#         src = gray2rgb()
-#         print src
-#         src = rgb2gray(src)
         image.source_frame = array(colorspace(src))
-#         return
-#         src = array(src)
-#            image.set_frame(0, src)
-#        image.set_frame(0, src)
-#         src = colorspace(src)
-#         print src
-#         image.source_frame =
-#         return
+        src = array(src)
 
         seg = RegionSegmenter(use_adaptive_threshold=False)
 #        if seg.use_adaptive_threshold:
@@ -173,7 +161,6 @@ class Locator(Loggable):
         fa = self._get_filter_target_area(dim)
 
         for i in range(n):
-            print i, start + i - w, start + i + w
             seg.threshold_low = start + i * step - w
             seg.threshold_high = start + i * step + w
             seg.block_size += 5

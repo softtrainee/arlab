@@ -22,7 +22,7 @@ from src.mv.machine_vision_manager import MachineVisionManager
 #============= local library imports  ==========================
 
 class AutoCenterManager(MachineVisionManager):
-    crop_size = Float(3)
+    crop_size = Float(4)
     def locate_center(self, cx, cy, holenum, dim=1.5):
         frame = self.new_image_frame()
         im = self.new_image(frame)
@@ -31,16 +31,16 @@ class AutoCenterManager(MachineVisionManager):
 
         loc = self.new_co2_locator()
         cw = ch = dim * self.crop_size
-        frame = self._crop_image(self.target_image.source_frame, cw, ch)
+        frame = self._crop_image(im.source_frame, cw, ch)
 #        loc.croppixels=(cw,ch)
-        dx, dy = loc.find(self.target_image, frame, dim=dim * self.pxpermm)
+        dx, dy = loc.find(im, frame, dim=dim * self.pxpermm)
         if dx and dy:
             mdx = dx / self.pxpermm
             mdy = dy / self.pxpermm
             self.info('calculated deviation px={:n},{:n}, mm={:0.3f},{:0.3f}'.format(round(dx), round(dy),
                                                                                      mdx, mdy))
 
-            return  cx + mdx, cy - mdy
+            return  cx + mdx, cy + mdy
 
     def configure_view(self):
         v = View(Item('crop_size'),
