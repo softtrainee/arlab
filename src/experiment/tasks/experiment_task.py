@@ -255,7 +255,10 @@ class ExperimentEditorTask(EditorTask):
         for ei in self.editor_area.editors:
             if id(ei.queue) == new:
 #                self.debug('editor {} activated'.format(new))
-                self.editor_area.activate_editor(ei)
+                try:
+                    self.editor_area.activate_editor(ei)
+                except AttributeError:
+                    pass
                 break
 
     @on_trait_change('manager:execute_event')
@@ -275,6 +278,7 @@ class ExperimentEditorTask(EditorTask):
                 else:
                     return
 
+            self.debug('active editor path {}, {}'.format(p, os.path.isfile(p)))
             if os.path.isfile(p):
                 group = editor.group
                 min_idx = editor.merge_id

@@ -47,6 +47,7 @@ from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
 from pyface.constant import CANCEL, NO
 from src.ui.qt.gui import invoke_in_main_thread
+from src.helpers.ctx_managers import no_update
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
@@ -448,18 +449,21 @@ class ExperimentExecutor(Experimentable):
     def _delay(self, delay, message='between'):
         self.delay_between_runs_readback = delay
         self.info('Delay {} runs {}'.format(message, delay))
+        
+        time.sleep(1)
         self.delaying_between_runs = True
         self.resume_runs = False
         st = time.time()
-        while time.time() - st < delay:
+        while time.time() - st < delay-1:
             if not self.isAlive():
                 break
             if self.resume_runs:
                 break
 
-            time.sleep(0.1)
-            self.delay_between_runs_readback -= 0.1
+            time.sleep(0.05)
+            self.delay_between_runs_readback -= 0.05
         self.delaying_between_runs = False
+        self.delay_between_runs_readback=0
 
     def _execute_procedure(self, name):
         self.pyscript_runner.connect()
@@ -866,8 +870,14 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 #                self.cancel(style='run')
 
     def _refresh_button_fired(self):
+        q=self.experiment_queue
+        q.initialized=False
+        q.automated_runs=q.executed_runs
+        q.initialized=True
+        
         self.update_needed = True
-        self.experiment_queue.executed_runs=[]
+        q.executed_runs=[]
+        
 
     def _truncate_button_fired(self):
         self.experiment_queue.current_run.truncate_run(self.truncate_style)

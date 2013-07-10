@@ -21,7 +21,7 @@ ETSConfig.toolkit = "qt4"
 import os
 #============= local library imports  ==========================
 
-version_id = '_experiment'
+version_id = '_experiment-2.1.0'
 from helpers import build_version
 '''
     obsolete:
