@@ -69,7 +69,7 @@ class VueMetrixManager(Manager):
         '''
         '''
         b = VueDiodeControlModule(name='vue_metrix_controlmodule',
-                                      configuration_dir_name='diode'
+                                      configuration_dir_name='fusions_diode'
                                       )
         return b
 
