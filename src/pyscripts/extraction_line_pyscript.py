@@ -177,8 +177,8 @@ class ExtractionPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def set_motor(self, name='', value=''):
-        if name and value is not '':
-            self.info('set motor {} to {}'.format(name, value))
+        self.info('setting motor "{}" to {}'.format(name, value))
+        if name is not '' and value is not '':
             self._manager_action([('set_motor', (name, value), {})],
                                  protocol=ILaserManager,
                                  name=self.extract_device)
