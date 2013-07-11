@@ -87,6 +87,9 @@ def assemble_script_blob(scripts, kinds=None):
     return 'Pychron Script', '\n'.join(ts)
 
 
+warned_scripts=[]
+
+
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
     extraction_line_manager = Any
@@ -139,7 +142,7 @@ class AutomatedRun(Loggable):
     weight = Float
     comment = Str
     pattern = Str
-    beam_diameter = Float
+    beam_diameter = None
 
     ic_factor = Any
 
@@ -561,12 +564,13 @@ anaylsis_type={}
         '''
 #        self.aliquot='##'
         self._save_enabled = False
-        for s in ['extraction', 'measurement']:
+        for s in ('extraction', 'measurement'):
             script = getattr(self, '{}_script'.format(s))
             if script is not None:
                 script.cancel()
 
         self.do_post_termination()
+                
         self.finish()
 
         if state:
@@ -1783,7 +1787,12 @@ anaylsis_type={}
 #                    setattr(self, '_{}_script'.format(name), None)
         else:
             valid = False
-            self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else fname))
+            fname=s.filename if s else fname
+            
+            global warned_scripts
+            if not name in warned_scripts:
+                warned_scripts.append(fname)
+                self.warning_dialog('Invalid Scriptb {}'.format(fname))
 
         self.valid_scripts[name] = valid
         return s
@@ -1856,6 +1865,7 @@ anaylsis_type={}
         '''
         hdn = self.extract_device.replace(' ', '_').lower()
         an = self.analysis_type.split('_')[0]
+                
         script.setup_context(tray=self.tray,
                             position=self.get_position_list(),
                             disable_between_positions=self.disable_between_positions,

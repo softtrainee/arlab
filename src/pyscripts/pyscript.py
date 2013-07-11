@@ -454,14 +454,13 @@ class PyScript(Loggable):
 
     @command_register
     def complete_interval(self):
-        try:
-            pi = self._interval_stack.get(timeout=0.01)
-            if pi != 'b':
-                raise IntervalError()
-        except Empty:
-            raise IntervalError()
-
         if self.testing_syntax:
+            try:
+                pi = self._interval_stack.get(timeout=0.01)
+                if pi != 'b':
+                    raise IntervalError()
+            except Empty:
+                raise IntervalError()
             return
 
         if self._cancel:

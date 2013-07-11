@@ -70,7 +70,7 @@ class AutomatedRunSpec(Loggable):
     duration = Float
     cleanup = Float
     pattern = Str
-    beam_diameter = Float
+    beam_diameter = None
     #===========================================================================
     # info
     #===========================================================================
