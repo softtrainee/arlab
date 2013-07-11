@@ -31,6 +31,7 @@ from src.paths import paths
 import hashlib
 import os
 from pyface.constant import CANCEL, YES, NO
+from src.helpers.filetools import add_extension
 
 
 class ExperimentEditorTask(EditorTask):
@@ -277,8 +278,10 @@ class ExperimentEditorTask(EditorTask):
                     self._save_file(p)
                 else:
                     return
-
+            
+            p=add_extension(p, '.txt')
             self.debug('active editor path {}, {}'.format(p, os.path.isfile(p)))
+            
             if os.path.isfile(p):
                 group = editor.group
                 min_idx = editor.merge_id
