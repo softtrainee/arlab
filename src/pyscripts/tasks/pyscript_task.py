@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, List, Instance, Property, Any, Enum, \
-    on_trait_change
+    on_trait_change, Bool
 from traitsui.api import View, Item, EnumEditor, UItem, Label
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, Splitter
 #============= standard library imports ========================
@@ -28,6 +28,7 @@ from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEdi
 from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
     ExamplePane, EditorPane, CommandEditorPane
 from src.paths import paths
+from src.ui.preference_binding import bind_preference
 
 class PyScriptTask(EditorTask):
     name = 'PyScript'
@@ -43,6 +44,11 @@ class PyScriptTask(EditorTask):
 #    editor = Instance(ParameterEditor, ())
 
     wildcard = '*.py'
+    auto_detab = Bool(False)
+    def __init__(self, *args, **kw):
+        super(PyScriptTask, self).__init__(*args, **kw)
+        bind_preference(self, 'auto_detab', 'pychron.pyscript.auto_detab')
+
     def activated(self):
         from pyface.timer.do_later import do_later
         do_later(self.window.reset_layout)
@@ -145,9 +151,10 @@ class PyScriptTask(EditorTask):
         else:
             klass = ExtractionEditor
 
+        print self.auto_detab, 'auto_dettablaa'
         editor = klass(path=path,
-#                                kind=self.kind
-                                )
+                       auto_detab=self.auto_detab,
+                       )
 
 #        self.editor.editor = editor
 #        editor.editor = self.editor

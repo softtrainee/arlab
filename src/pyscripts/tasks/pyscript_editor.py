@@ -138,6 +138,8 @@ class PyScriptEditor(Editor):
     kind = String
     commands = Property(depends_on='kind')
 
+    auto_detab = True
+
     def get_scroll(self):
         return self.control.code.verticalScrollBar().value()
 
@@ -228,7 +230,13 @@ class PyScriptEditor(Editor):
         else:
             text = ''
 
+
+        if self.auto_detab:
+            text = self._detab(text)
+
         self.control.code.setPlainText(text)
+
+
         self.dirty = False
 
     def dump(self, path):
@@ -239,6 +247,9 @@ class PyScriptEditor(Editor):
     save = dump
 #    def save(self, path):
 #        self.dump(path)
+    def _detab(self, txt):
+        return txt.replace('\t', '    ')
+
 
 
 class MeasurementEditor(PyScriptEditor):

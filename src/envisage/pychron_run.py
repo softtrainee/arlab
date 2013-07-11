@@ -39,8 +39,8 @@ from src.helpers.logger_setup import new_logger
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 # from src.envisage.tasks.pychron_application import Pychron
 import os
-
-
+from src.logger.tasks.logger_plugin import LoggerPlugin
+from pyface.tasks.task_window_layout import TaskWindowLayout
 
 logger = new_logger('launcher')
 # logger = logging.getLogger('launcher')
@@ -74,7 +74,9 @@ PACKAGE_DICT = dict(
                    ProcessingPlugin='src.processing.tasks.processing_plugin',
 
                    MediaServerPlugin='src.media_server.tasks.media_server_plugin',
-                   PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin'
+                   PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin',
+
+
                  )
 
 def get_module_name(klass):
@@ -168,6 +170,7 @@ def app_factory(klass):
     plugins = [
                CorePlugin(),
                TasksPlugin(),
+               LoggerPlugin()
                ]
 
     plugins += get_hardware_plugins()
@@ -175,14 +178,17 @@ def app_factory(klass):
 
 #    print plugins
     app = klass(plugins=plugins)
+#
+#     gLoggerDisplay.application = app
+#     gMessageDisplay.application = app
+#     gWarningDisplay.application = app
+#     gTraceDisplay.application = app
+#
+#     if globalv.open_logger_on_launch:
+#         win = app.create_window(TaskWindowLayout('pychron.logger'))
+#         win.open()
 
-    gLoggerDisplay.application = app
-    gMessageDisplay.application = app
-    gWarningDisplay.application = app
-    gTraceDisplay.application = app
-
-    if globalv.open_logger_on_launch:
-        gLoggerDisplay.open_view(gLoggerDisplay)
+#         gLoggerDisplay.open_view(gLoggerDisplay)
 
     return app
 
@@ -211,9 +217,7 @@ def check_dependencies():
 
     return True
 
-
-
-app = None
+# app = None
 def launch(klass):
     '''
     '''
@@ -221,7 +225,7 @@ def launch(klass):
     if not check_dependencies():
         return
 
-    global app
+#     global app
     app = app_factory(klass)
 
     if globalv.test:

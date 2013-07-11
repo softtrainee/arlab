@@ -15,37 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List
-from src.loggable import Loggable
-from envisage.ui.tasks.tasks_application import TasksApplication
-from pyface.tasks.task_window_layout import TaskWindowLayout
-from src.globals import globalv
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from src.envisage.tasks.base_task import BaseTask
+from src.logger.tasks.logger_panes import DisplayPane
+from src.displays.gdisplays import gLoggerDisplay
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTasksApplication(TasksApplication, Loggable):
-    uis = List
-    def start(self):
-        if globalv.open_logger_on_launch:
-            self._load_state()
-            win = self.create_window(TaskWindowLayout('pychron.logger',
-                                                      ),
-                                     )
-            win.open()
-        return super(BaseTasksApplication, self).start()
+class LoggerTask(BaseTask):
 
-    def open_view(self, obj, **kw):
-        info = obj.edit_traits(**kw)
-        self.uis.append(info)
-
-    def exit(self):
-        import copy
-        uis = copy.copy(self.uis)
-        for ui in uis:
-            try:
-                ui.dispose(abort=True)
-            except AttributeError:
-                pass
-
-        super(BaseTasksApplication, self).exit()
+    def create_central_pane(self):
+        return DisplayPane(logger=gLoggerDisplay)
 #============= EOF =============================================

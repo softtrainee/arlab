@@ -31,10 +31,10 @@ class ExtractionLinePlugin(BaseTaskPlugin):
     id = 'pychron.extraction_line.plugin'
 
 #    manager = Instance(ExtractionLineManager)
-    def _my_task_extensions(self):
+    def _my_task_extensions_default(self):
         return [TaskExtension(actions=[SchemaAddition(id='refresh_canvas',
                                                       factory=RefreshCanvasAction,
-                                                      path='MenuBar/Extraction'
+                                                      path='MenuBar/Tools'
                                                       )])]
 
     def _service_offers_default(self):

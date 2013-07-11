@@ -111,8 +111,8 @@ class BaseLaserManager(Manager):
         pm = PatternMakerView(
                               executor=self.pattern_executor
                               )
-        pm.load_pattern()
-        self.open_view(pm)
+        if pm.load_pattern():
+            self.open_view(pm)
 
     def execute_pattern(self, name=None, block=False):
         pm = self.pattern_executor
