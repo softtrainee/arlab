@@ -687,7 +687,6 @@ class ExperimentExecutor(Experimentable):
         q = q.join(gen_MassSpectrometerTable)
         q = q.join(gen_ExtractionDeviceTable)
         
-        
         q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
         q = q.filter(gen_MassSpectrometerTable.name == ms)
         q = q.filter(gen_ExtractionDeviceTable.name==ed)

@@ -108,9 +108,12 @@ class ScriptMixin(HasTraits):
                 default_scripts = defaults[labnumber]
                 for skey in SCRIPT_KEYS:
                     new_script_name = default_scripts.get(skey) or NULL_STR
+                    
                     new_script_name = self._remove_file_extension(new_script_name)
                     if labnumber in ('u', 'bu') and self.extract_device != NULL_STR:
-                        if self.extract_device:
+                        
+                        #the default value trumps pychron's 
+                        if self.extract_device and new_script_name==NULL_STR:
                             e = self.extract_device.split(' ')[1].lower()
                             if skey == 'extraction':
                                 new_script_name = e
