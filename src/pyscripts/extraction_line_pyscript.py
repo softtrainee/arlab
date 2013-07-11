@@ -49,11 +49,7 @@ class ExtractionPyScript(ValvePyScript):
         # remove ourselves from the script runner
         if self.runner:
             self.runner.scripts.remove(self)
-
-    def _cancel_hook(self):
-        if self._resource_flag:
-            self._resource_flag.clear()
-
+    
     def set_default_context(self):
         '''
             provide default values for all the properties exposed in the script
@@ -148,22 +144,6 @@ class ExtractionPyScript(ValvePyScript):
     def set_xy(self, value, velocity=''):
         self._set_axis('xy', value, velocity)
 
-    def _set_axis(self, name, value, velocity):
-        kw = dict(block=True)
-        if velocity:
-            kw['velocity'] = value
-
-        success = self._manager_action([('set_{}'.format(name), (value,), kw)],
-                                       protocol=ILaserManager,
-#                                       protocol='src.lasers.laser_managers.laser_manager.IExtractionDevice',
-                                       name=self.extract_device)
-        if not success:
-            self.info('{} move to position failed'.format(self.extract_device))
-        else:
-            self.info('move to position suceeded')
-        return True
-
-
     @verbose_skip
     @command_register
     def set_motor_lock(self, name='', value=''):
@@ -179,10 +159,10 @@ class ExtractionPyScript(ValvePyScript):
     def set_motor(self, name='', value=''):
         self.info('setting motor "{}" to {}'.format(name, value))
         if name is not '' and value is not '':
-            self._manager_action([('set_motor', (name, value), {})],
+            if value is not None:
+                self._manager_action([('set_motor', (name, value), {})],
                                  protocol=ILaserManager,
                                  name=self.extract_device)
-
 
     @verbose_skip
     @command_register
@@ -465,17 +445,55 @@ class ExtractionPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def disable(self):
-        self.manager.set_extract_state(False)
-        return self._manager_action([('disable_device', (), {})],
-                             protocol=ILaserManager,
-                             name=self.extract_device)
+        return self._disable()
+    
+    
     @verbose_skip
     @command_register
     def prepare(self):
         return self._manager_action([('prepare', (), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)
+        
 
+#===============================================================================
+# private
+#===============================================================================
+    def _disable(self):
+        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% disable')
+        self.manager.set_extract_state(False)
+        return self._manager_action([('disable_device', (), {})],
+                             protocol=ILaserManager,
+                             name=self.extract_device)  
+    def _set_axis(self, name, value, velocity):
+        kw = dict(block=True)
+        if velocity:
+            kw['velocity'] = value
+
+        success = self._manager_action([('set_{}'.format(name), (value,), kw)],
+                                       protocol=ILaserManager,
+#                                       protocol='src.lasers.laser_managers.laser_manager.IExtractionDevice',
+                                       name=self.extract_device)
+        if not success:
+            self.info('{} move to position failed'.format(self.extract_device))
+        else:
+            self.info('move to position suceeded')
+        return True
+    
+    def _cancel_hook(self):
+        if self._resource_flag:
+            self._resource_flag.clear()
+        
+        #disable the extract device    
+        self._disable()
+        
+        #stop patterning
+        self._stop_pattern()
+    
+    def _stop_pattern(self):
+        self._manager_action([('stop_pattern',(),{})],
+                             name=self.extract_device,
+                              protocol=ILaserManager)
 #============= EOF ====================================
 #    @verbose_skip
 #    def _m_open(self, name=None, description=''):
