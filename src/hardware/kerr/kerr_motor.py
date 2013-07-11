@@ -29,6 +29,7 @@ import time
 from src.globals import globalv
 from src.ui.custom_label_editor import CustomLabel
 from pyface.timer.api import do_after
+from src.ui.gui import invoke_in_main_thread
 
 SIGN = ['negative', 'positive']
 
@@ -598,8 +599,11 @@ class KerrMotor(KerrDevice):
 
             self._set_motor_position_(npos, hysteresis)
             if not self.parent.simulation:
-                time.sleep(0.250)
-                self.timer = Timer(400, self._update_position)
+                #invoke in gui thread because in position update can be triggered from a RemoteHardware thread
+                def launch_timer():
+                    self.timer = Timer(400, self._update_position)
+                invoke_in_main_thread(launch_timer)
+                    
             else:
                 self.update_position = self._data_position
 
