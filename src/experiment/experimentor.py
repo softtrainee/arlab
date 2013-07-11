@@ -190,25 +190,25 @@ class Experimentor(IsotopeDatabaseManager):
                 special = ln.split('-')[0] in ANALYSIS_MAPPING
             return ln, special
 
-#        def get_analysis_info(li):
-#            sample, irradiationpos = '', ''
-#            
-##            analysis = db.get_last_analysis(li)
-##            if analysis:
-##                dbln = analysis.labnumber
-#            dbln=db.get_labnumber(li)
-#            if dbln:
-#                sample = dbln.sample
-#                if sample:
-#                    sample = sample.name
-#
-#                irradiationpos = dbln.irradiation_position
-#                if irradiationpos:
-#                    level = irradiationpos.level
-#                    irradiationpos = '{}{}'.format(level.irradiation.name,
-#                                                   level.name)
-##            self.debug('{} {} {}'.format(li, analysis, sample))
-#            return sample, irradiationpos
+        def get_analysis_info(li):
+            sample, irradiationpos = '', ''
+            
+#            analysis = db.get_last_analysis(li)
+#            if analysis:
+#                dbln = analysis.labnumber
+            dbln=db.get_labnumber(li)
+            if dbln:
+                sample = dbln.sample
+                if sample:
+                    sample = sample.name
+
+                irradiationpos = dbln.irradiation_position
+                if irradiationpos:
+                    level = irradiationpos.level
+                    irradiationpos = '{}{}'.format(level.irradiation.name,
+                                                   level.name)
+#            self.debug('{} {} {}'.format(li, analysis, sample))
+            return sample, irradiationpos
 
         db = self.db
         groups = self._group_analyses(ans, exclude=exclude)
@@ -216,19 +216,16 @@ class Experimentor(IsotopeDatabaseManager):
             ln, special = get_is_special(ln)
             cln = convert_identifier(ln)
 
-#            sample, irradiationpos = get_analysis_info(cln)
+            sample, irradiationpos = get_analysis_info(cln)
 
             # group analyses by aliquot
             for aliquot, ais in groupby(analyses,
                                         key=lambda x: x._aliquot):
                 self._set_aliquot_step(ais, special, cln, aliquot,
-#                                       sample, irradiationpos
+                                       sample, irradiationpos
                                        )
-#                self._set_aliquot_step(ais, special, cln, aliquot,
-#                                       sample, irradiationpos)
 
-#    def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
-    def _set_aliquot_step(self, ais, special, cln, aliquot):
+    def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
         db = self.db
 
         an = db.get_last_analysis(cln, aliquot=aliquot)
@@ -248,8 +245,7 @@ class Experimentor(IsotopeDatabaseManager):
         for aliquot_cnt, (egroup, aruns) in enumerate(ganalyses):
             step_cnt = 1
             for arun in aruns:
-#                arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
-
+                arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
                 if arun.skip:
                     arun.aliquot = 0
                     continue
@@ -406,7 +402,7 @@ class Experimentor(IsotopeDatabaseManager):
 
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,
-#                              application=self.application,
+                              application=self.application,
 #                               queue=self.experiment_queue,
 #                              max_allowable_runs=self.max_allowable_runs,
 #                              can_edit_scripts=self.can_edit_scripts

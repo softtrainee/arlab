@@ -184,7 +184,7 @@ class ExperimentFactory(Loggable):
             klass = AutomatedRunFactory
 
         rf = klass(db=self.db,
-#                   application=self.application,
+                   application=self.application,
                    extract_device=self._extract_device,
                    mass_spectrometer=self._mass_spectrometer,
 #                   can_edit=self.can_edit_scripts

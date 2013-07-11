@@ -861,8 +861,10 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
         self.resume_runs = True
 
     def _cancel_run_button_fired(self):
+        self.debug('cancel run {}'.format(self.isAlive()))
         if self.isAlive():
-            crun = self.experiment_queue.current_run
+            crun = self.current_run
+            self.debug('cancel run {}'.format(crun))
             if crun:
                 t = Thread(target=self.cancel, kwargs={'style':'run'})
                 t.start()
