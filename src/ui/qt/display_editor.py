@@ -68,24 +68,25 @@ class _DisplayEditor(Editor):
         ctrl = self.control
 
         if self.value:
-            try:
-                v, c, force = self.value.get(timeout=0.0001)
-            except Empty:
-                return
+            while 1:
+                try:
+                    v, c, force = self.value.get(timeout=0.0001)
+                except Empty:
+                    return
 
-#            if force or v != self._pv or c != self._pc:
-#            ctrl.setTextColor(c)
-#            if c != self._pc:
-            fmt = ctrl.currentCharFormat()
-            fmt.setForeground(QColor(c))
-            ctrl.setCurrentCharFormat(fmt)
-            ctrl.appendPlainText(v)
+    #            if force or v != self._pv or c != self._pc:
+    #            ctrl.setTextColor(c)
+    #            if c != self._pc:
+                fmt = ctrl.currentCharFormat()
+                fmt.setForeground(QColor(c))
+                ctrl.setCurrentCharFormat(fmt)
+                ctrl.appendPlainText(v)
 
-#            self._pc = c
-#            self._pv = v
+    #            self._pc = c
+    #            self._pv = v
 
-            ctrl.moveCursor(QTextCursor.End)
-            ctrl.ensureCursorVisible()
+                ctrl.moveCursor(QTextCursor.End)
+                ctrl.ensureCursorVisible()
 
 
 class DisplayEditor(BasicEditorFactory):

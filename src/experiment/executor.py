@@ -450,12 +450,12 @@ class ExperimentExecutor(Experimentable):
     def _delay(self, delay, message='between'):
         self.delay_between_runs_readback = delay
         self.info('Delay {} runs {}'.format(message, delay))
-        
+
         time.sleep(1)
         self.delaying_between_runs = True
         self.resume_runs = False
         st = time.time()
-        while time.time() - st < delay-1:
+        while time.time() - st < delay - 1:
             if not self.isAlive():
                 break
             if self.resume_runs:
@@ -464,7 +464,7 @@ class ExperimentExecutor(Experimentable):
             time.sleep(0.05)
             self.delay_between_runs_readback -= 0.05
         self.delaying_between_runs = False
-        self.delay_between_runs_readback=0
+        self.delay_between_runs_readback = 0
 
     def _execute_procedure(self, name):
         self.pyscript_runner.connect()
@@ -774,9 +774,9 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 
     def _do_automated_run(self, arun):
         def start_run():
-            
+
             self.experiment_queue.set_run_inprogress(arun.runid)
-            
+
             if not arun.start():
                 self.err_message = 'Monitor failed to start'
                 self._alive = False
@@ -788,7 +788,11 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 if not self._canceled:
                     self.err_message = 'Extraction Failed'
                     self._alive = False
+
+                self.extraction_state_label = ''
                 return
+
+            self.extraction_state_label = ''
             return True
 
         def measurement():
@@ -851,7 +855,7 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 startid = exp._cached_runs.index(self._last_ran) + 1
             except ValueError:
                 pass
-            
+
         if startid:
             return [ai for ai in ans][startid:]
         else:
@@ -882,14 +886,14 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 #                self.cancel(style='run')
 
     def _refresh_button_fired(self):
-        q=self.experiment_queue
-        q.initialized=False
-        q.automated_runs=q.executed_runs
-        q.initialized=True
-        
+        q = self.experiment_queue
+        q.initialized = False
+        q.automated_runs = q.executed_runs
+        q.initialized = True
+
         self.update_needed = True
-        q.executed_runs=[]
-        
+        q.executed_runs = []
+
 
     def _truncate_button_fired(self):
         if self.current_run:

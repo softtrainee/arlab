@@ -26,6 +26,9 @@ from pylab import show, plot, axvline
 import time
 import math
 from numpy.core.fromnumeric import argmax
+from scipy.stats.stats import mode
+from numpy.lib.function_base import median
+from src.time_series.time_series import smooth
 
 
 #============= local library imports  ==========================
@@ -68,8 +71,8 @@ from numpy.core.fromnumeric import argmax
 #     nages = _monte_carlo_step(in_ages)
 #     return nages
 
-def _monte_carlo_step(args):
-    _, in_ages = args
+def _monte_carlo_step(in_ages):
+#     _, in_ages = args
     ages = _generate_ages(in_ages)
     if _is_valid(ages):
         return ages
@@ -88,6 +91,11 @@ def _is_valid(ages):
     else:
         return True
 
+def age_generator(ages, n):
+    i = 0
+    while i < n:
+        yield ages
+        i += 1
 
 class BayesianModeler2(HasTraits):
     def run(self):
@@ -95,27 +103,34 @@ class BayesianModeler2(HasTraits):
         pool = Pool(processes=10)
         n = 1e5
 
-#         st = time.time()
-        aa = ((ai, ages) for ai in arange(n))
-#         print 'a"', time.time() - st
 
 #         st = time.time()
-        results = pool.map(_monte_carlo_step, aa)
-#         print 'a', time.time() - st
+#         aa = ((ai, ages) for ai in arange(n))
+#         print 'a"', time.time() - st
+        age_gen = age_generator(ages, n)
+        st = time.time()
+        results = pool.map(_monte_carlo_step, age_gen)
+        print 'a', time.time() - st
 
         st = time.time()
         results = vstack((ri for ri in results if ri is not None))
         print 'b', time.time() - st
 
         for xx, (ai, ei)in zip(results.T, ages):
-            print 'dev ', abs(xx.mean() - ai) / ai * 100, abs(xx.std() - ei) / ei * 100
-            f, v = histogram(xx, 10)
+#             print 'dev ', abs(xx.mean() - ai) / ai * 100, abs(xx.std() - ei) / ei * 100
+#             print xx
+
+            f, v = histogram(xx, 40)
             lp = plot(v[:-1], f)[0]
             c = lp.get_color()
+
+            nf = smooth(f, window='flat')
+            plot(v[:-1], nf, c=c, ls='--', lw=2)
+
             axvline(ai, c=c)
 #             print f, v
-            idx = argmax(f)
-            axvline(xx.mean(), c=c, ls='--')
+            idx = argmax(nf)
+#             axvline(xx.mean(), c=c, ls='--')
             axvline(v[idx], c=c, ls='--')
 
         show()

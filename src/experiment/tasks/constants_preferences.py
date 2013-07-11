@@ -15,11 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Enum
+from traits.api import Float, Enum, List, Str, Property
 from traitsui.api import View, Item, UItem, Spring, Label, spring, VGroup, HGroup
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 from src.constants import PLUSMINUS
+from IPython.utils.traitlets import HasTraits
+from traitsui.table_column import ObjectColumn
+from traitsui.editors.table_editor import TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -52,9 +55,79 @@ class ConstantsPreferences(BasePreferencesHelper):
     ic_factor = Float(1.0)
     ic_factor_error = Float(0.0)
 
+
 class ConstantsPreferencesPane(PreferencesPane):
     category = 'Constants'
     model_factory = ConstantsPreferences
+
+    def _get_decay_group(self):
+        vs = [
+              ('Ar40K epsilon/yr', 'lambda_e', 'lambda_e_error'),
+              ('Ar40K beta/yr', 'lambda_b', 'lambda_b_error'),
+              ('Cl36/d', 'lambda_Cl36', 'lambda_Cl36_error'),
+              ('Ar37/d', 'lambda_Ar37', 'lambda_Ar37_error'),
+              ('Ar39/d', 'lambda_Ar39', 'lambda_Ar39_error'),
+              ]
+        decay = VGroup(
+                     *[
+                       HGroup(spring, Label('Value'),
+                              Spring(width=75, springy=False),
+                              Label(u'{}1s'.format(PLUSMINUS)),
+                              Spring(width=75, springy=False),
+                              )
+                       ] + \
+                        [HGroup(Label(l), spring, UItem(v), UItem(e))
+                          for l, v, e in vs],
+
+                     show_border=True,
+                     label='Decay'
+                     )
+
+#         decay = VGroup(
+#                         HGroup(Spring(springy=False, width=125),
+#                                Label('Value'), Spring(springy=False, width=55),
+#                                Label(u'{}1s'.format(PLUSMINUS))),
+#                         HGroup(
+#                                spring,
+#                                Label('Value'),
+# #                                Spring(springy=False, width=55),
+#                                Label(u'{}1s'.format(PLUSMINUS))),
+
+#                         grp,
+#                         HGroup(Label('Cl36/d')),
+#                         HGroup(Label('Ar37/d')),
+#                         HGroup(Label('Ar39/d')),
+#                         HGroup(
+#                                 VGroup(
+# #                                        spring,
+#                                        HGroup(spring, Label('Ar40K epsilon/yr')),
+# #                                        spring,
+#                                        HGroup(spring, Label('Ar40K beta/yr')),
+# #                                        spring,
+#                                        HGroup(spring, Label('Cl36/d')),
+# #                                        spring,
+#                                        HGroup(spring, Label('Ar37/d')),
+# #                                        spring,
+#                                        HGroup(spring, Label('Ar39/d')),
+#                                        ),
+#                                 VGroup(
+#                                        HGroup(Item('lambda_e',),
+#                                               Item('lambda_e_error'), show_labels=False),
+#                                        HGroup(Item('lambda_b'),
+#                                               Item('lambda_b_error'), show_labels=False),
+#                                        HGroup(Item('lambda_Cl36'),
+#                                               Item('lambda_Cl36_error'), show_labels=False),
+#                                        HGroup(Item('lambda_Ar37'),
+#                                               Item('lambda_Ar37_error'), show_labels=False),
+#                                        HGroup(Item('lambda_Ar39'),
+#                                               Item('lambda_Ar39_error'), show_labels=False)
+#                                        )
+#                                ),
+#                         show_border=True,
+#                         label='Decay'
+#                         )
+        return decay
+
     def traits_view(self):
         ratios = VGroup(
                         HGroup(Spring(springy=False, width=125),
@@ -73,40 +146,8 @@ class ConstantsPreferencesPane(PreferencesPane):
                         show_border=True,
                         label='Ratios'
                         )
-        decay = VGroup(
-                        HGroup(Spring(springy=False, width=125),
-                               Label('Value'), Spring(springy=False, width=55),
-                               Label(u'{}1s'.format(PLUSMINUS))),
 
-                        HGroup(
-                                VGroup(
-                                       spring,
-                                       HGroup(spring, Label('Ar40K epsilon/yr')),
-                                       spring,
-                                       HGroup(spring, Label('Ar40K beta/yr')),
-                                       spring,
-                                       HGroup(spring, Label('Cl36/d')),
-                                       spring,
-                                       HGroup(spring, Label('Ar37/d')),
-                                       spring,
-                                       HGroup(spring, Label('Ar39/d')),
-                                       ),
-                                VGroup(
-                                       HGroup(Item('lambda_e',),
-                                              Item('lambda_e_error'), show_labels=False),
-                                       HGroup(Item('lambda_b'),
-                                              Item('lambda_b_error'), show_labels=False),
-                                       HGroup(Item('lambda_Cl36'),
-                                              Item('lambda_Cl36_error'), show_labels=False),
-                                       HGroup(Item('lambda_Ar37'),
-                                              Item('lambda_Ar37_error'), show_labels=False),
-                                       HGroup(Item('lambda_Ar39'),
-                                              Item('lambda_Ar39_error'), show_labels=False)
-                                       )
-                               ),
-                        show_border=True,
-                        label='Decay'
-                        )
+        decay = self._get_decay_group()
         spectrometer = VGroup(
                             Item('abundant_sensitivity'),
                             Item('sensitivity',
@@ -122,6 +163,6 @@ class ConstantsPreferencesPane(PreferencesPane):
                                 UItem('ic_factor_error')
                                    ),
                             label='Spectrometer', show_border=True)
-        v = View(ratios, decay, spectrometer)
+        v = View(decay, ratios, spectrometer)
         return v
 #============= EOF =============================================

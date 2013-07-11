@@ -26,6 +26,8 @@ from src.pyscripts.tasks.pyscript_actions import OpenPyScriptAction, \
     NewPyScriptAction
 from pyface.tasks.action.task_action import TaskAction
 from pyface.tasks.action.schema import SMenu
+from src.pyscripts.tasks.pyscript_preferences import PyScriptPreferences, \
+    PyScriptPreferencesPane
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -94,4 +96,8 @@ class PyScriptPlugin(BaseTaskPlugin):
 
     def _task_factory(self):
         return PyScriptTask()
+
+    def _preferences_panes_default(self):
+        return [PyScriptPreferencesPane,
+                ]
 #============= EOF =============================================

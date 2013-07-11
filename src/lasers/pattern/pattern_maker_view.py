@@ -74,19 +74,9 @@ class PatternMakerView(Saveable, Patternable):
                 pattern = self._load_pattern(fp, p)
                 if pattern:
                     self._kind = pattern.__class__.__name__.replace('Pattern', '')
+                    return True
 
-#        p = self.open_file_dialog(default_directory=paths.pattern_dir)
-#        if p:
-#            try:
-#                with open(p, 'r') as fp:
-#                    obj = pickle.load(fp)
-#                    if isinstance(obj, Pattern):
-#                        self.pattern = obj
-#                        self.pattern.path = p
-#                        self._kind = obj.__class__.__name__.replace('Pattern', '')
-#
-#            except pickle.PickleError, e:
-#                print e
+            self.warning_dialog('{} is not a valid pattern file'.format(p))
 
     @on_trait_change('pattern:+')
     def pattern_dirty(self):

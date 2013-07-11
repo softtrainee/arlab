@@ -192,8 +192,29 @@ class TaskGroup(Group):
 
 class BaseTask(Task):
 
-    def _menu_bar_factory(self):
-        return
+    def _menu_bar_factory(self, menus=None):
+        if not menus:
+            menus = []
+
+        mb = SMenuBar(
+                      self._file_menu(),
+                      self._edit_menu(),
+                      self._view_menu(),
+                      self._tools_menu(),
+                      self._window_menu(),
+                      self._help_menu(),
+#                       SMenu(
+#                             ViewMenuManager(),
+#                             id='Window', name='&Window'),
+
+
+#                       *menus
+                      )
+        if menus:
+            for mi in reversed(menus):
+                mb.items.insert(4, mi)
+
+        return mb
 
     def _menu_bar_default(self):
         return self._menu_bar_factory()
@@ -308,29 +329,7 @@ class BaseManagerTask(BaseTask):
         if dialog.open() == OK:
             return dialog.path
 
-    def _menu_bar_factory(self, menus=None):
-        if not menus:
-            menus = []
 
-        mb = SMenuBar(
-                      self._file_menu(),
-                      self._edit_menu(),
-                      self._view_menu(),
-                      self._tools_menu(),
-                      self._window_menu(),
-                      self._help_menu(),
-#                       SMenu(
-#                             ViewMenuManager(),
-#                             id='Window', name='&Window'),
-
-
-#                       *menus
-                      )
-        if menus:
-            for mi in reversed(menus):
-                mb.items.insert(4, mi)
-
-        return mb
 
 class BaseHardwareTask(BaseManagerTask):
     pass
