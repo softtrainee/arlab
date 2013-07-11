@@ -18,17 +18,17 @@
 from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int, on_trait_change
 from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup, VSplit, Label
 from pyface.tasks.api import Editor
+
+#============= standard library imports ========================
+import os
+#============= local library imports  ==========================
+
 from src.ui.tabular_editor import myTabularEditor
 from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
-import os
-from src.loggable import Loggable
-from pyface.file_dialog import FileDialog
-from src.paths import paths
-from pyface.constant import OK
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.envisage.tasks.base_editor import  BaseTraitsEditor
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.helpers.filetools import add_extension
+
 
 class ExperimentEditor(BaseTraitsEditor):
     queue = Instance(ExperimentQueue, ())  # Any
@@ -126,6 +126,7 @@ class ExperimentEditor(BaseTraitsEditor):
             queues = [self.queue]
         if self._validate_experiment_queues(queues):
             path = self._dump_experiment_queues(path, queues)
+            
         self.path = path
         self.dirty = False
 
@@ -140,8 +141,9 @@ class ExperimentEditor(BaseTraitsEditor):
 
         if not p:
             return
-        if not p.endswith('.txt'):
-            p += '.txt'
+        
+        p=add_extension(p)
+        
 
         self.info('saving experiment to {}'.format(p))
         with open(p, 'wb') as fp:

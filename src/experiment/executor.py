@@ -36,7 +36,8 @@ from src.experiment.stats import StatsGroup
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
-    meas_MeasurementTable, gen_MassSpectrometerTable
+    meas_MeasurementTable, gen_MassSpectrometerTable, meas_ExtractionTable,\
+    gen_ExtractionDeviceTable
 from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
@@ -675,20 +676,25 @@ class ExperimentExecutor(Experimentable):
             arun.monitor = mon
         return arun
 
-    def _get_blank(self, kind, ms, last=False, info=True):
+    def _get_blank(self, kind, ms, ed,last=False, info=True):
         db = self.db
         sel = db.selector_factory(style='single')
         sess = db.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.join(meas_MeasurementTable)
+        q = q.join(meas_ExtractionTable)
         q = q.join(gen_AnalysisTypeTable)
         q = q.join(gen_MassSpectrometerTable)
+        q = q.join(gen_ExtractionDeviceTable)
+        
+        
         q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
         q = q.filter(gen_MassSpectrometerTable.name == ms)
-
+        q = q.filter(gen_ExtractionDeviceTable.name==ed)
+        
         dbr = None
         if last:
-            q = q.order_by(meas_AnalysisTable.aliquot.asc())
+            q = q.order_by(meas_AnalysisTable.aliquot.desc())
             q = q.limit(1)
             dbr = q.one()
 #            dbr
@@ -728,6 +734,7 @@ class ExperimentExecutor(Experimentable):
             ind, an = fa
             if ind == 0:
                 pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer,
+                                       exp.extract_device,
                                        last=True, info=False)
                 if pdbr:
                     msg = '''First "{}" not preceeded by a blank. 
@@ -743,9 +750,12 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
                 if retval == CANCEL:
                     return
                 elif retval == NO:
-                    return self._get_blank(an.analysis_type, exp.mass_spectrometer, last=True)
+                    return self._get_blank(an.analysis_type, exp.mass_spectrometer,
+                                           exp.extract_device,
+                                           last=True)
                 else:
-                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
+                    return self._get_blank(an.analysis_type, exp.mass_spectrometer,
+                                           exp.extract_device)
 
 #                if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
 #                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
@@ -756,7 +766,8 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
 #                print pa, pa.analysis_type, btypes
                 if not pa.analysis_type in btypes or pa.skip:
                     if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                        return self._get_blank(an.analysis_type, exp.mass_spectrometer)
+                        return self._get_blank(an.analysis_type, exp.mass_spectrometer, 
+                                               exp.extract_device)
                     else:
                         return
 
@@ -882,7 +893,8 @@ Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
         
 
     def _truncate_button_fired(self):
-        self.experiment_queue.current_run.truncate_run(self.truncate_style)
+        if self.current_run:
+            self.current_run.truncate_run(self.truncate_style)
 
 #    def _show_sample_map_fired(self):
 #

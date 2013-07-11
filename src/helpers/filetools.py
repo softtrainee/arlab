@@ -19,6 +19,11 @@
 #========== standard library imports ==========
 import os
 
+def add_extension(p, ext='.txt'):
+    if not p.endswith(ext):
+        p += ext
+    return p
+
 def unique_dir(root, base):
     p = os.path.join(root, '{}001'.format(base))
     i = 2
